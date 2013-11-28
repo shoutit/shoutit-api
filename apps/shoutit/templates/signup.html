@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+	<div class="span6">
+		<h1>It’s your turn.<br><em>Join Shoutit.</em></h1>
+	</div>
+    <div class="span10">
+		<form id='signup_form' method="post" class="signup clearfix">
+			{% csrf_token %}
+{#			<div class="holding clearfix {% if form.username.errors %}error{% endif %}">#}
+{#				<div class="sidetip">{% if form.username.errors %}{% for error in form.username.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>#}
+{#				{{ form.username|attr:"placeholder:Username"|attr:"autocomplete:off" }}#}
+{#			</div>#}
+
+            <div class="holding clearfix {% if form.firstname.errors %}error{% endif %}">
+				<div class="sidetip">{% if form.firstname.errors %}{% for error in form.firstname.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.firstname|attr:"placeholder:First Name"|attr:"autocomplete:off" }}
+			</div>
+
+            <div class="holding clearfix {% if form.lastname.errors %}error{% endif %}">
+				<div class="sidetip">{% if form.lastname.errors %}{% for error in form.lastname.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.lastname|attr:"placeholder:Last Name"|attr:"autocomplete:off" }}
+			</div>
+
+			<div class="holding clearfix {% if form.email.errors %}error{% endif %}">
+				<div class="sidetip">{% if form.email.errors %}{% for error in form.email.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.email|attr:"placeholder:Email"|attr:"autocomplete:off" }}
+			</div>
+
+{#          <div class="holding clearfix {% if form.mobile.errors %}error{% endif %}">#}
+{#				<div class="sidetip">{% if form.mobile.errors %}{% for error in form.mobile.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>#}
+{#				{{ form.mobile|attr:"placeholder:Phone"|attr:"autocomplete:off" }}#}
+{#			</div>#}
+
+            <div class="holding clearfix {% if form.password.errors %}error{% endif %}">
+                <div class="sidetip">{% if form.password.errors %}{% for error in form.password.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.password|attr:"placeholder:Password"|attr:"autocomplete:off" }}
+            </div>
+
+            <div class="holding clearfix {% if form.confirm_password.errors %}error{% endif %}">
+                <div class="sidetip">{% if form.confirm_password.errors %}{% for error in form.confirm_password.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.confirm_password|attr:"placeholder:Password Again"|attr:"autocomplete:off" }}
+            </div>
+
+			<input type="submit" value="Sign up" class="promotional submit button">
+		</form>
+		<p>You do have an account? Sign in <a href='/signin/'>here</a></p>
+	</div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" language="javascript">
+        $(document).ready(function () {
+            $('form#signup_form').submitAjaxily(function (data) {
+                setTimeout("window.location = '/';", 1500);
+            });
+        });
+    </script>
+{% endblock %}
+
+

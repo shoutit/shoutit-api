@@ -1,0 +1,49 @@
+{#{% extends "base.html" %}#}
+{#{% load widget_tweaks %}#}
+{% load template_filters %}
+{##}
+{#{% block content %}#}
+        <div class="box-container dark-container round shadow experiences">
+            <div class="box-content">
+                {% if experiences %}
+                    {% include 'experiences_stream.html' %}
+                {% endif %}
+            </div>
+        </div>
+{#{% endblock %}#}
+
+
+{#{% block scripts %}#}
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-ui-1.8.17.custom.min.js"></script>
+{#<script type="text/javascript" language="JavaScript" src="/static/new_design/js/bootstrap.js"></script>#}
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/slimScroll.js"></script>
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/site.js"></script>
+
+<script type="text/javascript" language="JavaScript">
+
+    function report_experience(id){
+        report(id,{{ report_constants|key:"Experience" }});
+    }
+
+    function report_comment(id){
+        report(id,{{ report_constants|key:"Comment" }});
+    }
+
+
+    $(document).ready(function () {
+        function sendCommentsAjaxly(){
+            var commentsButtons = $('form.comment_on_experience_form');
+            for (var i=0;i < commentsButtons.length;i++)
+                $(commentsButtons[i]).submitAjaxily(function(data){
+                    var deleteHtml = "<a onclick=\"delete_comment('"+ data.data['id'] +"',this)\">x</a>"
+                   $(this).parent().children().first().append('<div>' + data.data['text'] + deleteHtml +'</div>');
+                });
+        }
+        $('form#post_experience_form').submitAjaxily();
+        $('.experiences .box-content').scrollableStream('560px', true, '/xhr/experiences_stream/{{ profile.username }}/', '.experiences .box-content', 0,sendCommentsAjaxly);
+        $('.experiences .box-content').refreshScrollableStream(sendCommentsAjaxly);
+        setup_modal('#experience_edit_modal', '/modal/experience_edit/', '#edit_experience', function () {});
+    });
+</script>
+{#{% endblock %}#}

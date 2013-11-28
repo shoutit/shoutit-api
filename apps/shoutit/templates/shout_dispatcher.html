@@ -1,0 +1,14 @@
+{% if shout.Type == 0 or shout.Type == 1 %}
+    {% if shout.OwnerStore %}
+        {% include 'store_post.html' %}
+        <table class="zebra-striped syrontest"><tr><td><b>store post</b></td>
+    {% else %}
+        {% include 'post.html' %}
+        <table class="zebra-striped syrontest"><tr><td><b>type {{ shout.Type }} post</b></td>
+    {% endif %}
+{% else %}
+    {% if shout.Type == 2 %}
+        {% include 'exp.html' %}
+        <table class="zebra-striped syrontest"><tr><td><b>experiences</b></td>
+    {% endif %}
+{% endif %}

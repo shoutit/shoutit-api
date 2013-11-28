@@ -1,0 +1,53 @@
+{% load widget_tweaks %}
+{% load template_filters %}
+{% load i18n %}
+<form id='signup_form' action="/signup/" method="post">
+    {% csrf_token %}
+    <div class="input-field">
+        {{ form.firstname|trans_attr:"placeholder:First Name"|attr:"autocomplete:off" }}
+    </div>
+    <div class="input-field">
+        {{ form.lastname|trans_attr:"placeholder:Last Name"|attr:"autocomplete:off" }}
+    </div>
+    <div class="input-field">
+        {{ form.email|trans_attr:"placeholder:Email"|attr:"autocomplete:off" }}
+    </div>
+    <div class="input-field">
+        {{ form.password|trans_attr:"placeholder:Password"|attr:"autocomplete:off" }}
+    </div>
+    <div class="input-field">
+        {{ form.confirm_password|trans_attr:"placeholder:Password Again"|attr:"autocomplete:off" }}
+    </div>
+    <button type="submit" class="btn btn-primary">{% trans "Sign up" %}</button>
+</form>
+<div class="hr-with-title">
+    <span class="hr-title">{% trans "Already a shouter?" %}</span>
+</div>
+<div class="with-facebook">
+    <a href="#signin" data-toggle="modal" data-target="#signin_modal" data-dismiss="modal">{% trans "Sign in here" %}</a>
+</div>
+<div class="hr-with-title">
+    <span class="hr-title">{% trans "Forgot your password?" %}</span>
+</div>
+<div class="with-facebook">
+    <a href="#recover" data-toggle="modal" data-target="#recover_modal" data-dismiss="modal">{% trans "Recover it here" %}</a>
+</div>
+<div class="hr-with-title">
+    <span class="hr-title">{% trans "Are you on Facebook?" %}</span>
+</div>
+<div class="with-facebook">
+    {% trans "Sign up using" %} <button class="facebook-button">{% trans "Facebook" %}</button>
+</div>
+<script type="text/javascript" language="JavaScript">
+    $('form#signup_form').submitAjaxily(function (data) {
+        if (redirect_after_login)
+            redirect_by_response(data);
+        else {
+            $('body').trigger('signin_ok', [data.data.username]);
+            redirect_after_login = true;
+        }
+    });
+    $('.facebook-button').click(function () {
+        FB.login(null,{'scope':'email,user_birthday,publish_actions'});
+    });
+</script>

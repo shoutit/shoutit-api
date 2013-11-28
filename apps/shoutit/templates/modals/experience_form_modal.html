@@ -1,0 +1,219 @@
+{% load widget_tweaks %}
+{% load template_filters %}
+{% load i18n %}
+<div class="container-fluid">
+
+    <form method="post" id="post_experience_form" action="/post_experience/{% if business %}{{ business.username }}/{% endif %}">
+        {% csrf_token %}
+
+		<div class="input-field thumb-state">
+			<div data-state="good" class="good-experience selected-state">
+				<span class="user-icon-thumbup pull-left"></span>
+				<span class="pull-left">{% trans "Good experience" %}</span>
+			</div>
+			<div data-state="bad" class="bad-experience">
+				<span class="user-icon-thumbdown pull-left"></span>
+				<span class="pull-left">{% trans "Bad experience" %}</span>
+			</div>
+{#			<span class="state_error">{% trans "you must select the experience" %}</span>#}
+		</div>
+        <div class="input-field" style="display:none">
+            {{ form.state|attr:"style:display:none"}}
+        </div>
+
+        <div class="input-field">
+            {{ tiny_business_form.name|trans_attr:"placeholder:Which business"|attr:"class:noSubmit" }}
+			{% if fb_access_token %}
+				<div class="shout-on-fb">
+					<label>{% trans "Also post it on " %}</label>
+					<input type="checkbox" name="facebook-shout" checked="" data-selected="true" data-access-token="{{ fb_access_token }}">
+					<span class="user-fb"></span>
+				</div>
+			{% endif %}
+		</div>
+		
+		<input name="id_name_selected" style="display:none" id ="id_name_selected" />
+
+        <div class="input-field" id="category">
+            {{ tiny_business_form.category|attr:""}}
+        </div>
+
+        <input type="text" id="input_search" class="noSubmit" style="">
+        <div class="input-field" id="location">
+            {{ tiny_business_form.location|attr:"style:display:none" }}
+            <div class="input" id="business_map" style="width: 513px; height: 146px;"></div>
+        </div>
+
+        <div class="input-field" id="city">
+            {{ tiny_business_form.city|attr:"style:display:none" }}
+        </div>
+        <div class="input-field" id="country">
+            {{ tiny_business_form.country|attr:"style:display:none" }}
+        </div>
+        <div class="input-field" id="address">
+            {{ tiny_business_form.address|attr:"style:display:none" }}
+        </div>
+
+        <div class="input-field" id="source">
+            {{ tiny_business_form.source|attr:"style:display:none" }}
+        </div>
+        <div class="input-field" id="source_id">
+            {{ tiny_business_form.source_id|attr:"style:display:none" }}
+        </div>
+
+        <div class="input-field">
+            {{ form.text|trans_attr:"placeholder:Write your comment here"}}
+        </div>
+
+        {{ form.username }}
+
+        <input type="submit" value="{% trans "Send"%}"/>
+    </form>
+</div>
+
+<script type="text/javascript" language="JavaScript">
+
+    $(document).ready(function(){
+
+		var box = $('.noSubmit');
+		box.keypress(function(e){
+			var k=e.keyCode || e.which;
+			if(k==13){
+				e.preventDefault();
+			}
+		});
+
+		var shout_on_fb = $('.shout-on-fb input[name=facebook-shout]');
+
+		shout_on_fb.click(function (){
+			if($(this).is(':checked')){
+				$(this).attr('data-selected','true');
+			}else {
+				$(this).attr('data-selected','false');
+			}
+		});
+
+		$('form#post_experience_form').submitAjaxily(function (shoutit_data) {
+//			console.log(shoutit_data);
+			// Facebook Activity Post
+			if(shout_on_fb.attr('data-selected')=='true'){
+				$.ajax({
+					url: "https://graph.facebook.com/me/shoutitcom:shout",
+					type: "POST",
+					dataType: 'json',
+					context: shoutit_data,
+					data: {"access_token" : shout_on_fb.attr('data-access-token'), "experience":shoutit_data.data.next},
+
+					success: function(fb_data, textStatus, jqXHR){
+//						console.log('success');
+//						console.log(fb_data);
+					redirect_by_response(this);
+					},
+					error: function(fb_data, textStatus, jqXHR){
+//						console.log('error');
+//						console.log(fb_data);
+					redirect_by_response(this);
+					}
+				});
+			}
+			// Redirect to Shout
+			else{
+			redirect_by_response(shoutit_data);
+			}
+
+		});
+
+		var state_validator=0;
+		$('.input-field.thumb-state div').click(function(){
+			state_validator=1;
+			$('.input-field.thumb-state div').removeClass('selected-state');
+			$(this).addClass('selected-state');
+			if($(this).attr('data-state')=='bad'){
+				$('#id_state_0').trigger('click');
+			}else{
+				$('#id_state_1').trigger('click');
+			}
+		});
+		$('#id_state_1').trigger('click');//default radio
+
+        SetUpFoursquareClient();
+        var search_field_id = "#id_name";
+		foursquare_select=false;
+		$(search_field_id).focus(function(){
+
+        SetUpFqBusinessSearchField(search_field_id, {{ business_constants|key:"Foursquare" }}, function (callback) {
+			if($(search_field_id).val()!=''){
+            requestAjaxily({
+                url: '/xhr/user/search/' + $(search_field_id).val() + '/',
+                type: 'GET',
+                data: {type: {{ user_constants|key:"Business" }} },
+                successCallback: function (data) {
+                    var items = [];
+                    for (var i = 0; i < data.data.users.length; i++) {
+                        var item = data.data.users[i];
+                        items.push({
+                            label: item.name,
+                            desc: item.about,
+                            cat: item.cat,
+                            location: item.lat + ", " + item.lng,
+                            lat: item.lat,
+                            lng: item.lng,
+                            city: item.city,
+                            country: item.country,
+                            source: item.source,
+                            source_id: item.source_id,
+                            username: item.username
+                        });
+                    }
+                    callback.onSuccess(items);
+
+                }
+            });
+			}
+        }, function (item) {
+			//console.log(item);
+			foursquare_select=true;
+            $("#id_location").val(item.location);
+			var point = new google.maps.LatLng(parseFloat(item.lat), parseFloat(item.lng));
+            shout_map.Map.panTo(point);
+			setLocation(parseFloat(item.lat),parseFloat(item.lng),shout_map);
+			shout_map.AddMarker.setPosition(point);
+            $("#id_source").val(item.source);
+            $("#id_source_id").select(item.source_id);
+			$('#id_category').val($('#'+item.cat).val());
+            $("#id_username").val(item.username);
+			$("#id_name_selected").val($("#id_name").val());
+            $("#input_search").hide();
+            $("#location").hide();
+			$("#category").hide();
+			$('#shout_experience_modal').css('height','397','max-height','397');
+			$('#shout_experience_modal .modal-body').css('height','225');
+			$("#id_text").focus();
+        }
+		);
+		});
+
+		$(search_field_id).blur(function() {
+			if ($("#id_name_selected").val() != $("#id_name").val()) {
+
+				$("#input_search").show();
+				$("#location").show();
+				$("#category").show();
+				$('#shout_experience_modal').css('height','640','max-height','640');
+				$('#shout_experience_modal .modal-body').css('height','474')
+			}
+		});
+
+        {% if business %}
+            $("#input_search").hide();
+            $("#location").hide();
+            $("#category").hide();
+            $('#shout_experience_modal').css('height','397','max-height','397');
+            $('#shout_experience_modal .modal-body').css('height','225');
+        {% endif %}
+
+        var shout_map = new GoogleMap("#business_map", "location input");
+        shout_map.CreateShoutMap("input_search","city input","country input","address input", undefined, undefined, "sell");
+    });
+
+</script>

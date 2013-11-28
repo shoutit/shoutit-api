@@ -1,0 +1,12 @@
+Hello {{ to_name|capfirst }},
+{{ from_name|capfirst }} [{{ from_email }}] [{{ from_link }}] invites you to join Shoutit [https://www.shoutit.com].
+Shoutit is the region’s first social marketplace where people shout their requests for goods or services that they need and the amount they would like to pay for them. It’s a way for you to connect with others in their local community on a fun and easy to use platform. Shoutit takes the concept of commerce back to the basics, by allowing you to log in and trade whatever you are offering or requesting with those around you.
+
+
+To learn more about Shoutit you can visit this page: Learn more about Shoutit [https://www.shoutit.com/learnmore/]
+-------------------------------------------------------------------------------------
+Please do not reply to this email, your message won't be read or processed.
+
+
+Shoutit [http://www.shoutit.com]
+info@shout.com

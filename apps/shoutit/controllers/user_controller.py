@@ -6,16 +6,16 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
-from ActivityLogger.logger import Logger
+from apps.ActivityLogger.logger import Logger
 from django.db.models.aggregates import Count, Min
 from django.db.models.query_utils import Q
-from ShoutWebsite.constants import USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, EVENT_TYPE_FOLLOW_TAG, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_COMMENT, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_BUY_DEAL, STREAM_TYPE_BUSINESS, EVENT_TYPE_FOLLOW_BUSINESS
-from ShoutWebsite.utils import ToSeoFriendly
+from apps.shoutit.constants import USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, EVENT_TYPE_FOLLOW_TAG, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_COMMENT, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_BUY_DEAL, STREAM_TYPE_BUSINESS, EVENT_TYPE_FOLLOW_BUSINESS
+from apps.shoutit.utils import ToSeoFriendly
 
-import settings
+import apps.shoutit.settings
 
-from ShoutWebsite import utils
-from ShoutWebsite.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
+from apps.shoutit import utils
+from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 
 def GetUser(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):
@@ -201,7 +201,7 @@ def SignUpUser(request, fname, lname, password, email = None, mobile=None, send_
 	Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME : username})
 	token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
 	if email is not None and send_activation:
-		ShoutWebsite.controllers.email_controller.SendRegistrationActivationEmail(django_user, email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'), token)
+		apps.shoutit.controllers.email_controller.SendRegistrationActivationEmail(django_user, email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'), token)
 	SignInUser(request, password, username)
 	django_user.token = token
 	return django_user
@@ -263,7 +263,7 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
 
 def ChangeEmailAndSendActivation(request, user, email):
 	token = SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
-	ShoutWebsite.controllers.email_controller.SendRegistrationActivationEmail(user, email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'), token)
+	apps.shoutit.controllers.email_controller.SendRegistrationActivationEmail(user, email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'), token)
 
 
 
@@ -281,7 +281,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
 		user.Profile.Image = '/static/img/_user_female.png'
 	user.Profile.Birthdate = birthdate
 	user.Profile.save()
-	import ShoutWebsite.controllers.realtime_controller as realtime_controller
+	import apps.shoutit.controllers.realtime_controller as realtime_controller
 	realtime_controller.BindUserToCity(user.username,user.Profile.City)
 	if token is not None and len(token) > 0:
 		ActivateUser(token, user)
@@ -448,13 +448,13 @@ def FollowStream(request, follower, followed):
 		Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_CREATED, data={ACTIVITY_DATA_FOLLOWER : follower.username, ACTIVITY_DATA_STREAM : followed.id})
 		if followed.Type == STREAM_TYPE_USER:
 			followedUser = UserProfile.objects.get(Stream=followed)
-			ShoutWebsite.controllers.email_controller.SendFollowshipEmail(follower.User, followedUser.User)
-			ShoutWebsite.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
+			apps.shoutit.controllers.email_controller.SendFollowshipEmail(follower.User, followedUser.User)
+			apps.shoutit.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
 			event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_USER,followedUser)
 		elif followed.Type == STREAM_TYPE_BUSINESS:
 			followedUser = BusinessProfile.objects.get(Stream=followed)
-			ShoutWebsite.controllers.email_controller.SendFollowshipEmail(follower.User, followedUser.User)
-			ShoutWebsite.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
+			apps.shoutit.controllers.email_controller.SendFollowshipEmail(follower.User, followedUser.User)
+			apps.shoutit.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
 			event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_BUSINESS,followedUser)
 
 def UnfollowStream(request, follower, followed):
@@ -641,8 +641,8 @@ def activities_stream(user,start_index = None, end_index = None):
 
 	return post_count,stream_posts
 
-from ShoutWebsite import utils, constants
-from ShoutWebsite.constants import TOKEN_LONG, TOKEN_TYPE_RECOVER_PASSWORD, STREAM_TYPE_USER, ACTIVITY_TYPE_SIGN_UP, ACTIVITY_DATA_USERNAME, TOKEN_TYPE_HTML_EMAIL, ACTIVITY_TYPE_SIGN_IN_SUCCESS,ACTIVITY_TYPE_SIGN_IN_FAILED, ACTIVITY_DATA_CREDENTIAL, ACTIVITY_TYPE_SIGN_OUT, ACTIVITY_TYPE_FOLLOWSHIP_CREATED, ACTIVITY_DATA_FOLLOWER, ACTIVITY_DATA_STREAM, ACTIVITY_TYPE_FOLLOWSHIP_REMOVED,STREAM_TYPE_TAG, STREAM_TYPE_STORE, POST_TYPE_BUY, POST_TYPE_SELL,EVENT_TYPE_FOLLOW_USER, USER_TYPE_INDIVIDUAL, USER_TYPE_BUSINESS,POST_TYPE_EVENT,EVENT_TYPE_GALLERY_ITEM,POST_TYPE_DEAL
-import ShoutWebsite.controllers.email_controller
-import ShoutWebsite.controllers.notifications_controller,event_controller,shout_controller
-from ShoutWebsite.models import Event, UserProfile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, Shout, UserPermission, Post, Trade, BusinessProfile, PredefinedCity
+from apps.shoutit import utils, constants
+from apps.shoutit.constants import TOKEN_LONG, TOKEN_TYPE_RECOVER_PASSWORD, STREAM_TYPE_USER, ACTIVITY_TYPE_SIGN_UP, ACTIVITY_DATA_USERNAME, TOKEN_TYPE_HTML_EMAIL, ACTIVITY_TYPE_SIGN_IN_SUCCESS,ACTIVITY_TYPE_SIGN_IN_FAILED, ACTIVITY_DATA_CREDENTIAL, ACTIVITY_TYPE_SIGN_OUT, ACTIVITY_TYPE_FOLLOWSHIP_CREATED, ACTIVITY_DATA_FOLLOWER, ACTIVITY_DATA_STREAM, ACTIVITY_TYPE_FOLLOWSHIP_REMOVED,STREAM_TYPE_TAG, STREAM_TYPE_STORE, POST_TYPE_BUY, POST_TYPE_SELL,EVENT_TYPE_FOLLOW_USER, USER_TYPE_INDIVIDUAL, USER_TYPE_BUSINESS,POST_TYPE_EVENT,EVENT_TYPE_GALLERY_ITEM,POST_TYPE_DEAL
+import apps.shoutit.controllers.email_controller
+import apps.shoutit.controllers.notifications_controller,event_controller,shout_controller
+from apps.shoutit.models import Event, UserProfile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, Shout, UserPermission, Post, Trade, BusinessProfile, PredefinedCity

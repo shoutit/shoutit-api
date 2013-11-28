@@ -10,10 +10,10 @@ from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
 
-from ShoutWebsite.permissions import PERMISSION_USE_SHOUT_IT
-from ShoutWebsite.utils import asynchronous_task
+from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
+from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.constants import Constant
-from tagged_cache import TaggedCache
+from common.tagged_cache import TaggedCache
 
 
 class ResponseResultError(Constant):
@@ -157,7 +157,7 @@ def view (
 			if PERMISSION_USE_SHOUT_IT not in permissions_required:
 				permissions_required.append(PERMISSION_USE_SHOUT_IT)
 			if not hasattr(request.user, 'constant_permissions'):
-				from ShoutWebsite.shoutwebsite_middlewares import UserPermissionsMiddleware
+				from apps.shoutit.middleware import UserPermissionsMiddleware
 				UserPermissionsMiddleware.attach_permissions_to_request(request)
 			if business_subscription_required and request.user.is_authenticated():
 				try:
@@ -294,7 +294,7 @@ def permissions_point_cut(request, permissions_required, *args, **kwargs):
 	if PERMISSION_USE_SHOUT_IT not in permissions_required:
 		permissions_required.append(PERMISSION_USE_SHOUT_IT)
 	if not hasattr(request.user, 'constant_permissions'):
-		from ShoutWebsite.shoutwebsite_middlewares import UserPermissionsMiddleware
+		from apps.shoutit.middleware import UserPermissionsMiddleware
 		UserPermissionsMiddleware.attach_permissions_to_request(request)
 	if not request.user.is_superuser and permissions_required and not frozenset(permissions_required) <= frozenset(request.user.constant_permissions):
 		result = ResponseResult()

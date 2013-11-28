@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block before_page %}
+	<div class="home-logo unselectable">
+		{% trans "what will you shout today?" %}
+		<br>
+		<span class="home-logo-desc unselectable">{% trans "Region's 1st Social Market" %}</span>
+	</div>
+{% endblock %}
+
+{% block content %}
+	<div class="home-container">
+
+		<div class="outer-box-header learnmore round shadow">
+			<h2 id="learnmore-title">{% trans "LEARN MORE" %}</h2>
+			<div class="box-content">
+				<div class="content">
+
+					<div class="learnmore-section left">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-about"></i>
+								<h4 class="title">{% trans "ABOUT SHOUTIT" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "Shoutit is the region’s first social marketplace where people shout their requests for goods or services that they need and the amount they would like to pay for them. It’s a way for you to connect with others in their local community on a fun and easy to use platform. Shoutit takes the concept of commerce back to the basics, by allowing you to log in and trade whatever you are offering or requesting with those around you." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-about.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section right">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-post"></i>
+								<h4 class="title">{% trans "HOW TO POST  A SHOUT" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "All you need to do is log in to your profiles so you can post shouts which offer or request an item or service, and then specify the amount you would like to buy or sell it for. And then it’s out there. Within moments, other users within the local community will connect with the shout, posting their own responses." %}
+                            </div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-post.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section left">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-listen"></i>
+								<h4 class="title">{% trans "LISTENING TO PEOPLE" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "Connect with old and new friends by listening to their shouts. Listen to other users by visiting their profile page and clicking on the listen icon so that their shout posts will be given priority on your browse page. If there is something specific you are searching for, you can also listen to your preferred tags or key words, in the same way you would listen to another user, to prioritize these shouts too." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-listen.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section right">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-tags"></i>
+								<h4 class="title">{% trans "HOW TAGS WORK" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "When you are filling out your shout post, tags will be auto completed.  You can also add your own tags by manually entering them in the tag box below the post. Tagging shouts enables them to be categorized and makes it easier to filter posts when searching." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-tags.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section left">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-search"></i>
+								<h4 class="title">{% trans "HOW TO SEARCH FOR A SHOUT" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "Searching is straight forward on the browse page and just enter your preferred keywords to filter through all the shouts to make sure you find what you are looking for. Although, if you do not have anything specific in mind, you can browse through all the shouts being posted within your local community on the browse page. You can also order the results by time, distance or leave it for us to give you best matches." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-search.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section right">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-im"></i>
+								<h4 class="title">{% trans "INSTANT MESSAGING" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "Only the shouts you have posted will appear on your profile page. If another user answers your shout, this will appear in your inbox. This is where all of your conversations with other users will be stored. All conversations on Shoutit happen in real time. If both shouter and replier are online, they will be able to instant message each other on the conversations page, or below the shout itself." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-im.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section left">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-reply"></i>
+								<h4 class="title">{% trans "REPLYING TO A SHOUT" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "If you see a shout that you would like to respond to, you can post a reply by clicking on the shout to open it up into its own page. There will be a box below the shout where you can type your response. Your reply will then appear on the user’s inbox as well as your own to help you keep track of your interactions." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-reply.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section right">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-activate"></i>
+								<h4 class="title">{% trans "ACTIVATING YOUR ACCOUNT" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "Once you have registered your information you will be sent an authorization email to confirm you are who you say you are. This email will contain a link back to the Shoutit site which you will need to click to verify your account. Once this step is complete, you are ready to shout! If you don’t verify your account, you will not be able to post more than 5 shouts or reply to others’ shouts – so make sure you follow this step to avoid missing out on being part of the action." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-activate.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section left">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-mobile"></i>
+								<h4 class="title">{% trans "MOBILE APPLICATIONS" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "You can download our mobile applications and enjoy the great experience of shouting and getting recommendations on the go." %}
+
+								<a href="http://itunes.apple.com/us/app/id517719439" target="_blank">iPhone</a> ,
+								<a href="http://play.google.com/store/apps/details?id=com.shoutit.android" target="_blank">Android</a> ,
+								<a href="http://appworld.blackberry.com/webstore/content/105904" target="_blank">BlackBerry</a> .
+
+
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-mobile.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section right">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-location1"></i>
+								<h4 class="title">{% trans "SHOUT LOCATION" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "Identifying your location on the map when you post a shout means that shouts closest to you will be given priority and recommended on your shout page. To highlight where you are shouting from, just drag the shout icon on the map until it is positioned correctly." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-location1.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+					<div class="learnmore-section left">
+						<div class="learnmore-section-body">
+							<div class="learnmore-section-header">
+								<i class="learnmore-icons-location2"></i>
+								<h4 class="title">{% trans "PROFILE LOCATION" %}</h4>
+							</div>
+							<div class="learnmore-section-text">
+								{% trans "You can fix your location on your profile page using the map in the same way that you did to show where you shouted from. Fixing your location on your profile page will select a permanent location for you, such as the area you live in. The shouts closest to you will be given priority on your browse page. Don’t worry; you will still be able to see shouts from users who are further away too. You can change this at any time by dragging the icon on the map ." %}
+							</div>
+						</div>
+						<div class="learnmore-section-image">
+							<img src="/static/new_design/img/learnmore-location2.png" alt="">
+						</div>
+						<div class="clearfix"></div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+		{% if flip %}
+			window.setTimeout(function(){
+				window.location = '/rules/?zwaar&no_ga';
+			},4000);
+		{% endif %}
+		{% if adfly %}
+			window.setTimeout(function(){
+				window.location = '/rules/?adfly&no_ga';
+			},3000);
+		{% endif %}
+	</script>
+{% endblock %}

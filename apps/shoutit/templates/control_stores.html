@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block styles %}
+
+{% endblock %}
+
+
+{% block content %}
+<div class="span12 offset2">
+
+<form method="post" id="control_store">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Stores</td>
+    <td>Owners</td>
+</tr>
+{% for store in stores  %}
+    <tr>
+        <td>{{ store.Name }}</td>
+        <td>
+            <input type="text" id="{{store.id}}" name="store{{store.id}}" value="{% if store.Owner != Null %}{{ store.Owner.username }}{% endif %}">
+            <div id="{{store.id}}div"></div>
+        </td>
+    </tr>
+{% endfor %}
+</table>
+<input type="submit" class="btn primary" name="Save" value="Save">
+</form>
+
+
+</div>
+{% endblock %}
+
+
+
+{% block scripts %}
+    <script type="text/javascript" src="/static/js/jquery.bgiframe.min.js"></script>
+{#    <script type="text/javascript" src="http://dev.jquery.com/view/trunk/plugins/autocomplete/lib/jquery.dimensions.js"></script>#}
+    <script type="text/javascript" src="/static/js/jquery.autocomplete.js"></script>
+	<script type="text/javascript">
+    var id;
+		$(document).ready(function () {    
+            $(":input").focus(function () {
+                 id = '#' + this.id;
+                $(id).keyup(suggest);
+            });
+		});
+		function suggest() {
+            if ($(id).val() == "")
+            $(id +"div").html("");
+            else
+            requestAjaxily({
+                url:  '/xhr/user/search/' + $(id).val() ,
+                successCallback: function (data) {
+                    var users = data.data.users;
+//                    $(id).autocomplete(users);
+//                    alert(users[0]);
+                    $(id+"div").html("<p> </p>");
+                    for(i = 0;i< users.length; i++){
+                        if (i == 0){
+                            $(id+"div").html(users[i]);
+                        }
+                        else
+                            $(id+"div").html($(id+"div").html() + '<br>' + users[i]);
+                    }
+                }
+            });
+		}
+
+	</script>
+{% endblock %}

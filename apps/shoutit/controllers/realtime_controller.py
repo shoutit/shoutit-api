@@ -1,7 +1,7 @@
 import datetime
 import pika
-from ShoutWebsite.utils import asynchronous_task
-import settings
+from apps.shoutit.utils import asynchronous_task
+import apps.shoutit.settings
 import os
 from apns import Payload, APNs
 
@@ -24,7 +24,7 @@ except:
 
 def GetUserConnectedClientsCount(username):
 	try:
-		from tagged_cache import TaggedCache
+		from common.tagged_cache import TaggedCache
 		apns_tokens = TaggedCache.get('apns|%s' % username)
 		count = 0
 		if apns_tokens:
@@ -46,15 +46,15 @@ def GetUserConnectedClientsCount(username):
 @asynchronous_task()
 def SendNotification(notification, username, count=0):
 	try:
-		from tagged_cache import TaggedCache
+		from common.tagged_cache import TaggedCache
 		apns_tokens = TaggedCache.get('apns|%s' % username)
 		apns_count = 0
 		if apns_tokens:
 			for token in apns_tokens:
 				message = notification.FromUser.username + " has"
-				userProfile = ShoutWebsite.controllers.user_controller.GetUser(username)
-				unread_conversations_num = ShoutWebsite.controllers.message_controller.UnReadConversationsCount(userProfile.User)
-				notifications_count = ShoutWebsite.controllers.notifications_controller.GetUserNotificationsWithoutMessagesCount(userProfile.User)
+				userProfile = apps.shoutit.controllers.user_controller.GetUser(username)
+				unread_conversations_num = apps.shoutit.controllers.message_controller.UnReadConversationsCount(userProfile.User)
+				notifications_count = apps.shoutit.controllers.notifications_controller.GetUserNotificationsWithoutMessagesCount(userProfile.User)
 				customMessage = {}
 				if notification.Type ==  NOTIFICATION_TYPE_FOLLOWSHIP:
 					message += " " + _("started listening to your shouts")
@@ -189,9 +189,9 @@ def UnbindUserFromPost(username, post):
 	except Exception, e:
 		print e.message
 
-from ShoutWebsite import utils
-from ShoutWebsite.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE
-import ShoutWebsite.controllers.message_controller
-import ShoutWebsite.controllers.notifications_controller
-import ShoutWebsite.controllers.user_controller
-from api.renderers import render_notification
+from apps.shoutit import utils
+from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE
+import apps.shoutit.controllers.message_controller
+import apps.shoutit.controllers.notifications_controller
+import apps.shoutit.controllers.user_controller
+from apps.shoutit.api.renderers import render_notification

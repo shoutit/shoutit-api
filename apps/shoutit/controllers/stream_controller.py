@@ -3,10 +3,10 @@ import time
 from django.db import connection
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
-from ShoutWebsite.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE
+from apps.shoutit.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE
 
-from ShoutWebsite.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Post, Trade
-import settings
+from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Post, Trade
+import apps.shoutit.settings
 
 def PublishShoutToShout(shout, other):
 	rank = 0.0
@@ -449,5 +449,5 @@ def GetRankedStreamShouts(stream):
 		return [shout.Shout.trade for shout in shouts]
 	else: return []
 
-from ShoutWebsite import utils
-from ShoutWebsite.models import Stream, ShoutWrap, Shout, Tag, StoredImage
+from apps.shoutit import utils
+from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage

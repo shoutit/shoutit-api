@@ -3,8 +3,8 @@ from django.template.context import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
-from ShoutWebsite.utils import asynchronous_task
-import settings
+from apps.shoutit.utils import asynchronous_task
+import apps.shoutit.settings
 
 @asynchronous_task()
 def SendEmail(email, variables, html_template, text_template):
@@ -213,16 +213,16 @@ def SendSellOfferEmail(shout, seller):
 def SendMessageEmail(message):
 	user = message.ToUser
 
-	if not user.is_active and ShoutWebsite.controllers.user_controller.GetProfile(user).Mobile:
+	if not user.is_active and apps.shoutit.controllers.user_controller.GetProfile(user).Mobile:
 		shout = message.Conversation.AboutPost
 		content = utils.RemoveNonAscii(shout.Item.Name)
 		title = utils.get_shout_name_preview(content,25)
-		link = 'shoutit.com/' + ShoutWebsite.controllers.user_controller.GetProfile(user).LastToken.Token
+		link = 'shoutit.com/' + apps.shoutit.controllers.user_controller.GetProfile(user).LastToken.Token
 		msg = utils.get_shout_name_preview(utils.RemoveNonAscii(message.Text),30)
 
 		text = _('A Shouter has replied to your ad \'%(shout_title)s\' on Shoutit, visit %(link)s to make your deal happen.\n-\n"%(message)s"') % {'shout_title' : title, 'link' : link, 'message' : msg}
-		mobile = ShoutWebsite.controllers.user_controller.GetProfile(user).Mobile
-		ShoutWebsite.controllers.sms_controller.SendSMS2('ShoutIt.com',mobile, text)
+		mobile = apps.shoutit.controllers.user_controller.GetProfile(user).Mobile
+		apps.shoutit.controllers.sms_controller.SendSMS2('ShoutIt.com',mobile, text)
 		return
 
 	subject = _('[ShoutIt] %(name)s has sent you a message') % {'name' : message.FromUser.get_full_name()}
@@ -479,6 +479,6 @@ def SendInvitationEmail(from_user, names_emails_dict):
 	connection = get_connection(backend = 'django.core.mail.backends.smtp.EmailBackend', fail_silently = True, host = settings.SEND_GRID_SMTP_HOST, username = settings.SEND_GRID_SMTP_USERNAME, password = settings.SEND_GRID_SMTP_PASSWORD)
 	connection.send_messages(messages)
 	
-from ShoutWebsite import constants, utils
-import ShoutWebsite.controllers.sms_controller
-import ShoutWebsite.controllers.user_controller
+from apps.shoutit import constants, utils
+import apps.shoutit.controllers.sms_controller
+import apps.shoutit.controllers.user_controller

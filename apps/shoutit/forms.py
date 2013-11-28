@@ -7,11 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.extras.widgets import SelectDateWidget
-from ShoutWebsite import constants, utils
-from ShoutWebsite.constants import ExperienceState
-from ShoutWebsite.controllers import user_controller
-from ShoutWebsite.models import Currency, BusinessProfile, BusinessCategory, BusinessCreateApplication
-from tagged_cache import TaggedCache
+from apps.shoutit import constants, utils
+from apps.shoutit.constants import ExperienceState
+from apps.shoutit.controllers import user_controller
+from apps.shoutit.models import Currency, BusinessProfile, BusinessCategory, BusinessCreateApplication
+from common.tagged_cache import TaggedCache
 
 def _get_currencies():
 	currencies = TaggedCache.get('perma|currencies')

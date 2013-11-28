@@ -10,10 +10,12 @@ from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from django.db.models import Min
 
-from subscription.signals import subscribed, unsubscribed
+# PAUSE: Payment
+#from subscription.signals import subscribed, unsubscribed
+
 from apps.ActivityLogger.models import Request
 from apps.shoutit import settings
-from ShoutWebsite.constants import *
+from apps.shoutit.constants import *
 
 
 class PostManager(models.Manager):
@@ -321,7 +323,7 @@ class Shout(Post):
 		if hasattr(self, 'images'):
 			return self.images
 		else:
-			from ShoutWebsite.constants import POST_TYPE_EXPERIENCE
+			from apps.shoutit.constants import POST_TYPE_EXPERIENCE
 			if self.Type == POST_TYPE_EXPERIENCE:
 				self.images = list(self.Images.all().order_by('Image'))
 			else:
@@ -332,7 +334,7 @@ class Shout(Post):
 		return self.GetImages()[0]
 
 	def SetImages(self, images):
-		from ShoutWebsite.constants import POST_TYPE_EXPERIENCE
+		from apps.shoutit.constants import POST_TYPE_EXPERIENCE
 		images = sorted(images, key=lambda img: img.Image)
 		if self.Type == POST_TYPE_EXPERIENCE:
 			self.images = images
@@ -919,6 +921,7 @@ class ServiceManager(models.Manager):
 			}
 		}).values('used_count', 'buys_count')
 
+
 class ServiceBuy(models.Model):
 	User = models.ForeignKey(User, related_name='Services')
 	Service = models.ForeignKey('Service', related_name='Buyers')
@@ -926,6 +929,7 @@ class ServiceBuy(models.Model):
 	DateBought = models.DateTimeField(auto_now_add = True)
 
 	objects = ServiceManager()
+
 
 class ServiceUsage(models.Model):
 	User = models.ForeignKey(User, related_name='ServicesUsages')
@@ -943,51 +947,52 @@ class Subscription(models.Model):
 	UserName = models.CharField(max_length=64)
 	Password = models.CharField(max_length=24)
 
-#PAYPAL
+#PAUSE: PAYPAL
 
-from paypal.standard.ipn.signals import payment_was_successful, payment_was_flagged,subscription_signup,subscription_cancel
-from paypal.standard.pdt.views import pdt
-import re
+#from paypal.standard.ipn.signals import payment_was_successful, payment_was_flagged,subscription_signup,subscription_cancel
+#from paypal.standard.pdt.views import pdt
+#import re
+#
+#def paypal_payment_flag(sender, **kwargs):
+#	import apps.shoutit.controllers.payment_controller
+#	#('Active', 'Cancelled', 'Cleared', 'Completed', 'Denied', 'Paid', 'Pending', 'Processed', 'Refused', 'Reversed', 'Rewarded', 'Unclaimed', 'Uncleared')
+#	ipn_obj = sender
+#	regex = re.compile(r'(\w+)_(\w+)_User_([^_]+)(?:_x_(\d+))?')
+#	match = regex.match(ipn_obj.invoice)
+#	transaction_data = 'PayPal TXN %s#%s by %s (%s)' % (ipn_obj.txn_type, ipn_obj.txn_id, ipn_obj.payer_id, ipn_obj.payer_email)
+#	transaction_identifier = 'PayPal#%s' % ipn_obj.txn_id
+#	if match:
+#		item_type, item_id, user_id, amount = match.groups()
+#		if ipn_obj.payment_status in ['Completed', 'Paid']:
+#			if item_type == 'Deal':
+#				apps.shoutit.controllers.payment_controller.PayForDeal(int(user_id), item_id, amount, transaction_data, transaction_identifier)
+#			elif item_type == 'Service':
+#				apps.shoutit.controllers.payment_controller.PayForService(int(user_id), item_id, amount, transaction_data, transaction_identifier)
+#		elif ipn_obj.payment_status in ['Cancelled', 'Reversed', 'Refunded']:
+#			transaction_identifier = 'PayPal#%s' % ipn_obj.parent_txn_id
+#			if item_type == 'Deal':
+#				apps.shoutit.controllers.payment_controller.CancelPaymentForDeal(int(user_id), item_id, transaction_data, transaction_identifier)
+#			elif item_type == 'Service':
+#				apps.shoutit.controllers.payment_controller.CancelPaymentForService(int(user_id), item_id, transaction_data, transaction_identifier)
 
-def paypal_payment_flag(sender, **kwargs):
-	import ShoutWebsite.controllers.payment_controller
-	#('Active', 'Cancelled', 'Cleared', 'Completed', 'Denied', 'Paid', 'Pending', 'Processed', 'Refused', 'Reversed', 'Rewarded', 'Unclaimed', 'Uncleared')
-	ipn_obj = sender
-	regex = re.compile(r'(\w+)_(\w+)_User_([^_]+)(?:_x_(\d+))?')
-	match = regex.match(ipn_obj.invoice)
-	transaction_data = 'PayPal TXN %s#%s by %s (%s)' % (ipn_obj.txn_type, ipn_obj.txn_id, ipn_obj.payer_id, ipn_obj.payer_email)
-	transaction_identifier = 'PayPal#%s' % ipn_obj.txn_id
-	if match:
-		item_type, item_id, user_id, amount = match.groups()
-		if ipn_obj.payment_status in ['Completed', 'Paid']:
-			if item_type == 'Deal':
-				ShoutWebsite.controllers.payment_controller.PayForDeal(int(user_id), item_id, amount, transaction_data, transaction_identifier)
-			elif item_type == 'Service':
-				ShoutWebsite.controllers.payment_controller.PayForService(int(user_id), item_id, amount, transaction_data, transaction_identifier)
-		elif ipn_obj.payment_status in ['Cancelled', 'Reversed', 'Refunded']:
-			transaction_identifier = 'PayPal#%s' % ipn_obj.parent_txn_id
-			if item_type == 'Deal':
-				ShoutWebsite.controllers.payment_controller.CancelPaymentForDeal(int(user_id), item_id, transaction_data, transaction_identifier)
-			elif item_type == 'Service':
-				ShoutWebsite.controllers.payment_controller.CancelPaymentForService(int(user_id), item_id, transaction_data, transaction_identifier)
+#payment_was_successful.connect(paypal_payment_flag)
+#payment_was_flagged.connect(paypal_payment_flag)
 
-payment_was_successful.connect(paypal_payment_flag)
-payment_was_flagged.connect(paypal_payment_flag)
-
-def business_subscribed(sender, **kwargs):
-	user = kwargs['user']
-	application = user.BusinessCreateApplication.all()[0]
-	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION
-	application.save()
-
-def business_unsubscribed(sender, **kwargs):
-	user = kwargs['user']
-	application = user.BusinessCreateApplication.all()[0]
-	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT
-	application.save()
-
-subscribed.connect(business_subscribed)
-unsubscribed.connect(business_unsubscribed)
+# taken own payments for now
+#def business_subscribed(sender, **kwargs):
+#	user = kwargs['user']
+#	application = user.BusinessCreateApplication.all()[0]
+#	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION
+#	application.save()
+#
+#def business_unsubscribed(sender, **kwargs):
+#	user = kwargs['user']
+#	application = user.BusinessCreateApplication.all()[0]
+#	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT
+#	application.save()
+#
+#subscribed.connect(business_subscribed)
+#unsubscribed.connect(business_unsubscribed)
 
 
 class PredefinedCity(models.Model):

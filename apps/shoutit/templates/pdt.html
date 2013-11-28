@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load template_filters %}
+{% load i18n %}
+{% block content %}
+    <div class="box-container white-container round shadow" style="margin-left: auto; margin-right: auto; text-align: center;">
+        {% if failed %}
+            You payment failed, you won't be charged any money.
+        {% else %}
+            Thank you for your payment. Your transaction has been completed, and a receipt for your purchase has been emailed to you. You may log into your account at paypal.com to view details of this transaction.
+        {% endif %}
+    </div>
+{% endblock %}
+{% block scripts %}
+{% endblock %}

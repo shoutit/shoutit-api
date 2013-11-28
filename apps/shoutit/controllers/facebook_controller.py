@@ -1,8 +1,8 @@
 from django.core.exceptions import ObjectDoesNotExist
 import json
-from ShoutWebsite.controllers.user_controller import LoginWithoutPassword, SignUpFB
-from ShoutWebsite.models import LinkedFacebookAccount
-import settings
+from apps.shoutit.controllers.user_controller import LoginWithoutPassword, SignUpFB
+from apps.shoutit.models import LinkedFacebookAccount
+import apps.shoutit.settings
 import urllib2, urllib, urlparse
 
 def Auth(request, authResponse):

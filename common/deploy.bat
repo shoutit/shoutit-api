@@ -1,0 +1,1 @@
+fab deploy:no_db=1

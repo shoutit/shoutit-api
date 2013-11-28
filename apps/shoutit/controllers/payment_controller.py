@@ -3,10 +3,10 @@ import re
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from paypal.standard.forms import PayPalEncryptedPaymentsForm
-from ShoutWebsite import utils
+from apps.shoutit import utils
 
-from ShoutWebsite.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency
-import settings
+from apps.shoutit.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency
+import apps.shoutit.settings
 
 CONCURRENT_DEALS_SERVICE = 'CONCURRENT_DEALS'
 
@@ -37,7 +37,7 @@ def UpdateOrCreateTransaction(remote_transaction_identifier, remote_transaction_
 	return transaction, old_status
 
 def PayForDeal(user, deal, amount, remote_transaction_data, remote_transaction_identifier):
-	import ShoutWebsite.controllers.deal_controller as deal_controller
+	import apps.shoutit.controllers.deal_controller as deal_controller
 
 	if not amount:
 		amount = 1

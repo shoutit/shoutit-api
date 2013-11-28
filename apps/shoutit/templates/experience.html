@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load template_filters %}
+{% load i18n %}
+{% block fb_og_meta %}
+	<meta property="og:type"         content="shoutitcom:experience" />
+	<meta property="og:url"          content="{% shout_link experience %}" />
+	<meta property="og:title"        content="{{ page_title }}" />
+	<meta property="og:description"  content="{{ page_desc }}" />
+	<meta property="og:image"        content="/static/new_design/img/fb_og_{% if experience.State == 0 %}bad{% else %}good{% endif %}_experience.png" />
+{#	<meta property="shoutitcom:with" content="http://shoutit.no-ip.org:8000/user/1779535550/" />#}
+{% endblock %}
+	{% block content %}
+<div class="page_content">
+<div class="left-column">
+    <div class="box-container white-container round shadow experience" style="margin-left: auto; margin-right: auto; text-align: center;">
+            <div class="box-content">
+				{% set detailed = 1 %}
+                {% include 'experience_in_stream.html' %}
+            </div>
+    </div>
+</div>
+<div class="right-column">
+	<div class="box-container white-container round shadow profile-brief">
+		<div class="user-image pull-left">
+			<img class="round" width="95" height="95" src="{{ experience.AboutBusiness.Image|secure_url }}" alt="{{ experience.AboutBusiness.name }}'s profile picture">
+		</div>
+		<div class="user-name">
+			<a href="/user/{{ experience.AboutBusiness.username }}/">{{ experience.AboutBusiness.Name }}</a>
+		</div>
+		<div class="business-experiences">
+			<div class="thumb-up">
+				<span class="user-icon-thumbup"></span>
+				<span class="count">{{ thumb_up_count }}</span>
+			</div>
+			<div class="thumb-down">
+				<span class="user-icon-thumbdown"></span>
+				<span class="count">{{ thumb_down_count }}</span>
+			</div>
+		</div>
+	</div>
+	<div class="box-container white-container round shadow public-events experience-event">
+		<div class="box-header">{% trans "Experiences of" %} {{ experience.AboutBusiness.Name }} </div>
+		{% for experience in recent_experiences %}
+			{% set detailed = 2 %}
+			{% include 'experience_in_stream.html' %}
+		{% endfor %}
+	</div>
+</div>
+</div>
+		<div style="clear: both;"></div>
+{% endblock %}
+
+
+{% block scripts %}
+<script type="text/javascript" language="JavaScript">
+    function report_experience(id){
+        report(id,{{ report_constants|key:"Experience" }});
+    }
+
+    function report_comment(id){
+        report(id,{{ report_constants|key:"Comment" }});
+    }
+
+    $(document).ready(function () {
+//        $('form#report_form').submitAjaxily(function(){
+//            $('#ReportModal').modal('hide')
+//        });
+        $('form.comment_on_experience_form').submitAjaxily(function(data){
+            $(this).parent().children().first().append(data.data['text']);
+        });
+        setup_modal('#experience_edit_modal', '/modal/experience_edit/', '#edit_experience', function () {});
+    });
+</script>
+{% endblock %}

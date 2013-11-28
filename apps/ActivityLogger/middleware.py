@@ -1,5 +1,6 @@
 from piston.authentication.oauth.utils import get_oauth_request
 from psycopg2._psycopg import DatabaseError
+
 from apps.ActivityLogger.models import Request
 
 class ActivityLogger(object):

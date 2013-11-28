@@ -1,0 +1,79 @@
+{% load template_filters %}
+{% load i18n %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+	<title>Facebook Share</title>
+	<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
+	<script type="text/javascript">
+		var RunCallbackFunction = function(data) {
+			window.opener.FBShareDone(data);
+		}; //reference holder only
+	</script>
+</head>
+<body class="">
+	<a href="#" class="fb-share-button">Share the contest with your friends</a>
+	<br>
+	<br>
+	[Please allow Pop-up and try again]
+<div id="fb-root"></div>
+<script>
+
+	function FBShare(){
+		//		var feed = {
+//			message: "Shout & Win!",
+//			link: "http://www.facebook.com/pages/Shout-It/327771573931845?sk=app_233904736709818",
+//			picture:"http://www.syrex.me/asd.png",
+//			name: "Shout & Win",
+//			caption: "Shout your requests and offers to the local community and win the new iPad 3.",
+//			description: "Here is what you have to do",
+//			properties:{
+//				"1":{"text":"Log on to Shoutit with your Facebook account","href":"http://www.shoutit.com/"},
+//				"2":{"text":"Share the contest", "href":"http://www.facebook.com/pages/Shout-It/327771573931845?sk=app_233904736709818"},
+//				"3":"Done :)"
+//			}
+//		};
+//		FB.api('/me/feed', 'post', feed, callback);
+
+		var feed = {
+			method: "feed",
+			link: "http://www.facebook.com/pages/Shout-It/327771573931845?sk=app_233904736709818",
+			picture:"http://www.syrex.me/contest.jpg",
+			name: "Win an iPad 3!",
+			caption: "Follow these simples steps to enter our exclusive competition for Shoutit users and you could win a brand new iPad 3.",
+			description: "Don’t miss out – enter now!",
+			properties:{
+				"1":{"text":"Log in to Shoutit via your Facebook account","href":"http://www.shoutit.com/"},
+				"2":{"text":"Share this contest with your friends", "href":"http://www.facebook.com/pages/Shout-It/327771573931845?sk=app_233904736709818"},
+				"3":"Done, You are qualified"
+			}
+		};
+		FB.ui(feed, RunCallbackFunction);
+
+	}
+
+	window.fbAsyncInit = function() {
+		FB.init({
+			appId      : '353625811317277',
+			status     : true,
+			cookie     : true,
+			xfbml      : true,
+			oauth      : true
+		});
+		FBShare();
+	};
+	(function(d){
+		var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "//connect.facebook.net/en_US/all.js";
+		d.getElementsByTagName('head')[0].appendChild(js);
+	}(document));
+
+	$(document).ready(function(){
+		$('.fb-share-button').click(function () {
+			FBShare();
+		});
+	});
+</script>
+
+</body>
+</html>

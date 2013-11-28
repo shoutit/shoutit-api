@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block styles %}
+{% endblock %}
+
+
+{% block content %}
+<div class="span12 offset2">
+
+{#<form method="post" id="tagControl">#}
+{#{% csrf_token %}#}
+{#<table>#}
+{#<tr>#}
+{#    <td>Parent Tags</td>#}
+{#    <td>Remove From Parents</td>#}
+{#</tr>#}
+{#{% for parentTag in parentTags %}#}
+{#<tr>#}
+{#    <td> {{ parentTag.Name }}</td>#}
+{#    <td> <input type="checkbox" name="tag{{ parentTag.id }}"  > </td>#}
+{#</tr>#}
+{#{% endfor %}#}
+{#</table>#}
+{#<input type="submit" class="btn primary" name="Remove" value="Remove">#}
+{#</form>#}
+
+<form method="post" id="tagControl">
+{% csrf_token %}
+    <div align="left">
+        New Tag <input type="text" name="NewTag">
+        <br><br><input type="submit" class="btn primary" value="Add">
+    </div>
+</form>
+
+
+
+<form method="post">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Tags</td>
+    <td>Parent</td>
+</tr>
+{% for tag in allTags  %}
+    <tr>
+        <td>{{ tag.Name }}</td>
+        <td>
+            <select name="tag{{ tag.id }}">
+                    {% if tag.Parent != Null %}
+                        <option selected="selected" >
+                        {{ tag.Parent.Name }}
+                        </option>
+                        <option> ----- </option>
+                    {% else %}
+                        <option selected="selected"> ----- </option>
+                    {% endif %}
+
+                {% for parentTag in allTags %}
+                    {% if parentTag != tag.Parent and parentTag != tag %}
+                        <option>{{ parentTag.Name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </td>
+    </tr>
+{% endfor %}
+</table>
+{#<input type="submit" class="btn primary" name="Save" value="Save">#}
+</form>
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function(){
+        $('select[name^=tag]').change(function(){
+            changedEle = $(this)[0];
+            child_id = changedEle['name'].substr(3);
+            parent_name = $(changedEle[changedEle.selectedIndex]).html();
+            var post_data = {child_id : child_id , parent_name : parent_name};
+            requestAjaxily({
+                url : '/xhr/setTagParent',
+                data : post_data ,
+                type : 'GET' ,
+                successCallback:function(data){
+//                    $('#ShowMap').html(city);
+                } 
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,5 +1,5 @@
-import ShoutWebsite
-from ShoutWebsite.constants import *
+import apps.shoutit
+from apps.shoutit.constants import *
 
 def GetBusinessGalleryItems(business,start_index = None, end_index = None):
 	gallery = GetBusinessGallery(business)
@@ -56,7 +56,7 @@ def ShoutItem(request, business, item, text, longitude, latitude, country_code, 
 	trade.save()
 
 	stream.PublishShout(trade)
-	for tag in ShoutWebsite.controllers.tag_controller.GetOrCreateTags(request, tags, business):
+	for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, business):
 		trade.Tags.add(tag)
 		tag.Stream.PublishShout(trade)
 
@@ -71,6 +71,6 @@ def ShoutItem(request, business, item, text, longitude, latitude, country_code, 
 	return trade
 
 
-from ShoutWebsite import constants, utils
-from ShoutWebsite.controllers import event_controller,shout_controller,item_controller
-from ShoutWebsite.models import GalleryItem, Item, Post, Trade, StoredImage
+from apps.shoutit import constants, utils
+from apps.shoutit.controllers import event_controller,shout_controller,item_controller
+from apps.shoutit.models import GalleryItem, Item, Post, Trade, StoredImage

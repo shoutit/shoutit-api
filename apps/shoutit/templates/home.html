@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load template_filters %}
+
+{% block content %}
+{#	Top column#}
+
+<div class="modal fade" id="MapModal">
+    <div class="modal-header">
+        <a href="#" class="close">×</a>
+        <h4>Specify Your Location</h4>
+    </div>
+    <div align="center" class="modal-body" >
+        <div id="Map" style="width: 525px; height: 300px; position: relative; overflow-x: hidden; overflow-y: hidden; "></div>
+	</div>
+    <div class="modal-footer">
+        <a id="save_location" class="btn primary "> Save </a>
+        <input type="text" id="id_location" style="display:none;">
+    </div>
+</div>
+
+{#	left column#}
+	<div class="span3">
+
+		<div class="shout_user_image_welcome clearfix">
+			<a href="/user/{{ user.username }}/" title="{{ user.username }}">
+				<img src="/xhr/user/{{ user.username }}/picture/50/" alt="{{ user.username }}">
+				<span>{{ user.username }}</span>
+			</a>
+		</div>
+
+		<h4>Shouts Feed</h4>
+
+		<div class="shout_filter_tags clearfix">
+			{% include 'filter_banner.html' %}
+		</div>
+	</div>
+
+	<div class="span13">
+		<div class="row">
+
+			<div class="span5 offset2">
+				<input type="text" size="30" name="home_search" id="home_search_box" class="xlarge" placeholder="Search for nearby shouts...">
+			</div>
+			<div class="span4 offset2" align="right">
+	{#			<select id="mediumSelect" name="mediumSelect" class="small rfloat">#}
+	{#                <option selected>Dubai</option>#}
+	{#                <option>Abu Dhabi</option>#}
+	{#                <option>Sharjah</option>#}
+	{#              </select>#}
+			<a id="ShowMap" class="btn large " data-controls-modal="MapModal" data-backdrop="static">{% if user.Profile.City != "" %}{{user.Profile.City}}{% else %}Location{% endif %}</a>
+			</div>
+		</div>
+	</div>
+
+{#	main column#}
+	<div class="span9">
+		<div class="stream">
+			<h4>People are Shouting</h4>
+            <div id="stream_container">
+                {% include 'stream.html' %}
+            </div>
+		</div>
+	</div>
+
+{#	right column#}
+	<div class="span4">
+		<div class="shout_top_tags clearfix">
+			<h5>Top Tags</h5>
+			<ul class="unstyled">
+                {% for tag in top_tags %}
+                    <li><a class="post_tag hovercard unselectable" hovercard-name="{{ tag|key:'Name' }}" hovercard-type="tag" hovercard-data="" href="/tag/{{ tag|key:'Name' }}/">{{ tag|key:'Name' }}</a></li>
+                {% endfor %}
+			</ul>
+		</div>
+	</div>
+
+    <div class="span4">
+        <h5>Now Shouting</h5>
+		<div class="clearfix live_shouts">
+			<ul id="live_shouts" class="unstyled">
+			</ul>
+		</div>
+	</div>
+
+    <div class="span4">
+		<div class="shout_top_tags clearfix">
+			<h5>Categories: (yacc!)</h5>
+			<ul class="unstyled">
+                {% for category in categories %}
+                    <li><a class="post_tag unselectable" onclick="filterByCat('{{ category.Name }}')">{{ category.Name }}</a></li>
+                {% endfor %}
+			</ul>
+		</div>
+	</div>
+    
+{% endblock %}
+
+{% block scripts %}
+<script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
+<script src="/static/js/googlemap.js"></script>
+<script>
+    var timeout = null;
+    var lastSearch = null;
+
+	$('.filter_option').change(function () {
+		search();
+	});
+
+    $('#home_search_box').keyup(function(event){
+        if (timeout != null)
+            clearTimeout(timeout);
+        if ($(this).val() == "" && lastSearch!="")
+            endSearch();
+        else {
+            if ($(this).val() != lastSearch)
+                timeout = setTimeout("search();", 1000);
+        }
+    });
+
+    var lat = {{user.Profile.Latitude}};
+    var lng = {{user.Profile.Longitude}};
+
+    $('#save_location').click(function(){
+        lat = $('#id_location').val().split(",")[0];
+        lng = $('#id_location').val().split(",")[1];
+        var post_data = {latlong : $('#id_location').val()};
+        requestAjaxily({
+            url : '/xhr/updateUserLocation',
+            data : post_data ,
+            type : 'GET' ,
+            successCallback:function(data){
+                if (data.data.city != undefined){
+                    if ($('#ShowMap').text() != data.data.city){
+                        requestAjaxily({
+                            url : '/xhr/shouts/stream',
+                            data : {} ,
+                            type : 'GET' ,
+                            successCallback:function(data){
+                                $('#stream_container').html(data.data.html);
+                                reset_stream('/xhr/shouts/stream/');
+                            }
+                        });
+                    }
+                    $('#ShowMap').html(data.data.city);
+                    $('#MapModal').modal('hide');
+                }
+            }
+        });
+    });
+
+    function filterByCat(cat)
+    {
+        var post_data = {category : cat};
+        $('#stream_container').html('');
+            reset_stream('/xhr/shouts/stream/');
+            set_stream_data('/xhr/shouts/stream/', post_data);
+            refresh_stream('/xhr/shouts/stream/');
+    }
+
+    function search(){
+        var query = $('#home_search_box').val();
+        lastSearch = query;
+
+        if (query.length > 0) {
+            var checked_boxes = $('.filter_option:checked');
+            var checked_tags = [];
+            var checked_types = [];
+            var checked_orders = [];
+
+            if (checked_boxes.length > 0)
+                checked_tags = checked_boxes.filter(function (index) { return $(this).attr('id') == "tag_filter" });
+                checked_types = checked_boxes.filter(function (index) { return $(this).attr('id') == "type_filter" });
+                checked_orders = checked_boxes.filter(function (index) { return $(this).attr('id') == "order_filter" });
+
+            var checked_ids = new Array();
+            for (var i = 0; i < checked_tags.length; i++)
+                checked_ids.push(checked_tags[i].value);
+
+            var types = new Array();
+            for (i = 0; i < checked_types.length; i++)
+                switch(checked_types[i].value)
+                {
+                    case 'buys':
+                        types.push("0");
+                        break;
+                    case 'sells':
+                        types.push("1");
+                        break;
+                    case 'experiences':
+                        types.push("2");
+                        break;
+                }
+
+            var order = 0;
+            for (i = 0; i < checked_orders.length; i++)
+                switch(checked_orders[i].value)
+                {
+                    case 'time_order':
+                        order = (order | {{ constants|key:"Time" }});
+                        break;
+                    case 'price_order':
+                        order = (order | {{ constants|key:"Price" }});
+                        break;
+                    case 'location_order':
+                        order = (order | {{ constants|key:"Distance" }});
+                        break;
+                }
+
+            var post_data = {tag_ids : checked_ids, shout_types : types,shouts_order : order, query : query};
+
+            $('#stream_container').html('');
+            reset_stream('/xhr/shouts/stream/');
+            set_stream_data('/xhr/shouts/stream/', post_data);
+            refresh_stream('/xhr/shouts/stream/');
+        }
+    }
+
+    function endSearch(){
+        $('#stream_container').html('');
+        reset_stream('/xhr/shouts/stream/');
+        refresh_stream('/xhr/shouts/stream/');
+    }
+
+    $(document).ready(function () {
+        startLiveShoutsPolling('/xhr/shouts/livetimeline/', '#live_shouts');
+        register_stream('/xhr/shouts/stream/', '#stream_container', 0);
+        {% if user.Profile.Latitude and user.Profile.Longitude %}
+            CreateProfileMap( {{user.Profile.Latitude}} , {{user.Profile.Longitude}} , "Map");
+        {% else %}
+            CreateShoutMap("Map");
+        {% endif %}
+
+        $('#ShowMap').click(function(){
+            if (lat != 0 && lng != 0)
+                refreshLocation( lat , lng);
+        });
+
+        $('#MapModal').modal({
+            keyboard: true ,
+            backdrop: true
+        });
+
+        fix_stream();
+        $('#tag_filter_input').tagsInput({
+            autocomplete_url:'/xhr/search/tag/',
+            autocomplete:{
+                autoFocus:true, minLength:1, delay:300,
+                source: function(request, response) {
+                    $.ajax({
+                        url: "/xhr/search/tag/",
+                        dataType: "json",
+                        data: {
+                            term: request.term
+                        },
+                        success: function(data) {
+                            //map the data into a response that will be understood by the autocomplete widget
+                            data = data.data
+                            response($.map(data, function(item) {
+                                return {
+                                    label: item,
+                                    value: item
+                                }
+                            }));
+                        }
+                    });
+                }
+            }
+            ,
+            'height':'100px',
+            'width':'150px',
+            'interactive':true,
+            'delimiter': [' ',','],
+            'defaultText':'add a tag',
+            'onAddTag':null,
+            'onRemoveTag':null,
+            'onChange' : null,
+            'removeWithBackspace' : true,
+            'minChars' : 2,
+            'maxChars' : 30, //if not provided there is no limit,
+            'placeholderColor' : '#808080',
+            max_tags:5
+        });
+    });
+
+</script>
+{% endblock %}

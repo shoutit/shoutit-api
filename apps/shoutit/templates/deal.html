@@ -1,0 +1,58 @@
+{% load template_filters %}
+{% load i18n %}
+<div class="deal">
+	<div class="businesse-icon-deal"></div>
+<div class="deal-image">
+	{% if deal.GetImages %}
+		{% for image in deal.GetImages %}
+			{% if forloop.counter0 == 0 %}
+				<div class="round shout-images shadow" rel="shout_{{ deal.pk|base62 }}" href="{{ image.Image|secure_url }}" style="background-image: url('{{ image.Image|thumbnail:145|secure_url }}');">
+			{% else %}
+				<a href="{{ image.Image|secure_url }}" rel="shout_{{ deal.pk|base62 }}" style="display: none;"></a>
+			{% endif %}
+		{% endfor %}
+	<i class="icon-search"></i>
+				</div>
+	{% else %}
+		<div class="round shout-images shadow">
+			<i class="icon-search"></i>
+		</div>
+	{% endif %}
+
+	<div class="shadow deal-buyers">0 Buys</div>
+	<div class="shadow countdown"><span>Valid </span><span title="{{ deal.ExpiryDate|ISO8601 }}" class="deal-ticker"></span></div>
+</div>
+	<div class="deal-details">
+    <span class="deal-title"> {{ deal.Item.Name }}</span>
+    <span class="deal-description"> {{ deal.Text }}</span>
+	<span class="deal-time">1 hour ago </span>...
+	{#ask nour what we need from here#}
+    <span class="deal-Price"> {{ deal.Item.Price|price:deal.Item.Currency.Code }}</span>
+    {% if deal.MinBuyers %}
+        <p><b>Min Buyers</b> {{ deal.MinBuyers }}</p>
+    {% endif %}
+    {% if deal.MaxBuyers %}
+        <p><b>Max Buyers</b> {{ deal.MaxBuyers }}</p>
+    {% endif %}
+    {% if deal.IsClosed %}
+        <p>Closed</p>
+    {% else %}
+        <p>Open</p>
+    {% endif %}
+    <p><b>Original Price</b> {{ deal.OriginalPrice|price:deal.Item.Currency.Code }}</p>
+    <p><b>Country Code</b> {{ deal.CountryCode }}</p>
+    <p><b>Province Code</b> {{ deal.ProvinceCode }}</p>
+    {% if deal.ValidFrom %}
+        <p><b>Valid From</b> {{ deal.ValidFrom|date }}</p>
+    {% endif %}
+    {% if deal.ValidTo %}
+        <p><b>Valid To</b> {{ deal.ValidTo|date }}</p>
+    {% endif %}
+    {% if deal.user_bought_deal %}
+        <p>You bought {{ deal.user_bought_deal }} voucher{{ deal.user_bought_deal|pluralize }} of this deal</p>
+    {% endif %}
+    {% if deal.buys_count %}
+        <p>{{ deal.buys_count }} voucher{{ deal.buys_count|pluralize }} were sold of this deal</p>
+    {% endif %}
+	</div>
+</div>

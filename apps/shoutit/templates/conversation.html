@@ -1,0 +1,28 @@
+{% load template_filters %}
+{% load i18n %}
+{% if request.user == conversation.FromUser %}
+    {% set right = 'True' %}
+{% else %}
+    {% set right = None %}
+{% endif %}
+<div class="message{% if right %} message-right{% endif %}">
+<div id="conversation_{{conversation.id|base62}}">
+    <div class="user-image pull-{% if right %}right{% else %}left{% endif %} shadow round">
+        <a href="/user/{{ conversation.With.username }}/" title="{{ conversation.With.name }}">
+            <img class="round" src="{{ conversation.With.Image|thumbnail:95|secure_url }}" alt="{{ conversation.With.name }}'s profile picture">
+        </a>
+    </div>
+{#    <div class="arrow-{% if right %}right{% else %}left{% endif %} pull-{% if right %}right{% else %}left{% endif %}"></div>#}
+    <div class="round shadow white-container pull-{% if right %}right{% else %}left{% endif %} message-content">
+        <span class="message-date pd" title="{{ conversation.DateCreated|ISO8601 }}">{{ conversation.DateCreated }}</span>
+        {% trans "you and" %} <a class="shout_message_with" href="/user/{{ conversation.With }}/">{{ conversation.With.name }}</a>
+        {% trans "about" %} <a class="shout_message_about" href="{% shout_link  conversation.AboutPost%}/">{{ conversation.AboutPost.Item.Name }}</a>
+        <br>{{ conversation.Text|linebreaksbr }}
+        <a class="shout_message_link btn" onclick="showMessagesAjaxly('{{conversation.id|base62}}')">{% trans "Read More" %}</a>
+        <div class="controls">
+            <a class="shout_message_delete" onclick="deleteConversation('{{conversation.id|base62}}',this)"><i class="icon-trash" title="delete conversation"></i></a>
+        </div>
+    </div>
+    <div style="clear: both;"></div>
+</div>
+</div>

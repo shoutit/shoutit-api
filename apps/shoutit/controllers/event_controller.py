@@ -1,9 +1,9 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-from ShoutWebsite.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, RealtimeType, REALTIME_TYPE_EVENT, EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG, EVENT_TYPE_SHOUT_REQUEST, EVENT_TYPE_EXPERIENCE, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_POST_DEAL, EVENT_TYPE_BUY_DEAL, EVENT_TYPE_GALLERY_ITEM, EVENT_TYPE_COMMENT, EVENT_TYPE_FOLLOW_BUSINESS
-from ShoutWebsite.utils import IntToBase62
-from api.renderers import render_event
+from apps.shoutit.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, RealtimeType, REALTIME_TYPE_EVENT, EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG, EVENT_TYPE_SHOUT_REQUEST, EVENT_TYPE_EXPERIENCE, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_POST_DEAL, EVENT_TYPE_BUY_DEAL, EVENT_TYPE_GALLERY_ITEM, EVENT_TYPE_COMMENT, EVENT_TYPE_FOLLOW_BUSINESS
+from apps.shoutit.utils import IntToBase62
+from apps.shoutit.api.renderers import render_event
 
 
 def RegisterEvent(user, type, attached_object=None):
@@ -12,7 +12,7 @@ def RegisterEvent(user, type, attached_object=None):
 	event = Event(OwnerUser = user,Type = POST_TYPE_EVENT, EventType = type, object_pk = pk, content_type=ct)
 	event.save()
 
-	profile = ShoutWebsite.controllers.user_controller.GetUser(user.username)
+	profile = apps.shoutit.controllers.user_controller.GetUser(user.username)
 	profile.Stream.PublishShout(event)
 #	realtime_message = realtime_controller.WrapRealtimeMessage(render_event(event),RealtimeType.values[REALTIME_TYPE_EVENT])
 #	realtime_controller.BroadcastRealtimeMessage(realtime_message,user_controller.GetProfile(user).City)
@@ -161,5 +161,5 @@ def GetDetailedEvents(events):
 
 
 
-from ShoutWebsite.models import Event,Tag,Trade,Experience,Deal,Comment,UserProfile,BusinessProfile, SharedExperience
-import ShoutWebsite.controllers.user_controller,realtime_controller,user_controller,shout_controller
+from apps.shoutit.models import Event,Tag,Trade,Experience,Deal,Comment,UserProfile,BusinessProfile, SharedExperience
+import apps.shoutit.controllers.user_controller,realtime_controller,user_controller,shout_controller

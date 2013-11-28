@@ -5,7 +5,7 @@ from django.conf import settings
 from django.http import QueryDict, HttpResponse
 from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
-from ShoutWebsite.constants import *
+from apps.shoutit.constants import *
 
 from django.utils.translation import ugettext as _
 

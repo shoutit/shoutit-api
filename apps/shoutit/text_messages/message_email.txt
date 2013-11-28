@@ -1,0 +1,12 @@
+Hello {{ to }},
+{{ from }} [{{ from_link }}] has sent you a message regarding your shout {{ shout_name }} [{{ shout_link }}]:
+----
+{{ message }}
+----
+To view this message on ShoutIt go to this url: {{ shout_link }}
+-------------------------------------------------------------------------------------
+Please do not reply to this email, your message won't be read or processed.
+
+
+Shoutit [http://www.shoutit.com]
+info@shout.com

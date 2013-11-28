@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-from api.renderers import render_notification
+from apps.shoutit.api.renderers import render_notification
 
 
 def MarkAllAsRead(user):
@@ -17,11 +17,11 @@ def NotifyUser(user, type, from_user=None, attached_object=None):
 		notification.IsRead = False
 		notification.save()
 
-	count = ShoutWebsite.controllers.realtime_controller.GetUserConnectedClientsCount(user.username)
+	count = apps.shoutit.controllers.realtime_controller.GetUserConnectedClientsCount(user.username)
 	if count:
-		ShoutWebsite.controllers.realtime_controller.SendNotification(notification, user.username, count)
-		realtime_message = ShoutWebsite.controllers.realtime_controller.WrapRealtimeMessage(render_notification(notification),RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
-		ShoutWebsite.controllers.realtime_controller.SendRealtimeMessage(realtime_message,user.username)
+		apps.shoutit.controllers.realtime_controller.SendNotification(notification, user.username, count)
+		realtime_message = apps.shoutit.controllers.realtime_controller.WrapRealtimeMessage(render_notification(notification),RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
+		apps.shoutit.controllers.realtime_controller.SendRealtimeMessage(realtime_message,user.username)
 
 
 def NotifyUserOfFollowship(user, follower):
@@ -53,6 +53,6 @@ def GetUserNotificationsWithoutMessagesCount(user):
 	return Notification.objects.filter( Q(IsRead=False) & Q(ToUser=user) & ~Q(Type = NOTIFICATION_TYPE_MESSAGE)).count()
 
 
-from ShoutWebsite.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_BADGE_EARNED, NOTIFICATION_TYPE_BADGE_REVOKED, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
-import ShoutWebsite.controllers.realtime_controller
-from ShoutWebsite.models import Notification
+from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_BADGE_EARNED, NOTIFICATION_TYPE_BADGE_REVOKED, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
+import apps.shoutit.controllers.realtime_controller
+from apps.shoutit.models import Notification

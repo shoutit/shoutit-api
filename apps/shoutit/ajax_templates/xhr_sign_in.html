@@ -1,0 +1,24 @@
+<form method="post" action="/xhr/signin/" id="xhr_sign_in_form">
+    {% csrf_token %}
+    <table>
+        <tr>
+            <td>Username or Email</td>
+            <td><div class="clearfix">{{ form.username_or_email }}</div></td>
+        </tr>
+        <tr>
+            <td>Password</td>
+            <td><div class="clearfix">{{ form.password }}</div></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><div class="actions"><input class="btn unselectable" type="submit" value="Sign In" id="xhr_sign_in_submit" /></div></td>
+        </tr>
+    </table>
+    <input type="hidden" name="next" value="{{ next }}" />
+</form>
+You don't have an account? Sign up <a href='/signup/'>here</a> for a Shout! account.
+<script type="text/javascript" language="javascript">
+    $('form#xhr_sign_in_form').submitAjaxily(function (data) {
+        $('body').trigger('signin_ok', [data.data.username]);
+    });
+</script>

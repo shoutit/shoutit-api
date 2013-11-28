@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load template_filters %}
+{% load i18n %}
+{% block content %}
+<div class="box-container white-container round shadow" style="margin-left: auto; margin-right: auto; text-align: center;">
+    {% if form %}
+        {{ form.sandbox }}
+        <div>NOTE: Please be aware that PayPal does not accept all currencies so you'll have to pay in dollars.</div>
+    {% endif %}
+    {% if sform %}
+        {{ sform.sandbox }}
+        <div>NOTE: Please be aware that PayPal does not accept all currencies so you'll have to pay in dollars.</div>
+    {% endif %}
+    {% if cpsp_dict %}
+        <form action="https://cpsp.v-psp.com/ncol/test/orderstandard.asp" method="post">
+            {% for k, v in cpsp_dict.iteritems %}
+                <input type="hidden" name="{{ k }}" value="{{ v }}">
+            {% endfor %}
+            <input type="submit" value="Submit">
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+{% endblock %}

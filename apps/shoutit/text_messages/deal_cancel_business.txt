@@ -1,0 +1,9 @@
+{% load template_filters %}
+Hello {{ to }},
+We are sorry to tell you that your deal {{ deal_name }} ({{ deal_link }}) has been cancelled due to lack of buyers.
+-------------------------------------------------------------------------------------
+Please do not reply to this email, your message won't be read or processed.
+
+
+Shoutit [http://www.shoutit.com]
+info@shout.com

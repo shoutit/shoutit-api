@@ -8,4 +8,4 @@ def CreateReport(user, text, attached_object=None):
 #	Send event to related user (user followers | users in the same city)
 
 
-from ShoutWebsite.models import Report
+from apps.shoutit.models import Report

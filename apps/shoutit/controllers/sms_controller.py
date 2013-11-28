@@ -3,8 +3,8 @@ import urllib
 import urllib2
 from suds.client import Client
 from xml.dom.minidom import parseString
-from ShoutWebsite.utils import asynchronous_task
-import settings
+from apps.shoutit.utils import asynchronous_task
+import apps.shoutit.settings
 
 def LogIn():
 	client = Client(settings.SMS_SERVICE_WSDL_URL)

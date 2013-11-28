@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load template_filters %}
+{% load i18n %}
+{% block fb_og_meta %}
+	<meta property="og:type"   content="shoutitcom:{% if shout.Type == 0 %}request{% else %}offer{% endif %}" />
+	<meta property="og:url"    content="{% shout_link shout %}" />
+	<meta property="og:title"  content="{{ shout.Item.Name|title }}" />
+	<meta property="shoutitcom:price"  content="{{ shout.Item.Price|price:shout.Item.Currency.Code }}" />
+	{% if shout.GetImages %}
+		{% with myimg=shout.GetImages|key:0  %}
+			<meta property="og:image"  content="{{ myimg.Image|secure_url }}" />
+		{% endwith %}
+	{% else %}
+		<meta property="og:image"  content="/static/new_design/img/fb_og_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png" />
+	{% endif %}
+	<meta property="og:description" content="{{ shout.Text|striptags|truncatewords:30|safe }}"/>
+{% endblock %}
+{% block content %}
+    <div class="modal fade in" id="map_modal">
+        <div class="modal-header">
+            <a class="close" data-dismiss="modal">×</a>
+        </div>
+        <div class="modal-title">
+            {{ shout.Item.Name|title }}
+        </div>
+        <div class="modal-body">
+            <div class="map"></div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+
+    {% if owner %}
+        <div class="modal shout_modal" id="edit_shout_modal">
+            <div class="modal-header">
+                <a class="close" data-dismiss="modal">×</a>
+            </div>
+            <div class="modal-title">
+                {% trans "Edit Shout" %}
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    {% endif %}
+    <div class="page_content">
+        <div class="left-column">
+            <div class="box-container dark-container round shadow detailed-shout">
+                <div class="box-content">
+                    {% set detailed = 'True' %}
+					{% if not owner  %}
+						<span class="report-user" title="Report" onclick="report_shout('{{ shout.pk|base62 }}')"></span>
+					{% endif %}
+                    {% include 'shout_detailed.html' %}
+                </div>
+            </div>
+            <div class="conversations_stream">
+            {% if new_message or conversation_messages %}
+                <input type="hidden" id="conversation_messages_conversation_id" value="{{ conversation_id|base62 }}" />
+                <div class="outer-box-header round shadow">
+                    {% trans "Conversation" %}
+                </div>
+                <div class="box-container dark-container round shadow conversation">
+                    <div class="box-content">
+                        {% include "conversation_messages.html" %}
+                    </div>
+                </div>
+            {% else %}
+{#                <div class="outer-box-header round shadow" id="conversations_header_title">#}
+{#                    <div id="conversations_header_buttons">#}
+{#                    </div>#}
+{#                    {% trans "conversations" %}#}
+{#                </div>#}
+{#                <div class="box-container dark-container round shadow conversations">#}
+{#                    <div class="box-content" id="conversations_stream">#}
+{#                        {% include "conversations_stream.html" %}#}
+{#                    </div>#}
+{#                </div>#}
+                <div class="box-container dark-container round shadow detailed-shout" id="conversation_shout" style="display: none;"></div>
+                <div class="outer-box-header round shadow">
+                    <div id="conversations_header_buttons">
+                    </div>
+                    {% trans "Conversations" %}
+                </div>
+
+                <div class="box-container dark-container round shadow conversations">
+					{% if not request.user.is_authenticated %}
+					<div><a href="#signin" data-toggle="modal" data-target="#signin_modal"> {% trans "Sign In" %}</a> to reply.</div>
+					{% endif %}
+					<div class="box-content">
+                        {% include "conversations_stream.html" %}
+                    </div>
+                </div>
+
+                {# parse conversation messages after request ajaxly here#}
+                <div class="box-container dark-container round shadow conversation_messages" style="display: none;">
+                    <div class="box-content">
+                    </div>
+                </div>
+            {% endif %}
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="box-container white-container round shadow suggested-shouts">
+            <div class="stream">
+                <div class="box-header">
+                	<span>{{ shouts_type }}</span> <span class="shout_related">{% trans "Shouts"%}</span>
+                </div>
+                <div class="box-content">
+                <div id="stream_container">
+                    {%  if shouts %}
+						{% for shout in shouts %}
+							{% include 'shout_brief.html' %}
+						{% endfor %}
+					{% else %}
+						<span class="shout_related">0</span><span>{{ shouts_type }}</span> <span class="shout_related">{% trans "Shouts"%}</span>
+					{% endif %}
+                </div>
+            </div>
+            </div>
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+{% endblock %}
+{% block scripts %}
+{#    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>#}
+    <script type="text/javascript" language="JavaScript">
+        function report_shout(id){
+            report(id,{{ report_constants|key:"Trade" }});
+        }
+        var mapLoaded = false;
+        var map = null;
+        var shout_id = '{{ shout.pk|base62 }}';
+        $(document).ready(function () {
+            $('.suggested-shouts .box-content').slimScroll({
+                height: '430px',
+                size: '5px',
+                resumePageScroll: false
+            });
+
+
+            $('.conversation_messages .box-content').slimScroll({
+				height: '400px',
+				size: '5px',
+				resumePageScroll: true
+			});
+
+//            $('.conversations .box-content').scrollableStream('245px', true, '/xhr/messages/stream/', '#conversations_stream');
+//            $('.conversations .box-content').slimScroll({
+//                height: '245px',
+//                width: '655px',
+//                size: '5px',
+//                resumePageScroll: true
+//            });
+
+            {% if owner %}
+                setup_modal('#edit_shout_modal', '/modal/shout_edit/?id={{ shout.pk|base62 }}', '#edit', undefined);
+				var confirm_modal = $('<div class="modal"><div class="modal-header"><a class="close" data-dismiss="modal">×</a></div><div class="modal-title">{% trans "Delete Shout" %}</div><div class="modal-body">{% trans "Are you sure you want to delete this shout?" %}</div><div class="modal-footer"><button data-dismiss="modal" class="btn">{% trans "no" %}</button><button class="yes btn" data-dismiss="modal">{% trans "yes" %}</button></div></div>');
+				$('.shout-delete').click(function () {
+                    confirm_modal.modal();
+                    confirm_modal.find('.yes').click(function () {
+                        requestAjaxily({
+                            url: '/xhr/deleteShout/',
+                            data: {
+                                id: shout_id
+                            },
+                            successCallback: function (data) {
+                                redirect_by_response(data);
+                            }
+                        });
+                    });
+                    return false;
+                });
+            {% endif %}
+
+            $('#messages').slimScroll({
+                height: '345px',
+                size: '5px',
+                resumePageScroll: true
+            });
+
+            setup_colorbox();
+
+            var f = function () {
+                if (!mapLoaded) {
+                    ViewShoutMap = new GoogleMap('.map',null);
+                    ViewShoutMap.CreateViewShoutMap({{ shout.Latitude }}, {{ shout.Longitude }}, {{ shout.Type }});
+                    mapLoaded = true;
+                }
+            };
+
+            $('#map_modal').on('show', function () {
+                setTimeout(f, 500);
+            });
+
+//			register_stream('/xhr/messages/stream/', '.conversations_stream');
+            if ($('#conversation_messages_conversation_id').length != 0)
+                current_conversation_id = $('#conversation_messages_conversation_id').val()
+        });
+    </script>
+{% endblock %}

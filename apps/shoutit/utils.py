@@ -13,14 +13,14 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from numpy import array,argmax, sqrt, sum
 from milk.unsupervised.normalise import zscore
-from ShoutWebsite import constants
-from ShoutWebsite.models import Post, Experience, PredefinedCity
-import settings
+from apps.shoutit import constants
+from apps.shoutit.models import Post, Experience, PredefinedCity
+import apps.shoutit.settings
 from pygeoip import *
 import pygeoip
 from milk.unsupervised import _kmeans
 import numpy as np
-
+import apps.shoutit.settings as settings
 
 BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -166,7 +166,7 @@ def getLocationInfoByIP(request):
 	ip = getIP(request)
 
 	#Get Info(lat lng) By IP
-	gi = GeoIP('pygeoip/GeoIPCity.dat', pygeoip.MEMORY_CACHE)
+	gi = GeoIP('libs/pygeoip/GeoIPCity.dat', pygeoip.MEMORY_CACHE)
 	record = gi.record_by_addr(ip)  #168.144.92.219  82.137.200.83
 
 	#another way to get locationInfo

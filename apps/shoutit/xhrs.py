@@ -1,7 +1,7 @@
-from ShoutWebsite.controllers import shout_controller
-from ShoutWebsite.forms import *
+from apps.shoutit.controllers import shout_controller
+from apps.shoutit.forms import *
 from apps.shoutit.xhr_utils import *
-#from ShoutWebsite.tasks import poll
+#from apps.shoutit.tasks import poll
 
 @xhr_login_required
 def store_shout_sell(request, store_id):

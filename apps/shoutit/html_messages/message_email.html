@@ -1,0 +1,16 @@
+<p>
+    Hello {{ to }},<br />
+    <a href="{{ from_link }}">{{ from }}</a> has sent you a message regarding your shout <a href="{{ shout_link }}">{{ shout_name }}</a>:<br />
+    ----<br />
+    {{ message|linebreaksbr }}<br />
+    ----<br />
+    To view this message on ShoutIt click here <a href="{{ shout_link }}">{{ shout_link }}</a>.<br />
+</p>
+<hr />
+<p>
+    You can reply to this email and the message will be delivered to {{ from }}'s email address.<br />
+    <br />
+    <br />
+    <a href="http://www.shoutit.com">Shoutit</a><br />
+    <a href='mailto:info@shout.com'>info@shout.com</a>
+</p>

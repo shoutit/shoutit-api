@@ -1,0 +1,1 @@
+from apps.shoutit.models.models import *

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load template_filters %}
+{% block content %}
+    <div class="box-container white-container round shadow" style="margin-left: auto; margin-right: auto; text-align: center; padding: 20px;">
+        <input type="text" id="voucher_check" /> <input type="button" value="Check" id="voucher_check_button" />
+        <span id="voucher_check_status"></span><br />
+        <hr />
+        <input type="text" id="voucher_invalidate" /> <input type="button" value="Invalidate" id="voucher_invalidate_button" />
+        <span id="voucher_invalidate_status"></span><br />
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script type="text/javascript" language="JavaScript">
+        $(document).ready(function () {
+            $('#voucher_check_button').click(function () {
+                $('#voucher_check_status').html('');
+                requestAjaxily({
+                    url : '/valid_voucher/',
+                    data : {
+                        code: $('#voucher_check').val()
+                    },
+                    successCallback : function (data) {
+                        if (data.data.is_valid)
+                            $('#voucher_check_status').html('Valid for deal ' + data.data.deal);
+                        else
+                            $('#voucher_check_status').html('Invalid');
+                    }
+                });
+            });
+            $('#voucher_invalidate_button').click(function () {
+                $('#voucher_invalidate_status').html('');
+                requestAjaxily({
+                    url : '/invalidate_voucher/',
+                    data : {
+                        code: $('#voucher_invalidate').val()
+                    },
+                    successCallback : function (data) {
+                        if (data.data.is_validated)
+                            $('#voucher_invalidate_status').html('Invalidated for deal ' + data.data.deal);
+                        else
+                            $('#voucher_invalidate_status').html('Invalid voucher');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

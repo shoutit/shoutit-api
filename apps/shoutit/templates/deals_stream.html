@@ -1,0 +1,6 @@
+{% for deal in deals %}
+    {% if forloop.counter0 %}
+        <hr />
+    {% endif %}
+    {% include "deal.html" %}
+{% endfor %}

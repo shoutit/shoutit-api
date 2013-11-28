@@ -8,11 +8,11 @@ import glob
 import os
 from symbol import decorator
 from django.test import TestCase
-from ShoutWebsite.constants import *
-from ShoutWebsite.controllers.message_controller import MessageController
-from ShoutWebsite.controllers.shout_controller import ShoutController
-from ShoutWebsite.controllers.tag_controller import TagController
-from ShoutWebsite.controllers.user_controller import UserController
+from apps.shoutit.constants import *
+from apps.shoutit.controllers.message_controller import MessageController
+from apps.shoutit.controllers.shout_controller import ShoutController
+from apps.shoutit.controllers.tag_controller import TagController
+from apps.shoutit.controllers.user_controller import UserController
 import subprocess
 import datetime
 

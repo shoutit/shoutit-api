@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load template_filters %}
+
+{% block content %}
+{#	left column#}
+	<div class="span9">
+{#        <div id="original_shout">#}
+        <h4>Shout:</h4>
+        {% include 'shout_dispatcher.html' %}
+{#            <td>distance: {{ shout.distance }} KM</td>#}
+{#            <td>distance_per: {{ shout.distance_per }}</td>#}
+{#        </tr>#}
+{#        <tr>#}
+{#            <td>tag_affinity: {{ shout.tag_affinity }}</td>#}
+{#            <td>timevar: {{ shout.timevar }}</td>#}
+{#            <td>rank: {{ shout.rank }}</td>#}
+{#        </tr></table>#}
+{#        </div>#}
+        <hr>
+    	<div class="conversations_stream">
+{#            {% if conversations|length == 1 or conversations|length == 0 %}#}
+{#                {% with conversations.0.Messages.all as conversation_messages %}#}
+{#                {% with conversations.0.pk as conversation_id %}#}
+{#                    {% with 1 as message_page %}#}
+{#                    {% include "conversation_messages.html" %}#}
+{#                    {% endwith %}#}
+{#                {% endwith %}#}
+{#                {% endwith %}#}
+{#            {% else %}#}
+{#                {% include 'conversations_stream.html' %}#}
+{#            {% endif %}#}
+
+            {% if new_message or conversation_messages %}
+                <input type="text" id="conversation_messages_conversation_id" value="{{ conversation_id|base62 }}" style="display: none;">
+                {% include "conversation_messages.html" %}
+            {% else %}
+                {% include 'conversations_stream.html' %}
+            {% endif %}
+        </div>
+    </div>
+
+{#	main column#}
+{#    <div class="span9 offset5">#}
+{##}
+{#	</div>#}
+
+{#	right column#}
+	<div class="span9 offset8">
+    	<div class="stream">
+			{% if user.username == shout.OwnerUser.username %}
+				<h4>Recommended Shouts:</h4>
+			{% else %}
+				<h4>Related Shouts:</h4>
+			{% endif %}
+			<div id="stream_container">
+                {% include 'stream.html' %}
+            </div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+    <script type='text/javascript'>
+        $(document).ready(function () {
+//			register_stream('/xhr/messages/stream/', '.conversations_stream');
+            if ($('#conversation_messages_conversation_id').length != 0)
+                current_conversation_id = $('#conversation_messages_conversation_id').val()
+    });
+    </script>
+{% endblock %}

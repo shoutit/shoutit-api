@@ -1,0 +1,75 @@
+{% load template_filters %}
+{% load i18n %}
+{#{% block content %}#}
+
+        <div class="box-container dark-container round shadow deals">
+            <div class="box-content">
+				<div class="box-header"></div>
+                {% if deals %}
+                    {% include "deals_stream.html" %}
+                {% endif %}
+            </div>
+        </div>
+{#{% endblock %}#}
+{#{% block scripts %}#}
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-ui-1.8.17.custom.min.js"></script>
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/slimScroll.js"></script>
+<script type="text/javascript" language="JavaScript" src="/static/new_design/js/site.js"></script>
+<script type="text/javascript" language="JavaScript">
+    var tickInterval = 0;
+	function tick() {
+		var now = new Date();
+		$('.deal-ticker').each(function () {
+			var delta = new Date($(this).attr('title')) - now;
+			delta /= 1000;
+			var remaining = '';
+
+			var minute = 60;
+			var hour = 60 * minute;
+			var day = 24 * hour;
+			var week = 7 * day;
+			if (Math.floor(delta / day) > 0) {
+				var days =0;
+				if (Math.floor(delta / week) > 0){
+					days=Math.floor(delta / week)*7;
+					delta %= week;
+				}
+				remaining +=  days + Math.floor(delta / day) + ' Day' + ( (days + Math.floor(delta / day)) > 1 ? 's ' : ' ');
+				delta %= day;
+			}
+			if (Math.floor(delta / hour) >= 0) {
+				remaining += Math.floor(delta / hour) + ':';
+				delta %= hour;
+			}
+			if (Math.floor(delta / minute) > 0) {
+				remaining +=  Math.floor(delta / minute) + ':';
+				delta %= minute;
+			}
+			if (Math.floor(delta) > 0) {
+				remaining += Math.floor(delta);
+			}
+			$(this).text(remaining);
+		});
+	}
+
+    function startTicking() {
+        if (tickInterval != 0)
+            stopTicking();
+        tick();
+        tickInterval = setInterval(tick, 1000);
+    }
+    function stopTicking() {
+        if (tickInterval != 0) {
+            clearInterval(tickInterval);
+            tickInterval = 0;
+        }
+    }
+    $(document).ready(function () {
+        $('.deals .box-content').scrollableStream('560px', true, '/xhr/deals_stream/{{ profile.username }}/', '.deals .box-content', 0);
+        $('.deals .box-content').refreshScrollableStream();
+        setup_colorbox();
+        startTicking();
+    });
+</script>
+{#{% endblock %}#}

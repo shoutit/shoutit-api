@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from ShoutWebsite.constants import *
+from apps.shoutit.constants import *
 
 
 def CommentOnPost(user, post_id, text):
@@ -49,6 +49,6 @@ def DeleteComment(comment_id):
 		comment.save()
 		event_controller.DeleteEventAboutObj(comment)
 
-from ShoutWebsite import constants, utils
-from ShoutWebsite.controllers import event_controller,shout_controller,notifications_controller,realtime_controller
-from ShoutWebsite.models import Comment
+from apps.shoutit import constants, utils
+from apps.shoutit.controllers import event_controller,shout_controller,notifications_controller,realtime_controller
+from apps.shoutit.models import Comment

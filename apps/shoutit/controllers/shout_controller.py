@@ -5,10 +5,10 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, 
 from django.core.files.base import ContentFile
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
-from ActivityLogger.logger import Logger
-from ShoutWebsite.constants import *
-from ShoutWebsite.utils import asynchronous_task, ToSeoFriendly
-import settings
+from apps.ActivityLogger.logger import Logger
+from apps.shoutit.constants import *
+from apps.shoutit.utils import asynchronous_task, ToSeoFriendly
+import apps.shoutit.settings as settings
 
 
 def GetPost(post_id, find_muted=False, find_expired=False):
@@ -78,7 +78,7 @@ def NotifyPreExpiry():
 				expiry_date = shout.DatePublished + timedelta(days = settings.MAX_EXPIRY_DAYS)
 			if (expiry_date - datetime.now()).days < settings.SHOUT_EXPIRY_NOTIFY:
 				if shout.OwnerUser.email:
-					ShoutWebsite.controllers.email_controller.SendExpiryNotificationEmail(shout.OwnerUser, shout)
+					apps.shoutit.controllers.email_controller.SendExpiryNotificationEmail(shout.OwnerUser, shout)
 					shout.ExpiryNotified = True
 					shout.save()
 
@@ -118,7 +118,7 @@ def EditShout(request, shout_id, name = None, text = None, price = None, longitu
 			if len(tags) and shouter:
 				shout.OwnerUser = shouter
 				shout.Tags.clear()
-				for tag in ShoutWebsite.controllers.tag_controller.GetOrCreateTags(request, tags, shouter):
+				for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter):
 					shout.Tags.add(tag)
 					tag.Stream.PublishShout(shout)
 			shout.StreamsCode = str([f.id for f in shout.Streams.all()])[1:-1]
@@ -179,7 +179,7 @@ def SaveRecolatedShouts(trade, stream_type):
 		if trade.Type == POST_TYPE_SELL:
 			type = POST_TYPE_SELL
 
-	shouts = ShoutWebsite.controllers.stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
+	shouts = apps.shoutit.controllers.stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
 	stream = Stream(Type= stream_type)
 	stream.save()
 	if stream_type == STREAM_TYPE_RECOMMENDED:
@@ -197,7 +197,7 @@ def SaveRecolatedShouts(trade, stream_type):
 	for shout in shouts:
 		shout_wrap = ShoutWrap(Shout = shout, Stream = stream, Rank = shout.rank)
 		shout_wrap.save()
-		ShoutWebsite.controllers.stream_controller.PublishShoutToShout(trade, shout)
+		apps.shoutit.controllers.stream_controller.PublishShoutToShout(trade, shout)
 
 	trade.save()
 
@@ -225,7 +225,7 @@ def ShoutBuy(request, name, text, price, longitude, latitude, tags, shouter, cou
 		trade.save()
 
 	stream.PublishShout(trade)
-	for tag in ShoutWebsite.controllers.tag_controller.GetOrCreateTags(request, tags, shouter):
+	for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter):
 		trade.Tags.add(tag)
 		tag.Stream.PublishShout(trade)
 
@@ -261,7 +261,7 @@ def ShoutSell(request, name, text, price,  longitude, latitude, tags, shouter, c
 		PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 	stream.PublishShout(trade)
-	for tag in ShoutWebsite.controllers.tag_controller.GetOrCreateTags(request, tags, shouter.User):
+	for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter.User):
 		trade.Tags.add(tag)
 		tag.Stream.PublishShout(trade)
 
@@ -286,11 +286,11 @@ def GetTradeImages(trades):
 		trades[i].Item.SetImages([image for image in images if image.Item_id == trades[i].Item.pk])
 		images = [image for image in images if image.Item_id != trades[i].Item.pk]
 	return trades
-from ShoutWebsite import constants, utils
-import ShoutWebsite.controllers.email_controller
-import ShoutWebsite.controllers.tag_controller
-import ShoutWebsite.controllers.stream_controller,event_controller
-import ShoutWebsite.controllers.user_controller,business_controller,item_controller
+from apps.shoutit import constants, utils
+import apps.shoutit.controllers.email_controller
+import apps.shoutit.controllers.tag_controller
+import apps.shoutit.controllers.stream_controller,event_controller
+import apps.shoutit.controllers.user_controller,business_controller,item_controller
 import realtime_controller
-from ShoutWebsite.models import GalleryItem, PredefinedCity
-from ShoutWebsite.models import Shout, StoredImage, Stream, ShoutWrap, Item, Trade, Experience, Currency, Post, Deal, BusinessProfile, SharedExperience, Comment, GalleryItem
+from apps.shoutit.models import GalleryItem, PredefinedCity
+from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Item, Trade, Experience, Currency, Post, Deal, BusinessProfile, SharedExperience, Comment, GalleryItem

@@ -1,8 +1,8 @@
 from django.core.exceptions import ObjectDoesNotExist
 #from django.core.files.base import ContentFile
 #from django.db.models.query_utils import Q
-#from ActivityLogger.logger import Logger
-from ShoutWebsite.constants import *
+#from apps.ActivityLogger.logger import Logger
+from apps.shoutit.constants import *
 
 def PostExperience(user, state, text, businessProfile):
 	exp = Experience(State = state, Text = text, AboutBusiness = businessProfile, OwnerUser = user, Type = int(POST_TYPE_EXPERIENCE))
@@ -95,7 +95,7 @@ def getDetailedExperience(user,experience,sharedExperiences,comments):
 	experience.canEdit 		= user == experience.OwnerUser and not experience.sharedExpsCount and not experience.commentsCount
 	experience.isOwner		= True if experience.OwnerUser == user else False
 
-from ShoutWebsite import constants, utils
-from ShoutWebsite.controllers import business_controller,user_controller,event_controller,shout_controller,notifications_controller,realtime_controller
-from ShoutWebsite.models import GalleryItem
-from ShoutWebsite.models import Shout, Stream, Item, Trade, Experience, Post, BusinessProfile, SharedExperience, Comment, GalleryItem, UserProfile
+from apps.shoutit import constants, utils
+from apps.shoutit.controllers import business_controller,user_controller,event_controller,shout_controller,notifications_controller,realtime_controller
+from apps.shoutit.models import GalleryItem
+from apps.shoutit.models import Shout, Stream, Item, Trade, Experience, Post, BusinessProfile, SharedExperience, Comment, GalleryItem, UserProfile

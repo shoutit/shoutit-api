@@ -1,0 +1,73 @@
+{% load widget_tweaks %}
+{% load template_filters %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="/static/css/fileuploader.css" />
+{% endblock %}
+
+{% block content %}
+	<input type="radio" name="shout_type" value="0" checked> I want
+	<input type="radio" name="shout_type" value="1"> I offer
+
+
+    <form enctype="multipart/form-data" method="post" id="shout_form">
+        {% csrf_token %}
+
+		<div class="shout_post type-0 clearfix">
+
+			<div class="shout_post_user_image">
+				<a ><img src="/static/img/shout_user.jpg" alt=""></a><br />
+			</div>
+
+
+			<div class="shout_post_bubble">
+
+				<div class="shout_post_body">
+					<div class="shout_post_headline clearfix">
+						<span class="shout_post_name" href="/">
+							{{ shout_form.name|attr:"class:xlarge"|attr:"placeholder:what are you shouting about?" }}
+						</span>
+
+						<span class="shout_post_price">
+							{{ shout_form.price|attr:"class:mini"|attr:"placeholder:price" }} AED
+						</span>
+					</div>
+
+					<div class="clearfix">
+						<div class="shout_post_image" id="file-uploader" style="cursor: pointer;" >add picture</div>
+
+						<div class="shout_post_text">
+							{{ shout_form.description|attr:"class:span6"|attr:"rows:5"|attr:"placeholder:describe what you want here" }}
+						</div>
+					</div>
+
+					<div class="shout_post_tags">
+						{{ shout_form.tags|attr:"class:span8" }}
+					</div>
+
+
+					<div class="shout_post_location">
+{#						<span class="shout_post_location_address" >click to change location</span>#}
+{#						<label>Location</label>#}
+{#						<div class="input" id="shout_now" style="width: 280px; height: 280px;">#}
+{#						</div>#}
+
+					</div>
+
+
+					<div class="input">
+						{{ shout_form.location|attr:"style:display:None" }}
+						{{ shout_form.country|attr:"style:display:None" }}
+						{{ shout_form.city|attr:"style:display:None" }}
+						{{ shout_form.address|attr:"style:display:None" }}
+					</div>
+
+					<div class="shout_post_submit">
+						<button class="btn primary" type="submit">Shout It!</button>
+					</div>
+
+				</div>
+			</div>
+		</div>
+    </form>
+{% endblock %}

@@ -6,10 +6,10 @@ from django.http import HttpResponse
 from django.template.context import Context
 from django.template.loader import get_template
 #from xhtml2pdf import pisa
-from ShoutWebsite import utils
-import ShoutWebsite.controllers.shout_controller as shout_controller
-from ShoutWebsite.models import DealBuy, Payment, Transaction, Voucher, Shout
-from ShoutWebsite.utils import GeneratePassword, asynchronous_task
+from apps.shoutit import utils
+import apps.shoutit.controllers.shout_controller as shout_controller
+from apps.shoutit.models import DealBuy, Payment, Transaction, Voucher, Shout
+from apps.shoutit.utils import GeneratePassword, asynchronous_task
 
 def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min_buyers, max_buyers, original_price, business_profile, country_code, province_code, valid_from = None, valid_to = None):
 	#currency = Currency.objects.get(Code__iexact = currency)
@@ -33,7 +33,7 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
 
 	stream = business_profile.Stream
 	stream.PublishShout(deal)
-	for tag in ShoutWebsite.controllers.tag_controller.GetOrCreateTags(None, tags, deal.OwnerUser):
+	for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(None, tags, deal.OwnerUser):
 		deal.Tags.add(tag)
 		tag.Stream.PublishShout(deal)
 
@@ -48,7 +48,7 @@ from reportlab.lib.colors import orange
 from geraldo.utils import cm, BAND_WIDTH, TA_CENTER, TA_RIGHT
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from geraldo.generators import PDFGenerator
-from ShoutWebsite.templatetags.template_filters import price
+from apps.shoutit.templatetags.template_filters import price
 import reportlab.graphics.barcode
 import urllib2
 
@@ -207,18 +207,18 @@ def CloseDeal(deal):
 			f = open('c:\\b-%d.pdf' % buy.pk, 'wb')
 			f.write(voucher_document)
 			f.close()
-			ShoutWebsite.controllers.email_controller.SendUserDealVoucher(buy, voucher_document)
+			apps.shoutit.controllers.email_controller.SendUserDealVoucher(buy, voucher_document)
 
 		document = GenerateBuyersDocument(deal)
 		f = open('c:\\a.pdf', 'wb')
 		f.write(document)
 		f.close()
-		ShoutWebsite.controllers.email_controller.SendBusinessBuyersDocument(deal, document)
+		apps.shoutit.controllers.email_controller.SendBusinessBuyersDocument(deal, document)
 	else:
 		for buy in buys:
-			ShoutWebsite.controllers.email_controller.SendUserDealCancel(buy.User, deal)
-			ShoutWebsite.controllers.payment_controller.RefundTransaction(buy.Payment.Transaction)
-		ShoutWebsite.controllers.email_controller.SendBusinessDealCancel(deal)
+			apps.shoutit.controllers.email_controller.SendUserDealCancel(buy.User, deal)
+			apps.shoutit.controllers.payment_controller.RefundTransaction(buy.Payment.Transaction)
+		apps.shoutit.controllers.email_controller.SendBusinessDealCancel(deal)
 
 def GetDealsToBeClosed():
 	now = datetime.now()
@@ -276,10 +276,10 @@ def GetOpenDeals(user = None, business = None, start_index = None, end_index = N
 def HasUserBoughtDeal(user, deal):
 	return len(DealBuy.objects.filter(User = user, Deal = deal)) > 0
 
-import ShoutWebsite.controllers.shout_controller
-import ShoutWebsite.controllers.tag_controller
-import ShoutWebsite.controllers.email_controller,event_controller,item_controller
-import ShoutWebsite.controllers.payment_controller
-import ShoutWebsite.controllers.shout_controller
-from ShoutWebsite.models import StoredImage, Deal, Currency, Item, Post
-from ShoutWebsite.constants import POST_TYPE_DEAL,EVENT_TYPE_POST_DEAL,EVENT_TYPE_BUY_DEAL
+import apps.shoutit.controllers.shout_controller
+import apps.shoutit.controllers.tag_controller
+import apps.shoutit.controllers.email_controller,event_controller,item_controller
+import apps.shoutit.controllers.payment_controller
+import apps.shoutit.controllers.shout_controller
+from apps.shoutit.models import StoredImage, Deal, Currency, Item, Post
+from apps.shoutit.constants import POST_TYPE_DEAL,EVENT_TYPE_POST_DEAL,EVENT_TYPE_BUY_DEAL

@@ -1,0 +1,21 @@
+{% load widget_tweaks %}
+{% load template_filters %}
+{% load i18n %}
+<form id='create_tiny_business_form' action="{{ request.path }}" method="post">
+    {% csrf_token %}
+    <div class="input-field">
+        {{ form.name|trans_attr:"placeholder:Business Name" }}
+    </div>
+    <button type="submit" class="btn btn-primary">{% trans "create" %}</button>
+
+</form>
+<script type="text/javascript" language="JavaScript">
+    $('form#create_tiny_business_form').submitAjaxily(function (data) {
+        if (redirect_after_login)
+            redirect_by_response(data);
+        else {
+            $('body').trigger('create_tiny_business_ok', [data.data.username]);
+            redirect_after_login = true;
+        }
+    });
+</script>

@@ -1,13 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
-import ShoutWebsite
-from ShoutWebsite.constants import *
+import apps.shoutit
+from apps.shoutit.constants import *
 
 
 def GetItemByID(item_id):
 	return Item.objects.get(pk = item_id)
 
 def CreateItem(name, price, images, currency, description = ''):
-	currency = ShoutWebsite.controllers.shout_controller.GetCurrency(currency)
+	currency = apps.shoutit.controllers.shout_controller.GetCurrency(currency)
 	item = Item(Name = name, Price = price, Currency = currency, Description = description)
 	item.save()
 
@@ -22,7 +22,7 @@ def CreateItem(name, price, images, currency, description = ''):
 
 	if images:
 		try:
-			ShoutWebsite.controllers.shout_controller.MakeCloudThumbnailsForImage(images[0])
+			apps.shoutit.controllers.shout_controller.MakeCloudThumbnailsForImage(images[0])
 		except :
 			pass
 	return item
@@ -37,7 +37,7 @@ def EditItem(item,name = None, price = None, images = None, currency = None, des
 	if price:
 		item.Price = price
 	if currency:
-		shout_currency = ShoutWebsite.controllers.shout_controller.GetCurrency(currency)
+		shout_currency = apps.shoutit.controllers.shout_controller.GetCurrency(currency)
 		item.Currency = shout_currency
 	if description:
 		item.Description = description
@@ -58,16 +58,16 @@ def EditItem(item,name = None, price = None, images = None, currency = None, des
 			stored_image.Item = item
 			stored_image.Image = image
 			stored_image.save()
-		except ShoutWebsite.controllers.shout_controller.MultipleObjectsReturned, e:
+		except apps.shoutit.controllers.shout_controller.MultipleObjectsReturned, e:
 			pass
 
 	if images:
-		ShoutWebsite.controllers.shout_controller.MakeCloudThumbnailsForImage(images[0])
+		apps.shoutit.controllers.shout_controller.MakeCloudThumbnailsForImage(images[0])
 
 	item.save()
 	return item
 
 
-from ShoutWebsite import constants, utils
-import ShoutWebsite.controllers.shout_controller
-from ShoutWebsite.models import Item, Post, Trade, StoredImage
+from apps.shoutit import constants, utils
+import apps.shoutit.controllers.shout_controller
+from apps.shoutit.models import Item, Post, Trade, StoredImage

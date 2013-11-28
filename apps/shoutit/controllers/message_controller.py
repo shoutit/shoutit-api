@@ -29,8 +29,8 @@ def SendMessage(fromUser, toUser, trade, text, conversation_id=0):
 	conversation.save()
 	msg = Message(Conversation = conversation, FromUser = fromUser, ToUser = toUser, Text = text)
 	msg.save()
-	ShoutWebsite.controllers.notifications_controller.NotifyUserOfMessage(toUser, msg)
-	ShoutWebsite.controllers.email_controller.SendMessageEmail(msg)
+	apps.shoutit.controllers.notifications_controller.NotifyUserOfMessage(toUser, msg)
+	apps.shoutit.controllers.email_controller.SendMessageEmail(msg)
 	return msg
 
 def getFullConversationDetails(conversations,user):
@@ -106,7 +106,7 @@ def GetConversation(id,user=None):
 		return conversation
 
 def GetShoutConversations(shout_id, user):
-	shout = ShoutWebsite.controllers.shout_controller.GetPost(shout_id, True, True)
+	shout = apps.shoutit.controllers.shout_controller.GetPost(shout_id, True, True)
 	if user.is_authenticated() and user.pk == shout.OwnerUser.pk:
 		conversations = Conversation.objects.filter(AboutPost = shout, ToUser = user, VisibleToRecivier = True).annotate(max_date=Max('Messages__DateCreated')).select_related('ToUser','ToUser__Profile','FromUser','FromUser__Profile','AboutPost','AboutPost__Item','AboutPost__Item__Currency','AboutPost__shout','AboutPost__shout__Tags','AboutPost__shout__Images').order_by('-max_date')
 		conversations = getFullConversationDetails(conversations,user)
@@ -148,7 +148,7 @@ def ConversationsCount(user):
 def UnReadConversationsCount(user):
 	return Conversation.objects.filter(Q(Messages__ToUser = user) & Q(Messages__IsRead=False) & ((Q(FromUser = user) & Q(VisibleToSender = True)) | (Q(ToUser=user) & Q(VisibleToRecivier = True)))).values("id").distinct().count()
 
-import ShoutWebsite.controllers.email_controller
-import ShoutWebsite.controllers.notifications_controller
-import ShoutWebsite.controllers.shout_controller
-from ShoutWebsite.models import Conversation, Message, Tag, Shout, StoredImage
+import apps.shoutit.controllers.email_controller
+import apps.shoutit.controllers.notifications_controller
+import apps.shoutit.controllers.shout_controller
+from apps.shoutit.models import Conversation, Message, Tag, Shout, StoredImage

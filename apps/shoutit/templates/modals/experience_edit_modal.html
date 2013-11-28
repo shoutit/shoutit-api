@@ -1,0 +1,49 @@
+{% load widget_tweaks %}
+{% load template_filters %}
+{% load i18n %}
+<form id='experience_edit_form' action="/edit_experience/{{ experience_id }}/" method="post">
+    {% csrf_token %}
+	<div class="input-field thumb-state ">
+		<div data-state="good" class="good-experience">
+			<span class="user-icon-thumbup pull-left"></span>
+			<span class="pull-left">{% trans "Good experience" %}</span>
+		</div>
+		<div data-state="bad" class="bad-experience">
+			<span class="user-icon-thumbdown pull-left"></span>
+			<span class="pull-left">{% trans "Bad experience" %}</span>
+		</div>
+		{#			<span class="state_error">{% trans "you must select the experience" %}</span>#}
+	</div>
+
+	<div class="input-field" style="display:none">
+		{{ form.state|attr:"style:display:block"}}
+	</div>
+
+    <div class="input-field">
+        {{ form.text|trans_attr:"placeholder:Write your comment here" }}
+    </div>
+    <input type="submit" value="{% trans "edit" %}" class="btn" />
+</form>
+
+<script type="text/javascript" language="JavaScript">
+    $('form#experience_edit_form').submitAjaxily();
+	$(document).ready(function(){
+		var state_validator=0;
+		$('.input-field.thumb-state div').click(function(){
+			state_validator=1;
+			$('.input-field.thumb-state div').removeClass('selected-state');
+			$(this).addClass('selected-state');
+			if($(this).attr('data-state')=='bad'){
+				$('#id_state_0').trigger('click');
+			}else{
+				$('#id_state_1').trigger('click');
+			}
+		});
+		var checked_id = $("input[@name=state]:checked").attr('id');
+		if(checked_id == 'id_state_0'){
+			$('.bad-experience').trigger('click');
+		}else{
+			$('.good-experience').trigger('click');
+		}
+	});
+ </script>

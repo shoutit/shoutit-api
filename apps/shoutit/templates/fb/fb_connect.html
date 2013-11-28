@@ -1,0 +1,77 @@
+{% load template_filters %}
+{% load i18n %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+	<title>Facebook Connect</title>
+	<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
+	<script type="text/javascript">
+		var RunCallbackFunction = function(data, fb_id) {
+			window.opener.FBConnectDone(data, FbId);
+		}; //reference holder only
+	</script>
+
+	<!--[if lte IE 9]>
+	<script type="text/javascript" language="JavaScript" src="/static/js/json2.js"></script>
+	<![endif]-->
+
+
+</head>
+<body class="">
+	<a href="#" class="fb-login-button step_connect">Connect your Facebook with Shoutit</a>
+	<br>
+	<br>
+	[Please allow Pop-up and try again]
+<div id="fb-root"></div>
+<script>
+	FbId = 0;
+	window.fbAsyncInit = function() {
+		FB.init({
+			appId      : '353625811317277',
+			status     : false,
+			cookie     : true,
+			xfbml      : true,
+			oauth      : true
+		});
+		function FBStatusChange(response) {
+
+			if (response.authResponse) {
+				//user is already logged in and connected
+
+				var post_data = JSON.stringify(response.authResponse);
+				FbId = response.authResponse.userID;
+				$.ajax({
+					url: '/fb/auth/',
+					type: 'POST',
+					data: {'data':post_data},
+					success: function (data) {
+						RunCallbackFunction(data, FbId);
+					}
+				});
+
+			} else {
+				//user is not connected to your app or logged out
+			}
+		}
+		// run once with current status and whenever the status changes
+		FB.Event.subscribe('auth.statusChange', FBStatusChange);
+		FB.login(null,{'scope':'email,user_birthday,publish_actions'});
+	};
+	(function(d){
+		var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
+		js = d.createElement('script'); js.id = id; js.async = true;
+		js.src = "//connect.facebook.net/en_US/all.js";
+		d.getElementsByTagName('head')[0].appendChild(js);
+	}(document));
+
+	$(document).ready(function(){
+
+		$('.fb-login-button').click(function () {
+			FB.login(null,{'scope':'email,user_birthday,publish_actions'});
+		});
+
+
+	});
+</script>
+
+</body>
+</html>

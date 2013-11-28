@@ -2,15 +2,15 @@ from itertools import chain
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query_utils import Q
-from ShoutWebsite import utils
-from ShoutWebsite.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE, POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_EVENT, EVENT_TYPE_GALLERY_ITEM
+from apps.shoutit import utils
+from apps.shoutit.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE, POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_EVENT, EVENT_TYPE_GALLERY_ITEM
 from django.utils.translation import ugettext as _
 
-import ShoutWebsite.controllers.email_controller
-from ShoutWebsite.models import Stream, BusinessProfile, ConfirmToken, StoredFile, BusinessConfirmation, Gallery, BusinessSource, Event, Trade, Deal, BusinessCategory, BusinessCreateApplication, PredefinedCity
-from ShoutWebsite.permissions import ACTIVATED_BUSINESS_PERMISSIONS
-from ShoutWebsite.utils import ToSeoFriendly
-import settings
+import apps.shoutit.controllers.email_controller
+from apps.shoutit.models.models import Stream, BusinessProfile, ConfirmToken, StoredFile, BusinessConfirmation, Gallery, BusinessSource, Event, Trade, Deal, BusinessCategory, BusinessCreateApplication, PredefinedCity
+from apps.shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
+from apps.shoutit.utils import ToSeoFriendly
+import apps.shoutit.settings
 
 def GetBusiness(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):
@@ -88,7 +88,7 @@ def ClaimTinyBusiness(request, tiny_username, email, phone, website, about = Non
 
 	business.save()
 
-	ShoutWebsite.controllers.email_controller.SendBusinessSignupEmail(django_user, email, email)
+	apps.shoutit.controllers.email_controller.SendBusinessSignupEmail(django_user, email, email)
 
 	return django_user
 
@@ -105,7 +105,7 @@ def SignUpTempBusiness(request, email, password, send_activation = True, busines
 	token = SetTempRegisterToken(django_user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
 	
 	if email is not None and send_activation:
-		ShoutWebsite.controllers.email_controller.SendEmail(email, {
+		apps.shoutit.controllers.email_controller.SendEmail(email, {
 			'name'  : business and business.Name or "New Business",
 			'email' : email,
 			'link' 	: "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/')
@@ -187,7 +187,7 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 #	TODO log the sign up activity
 #	Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME : username})
 	
-	ShoutWebsite.controllers.email_controller.SendBusinessSignupEmail(user, user.email, ba.Name)
+	apps.shoutit.controllers.email_controller.SendBusinessSignupEmail(user, user.email, ba.Name)
 	return ba
 
 def EditBusiness(request, username = None, name = None, password = None, email = None, phone=None, image = None,
@@ -294,6 +294,6 @@ def AcceptBusiness(request, username):
 	user_controller.GiveUserPermissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
 
 	token = user_controller.SetRegisterToken(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
-	ShoutWebsite.controllers.email_controller.SendBusinessAcceptanceEmail(user.Business, user.email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'))
+	apps.shoutit.controllers.email_controller.SendBusinessAcceptanceEmail(user.Business, user.email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'))
 
-import ShoutWebsite.controllers.user_controller as user_controller
+import apps.shoutit.controllers.user_controller as user_controller

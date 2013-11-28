@@ -1,9 +1,9 @@
 import datetime
 from paypal.standard.ipn.signals import subscription_signup,subscription_cancel,subscription_eot
 import re
-from ShoutWebsite.constants import SUBSCRIPE_BUSINESS, SUBSCRIPTION_TRAIL, SUBSCRIPTION_EXPIRED, SUBSCRIPTION_CANCELED
-from ShoutWebsite.controllers import business_controller
-from ShoutWebsite.models import Subscription
+from apps.shoutit.constants import SUBSCRIPE_BUSINESS, SUBSCRIPTION_TRAIL, SUBSCRIPTION_EXPIRED, SUBSCRIPTION_CANCELED
+from apps.shoutit.controllers import business_controller
+from apps.shoutit.models import Subscription
 
 def SignUp(sender, **kwargs):
 	if sender.custom:

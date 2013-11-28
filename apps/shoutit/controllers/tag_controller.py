@@ -109,7 +109,7 @@ def AddToUserInterests(request, tag, user):
 			tag = tag[0]
 	if tag not in user.Interests.all():
 		user.Interests.add(tag)
-		ShoutWebsite.controllers.user_controller.FollowStream(request, user,tag.Stream)
+		apps.shoutit.controllers.user_controller.FollowStream(request, user,tag.Stream)
 		user.save()
 		event_controller.RegisterEvent(user.User, EVENT_TYPE_FOLLOW_TAG, tag)
 		Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG : tag.id, ACTIVITY_DATA_USERNAME : user.username})
@@ -125,7 +125,7 @@ def RemoveFromUserInterests(request, tag, user):
 		else:
 			tag = tag[0]
 	if tag in user.Interests.all():
-		ShoutWebsite.controllers.user_controller.UnfollowStream(request, user, tag.Stream)
+		apps.shoutit.controllers.user_controller.UnfollowStream(request, user, tag.Stream)
 		user.Interests.remove(tag)
 		user.save()
 
@@ -142,7 +142,7 @@ def TagFollowers(tagName):
 	followers = tag.Stream.userprofile_set.all()
 	return followers
 
-from ActivityLogger.logger import Logger
-from ShoutWebsite.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG, POST_TYPE_SELL, POST_TYPE_BUY
-import ShoutWebsite.controllers.user_controller,event_controller,shout_controller
-from ShoutWebsite.models import Tag, Stream, Trade, StoredImage
+from apps.ActivityLogger.logger import Logger
+from apps.shoutit.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG, POST_TYPE_SELL, POST_TYPE_BUY
+import apps.shoutit.controllers.user_controller,event_controller,shout_controller
+from apps.shoutit.models import Tag, Stream, Trade, StoredImage
