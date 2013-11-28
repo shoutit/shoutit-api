@@ -1,0 +1,2 @@
+# common requirements
+Django==1.6
