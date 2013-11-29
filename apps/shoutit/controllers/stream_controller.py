@@ -6,7 +6,7 @@ from django.db.models.query_utils import Q
 from apps.shoutit.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE
 
 from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Post, Trade
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 def PublishShoutToShout(shout, other):
 	rank = 0.0
@@ -141,9 +141,9 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code = '', province_code = 
 			Shout.Streams.field.m2m_column_name()
 			), promote = True)
 			if max_followings > 0:
-				extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_FOLLOW) + ' * ( 1 - (CAST(COUNT("ShoutWebsite_post_Streams"."stream_id") AS DOUBLE PRECISION) / CAST(%d AS DOUBLE PRECISION))), 2.0) + ' % max_followings
+				extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_FOLLOW) + ' * ( 1 - (CAST(COUNT("shoutit_post_Streams"."stream_id") AS DOUBLE PRECISION) / CAST(%d AS DOUBLE PRECISION))), 2.0) + ' % max_followings
 				rank_count += 1
-			group_by_string = '"ShoutWebsite_shout"."post_ptr_id"'
+			group_by_string = '"shoutit_shout"."post_ptr_id"'
 
 		#		Calculating the Distance rank attribute:
 	if int(rank_type_flag & DISTANCE_RANK_TYPE):
@@ -152,21 +152,21 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code = '', province_code = 
 		if lat is not None and long is not None:
 			max_distance = MaxDistance(points, lat, long)
 			if max_distance > 0.0:
-				extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_DISTANCE) + ' * (normalized_distance("ShoutWebsite_post"."Latitude", "ShoutWebsite_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%.100f as DOUBLE PRECISION)), 2.0) + ' %(float(lat), float(long), max_distance)
+				extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_DISTANCE) + ' * (normalized_distance("shoutit_post"."Latitude", "shoutit_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%.100f as DOUBLE PRECISION)), 2.0) + ' %(float(lat), float(long), max_distance)
 				rank_count += 1
 			if group_by_string <> '':
-				group_by_string += ', "ShoutWebsite_post"."Latitude", "ShoutWebsite_post"."Longitude"'
+				group_by_string += ', "shoutit_post"."Latitude", "shoutit_post"."Longitude"'
 
 			#		Calculating the Time rank attribute:
 	if int(rank_type_flag & TIME_RANK_TYPE):
-		extra_order_bys +=  'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "ShoutWebsite_post"."DatePublished"))/ %d), 2.0) + ' %(now_timestamp_string, now_timestamp - base_timestamp)
+		extra_order_bys +=  'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d), 2.0) + ' %(now_timestamp_string, now_timestamp - base_timestamp)
 		rank_count += 1
 		if group_by_string <> '':
-			group_by_string += ', "ShoutWebsite_post"."DatePublished"'
+			group_by_string += ', "shoutit_post"."DatePublished"'
 
 		#		Calculating the Price rank attribute
 	if int(rank_type_flag & PRICE_RANK_TYPE):
-		extra_order_bys += '("Price"/(SELECT MAX("Price") FROM "ShoutWebsite_item")) + '
+		extra_order_bys += '("Price"/(SELECT MAX("Price") FROM "shoutit_item")) + '
 		rank_count += 1
 
 	if rank_count:
@@ -182,22 +182,22 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code = '', province_code = 
 		for keyword in filter_query.split(' '):
 			keyword = utils.safe_sql(keyword)
 			if item_name_q <> '':
-				item_name_q += "AND UPPER(\"ShoutWebsite_item\".\"Name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
-				text_q += "AND UPPER(\"ShoutWebsite_post\".\"Text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+				item_name_q += "AND UPPER(\"shoutit_item\".\"Name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+				text_q += "AND UPPER(\"shoutit_post\".\"Text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
 			else:
-				item_name_q = "UPPER(\"ShoutWebsite_item\".\"Name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
-				text_q = "UPPER(\"ShoutWebsite_post\".\"Text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+				item_name_q = "UPPER(\"shoutit_item\".\"Name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+				text_q = "UPPER(\"shoutit_post\".\"Text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
 		where_custom_clause.append('((' + item_name_q + ') OR (' + text_q + '))')
 		additional_selects.append('trade__Item__Name')
 		if group_by_string <> '':
-			group_by_string += ', "ShoutWebsite_item"."Name"'
+			group_by_string += ', "shoutit_item"."Name"'
 
 		#		completing WHERE part of the SQL query string and merge it into the QuerySet
-	where_custom_clause.append('(("ShoutWebsite_shout"."ExpiryDate" IS NULL AND "ShoutWebsite_post"."DatePublished" BETWEEN \'%s\' AND \'%s\') OR ("ShoutWebsite_shout"."ExpiryDate" IS NOT NULL AND now() < "ShoutWebsite_shout"."ExpiryDate"))' %(str(begin), str(today)))
+	where_custom_clause.append('(("shoutit_shout"."ExpiryDate" IS NULL AND "shoutit_post"."DatePublished" BETWEEN \'%s\' AND \'%s\') OR ("shoutit_shout"."ExpiryDate" IS NOT NULL AND now() < "shoutit_shout"."ExpiryDate"))' %(str(begin), str(today)))
 	if country_code and country_code <> '':
-		where_custom_clause.append('"ShoutWebsite_post"."CountryCode" = \'%s\'' %country_code)
+		where_custom_clause.append('"shoutit_post"."CountryCode" = \'%s\'' %country_code)
 	if province_code and province_code <> '':
-		where_custom_clause.append('LOWER("ShoutWebsite_post"."ProvinceCode") = \'%s\'' %unicode.lower(u''+province_code))
+		where_custom_clause.append('LOWER("shoutit_post"."ProvinceCode") = \'%s\'' %unicode.lower(u''+province_code))
 	shout_qs = shout_qs.extra(where = where_custom_clause)
 
 	if extra_order_bys <> '':
@@ -213,9 +213,9 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code = '', province_code = 
 
 	if int(rank_type_flag & FOLLOW_RANK_TYPE):
 		if len(user_followings_ids):
-			qp = 'LEFT OUTER JOIN "ShoutWebsite_post_Streams" ON ("ShoutWebsite_shout"."post_ptr_id" = "ShoutWebsite_post_Streams"."post_id")'
+			qp = 'LEFT OUTER JOIN "shoutit_post_Streams" ON ("shoutit_shout"."post_ptr_id" = "shoutit_post_Streams"."post_id")'
 			index = (query_string.find(qp) + len(qp) + 1)
-			query_string = unicode(query_string[:index]) + ' and "ShoutWebsite_post_Streams"."stream_id" IN (%s) ' % unicode(user_followings_ids)[1:-1] + unicode(query_string[index:])
+			query_string = unicode(query_string[:index]) + ' and "shoutit_post_Streams"."stream_id" IN (%s) ' % unicode(user_followings_ids)[1:-1] + unicode(query_string[index:])
 
 
 		#		executing query SQL & fetching shout IDs
@@ -263,12 +263,12 @@ def __GetStreamOfShoutsWithTags(rank_flag , user = None, lat = None, long= None,
 		if lat is not None and long is not None:
 			max_distance = MaxDistance(points, lat, long)
 			if max_distance > 0.0:
-				extra_order_bys += '(normalized_distance("ShoutWebsite_post"."Latitude", "ShoutWebsite_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%f as DOUBLE PRECISION)) + ' %(lat, long, max_distance)
+				extra_order_bys += '(normalized_distance("shoutit_post"."Latitude", "shoutit_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%f as DOUBLE PRECISION)) + ' %(lat, long, max_distance)
 				rank_count += 1
 
 			#		Calculating the Time axis:
 	if int(rank_flag & TIME_RANK_TYPE):
-		extra_order_bys +=  '(extract (epoch from age(\'%s\', "ShoutWebsite_post"."DatePublished"))/ %d) + ' %(now_timestamp_string, now_timestamp - base_timestamp)
+		extra_order_bys +=  '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d) + ' %(now_timestamp_string, now_timestamp - base_timestamp)
 		rank_count += 1
 
 	#		Calculating the Mutual Streams axis:
@@ -285,11 +285,11 @@ def __GetStreamOfShoutsWithTags(rank_flag , user = None, lat = None, long= None,
 			Shout.Streams.field.m2m_column_name()
 			), promote = True)
 			if max_followings > 0:
-				extra_order_bys += '(1 - (CAST(COUNT("ShoutWebsite_post_Streams"."stream_id") AS DOUBLE PRECISION) / CAST(%d AS DOUBLE PRECISION))) + ' % max_followings
+				extra_order_bys += '(1 - (CAST(COUNT("shoutit_post_Streams"."stream_id") AS DOUBLE PRECISION) / CAST(%d AS DOUBLE PRECISION))) + ' % max_followings
 				rank_count += 1
 
 	if int(rank_flag & PRICE_RANK_TYPE):
-		extra_order_bys += '("Price"/(SELECT MAX("Price") FROM "ShoutWebsite_item")) + '
+		extra_order_bys += '("Price"/(SELECT MAX("Price") FROM "shoutit_item")) + '
 		rank_count += 1
 
 	if rank_count:
@@ -298,7 +298,7 @@ def __GetStreamOfShoutsWithTags(rank_flag , user = None, lat = None, long= None,
 	else:
 		extra_order_bys = ''
 
-	where_custom_clause = ['"ShoutWebsite_post"."DatePublished" BETWEEN \'%s\' and \'%s\'' %(str(begin), str(today))]
+	where_custom_clause = ['"shoutit_post"."DatePublished" BETWEEN \'%s\' and \'%s\'' %(str(begin), str(today))]
 	if extra_order_bys <> '':
 		shout_qs = shout_qs.distinct(True).extra(select = {'rank' : extra_order_bys}).extra(order_by=['rank'])[start_index:end_index]
 	else:
@@ -345,17 +345,17 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index = None, end_ind
 	max_followings = MaxFollowings(ids, base_shout.CountryCode, base_shout.ProvinceCode,filters)
 	max_price = 1.0
 
-	extra_order_bys +=  'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "ShoutWebsite_post"."DatePublished"))/ %d), 2.0) + ' %(now_timestamp_string, now_timestamp - base_timestamp)
+	extra_order_bys +=  'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d), 2.0) + ' %(now_timestamp_string, now_timestamp - base_timestamp)
 	rank_count = 1
 
 	if max_distance > 0.0:
-		extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (normalized_distance("ShoutWebsite_post"."Latitude", "ShoutWebsite_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%.100f as DOUBLE PRECISION)), 2.0) + ' %(float(base_shout.Latitude), float(base_shout.Longitude), max_distance)
+		extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (normalized_distance("shoutit_post"."Latitude", "shoutit_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%.100f as DOUBLE PRECISION)), 2.0) + ' %(float(base_shout.Latitude), float(base_shout.Longitude), max_distance)
 		rank_count +=1
 		base_shout.MaxDistance = max_distance
 		base_shout.save()
 
 	if max_followings > 0:
-		extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (1 - (CAST(get_followings(\'%s\', "ShoutWebsite_trade"."StreamsCode") AS DOUBLE PRECISION) / CAST(%d AS DOUBLE PRECISION))), 2.0) + ' %(base_shout.StreamsCode, max_followings)
+		extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_TIME) + ' * (1 - (CAST(get_followings(\'%s\', "shoutit_trade"."StreamsCode") AS DOUBLE PRECISION) / CAST(%d AS DOUBLE PRECISION))), 2.0) + ' %(base_shout.StreamsCode, max_followings)
 		rank_count +=1
 		base_shout.MaxFollowings = max_followings
 		base_shout.save()
@@ -365,7 +365,7 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index = None, end_ind
 	shout_qs = Trade.objects.GetValidTrades(country_code=base_shout.CountryCode, province_code=base_shout.ProvinceCode).select_related('Item', 'Item__Currency', 'OwnerUser__Profile', 'Tags').filter(**filters).filter(~Q(pk = base_shout.id))
 	if exclude_shouter:
 		shout_qs = shout_qs.filter(~Q(OwnerUser = base_shout.OwnerUser))
-	shout_qs = shout_qs.extra(select = {'time_rank' : '(extract (epoch from age(\'%s\', "ShoutWebsite_post"."DatePublished"))/ %d)' %(now_timestamp_string, now_timestamp - base_timestamp)})
+	shout_qs = shout_qs.extra(select = {'time_rank' : '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' %(now_timestamp_string, now_timestamp - base_timestamp)})
 	shout_qs = shout_qs.extra(select = {'rank' : extra_order_bys}).extra(order_by=['rank'])[start_index:end_index]
 	shouts = list(shout_qs)
 	if shouts:
@@ -441,7 +441,7 @@ def GetRankedStreamShouts(stream):
 		now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
 		now_timestamp_string = str(datetime.now())
 
-		time_axis = '(extract (epoch from age(\'%s\', "ShoutWebsite_post"."DatePublished"))/ %d)' %(now_timestamp_string, now_timestamp - base_timestamp)
+		time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' %(now_timestamp_string, now_timestamp - base_timestamp)
 
 		shouts =  stream.ShoutWraps.select_related('Shout','Trade').filter(Q(Shout__ExpiryDate__isnull = True, Shout__DatePublished__range = (begin, today)) | Q(Shout__ExpiryDate__isnull = False, Shout__DatePublished__lte = F('Shout__ExpiryDate')) ,Shout__IsMuted = False, Shout__IsDisabled = False).extra(select = {'overall_rank' : '(("Rank" * 2) + %s) / 3' %time_axis}).extra(order_by = ['overall_rank'])
 		if not shouts:

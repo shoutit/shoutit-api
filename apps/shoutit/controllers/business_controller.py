@@ -10,7 +10,7 @@ import apps.shoutit.controllers.email_controller
 from apps.shoutit.models.models import Stream, BusinessProfile, ConfirmToken, StoredFile, BusinessConfirmation, Gallery, BusinessSource, Event, Trade, Deal, BusinessCategory, BusinessCreateApplication, PredefinedCity
 from apps.shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
 from apps.shoutit.utils import ToSeoFriendly
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 def GetBusiness(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):
@@ -244,7 +244,7 @@ def AcceptBusiness(request, username):
 	else:
 		user = username.User
 
-	profile = user_controller.GetProfile(user)
+	profile = GetProfile(user)
 
 	if not user.BusinessCreateApplication.count():
 		return
@@ -287,13 +287,12 @@ def AcceptBusiness(request, username):
 	elif ba.Business:
 		ba.Business.Confirmed = True
 
-
 	ba.Status = BUSINESS_CONFIRMATION_STATUS_ACCEPTED
 	ba.save()
 
-	user_controller.GiveUserPermissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
+	GiveUserPermissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
 
-	token = user_controller.SetRegisterToken(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
+	token = SetRegisterToken(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
 	apps.shoutit.controllers.email_controller.SendBusinessAcceptanceEmail(user.Business, user.email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'))
 
-import apps.shoutit.controllers.user_controller as user_controller
+from apps.shoutit.controllers.user_controller import *

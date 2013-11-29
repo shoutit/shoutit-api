@@ -25,7 +25,7 @@ from apps.shoutit.utils import Base62ToInt
 from apps.shoutit.xhr_utils import xhr_respond
 import apps.shoutit.controllers.payment_controller
 from renderers import page_html
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 from validators import form_validator
 from apps.shoutit.tiers import non_cached_view, refresh_cache, CACHE_TAG_DEALS, CACHE_TAG_STREAMS, ResponseResult, ValidationResult, RESPONSE_RESULT_ERROR_BAD_REQUEST, cached_view, CACHE_LEVEL_GLOBAL, CACHE_TAG_VOUCHERS, RESPONSE_RESULT_ERROR_FORBIDDEN
 from apps.shoutit.permissions import PERMISSION_SHOUT_DEAL

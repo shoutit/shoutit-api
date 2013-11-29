@@ -11,7 +11,7 @@ from apps.shoutit.models import ConfirmToken, Item, GalleryItem, UserProfile, Bu
 from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
 from apps.shoutit.utils import Base62ToInt
 from apps.shoutit.constants import *
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 def object_exists_validator(function, message='', *args, **kwargs):
 	try:

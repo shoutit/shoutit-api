@@ -96,6 +96,9 @@ class EventManager(PostManager):
 		return event_qs
 
 class ConfirmToken(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + unicode(self.User) + "::" + self.Token
 
@@ -128,6 +131,9 @@ class ConfirmToken(models.Model):
 			return None
 
 class Currency(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return '[' + self.Code + '] '
 	Code = models.CharField(max_length=10)
@@ -135,6 +141,9 @@ class Currency(models.Model):
 	Name = models.CharField(max_length=64, null=True)
 	
 class UserProfile(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return '[UP_' + unicode(self.id) + "] " + unicode(self.User.get_full_name())
 
@@ -266,6 +275,9 @@ class UserFunctions:
 User.__bases__ += (UserFunctions,)
 
 class LinkedFacebookAccount(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	User = models.ForeignKey(User, related_name='LinkedFB')
 	Uid = models.CharField(max_length=24, db_index=True)
 	AccessToken = models.CharField(max_length=512)
@@ -275,6 +287,9 @@ class LinkedFacebookAccount(models.Model):
 	verified = models.BooleanField(default = False)
 
 class Post(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	objects = PostManager()
 
 	OwnerUser = models.ForeignKey(User, related_name='Posts')
@@ -300,6 +315,9 @@ class Post(models.Model):
 
 
 class Shout(Post):
+	class Meta:
+		app_label = 'shoutit'
+
 	Tags = models.ManyToManyField('Tag', related_name='Shouts')
 	ExpiryDate = models.DateTimeField(null= True, default= None, db_index=True)
 	ExpiryNotified = models.BooleanField(default= False)
@@ -364,6 +382,9 @@ class Shout(Post):
 
 
 class ShoutWrap(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + unicode(self.Shout) + " # " + unicode(self.Rank)
 
@@ -372,6 +393,9 @@ class ShoutWrap(models.Model):
 	Rank = models.FloatField(default=1.0)
 
 class StoredImage(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + self.Image + " @ " + unicode(self.Item)
 
@@ -380,6 +404,9 @@ class StoredImage(models.Model):
 	Image = models.URLField(max_length=1024)
 
 class StoredFile(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return "(" + unicode(self.id) + ") " + unicode(self.File)
 	User = models.ForeignKey(User, related_name='Documents', null=True)
@@ -387,6 +414,9 @@ class StoredFile(models.Model):
 	Type = models.IntegerField()
 
 class Trade(Shout):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + unicode(self.Item)
 
@@ -405,6 +435,9 @@ class Trade(Shout):
 	objects = TradeManager()
 
 class Item(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + self.Name
 
@@ -430,6 +463,9 @@ class Item(models.Model):
 		return self.GetImages() and self.GetImages()[0] or None
 
 class Stream(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ' ' + self.GetTypeText()  + ' (' + unicode(self.GetOwner()) + ')'
 	Type = models.IntegerField(default=0, db_index=True)
@@ -508,6 +544,9 @@ class Stream(models.Model):
 #		stream.save()
 
 class FollowShip(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
 	follower = models.ForeignKey(UserProfile)
@@ -516,6 +555,9 @@ class FollowShip(models.Model):
 	state = models.IntegerField(default=0, db_index=True)
 
 class Store(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + self.Name
 	Creator = models.ForeignKey(User, related_name='created_stores')
@@ -536,6 +578,9 @@ class Store(models.Model):
 		return self.Stream.Shouts.filter(Type = POST_TYPE_EXPERIENCE).count()
 
 class Tag(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + self.Name
 	Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
@@ -553,6 +598,9 @@ class Tag(models.Model):
 		return True if Category.objects.get(TopTag=self) else False
 	
 class Category(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return self.Name
 	Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
@@ -561,6 +609,9 @@ class Category(models.Model):
 	Tags = models.ManyToManyField(Tag, related_name='Category')
 
 class Badge(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + self.Name
 	Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
@@ -571,6 +622,9 @@ class Badge(models.Model):
 #	TODO: view, controller. whenever user does an activity the controller gets fired and check if user earns new badge
 
 class Conversation(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id)
 	FromUser = models.ForeignKey(User,related_name='+')
@@ -583,6 +637,9 @@ class Conversation(models.Model):
 #	DateCreated = models.DateTimeField(auto_now_add=True)
 
 class Message(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		try:
 			return unicode(self.id) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
@@ -600,6 +657,9 @@ class Message(models.Model):
 	DateCreated = models.DateTimeField(auto_now_add=True)
 
 class Notification(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + self.Text
 	ToUser = models.ForeignKey(User, related_name='Notifications')
@@ -621,6 +681,9 @@ class Notification(models.Model):
 		self.save()
 
 class FbContest(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	ContestId = models.IntegerField(db_index=True)
 	User = models.ForeignKey(User, related_name='Contest_1')
 	FbId = models.CharField(max_length=24, db_index=True)
@@ -631,6 +694,9 @@ class PermissionsManager(models.Manager):
 		return Permission.objects.filter(users = user)
 
 class Permission(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return self.name
 
@@ -641,6 +707,9 @@ class Permission(models.Model):
 	users = models.ManyToManyField(User, through='UserPermission', related_name='permissions')
 
 class UserPermission(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 	date_given = models.DateTimeField(auto_now_add=True)
@@ -654,6 +723,9 @@ class BusinessCategoryManager(models.Manager):
 		return self.filter(Parent = None)
 
 class BusinessCategory(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return self.PrintHierarchy()
 
@@ -668,6 +740,9 @@ class BusinessCategory(models.Model):
 		return unicode('%s > %s' %(self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
 
 class BusinessProfile(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return '[BP_%s | %s | %s]' % (unicode(self.id), unicode(self.Name), unicode(self.User))
 
@@ -732,6 +807,9 @@ class BusinessProfile(models.Model):
 			return False
 
 class BusinessCreateApplication(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	User = models.ForeignKey(User, related_name='BusinessCreateApplication', null = True, on_delete=models.SET_NULL)
 	Business = models.ForeignKey(BusinessProfile, related_name='UserApplications', null = True, on_delete=models.SET_NULL)
 
@@ -755,16 +833,24 @@ class BusinessCreateApplication(models.Model):
 	Status = models.IntegerField(default=int(BUSINESS_CONFIRMATION_STATUS_WAITING), db_index=True)
 
 class BusinessSource(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	Business = models.OneToOneField(BusinessProfile, related_name="Source")
 	Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE)
 	SourceID = models.CharField(max_length=128, blank=True)
 
 class BusinessConfirmation(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	User = models.ForeignKey(User, related_name = 'BusinessConfirmations')
 	Files = models.ManyToManyField(StoredFile, related_name='Comfirmation')
 	DateSent = models.DateTimeField(auto_now_add=True)
 
 class Deal(Shout):
+	class Meta:
+		app_label = 'shoutit'
 	MinBuyers = models.IntegerField(default = 0)
 	MaxBuyers = models.IntegerField(null=True)
 	OriginalPrice = models.FloatField()
@@ -780,12 +866,17 @@ class Deal(Shout):
 		return self.MaxBuyers - self.BuyersCount()
 
 class DealBuy(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	Deal = models.ForeignKey(Deal, related_name = 'Buys', on_delete = models.SET_NULL, null = True)
 	User = models.ForeignKey(User, related_name = 'DealsBought', on_delete = models.SET_NULL, null = True)
 	Amount = models.IntegerField(default = 1)
 	DateBought = models.DateTimeField(auto_now_add = True)
 
 class Experience(Post):
+	class Meta:
+		app_label = 'shoutit'
 	def __unicode__(self):
 		return unicode(self.id)
 	AboutBusiness = models.ForeignKey('BusinessProfile', related_name='Experiences')
@@ -793,13 +884,18 @@ class Experience(Post):
 	objects = ExperienceManager()
 
 class SharedExperience(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+		unique_together = ('Experience', 'OwnerUser',)
+
 	Experience = models.ForeignKey(Experience, related_name = 'SharedExperiences')
 	OwnerUser = models.ForeignKey(User, related_name = 'SharedExperiences')
 	DateCreated = models.DateTimeField(auto_now_add = True)
-	class Meta:
-		unique_together = ('Experience', 'OwnerUser',)
 
 class Comment(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + unicode(self.Text)
 	AboutPost = models.ForeignKey(Post, related_name = 'Comments', null=True)
@@ -809,15 +905,20 @@ class Comment(models.Model):
 	DateCreated = models.DateTimeField(auto_now_add=True)
 
 class GalleryItem(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+		unique_together = ('Item', 'Gallery',)
+
 	Item = models.ForeignKey(Item,related_name='+')
 	Gallery = models.ForeignKey('Gallery',related_name='GalleryItems')
 	IsDisable = models.BooleanField(default=False)
 	IsMuted = models.BooleanField(default=False)
 	DateCreated = models.DateTimeField(auto_now_add=True)
-	class Meta:
-		unique_together = ('Item', 'Gallery',)
 
 class Gallery(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return unicode(self.id) + ": " + unicode(self.Description)
 	Description = models.TextField(max_length=500,default='')
@@ -841,6 +942,9 @@ class PaymentsManager(models.Manager):
 		return self.filter(content_type = ContentType.objects.get_for_model(object.__class__), object_pk = object.pk)
 
 class Payment(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	User = models.ForeignKey(User, related_name='Payments')
 	DateCreated = models.DateTimeField(auto_now_add=True)
 	DateUpdated = models.DateTimeField(auto_now=True)
@@ -856,6 +960,9 @@ class Payment(models.Model):
 	objects = PaymentsManager()
 
 class Transaction(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	RemoteIdentifier = models.CharField(max_length=1024)
 	RemoteData = models.CharField(max_length=1024)
 	RemoteStatus = models.CharField(max_length=1024)
@@ -863,6 +970,9 @@ class Transaction(models.Model):
 	DateUpdated = models.DateTimeField(auto_now=True)
 
 class Voucher(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	DealBuy = models.ForeignKey(DealBuy, related_name = 'Vouchers')
 	Code = models.CharField(max_length = 22)
 	DateGenerated = models.DateTimeField(auto_now_add = True)
@@ -870,6 +980,8 @@ class Voucher(models.Model):
 	IsSent = models.BooleanField(default = False)
 
 class Event(Post):
+	class Meta:
+		app_label = 'shoutit'
 	def __unicode__(self):
 		return unicode(self.id)
 
@@ -882,6 +994,9 @@ class Event(Post):
 
 
 class Report(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	def __unicode__(self):
 		return 'From : ' + self.Type()
 	User = models.ForeignKey(User, related_name='Reports')
@@ -900,6 +1015,9 @@ class Report(models.Model):
 		return ReportType.values[self.Type]
 
 class Service(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	Code = models.CharField(max_length = 256)
 	Name = models.CharField(max_length = 1024)
 	Price = models.FloatField()
@@ -923,6 +1041,9 @@ class ServiceManager(models.Manager):
 
 
 class ServiceBuy(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	User = models.ForeignKey(User, related_name='Services')
 	Service = models.ForeignKey('Service', related_name='Buyers')
 	Amount = models.IntegerField(default = 1)
@@ -932,6 +1053,9 @@ class ServiceBuy(models.Model):
 
 
 class ServiceUsage(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	User = models.ForeignKey(User, related_name='ServicesUsages')
 	Service = models.ForeignKey('Service', related_name='BuyersUsages')
 	Amount = models.IntegerField(default = 1)
@@ -939,7 +1063,10 @@ class ServiceUsage(models.Model):
 
 
 class Subscription(models.Model):
-	Id = models.CharField(max_length=19)
+	class Meta:
+		app_label = 'shoutit'
+
+	#Id = models.CharField(max_length=19)
 	Type = models.IntegerField(default=0)
 	State = models.IntegerField(default=0)
 	SignUpDate = models.DateTimeField(null=True)
@@ -996,6 +1123,9 @@ class Subscription(models.Model):
 
 
 class PredefinedCity(models.Model):
+	class Meta:
+		app_label = 'shoutit'
+
 	City = models.CharField(max_length=200, default='' , db_index=True)
 	EncodedCity = models.CharField(max_length=200, default='' , db_index=True)
 	Country = models.CharField(max_length=2, default='' , db_index=True)

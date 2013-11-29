@@ -1,7 +1,7 @@
 import datetime
 import pika
 from apps.shoutit.utils import asynchronous_task
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 import os
 from apns import Payload, APNs
 

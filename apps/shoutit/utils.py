@@ -15,7 +15,6 @@ from numpy import array,argmax, sqrt, sum
 from milk.unsupervised.normalise import zscore
 from apps.shoutit import constants
 from apps.shoutit.models import Post, Experience, PredefinedCity
-import apps.shoutit.settings
 from pygeoip import *
 import pygeoip
 from milk.unsupervised import _kmeans

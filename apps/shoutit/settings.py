@@ -27,11 +27,20 @@ DEBUG = True
 
 TEMPLATE_DEBUG = False
 
-ALLOWED_HOSTS = []
+# Prod or Dev
+DEV = True
+if DEV:
+	SHOUT_IT_DOMAIN = 'shoutit.syrex:8000'
+	SHOUT_IT_HOST = '127.0.0.1'
+else:
+	SHOUT_IT_DOMAIN = 'www.shoutit.com'
+	SHOUT_IT_HOST = 'shoutit.com'
+
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.syrex', 'shoutit.com']
 
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.syrex')
 ADMINS = (
-     ('Your Name', 'your_email@example.com'),
+	 ('Your Name', 'your_email@example.com'),
 )
 MANAGERS = ADMINS
 
@@ -49,7 +58,7 @@ RANK_COEFFICIENT_FOLLOW = 0.014 # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_DISTANCE = 1 # value should be between 0.0 ~ 1.0
 
 # Celery Settings
-BROKER_HOST = "localhost"
+BROKER_HOST = SHOUT_IT_HOST
 BROKER_PORT = 5672
 #BROKER_USER = "celery"
 #BROKER_PASSWORD = "celery"
@@ -60,34 +69,36 @@ CELERY_IMPORTS = ("celery_tasks", )
 #djcelery.setup_loader()
 
 # Realtime and Redis
-REALTIME_SERVER_URL = 'http://shoutit.syrex:7772/' #'www.shoutit.com'
-REALTIME_SERVER_ADDRESS = 'shoutit.syrex'
+REALTIME_SERVER_URL = 'http://' + SHOUT_IT_HOST + ':7772/' #'www.shoutit.com'
+REALTIME_SERVER_ADDRESS = SHOUT_IT_HOST
 REALTIME_SERVER_TCP_PORT = 7771
 REALTIME_SERVER_HTTP_PORT = 7772
 REALTIME_SERVER_API_PORT = 7773
-RABBIT_MQ_HOST = 'shoutit.syrex'
+RABBIT_MQ_HOST = SHOUT_IT_HOST
 RABBIT_MQ_PORT = 5672
-SHOUT_IT_DOMAIN = 'shoutit.syrex:8008' #'www.shoutit.com'
 
-SESSION_REDIS_HOST = 'shoutit.syrex'
+SESSION_REDIS_HOST = SHOUT_IT_HOST
 SESSION_REDIS_PORT = 6379
 REDIS_SOCKET_TIMEOUT = 30
+SESSION_REDIS_DB = 0
+SESSION_REDIS_PASSWORD = 'password'
+SESSION_REDIS_PREFIX = 'session'
 
 # Caching
 try:
-    import redis
-    SESSION_ENGINE = 'common.redis_session_backend'
-    CACHES = {
+	import redis
+	SESSION_ENGINE = 'redis_sessions.session'
+	CACHES = {
 		'default': {
-			'BACKEND' : 'redis_cache.RedisCache',
-			'LOCATION' : 'shoutit.syrex:6379',
+			'BACKEND': 'redis_cache.RedisCache',
+			'LOCATION': SHOUT_IT_HOST + ':6379',
 			'TIMEOUT': 12 * 60 * 60,
 		}
 	}
 except ImportError:
-    redis = ''
-    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-    CACHES = {
+	redis = ''
+	SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+	CACHES = {
 		'default': {
 			'BACKEND' : 'django.core.cache.backends.locmem.LocMemCache',
 			'TIMEOUT': 240,
@@ -98,15 +109,15 @@ except ImportError:
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
+	'django.contrib.admin',
 	'grappelli',
-    'django.contrib.auth',
+	'django.contrib.auth',
 	'django.contrib.admindocs',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'apps.ActivityLogger',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'apps.ActivityLogger',
 	'apps.shoutit',
 	'widget_tweaks',
 	'piston',
@@ -131,17 +142,17 @@ INSTALLED_APPS = (
 
 MIDDLEWARE_CLASSES = (
 	#'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
 	'django.middleware.locale.LocaleMiddleware',
 
 	'apps.shoutit.middleware.SetLanguageMiddleware',
 	'apps.shoutit.middleware.UserPermissionsMiddleware',
-	#'apps.shoutit.middleware.UserLocationMiddleware',
+	'apps.shoutit.middleware.UserLocationMiddleware',
 	'apps.shoutit.middleware.FBMiddleware',
 	'apps.ActivityLogger.middleware.ActivityLogger',
 
@@ -150,16 +161,11 @@ MIDDLEWARE_CLASSES = (
 	'django_mobile.middleware.MobileDetectionMiddleware',
 	'django_mobile.middleware.SetFlavourMiddleware',
 
-
 )
 
 # URLs
 ROOT_URLCONF = 'apps.shoutit.urls'
-SITE_ID = 1
 APPEND_SLASH = True
-SITE_NAME = "Shoutit"
-SITE_DOMAIN = "shoutit.syrex"
-SITE_HOST = 'shoutit.syrex'
 IS_SITE_SECURE = False #True
 
 WSGI_APPLICATION = 'apps.shoutit.wsgi.application'
@@ -168,23 +174,23 @@ WSGI_APPLICATION = 'apps.shoutit.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
+#DATABASES = {
+#	'default': {
+#		'ENGINE': 'django.db.backends.sqlite3',
+#		'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#	}
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'shoutdb',                      # Or path to database file if using sqlite3.
+        'USER': 'postgres',                      # Not used with sqlite3.
+        'PASSWORD': 'root',                  # Not used with sqlite3.
+		'HOST': SHOUT_IT_HOST,
+        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
-
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#        'NAME': 'shoutdb',                      # Or path to database file if using sqlite3.
-#        'USER': 'postgres',                      # Not used with sqlite3.
-#        'PASSWORD': 'root',                  # Not used with sqlite3.
-#		'HOST': 'localhost',
-#        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-#    }
-#}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -217,10 +223,10 @@ MEDIA_ROOT = '/media/'
 
 # Templates
 TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, 'apps', 'shoutit', 'templates'),
-    os.path.join(BASE_DIR, 'apps', 'shoutit', 'ajax_templates'),
-    os.path.join(BASE_DIR, 'apps', 'shoutit', 'text_messages'),
-    os.path.join(BASE_DIR, 'apps', 'shoutit', 'html_messages'),
+	os.path.join(BASE_DIR, 'apps', 'shoutit', 'templates'),
+	os.path.join(BASE_DIR, 'apps', 'shoutit', 'ajax_templates'),
+	os.path.join(BASE_DIR, 'apps', 'shoutit', 'text_messages'),
+	os.path.join(BASE_DIR, 'apps', 'shoutit', 'html_messages'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -235,69 +241,69 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
+	'django.template.loaders.filesystem.Loader',
+	'django.template.loaders.app_directories.Loader',
 )
 
 # Logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
+	'version': 1,
+	'disable_existing_loggers': False,
 	'formatters': {
 		'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
+			'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+		},
+		'simple': {
+			'format': '%(levelname)s %(message)s'
+		},
 		'message_only' : {
 			'format': '%(message)s'
 		}
 	},
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        },
+	'handlers': {
+		'mail_admins': {
+			'level': 'ERROR',
+			'class': 'django.utils.log.AdminEmailHandler'
+		},
 		'sql_file': {
 			'class' : 'logging.FileHandler',
 			'level' : 'INFO',
 			'filename': os.path.join(BASE_DIR, 'logs', 'sql.log'),
 		},
 		'sql_console': {
-            'level':'INFO',
-            'class':'logging.StreamHandler',
-            'formatter': 'message_only'
-        },
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
+			'level':'INFO',
+			'class':'logging.StreamHandler',
+			'formatter': 'message_only'
+		},
+	},
+	'loggers': {
+		'django.request': {
+			'handlers': ['mail_admins'],
+			'level': 'ERROR',
+			'propagate': True,
+		},
 		'SqlLogMiddleware' : {
 			'handlers': ['sql_file'],
-            'level': 'INFO',
+			'level': 'INFO',
 			'propagate': False,
 		},
 		'SqlLogMiddleware_console' : {
 			'handlers': ['sql_console'],
-            'level': 'INFO',
+			'level': 'INFO',
 			'propagate': False,
 		}
-    }
+	}
 }
 
 # Mail Settings
 DEFAULT_FROM_EMAIL = 'ShoutIt <info@shoutit.com>'
-EMAIL_HOST = 'localhost'    #TODO: SET THIS BEFORE DEPLOYMENT
+EMAIL_HOST = SHOUT_IT_HOST    #TODO: SET THIS BEFORE DEPLOYMENT
 EMAIL_PORT = '25'
 EMAIL_HOST_USER = 'admin'   #TODO: SET THIS BEFORE DEPLOYMENT
 EMAIL_HOST_PASSWORD = 'password'    #TODO: SET THIS BEFORE DEPLOYMENT
 EMAIL_USE_TLS = False
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'  #TODO: REMOVE THIS BEFORE DEPLOYMENT
-EMAIL_FILE_PATH = os.path.join(os.path.dirname(__file__), 'messages')   #TODO: REMOVE THIS BEFORE DEPLOYMENT
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'messages')   #TODO: REMOVE THIS BEFORE DEPLOYMENT
 
 SEND_GRID_SMTP_HOST = 'smtp.sendgrid.net'
 SEND_GRID_SMTP_USERNAME = 'shoutit'
@@ -411,3 +417,40 @@ PROFANITIES_LIST = ('ass', 'ass lick', 'asses', 'asshole', 'assholes', 'asskisse
 					'shits', 'shitted', 'shitter', 'shitters', 'shitting', 'shittings', 'shitty',
 					'slag', 'sleaze', 'slut', 'sluts', 'smut', 'snatch', 'spunk', 'twat', 'wetback',
 					'whore', 'wop')
+
+
+CLOUD_FILES_AUTH = 'syrexme'
+CLOUD_FILES_KEY = '1a0386c347776588f5aa08cf8dce0877'
+CLOUD_FILES_SERVICE_NET = False #True
+
+SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
+
+
+
+PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO' #'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
+PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
+PAYPAL_PRIVATE_CERT = os.path.join(os.path.dirname(__file__), 'ShoutWebsite', 'static', 'Certificates', 'PayPal', 'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(os.path.dirname(__file__), 'ShoutWebsite', 'static', 'Certificates', 'PayPal', 'paypal-public-key.pem')
+PAYPAL_CERT = os.path.join(os.path.dirname(__file__), 'ShoutWebsite', 'static', 'Certificates', 'PayPal', 'paypal-cert.pem')
+PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
+PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
+PAYPAL_RETURN_URL = 'http://80.227.53.34/paypal_return/'
+PAYPAL_CANCEL_URL = 'http://80.227.53.34/paypal_cancel/'
+
+PAYPAL_SUBSCRIPTION_RETURN_URL = 'http://80.227.53.34/bsignup/'
+PAYPAL_SUBSCRIPTION_CANCEL_URL = 'http://80.227.53.34/bsignup/'
+
+PAYPAL_BUSINESS = 'biz_1339997492_biz@syrex.me'
+PAYPAL_TEST = True
+
+SUBSCRIPTION_PAYPAL_SETTINGS = {
+	'notify_url' : PAYPAL_NOTIFY_URL,
+	'return' : PAYPAL_RETURN_URL,
+	'cancel_return' : PAYPAL_CANCEL_URL,
+	'business' : PAYPAL_BUSINESS,
+}
+
+SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
+
+CPSP_ID = 'syrexme'
+CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'

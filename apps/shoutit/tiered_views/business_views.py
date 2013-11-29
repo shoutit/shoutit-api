@@ -9,7 +9,7 @@ from apps.shoutit.tiered_views.renderers import page_html, json_renderer, activa
 from apps.shoutit.tiered_views.validators import form_validator, user_edit_profile_validator
 from apps.shoutit.tiers import refresh_cache, non_cached_view, CACHE_TAG_STREAMS, ResponseResult, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_USERS
 from django.utils.translation import ugettext as _
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 @non_cached_view(html_renderer=lambda request, result, tiny_username: page_html(request, result, 'signup_temp_business.html', 'Sign Up Business'),
 	json_renderer=lambda request, result, tiny_username: json_renderer(request,

@@ -19,7 +19,7 @@ from apps.shoutit.utils import IntToBase62, Base62ToInt
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from apps.shoutit.api.api_utils import get_object_url
 from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 from common.tagged_cache import TaggedCache
 
 def render_in_master_page(request, template, variables, page_title='', page_desc=''):
@@ -31,7 +31,7 @@ def render_in_master_page(request, template, variables, page_title='', page_desc
 	variables['MESSAGE_HEAD'] = MESSAGE_HEAD
 	variables['constants'] = constants.rank_flags
 	variables['report_constants'] = constants.report_types
-	variables['settings'] = apps.shoutit.settings
+	variables['settings'] = settings
 
 
 	variables['user_lat'] = request.session['user_lat']

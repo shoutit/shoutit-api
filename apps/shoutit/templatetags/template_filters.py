@@ -10,7 +10,7 @@ from django.utils.translation import ugettext as _
 from widget_tweaks.templatetags.widget_tweaks import _process_field_attributes
 from apps.shoutit import utils
 from apps.shoutit.utils import IntToBase62
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 register = template.Library()
 

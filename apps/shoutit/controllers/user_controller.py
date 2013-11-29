@@ -12,7 +12,7 @@ from django.db.models.query_utils import Q
 from apps.shoutit.constants import USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, EVENT_TYPE_FOLLOW_TAG, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_COMMENT, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_BUY_DEAL, STREAM_TYPE_BUSINESS, EVENT_TYPE_FOLLOW_BUSINESS
 from apps.shoutit.utils import ToSeoFriendly
 
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 from apps.shoutit import utils
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS

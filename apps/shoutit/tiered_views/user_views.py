@@ -1,12 +1,12 @@
 from django.contrib.auth.decorators import login_required
-from contact_importer.decorators import get_contacts
+#from contact_importer.decorators import get_contacts
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import math
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 from apps.shoutit.utils import ToSeoFriendly
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 from django.utils.translation import ugettext_lazy as _
 from apps.shoutit.controllers import email_controller, shout_controller, realtime_controller
 from apps.shoutit.controllers import stream_controller
@@ -652,7 +652,7 @@ def top_users(request):
 
 @csrf_exempt
 @login_required
-@get_contacts
+#@get_contacts
 @non_cached_view(html_renderer = lambda request, result, *args, **kwargs: page_html(request, result, 'contact_list.html', _('Invite your contacts to Shoutit.')))
 def import_contacts(request, contact_provider):
 	result = ResponseResult()

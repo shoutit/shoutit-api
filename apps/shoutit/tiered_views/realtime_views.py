@@ -1,5 +1,5 @@
 from importlib import import_module
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 from apps.shoutit.controllers import realtime_controller, user_controller
 from apps.shoutit.controllers import notifications_controller
 from apps.shoutit.controllers import message_controller

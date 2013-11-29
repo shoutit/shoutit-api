@@ -6,7 +6,7 @@ from paypal.standard.forms import PayPalEncryptedPaymentsForm
 from apps.shoutit import utils
 
 from apps.shoutit.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 CONCURRENT_DEALS_SERVICE = 'CONCURRENT_DEALS'
 

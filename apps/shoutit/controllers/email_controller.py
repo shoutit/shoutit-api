@@ -4,7 +4,7 @@ from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from apps.shoutit.utils import asynchronous_task
-import apps.shoutit.settings
+import apps.shoutit.settings as settings
 
 @asynchronous_task()
 def SendEmail(email, variables, html_template, text_template):
