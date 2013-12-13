@@ -1,6 +1,6 @@
 from django.utils.translation import ugettext as _
 
-translated = ["what are you shouting about?", "currency", "description", "Username or Email", "Password", "email", "email", "Username", "Email", "Mobile", "Sex", "Birthdate", "First Name", "Last Name", "Password Again", "Text", "Phone", "Name", "price", "Business Name", "Business Name", "expiry date", "minimum buyers", "maximum buyers", "original price", "valid from date", "valid to date", "Which business", "Which business", "Write your comment here", "Tell us what's wrong","New Password", "Confirm Password", "New Password", "Confirm Password", "About","Autos", "Electronics", "Pets", "Fashion", "What are you shouting about?", "For what price?", "Currency", "Description"]
+translated = ["what are you shouting about?", "currency", "description", "Username or Email", "Password", "email", "email", "Username", "Email", "Mobile", "Sex", "Birthdate", "First Name", "Last Name", "Password Again", "Text", "Phone", "Name", "price", "Business Name", "Business Name", "expiry date", "minimum buyers", "maximum buyers", "original price", "valid from date", "valid to date", "Which business", "Which business", "Write your comment here", "Tell us what's wrong","New Password", "Confirm Password", "New Password", "Confirm Password", "About","Autos", "Electronics", "Pets", "Fashion", "What are you shouting about?", "For what price?", "Currency", "Description", "for what price?"]
 
 var = _("what are you shouting about?")
 var = _("currency")
@@ -71,3 +71,5 @@ var = _("Damascus")
 
 
 
+
+var = _("for what price?")

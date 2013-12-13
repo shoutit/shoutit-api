@@ -1,4 +1,5 @@
 {% load template_filters %}
+{% load staticfiles %}
 
 <div class="shout_post type-{{ shout.Type }} clearfix">
 
@@ -22,7 +23,7 @@
 				<a class="shout_post_name" href="/shout/{{ shout.id|base62 }}/">{{ shout.Item.Name }}</a>
 				<span class="shout_post_price">{{ shout.Item.Price|price }}</span>
 {#				{% if user.username == shout.OwnerUser.username %}#}
-{#				<span class="shout_post_delete btn" id="delete{{shout.id}}"><img src="/static/img/delete.png" title="Delete shout" /></span>#}
+{#				<span class="shout_post_delete btn" id="delete{{shout.id}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></span>#}
 {#				{% endif %}#}
 				<br>
 				<span class="shout_post_date pd" title="{{ shout.DatePublished|date:"Y-n-d H:i:s" }}">.</span>
@@ -51,13 +52,13 @@
 
             <div class="shout_post_buttons">
 			{% if user.is_staff and  user.username != shout.OwnerUser.username%}
-				<a id="reply_to_{{shout.id|base62}}" class="btn" href="/shout/{{ shout.pk|base62 }}/" title="Message this Shouter"><img src="/static/img/message2.png" /></a>
-				<a class="shout_post_delete btn" id="deleteShout{{shout.pk|base62}}"><img src="/static/img/delete.png" title="Delete shout" /></a>
+				<a id="reply_to_{{shout.id|base62}}" class="btn" href="/shout/{{ shout.pk|base62 }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
+				<a class="shout_post_delete btn" id="deleteShout{{shout.pk|base62}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
             {%  else %}
 				{% if user.username == shout.OwnerUser.username %}
-                <a class="shout_post_delete btn" id="deleteShout{{shout.pk|base62}}"><img src="/static/img/delete.png" title="Delete shout" /></a>
+                <a class="shout_post_delete btn" id="deleteShout{{shout.pk|base62}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
 				{% else %}
-					<a id="reply_to_{{shout.id|base62}}" class="btn" href="/shout/{{ shout.pk|base62 }}/" title="Message this Shouter"><img src="/static/img/message2.png" /></a>
+					<a id="reply_to_{{shout.id|base62}}" class="btn" href="/shout/{{ shout.pk|base62 }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
 				{% endif %}
 			{% endif %}
             </div>

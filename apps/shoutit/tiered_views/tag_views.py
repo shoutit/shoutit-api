@@ -136,7 +136,7 @@ def tag_stream(request, tag_name, page_num=None):
 def tag_profile(request, tag_name):
 	tag = tag_controller.GetTag(tag_name)
 	if not tag.Image:
-		tag.Image = '/static/new_design/img/shout_tag.png'
+		tag.Image = '/static/img/shout_tag.png'
 	result = ResponseResult()
 	result.data['tagProfile'] = tag
 
@@ -168,7 +168,7 @@ def tag_profile(request, tag_name):
 def tag_profile_brief(request, tag_name):
 	tag = tag_controller.GetTag(tag_name)
 	if not tag.Image:
-		tag.Image = '/static/new_design/img/shout_tag.png'
+		tag.Image = '/static/img/shout_tag.png'
 	result = ResponseResult()
 	result.data['tagProfile'] = tag
 

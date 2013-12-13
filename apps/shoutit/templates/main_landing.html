@@ -2,6 +2,8 @@
 {% load template_filters %}
 {% load widget_tweaks %}
 {% load i18n %}
+{% load staticfiles %}
+
 {% block styles_ %}
 {% endblock %}
 {% block before_page %}
@@ -20,7 +22,7 @@
             {% trans "Selling something?" %}
         </div>
         <div class="modal-body">
-            <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+            <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
         </div>
         <div class="modal-footer">
         </div>
@@ -33,7 +35,7 @@
             {% trans "Want to make extra cash?" %}
         </div>
         <div class="modal-body">
-            <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+            <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
         </div>
         <div class="modal-footer">
         </div>
@@ -46,7 +48,7 @@
             {% trans "Looking for a new hobby?" %}
         </div>
         <div class="modal-body">
-            <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+            <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
         </div>
         <div class="modal-footer">
         </div>
@@ -59,7 +61,7 @@
             {% trans "Want to learn new stuff?" %}
         </div>
         <div class="modal-body">
-            <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+            <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
         </div>
         <div class="modal-footer">
         </div>
@@ -72,7 +74,7 @@
             {% trans "Feel like spending?" %}
         </div>
         <div class="modal-body">
-            <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+            <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
         </div>
         <div class="modal-footer">
         </div>
@@ -138,7 +140,7 @@
 //                $(this).find('#id_tags').importTags('new iphone4s unlocked');
             });
             var remove_data = function () {
-                $(this).find('.modal-body').html('<div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>');
+                $(this).find('.modal-body').html('<div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>');
                 $(this).removeAttr('data-loaded');
             };
             $('#selling_modal').on('hidden', remove_data);

@@ -1,9 +1,11 @@
 {% load template_filters %}
 {% load i18n %}
+{% load staticfiles %}
+
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
 	<title>Facebook Connect</title>
-	<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
+	<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-1.7.1.js"%}"></script>
 	<script type="text/javascript">
 		var RunCallbackFunction = function(data, fb_id) {
 			window.opener.FBConnectDone(data, FbId);
@@ -11,7 +13,7 @@
 	</script>
 
 	<!--[if lte IE 9]>
-	<script type="text/javascript" language="JavaScript" src="/static/js/json2.js"></script>
+	<script type="text/javascript" language="JavaScript" src="{% static "js/json2.js"%}"></script>
 	<![endif]-->
 
 

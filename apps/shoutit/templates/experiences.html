@@ -1,6 +1,8 @@
 {#{% extends "base.html" %}#}
 {#{% load widget_tweaks %}#}
 {% load template_filters %}
+{% load staticfiles %}
+
 {##}
 {#{% block content %}#}
         <div class="box-container dark-container round shadow experiences">
@@ -14,11 +16,11 @@
 
 
 {#{% block scripts %}#}
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-ui-1.8.17.custom.min.js"></script>
-{#<script type="text/javascript" language="JavaScript" src="/static/new_design/js/bootstrap.js"></script>#}
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/slimScroll.js"></script>
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/site.js"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-1.7.1.js"%}"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-ui-1.8.17.custom.min.js"%}"></script>
+{#<script type="text/javascript" language="JavaScript" src="{% static "js/bootstrap.js"%}"></script>#}
+<script type="text/javascript" language="JavaScript" src="{% static "js/slimScroll.js"%}"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/site.js"%}"></script>
 
 <script type="text/javascript" language="JavaScript">
 

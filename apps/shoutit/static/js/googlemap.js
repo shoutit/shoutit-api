@@ -4,10 +4,10 @@
  * Time: 5:03 PM
  */
 
-var image =  new google.maps.MarkerImage('/static/new_design/img/map-pin.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
-var offer_image =  new google.maps.MarkerImage('/static/new_design/img/map-pin-offer.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
-var request_image =  new google.maps.MarkerImage('/static/new_design/img/map-pin-request.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
-var shadow = new google.maps.MarkerImage('/static/new_design/img/map-pin-shadow.png',new google.maps.Size(42,27),new google.maps.Point(0,0),new google.maps.Point(10,15));
+var image =  new google.maps.MarkerImage('/static/img/map-pin.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
+var offer_image =  new google.maps.MarkerImage('/static/img/map-pin-offer.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
+var request_image =  new google.maps.MarkerImage('/static/img/map-pin-request.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
+var shadow = new google.maps.MarkerImage('/static/img/map-pin-shadow.png',new google.maps.Size(42,27),new google.maps.Point(0,0),new google.maps.Point(10,15));
 var geocoder = new google.maps.Geocoder();
 
 function GoogleMap(ID,location_id){
@@ -421,8 +421,8 @@ GoogleMap.prototype.CreateLandingMap = function(lat,lng){
 //var UpRight;
 //var MapBounds;
 //
-//var image =  new google.maps.MarkerImage('/static/new_design/img/map-pin.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
-//var shadow = new google.maps.MarkerImage('/static/new_design/img/map-pin-shadow.png',new google.maps.Size(42,27),new google.maps.Point(0,0),new google.maps.Point(10,15));
+//var image =  new google.maps.MarkerImage('/static/img/map-pin.png',new google.maps.Size(24, 27),new google.maps.Point(0,0),new google.maps.Point(12, 14));
+//var shadow = new google.maps.MarkerImage('/static/img/map-pin-shadow.png',new google.maps.Size(42,27),new google.maps.Point(0,0),new google.maps.Point(10,15));
 //
 //    function setLocation(lat,lng){
 //        document.getElementById('id_location').value = lat+','+lng;

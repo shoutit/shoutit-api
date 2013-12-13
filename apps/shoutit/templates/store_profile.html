@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
+{% load staticfiles %}
 
 {% block styles %}
 {% endblock %}
@@ -61,7 +62,7 @@
 			{{ storeProfile.Description }}
 		</div>
         {% if form %}
-        <form enctype="multipart/form-data" method="post" action="." id="store_shout_sell">
+        <form enctype="multipart/form-data" method="post" action="" id="store_shout_sell">
             {% csrf_token %}
 
             <div class="clearfix {% if form.name.errors %}error{% endif %}">
@@ -149,8 +150,8 @@
 
 {% block scripts %}
 	{% block sub_scripts %}{% endblock %}
-    <script src="/static/js/jquery-ui-1.8.16.custom.min.js"></script>
-    <script src="/static/js/jquery.tagsinput.min.js"></script>
+    <script src="{% static "js/jquery-ui-1.8.16.custom.min.js"%}"></script>
+    <script src="{% static "js/jquery.tagsinput.min.js"%}"></script>
 	<script type="text/javascript">
 		$(document).ready(function () {
             fix_stream();

@@ -1,13 +1,14 @@
+{% load staticfiles %}
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN"
         "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">
 <html>
 <head>
     <title>Mobile |{% if page_title %} {{ page_title }} | {% endif %} Shoutit</title>
-    <link rel="stylesheet" href="/static/new_design/css/mobile.css" />
-    <link type="image/png" rel="icon" href="/static/new_design/img/icon.png"/>
-    <link rel="apple-touch-icon-precomposed" href="/static/new_design/img/icon.png" />
-    <link rel="apple-touch-icon" href="/static/new_design/img/icon.png"/>
+    <link rel="stylesheet" href="{% static "css/mobile.css"%}" />
+    <link type="image/png" rel="icon" href="{% static "img/icon.png"%}"/>
+    <link rel="apple-touch-icon-precomposed" href="{% static "img/icon.png"%}" />
+    <link rel="apple-touch-icon" href="{% static "img/icon.png"%}"/>
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />

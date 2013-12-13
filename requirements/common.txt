@@ -15,6 +15,7 @@ milk==0.4.2
 pygeoip==0.3.0
 redis==2.8.0
 django-redis-cache==0.10.0
+django-redis-sessions==0.4.0
 suds==0.4
 pika==0.9.13
 apns==1.1.2

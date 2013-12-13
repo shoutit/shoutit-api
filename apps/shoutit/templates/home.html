@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load template_filters %}
+{% load staticfiles %}
 
 {% block content %}
 {#	Top column#}
@@ -97,7 +98,7 @@
 
 {% block scripts %}
 <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
-<script src="/static/js/googlemap.js"></script>
+<script src="{% static "js/googlemap.js"%}"></script>
 <script>
     var timeout = null;
     var lastSearch = null;

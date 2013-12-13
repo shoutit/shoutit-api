@@ -6,7 +6,7 @@
 
 {% block content %}
     <div class="span12 offset2">
-    <form enctype="multipart/form-data" method="post" action=".">
+    <form enctype="multipart/form-data" method="post" action="">
         {% csrf_token %}
 
         <div class="clearfix {% if form.name.errors %}error{% endif %}">

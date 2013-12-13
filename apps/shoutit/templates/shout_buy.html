@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% load template_filters %}
+{% load staticfiles %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="/static/css/fileuploader.css" />
+    <link rel="stylesheet" type="text/css" href="{% static "css/fileuploader.css"%}" />
 {% endblock %}
 
 {% block content %}
@@ -84,9 +85,9 @@
 
 {% block scripts %}
 	<script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
-	<script src="/static/js/googlemap.js"></script>
+	<script src="{% static "js/googlemap.js"%}"></script>
 
-    <script type="text/javascript" src="/static/js/fileuploader.js"></script>
+    <script type="text/javascript" src="{% static "js/fileuploader.js"%}"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             CreateShoutMap("shout_buy");

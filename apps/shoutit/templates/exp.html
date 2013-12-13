@@ -1,4 +1,6 @@
 {% load template_filters %}
+{% load staticfiles %}
+
 <div class="shout_post type-{{ shout.Type }} clearfix">
     <a class="shout_post_user_image">
     	<img src="/xhr/user/{{ shout.OwnerUser.username }}/picture/50/" alt="{{ shout.OwnerUser.username }}">
@@ -10,7 +12,7 @@
 			<b><a href="/store/{{shout.AboutStore.id }}/" class="hovercard" hovercard-name="{{ shout.AboutStore.Name }}" hovercard-type="store" hovercard-data="">{{shout.AboutStore.Name }}</a></b>
 
 			{% if user.username == shout.OwnerUser.username %}
-			<span class="shout_post_delete btn" id="delete{{shout.id}}" title="Delete shout"><img src="/static/img/delete.png"/></span>
+			<span class="shout_post_delete btn" id="delete{{shout.id}}" title="Delete shout"><img src="{% static "img/delete.png"%}"/></span>
 			{% endif %}
 			<span class="shout_post_date pd" title="{{ shout.DatePublished|date:"Y-n-d H:i:s" }}">{{ shout.DatePublished }}</span> </p>
 

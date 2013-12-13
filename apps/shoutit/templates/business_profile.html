@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load template_filters %}
+{% load staticfiles %}
+
 {% block fb_og_meta %}
 	<meta property="og:type"        content="shoutitcom:business" />
 	<meta property="og:url"         content="{{ fb_og_url }}" />
@@ -32,7 +34,7 @@
                 {% trans "edit profile" %}
             </div>
             <div class="modal-body">
-                <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+                <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
             </div>
             <div class="modal-footer">
             </div>

@@ -1,0 +1,1 @@
+psql -h localhost -d shoutdb -a -f deploy_scripts/deploy.sql

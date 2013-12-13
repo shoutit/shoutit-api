@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load staticfiles %}
 
 {% block styles %}
 {% endblock %}
 
 {% block content %}
     <div class="span12 offset2">
-    <form enctype="multipart/form-data" method="post" action=".">
+    <form enctype="multipart/form-data" method="post" action="">
         {% csrf_token %}
 
         <div class="clearfix {% if form.image.errors %}error{% endif %}">
@@ -14,7 +15,7 @@
 			{%  if store.Image != '' %}
 				<img width="128" height="128" src="/{{ store.Image }}" alt="{{ store.Name }}">
 			{% else %}
-				<img src="/static/img/shout_user2_p.png" alt="{{ store.Name}}">
+				<img src="{% static "img/shout_user2_p.png" %}" alt="{{ store.Name}}">
 			{% endif %}
 
             {{ form.image|attr:"style:width: 270px;" }}{% if form.image.errors %}{% for error in form.image.errors %}<span>{{ error }}</span>{% endfor %}{% endif %}

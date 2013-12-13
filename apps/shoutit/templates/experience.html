@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% load template_filters %}
+{% load staticfiles %}
 {% load i18n %}
 {% block fb_og_meta %}
 	<meta property="og:type"         content="shoutitcom:experience" />
 	<meta property="og:url"          content="{% shout_link experience %}" />
 	<meta property="og:title"        content="{{ page_title }}" />
 	<meta property="og:description"  content="{{ page_desc }}" />
-	<meta property="og:image"        content="/static/new_design/img/fb_og_{% if experience.State == 0 %}bad{% else %}good{% endif %}_experience.png" />
+	<meta property="og:image"        content="{% if experience.State == 0 %}{% static "img/fb_og_bad_experience.png" %}{% else %}{% static "img/fb_og_good_experience.png" %}{% endif %}" />
 {#	<meta property="shoutitcom:with" content="http://shoutit.no-ip.org:8000/user/1779535550/" />#}
 {% endblock %}
 	{% block content %}

@@ -44,7 +44,10 @@ $.prettyDate = {
 	// Takes an ISO time and returns a string representing how
 	// long ago the date represents.
 	format: function(time) {
-		var date = new Date((time || "").replace(/-/g,"/")),
+		var d = new Date((time || "").replace(/-/g,"/"));
+		if (d == 'Invalid Date')
+			d = new Date((time || ""));
+		var date = d,
 			diff = ($.prettyDate.now().getTime() - date.getTime()) / 1000,
 			day_diff = Math.floor(diff / 86400);
 			
@@ -67,15 +70,15 @@ $.prettyDate = {
 
 $.prettyDate.messages = {
 	now: "just now",
-	minute: "1 minute ago",
-	minutes: $.prettyDate.template("{0} minutes ago"),
-	hour: "1 hour ago",
-	hours: $.prettyDate.template("{0} hours ago"),
-	yesterday: "Yesterday",
-	days: $.prettyDate.template("{0} days ago"),
-	weeks: $.prettyDate.template("{0} weeks ago")
+	minute: "1 minute ago ...",
+	minutes: $.prettyDate.template("{0} minutes ago ..."),
+	hour: "1 hour ago ...",
+	hours: $.prettyDate.template("{0} hours ago ..."),
+	yesterday: "Yesterday ...",
+	days: $.prettyDate.template("{0} days ago ..."),
+	weeks: $.prettyDate.template("{0} weeks ago ...")
 };
-
+	
 $.fn.prettyDate = function(options) {
 	options = $.extend({
 		value: function() {

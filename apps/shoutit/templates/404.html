@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load staticfiles %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en">
@@ -8,11 +9,11 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta name="google-site-verification" content="xjW9_C1eG4BKkBgPh1EpHXEphnAP0zkL6AwTXVaDRXw" />
 	{% if LANGUAGE_BIDI %}
-		<link type="text/css" rel='stylesheet' href="/static/new_design/css/site.min.rtl.css" />
+		<link type="text/css" rel='stylesheet' href="{% static "css/site.min.rtl.css"%}" />
 	{% else %}
-		<link type="text/css" rel='stylesheet' href="/static/new_design/css/site.min.css" />
+		<link type="text/css" rel='stylesheet' href="{% static "css/site.min.css"%}" />
 	{% endif %}
-    <link type="image/png" rel="icon" href="/static/new_design/img/icon.png"/>
+    <link type="image/png" rel="icon" href="{% static "img/icon.png"%}"/>
     <style type="text/css">
         a {
             color: #08C;

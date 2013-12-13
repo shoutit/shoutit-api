@@ -1,4 +1,6 @@
 {% load template_filters %}
+{% load staticfiles %}
+
 {% load i18n %}
 {#{% block content %}#}
 
@@ -12,10 +14,10 @@
         </div>
 {#{% endblock %}#}
 {#{% block scripts %}#}
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-ui-1.8.17.custom.min.js"></script>
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/slimScroll.js"></script>
-<script type="text/javascript" language="JavaScript" src="/static/new_design/js/site.js"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-1.7.1.js"%}"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-ui-1.8.17.custom.min.js"%}"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/slimScroll.js"%}"></script>
+<script type="text/javascript" language="JavaScript" src="{% static "js/site.js"%}"></script>
 <script type="text/javascript" language="JavaScript">
     var tickInterval = 0;
 	function tick() {

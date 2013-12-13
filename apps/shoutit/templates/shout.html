@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load template_filters %}
 {% load i18n %}
+{% load staticfiles %}
+
 {% block fb_og_meta %}
 	<meta property="og:type"   content="shoutitcom:{% if shout.Type == 0 %}request{% else %}offer{% endif %}" />
 	<meta property="og:url"    content="{% shout_link shout %}" />
@@ -11,7 +13,7 @@
 			<meta property="og:image"  content="{{ myimg.Image|secure_url }}" />
 		{% endwith %}
 	{% else %}
-		<meta property="og:image"  content="/static/new_design/img/fb_og_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png" />
+		<meta property="og:image"  content="{% if shout.Type == 0 %}{% static "img/fb_og_request.png" %}{% else %}{% static "img/fb_og_offer.png" %}{% endif %}" />
 	{% endif %}
 	<meta property="og:description" content="{{ shout.Text|striptags|truncatewords:30|safe }}"/>
 {% endblock %}
@@ -39,7 +41,7 @@
                 {% trans "Edit Shout" %}
             </div>
             <div class="modal-body">
-                <div style="text-align: center;"><img src="/static/new_design/img/modal-loading.gif" alt=""></div>
+                <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
             </div>
             <div class="modal-footer">
             </div>

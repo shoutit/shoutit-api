@@ -49,6 +49,7 @@ class FBMiddleware(object):
 
 class UserLocationMiddleware(object):
 	def process_request(self, request):
+
 		if not utils.IsSessionHasLocation(request) or request.session.has_key('user_renew_location'):
 			if not request.user.is_authenticated():
 #				ip = utils.getIP(request)

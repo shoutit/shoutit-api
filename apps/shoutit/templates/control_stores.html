@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
+{% load staticfiles %}
 
 {% block styles %}
 
@@ -36,9 +37,9 @@
 
 
 {% block scripts %}
-    <script type="text/javascript" src="/static/js/jquery.bgiframe.min.js"></script>
+    <script type="text/javascript" src="{% static "js/jquery.bgiframe.min.js"%}"></script>
 {#    <script type="text/javascript" src="http://dev.jquery.com/view/trunk/plugins/autocomplete/lib/jquery.dimensions.js"></script>#}
-    <script type="text/javascript" src="/static/js/jquery.autocomplete.js"></script>
+    <script type="text/javascript" src="{% static "js/jquery.autocomplete.js"%}"></script>
 	<script type="text/javascript">
     var id;
 		$(document).ready(function () {    

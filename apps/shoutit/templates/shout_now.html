@@ -1,8 +1,9 @@
 {% load widget_tweaks %}
 {% load template_filters %}
+{% load staticfiles %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="/static/css/fileuploader.css" />
+    <link rel="stylesheet" type="text/css" href="{% static "css/fileuploader.css"%}" />
 {% endblock %}
 
 {% block content %}
@@ -16,7 +17,7 @@
 		<div class="shout_post type-0 clearfix">
 
 			<div class="shout_post_user_image">
-				<a ><img src="/static/img/shout_user.jpg" alt=""></a><br />
+				<a ><img src="{% static "img/shout_user.jpg"%}" alt=""></a><br />
 			</div>
 
 

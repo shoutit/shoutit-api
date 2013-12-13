@@ -24,7 +24,7 @@ label, input, button, select, textarea {
 }
 
 .site-wrapper {
-    background: #FFFFFF url('/static/new_design/img/home-gradient.png') repeat-x;
+    background: #FFFFFF url('/static/img/home-gradient.png') repeat-x;
     min-height: 100%;
     height: auto !important;
     height: 100%;
@@ -50,7 +50,7 @@ label, input, button, select, textarea {
 span.fbicon {
     width: 16px;
     height: 16px;
-    background: url('/static/new_design/img/fbicon.png') no-repeat;
+    background: url('/static/img/fbicon.png') no-repeat;
     display: inline-block;
     margin-top: 12px;
 
@@ -59,36 +59,36 @@ span.fbicon {
 i.shout-icon {
     width: 15px;
     height: 14px;
-    background: url('/static/new_design/img/shout-icon.png');
+    background: url('/static/img/shout-icon.png');
     display: inline-block;
 }
 
 i.notifications-icon {
     width: 14px;
     height: 13px;
-    background: url('/static/new_design/img/notifications-icon.png');
+    background: url('/static/img/notifications-icon.png');
     display: inline-block;
 }
 
 i.learn-more-icon {
     width: 17px;
     height: 10px;
-    background: url('/static/new_design/img/learn-more-icon.png');
+    background: url('/static/img/learn-more-icon.png');
     display: inline-block;
 }
 
 i.user-icon-follow {
     width: 31px;
     height: 12px;
-    background: url('/static/new_design/img/follow-btn.png');
+    background: url('/static/img/follow-btn.png');
     display: inline-block;
 }
 
 .navbar .nav > li > a.fbicon {
 	width: 20px;
 	height: 20px;
-	/* background-image: url('/static/new_design/img/fb_logo2.png'); */
-    background: url('/static/new_design/img/fbicon.png') no-repeat;
+	/* background-image: url('/static/img/fb_logo2.png'); */
+    background: url('/static/img/fbicon.png') no-repeat;
 	margin-top: 10px;
 	/*margin-bottom: -10px;*/
 	/*background-repeat: no-repeat;*/
@@ -103,7 +103,7 @@ i.user-icon-follow {
 div.home-logo {
     text-align: center;
     height: 48px;
-    background: url('/static/new_design/img/logo-cloud.png') no-repeat center 24px;
+    background: url('/static/img/logo-cloud.png') no-repeat center 24px;
     padding-top: 205px;
     color: #A7A9AC;
     font-size: 20pt;
@@ -132,7 +132,7 @@ div.home-sillouettes {
     height: 120px;
     /* margin-top: -120px; */
     width: 100%;
-    background: url('/static/new_design/img/sillouettes.png') repeat-x;
+    background: url('/static/img/sillouettes.png') repeat-x;
 }
 
 div.home-footer {
@@ -201,7 +201,7 @@ div.white-container {
 }
 
 .shout-logo-white {
-    background: url('/static/new_design/img/white-logo.png') no-repeat center center;
+    background: url('/static/img/white-logo.png') no-repeat center center;
     display: inline-block;
     width: 125px;
     height: 40px;
@@ -297,7 +297,7 @@ div.shout {
 }
 
 div.shout i.icon-search {
-    background: url('/static/new_design/img/icon-search-white.png') 0 0;
+    background: url('/static/img/icon-search-white.png') 0 0;
 }
 
 div.shout.shout-right {
@@ -422,7 +422,7 @@ a.span-fourth:hover {
 .blackberry, .android, .iphone {
     height: 133px;
     width: 113px;
-    background: url('/static/new_design/img/phones.png') no-repeat;
+    background: url('/static/img/phones.png') no-repeat;
     margin-left: auto;
     margin-right: auto;
     display: block;
@@ -466,7 +466,7 @@ div.phones-description {
 }
 
 .dropdown-menu li > a:hover i[class^="icon-"] {
-    background-image: url(/static/new_design/img/glyphicons-halflings-white.png);
+    background-image: url(/static/img/glyphicons-halflings-white.png);
 }
 
 a.read-more {
@@ -728,7 +728,7 @@ div.shout-images i {
 .modal-header {
     text-align: center;
     font-size: 16pt;
-    background: url('/static/new_design/img/black-logo.png') no-repeat center 10px;
+    background: url('/static/img/black-logo.png') no-repeat center 10px;
     height: 56px;
 }
 
@@ -886,7 +886,7 @@ button.userprofile-button img {
 .qq-upload-list li { margin:0; padding:0; line-height:15px; font-size:12px; }
 .qq-upload-file, .qq-upload-spinner, .qq-upload-size, .qq-upload-cancel, .qq-upload-failed-text { margin-right: 7px; }
 .qq-upload-file {}
-.qq-upload-spinner { display:inline-block; background: url("/static/new_design/img/uploading.gif"); width:15px; height:15px; vertical-align:text-bottom; }
+.qq-upload-spinner { display:inline-block; background: url("/static/img/uploading.gif"); width:15px; height:15px; vertical-align:text-bottom; }
 .qq-upload-size,.qq-upload-cancel { font-size:11px; }
 .qq-upload-failed-text { display:none; }
 .qq-upload-fail .qq-upload-failed-text { display:inline; }
@@ -1623,7 +1623,7 @@ span.qtip-error {
 	width: 30px;
 	height: 30px;
 	vertical-align: middle;
-	background-image: url(/static/new_design/img/user-icon-set.png);
+	background-image: url(/static/img/user-icon-set.png);
 	background-position: -5px -5px;
 	background-repeat: no-repeat;
 	margin-right: 3px;

@@ -1,3 +1,4 @@
+{% load staticfiles %}
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 		"http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en">
@@ -6,8 +7,8 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 		<meta name="google-site-verification" content="xjW9_C1eG4BKkBgPh1EpHXEphnAP0zkL6AwTXVaDRXw" />
-		<link type="text/css" rel='stylesheet' href="/static/new_design/css/site.min.css" />
-		<link type="image/png" rel="icon" href="/static/new_design/img/icon.png"/>
+		<link type="text/css" rel='stylesheet' href="{% static "css/site.min.css"%}" />
+		<link type="image/png" rel="icon" href="{% static "img/icon.png"%}"/>
 	</head>
 	<body>
 		<div class="site-wrapper">
@@ -16,7 +17,7 @@
 			</div>
 			<div class="page">
 				<div class="home-container">
-					<div class="box-container white-container round shadow" style="background-image: url('/static/new_design/img/unicorn.png'); background-repeat: no-repeat; height: 215px; background-position: 410px 10px; padding-right: 390px; padding-top: 90px; font-size: 15pt; line-height: 30px;">
+					<div class="box-container white-container round shadow" style="background-image: url('/static/img/unicorn.png'); background-repeat: no-repeat; height: 215px; background-position: 410px 10px; padding-right: 390px; padding-top: 90px; font-size: 15pt; line-height: 30px;">
 						Oops!<br />
 						Something went wrong! We will send one of our unicorns to check it out.<br />
                         Meanwhile please try to refresh your page now, if that doesn't work please try againg later.

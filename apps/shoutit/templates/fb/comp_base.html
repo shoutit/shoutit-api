@@ -1,13 +1,13 @@
 {% load template_filters %}
 {% load i18n %}
+{% load staticfiles %}
+
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
 	<title>Shout & Win</title>
-		<link type="text/css" rel='stylesheet' href="/static/new_design/css/contest.css" />
-	<script type="text/javascript" language="JavaScript" src="/static/new_design/js/jquery-1.7.1.js"></script>
-	<script type="text/javascript" language="JavaScript" src="/static/new_design/js/bootstrap.js"></script>
-{#	<script type="text/javascript" src="/static/new_design/js/cufon-yui.js"></script>#}
-{#	<script type="text/javascript" src="/static/new_design/js/sketchy_500.font.js"></script>#}
+		<link type="text/css" rel='stylesheet' href="{% static "css/contest.css"%}" />
+	<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-1.7.1.js"%}"></script>
+	<script type="text/javascript" language="JavaScript" src="{% static "js/bootstrap.js"%}"></script>
 
 	<script type="text/javascript">
 		var _gaq = _gaq || [];
@@ -24,7 +24,7 @@
 
 {#	{% if page.liked %}#}
 	{% if page_num == 1 and page and not page.liked %}
-		<img src="/static/new_design/images/like_first.jpg" alt="Shoutit">
+		<img src="{% static "images/like_first.jpg" alt="Shoutit"%}">
 	{% else %}
 	{#Base Elements#}
 		<div class="contest_bg">

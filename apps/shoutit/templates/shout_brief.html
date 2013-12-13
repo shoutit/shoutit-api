@@ -1,8 +1,8 @@
 {% load template_filters %}
 {% load i18n %}
 <div class="shout-brief{% if shout.featured %} featured{% endif %}">
-{#    <img class="shout-type-icon" title='{% if shout.Type == 0 %}{% trans "Request" %}{% else %}{% trans "Offer" %}{% endif %}' src='/static/new_design/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />#}
-{#	<img class="shout-type-icon" title='{% if shout.Type == 0 %}{% trans "Request" %}{% else %}{% trans "Offer" %}{% endif %}' src='/static/new_design/images/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}{% if LANGUAGE_BIDI %}_rtl{% endif %}.png' />#}
+{#    <img class="shout-type-icon" title='{% if shout.Type == 0 %}{% trans "Request" %}{% else %}{% trans "Offer" %}{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />#}
+{#	<img class="shout-type-icon" title='{% if shout.Type == 0 %}{% trans "Request" %}{% else %}{% trans "Offer" %}{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}{% if LANGUAGE_BIDI %}_rtl{% endif %}.png' />#}
 	<a class="pull-left" href="{% shout_link shout %}">{% if shout.Type == 0 %}<span class="user-icon-requests"></span>{% else %}<span class="user-icon-offers"></span>{% endif %}</a>
 	<div class="shout-brief-contain">
 		<div class="shout-brief-title"><a href="{% shout_link shout %}">{% if shout.featured %}<i class="icon-star"></i>{% endif %}{{ shout.Item.Name|title }}</a></div>

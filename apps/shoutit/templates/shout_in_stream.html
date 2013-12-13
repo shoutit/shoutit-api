@@ -4,7 +4,7 @@
 	<span class="user-icon-{% if shout.Type == 0 %}requests{% else %}offers{% endif %}"><a {% if shout.OwnerUser.is_active or shout.OwnerUser == request.user %}href="/user/{{ shout.OwnerUser.username }}/"{% endif %} title="{{ shout.OwnerUser.name }}"></a></span>
 {#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.OwnerUser.Profile.Image|secure_url }}{% else %}{{ shout.OwnerUser.Profile.Image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.OwnerUser.name }}'s profile picture">#}
 {#        </a>#}
-        <!--<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='/static/new_design/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />-->
+        <!--<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />-->
 {#		<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.Type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
 	</div>
     <div class="pull-{% if right %}right{% else %}left{% endif %} shout-content {% if shout.GetImages %}with-image{% endif %}">

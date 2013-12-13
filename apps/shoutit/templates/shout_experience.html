@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% load template_filters %}
+{% load staticfiles %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="/static/css/fileuploader.css" />
+    <link rel="stylesheet" type="text/css" href="{% static "css/fileuploader.css"%}" />
 {% endblock %}
 
 {% block content %}
