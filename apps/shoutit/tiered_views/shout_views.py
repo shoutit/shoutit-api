@@ -61,7 +61,7 @@ def cloud_save_upload(uploaded, container_name, filename, raw_data):
 
         return obj
     except Exception, e:
-        pass
+        raise Http404(e.message)
     return None
 
 
