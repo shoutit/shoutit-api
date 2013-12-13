@@ -165,7 +165,7 @@ def getLocationInfoByIP(request):
     ip = getIP(request)
 
     #Get Info(lat lng) By IP
-    gi = GeoIP(os.path.join(settings.BASE_DIR, 'libs','pygeoip') + 'GeoIPCity.dat', pygeoip.MEMORY_CACHE)
+    gi = GeoIP(os.path.join(settings.BASE_DIR, 'libs','pygeoip') + '/GeoIPCity.dat', pygeoip.MEMORY_CACHE)
     record = gi.record_by_addr(ip)  #168.144.92.219  82.137.200.83
 
     #another way to get locationInfo
