@@ -318,14 +318,21 @@ if DEV:
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'messages')
 else:
-    DEFAULT_FROM_EMAIL = 'Shoutit <noor.syron@gmail.com>'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = '587'
-    EMAIL_HOST_USER = 'noor.syron@gmail.com'
-    EMAIL_HOST_PASSWORD = 'Sni4hot*'
-    EMAIL_USE_TLS = True
-    EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-
+    DEFAULT_FROM_EMAIL = 'ShoutIt <info@shoutit.com>'
+    EMAIL_HOST = SHOUT_IT_HOST
+    EMAIL_PORT = '25'
+    EMAIL_HOST_USER = 'admin'
+    EMAIL_HOST_PASSWORD = 'password'
+    EMAIL_USE_TLS = False
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'messages')
+    #DEFAULT_FROM_EMAIL = 'Shoutit <noor.syron@gmail.com>'
+    #EMAIL_HOST = 'smtp.gmail.com'
+    #EMAIL_PORT = '587'
+    #EMAIL_HOST_USER = 'noor.syron@gmail.com'
+    #EMAIL_HOST_PASSWORD = 'Sni4hot*'
+    #EMAIL_USE_TLS = True
+    #EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
     SEND_GRID_SMTP_HOST = 'smtp.sendgrid.net'
     SEND_GRID_SMTP_USERNAME = 'shoutit'
     SEND_GRID_SMTP_PASSWORD = 'Syrex6me'
