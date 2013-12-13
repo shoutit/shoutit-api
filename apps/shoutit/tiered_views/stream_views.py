@@ -10,6 +10,7 @@ from apps.shoutit.tiers import *
 from apps.shoutit.utils import kmeans, numberOfClustersBasedOnZoom
 from django.core.exceptions import ObjectDoesNotExist
 
+
 @non_cached_view(html_renderer=browse_html, api_renderer=shouts_api, methods=['GET'])
 def browse(request, browse_type, url_encoded_city, browse_category=None):
     result = ResponseResult()
@@ -19,7 +20,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     result.data['predefined_cities'] = PredefinedCity.objects.all()
     # HACK: add dubai
     if not len(result.data['predefined_cities']):
-        dubai = PredefinedCity(City='Dubai', EncodedCity='dubai', Country='AE', Approved=True, Latitude=50,  Longitude=50)
+        dubai = PredefinedCity(City='Dubai', EncodedCity='dubai', Country='AE', Approved=True, Latitude=25.2644, Longitude=55.3117)
         dubai.save()
         result.data['predefined_cities'] = PredefinedCity.objects.all()
 

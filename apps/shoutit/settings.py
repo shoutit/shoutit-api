@@ -141,7 +141,7 @@ INSTALLED_APPS = (
     #'satchmo_utils',
     #'app_plugins',
     #'subscription',
-    'debug_toolbar',
+    #'debug_toolbar',
 )
 # apps only on development
 if DEV:
@@ -169,7 +169,7 @@ MIDDLEWARE_CLASSES = (
     #'apps.ActivityLogger.middleware.ActivityLogger',
     #'common.middleware.ProfilerMiddleware.ProfileMiddleware',
 
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 
     'django_mobile.middleware.MobileDetectionMiddleware',
     'django_mobile.middleware.SetFlavourMiddleware',
@@ -228,7 +228,7 @@ LANGUAGES = (
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = 'opt/myenv/shoutit/static/'
+STATIC_ROOT = '/opt/myenv/shoutit/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/opt/myenv/shoutit/media/'
 
@@ -308,18 +308,28 @@ LOGGING = {
 }
 
 # Mail Settings
-DEFAULT_FROM_EMAIL = 'ShoutIt <info@shoutit.com>'
-EMAIL_HOST = SHOUT_IT_HOST    #TODO: SET THIS BEFORE DEPLOYMENT
-EMAIL_PORT = '25'
-EMAIL_HOST_USER = 'admin'   #TODO: SET THIS BEFORE DEPLOYMENT
-EMAIL_HOST_PASSWORD = 'password'    #TODO: SET THIS BEFORE DEPLOYMENT
-EMAIL_USE_TLS = False
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'  #TODO: REMOVE THIS BEFORE DEPLOYMENT
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'messages')   #TODO: REMOVE THIS BEFORE DEPLOYMENT
+if DEV:
+    DEFAULT_FROM_EMAIL = 'ShoutIt <info@shoutit.com>'
+    EMAIL_HOST = SHOUT_IT_HOST
+    EMAIL_PORT = '25'
+    EMAIL_HOST_USER = 'admin'
+    EMAIL_HOST_PASSWORD = 'password'
+    EMAIL_USE_TLS = False
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'messages')
+else:
+    DEFAULT_FROM_EMAIL = 'Shoutit <noor.syron@gmail.com>'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = '587'
+    EMAIL_HOST_USER = 'noor.syron@gmail.com'
+    EMAIL_HOST_PASSWORD = 'Sni4hot*'
+    EMAIL_USE_TLS = True
+    EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
-SEND_GRID_SMTP_HOST = 'smtp.sendgrid.net'
-SEND_GRID_SMTP_USERNAME = 'shoutit'
-SEND_GRID_SMTP_PASSWORD = 'Syrex6me'
+    SEND_GRID_SMTP_HOST = 'smtp.sendgrid.net'
+    SEND_GRID_SMTP_USERNAME = 'shoutit'
+    SEND_GRID_SMTP_PASSWORD = 'Syrex6me'
+
 
 # Auth Settings
 LOGIN_URL = '/signin/'
@@ -399,7 +409,6 @@ PROFANITIES_LIST = ('ass', 'ass lick', 'asses', 'asshole', 'assholes', 'asskisse
 CLOUD_FILES_AUTH = 'syrexme'
 CLOUD_FILES_KEY = '1a0386c347776588f5aa08cf8dce0877'
 CLOUD_FILES_SERVICE_NET = False # True
-
 SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO' #'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'

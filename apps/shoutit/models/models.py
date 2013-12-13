@@ -1138,9 +1138,9 @@ class PredefinedCity(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    City = models.CharField(max_length=200, default='' , db_index=True)
-    EncodedCity = models.CharField(max_length=200, default='' , db_index=True)
-    Country = models.CharField(max_length=2, default='' , db_index=True)
+    City = models.CharField(max_length=200, default='', db_index=True, unique=True)
+    EncodedCity = models.CharField(max_length=200, default='', db_index=True, unique=True)
+    Country = models.CharField(max_length=2, default='', db_index=True)
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
     Approved = models.BooleanField(default=False)
