@@ -74,7 +74,7 @@ REALTIME_SERVER_API_PORT = 7773
 RABBIT_MQ_HOST = SHOUT_IT_HOST
 RABBIT_MQ_PORT = 5672
 
-SESSION_REDIS_HOST = SHOUT_IT_HOST
+SESSION_REDIS_HOST = 'localhost'
 SESSION_REDIS_PORT = 6379
 REDIS_SOCKET_TIMEOUT = 30
 SESSION_REDIS_DB = 0
@@ -90,10 +90,9 @@ DEV_CACHES = {
         }
 }
 REDIS_SESSION_ENGINE = 'redis_sessions.session'
-REDIS_CACHES =  {
+REDIS_CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': SHOUT_IT_HOST + ':6379',
         'TIMEOUT': 12 * 60 * 60,
     }
 }
@@ -200,7 +199,7 @@ DATABASES = {
         'NAME': 'shoutdb',                      # Or path to database file if using sqlite3.
         'USER': 'syron',                      # Not used with sqlite3.
         'PASSWORD': '123',                  # Not used with sqlite3.
-        'HOST': SHOUT_IT_HOST,
+        'HOST': 'localhost',
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -229,9 +228,9 @@ LANGUAGES = (
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/static/'
+STATIC_ROOT = 'opt/myenv/shoutit/static/'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/media/'
+MEDIA_ROOT = '/opt/myenv/shoutit/media/'
 
 
 # Templates

@@ -85,3 +85,4 @@ $BODY$
   COST 100;
 ALTER FUNCTION max_followings(numeric, numeric) OWNER TO postgres;
 
+
