@@ -334,7 +334,7 @@ def asynchronous_task():
 #					insp = inspect()
 #					d = insp.active()
 #					if not d:
-                    from libs.celery.celery_tasks import execute
+                    from libs.celery.celery_tasks_____asdasd import execute
                     execute.delay('', f.__module__, '', f.func_name, *args, **kwargs)
                 except Exception as e:
                     f(*args, **kwargs)
