@@ -55,7 +55,7 @@ RANK_COEFFICIENT_FOLLOW = 0.014  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 
 # Celery Settings
-BROKER_HOST = SHOUT_IT_HOST
+BROKER_HOST = 'localhost'
 BROKER_PORT = 5672
 #BROKER_USER = "celery"
 #BROKER_PASSWORD = "celery"
