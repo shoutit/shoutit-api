@@ -147,8 +147,8 @@ def GetLandingShouts(DownLeftLat , DownLeftLng , UpRightLat , UpRightLng):
 
 
 def MakeCloudThumbnailsForImage(image_url):
-	utils.make_image_thumbnail(image_url, 145, 'shout_images')
-	utils.make_image_thumbnail(image_url, 85, 'shout_images')
+	utils.make_image_thumbnail(image_url, 145, 'shout_image')
+	utils.make_image_thumbnail(image_url, 85, 'shout_image')
 
 def GetStreamAffectedByShout(shout):
 	if isinstance(shout, int):

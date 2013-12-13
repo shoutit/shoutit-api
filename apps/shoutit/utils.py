@@ -334,7 +334,7 @@ def asynchronous_task():
 #					insp = inspect()
 #					d = insp.active()
 #					if not d:
-                    from apps.shoutit.celery_tasks import execute
+                    from libs.celery.celery_tasks import execute
                     execute.delay('', f.__module__, '', f.func_name, *args, **kwargs)
                 except Exception as e:
                     f(*args, **kwargs)
@@ -345,30 +345,33 @@ def asynchronous_task():
     return wrapper
 
 @asynchronous_task()
-def make_image_thumbnail(url, size, container):
+def make_image_thumbnail(url, size, container_name):
     import cloudfiles
     import urlparse
     import os
     import Image
     import mimetypes
     import StringIO
+    import pyrax
     from django.core.files.base import ContentFile
     filename = os.path.basename(urlparse.urlparse(url)[2])
     content_type = mimetypes.guess_type(filename)
     name, extension = os.path.splitext(filename)
-    connection = cloudfiles.get_connection(settings.CLOUD_FILES_AUTH, settings.CLOUD_FILES_KEY, servicenet = settings.CLOUD_FILES_SERVICE_NET)
-    container = connection.get_container(container)
-    file = container.get_object(filename)
-    content_file = ContentFile(file.read())
+
+    pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
+    pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
+    cf = pyrax.cloudfiles
+    container = cf.get_container(container_name)
+
+    obj = container.get_object(filename)
+    content_file = ContentFile(obj.get())
     image = Image.open(content_file)
     thumb = image.copy()
     thumb.thumbnail((size, size), Image.ANTIALIAS)
-    file = container.create_object('%s_%d%s' % (name, size, extension))
-    file.content_type = content_type
     buff = StringIO.StringIO()
-    thumb.save(buff, format = image.format)
+    thumb.save(buff, format=image.format)
     buff.seek(0)
-    file.write(buff)
+    new_obj = container.store_object('%s_%d%s' % (name, size, extension), data=buff.buf, content_type=content_type)
 
 def ToSeoFriendly(s, maxlen=50):
     import re

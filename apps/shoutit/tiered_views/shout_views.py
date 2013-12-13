@@ -22,13 +22,13 @@ from apps.shoutit.constants import *
 cloud_connection = None
 
 
-
-def cloud_save_upload(uploaded, container, filename, raw_data):
+def cloud_save_upload(uploaded, container_name, filename, raw_data):
     try:
-        container = get_cloud_connection().get_container(container)
+        cf = get_cloud_connection().cloudfiles
+        container = cf.get_container(container_name)
         data = ''
         if raw_data:
-            data = uploaded.raw_post_data
+            data = uploaded.body
         else:
             for c in uploaded.chunks():
                 data += c
@@ -52,15 +52,14 @@ def cloud_save_upload(uploaded, container, filename, raw_data):
         buff = StringIO.StringIO()
         image.save(buff, format="JPEG", quality=60)
         buff.seek(0)
-        cloud_file = container.create_object(filename)
-        cloud_file.content_type = mimetypes.guess_type(filename)
-        cloud_file.write(buff)
+
+        obj = container.store_object(obj_name=filename, data=buff.buf, content_type=mimetypes.guess_type(filename))
 
         if container.name == 'user_image':
-            utils.make_image_thumbnail(cloud_file.public_uri(), 95, 'user_image')
-            utils.make_image_thumbnail(cloud_file.public_uri(), 32, 'user_image')
+            utils.make_image_thumbnail(obj.container.cdn_uri + '/' + obj.name, 95, 'user_image')
+            utils.make_image_thumbnail(obj.container.cdn_uri + '/' + obj.name, 32, 'user_image')
 
-        return cloud_file
+        return obj
     except Exception, e:
         pass
     return None
@@ -86,7 +85,7 @@ def cloud_upload(request, method=None):
 
         if method.startswith('shout_'):
             filename = GeneratePassword() + os.path.splitext(filename)[1]
-            cloud_file = cloud_save_upload(upload, 'shout_images', filename, is_raw)
+            cloud_file = cloud_save_upload(upload, 'shout_image', filename, is_raw)
         else:
             #TODO: DELETE request.user.Profile.Image
             filename = GeneratePassword() + os.path.splitext(filename)[1]
@@ -97,9 +96,9 @@ def cloud_upload(request, method=None):
             ret_json = {'success': True}
             if method == 'user_image':
                 profile = user_controller.GetProfile(request.user)
-                profile.Image = cloud_file.public_uri() #.save(filename, ContentFile(open(filepath, mode='rb').read()))
+                profile.Image = cloud_file.container.cdn_uri + '/' + cloud_file.name
                 profile.save()
-            ret_json['url'] = cloud_file.public_uri()
+            ret_json['url'] = cloud_file.container.cdn_uri + '/' + cloud_file.name
         else:
             ret_json = {'success': False}
         return HttpResponse(json.dumps(ret_json))

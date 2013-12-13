@@ -409,6 +409,7 @@ def set_language(request):
     result = ResponseResult()
     return result
 
+
 def handler500(request):
     f = open('site_off.html')
     content = f.read()
@@ -416,32 +417,31 @@ def handler500(request):
     return HttpResponseServerError(content)
 
 cloud_connection = None
-import cloudfiles, mimetypes
+import mimetypes
+import pyrax
 
 
 def get_cloud_connection():
     global cloud_connection
     if cloud_connection is None:
-        cloud_connection = cloudfiles.get_connection(settings.CLOUD_FILES_AUTH, settings.CLOUD_FILES_KEY,
-                                                     servicenet=settings.CLOUD_FILES_SERVICE_NET)
+        pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
+        pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
+        cloud_connection = pyrax
     return cloud_connection
 
 
 def cloud_save_upload(uploaded, container, filename, raw_data):
     try:
-        container = get_cloud_connection().get_container(container)
+        cf = get_cloud_connection().cloudfiles
+        container = cf.get_container(container)
         data = ''
         if raw_data:
-            data = uploaded.raw_post_data
+            data = uploaded.body
         else:
             for c in uploaded.chunks():
                 data += c
-
-        cloud_file = container.create_object(filename)
-        cloud_file.content_type = mimetypes.guess_type(filename)
-        cloud_file.write(data)
-
-        return cloud_file
+        obj = container.store_object(obj_name=filename, data=data, content_type=mimetypes.guess_type(filename))
+        return obj
     except Exception, e:
         pass
     return None
