@@ -23,6 +23,7 @@ import apps.shoutit.settings as settings
 
 BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+
 def IntToBase62(value):
     result = ''
 
@@ -35,15 +36,19 @@ def IntToBase62(value):
 
     return result
 
+
 def TimeInBase62():
     return IntToBase62(int(time.time()))
+
 
 def GeneratePassword():
     return IntToBase62(uuid.uuid4().int)
 
+
 def RandomBase62(length):
     r = random.Random()
     return ''.join([r.choice(BASE62_ALPHABET) for i in range(length)])
+
 
 def Base62ToInt(value):
     result = 0
@@ -57,10 +62,12 @@ def Base62ToInt(value):
 
     return result
 
+
 def EntityID(entity):
     return IntToBase62(entity.id)
 
 import math
+
 
 def get_farest_point(observation, points):
     observation = array(observation)
@@ -70,6 +77,7 @@ def get_farest_point(observation, points):
     dist = sqrt(sum(diff**2, axis=-1))
     farest_index = argmax(dist)
     return farest_index
+
 
 def normalized_distance(lat1, long1, lat2, long2):
     # Convert latitude and longitude to
@@ -100,6 +108,7 @@ def normalized_distance(lat1, long1, lat2, long2):
 
     # multiply the result by pi * radius of earth to get the actual distance(approx.)
     return arc / math.pi
+
 
 def mutual_followings(StreamsCode1, StreamsCode2):
     return len(set([int(x) for x in StreamsCode1.split(',')]) & set([int(x) for x in StreamsCode2.split(',')]))
@@ -160,6 +169,7 @@ def getIP(request):
         ip = '80.227.53.34'
     return ip
 
+
 def getLocationInfoByIP(request):
     #Get User IP
     ip = getIP(request)
@@ -199,10 +209,12 @@ def numberOfClustersBasedOnZoom(zoom):
 
 
 
+
 def distfunction(fmatrix, cs):
     dists = np.dot(fmatrix, (-2)*cs.T)
     dists += np.array([np.dot(c,c) for c in cs])
     return dists
+
 
 def kmeans(fmatrix, k , max_iter=1000):
     fmatrix = np.asanyarray(fmatrix)
@@ -237,8 +249,10 @@ def generateConfirmToken(type):
     ran = random.Random()
     return ''.join([ran.choice(type[0]) for i in range(0, type[1])])
 
+
 def generateUsername():
     return str(random.randint(1000000000,1999999999))
+
 
 def CorrectMobile(mobile):
     mobile = RemoveNonAscii(mobile)
@@ -250,8 +264,10 @@ def CorrectMobile(mobile):
     else:
         return None
 
+
 def RemoveNonAscii(s):
     return "".join(i for i in s if ord(i)<128)
+
 
 def set_cookie(response, key, value, days_expire = 7):
     if days_expire is None:
@@ -268,6 +284,7 @@ def base64_url_decode(inp):
     padding_factor = (4 - len(inp) % 4) % 4
     inp += "="*padding_factor
     return base64.decodestring(inp)
+
 
 def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECRET):
     l = signed_request.split('.', 2)
@@ -298,9 +315,11 @@ def get_https_cdn(url):
     else:
         return url
 
+
 def safe_string(value):
     c = re.compile( '\\b' + ('%s|%s'%('\\b', '\\b')).join(settings.PROFANITIES_LIST) + '\\b', re.IGNORECASE)
     return c.findall(value)
+
 
 def safe_sql(value):
     return value.replace('\'', '\'\'')
@@ -310,6 +329,7 @@ def get_shout_name_preview(text, n):
         return text
     else:
         return text[0:n] + '...'
+
 
 def get_size_url(url, size):
     if not url:
@@ -323,6 +343,7 @@ def get_size_url(url, size):
 
 from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
+
 
 def asynchronous_task():
     def wrapper(f):
@@ -346,7 +367,6 @@ def asynchronous_task():
 
 @asynchronous_task()
 def make_image_thumbnail(url, size, container_name):
-    import cloudfiles
     import urlparse
     import os
     import Image

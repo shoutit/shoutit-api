@@ -349,6 +349,10 @@ ACTIVATE_URL_MODAL = '/#activate/'
 FACEBOOK_APP_ID = '353625811317277'
 FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
 
+# Google App
+GOOGLE_APP_CLIENT_ID = '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com'
+GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
+
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {
     'google': { 'consumer_key': '572868510623.apps.googleusercontent.com', 'consumer_secret': 'GkQnvuCaAzgdIn6V1wZ70DW8' },

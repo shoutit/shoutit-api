@@ -2041,3 +2041,4 @@ div.tagsinput span.tag{height:18px;line-height: 18px;}
 .container-fluid .dropdown_search{display: inline-block;list-style: none outside none;margin-bottom: 0;width: 325px;}
 .navbar .nav  .user-navigation a{float: left; display: inline-block; height: 23px; padding: 8px 5px 9px 10px;}
 .navbar .nav  .user-navigation a span{margin-left: 5px; line-height: 23px;}
+.navbar .nav li a.g-login-btn div {margin: -6px !important;}

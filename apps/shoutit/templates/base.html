@@ -41,6 +41,8 @@
 
 	<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-1.7.1.js"%}"></script>
 	<script type="text/javascript" language="JavaScript" src="{% static "js/jquery-ui-1.8.17.custom.min.js"%}"></script>
+
+
 {#	{% if not no_ga %}#}
 	<script type="text/javascript">
 		var _gaq = _gaq || [];
@@ -632,7 +634,7 @@
 
 {% if not request.user.is_authenticated %}
 	<div id="fb-root"></div>
-	<script src="{% static "js/fb.js"%}"></script>
+{#	<script src="{% static "js/fb.js"%}"></script>#}
 	<script>
 		$(document).ready(function(){
 			$('.fb-login-button').click(function () {
@@ -695,5 +697,49 @@
 		a.src=document.location.protocol+"//dnn506yrbagrg.cloudfront.net/pages/scripts/0012/6993.js?"+Math.floor(new Date().getTime()/3600000);
 		a.async=true;a.type="text/javascript";b.parentNode.insertBefore(a,b)}, 1);
 </script>
+
+<script type="text/javascript">
+function signInCallback(authResult) {
+
+  if (authResult['code']) {
+      requestAjaxily({
+          type: 'POST',
+          url: '/gplus_auth/',
+          data: authResult['code'],
+          processData: false,
+          contentType: 'application/octet-stream; charset=utf-8',
+          successCallback: function (data) {
+              if (redirect_after_login)
+                redirect_by_response(data);
+              else {
+                $('body').trigger('signin_ok', [data.data.username]);
+                redirect_after_login = true;
+              }
+          }
+      });
+
+  } else if (authResult['error']) {
+    // There was an error.
+    // Possible error codes:
+    //   "access_denied" - User denied access to your app
+    //   "immediate_failed" - Could not automatially log in the user
+    // console.log('There was an error: ' + authResult['error']);
+  }
+}
+</script>
+
+<!-- BEGIN Pre-requisites -->
+<script type="text/javascript">
+(function () {
+  var po = document.createElement('script');
+  po.type = 'text/javascript';
+  po.async = true;
+  po.src = 'https://plus.google.com/js/client:plusone.js?onload=start';
+  var s = document.getElementsByTagName('script')[0];
+  s.parentNode.insertBefore(po, s);
+})();
+</script>
+<!-- END Pre-requisites -->
+
 </body>
 </html>

@@ -24,3 +24,5 @@ twisted==11
 python-cloudfiles==1.7.10
 django-paypal==0.1.2
 geraldo==0.4.17
+google-api-python-client
+pyrax

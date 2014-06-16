@@ -551,6 +551,7 @@ class Stream(models.Model):
 #					follower.FeedStream.UnPublishShout(shout)
 #		stream.save()
 
+
 class FollowShip(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -561,6 +562,7 @@ class FollowShip(models.Model):
     stream = models.ForeignKey(Stream)
     date_followed = models.DateTimeField(auto_now_add=True)
     state = models.IntegerField(default=0, db_index=True)
+
 
 class Store(models.Model):
     class Meta:
@@ -585,6 +587,7 @@ class Store(models.Model):
     def ExperiencesCounter(self):
         return self.Stream.Shouts.filter(Type = POST_TYPE_EXPERIENCE).count()
 
+
 class Tag(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -605,6 +608,7 @@ class Tag(models.Model):
     def IsCategory(self):
         return True if Category.objects.get(TopTag=self) else False
 
+
 class Category(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -615,6 +619,7 @@ class Category(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
     TopTag = models.OneToOneField(Tag,related_name='OwnerCategory', null= True)
     Tags = models.ManyToManyField(Tag, related_name='Category')
+
 
 class Badge(models.Model):
     class Meta:
@@ -628,6 +633,7 @@ class Badge(models.Model):
 
 #	TODO: description field, criteria type/field for ex: this badge needs user to have 10 shouts in total, this badge needs user to have 20 followers
 #	TODO: view, controller. whenever user does an activity the controller gets fired and check if user earns new badge
+
 
 class Conversation(models.Model):
     class Meta:
@@ -643,6 +649,7 @@ class Conversation(models.Model):
     VisibleToRecivier = models.BooleanField(default = True)
     VisibleToSender = models.BooleanField(default = True)
 #	DateCreated = models.DateTimeField(auto_now_add=True)
+
 
 class Message(models.Model):
     class Meta:
@@ -663,6 +670,7 @@ class Message(models.Model):
     VisibleToRecivier = models.BooleanField(default = True)
     VisibleToSender = models.BooleanField(default = True)
     DateCreated = models.DateTimeField(auto_now_add=True)
+
 
 class Notification(models.Model):
     class Meta:
@@ -687,6 +695,7 @@ class Notification(models.Model):
     def MarkAsRead(self):
         self.IsRead = True
         self.save()
+
 
 class FbContest(models.Model):
     class Meta:
@@ -734,6 +743,7 @@ class BusinessCategoryManager(models.Manager):
     def get_top_level_categories(self):
         return self.filter(Parent = None)
 
+
 class BusinessCategory(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -750,6 +760,7 @@ class BusinessCategory(models.Model):
 
     def PrintHierarchy(self):
         return unicode('%s > %s' %(self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
+
 
 class BusinessProfile(models.Model):
     class Meta:
@@ -818,6 +829,7 @@ class BusinessProfile(models.Model):
         except ObjectDoesNotExist, e:
             return False
 
+
 class BusinessCreateApplication(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -844,6 +856,7 @@ class BusinessCreateApplication(models.Model):
 
     Status = models.IntegerField(default=int(BUSINESS_CONFIRMATION_STATUS_WAITING), db_index=True)
 
+
 class BusinessSource(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -859,6 +872,7 @@ class BusinessConfirmation(models.Model):
     User = models.ForeignKey(User, related_name = 'BusinessConfirmations')
     Files = models.ManyToManyField(StoredFile, related_name='Comfirmation')
     DateSent = models.DateTimeField(auto_now_add=True)
+
 
 class Deal(Shout):
     class Meta:
@@ -877,6 +891,7 @@ class Deal(Shout):
     def AvailableCount(self):
         return self.MaxBuyers - self.BuyersCount()
 
+
 class DealBuy(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -885,6 +900,7 @@ class DealBuy(models.Model):
     User = models.ForeignKey(User, related_name = 'DealsBought', on_delete = models.SET_NULL, null = True)
     Amount = models.IntegerField(default = 1)
     DateBought = models.DateTimeField(auto_now_add = True)
+
 
 class Experience(Post):
     class Meta:
@@ -895,6 +911,7 @@ class Experience(Post):
     State = models.IntegerField(null=False)
     objects = ExperienceManager()
 
+
 class SharedExperience(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -903,6 +920,7 @@ class SharedExperience(models.Model):
     Experience = models.ForeignKey(Experience, related_name = 'SharedExperiences')
     OwnerUser = models.ForeignKey(User, related_name = 'SharedExperiences')
     DateCreated = models.DateTimeField(auto_now_add = True)
+
 
 class Comment(models.Model):
     class Meta:
@@ -916,6 +934,7 @@ class Comment(models.Model):
     Text = models.TextField(max_length = 300)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
+
 class GalleryItem(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -927,6 +946,7 @@ class GalleryItem(models.Model):
     IsMuted = models.BooleanField(default=False)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
+
 class Gallery(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -936,6 +956,7 @@ class Gallery(models.Model):
     Description = models.TextField(max_length=500,default='')
     OwnerBusiness = models.ForeignKey(BusinessProfile,related_name='Galleries')
     Category = models.OneToOneField(Category,related_name='+',null=True)
+
 
 class PaymentsManager(models.Manager):
     def GetUserPayments(self, user):
@@ -952,6 +973,7 @@ class PaymentsManager(models.Manager):
 
     def GetObjectPayments(self, object):
         return self.filter(content_type = ContentType.objects.get_for_model(object.__class__), object_pk = object.pk)
+
 
 class Payment(models.Model):
     class Meta:
@@ -971,6 +993,7 @@ class Payment(models.Model):
 
     objects = PaymentsManager()
 
+
 class Transaction(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -981,6 +1004,7 @@ class Transaction(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
     DateUpdated = models.DateTimeField(auto_now=True)
 
+
 class Voucher(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -990,6 +1014,7 @@ class Voucher(models.Model):
     DateGenerated = models.DateTimeField(auto_now_add = True)
     IsValidated = models.BooleanField(default = False)
     IsSent = models.BooleanField(default = False)
+
 
 class Event(Post):
     class Meta:
@@ -1026,6 +1051,7 @@ class Report(models.Model):
     def Type(self):
         return ReportType.values[self.Type]
 
+
 class Service(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -1033,6 +1059,7 @@ class Service(models.Model):
     Code = models.CharField(max_length = 256)
     Name = models.CharField(max_length = 1024)
     Price = models.FloatField()
+
 
 class ServiceManager(models.Manager):
     def GetUserServiceBuyRemaining(self, user, service_code):

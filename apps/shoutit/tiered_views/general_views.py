@@ -19,6 +19,7 @@ from apps.shoutit.tiered_views.views_utils import *
 from apps.shoutit.tiers import *
 from apps.shoutit.controllers import user_controller
 
+
 @non_cached_view(html_renderer=index_html, mobile_renderer=index_mobile, api_renderer=shouts_api, methods=['GET'])
 def index(request, browse_type=None):
     result = ResponseResult()
@@ -51,17 +52,20 @@ def index(request, browse_type=None):
 #		result.data['shouts'] = shouts
     return result
 
+
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'tos.html', _('Terms of Service')),
     methods=['GET'])
 def tos(request):
     result = ResponseResult()
     return result
 
+
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'privacy.html', _('Privacy Policy')),
     methods=['GET'])
 def privacy(request):
     result = ResponseResult()
     return result
+
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'rules.html', _('Marketplace Rules')),
     methods=['GET'])
@@ -73,6 +77,7 @@ def rules(request):
         result.data['adfly'] = True
     return result
 
+
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'learnmore.html', _('Learn More')),
     methods=['GET'])
 def learnmore(request):
@@ -82,6 +87,7 @@ def learnmore(request):
     if request.GET.has_key('adfly'):
         result.data['adfly'] = True
     return result
+
 
 @cached_view(tags=[CACHE_TAG_STORES, CACHE_TAG_TAGS, CACHE_TAG_USERS], methods=['GET'],
     json_renderer=json_data_renderer)
@@ -122,6 +128,7 @@ def hovercard(request):
     result.data = data
     return result
 
+
 @cache_control(public=True, must_revalidate=False)
 @non_cached_view(methods=['GET'],
     login_required=False,
@@ -150,6 +157,7 @@ def profile_picture(request, type, name, size=''):
     result.data['url'] = path
 
     return result
+
 
 @cache_control(public=True, must_revalidate=False)
 @non_cached_view(methods=['GET'],
@@ -189,6 +197,7 @@ def get_client_lat_lng(request):
     location_info = getLocationInfoByIP(request)
     result.data['location'] = str(location_info['latitude']) + ' ' + str(location_info['longitude'])
     return result
+
 
 def modal(request, template=None):
     if not template:
@@ -318,12 +327,14 @@ def modal(request, template=None):
 
     return render_to_response('modals/' + template + '_modal.html', variables)
 
+
 def admin_stats_mobile(request, result):
     if request.user.is_authenticated():
         if request.user.is_staff:
             return page_html(request, result, 'mobile_stats.html')
 
     return HttpResponseRedirect('/')
+
 
 @non_cached_view(html_renderer=admin_stats_mobile, mobile_renderer=admin_stats_mobile,
     methods=['GET'])
@@ -381,6 +392,7 @@ def admin_stats(request):
 
     return result
 
+
 @cached_view(level=CACHE_LEVEL_GLOBAL,
     tags=[CACHE_TAG_CURRENCIES],
     methods=['GET'],
@@ -389,6 +401,7 @@ def currencies(request):
     result = ResponseResult()
     result.data['currencies'] = list(Currency.objects.all())
     return result
+
 
 @non_cached_view(methods=['POST'], json_renderer=json_renderer)
 @csrf_exempt
@@ -401,6 +414,7 @@ def set_perma(request):
             timeout=10 * 356 * 24 * 60 * 60)
     result = ResponseResult()
     return result
+
 
 @non_cached_view(methods=['POST'], json_renderer=json_renderer)
 @csrf_exempt
@@ -476,6 +490,7 @@ def cloud_file_upload(request):
             ret_json = {'success': False}
         return HttpResponse(json.dumps(ret_json))
 
+
 @non_cached_view(methods=['GET'],
 json_renderer = lambda request,result : live_events_json_renderer(request,result))
 def live_events(request):
@@ -506,6 +521,7 @@ def live_events(request):
     result.data['count'] = events.count()
     result.data['timestamp'] = time.mktime(datetime.now().timetuple())
     return result
+
 
 @csrf_exempt
 @non_cached_view(methods=['POST'],
