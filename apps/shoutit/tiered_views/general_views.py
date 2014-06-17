@@ -419,7 +419,7 @@ def set_perma(request):
 @non_cached_view(methods=['POST'], json_renderer=json_renderer)
 @csrf_exempt
 def set_language(request):
-    set_request_language(request, request.POST.get('language', None))
+    set_request_language(request, request.POST.get('language', settings.DEFAULT_LANGUAGE_CODE))
     result = ResponseResult()
     return result
 

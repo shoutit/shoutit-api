@@ -222,6 +222,7 @@ LANGUAGES = (
     ('en', ugettext('English')),
     ('ar', ugettext('Arabic')),
 )
+DEFAULT_LANGUAGE_CODE = 'en'
 
 
 # Static files (CSS, JavaScript, Images)
