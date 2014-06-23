@@ -220,7 +220,7 @@ USE_TZ = False
 ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
-    ('ar', ugettext('Arabic')),
+    #('ar', ugettext('Arabic')),
 )
 DEFAULT_LANGUAGE_CODE = 'en'
 
