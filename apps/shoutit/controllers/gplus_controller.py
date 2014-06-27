@@ -10,7 +10,7 @@ from oauth2client.client import credentials_from_code, Credentials
 from oauth2client.client import FlowExchangeError
 import apps.shoutit.settings as Settings
 
-
+# TODO: this requires established external connection, try catch would handle it better.
 SERVICE = build('plus', 'v1')
 
 
