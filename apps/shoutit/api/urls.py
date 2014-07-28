@@ -295,6 +295,12 @@ urlpatterns = patterns('',
         })
     ),
 
+    url(r'^gplus_auth/$',
+        TieredResource(TieredHandler, a_oauth, {
+            'POST' : tiered_views.user_views.gplus_auth,
+        })
+    ),
+
     url(r'^location/$',
         TieredResource(TieredHandler, a_oauth, {
             'POST' : tiered_views.user_views.set_user_session_location_info,
