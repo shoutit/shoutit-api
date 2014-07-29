@@ -18,8 +18,10 @@ def user_from_gplus_code(request, code):
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_code(Settings.GOOGLE_APP_CLIENT_ID, Settings.GOOGLE_APP_CLIENT_SECRET, '', code)
-    except FlowExchangeError:
+        credentials = credentials_from_code(Settings.GOOGLE_APP_CLIENT_ID, Settings.GOOGLE_APP_CLIENT_SECRET,
+                                    'https://www.googleapis.com/auth/plus.login email', code)
+    except FlowExchangeError as flowError:
+        print(flowError.message)
         return None
 
     gplus_id = credentials.id_token['sub']
