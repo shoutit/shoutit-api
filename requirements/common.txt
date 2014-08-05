@@ -1,8 +1,8 @@
 # common requirements
 Django==1.6
-PIL==1.1.7
+# PIL==1.1.7
 oauth2==1.5.211
-https://bitbucket.org/jespern/django-piston-oauth2/get/6f1b8963ed0e.zip
+https://cloudup.com/files/ilyUIgJuXD8/download
 httplib2==0.8
 Celery==3.1.5
 django-celery==3.1.1
@@ -19,7 +19,7 @@ django-redis-sessions==0.4.0
 suds==0.4
 pika==0.9.13
 apns==1.1.2
-psycopg2==2.4.3
+# psycopg2==2.4.3
 twisted==11
 python-cloudfiles==1.7.10
 django-paypal==0.1.2

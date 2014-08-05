@@ -15,11 +15,16 @@ SERVICE = build('plus', 'v1')
 
 
 def user_from_gplus_code(request, code):
+    redirectURI = 'postmessage'
+    if hasattr(request, 'is_api') and request.is_api:
+        redirectURI = 'urn:ietf:wg:oauth:2.0:oob'
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_code(Settings.GOOGLE_APP_CLIENT_ID, Settings.GOOGLE_APP_CLIENT_SECRET,
-                                    'https://www.googleapis.com/auth/plus.login email', code)
+
+        credentials = credentials_from_code(Settings.GOOGLE_APP_CLIENT_ID, Settings.GOOGLE_APP_CLIENT_SECRET, '',
+                                                                code, redirectURI)
+
     except FlowExchangeError as flowError:
         print("###")
         print(flowError.message)

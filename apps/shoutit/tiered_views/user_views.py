@@ -18,6 +18,15 @@ from apps.shoutit.tiered_views.renderers import *
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
 from apps.shoutit.constants import *
+import urllib2
+
+
+def urlencode(s):
+    return urllib2.quote(s)
+
+
+def urldecode(s):
+    return urllib2.unquote(s).decode('utf8')
 
 @non_cached_view(methods=['POST'],
     api_renderer=operation_api,
@@ -195,7 +204,7 @@ def gplus_auth(request):
     result = ResponseResult()
 
     if request.method == "POST":
-        code = request.body
+        code = urldecode(request.body).replace('"','')
         user = user_from_gplus_code(request, code)
         if user:
             result.data['profile'] = user.Profile
