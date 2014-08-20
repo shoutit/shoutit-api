@@ -634,7 +634,7 @@
 
 {% if not request.user.is_authenticated %}
 	<div id="fb-root"></div>
-{#	<script src="{% static "js/fb.js"%}"></script>#}
+	<script src="{% static "js/fb.js"%}"></script>
 	<script>
 		$(document).ready(function(){
 			$('.fb-login-button').click(function () {
