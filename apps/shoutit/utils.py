@@ -175,6 +175,7 @@ def getLocationInfoByIP(request):
     ip = getIP(request)
 
     #Get Info(lat lng) By IP
+    # TODO Move gi initialization in a global scope so its done only once.
     gi = GeoIP(os.path.join(settings.BASE_DIR, 'libs','pygeoip') + '/GeoIPCity.dat', pygeoip.MEMORY_CACHE)
     record = gi.record_by_addr(ip)  #168.144.92.219  82.137.200.83
 
