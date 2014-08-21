@@ -12,10 +12,6 @@ def render_shout(shout):
         'name': '' if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
         'price': 0 if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': '' if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
-        #		'about_store' : {} if shout.Type != SHOUT_TYPE_EXPERIENCE else {
-        #			'name' : shout.AboutStore.Name,
-        #			'url' : get_object_url(shout.AboutStore.pk)
-        #		},
         'date_created': shout.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
         'thumbnail':  shout.GetFirstImage().Image if shout.GetImages() else '',
         'images': [image.Image for image in shout.GetImages()],

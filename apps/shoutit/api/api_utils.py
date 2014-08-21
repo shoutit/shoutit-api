@@ -20,7 +20,6 @@ urls = {
     Trade: ('/shout/%s/', 'pk|base62'),
     StoredImage: ('/image/%s/', 'pk|base62'),
     Item: ('/item/%s/', 'pk|base62'),
-    Store: ('/store/%s/', 'pk|base62'),
     Tag: ('/tag/%s/', 'Name'),
     Conversation : ('/message/%s/', 'pk|base62'),
     Experience: ('/experience/%s/', 'pk|base62'),

@@ -1,7 +1,6 @@
 from django.conf.urls import patterns, include, url, handler500
 from django.views.generic import TemplateView
 
-#from satchmo_store.urls import urlpatterns
 from django.contrib import admin
 admin.autodiscover()
 
@@ -59,9 +58,6 @@ urlpatterns = patterns('',
 
                        url(r'^(?:xhr/)?user/(\w+)/editBusinessProfile/$', 'apps.shoutit.tiered_views.business_views.business_edit_profile'),
 
-                       #	url(r'^store/([a-zA-z0-9]+)/$', 'apps.shoutit.views.store_profile'),
-                       #	url(r'^(?:xhr/)?store/(\d+)/stream/(?:(\d+)/)?$', 'apps.shoutit.views.store_stream'),
-
                        url(r'^tag/([^/]+)/$', 'apps.shoutit.tiered_views.tag_views.tag_profile'),
                        url(r'^(?:xhr/)?tag/([^/]+)/stream/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.tag_views.tag_stream'),
 
@@ -105,19 +101,11 @@ urlpatterns = patterns('',
 
                        url(r'^xhr/(user|tag)/([\.\w-]+)/picture(?:/(\d+))?/$', 'apps.shoutit.tiered_views.general_views.profile_picture'),
 
-                       #	url(r'^xhr/store/(\w+)/follow/$', 'apps.shoutit.views.follow_store'),
-                       #	url(r'^xhr/store/(\w+)/unfollow/$', 'apps.shoutit.views.unfollow_store'),
-
-                       #	url(r'^xhr/store/([a-zA-z0-9]+)/post/$', 'apps.shoutit.xhrs.store_shout_sell' ),
-                       #	url(r'^xhr/store/([a-zA-z0-9]+)/stats/(\w+)/$', 'apps.shoutit.views.store_stats'),
-
                        url(r'^(?:xhr/)?tag/([^/]+)/interest/$', 'apps.shoutit.tiered_views.tag_views.add_tag_to_interests'),
                        url(r'^(?:xhr/)?tag/([^/]+)/uninterest/$', 'apps.shoutit.tiered_views.tag_views.remove_tag_from_interests'),
                        url(r'^(?:xhr/)?tag/([^/]+)/stats/(\w+)/$', 'apps.shoutit.tiered_views.tag_views.tag_stats'),
 
                        url(r'^(?:xhr/)?image/([a-zA-z0-9]+)(?:/(\d+))?/(?:i\.png)?$', 'apps.shoutit.tiered_views.general_views.stored_image'),
-
-                       url(r'^xhr/stream_polling/$','apps.shoutit.xhrs.stream_polling' ),
 
                        url(r'^xhr/search/tag/$', 'apps.shoutit.tiered_views.tag_views.search_tag'),
                        url(r'^xhr/top_tags/$', 'apps.shoutit.tiered_views.tag_views.top_tags'),

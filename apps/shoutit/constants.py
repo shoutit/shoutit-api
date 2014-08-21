@@ -216,7 +216,6 @@ class StreamType(Constant):
     values = {}
 
 STREAM_TYPE_USER = StreamType('User')
-STREAM_TYPE_STORE = StreamType('Store')
 STREAM_TYPE_TAG = StreamType('Tag')
 #STREAM_TYPE_FEED = StreamType('Feed')
 STREAM_TYPE_RELATED = StreamType('Related')

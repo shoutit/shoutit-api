@@ -89,7 +89,7 @@ def learnmore(request):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STORES, CACHE_TAG_TAGS, CACHE_TAG_USERS], methods=['GET'],
+@cached_view(tags=[CACHE_TAG_TAGS, CACHE_TAG_USERS], methods=['GET'],
     json_renderer=json_data_renderer)
 def hovercard(request):
     type = request.REQUEST['type'] if 'type' in request.REQUEST else None
@@ -108,12 +108,6 @@ def hovercard(request):
         elif type == 'tag':
             data = tag_controller.GetTag(name)
             if request.user.is_authenticated() and data in request.user.Profile.Interests.all():
-                data.isFollowing = 1
-            else:
-                data.isFollowing = -1
-        elif type == 'store':
-            data = store_controller.GetStoreByName(name)
-            if request.user.is_authenticated() and data.Stream in request.user.Profile.Following.all():
                 data.isFollowing = 1
             else:
                 data.isFollowing = -1
@@ -144,8 +138,6 @@ def profile_picture(request, type, name, size=''):
         d = user_controller.GetUser(name)
     elif type == 'tag':
         d = tag_controller.GetTag(name)
-    elif type == 'store':
-        d = store_controller.GetStore(name)
     if d.Image:
         path = d.Image
     else:

@@ -480,9 +480,7 @@ class Stream(models.Model):
     def GetOwner(self):
         owner = None
         try:
-            if self.Type == STREAM_TYPE_STORE:
-                owner = self.OwnerStore
-            elif self.Type == STREAM_TYPE_TAG:
+            if self.Type == STREAM_TYPE_TAG:
                 owner = self.OwnerTag
             elif self.Type == STREAM_TYPE_USER:
                 owner = self.OwnerUser
@@ -498,9 +496,7 @@ class Stream(models.Model):
 
     def GetTypeText(self):
         type = u'None'
-        if self.Type == STREAM_TYPE_STORE:
-            type = unicode(STREAM_TYPE_STORE)
-        elif self.Type == STREAM_TYPE_TAG:
+        if self.Type == STREAM_TYPE_TAG:
             type = unicode(STREAM_TYPE_TAG)
         elif self.Type == STREAM_TYPE_USER:
             type = unicode(STREAM_TYPE_USER)
@@ -561,30 +557,6 @@ class FollowShip(models.Model):
     stream = models.ForeignKey(Stream)
     date_followed = models.DateTimeField(auto_now_add=True)
     state = models.IntegerField(default=0, db_index=True)
-
-
-class Store(models.Model):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.id) + ": " + self.Name
-    Creator = models.ForeignKey(User, related_name='created_stores')
-    Owner = models.ForeignKey(User, related_name='owned_stores', null=True)
-    Stream = models.OneToOneField(Stream,related_name='OwnerStore', db_index=True)
-    Name = models.CharField(max_length=512, db_index=True)
-    Description = models.TextField(default='', blank=True)
-    Website = models.URLField(default='', blank=True)
-    Phone = models.CharField(max_length=512, default='', blank=True)
-    Image = models.ImageField(upload_to='static/stores', null=True)
-    Longitude = models.FloatField(default=0.0)
-    Latitude = models.FloatField(default=0.0)
-
-    def ShoutsCounter(self):
-        return self.Shouts.filter(Type = POST_TYPE_SELL).count()
-
-    def ExperiencesCounter(self):
-        return self.Stream.Shouts.filter(Type = POST_TYPE_EXPERIENCE).count()
 
 
 class Tag(models.Model):

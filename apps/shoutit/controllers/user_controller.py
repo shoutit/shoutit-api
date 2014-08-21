@@ -561,7 +561,7 @@ def UserFollowers(username, count_only=False):
 def UserFollowing(username, type='all', period='recent'):
 
     user = GetUser(username)
-    result = {'stores' : [],'storesId' : [], 'users' : [] , 'tags' : []}
+    result = {'users': [], 'tags': []}
     if period == 'recent':
         limit = 5
     elif period == 'all':
@@ -570,16 +570,12 @@ def UserFollowing(username, type='all', period='recent'):
         limit = 0
 
     if type == 'users' or type == 'all':
-        users =  [f[0] for f in FollowShip.objects.filter(follower__pk = user.pk, stream__Type = STREAM_TYPE_USER).values_list('stream__OwnerUser').order_by('-date_followed')[:limit]]
+        users = [f[0] for f in FollowShip.objects.filter(follower__pk = user.pk, stream__Type = STREAM_TYPE_USER).values_list('stream__OwnerUser').order_by('-date_followed')[:limit]]
         result['users'] = [u for u in UserProfile.objects.all().filter(pk__in=users)]
 
     if type == 'tags' or type == 'all':
         result['tags'] = [f[0] for f in FollowShip.objects.filter(follower__pk = user.pk, stream__Type = STREAM_TYPE_TAG).values_list('stream__OwnerTag__Name').order_by('-date_followed')[:limit]]
 
-    if type == 'stores' or type == 'all':
-        q = FollowShip.objects.filter(follower__pk = user.pk, stream__Type = STREAM_TYPE_STORE).values_list('stream__OwnerStore__Name', 'stream__OwnerStore__pk').order_by('-date_followed')[:limit]
-        result['stores'] =  [f[0] for f in q]
-        result['storesId'] =  [f[1] for f in q]
     return result
 
 
@@ -602,7 +598,7 @@ def UpdateLocation(username , lat,lng,city,country):
     return user
 
 
-def GetTopUsers(limit=10, country = '', city = ''):
+def GetTopUsers(limit=10, country='', city=''):
     if not limit:
         limit = 10
     if not country:
@@ -699,7 +695,7 @@ def GetUnreadNotificatiosCount(profile):
         notifications = GetNotifications(profile)
     return len(filter(lambda n: not n.IsRead, notifications))
 
-def activities_stream(user,start_index = None, end_index = None):
+def activities_stream(user,start_index=None, end_index=None):
     stream_posts_query_set = user.Stream.Posts.GetValidPosts([POST_TYPE_EVENT]).filter(
         ~Q(Type = POST_TYPE_EVENT) |
         (Q(Type = POST_TYPE_EVENT)
@@ -723,7 +719,7 @@ def activities_stream(user,start_index = None, end_index = None):
     return post_count,stream_posts
 
 from apps.shoutit import utils, constants
-from apps.shoutit.constants import TOKEN_LONG, TOKEN_TYPE_RECOVER_PASSWORD, STREAM_TYPE_USER, ACTIVITY_TYPE_SIGN_UP, ACTIVITY_DATA_USERNAME, TOKEN_TYPE_HTML_EMAIL, ACTIVITY_TYPE_SIGN_IN_SUCCESS,ACTIVITY_TYPE_SIGN_IN_FAILED, ACTIVITY_DATA_CREDENTIAL, ACTIVITY_TYPE_SIGN_OUT, ACTIVITY_TYPE_FOLLOWSHIP_CREATED, ACTIVITY_DATA_FOLLOWER, ACTIVITY_DATA_STREAM, ACTIVITY_TYPE_FOLLOWSHIP_REMOVED,STREAM_TYPE_TAG, STREAM_TYPE_STORE, POST_TYPE_BUY, POST_TYPE_SELL,EVENT_TYPE_FOLLOW_USER, USER_TYPE_INDIVIDUAL, USER_TYPE_BUSINESS,POST_TYPE_EVENT,EVENT_TYPE_GALLERY_ITEM,POST_TYPE_DEAL
+from apps.shoutit.constants import TOKEN_LONG, TOKEN_TYPE_RECOVER_PASSWORD, STREAM_TYPE_USER, ACTIVITY_TYPE_SIGN_UP, ACTIVITY_DATA_USERNAME, TOKEN_TYPE_HTML_EMAIL, ACTIVITY_TYPE_SIGN_IN_SUCCESS,ACTIVITY_TYPE_SIGN_IN_FAILED, ACTIVITY_DATA_CREDENTIAL, ACTIVITY_TYPE_SIGN_OUT, ACTIVITY_TYPE_FOLLOWSHIP_CREATED, ACTIVITY_DATA_FOLLOWER, ACTIVITY_DATA_STREAM, ACTIVITY_TYPE_FOLLOWSHIP_REMOVED,STREAM_TYPE_TAG, POST_TYPE_BUY, POST_TYPE_SELL,EVENT_TYPE_FOLLOW_USER, USER_TYPE_INDIVIDUAL, USER_TYPE_BUSINESS,POST_TYPE_EVENT,EVENT_TYPE_GALLERY_ITEM,POST_TYPE_DEAL
 import apps.shoutit.controllers.email_controller
 import apps.shoutit.controllers.notifications_controller,event_controller,shout_controller
 from apps.shoutit.models import Event, UserProfile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, Shout, UserPermission, Post, Trade, BusinessProfile, PredefinedCity
