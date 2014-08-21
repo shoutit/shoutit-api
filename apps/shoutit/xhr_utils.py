@@ -1,4 +1,3 @@
-import json
 import urlparse
 from django.conf import settings
 from django.http import QueryDict, HttpResponse
@@ -26,7 +25,6 @@ class XHRResult(object):
             "code": code, "message": unicode(message), "errors": form_errors, "data": data,
             "message_type": self.message_type
         }
-        # self.json = json.dumps(self.response)
 
     def __str__(self):
         return self.json

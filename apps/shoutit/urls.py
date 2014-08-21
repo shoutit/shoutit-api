@@ -115,9 +115,6 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?tag/([^/]+)/uninterest/$', 'apps.shoutit.tiered_views.tag_views.remove_tag_from_interests'),
                        url(r'^(?:xhr/)?tag/([^/]+)/stats/(\w+)/$', 'apps.shoutit.tiered_views.tag_views.tag_stats'),
 
-                       url(r'^xhr/badge/(\d+)/(\w+)/add/$', 'apps.shoutit.xhrs.add_badge_to_user'),
-                       url(r'^xhr/badge/(\d+)/(\w+)/remove/$', 'apps.shoutit.xhrs.remove_badge_from_user'),
-
                        url(r'^(?:xhr/)?image/([a-zA-z0-9]+)(?:/(\d+))?/(?:i\.png)?$', 'apps.shoutit.tiered_views.general_views.stored_image'),
 
                        url(r'^xhr/stream_polling/$','apps.shoutit.xhrs.stream_polling' ),

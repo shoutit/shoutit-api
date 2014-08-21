@@ -162,7 +162,6 @@ class UserProfile(models.Model):
 
     Following = models.ManyToManyField('Stream', through='FollowShip')
     Interests = models.ManyToManyField('Tag', related_name='Followers')
-    Badges = models.ManyToManyField('Badge', related_name='Holders')
 
     Stream = models.OneToOneField('Stream', related_name='OwnerUser', db_index=True)
 #	FeedStream = models.OneToOneField('Stream', related_name='ViewerUser', db_index=True)
@@ -619,20 +618,6 @@ class Category(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
     TopTag = models.OneToOneField(Tag,related_name='OwnerCategory', null= True)
     Tags = models.ManyToManyField(Tag, related_name='Category')
-
-
-class Badge(models.Model):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.id) + ": " + self.Name
-    Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
-    Image = models.ImageField(upload_to='badges/', null=True)
-    DateCreated = models.DateTimeField(auto_now_add=True)
-
-#	TODO: description field, criteria type/field for ex: this badge needs user to have 10 shouts in total, this badge needs user to have 20 followers
-#	TODO: view, controller. whenever user does an activity the controller gets fired and check if user earns new badge
 
 
 class Conversation(models.Model):

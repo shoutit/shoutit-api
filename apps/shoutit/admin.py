@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from apps.ActivityLogger.models import Activity, ActivityData, Request
 from apps.shoutit.controllers import business_controller
-from apps.shoutit.models.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, FollowShip, Store, Tag, Badge, Conversation, Message, Notification, Category, Currency, BusinessProfile, BusinessConfirmation, BusinessCategory, StoredFile, Report, BusinessCreateApplication
+from apps.shoutit.models.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, FollowShip, Store, Tag, Conversation, Message, Notification, Category, Currency, BusinessProfile, BusinessConfirmation, BusinessCategory, StoredFile, Report, BusinessCreateApplication
 
 # Shout
 class ShoutAdmin(admin.ModelAdmin):
@@ -159,7 +159,6 @@ admin.site.register(ShoutWrap)
 admin.site.register(StoredImage)
 admin.site.register(Stream)
 admin.site.register(Store)
-admin.site.register(Badge)
 admin.site.register(Notification)
 admin.site.register(Category)
 admin.site.register(Currency)
