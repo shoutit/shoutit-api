@@ -1,16 +1,14 @@
 import json
 import urlparse
-
 from django.conf import settings
 from django.http import QueryDict, HttpResponse
 from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
+from django.utils.translation import ugettext as _
 from apps.shoutit.constants import *
 
-from django.utils.translation import ugettext as _
 
-
-class XHR_Result(object):
+class XHRResult(object):
     code = ENUM_XHR_RESULT.SUCCESS
     message = ''
     message_type = ''
@@ -28,7 +26,7 @@ class XHR_Result(object):
             "code": code, "message": unicode(message), "errors": form_errors, "data": data,
             "message_type": self.message_type
         }
-        self.json = json.dumps(self.response)
+        # self.json = json.dumps(self.response)
 
     def __str__(self):
         return self.json
@@ -38,7 +36,7 @@ class XHR_Result(object):
 
 
 def xhr_respond(code, message, errors={}, data={}, message_type='success'):
-    return HttpResponse(content=XHR_Result(code, message, errors, data, message_type=message_type),
+    return HttpResponse(content=XHRResult(code, message, errors, data, message_type=message_type),
                         content_type='application/json')
 
 
@@ -67,6 +65,7 @@ def xhr_login_required(function=None):
                                data={'link': urlparse.urlunparse(login_url_parts)}, message_type='error')
 
     return wrapper
+
 
 def redirect_to_modal_xhr(request,to, message, modal_key = None):
     if request.META.has_key('HTTP_REFERER'):

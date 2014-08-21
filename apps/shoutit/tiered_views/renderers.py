@@ -229,7 +229,7 @@ def thumbnail_response(request, result, *args, **kwargs):
             im.save(path, "PNG")
         else:
             raise Http404()
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     im.save(response, "PNG")
     response['Content-Length'] = len(response.content)
     return response

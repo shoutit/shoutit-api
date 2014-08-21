@@ -15,6 +15,7 @@ import apps.shoutit.tiered_views.business_views
 
 from apps.shoutit.api.handlers import *
 
+
 class TieredResource(Resource):
     def __init__(self, handler, authentication=None, methods_map=None):
         if not methods_map: methods_map = {}
@@ -26,10 +27,12 @@ class TieredResource(Resource):
         request.is_api = True
         return Resource.__call__(self, request, *args, **kwargs)
 
+
 class AnonymousOAuth(OAuthAuthentication):
     def is_authenticated(self, request):
         OAuthAuthentication.is_authenticated(self, request)
         return True
+
 
 class MethodDependentAuthentication(object):
     def __init__(self, methods_auth_map=None, default=None):
