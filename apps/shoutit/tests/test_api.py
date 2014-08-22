@@ -1,9 +1,10 @@
 from django.test import TestCase
 from django.test.client import Client
 from django.db import connection
-from apps.shoutit.models import PredefinedCity
+from apps.shoutit.models import PredefinedCity, Currency
 import json
 import string
+
 
 def patchDatabase():
     with open("deploy_scripts/deploy.sql", "r") as myfile:
@@ -19,10 +20,16 @@ def createCities():
     dubai.save()
 
 
+def createCurrency():
+    euro = Currency(Name='Euro', Code='EUR', Country='Germany')
+    euro.save()
+
+
 class APITestCase(TestCase):
     def setUp(self):
         patchDatabase()
         createCities()
+        createCurrency()
         self.testClient = Client()
         response = self.testClient.post('/api/signup/', {
             'firstname': 'philip',
@@ -35,22 +42,25 @@ class APITestCase(TestCase):
         self.assertEqual(response['Content-Type'], 'application/json; charset=utf-8')
 
     def test_api(self):
+        self.get_request_token()
         self.shout_stream()
-        self.nearby_shouts()
-        self.shout_clusters()
+        #self.nearby_shouts()
+        #self.shout_clusters()
+        #self.get_currencies()
+        #self.shout_buy()
+
+    def get_request_token(self):
+        response = self.testClient.get('/oauth/request_token')
+        print response
 
     def shout_stream(self):
         response = self.testClient.get('/api/shouts/stream/')
-        print type(response)
-        print response.content
-        print type(response.content)
-        print string.find(response.content, "[")
         parsed = json.loads(response.content)
-        print type(parsed)
-        print(parsed[0])
-        parsed2 = json.loads(parsed[0])
-        print json.dumps(parsed2, sort_keys=True, indent=4)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(parsed['shouts'], [])
+        self.assertEqual(parsed['count'], 0)
+        self.assertEqual(parsed['messages'], [])
+
 
     def nearby_shouts(self):
         response = self.client.get('/api/shouts/nearby', {
@@ -72,4 +82,23 @@ class APITestCase(TestCase):
             'bottomRightLongitude': '6.171753463745063'
         }, follow=True)
         print(response)
+        self.assertEqual(response.status_code, 200)
+
+    def get_currencies(self):
+        response = self.client.get('/api/currencies/')
+        print response
+        self.assertEqual(response.status_code, 200)
+
+    def shout_buy(self):
+        response = self.client.post('/api/shout/buy', {
+            'price': '42.5',
+            'currency': 'EUR',
+            'name': 'Nice offer',
+            'description': 'BlaBla Buy this BlaBla',
+            'tags': 'superman chicken',
+            'location': 'bitstars',
+            'country': 'Germany',
+            'city': 'Aachen'
+        }, follow=True)
+        print response
         self.assertEqual(response.status_code, 200)
