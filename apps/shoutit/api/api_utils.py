@@ -14,7 +14,7 @@ JSON_URL_MARK_NOTIFICATION_AS_READ = JSONUrl()
 JSON_URL_MARK_NOTIFICATION_AS_UNREAD = JSONUrl()
 
 urls = {
-    UserProfile : ('/user/%s/', 'username'),
+    UserProfile: ('/user/%s/', 'username'),
     User: ('/user/%s/', 'username'),
     Shout: ('/shout/%s/', 'pk|base62'),
     Trade: ('/shout/%s/', 'pk|base62'),
@@ -47,8 +47,8 @@ def get_object_url(obj, extra_params=[]):
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), obj.__class__.__name__))
 
 
-def get_custom_url(JSON_URL, *params):
-    if urls.has_key(JSON_URL):
-        return urls[JSON_URL] % tuple(params)
+def get_custom_url(json_url, *params):
+    if urls.has_key(json_url):
+        return urls[json_url] % tuple(params)
     else:
-        raise Exception('URL for %s was not found.' % str(JSON_URL))
+        raise Exception('URL for %s was not found.' % str(json_url))
