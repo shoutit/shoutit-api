@@ -162,7 +162,6 @@ class UserProfile(models.Model):
 
     Following = models.ManyToManyField('Stream', through='FollowShip')
     Interests = models.ManyToManyField('Tag', related_name='Followers')
-    Badges = models.ManyToManyField('Badge', related_name='Holders')
 
     Stream = models.OneToOneField('Stream', related_name='OwnerUser', db_index=True)
 #	FeedStream = models.OneToOneField('Stream', related_name='ViewerUser', db_index=True)
@@ -481,9 +480,7 @@ class Stream(models.Model):
     def GetOwner(self):
         owner = None
         try:
-            if self.Type == STREAM_TYPE_STORE:
-                owner = self.OwnerStore
-            elif self.Type == STREAM_TYPE_TAG:
+            if self.Type == STREAM_TYPE_TAG:
                 owner = self.OwnerTag
             elif self.Type == STREAM_TYPE_USER:
                 owner = self.OwnerUser
@@ -499,9 +496,7 @@ class Stream(models.Model):
 
     def GetTypeText(self):
         type = u'None'
-        if self.Type == STREAM_TYPE_STORE:
-            type = unicode(STREAM_TYPE_STORE)
-        elif self.Type == STREAM_TYPE_TAG:
+        if self.Type == STREAM_TYPE_TAG:
             type = unicode(STREAM_TYPE_TAG)
         elif self.Type == STREAM_TYPE_USER:
             type = unicode(STREAM_TYPE_USER)
@@ -564,30 +559,6 @@ class FollowShip(models.Model):
     state = models.IntegerField(default=0, db_index=True)
 
 
-class Store(models.Model):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.id) + ": " + self.Name
-    Creator = models.ForeignKey(User, related_name='created_stores')
-    Owner = models.ForeignKey(User, related_name='owned_stores', null=True)
-    Stream = models.OneToOneField(Stream,related_name='OwnerStore', db_index=True)
-    Name = models.CharField(max_length=512, db_index=True)
-    Description = models.TextField(default='', blank=True)
-    Website = models.URLField(default='', blank=True)
-    Phone = models.CharField(max_length=512, default='', blank=True)
-    Image = models.ImageField(upload_to='static/stores', null=True)
-    Longitude = models.FloatField(default=0.0)
-    Latitude = models.FloatField(default=0.0)
-
-    def ShoutsCounter(self):
-        return self.Shouts.filter(Type = POST_TYPE_SELL).count()
-
-    def ExperiencesCounter(self):
-        return self.Stream.Shouts.filter(Type = POST_TYPE_EXPERIENCE).count()
-
-
 class Tag(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -619,20 +590,6 @@ class Category(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
     TopTag = models.OneToOneField(Tag,related_name='OwnerCategory', null= True)
     Tags = models.ManyToManyField(Tag, related_name='Category')
-
-
-class Badge(models.Model):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.id) + ": " + self.Name
-    Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
-    Image = models.ImageField(upload_to='badges/', null=True)
-    DateCreated = models.DateTimeField(auto_now_add=True)
-
-#	TODO: description field, criteria type/field for ex: this badge needs user to have 10 shouts in total, this badge needs user to have 20 followers
-#	TODO: view, controller. whenever user does an activity the controller gets fired and check if user earns new badge
 
 
 class Conversation(models.Model):

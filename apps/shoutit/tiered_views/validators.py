@@ -53,9 +53,6 @@ def profile_picture_validator(request, type, name, size):
 	elif type =='tag':
 		result = object_exists_validator(tag_controller.GetTag, _('Tag %(tag_name)s does not exist.') % {'tag_name' : name}, name)
 
-	elif type == 'store':
-		result = object_exists_validator(store_controller.GetStore, 'Store %s does not exist.' % name, name)
-
 	return result
 
 def user_edit_profile_validator(request, username, email):

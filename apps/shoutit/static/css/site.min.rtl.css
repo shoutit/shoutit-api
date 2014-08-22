@@ -1189,8 +1189,6 @@ a.follow-unfollow{margin:5px 10px 0 0}
 .bmargin{margin-bottom:15px}
 .shout_user_stats h2{display:inline}
 #stats_summary a{display:block;margin-bottom:10px}
-a.user_badge{background:#92d6ff;border:1px solid #40b8ff;-moz-border-radius:2px;-webkit-border-radius:2px;border-radius:2px;display:block;float:right;padding:5px;text-decoration:none;color:#0068a6;margin-left:5px;margin-bottom:5px;font-size:13px;font-weight:bold}
-a.user_badge:hover{text-decoration:none;color:#00a0ff}
 .modal-body{min-height:80px}
 .user_thumb{margin:0 0 5px 5px;padding:5px!important}
 .user_thumb img{height:32px;margin-left:5px;vertical-align:middle;width:32px}

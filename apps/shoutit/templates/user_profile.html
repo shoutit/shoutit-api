@@ -30,14 +30,12 @@
 				<li id="tagsFollowedTab">
 					<a data-toggle="tab" href="#tagsFollowed">{% trans "Tags" %}</a>
 				</li>
-{#				<li id="storesFollowedTab"><a href="#storesFollowed">Stores</a></li>#}
 			</ul>
 
 			<div class="tab-content">
 				<div class="tab-pane active" id="recentFollowed"></div>
 				<div class="tab-pane" id="usersFollowed"></div>
 				<div class="tab-pane" id="tagsFollowed"></div>
-{#				<div id="storesFollowed"></div>#}
 			</div>
 		</div>
 		<div class="modal-footer">
@@ -311,7 +309,6 @@
 		var RecentFollowingLoaded = false;
 		var UsersFollowingLoaded = false;
 		var TagsFollowingLoaded = false;
-//		var StoresFollowingLoaded = false;
         function loadFollowing(type, period){
             if(typeof type == 'undefined')
 				type ='all';
@@ -327,8 +324,6 @@
 							RecentFollowingLoaded = true;
 							var followingUsers =  data.data.followingUsers;
 							var followingTags = data.data.followingTags;
-//							var followingStores = data.data.followingStores;
-//							var followingStoresId = data.data.followingStoresId;
 
 							var elm = $('#recentFollowed');
 							var html = '';
@@ -345,12 +340,6 @@
 								html+= '<li><a class="post_tag unselectable" href="/tag/'+followingTags[i]+'">' + followingTags[i] + '</a></li>';
 							}
 							html+= '</ul></div>';
-
-//							html+= '<div class="clearfix"><h6>Stores</h6>';
-//							for(i = 0;i<followingStores.length; i++){
-//								html+= '<a class="btn large user_thumb" href="/store/'+followingStoresId[i]+'"><img src="/xhr/store/'+followingStoresId[i]+'/picture/32"><span>' + followingStores[i] + '</span></a>'
-//							}
-//							html+= '</div>';
 
 							elm.append(html);
 						}
@@ -403,31 +392,6 @@
 						}
 					});
 					break;
-{#				case 'stores':#}
-{#					if(StoresFollowingLoaded)#}
-{#						return;#}
-{#					requestAjaxily({#}
-{#						url: '/xhr/user/{{ profile.username }}/stats/following/'+type+'/'+period+'/',#}
-{#						successCallback: function (data) {#}
-{#							StoresFollowingLoaded = true;#}
-{#							var followingStores = data.data.followingStores;#}
-{#							var followingStoresId = data.data.followingStoresId;#}
-{##}
-{#							var elm = $('#storesFollowed');#}
-{#							var html = '';#}
-{##}
-{#							html+= '<div class="clearfix">';#}
-{#							html+= '<ul class="unstyled">';#}
-{#							for(i = 0;i<followingStores.length; i++){#}
-{#								html+= '<a class="btn large user_thumb" href="/store/'+followingStoresId[i]+'"><img src="/xhr/store/'+followingStoresId[i]+'/picture/32"><span>' + followingStores[i] + '</span></a>'#}
-{#							}#}
-{#							html+= '</ul></div>';#}
-{##}
-{#							elm.append(html);#}
-{#						}#}
-{#					});#}
-{#					break;#}
-
 			}
 
         }

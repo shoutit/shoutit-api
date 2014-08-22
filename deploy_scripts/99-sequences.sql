@@ -1,7 +1,6 @@
 ﻿SELECT setval('"ActivityLogger_activity_id_seq"', (SELECT MAX(id) FROM "ActivityLogger_activity")+1, true);
 SELECT setval('"ActivityLogger_activitydata_id_seq"', (SELECT MAX(id) FROM "ActivityLogger_activitydata")+1, true);
 SELECT setval('"ActivityLogger_request_id_seq"', (SELECT MAX(id) FROM "ActivityLogger_request")+1, true);
-SELECT setval('"shoutit_badge_id_seq"', (SELECT MAX(id) FROM "shoutit_badge")+1, true);
 SELECT setval('"shoutit_category_Tags_id_seq"', (SELECT MAX(id) FROM "shoutit_category_Tags")+1, true);
 SELECT setval('"shoutit_category_id_seq"', (SELECT MAX(id) FROM "shoutit_category")+1, true);
 SELECT setval('"shoutit_confirmtoken_id_seq"', (SELECT MAX(id) FROM "shoutit_confirmtoken")+1, true);
@@ -23,7 +22,6 @@ SELECT setval('"shoutit_storedimage_id_seq"', (SELECT MAX(id) FROM "shoutit_stor
 SELECT setval('"shoutit_stream_id_seq"', (SELECT MAX(id) FROM "shoutit_stream")+1, true);
 SELECT setval('"shoutit_tag_id_seq"', (SELECT MAX(id) FROM "shoutit_tag")+1, true);
 SELECT setval('"shoutit_userpermission_id_seq"', (SELECT MAX(id) FROM "shoutit_userpermission")+1, true);
-SELECT setval('"shoutit_userprofile_Badges_id_seq"', (SELECT MAX(id) FROM "shoutit_userprofile_Badges")+1, true);
 SELECT setval('"shoutit_userprofile_Interests_id_seq"', (SELECT MAX(id) FROM "shoutit_userprofile_Interests")+1, true);
 SELECT setval('"shoutit_userprofile_id_seq"', (SELECT MAX(id) FROM "shoutit_userprofile")+1, true);
 SELECT setval('"auth_group_id_seq"', (SELECT MAX(id) FROM "auth_group")+1, true);
