@@ -37,7 +37,7 @@ TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.syrex', 'shoutit.com']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.syrex')
 ADMINS = (
-     ('Your Name', 'your_email@example.com'),
+    ('Your Name', 'your_email@example.com'),
 )
 MANAGERS = ADMINS
 
@@ -84,16 +84,16 @@ SESSION_REDIS_PREFIX = 'session'
 # Caching
 DEV_SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 DEV_CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'TIMEOUT': 240,
-        }
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'TIMEOUT': 240
+    }
 }
 REDIS_SESSION_ENGINE = 'redis_sessions.session'
 REDIS_CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'TIMEOUT': 12 * 60 * 60,
+        'TIMEOUT': 12 * 60 * 60
     }
 }
 if DEV:
@@ -113,6 +113,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = (
+    'django.contrib.sites',
     'django.contrib.admin',
     'grappelli',
     'django.contrib.auth',
@@ -134,12 +135,7 @@ INSTALLED_APPS = (
     #'keyedcache',
     #'livesettings',
     #'l10n',
-    #'sorl.thumbnail',
-    #'product',
-    #'product.modules.subscription',
     #'payment',
-    #'satchmo_utils',
-    #'app_plugins',
     #'subscription',
     #'debug_toolbar',
 )
@@ -176,6 +172,8 @@ MIDDLEWARE_CLASSES = (
 )
 
 # URLs
+SITE_ID = 1
+
 ROOT_URLCONF = 'apps.shoutit.urls'
 APPEND_SLASH = True
 IS_SITE_SECURE = False  # True
@@ -186,13 +184,6 @@ WSGI_APPLICATION = 'apps.shoutit.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
-#DATABASES = {
-#	'default': {
-#		'ENGINE': 'django.db.backends.sqlite3',
-#		'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#	}
-#}
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
@@ -200,7 +191,7 @@ DATABASES = {
         'USER': 'syron',                      # Not used with sqlite3.
         'PASSWORD': '123',                  # Not used with sqlite3.
         'HOST': 'localhost',
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'PORT': ''                      # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -281,29 +272,29 @@ LOGGING = {
         'sql_file': {
             'class': 'logging.FileHandler',
             'level': 'INFO',
-            'filename': os.path.join(BASE_DIR, 'logs', 'sql.log'),
+            'filename': os.path.join(BASE_DIR, 'logs', 'sql.log')
         },
         'sql_console': {
             'level':'INFO',
             'class':'logging.StreamHandler',
             'formatter': 'message_only'
-        },
+        }
     },
     'loggers': {
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
-            'propagate': True,
+            'propagate': True
         },
-        'SqlLogMiddleware' : {
+        'SqlLogMiddleware': {
             'handlers': ['sql_file'],
             'level': 'INFO',
-            'propagate': False,
+            'propagate': False
         },
         'SqlLogMiddleware_console' : {
             'handlers': ['sql_console'],
             'level': 'INFO',
-            'propagate': False,
+            'propagate': False
         }
     }
 }
@@ -356,7 +347,7 @@ GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
 
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {
-    'google': { 'consumer_key': '572868510623.apps.googleusercontent.com', 'consumer_secret': 'GkQnvuCaAzgdIn6V1wZ70DW8' },
+    'google': {'consumer_key': '572868510623.apps.googleusercontent.com', 'consumer_secret': 'GkQnvuCaAzgdIn6V1wZ70DW8' },
     'yahoo': {
         'consumer_key': 'dj0yJmk9akptTldFWW1qd1F1JmQ9WVdrOWVWZzRkbTVGTmpJbWNHbzlOak13T0RNNU5qSS0mcz1jb25zdW1lcnNlY3JldCZ4PTE2',
         'consumer_secret': 'c3d0cd060d1085000f7b5d1698f2c9e65632a4e6'
@@ -443,17 +434,13 @@ PAYPAL_TEST = True
 
 SUBSCRIPTION_PAYPAL_SETTINGS = {
     'notify_url' : PAYPAL_NOTIFY_URL,
-    'return' : PAYPAL_RETURN_URL,
+    'return': PAYPAL_RETURN_URL,
     'cancel_return' : PAYPAL_CANCEL_URL,
-    'business' : PAYPAL_BUSINESS,
-}
+    'business': PAYPAL_BUSINESS,
+    }
 
 SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
-#SATCHMO_SETTINGS = {
-#    'SHOP_BASE' : '',
-#    'MULTISHOP' : True,
-#}

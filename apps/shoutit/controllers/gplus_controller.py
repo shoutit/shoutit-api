@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from apiclient.discovery import build
 import httplib2
 from oauth2client.client import AccessTokenRefreshError
-from oauth2client.client import credentials_from_code, Credentials
+from oauth2client.client import credentials_from_code
 from oauth2client.client import FlowExchangeError
 import apps.shoutit.settings as Settings
 
