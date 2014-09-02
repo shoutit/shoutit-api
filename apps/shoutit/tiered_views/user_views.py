@@ -204,7 +204,7 @@ def gplus_auth(request):
     result = ResponseResult()
 
     if request.method == "POST":
-        code = urldecode(request.body).replace('"','')
+        code = urldecode(request.body).replace('"', '')
         user = user_from_gplus_code(request, code)
         if user:
             result.data['profile'] = user.Profile

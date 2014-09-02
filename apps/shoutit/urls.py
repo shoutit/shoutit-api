@@ -199,8 +199,8 @@ urlpatterns = patterns('',
                        url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$', 'apps.shoutit.tiered_views.user_views.activate_modal'),
 
                        url(r'^contact-import/$', 'apps.shoutit.tiered_views.user_views.import_contacts', name = 'import_contacts'),
-                       url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitiations'),
-                       )
+                       url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitiations')
+                    )
 
 #urlpatterns += patterns('',
 #	url(r'^admin/django-lean/', include('django_lean.experiments.admin_urls')),

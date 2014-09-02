@@ -122,7 +122,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.ActivityLogger',
+    # 'apps.ActivityLogger',
     'apps.shoutit',
     'widget_tweaks',
     'piston',
