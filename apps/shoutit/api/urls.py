@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
-from piston.resource import Resource
-from piston.authentication.oauth import OAuthAuthentication
+from piston3.resource import Resource
+from piston3.authentication import OAuthAuthentication, NoAuthentication
 from apps.shoutit import tiered_views
 import apps.shoutit.tiered_views.user_views
 import apps.shoutit.tiered_views.realtime_views
@@ -28,12 +28,6 @@ class TieredResource(Resource):
         return Resource.__call__(self, request, *args, **kwargs)
 
 
-class AnonymousOAuth(OAuthAuthentication):
-    def is_authenticated(self, request):
-        OAuthAuthentication.is_authenticated(self, request)
-        return True
-
-
 class MethodDependentAuthentication(object):
     def __init__(self, methods_auth_map=None, default=None):
         if not methods_auth_map: methods_auth_map = {}
@@ -58,7 +52,7 @@ class MethodDependentAuthentication(object):
             return None
 
 o_auth = OAuthAuthentication()
-a_oauth = AnonymousOAuth()
+a_oauth = NoAuthentication()
 
 urlpatterns = patterns('',
     url(r'^session/([0-9a-f]{32})/$',

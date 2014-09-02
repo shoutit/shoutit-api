@@ -5,7 +5,8 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
-from piston.utils import rc
+from piston3.utils import rc
+import json
 from apps.shoutit import constants, utils
 
 from apps.shoutit.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_BUY, POST_TYPE_SELL, POST_TYPE_EXPERIENCE
@@ -290,7 +291,7 @@ def get_initial_api_result(request, result, *args, **kwargs):
         'form_errors': [{'field': k, 'messages': v} for k, v in result.form_errors.iteritems()]
     }
 
-    response['Content-Type'] = 'application/json'
+    response['content-type'] = 'application/json'
     return response, json_result
 
 
@@ -516,7 +517,7 @@ def user_api(request, result, *args, **kwargs):
         if result.data.has_key('interests_count'):
             json_result['interests_count'] = result.data['interests_count']
 
-    response.content = json_result
+    response.content = json.dumps(json_result)
     return response
 
 

@@ -125,7 +125,7 @@ INSTALLED_APPS = (
     # 'apps.ActivityLogger',
     'apps.shoutit',
     'widget_tweaks',
-    'piston',
+    'piston3',
     'django_mobile',
     'djcelery',
     'djcelery_email',

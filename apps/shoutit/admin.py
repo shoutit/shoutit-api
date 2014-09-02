@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from apps.ActivityLogger.models import Activity, ActivityData, Request
 from apps.shoutit.controllers import business_controller
 from apps.shoutit.models.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, FollowShip, Tag, Conversation, Message, Notification, Category, Currency, BusinessProfile, BusinessConfirmation, BusinessCategory, StoredFile, Report, BusinessCreateApplication
-from piston.models import Consumer, Nonce, Token
+
 
 # Shout
 class ShoutAdmin(admin.ModelAdmin):
@@ -12,6 +12,7 @@ class ShoutAdmin(admin.ModelAdmin):
     readonly_fields = ('OwnerUser','Streams','Tags')
 
 admin.site.register(Shout,ShoutAdmin)
+
 
 # Trade
 class TradeAdmin(admin.ModelAdmin):
@@ -35,6 +36,7 @@ admin.site.register(Trade, TradeAdmin)
 
 admin.site.register(Item)
 
+
 # Experience
 class ExperienceAdmin(admin.ModelAdmin):
     list_display = ('pk', 'OwnerUser','AboutBusiness', 'State','Text')
@@ -50,6 +52,7 @@ class CustomUserAdmin(UserAdmin):
     list_per_page = 50
 admin.site.register(User, CustomUserAdmin)
 
+
 # UserProfile
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('name','User', 'Country','City' , 'Sex','Image','Stream')
@@ -59,12 +62,14 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 admin.site.register(UserProfile, UserProfileAdmin)
 
+
 # BusinessProfile
 class BusinessProfileAdmin(admin.ModelAdmin):
     list_display = ('name', 'User', 'Country', 'City','Category', 'Confirmed', 'Stream')
     search_fields = ['Name', 'User__email','Website', 'Mobile']
     readonly_fields = ('User','Stream','LastToken')
 admin.site.register(BusinessProfile, BusinessProfileAdmin)
+
 
 # BusinessCreateApplication
 class BusinessCreateApplicationAdmin(admin.ModelAdmin):
@@ -95,16 +100,19 @@ class BusinessCreateApplicationAdmin(admin.ModelAdmin):
     reject_business.short_description = "Reject selected business creation applications"
 admin.site.register(BusinessCreateApplication, BusinessCreateApplicationAdmin)
 
+
 # BusinessConfirmation
 class BusinessConfirmationAdmin(admin.ModelAdmin):
     list_display = ('id', 'User')
 admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
+
 
 # BusinessCategory
 class BusinessCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'Name', 'Source', 'SourceID', 'Parent')
     search_fields = ['Name','Parent__Name']
 admin.site.register(BusinessCategory, BusinessCategoryAdmin)
+
 
 # FollowShip
 class FollowShipAdmin(admin.ModelAdmin):
@@ -113,11 +121,13 @@ class FollowShipAdmin(admin.ModelAdmin):
     readonly_fields = ('follower','stream',)
 admin.site.register(FollowShip,FollowShipAdmin)
 
+
 # Tag
 class TagAdmin(admin.ModelAdmin):
     list_display = ('id','Name','Stream')
     search_fields = ['id', 'Name']
 admin.site.register(Tag, TagAdmin)
+
 
 # Conversation
 class ConversationAdmin(admin.ModelAdmin):
@@ -125,11 +135,13 @@ class ConversationAdmin(admin.ModelAdmin):
     search_fields = ['FromUser__username', 'ToUser__username']
 admin.site.register(Conversation, ConversationAdmin)
 
+
 # Message
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('Conversation', 'FromUser','ToUser', 'Text', 'DateCreated', 'IsRead')
     search_fields = ['FromUser__username', 'ToUser__username', 'Text']
 admin.site.register(Message, MessageAdmin)
+
 
 # Request
 class RequestAdmin(admin.ModelAdmin):
@@ -137,13 +149,13 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = ['ip_address','plain_url','user__username','referer']
 admin.site.register(Request, RequestAdmin)
 
+
 # Report
 class ReportAdmin(admin.ModelAdmin):
     list_display = ('User', 'AttachedObject', 'content_type', 'Text', 'IsSolved', 'IsDisabled')
     list_filter = ('IsSolved', 'IsDisabled')
     actions = ['mark_as_solved','mark_as_disabled']
     readonly_fields = ('User','AttachedObject','content_type')
-
 
     def mark_as_solved(self, request, queryset):
         queryset.update(IsSolved = True)
@@ -164,7 +176,3 @@ admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(Activity)
 admin.site.register(ActivityData)
-admin.site.register(Consumer)
-admin.site.register(Nonce)
-admin.site.register(Token)
-

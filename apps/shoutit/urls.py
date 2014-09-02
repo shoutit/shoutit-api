@@ -85,9 +85,9 @@ urlpatterns = patterns('',
 
                        url(r'^api/', include('apps.shoutit.api.urls')),
 
-                       url(r'^oauth/request_token/$', 'piston.authentication.oauth.views.get_request_token'),
-                       url(r'^oauth/authorize/$', 'piston.authentication.oauth.views.authorize_request_token'),
-                       url(r'^oauth/access_token/$', 'piston.authentication.oauth.views.get_access_token'),
+                       url(r'^oauth/request_token/$', 'piston3.authentication.oauth.views.get_request_token'),
+                       url(r'^oauth/authorize/$', 'piston3.authentication.oauth.views.authorize_request_token'),
+                       url(r'^oauth/access_token/$', 'piston3.authentication.oauth.views.get_access_token'),
 
                        url(r'^oauth/shout_request_token/$', 'apps.shoutit.api.authentication.get_request_token'),
                        url(r'^oauth/shout_access_token/$', 'apps.shoutit.api.authentication.get_access_token'),

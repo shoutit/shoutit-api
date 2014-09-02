@@ -5,8 +5,8 @@ from django.http import HttpResponseBadRequest, HttpResponse
 from urllib import urlencode
 import json
 from django.views.decorators.csrf import csrf_exempt
-from piston.authentication.oauth.store import store, InvalidConsumerError, InvalidTokenError
-from piston.authentication.oauth.utils import verify_oauth_request, get_oauth_request, require_params
+from piston3.authentication.oauth.store import store, InvalidConsumerError, InvalidTokenError
+from piston3.authentication.oauth.utils import verify_oauth_request, get_oauth_request, require_params
 from apps.shoutit.models import LinkedFacebookAccount
 
 

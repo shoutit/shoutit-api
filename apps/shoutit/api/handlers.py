@@ -1,5 +1,5 @@
 from django.http import HttpResponseNotAllowed
-from piston.handler import BaseHandler
+from piston3.handler import BaseHandler
 
 
 class TieredHandler(BaseHandler):
