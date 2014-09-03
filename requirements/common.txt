@@ -2,7 +2,7 @@
 Django==1.6
 # PIL==1.1.7
 oauth2==1.5.211
-https://cloudup.com/files/iWMB540YcLj/download
+https://bitbucket.org/userzimmermann/django-piston3/get/tip.tar.gz
 httplib2==0.8
 Celery==3.1.5
 django-celery==3.1.1
