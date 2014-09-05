@@ -705,9 +705,11 @@ function signInCallback(authResult) {
       requestAjaxily({
           type: 'POST',
           url: '/gplus_auth/',
-          data: authResult['code'],
-          processData: false,
-          contentType: 'application/octet-stream; charset=utf-8',
+          data: JSON.stringify({
+            code: authResult['code'],
+            consumer_key: "935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com"
+          }),
+          contentType: 'application/json',
           successCallback: function (data) {
               if (redirect_after_login)
                 redirect_by_response(data);

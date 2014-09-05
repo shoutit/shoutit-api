@@ -342,6 +342,30 @@ FACEBOOK_APP_ID = '353625811317277'
 FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
 
 # Google App
+GOOGLE_APP = {
+    'CLIENTS': {
+        '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com': {
+            'NAME': 'web',
+            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com.json'
+        },
+
+        '935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com': {
+            'NAME': 'android',
+            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com.json'
+        },
+
+        '935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com': {
+            'NAME': 'ios',
+            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com.json'
+        },
+
+        '935842257865-vr43ma66p1euc6n599uml1ldvgfm27n7.apps.googleusercontent.com': {
+            'NAME': 'android2',
+            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-vr43ma66p1euc6n599uml1ldvgfm27n7.apps.googleusercontent.com.json'
+        }
+    }
+}
+
 GOOGLE_APP_CLIENT_ID = '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com'
 GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
 

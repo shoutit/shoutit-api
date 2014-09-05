@@ -4,6 +4,7 @@ from django.http import HttpResponseBadRequest
 from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 import math
+import json
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 from apps.shoutit.utils import ToSeoFriendly
 import apps.shoutit.settings as settings
@@ -204,8 +205,30 @@ def gplus_auth(request):
     result = ResponseResult()
 
     if request.method == "POST":
-        code = urldecode(request.body).replace('"', '')
-        user = user_from_gplus_code(request, code)
+        try:
+            post_data = json.loads(request.body)
+            code = post_data['code']
+            client_id = post_data['consumer_key']
+        except ValueError:
+            result.messages.append(('error', _('Invalid json')))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+        except KeyError, e:
+            result.messages.append(('error', _('Missing parameter: ' + e.message)))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
+        try:
+            error, user = user_from_gplus_code(request, code, client_id)
+        except KeyError, e:
+            result.messages.append(('error', _('Invalid client: ' + e.message)))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+        except BaseException, e:
+            result.messages.append(('error', _(e.message)))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
         if user:
             result.data['profile'] = user.Profile
             result.data['is_following'] = False
@@ -214,7 +237,9 @@ def gplus_auth(request):
             result.messages.append(('success', _('Your Google account has been added to Shoutit!')))
         else:
             result.messages.append(('error', _('Error connecting to your Google account')))
+            result.messages.append(('error', error.message))
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+
     return result
 
 

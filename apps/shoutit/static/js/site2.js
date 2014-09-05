@@ -157,9 +157,6 @@ function requestAjaxily(config) {
     if (config === undefined)
         return;
 
-    if (config.type === undefined)
-        config.type = 'GET';
-
     var key = config.type + '-' + config.url + '-' + config.returned_type;
 
     if (is_loading[key] !== undefined && is_loading[key])
@@ -173,8 +170,9 @@ function requestAjaxily(config) {
     $.ajax({
         url: config.url,
         data: config.data,
-        type: config.type,
+        type: config.type || 'GET',
         config: config,
+        contentType: config.contentType || 'application/x-www-form-urlencoded; charset=UTF-8',
         cache: false,
         key: key,
         success: function (data, textStatus, jqXHR) {

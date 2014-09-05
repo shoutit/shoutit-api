@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from apiclient.discovery import build
 import httplib2
 from oauth2client.client import AccessTokenRefreshError
-from oauth2client.client import credentials_from_code
+from oauth2client.client import credentials_from_code, credentials_from_clientsecrets_and_code
 from oauth2client.client import FlowExchangeError
 import apps.shoutit.settings as Settings
 
@@ -14,19 +14,17 @@ import apps.shoutit.settings as Settings
 SERVICE = build('plus', 'v1')
 
 
-def user_from_gplus_code(request, code):
+def user_from_gplus_code(request, code, client_id):
     redirect_uri = 'postmessage'
     if hasattr(request, 'is_api') and request.is_api:
         redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_code(Settings.GOOGLE_APP_CLIENT_ID, Settings.GOOGLE_APP_CLIENT_SECRET, '',
-                                            code, redirect_uri)
+        credentials = credentials_from_clientsecrets_and_code(filename=Settings.GOOGLE_APP['CLIENTS'][client_id]['FILE']
+                                                              , scope='', code=code, redirect_uri=redirect_uri)
     except FlowExchangeError as flowError:
-        print("###")
-        print(flowError.message)
-        return None
+        return flowError, None
 
     gplus_id = credentials.id_token['sub']
     try:
@@ -43,14 +41,14 @@ def user_from_gplus_code(request, code):
             # Get the logged gplus user.
             google_request = SERVICE.people().get(userId='me')
             gplus_user = google_request.execute(http=http)
-        except AccessTokenRefreshError:
-            return None
+        except AccessTokenRefreshError, e:
+            return e, None
 
         user = auth_with_gplus(request, gplus_user, credentials)
 
     if user:
         login_without_password(request, user)
         request.session['user_renew_location'] = True
-        return user
+        return None, user
     else:
-        return None
+        return Exception('Could not login the user'), None
