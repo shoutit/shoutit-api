@@ -2,29 +2,25 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models.query_utils import Q
 from django.http import HttpResponseBadRequest, HttpResponse
-from urllib import urlencode
 import json
+from piston3 import oauth
 from django.views.decorators.csrf import csrf_exempt
-from piston3.authentication.oauth.store import store, InvalidConsumerError, InvalidTokenError
-from piston3.authentication.oauth.utils import verify_oauth_request, get_oauth_request, require_params
+from piston3.authentication import initialize_server_request, INVALID_PARAMS_RESPONSE, send_oauth_error
 from apps.shoutit.models import LinkedFacebookAccount
 
 
 @csrf_exempt
 def get_request_token(request):
-    oauth_request = get_oauth_request(request)
-    missing_params = require_params(oauth_request)
-    if missing_params is not None:
-        return missing_params
+
+    oauth_server, oauth_request = initialize_server_request(request)
+
+    if oauth_server is None:
+        return INVALID_PARAMS_RESPONSE
     try:
-        consumer = store.get_consumer(request, oauth_request, oauth_request['oauth_consumer_key'])
-    except InvalidConsumerError:
-        return HttpResponseBadRequest('Invalid Consumer.')
+        request_token = oauth_server.fetch_request_token(oauth_request)
 
-    if not verify_oauth_request(request, oauth_request, consumer):
-        return HttpResponseBadRequest('Could not verify OAuth request.')
-
-    request_token = store.create_request_token(request, oauth_request, consumer, 'oob')
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
 
     token = {
         'oauth_token': request_token.key,
@@ -35,18 +31,8 @@ def get_request_token(request):
 
 @csrf_exempt
 def get_access_token(request):
-    oauth_request = get_oauth_request(request)
 
-    if 'oauth_token' not in oauth_request:
-        return HttpResponseBadRequest('No request token specified.')
-
-    try:
-        request_token = store.get_request_token(request, oauth_request, oauth_request['oauth_token'])
-    except InvalidTokenError:
-        return HttpResponseBadRequest('Invalid request token.')
-
-    consumer = store.get_consumer_for_request_token(request, oauth_request, request_token)
-
+    # step 1: fill request.user
     if not 'credential' in request.REQUEST or not request.REQUEST['credential']:
         return HttpResponseBadRequest('username or email or mobile should be specified.')
     credential = request.REQUEST['credential']
@@ -66,8 +52,31 @@ def get_access_token(request):
         return HttpResponseBadRequest('Invalid username or password.')
 
     request.user = user
-    request_token = store.authorize_request_token(request, oauth_request, request_token)
-    access_token = store.create_access_token(request, oauth_request, consumer, request_token)
+
+    # step 2: authorize the request token, do the verification on air
+    oauth_server, oauth_request = initialize_server_request(request)
+
+    if oauth_server is None or oauth_request is None:
+        return INVALID_PARAMS_RESPONSE
+
+    try:
+        request_token = oauth_server.fetch_request_token(oauth_request)
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
+
+    try:
+        request_token = oauth_server.authorize_token(request_token, request.user)
+        # after authorization we need to set the verifier and therefore new signature for oauth_request
+        oauth_request.set_parameter('oauth_verifier', request_token.verifier)
+        oauth_request.sign_request(oauth_server.signature_methods[oauth_request.get_parameter('oauth_signature_method')], request_token.consumer, request_token)
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
+
+    # step 3: create access token for user
+    try:
+        access_token = oauth_server.fetch_access_token(oauth_request)
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
 
     token = {
         'access_token': access_token.key,
