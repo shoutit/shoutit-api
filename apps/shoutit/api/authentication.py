@@ -7,7 +7,8 @@ from piston3 import oauth
 from django.views.decorators.csrf import csrf_exempt
 from piston3.authentication import initialize_server_request, INVALID_PARAMS_RESPONSE, send_oauth_error
 from apps.shoutit.models import LinkedFacebookAccount
-
+from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
+from apps.shoutit.api.renderers import render_user
 
 @csrf_exempt
 def get_request_token(request):
@@ -81,6 +82,56 @@ def get_access_token(request):
     token = {
         'access_token': access_token.key,
         'access_token_secret': access_token.secret,
+    }
+    return HttpResponse(json.dumps(token), content_type='application/json')
+
+@csrf_exempt
+def get_gplus_access_token(request):
+
+    # step 1: fill request.user
+    if not 'code' in request.REQUEST or not request.REQUEST['code']:
+        return HttpResponseBadRequest('google one time code should be specified.')
+    code = request.REQUEST['code']
+
+    try:
+        error, user = user_from_gplus_code(request, code)
+    except BaseException, e:
+        return HttpResponseBadRequest(json.dumps({'error': e.message}), content_type='application/json')
+
+    if not user:
+        return HttpResponseBadRequest(json.dumps({'error': error.message}), content_type='application/json')
+
+    request.user = user
+
+    # step 2: authorize the request token, do the verification on air
+    oauth_server, oauth_request = initialize_server_request(request)
+
+    if oauth_server is None or oauth_request is None:
+        return INVALID_PARAMS_RESPONSE
+
+    try:
+        request_token = oauth_server.fetch_request_token(oauth_request)
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
+
+    try:
+        request_token = oauth_server.authorize_token(request_token, request.user)
+        # after authorization we need to set the verifier and therefore new signature for oauth_request
+        oauth_request.set_parameter('oauth_verifier', request_token.verifier)
+        oauth_request.sign_request(oauth_server.signature_methods[oauth_request.get_parameter('oauth_signature_method')], request_token.consumer, request_token)
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
+
+    # step 3: create access token for user
+    try:
+        access_token = oauth_server.fetch_access_token(oauth_request)
+    except oauth.OAuthError as err:
+        return send_oauth_error(err)
+
+    token = {
+        'access_token': access_token.key,
+        'access_token_secret': access_token.secret,
+        'user': render_user(user)
     }
     return HttpResponse(json.dumps(token), content_type='application/json')
 

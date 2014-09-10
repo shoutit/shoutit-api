@@ -6,22 +6,22 @@ from django.core.exceptions import ObjectDoesNotExist
 from apiclient.discovery import build
 import httplib2
 from oauth2client.client import AccessTokenRefreshError
-from oauth2client.client import credentials_from_code, credentials_from_clientsecrets_and_code
+from oauth2client.client import credentials_from_clientsecrets_and_code, OOB_CALLBACK_URN
 from oauth2client.client import FlowExchangeError
-import apps.shoutit.settings as Settings
+import apps.shoutit.settings as settings
 
 # TODO: this requires established external connection, try catch would handle it better.
 SERVICE = build('plus', 'v1')
 
 
-def user_from_gplus_code(request, code, client_id):
+def user_from_gplus_code(request, code):
     redirect_uri = 'postmessage'
     if hasattr(request, 'is_api') and request.is_api:
-        redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+        redirect_uri = OOB_CALLBACK_URN
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_clientsecrets_and_code(filename=Settings.GOOGLE_APP['CLIENTS'][client_id]['FILE']
+        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS'][settings.GOOGLE_APP_CLIENT_ID]['FILE']
                                                               , scope='', code=code, redirect_uri=redirect_uri)
     except FlowExchangeError as flowError:
         return flowError, None

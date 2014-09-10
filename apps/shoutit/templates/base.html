@@ -706,8 +706,7 @@ function signInCallback(authResult) {
           type: 'POST',
           url: '/gplus_auth/',
           data: JSON.stringify({
-            code: authResult['code'],
-            consumer_key: "935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com"
+            code: authResult['code']
           }),
           contentType: 'application/json',
           successCallback: function (data) {

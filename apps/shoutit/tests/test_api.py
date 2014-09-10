@@ -113,8 +113,8 @@ class APITestCase(TestCase):
 # import requests
 # import pprint
 #
-# request_token_url = 'http://shoutit.com:8000/oauth/shout_request_token/'
-# access_token_url = 'http://shoutit.com:8000/oauth/shout_access_token/'
+# request_token_url = 'http://shoutit.com:8000/oauth/request_token/'
+# access_token_url = 'http://shoutit.com:8000/oauth/access_token/'
 # consumer = oauth.Consumer(key='123', secret='123456')
 #
 # # initiate request with consumer key,secret to request_token_url

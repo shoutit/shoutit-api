@@ -208,7 +208,6 @@ def gplus_auth(request):
         try:
             post_data = json.loads(request.body)
             code = post_data['code']
-            client_id = post_data['consumer_key']
         except ValueError:
             result.messages.append(('error', _('Invalid json')))
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -219,9 +218,9 @@ def gplus_auth(request):
             return result
 
         try:
-            error, user = user_from_gplus_code(request, code, client_id)
+            error, user = user_from_gplus_code(request, code)
         except KeyError, e:
-            result.messages.append(('error', _('Invalid client: ' + e.message)))
+            result.messages.append(('error', _('Invalid client: ' + unicode(e.message))))
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
             return result
         except BaseException, e:
