@@ -94,6 +94,7 @@ def get_gplus_access_token(request):
     code = request.REQUEST['code']
 
     try:
+        request.is_api = True
         error, user = user_from_gplus_code(request, code)
     except BaseException, e:
         return HttpResponseBadRequest(json.dumps({'error': e.message}), content_type='application/json')

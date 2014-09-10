@@ -4,10 +4,10 @@ import oauth2 as oauth
 import requests
 import pprint
 
-request_token_url = 'http://shoutit.syrex:8000/oauth/request_token/'
-access_token_url = 'http://shoutit.syrex:8000/oauth/gplus_access_token/'
+request_token_url = 'http://shoutit.com:8000/oauth/request_token/'
+access_token_url = 'http://shoutit.com:8000/oauth/gplus_access_token/'
 consumer = oauth.Consumer(key='123', secret='123456')
-google_one_time_code = '4/-8ajNwu6D4JzxUzLwrv8CTI2HccF.wlEqZSfSb9oaPvB8fYmgkJyfLlO-kAI'
+google_one_time_code = '4/3DWjkTq3sa0QjMV6pPhRuFpX-GYl.gtUOFngyy6kSyjz_MlCJoi0kbIu-kAI'
 params = {'code': google_one_time_code}
 
 # initiate request with consumer key,secret to request_token_url
