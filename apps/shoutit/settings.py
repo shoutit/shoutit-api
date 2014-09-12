@@ -81,6 +81,9 @@ SESSION_REDIS_DB = 0
 SESSION_REDIS_PASSWORD = 'password'
 SESSION_REDIS_PREFIX = 'session'
 
+# to access session from JS, needed for realtime
+SESSION_COOKIE_HTTPONLY = False
+
 # Caching
 DEV_SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 DEV_CACHES = {

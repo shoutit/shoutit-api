@@ -6,7 +6,7 @@ import os
 from apns import Payload, APNs
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
-apns_instance = APNs(use_sandbox=False, cert_file=PROJECT_PATH+'/ShoutWebsite/static/Certificates/iphone/ShoutitPushCer.pem', key_file=PROJECT_PATH+'/ShoutWebsite/static/Certificates/iphone/ShoutitKey.pem')
+apns_instance = APNs(use_sandbox=False, cert_file=PROJECT_PATH+'/apps/shoutit/static/Certificates/iphone/ShoutitPushCer.pem', key_file=PROJECT_PATH+'/apps/shoutit/static/Certificates/iphone/ShoutitKey.pem')
 
 import json
 import socket

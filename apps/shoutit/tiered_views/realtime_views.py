@@ -81,7 +81,7 @@ def get_session_data(request, session_key=None):
         result['session_key'] = session._get_session_key()
     except:
         raise Http404()
-    return HttpResponse(content=result, content_type='application/json')
+    return HttpResponse(content=json.dumps(result), content_type='application/json')
 
 
 @non_cached_view(json_renderer=json_renderer,

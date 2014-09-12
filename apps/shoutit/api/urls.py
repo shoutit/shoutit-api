@@ -55,7 +55,7 @@ o_auth = OAuthAuthentication()
 a_oauth = NoAuthentication()
 
 urlpatterns = patterns('',
-    url(r'^session/([0-9a-f]{32})/$',
+    url(r'^session/([0-9a-z]{32})/$',
         TieredResource(TieredHandler, a_oauth, {
             'GET' : tiered_views.realtime_views.get_session_data,
         })
