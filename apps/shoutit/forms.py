@@ -46,7 +46,7 @@ class RecoverForm(forms.Form):
 
 class ShoutForm(forms.Form):
     price = forms.FloatField(label=_('Price'), min_value=0.0)
-    currency = forms.ChoiceField(label = _('Currency'), choices=_get_currencies(), required=True)
+    currency = forms.ChoiceField(label= _('Currency'), choices=_get_currencies(), required=True)
     name = forms.CharField(label=_('Name'), max_length=120)
     description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=200)
     tags = forms.CharField(label=_('Tags'))

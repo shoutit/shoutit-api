@@ -14,7 +14,6 @@ from apps.shoutit.utils import ToSeoFriendly
 from apps.shoutit.models.user import LinkedGoogleAccount
 import apps.shoutit.settings as settings
 
-from apps.shoutit import utils
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 
 
@@ -35,7 +34,7 @@ def GetUser(username):
         return None
 
 
-def SearchUsers(query, flag = int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), start_index = 0, end_index = 30, email_search = False):
+def SearchUsers(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), start_index=0, end_index=30, email_search=False):
     users = []
     if not isinstance(query,str) and not isinstance(query, unicode) and len(query.strip()):
         return users
@@ -67,6 +66,7 @@ def SearchUsers(query, flag = int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), st
             user_profiles.append(user)
     return user_profiles
 
+
 def GetProfile(user):
     try:
         if not isinstance(user,User):
@@ -89,6 +89,7 @@ def GetProfile(user):
             return None
     except BaseException, e:
         return None
+
 
 def GetUserByEmail(email):
     if not isinstance(email,str) and not isinstance(email, unicode):
@@ -115,6 +116,7 @@ def GetUserByMobile(mobile):
     except ValueError, e:
         return None
 
+
 def SetRecoveryToken(user):
     token = utils.generateConfirmToken(TOKEN_LONG)
     db_token = ConfirmToken.getToken(token)
@@ -124,6 +126,7 @@ def SetRecoveryToken(user):
     tok = ConfirmToken(Token = token, User = user, Type = TOKEN_TYPE_RECOVER_PASSWORD)
     tok.save()
     return token
+
 
 def SetRegisterToken(user, email, tokenLength, tokenType):
     token = utils.generateConfirmToken(tokenLength)
@@ -138,12 +141,14 @@ def SetRegisterToken(user, email, tokenLength, tokenType):
     profile.save()
     return token
 
-def GetUserByToken(token, get_disabled = True, case_sensitive = True):
+
+def GetUserByToken(token, get_disabled=True, case_sensitive=True):
     db_token =  ConfirmToken.getToken(token, get_disabled, case_sensitive)
     if db_token is not None:
         return db_token.User
     else:
         return None
+
 
 def ActivateUser(token, user):
     db_token = ConfirmToken.getToken(token)
@@ -165,7 +170,7 @@ def login_without_password(request, user):
     login(request, user)
 
 
-def SignUpUser(request, fname, lname, password, email = None, mobile=None, send_activation = True):
+def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_activation=True):
     if (email is None or email == '') and (mobile is None or mobile == ''):
         raise Exception(_('Signup parameters are not valid!'))
 
@@ -209,6 +214,7 @@ def SignUpUser(request, fname, lname, password, email = None, mobile=None, send_
     django_user.token = token
     return django_user
 
+
 def SignUpSSS(request, mobile, location, country, city):
     token_type = constants.TOKEN_TYPE_HTML_NUM
     token_length = constants.TOKEN_SHORT_UPPER
@@ -245,6 +251,7 @@ def SignUpSSS(request, mobile, location, country, city):
 
     return django_user
 
+
 def CompleteSignUpSSS(request, firstname, lastname, password, user, username, token, tokenType, email,sex, birthdate):
     if tokenType == constants.TOKEN_TYPE_HTML_NUM:
         user.email = email
@@ -267,7 +274,6 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
 def ChangeEmailAndSendActivation(request, user, email):
     token = SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
     apps.shoutit.controllers.email_controller.SendRegistrationActivationEmail(user, email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'), token)
-
 
 
 def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthdate):
@@ -301,6 +307,7 @@ def complete_signup_fb(request, user, sex, birthdate):
     user.Profile.save()
     user.is_active = True
     user.save()
+
 
 def SignUpUserFromAPI(request, first_name, last_name, username, email, password, sex, birthdate, mobile=None):
     django_user = User.objects.create_user(username, email, password)
@@ -487,7 +494,7 @@ def signup_fb(request, fb_user, authResponse):
     return user
 
 
-def SignInUser(request, password , credential = ''):
+def SignInUser(request, password , credential=''):
     user = ValidateCredentials(credential, password)
     if user :
         user = authenticate(username = user.username, password = password)
@@ -504,16 +511,19 @@ def SignInUser(request, password , credential = ''):
         Logger.log(request, type=ACTIVITY_TYPE_SIGN_IN_FAILED, data={ACTIVITY_DATA_CREDENTIAL : credential})
         return None
 
-def updatePassword(user,oldPassword,newPassword):
+
+def updatePassword(user, oldPassword, newPassword):
     if user.check_password(oldPassword):
         user.set_password(newPassword)
         return True
     else:
         return False
 
+
 def SignOut(request):
     logout(request)
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_OUT)
+
 
 def FollowStream(request, follower, followed):
     if isinstance(follower, unicode):
@@ -538,6 +548,7 @@ def FollowStream(request, follower, followed):
             apps.shoutit.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_BUSINESS,followedUser)
 
+
 def UnfollowStream(request, follower, followed):
     if isinstance(follower, unicode):
         follower = GetUser(follower)
@@ -548,6 +559,7 @@ def UnfollowStream(request, follower, followed):
         followShip.delete()
         follower.save()
         Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_REMOVED, data={ACTIVITY_DATA_FOLLOWER : follower.username, ACTIVITY_DATA_STREAM : followed.id})
+
 
 def UserFollowers(username, count_only=False):
     user = GetUser(username)
@@ -584,7 +596,7 @@ def IsInterested(user, interest):
     return True if result else False
 
 
-def UpdateLocation(username , lat,lng,city,country):
+def UpdateLocation(username, lat, lng, city, country):
     user = GetUser(username)
     user.Latitude = lat
     user.Longitude = lng
@@ -637,7 +649,9 @@ def GetTopUsers(limit=10, country='', city=''):
         user['Image'] = utils.get_size_url(user['Image'], 32)
     return list(top_users)
 
-def GiveUserPermissions(request, permissions, user = None):
+
+#todo: use the GiveUserPermission
+def GiveUserPermissions(request, permissions, user=None):
     if request and not user:
         user = request.user
     for permission in permissions:
@@ -647,6 +661,7 @@ def GiveUserPermissions(request, permissions, user = None):
     if request:
         permissions_changed.send(sender = None, request = request, permissions = permissions)
 
+
 def TakePermissionsFromUser(request, permissions):
     for permission in permissions:
         if isinstance(permission, ConstantPermission):
@@ -654,17 +669,20 @@ def TakePermissionsFromUser(request, permissions):
         UserPermission.objects.filter(user = request.user, permission = permission).delete()
     permissions_changed.send(sender = None, request = request, permissions = permissions)
 
+
 def GiveUserPermission(request, permission):
     if isinstance(permission, ConstantPermission):
         permission = permission.permission
     UserPermission.objects.get_or_create(user = request.user, permission = permission)
     permissions_changed.send(sender = None, request = request, permissions = [permission])
 
+
 def TakePermissionFromUser(request, permission):
     if isinstance(permission, ConstantPermission):
         permission = permission.permission
     UserPermission.objects.filter(user = request.user, permission = permission).delete()
     permissions_changed.send(sender = None, request = request, permissions = [permission])
+
 
 def GetNotifications(profile):
     if not hasattr(profile, 'notifications'):
@@ -682,10 +700,12 @@ def GetNotifications(profile):
         profile.notifications = notifications
     return profile.notifications
 
+
 def GetAllNotifications(profile):
     if not hasattr(profile, 'all_notifications'):
         profile.all_notifications = list(profile.User.Notifications.order_by('-DateCreated'))
     return profile.all_notifications
+
 
 def GetUnreadNotificatiosCount(profile):
     notifications = hasattr(profile, 'notifications') and profile.notifications
@@ -695,7 +715,8 @@ def GetUnreadNotificatiosCount(profile):
         notifications = GetNotifications(profile)
     return len(filter(lambda n: not n.IsRead, notifications))
 
-def activities_stream(user,start_index=None, end_index=None):
+
+def activities_stream(user, start_index=None, end_index=None):
     stream_posts_query_set = user.Stream.Posts.GetValidPosts([POST_TYPE_EVENT]).filter(
         ~Q(Type = POST_TYPE_EVENT) |
         (Q(Type = POST_TYPE_EVENT)
@@ -709,7 +730,7 @@ def activities_stream(user,start_index=None, end_index=None):
 
     post_ids =  [post['id'] for post in stream_posts_query_set[start_index:end_index].values('id')]
 #	trades = Trade.objects.GetValidTrades().filter(pk__in = post_ids).select_related('Item','Item__Currency','OwnerUser','OwnerUser__Profile','OwnerUser__Business')
-#	trades = shout_controller.GetTradeImages(trades)
+#	trades = shout_controller.get_trade_images(trades)
 
     events = Event.objects.GetValidEvents().filter(pk__in = post_ids).select_related('OwnerUser','OwnerUser__Profile').order_by('-DatePublished')
     events = event_controller.GetDetailedEvents(events)

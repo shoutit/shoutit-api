@@ -8,6 +8,7 @@ import re
 import urlparse
 import time
 import uuid
+from django.http import HttpResponse
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -444,3 +445,17 @@ def MapWithPredefinedCity(city):
         mapped_location = {'latitude':25.2644,'longitude':55.3117,'country':u'AE','city':u'Dubai','city_encoded':'dubai'}
 
     return mapped_location
+
+
+class JsonResponse(HttpResponse):
+    """
+    An HTTP response class that consumes data to be serialized to JSON.
+    """
+    def __init__(self, data, **kwargs):
+        kwargs.setdefault('content_type', 'application/json')
+        data = json.dumps(data)
+        super(JsonResponse, self).__init__(content=data, **kwargs)
+
+
+class JsonResponseBadRequest(JsonResponse):
+    status_code = 400

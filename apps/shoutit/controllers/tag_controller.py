@@ -12,7 +12,7 @@ def GetTag(name):
 
 def GetTagTrades(tag):
 	trades = Trade.objects.GetValidTrades().filter(Tags = tag).select_related('OwnerUser','OwnerUser__Profile','Item','Item__Currency')
-	trades = shout_controller.GetTradeImages(trades)
+	trades = shout_controller.get_trade_images(trades)
 	return list(trades)
 
 

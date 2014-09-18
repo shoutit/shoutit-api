@@ -10,12 +10,10 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
                        ### Admin ###
+                       (r'^grappelli/', include('grappelli.urls')),# grappelli URLS
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
-                       #	url(r'^admin_tools/', include('admin_tools.urls')),
-
-                       (r'^grappelli/', include('grappelli.urls')), # grappelli URLS
 
                        ### Shout Website ###
                        url(r'^$', 'apps.shoutit.tiered_views.general_views.index'),

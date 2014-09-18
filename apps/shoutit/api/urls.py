@@ -18,7 +18,8 @@ from apps.shoutit.api.handlers import *
 
 class TieredResource(Resource):
     def __init__(self, handler, authentication=None, methods_map=None):
-        if not methods_map: methods_map = {}
+        if not methods_map:
+            methods_map = {}
         super(TieredResource, self).__init__(handler, authentication)
         self.csrf_exempt = getattr(self.handler, 'csrf_exempt', True)
         self.handler.methods_map = methods_map

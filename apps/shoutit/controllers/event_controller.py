@@ -97,7 +97,7 @@ def GetDetailedEvents(events):
 		related['tags'] = list(Tag.objects.filter(pk__in = related_ids['tag_ids']))
 	if related_ids['trade_ids']:
 		trades = Trade.objects.filter(pk__in = related_ids['trade_ids']).select_related('OwnerUser','OwnerUser__Profile','OwnerUser__Business','Item','Item__Currency')
-		trades = shout_controller.GetTradeImages(trades)
+		trades = shout_controller.get_trade_images(trades)
 		related['trades'] = list(trades)
 	if related_ids['experience_ids']:
 		related['experiences'] = list(Experience.objects.filter(pk__in = related_ids['experience_ids']).select_related('OwnerUser','OwnerUser__Profile','AboutBusiness__User'))

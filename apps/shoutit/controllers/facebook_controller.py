@@ -1,30 +1,33 @@
 from django.core.exceptions import ObjectDoesNotExist
-import json
 from apps.shoutit.controllers.user_controller import login_without_password, signup_fb
 from apps.shoutit.models import LinkedFacebookAccount
 import apps.shoutit.settings as settings
-import urllib2, urllib, urlparse
+import json
+import urllib
+import urllib2
+import urlparse
 
-def Auth(request, authResponse):
-    long_lived_token = ExtendToken(authResponse['accessToken'])
-    authResponse['accessToken'] = long_lived_token['access_token']
-    authResponse['expiresIn']  = long_lived_token['expires']
+
+def auth(request, auth_response):
+    long_lived_token = ExtendToken(auth_response['accessToken'])
+    auth_response['accessToken'] = long_lived_token['access_token']
+    auth_response['expiresIn'] = long_lived_token['expires']
 
     try:
-        linked_account = LinkedFacebookAccount.objects.get(AccessToken = authResponse['accessToken'])
+        linked_account = LinkedFacebookAccount.objects.get(AccessToken=auth_response['accessToken'])
         user = linked_account.User
-    except ObjectDoesNotExist,e:
+    except ObjectDoesNotExist, e:
         user = None
 
     if not user:
         try:
-            response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + authResponse['accessToken'], timeout=20)
+            response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
             fb_user = json.loads(response.read())
             if not fb_user.has_key('email'):
                 return None
-        except Exception,e:
+        except Exception, e:
             return None
-        user = signup_fb(request, fb_user, authResponse)
+        user = signup_fb(request, fb_user, auth_response)
 
     if user:
         login_without_password(request, user)

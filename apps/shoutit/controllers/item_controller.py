@@ -7,7 +7,7 @@ def GetItemByID(item_id):
 	return Item.objects.get(pk = item_id)
 
 def CreateItem(name, price, images, currency, description = ''):
-	currency = apps.shoutit.controllers.shout_controller.GetCurrency(currency)
+	currency = apps.shoutit.controllers.shout_controller.get_currency(currency)
 	item = Item(Name = name, Price = price, Currency = currency, Description = description)
 	item.save()
 
@@ -37,7 +37,7 @@ def EditItem(item,name = None, price = None, images = None, currency = None, des
 	if price:
 		item.Price = price
 	if currency:
-		shout_currency = apps.shoutit.controllers.shout_controller.GetCurrency(currency)
+		shout_currency = apps.shoutit.controllers.shout_controller.get_currency(currency)
 		item.Currency = shout_currency
 	if description:
 		item.Description = description

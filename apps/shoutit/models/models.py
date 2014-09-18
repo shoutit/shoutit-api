@@ -137,6 +137,7 @@ class ConfirmToken(models.Model):
         else:
             return None
 
+
 class Currency(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -241,12 +242,14 @@ class UserProfile(models.Model):
         self.User = self.User
         models.Model.save(self, force_insert, force_update, using)
 
-class UserFunctions:
+
+class UserFunctions(object):
     def name(self):
         if hasattr(self,'Business') and self.Business:
             return self.Business.Name
         else:
             return  self.get_full_name()
+
     def Image(self):
         if hasattr(self,'Business'):
             return self.Business.Image
@@ -254,12 +257,14 @@ class UserFunctions:
             return  self.Profile.Image
         else:
             return ''
+
     def Sex(self):
         profile = UserProfile.objects.filter(User__id =self.id).values('Sex')
         if profile:
             return profile[0]['Sex']
         else:
             return 'No Profile'
+
     def request_count(self):
         return Request.objects.filter(user__id=self.id).count()
 
@@ -281,6 +286,7 @@ class UserFunctions:
 
 User.__bases__ += (UserFunctions,)
 
+
 class LinkedFacebookAccount(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -292,6 +298,7 @@ class LinkedFacebookAccount(models.Model):
     SignedRequest = models.CharField(max_length=1024)
     link = models.CharField(max_length=128)
     verified = models.BooleanField(default = False)
+
 
 class Post(models.Model):
     class Meta:
@@ -399,6 +406,7 @@ class ShoutWrap(models.Model):
     Stream = models.ForeignKey('Stream', related_name='ShoutWraps')
     Rank = models.FloatField(default=1.0)
 
+
 class StoredImage(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -410,6 +418,7 @@ class StoredImage(models.Model):
     Item = models.ForeignKey('Item', related_name='Images', null=True)
     Image = models.URLField(max_length=1024)
 
+
 class StoredFile(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -419,6 +428,7 @@ class StoredFile(models.Model):
     User = models.ForeignKey(User, related_name='Documents', null=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
+
 
 class Trade(Shout):
     class Meta:
@@ -440,6 +450,7 @@ class Trade(Shout):
     BaseDatePublished = models.DateTimeField(auto_now_add=True)
     RenewalCount = models.IntegerField(default=0)
     objects = TradeManager()
+
 
 class Item(models.Model):
     class Meta:
@@ -468,6 +479,7 @@ class Item(models.Model):
 
     def GetFirstImage(self):
         return self.GetImages() and self.GetImages()[0] or None
+
 
 class Stream(models.Model):
     class Meta:
@@ -821,6 +833,7 @@ class BusinessSource(models.Model):
     Business = models.OneToOneField(BusinessProfile, related_name="Source")
     Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE)
     SourceID = models.CharField(max_length=128, blank=True)
+
 
 class BusinessConfirmation(models.Model):
     class Meta:

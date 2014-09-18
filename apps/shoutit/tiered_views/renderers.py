@@ -286,86 +286,87 @@ def get_initial_api_result(request, result, *args, **kwargs):
         else:
             response = rc.ALL_OK
 
-    json_result = {
+    # needs to be dumped before returned with json.dumps in the called function
+    pre_json_result = {
         'messages': [{'type': error[0], 'message': unicode(error[1])} for error in result.messages],
         'form_errors': [{'field': k, 'messages': v} for k, v in result.form_errors.iteritems()]
     }
 
     response['content-type'] = 'application/json'
-    return response, json_result
+    return response, pre_json_result
 
 
 def operation_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
     if not result.errors and result.data.has_key('url'):
-        json_result['url'] = result.data['url']
-    response.content = json_result
+        pre_json_result['url'] = result.data['url']
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def reply_message_api_render(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
     if not result.errors:
         if result.data.has_key('url'):
-            json_result['url'] = result.data['url']
-        json_result.update({
+            pre_json_result['url'] = result.data['url']
+        pre_json_result.update({
             'message': render_message(result.data['message'])
         })
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def shouts_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         shouts = [render_shout(shout) for shout in result.data['shouts']]
 
-        json_result.update({
+        pre_json_result.update({
             'count': len(shouts),
             'shouts': shouts,
             })
 
         if result.data.has_key('pages_count'):
-            json_result['pages_count'] = result.data['pages_count']
+            pre_json_result['pages_count'] = result.data['pages_count']
 
         if result.data.has_key('is_last_page'):
-            json_result['is_last_page'] = result.data['is_last_page']
+            pre_json_result['is_last_page'] = result.data['is_last_page']
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def tags_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         tags = [render_tag(tag) for tag in result.data]
-        json_result.update({
+        pre_json_result.update({
             'count': len(tags),
             'tags': tags,
             })
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def currencies_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         currencies = [render_currency(currency) for currency in result.data['currencies']]
-        json_result.update({
+        pre_json_result.update({
             'count': len(currencies),
             'currencies': currencies,
             })
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def shout_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         shouts = [render_shout(shout) for shout in result.data['shouts']]
@@ -380,24 +381,24 @@ def shout_api(request, result, *args, **kwargs):
                 'conversation': render_conversation_full(result.data['conversation']),
                 })
 
-        json_result.update({
+        pre_json_result.update({
             'count': len(shouts),
             'shout': shout,
             'shouts': shouts,
             })
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def shout_brief_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         shout = render_shout(result.data['shout'])
-        json_result.update({ 'shout': shout })
+        pre_json_result.update({ 'shout': shout })
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
@@ -414,180 +415,180 @@ def shout_brief_json(request, result, *args):
 
 
 def shout_xhr(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         shouts = [shout for shout in result.data['shouts']]
 
-        json_result.update({
+        pre_json_result.update({
             'count': len(shouts),
-            'shouts': shouts,
-            })
+            'shouts': shouts
+        })
     else:
         return get_initial_json_response(request, result)
 
-    response = xhr_respond(ENUM_XHR_RESULT.SUCCESS, "", data=json_result)
+    response = xhr_respond(ENUM_XHR_RESULT.SUCCESS, "", data=pre_json_result)
     return response
 
 
 def shouts_location_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result['shouts'] = []
+        pre_json_result['shouts'] = []
         for i in range(len(result.data['shoutsId'])):
-            json_result['shouts'].append({
+            pre_json_result['shouts'].append({
                 'url': get_object_url(Shout(pk = Base62ToInt(result.data['shoutsId'][i]))),
                 'longitude': result.data['locations'][i].split(' ')[1],
                 'latitude': result.data['locations'][i].split(' ')[0],
                 'type': result.data['shoutsTypes'][i]
             })
-        json_result['count'] = len(json_result['shouts'])
+        pre_json_result['count'] = len(pre_json_result['shouts'])
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def shouts_clusters_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result.update(result.data)
+        pre_json_result.update(result.data)
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def shout_form_renderer_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
-    if result.data.has_key('shout'):
-        json_result['shout'] = render_shout(result.data['shout'])
-    response.content = json_result
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+    if 'shout' in result.data:
+        pre_json_result['shout'] = render_shout(result.data['shout'])
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def tag_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result.update(render_tag(result.data['tagProfile']))
+        pre_json_result.update(render_tag(result.data['tagProfile']))
         if result.data.has_key('shouts_count'):
-            json_result['shouts_count'] = result.data['shouts_count']
+            pre_json_result['shouts_count'] = result.data['shouts_count']
         if result.data.has_key('followers_count'):
-            json_result['followers_count'] = result.data['followers_count']
+            pre_json_result['followers_count'] = result.data['followers_count']
         if result.data.has_key('creator'):
-            json_result['creator'] = render_user(result.data['creator'])
+            pre_json_result['creator'] = render_user(result.data['creator'])
         if result.data.has_key('shouts'):
-            json_result['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
+            pre_json_result['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
         if result.data.has_key('childs'):
-            json_result['children'] = result.data['childs']
+            pre_json_result['children'] = result.data['childs']
         if result.data.has_key('interested'):
-            json_result['interested'] = result.data['interested']
+            pre_json_result['interested'] = result.data['interested']
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def user_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result = render_user(result.data['profile'])
+        pre_json_result = render_user(result.data['profile'])
         if result.data.has_key('shouts'):
-            json_result['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
-        json_result['your_profile'] = result.data['owner']
+            pre_json_result['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
+        pre_json_result['your_profile'] = result.data['owner']
         if result.data['owner']:
-            json_result['longitude'] = result.data['profile'].Longitude
-            json_result['latitude'] = result.data['profile'].Latitude
-            json_result['city'] = result.data['profile'].City
-            json_result['country'] = result.data['profile'].Country
+            pre_json_result['longitude'] = result.data['profile'].Longitude
+            pre_json_result['latitude'] = result.data['profile'].Latitude
+            pre_json_result['city'] = result.data['profile'].City
+            pre_json_result['country'] = result.data['profile'].Country
         if result.data.has_key('shouts_count'):
-            json_result['shouts_count'] = result.data['shouts_count']
+            pre_json_result['shouts_count'] = result.data['shouts_count']
         if result.data.has_key('followers_count'):
-            json_result['followers_count'] = result.data['followers_count']
+            pre_json_result['followers_count'] = result.data['followers_count']
         if result.data.has_key('following_count'):
-            json_result['following_count'] = result.data['following_count']
+            pre_json_result['following_count'] = result.data['following_count']
         if result.data.has_key('interests'):
-            json_result['recent_interests'] = [render_tag(tag) for tag in result.data['interests']]
+            pre_json_result['recent_interests'] = [render_tag(tag) for tag in result.data['interests']]
         if result.data.has_key('tags_created'):
-            json_result['recent_tags_created'] = [render_tag(tag) for tag in result.data['tags_created']]
-        json_result['is_following'] = result.data['is_following']
+            pre_json_result['recent_tags_created'] = [render_tag(tag) for tag in result.data['tags_created']]
+        pre_json_result['is_following'] = result.data['is_following']
         if result.data.has_key('tags_created_count'):
-            json_result['tags_created_count'] = result.data['tags_created_count']
+            pre_json_result['tags_created_count'] = result.data['tags_created_count']
         if result.data.has_key('interests_count'):
-            json_result['interests_count'] = result.data['interests_count']
+            pre_json_result['interests_count'] = result.data['interests_count']
 
-    response.content = json.dumps(json_result)
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def notifications_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result['notifications'] = [render_notification(notification) for notification in
+        pre_json_result['notifications'] = [render_notification(notification) for notification in
                                         result.data['notifications']]
-        json_result['count'] = len(json_result['notifications'])
+        pre_json_result['count'] = len(pre_json_result['notifications'])
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def unread_notifications_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result['notificationsWithouMessages'] = result.data['notificationsWithouMessages']
-        json_result['unread_conversations'] = result.data['unread_conversations']
+        pre_json_result['notificationsWithouMessages'] = result.data['notificationsWithouMessages']
+        pre_json_result['unread_conversations'] = result.data['unread_conversations']
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def conversations_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         if result.data.has_key('is_last_page'):
-            json_result['is_last_page'] = result.data['is_last_page']
+            pre_json_result['is_last_page'] = result.data['is_last_page']
         if result.data.has_key('is_owner') and result.data['is_owner']:
-            json_result['conversations'] = [render_conversation(conversation) for conversation in
+            pre_json_result['conversations'] = [render_conversation(conversation) for conversation in
                                             result.data['conversations']]
         else:
-            json_result['conversations'] = [render_conversation_full(conversation) for conversation in
+            pre_json_result['conversations'] = [render_conversation_full(conversation) for conversation in
                                             result.data['conversations']]
-        json_result['count'] = len(json_result['conversations'])
+        pre_json_result['count'] = len(pre_json_result['conversations'])
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def conversation_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        json_result['conversation'] = render_conversation(result.data['conversation'])
-        json_result['shout'] = render_shout(result.data['shout'])
-        json_result['conversation_messages'] = [render_message(message) for message in
+        pre_json_result['conversation'] = render_conversation(result.data['conversation'])
+        pre_json_result['shout'] = render_shout(result.data['shout'])
+        pre_json_result['conversation_messages'] = [render_message(message) for message in
                                                 result.data['conversation_messages']]
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def stats_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         if result.data.has_key('followers'):
-            json_result['followers'] = [render_user(follower.User) for follower in result.data['followers']]
+            pre_json_result['followers'] = [render_user(follower.User) for follower in result.data['followers']]
         if result.data.has_key('followingUsers'):
-            json_result['following_users'] = [render_user(following.User) for following in
+            pre_json_result['following_users'] = [render_user(following.User) for following in
                                               result.data['followingUsers']]
         if result.data.has_key('followingTags'):
-            json_result['following_tags'] = [render_tag(tag) for tag in result.data['followingTags']]
+            pre_json_result['following_tags'] = [render_tag(tag) for tag in result.data['followingTags']]
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
@@ -760,7 +761,7 @@ def experiences_json(request, result):
     if not result.errors:
         variables = {
             'experiences': result.data['experiences'],
-            'form' : result.data['form']
+            'form': result.data['form']
         }
         variables = RequestContext(request, variables)
         data = {'html': render_to_string('experiences.html', variables)}
@@ -777,45 +778,47 @@ def experiences_stream_json(request, result):
         variables = {
             'experiences': result.data['experiences'],
             'comment_form': result.data['comment_form'],
-            'timestamp' : result.data['timestamp'],
-            }
+            'timestamp': result.data['timestamp']
+        }
         variables = RequestContext(request, variables)
-        data = {'html': render_to_string('experiences_stream.html', variables) ,
-                'count' : len(result.data['experiences'])}
+        data = {
+            'html': render_to_string('experiences_stream.html', variables) ,
+            'count': len(result.data['experiences'])
+        }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
 
 
 def experiences_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         experiences = [render_experience(experience) for experience in result.data['experiences']]
 
-        json_result.update({
+        pre_json_result.update({
             'count': len(experiences),
-            'experiences': experiences,
-            })
+            'experiences': experiences
+        })
 
         if result.data.has_key('pages_count'):
-            json_result['pages_count'] = result.data['pages_count']
+            pre_json_result['pages_count'] = result.data['pages_count']
 
         if result.data.has_key('is_last_page'):
-            json_result['is_last_page'] = result.data['is_last_page']
+            pre_json_result['is_last_page'] = result.data['is_last_page']
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def view_experience_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
     if not result.errors:
         experience = render_experience(result.data['experience'])
         if result.data.has_key('timestamp'):
-            json_result['timestamp'] = result.data['timestamp']
-        json_result['experience'] = experience
-    response.content = json_result
+            pre_json_result['timestamp'] = result.data['timestamp']
+        pre_json_result['experience'] = experience
+    response.content = json.dumps(pre_json_result)
     return response
 
 
@@ -823,12 +826,13 @@ def activities_stream_json(request, result):
     if not result.errors:
         variables = {
             'posts': result.data['posts'],
-            'constants' : constants.post_types,
-            'event_types' : constants.event_types
+            'constants': constants.post_types,
+            'event_types': constants.event_types
         }
         variables = RequestContext(request, variables)
-        data = {'html': render_to_string('user_home_stream.html', variables)
-            ,'count' :len(result.data['posts'])
+        data = {
+            'html': render_to_string('user_home_stream.html', variables),
+            'count': len(result.data['posts'])
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
@@ -836,34 +840,35 @@ def activities_stream_json(request, result):
 
 
 def activities_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         posts = [render_post(post) for post in result.data['posts']]
 
-        json_result.update({
+        pre_json_result.update({
             'count': len(posts),
-            'posts': posts,
-            })
+            'posts': posts
+        })
 
         if result.data.has_key('pages_count'):
-            json_result['pages_count'] = result.data['pages_count']
+            pre_json_result['pages_count'] = result.data['pages_count']
 
         if result.data.has_key('is_last_page'):
-            json_result['is_last_page'] = result.data['is_last_page']
+            pre_json_result['is_last_page'] = result.data['is_last_page']
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def deals_stream_json(request, result):
     if not result.errors:
         variables = {
-            'deals': result.data['deals'],
-            }
+            'deals': result.data['deals']
+        }
         variables = RequestContext(request, variables)
-        data = {'html': render_to_string('deals_stream.html', variables)
-            ,'count' :len(result.data['deals'])
+        data = {
+            'html': render_to_string('deals_stream.html', variables),
+            'count': len(result.data['deals'])
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
@@ -874,7 +879,7 @@ def gallery_items_stream_json(request, result):
     if not result.errors:
         variables = {
             'items': result.data['items'],
-            'IsOwner' : result.data['IsOwner']
+            'IsOwner': result.data['IsOwner']
         }
         variables = RequestContext(request, variables)
         data = {'html': render_to_string('gallery_items_stream.html', variables)}
@@ -886,12 +891,12 @@ def gallery_items_stream_json(request, result):
 def post_experience_json_renderer(request, result, message=_('Your experience was post successfully.')):
     if not result.errors:
         data = {
-            'text' : result.data['experience'].Text,
-            'state' : int(result.data['experience'].State),
-            'date' : result.data['experience'].DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
-            'next': utils.ShoutLink(result.data['experience']),
-            }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message = message , data=data)
+            'text': result.data['experience'].Text,
+            'state': int(result.data['experience'].State),
+            'date': result.data['experience'].DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
+            'next': utils.ShoutLink(result.data['experience'])
+        }
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message , data=data)
     else:
         return get_initial_json_response(request, result)
 
@@ -899,11 +904,11 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
 def comment_on_post_json_renderer(request, result, message=_('Your comment was post successfully.')):
     if not result.errors:
         data = {
-            'id' : IntToBase62(result.data['comment'].id),
-            'text' : result.data['comment'].Text,
+            'id': IntToBase62(result.data['comment'].id),
+            'text': result.data['comment'].Text,
             #			'user' : result.data['comment'].OwnerUser,
-            'date' : result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z'),
-            }
+            'date': result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+        }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message = message , data=data)
     else:
         return get_initial_json_response(request, result)
@@ -913,22 +918,23 @@ def profile_json_renderer(request, result):
     if not result.errors:
 
         data = {
-            'users' : [{
-                           'username': user.username,
-                           'name': user.name(),
-                           'category_id': isinstance(user_controller.GetProfile(user), BusinessProfile) and user.Profile.Category.pk or None,
-                           'about': user.Bio,
-                           'lat': user.Latitude,
-                           'lng': user.Longitude,
-                           'city': user.City,
-                           'country': user.Country,
-                           'image': user.Image,
-                           'source': user.has_source() and user.Source.Source or int(constants.BUSINESS_SOURCE_TYPE_NONE),
-                           'source_id': user.has_source() and user.Source.SourceID or None
-                       }
-                       for user in result.data['users']]
+            'users': [
+                {
+                    'username': user.username,
+                    'name': user.name(),
+                    'category_id': isinstance(user_controller.GetProfile(user), BusinessProfile) and user.Profile.Category.pk or None,
+                    'about': user.Bio,
+                    'lat': user.Latitude,
+                    'lng': user.Longitude,
+                    'city': user.City,
+                    'country': user.Country,
+                    'image': user.Image,
+                    'source': user.has_source() and user.Source.Source or int(constants.BUSINESS_SOURCE_TYPE_NONE),
+                    'source_id': user.has_source() and user.Source.SourceID or None
+                } for user in result.data['users']
+            ]
         }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS , '', data=data)
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
 
@@ -950,14 +956,14 @@ def user_json_renderer(request, result):
 def gallery_item_json_renderer(request, result, message=_('Your item was added successfully.')):
     if not result.errors:
         data = {
-            'name' : result.data['item'].Name,
-            'description' : result.data['item'].Description,
-            'price' : result.data['item'].Price,
-            'currency' : result.data['item'].Currency.Code,
-            'images' : [image.Image for image in result.data['item'].GetImages()],
+            'name': result.data['item'].Name,
+            'description': result.data['item'].Description,
+            'price': result.data['item'].Price,
+            'currency': result.data['item'].Currency.Code,
+            'images': [image.Image for image in result.data['item'].GetImages()]
             #			'date' : result.data['item'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z'),
         }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message = message , data=data)
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:
         return get_initial_json_response(request, result)
 
@@ -965,12 +971,12 @@ def gallery_item_json_renderer(request, result, message=_('Your item was added s
 def post_comments_json_renderer(request, result):
     if not result.errors:
         data = {
-            'comments' : [
+            'comments': [
                 {
                     'id': IntToBase62(comment.id),
-                    'isOwner' : comment.isOwner,
+                    'isOwner': comment.isOwner,
                     'text': comment.Text,
-                    'date' : comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+                    'date': comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
                 } for comment in result.data['comments']]
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
@@ -979,24 +985,24 @@ def post_comments_json_renderer(request, result):
 
 
 def api_post_comments(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result, *args, **kwargs)
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         comments = [render_comment(comment) for comment in result.data['comments']]
 
-        json_result.update({
+        pre_json_result.update({
             'count': len(comments),
             'timestamp': result.data['timestamp'],
-            'comments': comments,
-            })
+            'comments': comments
+        })
 
     #		if result.data.has_key('pages_count'):
-    #			json_result['pages_count'] = result.data['pages_count']
+    #			pre_json_result['pages_count'] = result.data['pages_count']
     #
     #		if result.data.has_key('is_last_page'):
-    #			json_result['is_last_page'] = result.data['is_last_page']
+    #			pre_json_result['is_last_page'] = result.data['is_last_page']
 
-    response.content = json_result
+    response.content = json.dumps(pre_json_result)
     return response
 
 
@@ -1006,16 +1012,16 @@ def live_events_json_renderer(request, result):
         for event in result.data['events']:
             variables = {
                 'event': event,
-                'event_types' : constants.event_types
+                'event_types': constants.event_types
             }
             variables = RequestContext(request, variables)
             events_arr.append({'id': event.id, 'html': render_to_string("event.html", variables)})
         data = {
-            'events' : events_arr,
-            'count' : result.data['count'],
-            'timestamp' : result.data['timestamp']
+            'events': events_arr,
+            'count': result.data['count'],
+            'timestamp': result.data['timestamp']
         }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data = data)
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
 
@@ -1028,21 +1034,21 @@ def categories_api(request, result):
         if children:
             d['children'] = [_get_category_dict(c) for c in children]
         return d
-    response, json_result = get_initial_api_result(request, result)
+    response, pre_json_result = get_initial_api_result(request, result)
     if not result.errors:
         if result.data.has_key('categories'):
             categories = [_get_category_dict(c) for c in result.data['categories']]
         else:
             categories = []
-        json_result['categories'] = categories
-        json_result['count'] = len(categories)
-    response.content = json_result
+        pre_json_result['categories'] = categories
+        pre_json_result['count'] = len(categories)
+    response.content = json.dumps(pre_json_result)
     return response
 
 
 def profiles_api(request, result, *args, **kwargs):
-    response, json_result = get_initial_api_result(request, result)
+    response, pre_json_result = get_initial_api_result(request, result)
     if not result.errors:
-        json_result['users'] = [render_user(user) for user in result.data['users']]
-    response.content = json_result
+        pre_json_result['users'] = [render_user(user) for user in result.data['users']]
+    response.content = json.dumps(pre_json_result)
     return response

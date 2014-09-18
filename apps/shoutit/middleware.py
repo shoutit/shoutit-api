@@ -2,16 +2,16 @@ from django.dispatch.dispatcher import receiver
 from apps.shoutit.permissions import permissions_changed, ConstantPermission, ANONYMOUS_USER_PERMISSIONS
 from apps.shoutit.models import UserPermission
 from apps.shoutit.tiered_views.views_utils import set_request_language
-from apps.shoutit.utils import ToSeoFriendly
 from common.tagged_cache import TaggedCache
 from apps.shoutit.controllers import facebook_controller
-from apps.shoutit import utils
+from apps.shoutit.utils import ToSeoFriendly, IsSessionHasLocation, getLocationInfoByIP, MapWithPredefinedCity, JsonResponseBadRequest
 from apps.shoutit.controllers import user_controller
 import apps.shoutit.settings as settings
-
+import json
 
 class SetLanguageMiddleware(object):
-    def process_request(self, request):
+    @staticmethod
+    def process_request(request):
         lang = settings.DEFAULT_LANGUAGE_CODE
         if request.GET.has_key('lang'):
             lang = request.GET['lang']
@@ -36,30 +36,33 @@ class UserPermissionsMiddleware(object):
         else:
             request.user.constant_permissions = ANONYMOUS_USER_PERMISSIONS
 
-    def process_request(self, request):
+    @staticmethod
+    def process_request(request):
         UserPermissionsMiddleware.attach_permissions_to_request(request)
 
 
-
 class FBMiddleware(object):
-    def process_request(self, request):
+    @staticmethod
+    def process_request(request):
     # Check the requests coming from Facebook
-        if request.GET.has_key('code') and request.GET.has_key('fb_source'):
-            authResponse = facebook_controller.ExchangeCode(request, request.GET['code'])
-            if authResponse:
-                facebook_controller.Auth(request, authResponse)
+        if 'code' in request.GET and 'fb_source' in request.GET:
+            auth_response = facebook_controller.ExchangeCode(request, request.GET['code'])
+            if auth_response:
+                facebook_controller.auth(request, auth_response)
             pass
 
-class UserLocationMiddleware(object):
-    def process_request(self, request):
 
-        if not utils.IsSessionHasLocation(request) or request.session.has_key('user_renew_location'):
+class UserLocationMiddleware(object):
+    @staticmethod
+    def process_request(request):
+
+        if not IsSessionHasLocation(request) or request.session.has_key('user_renew_location'):
             if not request.user.is_authenticated():
 #				ip = utils.getIP(request)
     #			if not request.session.has_key('user_ip')  or request.session['user_ip'] != ip:
-                location_info = utils.getLocationInfoByIP(request)
+                location_info = getLocationInfoByIP(request)
     #			request.session['user_ip'] = location_info['ip']
-                mapped_location = utils.MapWithPredefinedCity(location_info['city'])
+                mapped_location = MapWithPredefinedCity(location_info['city'])
                 request.session['user_lat'] = mapped_location['latitude']
                 request.session['user_lng'] = mapped_location['longitude']
                 request.session['user_country'] = mapped_location['country']
@@ -75,6 +78,19 @@ class UserLocationMiddleware(object):
 
             if request.session.has_key('user_renew_location'):
                 del(request.session['user_renew_location'])
+
+
+class JsonPostMiddleware(object):
+    @staticmethod
+    def process_request(request):
+        if request.method == 'POST' and request.body is not '' and request.META['CONTENT_TYPE'] == 'application/json':
+            request.POST = request.POST.copy()
+            try:
+                json_post = json.loads(request.body)
+            except ValueError, e:
+                return JsonResponseBadRequest({'error': 'invalid json format'})
+        else:
+            pass
 
 @receiver(permissions_changed)
 def refresh_permissions_cache(sender, **kwargs):

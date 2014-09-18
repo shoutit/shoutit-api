@@ -40,10 +40,6 @@ SECRET_KEY = '8xya^3^n_8d@c^lips0@!!3swh#7xyygf3w@)lsobv+!ni)x94'
 
 
 INSTALLED_APPS = (
-#	'admin_tools',
-#    'admin_tools.theming',
-#    'admin_tools.menu',
-#    'admin_tools.dashboard',
 	'django.contrib.sites',
     'django.contrib.messages',
 

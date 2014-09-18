@@ -117,8 +117,8 @@ else:
 
 INSTALLED_APPS = (
     'django.contrib.sites',
-    'django.contrib.admin',
     'grappelli',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.admindocs',
     'django.contrib.contenttypes',
@@ -140,7 +140,6 @@ INSTALLED_APPS = (
     #'l10n',
     #'payment',
     #'subscription',
-    #'debug_toolbar',
 )
 # apps only on development
 if DEV:
@@ -150,6 +149,11 @@ if DEV:
 else:
     INSTALLED_APPS += (
     )
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+)
 
 MIDDLEWARE_CLASSES = (
     #'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
@@ -161,14 +165,13 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     # Shoutit Custom Middleware
+    'apps.shoutit.middleware.JsonPostMiddleware',
     'apps.shoutit.middleware.SetLanguageMiddleware',
     'apps.shoutit.middleware.UserPermissionsMiddleware',
     'apps.shoutit.middleware.UserLocationMiddleware',
     'apps.shoutit.middleware.FBMiddleware',
     #'apps.ActivityLogger.middleware.ActivityLogger',
     #'common.middleware.ProfilerMiddleware.ProfileMiddleware',
-
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 
     'django_mobile.middleware.MobileDetectionMiddleware',
     'django_mobile.middleware.SetFlavourMiddleware',

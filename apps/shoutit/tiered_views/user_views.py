@@ -185,7 +185,7 @@ def fb_auth(request):
 
     if request.method == "POST":
         authResponse = json.loads(request.POST['data'])
-        user = facebook_controller.Auth(request, authResponse)
+        user = facebook_controller.auth(request, authResponse)
         if user:
             result.data['profile'] = user.Profile
             result.data['is_following'] = False
@@ -446,7 +446,7 @@ def sss(request):
                         shout['tags'].remove(tag)
 
             if shout['type'] == 'buy':
-                shout = shout_controller.ShoutBuy(
+                shout = shout_controller.shout_buy(
                     None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user,
@@ -455,7 +455,7 @@ def sss(request):
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
             else:
-                shout = shout_controller.ShoutSell(
+                shout = shout_controller.shout_sell(
                     None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.GetUser(user.username),

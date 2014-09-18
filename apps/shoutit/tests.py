@@ -10,7 +10,7 @@ from symbol import decorator
 from django.test import TestCase
 from apps.shoutit.constants import *
 from apps.shoutit.controllers.message_controller import MessageController
-from apps.shoutit.controllers.shout_controller import ShoutController
+import apps.shoutit.controllers.shout_controller as ShoutController
 from apps.shoutit.controllers.tag_controller import TagController
 from apps.shoutit.controllers.user_controller import UserController
 import subprocess
@@ -91,11 +91,11 @@ class ShoutTestCase(TestCase):
         self.ids = []
         self.user = UserController.GetUserByEmail('user_0@hotmail.com')
         for i in range(3):
-            shout_buy = ShoutController.ShoutBuy(None, 'Shout_Buy_%d' % i, 'this is shout__buy_%d' % i,
+            shout_buy = ShoutController.shout_buy(None, 'Shout_Buy_%d' % i, 'this is shout__buy_%d' % i,
                                                  23.4 * i, 20.34234 + i, 50.423463 + i, ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
                                                  self.user.User, 'AE', 'Dubai', '', 'aed')
             self.ids.append(shout_buy.id)
-            shout_sell = ShoutController.ShoutSell(None, 'Shout_sell_%d' % i, 'this is shout__sell_%d' % i,
+            shout_sell = ShoutController.shout_sell(None, 'Shout_sell_%d' % i, 'this is shout__sell_%d' % i,
                                                    19.8 * i, 20.2434 + i, 50.636 + i, ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
                                                    self.user.User, 'AE', 'Dubai', '', 'aed')
             self.ids.append(shout_sell.id)
@@ -187,7 +187,7 @@ class MessageTestCase(TestCase):
         self.user1 = UserController.GetUserByEmail('user_0@hotmail.com').User
         self.user2 = UserController.GetUserByEmail('user_1@hotmail.com').User
         self.user3 = UserController.GetUserByEmail('user_2@hotmail.com').User
-        self.post  = ShoutController.ShoutBuy(None, 'Shout', 'test shout',
+        self.post  = ShoutController.shout_buy(None, 'Shout', 'test shout',
                                               23.4, 20.34234 , 50.423463 , ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
                                               self.user1, 'AE', 'Dubai', '')
 

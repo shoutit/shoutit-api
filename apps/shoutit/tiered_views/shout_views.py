@@ -172,7 +172,7 @@ def shout_buy(request):
             images = request.POST.getlist('shout_images[]')
         elif request.POST.has_key('shout_images'):
             images = request.POST.getlist('shout_images')
-        result.data['shout'] = shout_controller.ShoutBuy(request, form.cleaned_data['name'],
+        result.data['shout'] = shout_controller.shout_buy(request, form.cleaned_data['name'],
             form.cleaned_data['description'],
             form.cleaned_data['price'],
             longitude,
@@ -231,15 +231,13 @@ def shout_edit(request, shout_id):
 
 
 @non_cached_view(post_login_required=True,
-    validator=lambda request, *args : shout_form_validator(request, ShoutForm),
-    api_renderer=shout_form_renderer_api,
-    html_renderer=lambda request, result, *args : page_html(request, result, 'shout_sell.html', _('Shout Sell')),
-    json_renderer=lambda request, result, *args : json_renderer(request,
-        result,
-        _('Your shout was shouted!'),
-        data=result.data.has_key('shout') and {'next': utils.ShoutLink(result.data['shout'])} or {}),
-    permissions_required = [PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
-@refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS,CACHE_TAG_USERS])
+                 validator=lambda request, *args: shout_form_validator(request, ShoutForm),
+                 api_renderer=shout_form_renderer_api,
+                 html_renderer=lambda request, result, *args: page_html(request, result, 'shout_sell.html', _('Shout Sell')),
+                 json_renderer=lambda request, result, *args: json_renderer(request, result, _('Your shout was shouted!'),
+                                                                            data=result.data.has_key('shout') and {'next': utils.ShoutLink(result.data['shout'])} or {}),
+                 permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
+@refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
 def shout_sell(request):
     result = ResponseResult()
 
@@ -263,7 +261,7 @@ def shout_sell(request):
         elif request.POST.has_key('shout_images'):
             images = request.POST.getlist('shout_images')
 
-        result.data['shout'] = shout_controller.ShoutSell(request,
+        result.data['shout'] = shout_controller.shout_sell(request,
             form.cleaned_data['name'],
             form.cleaned_data['description'],
             form.cleaned_data['price'],
