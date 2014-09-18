@@ -8,6 +8,8 @@ from apps.shoutit.utils import ToSeoFriendly, IsSessionHasLocation, getLocationI
 from apps.shoutit.controllers import user_controller
 import apps.shoutit.settings as settings
 import json
+from django.utils import datastructures
+
 
 class SetLanguageMiddleware(object):
     @staticmethod
@@ -74,7 +76,7 @@ class UserLocationMiddleware(object):
                 request.session['user_lng'] = profile and profile.Longitude or 55.3117
                 request.session['user_country'] = profile and profile.Country or u'AE'
                 request.session['user_city'] = profile and profile.City or u'Dubai'
-                request.session['user_city_encoded'] =  ToSeoFriendly(unicode.lower(request.session['user_city']))
+                request.session['user_city_encoded'] = ToSeoFriendly(unicode.lower(request.session['user_city']))
 
             if request.session.has_key('user_renew_location'):
                 del(request.session['user_renew_location'])
@@ -83,14 +85,31 @@ class UserLocationMiddleware(object):
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
-        if request.method == 'POST' and request.body is not '' and request.META['CONTENT_TYPE'] == 'application/json':
-            request.POST = request.POST.copy()
+        if request.method == 'POST' and request.body != '' and request.META['CONTENT_TYPE'] == 'application/json':
             try:
-                json_post = json.loads(request.body)
+                request.json_data = json.loads(request.body)
+                request.json_to_post_fill = True
+                request.json_to_post_filled = False
             except ValueError, e:
-                return JsonResponseBadRequest({'error': 'invalid json format'})
+                return JsonResponseBadRequest({'error': 'invalid json format: ' + e.message})
+            except BaseException, e:
+                return JsonResponseBadRequest({'error': e.message})
         else:
             pass
+
+    @staticmethod
+    def fill_request_post(request, data=None):
+        if getattr(request, 'json_to_post_fill', False) and not getattr(request, 'json_to_post_filled', True):
+            if not data:
+                data = request.json_data
+            request.POST = request.POST.copy()
+            for item in data:
+                request.POST[item] = data[item]
+
+            request._request = datastructures.MergeDict(request.POST, request.GET)
+            request.json_to_post_fill = False
+            request.json_to_post_filled = True
+
 
 @receiver(permissions_changed)
 def refresh_permissions_cache(sender, **kwargs):

@@ -13,6 +13,7 @@ from django.utils.translation import ugettext as _
 from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
 from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.constants import Constant
+from apps.shoutit.middleware import JsonPostMiddleware
 from common.tagged_cache import TaggedCache
 
 
@@ -28,6 +29,7 @@ RESPONSE_RESULT_ERROR_REDIRECT = ResponseResultError()
 RESPONSE_RESULT_ERROR_NOT_ACTIVATED = ResponseResultError()
 RESPONSE_RESULT_ERROR_PERMISSION_NEEDED = ResponseResultError()
 
+
 class CacheLevel(Constant):
     counter = 0
     values = {}
@@ -36,6 +38,7 @@ CACHE_LEVEL_GLOBAL = CacheLevel()
 CACHE_LEVEL_USER = CacheLevel()
 CACHE_LEVEL_SESSION = CacheLevel()
 
+
 class CacheRefreshLevel(Constant):
     counter = 0
     values = {}
@@ -43,6 +46,7 @@ class CacheRefreshLevel(Constant):
 CACHE_REFRESH_LEVEL_ALL = CacheRefreshLevel()
 CACHE_REFRESH_LEVEL_USER = CacheRefreshLevel()
 CACHE_REFRESH_LEVEL_SESSION = CacheRefreshLevel()
+
 
 class CacheTag(Constant):
     counter = 0
@@ -132,6 +136,7 @@ def get_cache_key(request, level):
 
     return key % key_parameters
 
+
 def get_cache_tags(request, cache_settings, *args, **kwargs):
     result = cache_settings['tags']
     if cache_settings['dynamic_tags']:
@@ -140,23 +145,25 @@ def get_cache_tags(request, cache_settings, *args, **kwargs):
 
 
 def view(
-    html_renderer = None,
-    json_renderer = None,
-    api_renderer = None,
-    mobile_renderer = None,
-    methods = ['GET', 'POST'],
-    validator = None,
-    login_required = False,
-    post_login_required = False,
-    activation_required = False,
-    post_activation_required = False,
-    cache_settings = None,
-    permissions_required = [],
-    business_subscription_required = False
+    html_renderer=None,
+    json_renderer=None,
+    api_renderer=None,
+    mobile_renderer=None,
+    methods=['GET', 'POST'],
+    validator=None,
+    login_required=False,
+    post_login_required=False,
+    activation_required=False,
+    post_activation_required=False,
+    cache_settings=None,
+    permissions_required=[],
+    business_subscription_required=False
 ):
     def wrapper(view=None):
         @wraps(view, assigned=available_attrs(view))
         def _wrapper(request, *args, **kwargs):
+            if getattr(request, 'json_to_post_fill', False):
+                JsonPostMiddleware.fill_request_post(request)
             result = None
             if PERMISSION_USE_SHOUT_IT not in permissions_required:
                 permissions_required.append(PERMISSION_USE_SHOUT_IT)
@@ -243,10 +250,10 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None
                 timeout = 240
 
     cache_settings = {
-        'timeout' : timeout,
-        'tags' : tags,
-        'dynamic_tags' : dynamic_tags,
-        'level' : level,
+        'timeout': timeout,
+        'tags': tags,
+        'dynamic_tags': dynamic_tags,
+        'level': level
     }
 
     return view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required, activation_required, post_activation_required, cache_settings, permissions_required = permissions_required, business_subscription_required = business_subscription_required)
@@ -270,6 +277,7 @@ def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=[], dynamic_tags=None):
         return _wrapper
     return wrapper
 
+
 @asynchronous_task()
 def _refresh_cache(level, tags, session_key, user_id):
     if level == CACHE_REFRESH_LEVEL_ALL:
@@ -278,6 +286,7 @@ def _refresh_cache(level, tags, session_key, user_id):
         [TaggedCache.delete(key) for tag in tags for key in TaggedCache.get_by_tag(tag).keys() if key.split(u'•')[2] == session_key]
     elif level == CACHE_REFRESH_LEVEL_USER:
         [TaggedCache.delete(key) for tag in tags for key in TaggedCache.get_by_tag(tag).keys() if key.split(u'•')[1] == user_id]
+
 
 def get_data(tags, function, *args, **kwargs):
     current_frame = inspect.stack()[1][0]
@@ -298,8 +307,10 @@ def get_data(tags, function, *args, **kwargs):
     del current_frame
     return result
 
+
 def refresh_cache_dynamically(tags):
     map(TaggedCache.delete_by_tag, tags)
+
 
 def permissions_point_cut(request, permissions_required, *args, **kwargs):
     if PERMISSION_USE_SHOUT_IT not in permissions_required:

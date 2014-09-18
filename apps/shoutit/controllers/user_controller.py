@@ -366,7 +366,7 @@ def auth_with_gplus(request, gplus_user, credentials):
     try:
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_user['id'])
         la.save()
-    except BaseException,e:
+    except BaseException, e:
         return None
 
     # todo: import profile pic from G+
