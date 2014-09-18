@@ -29,6 +29,7 @@ def urlencode(s):
 def urldecode(s):
     return urllib2.unquote(s).decode('utf8')
 
+
 @non_cached_view(methods=['POST'],
     api_renderer=operation_api,
     validator=activate_api_validator,
@@ -61,6 +62,7 @@ def activate_api(request, token):
     user_controller.GiveUserPermissions(request, ACTIVATED_USER_PERMISSIONS)
     return result
 
+
 @non_cached_view(html_renderer=activate_modal_html, mobile_renderer=activate_modal_mobile,
     methods=['GET'])
 def activate_modal(request, token):
@@ -82,6 +84,7 @@ def activate_modal(request, token):
         user_controller.login_without_password(request, user)
         request.session['user_renew_location'] = True
     return result
+
 
 @non_cached_view(json_renderer=lambda request, result, *args: activate_renderer_json(request, result),
     methods=['GET', 'POST'],
@@ -161,6 +164,7 @@ def activate_user(request):
             form = ExtenedSignUp(initial=init)
     result.data['form'] = form
     return result
+
 
 @non_cached_view(api_renderer=operation_api,
     methods=['POST'],
@@ -315,8 +319,6 @@ def follow_user(request, username):
         success_message_type='info'),
     validator=lambda request, username: object_exists_validator(user_controller.GetUser,
         _('User %(username)s does not exist.') % {'username': username}, username))
-
-
 @refresh_cache(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS])
 def unfollow_user(request, username):
     user_controller.UnfollowStream(request, request.user.username, user_controller.GetUser(username).Stream)
@@ -350,9 +352,11 @@ def search_user(request, keyword):
     result.data['users'] = users
     return result
 
+
 @csrf_exempt
 @non_cached_view(methods=['GET', 'POST'], json_renderer=json_data_renderer, api_renderer=operation_api)
-@refresh_cache(level=CACHE_REFRESH_LEVEL_SESSION, tags=[CACHE_TAG_STREAMS, CACHE_TAG_TAGS])
+# @refresh_cache(level=CACHE_REFRESH_LEVEL_SESSION, tags=[CACHE_TAG_STREAMS, CACHE_TAG_TAGS])
+#TODO: is it important the refresh cache decorator?
 def set_user_session_location_info(request):
     result = ResponseResult()
     request.session['user_lat'] = float(request.REQUEST['user_lat'])
@@ -360,6 +364,7 @@ def set_user_session_location_info(request):
     request.session['user_country'] = request.REQUEST['user_country']
     request.session['user_city'] = request.REQUEST['user_city']
     return result
+
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'signin.html', 'Sign In'),
     json_renderer=signin_renderer_json,
@@ -391,6 +396,7 @@ def signin(request):
     result.data['form'] = form
     return result
 
+
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'signup.html', 'Sign Up'),
     json_renderer=lambda request, result: json_renderer(request,
         result,
@@ -412,6 +418,7 @@ def signup(request):
     result.data['form'] = form
     return result
 
+
 @non_cached_view(html_renderer=lambda request, result: HttpResponseRedirect('/'),
     json_renderer=lambda request, result: json_renderer(request,
         result,
@@ -422,6 +429,7 @@ def signout(request):
     if request.user.is_authenticated():
         user_controller.SignOut(request)
     return ResponseResult()
+
 
 def sss(request):
     if request.method == "POST":
