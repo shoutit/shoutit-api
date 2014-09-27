@@ -28,7 +28,6 @@ DEV = False if os.environ.get('HOME') == '/root' else True
 
 
 def check_runserver_address_port():
-
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":
         address_port = sys.argv[-1] if len(sys.argv) > 2 else "127.0.0.1:8000"
         if address_port.startswith("-"):
@@ -41,6 +40,8 @@ def check_runserver_address_port():
         if not address:
             address = '127.0.0.1'
         return address, port
+    else:
+        return '127.0.0.1', '8000'
 
 ADDRESS, PORT = check_runserver_address_port()
 
