@@ -15,6 +15,7 @@ def render_shout(shout):
         'date_created': shout.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
         'thumbnail':  shout.GetFirstImage().Image if shout.GetImages() else '',
         'images': [image.Image for image in shout.GetImages()],
+        'videos': [render_video(video) for video in shout.get_videos()],
         'text': shout.Text,
         'tags': [render_tag(tag) for tag in shout.GetTags()],
         'location': {
@@ -185,6 +186,18 @@ def render_item(item):
         'price': item.Price,
         'currency': item.Currency.Code,
         'date_created': item.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+    }
+
+
+def render_video(video):
+    if video is None:
+        return {}
+    return {
+        'url': video.url,
+        'thumbnail_url': video.thumbnail_url,
+        'provider': video.provider,
+        'id_on_provider': video.id_on_provider,
+        'duration': video.duration
     }
 
 

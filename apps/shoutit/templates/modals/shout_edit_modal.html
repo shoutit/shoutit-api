@@ -81,7 +81,7 @@
                 if (responseJSON.success) {
                     var img = $('<img id=img_'+id+' src="' + responseJSON.url + '" title="' + fileName + '" alt="' + fileName + '" />');
                     $('form#shout_{{ method }}_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-                    $('form#shout_{{ method }}_form').append('<input id=input_'+id+' type="hidden" value="' + responseJSON.url + '" name="shout_images"/>');
+                    $('form#shout_{{ method }}_form').append('<input id=input_'+id+' type="hidden" value="' + responseJSON.url + '" name="images"/>');
                     $(img).after('<a id=href_'+id+' onclick="delete_image(\''+id+'\')">x</a>');
                     id++;
                 }
@@ -103,7 +103,7 @@
         {% for image in shout.GetImages %}
             img = $('<img id=img_'+id+' src="{{ image.Image }}" />');
             $('form#shout_{{ method }}_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-            $('form#shout_{{ method }}_form').append('<input id=input_'+id+' type="hidden" value="{{ image.Image }}" name="shout_images"/>');
+            $('form#shout_{{ method }}_form').append('<input id=input_'+id+' type="hidden" value="{{ image.Image }}" name="images"/>');
             $(img).after('<a id=href_'+id+' onclick="delete_image(\''+id+'\')">x</a>');
                     id++;
         {% endfor %}

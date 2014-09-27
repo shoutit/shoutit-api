@@ -280,7 +280,7 @@ def modal(request, template=None):
             raise Http404()
 
     elif template == 'shout_item_form' or template == 'edit_item_form':
-        item = item_controller.GetItemByID(Base62ToInt(request.GET['id']))
+        item = item_controller.get_item(Base62ToInt(request.GET['id']))
         if item:
             variables = RequestContext(request, {
                 'item_id': request.GET['id'],

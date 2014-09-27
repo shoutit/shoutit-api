@@ -101,10 +101,10 @@ def shout_deal(request):
 		result.data['form'].is_valid()
 		bp = BusinessProfile.objects.get(User__pk = request.user.pk)
 		images = []
-		if request.POST.has_key('shout_images[]'):
-			images = request.POST.getlist('shout_images[]')
-		elif request.POST.has_key('shout_images'):
-			images = request.POST.getlist('shout_images')
+		if request.POST.has_key('images[]'):
+			images = request.POST.getlist('images[]')
+		elif request.POST.has_key('images'):
+			images = request.POST.getlist('images')
 		result.data['deal'] = deal_controller.ShoutDeal(
 			result.data['form'].cleaned_data['name'],
 			result.data['form'].cleaned_data['description'],

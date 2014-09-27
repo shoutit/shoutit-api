@@ -26,6 +26,7 @@ class MethodDependentAuthentication(object):
             methods_auth_map = {}
         self.methods_auth_map = methods_auth_map
         self.default = default
+        self.last_request = None
 
     def is_authenticated(self, request):
         self.last_request = request
@@ -208,6 +209,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                    # Shouts: create, edit, delete, reply
                        url(r'^shout/buy/$',
                            TieredResource(TieredHandler, o_auth, {
                                'POST': shout_views.shout_buy,
@@ -227,8 +229,8 @@ urlpatterns = patterns('',
                        ),
 
                        url(r'^shout/([0-9a-zA-Z]+)/$',
-                           TieredResource(TieredHandler, MethodDependentAuthentication(
-                               methods_auth_map={'GET': a_oauth, 'POST': o_auth, 'DELETE': o_auth}), {
+                           TieredResource(TieredHandler, MethodDependentAuthentication({'GET': a_oauth, 'POST': o_auth, 'DELETE': o_auth}),
+                                          {
                                               'GET': shout_views.shout_view,
                                               'DELETE': shout_views.delete_shout,
                                               'POST': message_views.reply_to_shout,

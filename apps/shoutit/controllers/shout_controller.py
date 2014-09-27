@@ -1,33 +1,39 @@
 import StringIO
 from datetime import datetime, timedelta
 import os
+
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.core.files.base import ContentFile
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
+
 from apps.ActivityLogger.logger import Logger
-from apps.shoutit.constants import *
-from apps.shoutit.utils import asynchronous_task, ToSeoFriendly
+from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE
+from apps.shoutit.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
+from apps.shoutit.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
+from apps.shoutit.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
+from apps.shoutit.utils import asynchronous_task, ToSeoFriendly, make_image_thumbnail
 import apps.shoutit.settings as settings
 
 
 def GetPost(post_id, find_muted=False, find_expired=False):
-    post = Post.objects.filter(pk__exact = post_id,IsDisabled = False).select_related('OwnerUser','OwnerUser__Business','OwnerBusiness__Profile')
+    post = Post.objects.filter(pk__exact=post_id, IsDisabled=False).select_related('OwnerUser', 'OwnerUser__Business',
+                                                                                   'OwnerBusiness__Profile')
     if not find_muted:
-        post = post.filter(IsMuted = False)
+        post = post.filter(IsMuted=False)
 
     if not find_expired:
         today = datetime.today()
-        days = timedelta(days = int(settings.MAX_EXPIRY_DAYS))
+        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         begin = today - days
         post = post.filter(
-            (~Q(Type = POST_TYPE_BUY) & ~Q(Type = POST_TYPE_SELL))
+            (~Q(Type=POST_TYPE_BUY) & ~Q(Type=POST_TYPE_SELL))
             |
-            ((Q(shout__ExpiryDate__isnull = True, DatePublished__range = (begin, today))
+            ((Q(shout__ExpiryDate__isnull=True, DatePublished__range=(begin, today))
 
-              | Q(shout__ExpiryDate__isnull = False, DatePublished__lte = F('shout__ExpiryDate'))
+              | Q(shout__ExpiryDate__isnull=False, DatePublished__lte=F('shout__ExpiryDate'))
              )
-             & (Q(Type = POST_TYPE_BUY) | Q(Type = POST_TYPE_SELL)))
+             & (Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)))
         ).select_related(depth=2)
     if post:
         post = post[0]
@@ -40,7 +46,7 @@ def GetPost(post_id, find_muted=False, find_expired=False):
 
 
 def DeletePost(post_id):
-    post = Post.objects.get(pk = post_id)
+    post = Post.objects.get(pk=post_id)
     if not post:
         raise ObjectDoesNotExist()
     else:
@@ -53,18 +59,18 @@ def DeletePost(post_id):
                 event_controller.DeleteEventAboutObj(post.shout.deal)
             elif post.Type == POST_TYPE_EXPERIENCE:
                 event_controller.DeleteEventAboutObj(post.experience)
-        except :
+        except:
             pass
 
 
-def RenewShout(request, shout_id, days = int(settings.MAX_EXPIRY_DAYS)):
-    shout = Shout.objects.get(pk = shout_id)
+def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
+    shout = Shout.objects.get(pk=shout_id)
     if not shout:
         raise ObjectDoesNotExist()
     else:
         now = datetime.now()
         shout.DatePublished = now
-        shout.ExpiryDate = now + timedelta(days = days)
+        shout.ExpiryDate = now + timedelta(days=days)
         shout.RenewalCount += 1
         shout.ExpiryNotified = False
         shout.save()
@@ -76,7 +82,7 @@ def NotifyPreExpiry():
         if not shout.ExpiryNotified:
             expiry_date = shout.ExpiryDate
             if not expiry_date:
-                expiry_date = shout.DatePublished + timedelta(days = settings.MAX_EXPIRY_DAYS)
+                expiry_date = shout.DatePublished + timedelta(days=settings.MAX_EXPIRY_DAYS)
             if (expiry_date - datetime.now()).days < settings.SHOUT_EXPIRY_NOTIFY:
                 if shout.OwnerUser.email:
                     apps.shoutit.controllers.email_controller.SendExpiryNotificationEmail(shout.OwnerUser, shout)
@@ -84,13 +90,14 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def EditShout(request, shout_id, name = None, text = None, price = None, longitude = None, latitude = None, tags = [], shouter = None, country_code = None, province_code = None, address = None, currency = None, images = [], date_published = None, stream = None):
-    shout = Shout.objects.get(pk = shout_id)
+def EditShout(request, shout_id, name=None, text=None, price=None, longitude=None, latitude=None, tags=[], shouter=None, country_code=None,
+              province_code=None, address=None, currency=None, images=[], date_published=None, stream=None):
+    shout = Shout.objects.get(pk=shout_id)
 
     if not shout:
         raise ObjectDoesNotExist()
     else:
-        if shout.Type == constants.POST_TYPE_BUY or shout.Type == constants.POST_TYPE_SELL:
+        if shout.Type == POST_TYPE_BUY or shout.Type == POST_TYPE_SELL:
 
             if text:
                 shout.Text = text
@@ -107,9 +114,9 @@ def EditShout(request, shout_id, name = None, text = None, price = None, longitu
             if address:
                 shout.Address = address
             if date_published:
-                shout.DatePublished  = date_published
+                shout.DatePublished = date_published
 
-            item_controller.EditItem(shout.trade.Item,name,price,images,currency)
+            item_controller.edit_item(shout.trade.Item, name, price, images, currency)
 
             if stream and shout.Stream != stream:
                 shout.Stream.UnPublishShout(shout)
@@ -132,25 +139,25 @@ def EditShout(request, shout_id, name = None, text = None, price = None, longitu
     return None
 
 
-def GetLandingShouts(DownLeftLat , DownLeftLng , UpRightLat , UpRightLng):
+def GetLandingShouts(DownLeftLat, DownLeftLng, UpRightLat, UpRightLng):
     filters = {
-    'Latitude__gte' : DownLeftLat,
-    'Latitude__lte' : UpRightLat,
-    'Longitude__gte' : DownLeftLng,
-    'Longitude__lte' : UpRightLng,
+        'Latitude__gte': DownLeftLat,
+        'Latitude__lte': UpRightLat,
+        'Longitude__gte': DownLeftLng,
+        'Longitude__lte': UpRightLng,
     }
-    shouts = Trade.objects.GetValidTrades().filter(**filters).values('id', 'Type','Longitude','Latitude')[:10000]
+    shouts = Trade.objects.GetValidTrades().filter(**filters).values('id', 'Type', 'Longitude', 'Latitude')[:10000]
     return shouts
 
 
-def MakeCloudThumbnailsForImage(image_url):
-    utils.make_image_thumbnail(image_url, 145, 'shout_image')
-    utils.make_image_thumbnail(image_url, 85, 'shout_image')
+def make_cloud_thumbnails_for_image(image_url):
+    make_image_thumbnail(image_url, 145, 'shout_image')
+    make_image_thumbnail(image_url, 85, 'shout_image')
 
 
 def GetStreamAffectedByShout(shout):
     if isinstance(shout, int):
-        shout = Shout.objects.get(pk = shout)
+        shout = Shout.objects.get(pk=shout)
     if shout:
         return shout.Streams.all()
     return []
@@ -178,8 +185,9 @@ def SaveRecolatedShouts(trade, stream_type):
         if trade.Type == POST_TYPE_SELL:
             type = POST_TYPE_SELL
 
-    shouts = apps.shoutit.controllers.stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
-    stream = Stream(Type= stream_type)
+    shouts = apps.shoutit.controllers.stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10,
+                                                                                       stream_type == STREAM_TYPE_RECOMMENDED)
+    stream = Stream(Type=stream_type)
     stream.save()
     if stream_type == STREAM_TYPE_RECOMMENDED:
         old_recommended = trade.RecommendedStream
@@ -194,33 +202,33 @@ def SaveRecolatedShouts(trade, stream_type):
         if old_related:
             old_related.delete()
     for shout in shouts:
-        shout_wrap = ShoutWrap(Shout = shout, Stream = stream, Rank = shout.rank)
+        shout_wrap = ShoutWrap(Shout=shout, Stream=stream, Rank=shout.rank)
         shout_wrap.save()
         apps.shoutit.controllers.stream_controller.PublishShoutToShout(trade, shout)
 
     trade.save()
 
 
-def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, country_code, province_code, address, currency, images = [], date_published = None, stream = None, issss = False, exp_days = None):
+def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, country_code, province_code, address,
+              currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
     if stream is None:
         stream = shouter.Profile.Stream
 
-    item = item_controller.CreateItem(name,price,images,currency)
-    trade = Trade(Text = text, Longitude = longitude, Latitude = latitude, OwnerUser = shouter,
-                  Type = POST_TYPE_BUY, Item = item, CountryCode = country_code, ProvinceCode = province_code , Address = address, IsSSS = issss)
+    item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
+    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_BUY, Item=item,
+                  CountryCode=country_code, ProvinceCode=province_code, Address=address, IsSSS=issss)
     trade.save()
 
-    if not PredefinedCity.objects.filter(City = province_code):
+    if not PredefinedCity.objects.filter(City=province_code):
         encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
-        PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
-
+        PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     if date_published:
         trade.DatePublished = date_published
-        trade.ExpiryDate = exp_days and (date_published + timedelta(days = exp_days)) or None
+        trade.ExpiryDate = exp_days and (date_published + timedelta(days=exp_days)) or None
         trade.save()
     else:
-        trade.ExpiryDate = exp_days and datetime.today() + timedelta(days = exp_days) or None
+        trade.ExpiryDate = exp_days and datetime.today() + timedelta(days=exp_days) or None
         trade.save()
 
     stream.PublishShout(trade)
@@ -235,18 +243,18 @@ def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, co
     SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
     SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST,trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT : trade.id})
+    event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
+    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.id})
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 
-def shout_sell(request, name, text, price,  longitude, latitude, tags, shouter, country_code, province_code, address,
-               currency=None, images=[], date_published=None, stream=None, issss=False, exp_days=None):
+def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, country_code, province_code, address,
+               currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
     if stream is None:
         stream = shouter.Stream
 
-    item = item_controller.CreateItem(name, price, images, currency)
+    item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
     trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter.User, Type=POST_TYPE_SELL,
                   Item=item, CountryCode=country_code, ProvinceCode=province_code, Address=address, IsSSS=issss)
 
@@ -274,8 +282,8 @@ def shout_sell(request, name, text, price,  longitude, latitude, tags, shouter, 
     SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
     SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(shouter.User, EVENT_TYPE_SHOUT_OFFER,trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT : trade.id})
+    event_controller.RegisterEvent(shouter.User, EVENT_TYPE_SHOUT_OFFER, trade)
+    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.id})
     realtime_controller.BindUserToPost(shouter.User, trade)
     return trade
 
@@ -292,11 +300,11 @@ def get_trade_images(trades):
     return trades
 
 
-from apps.shoutit import constants, utils
 import apps.shoutit.controllers.email_controller
 import apps.shoutit.controllers.tag_controller
 import apps.shoutit.controllers.stream_controller, event_controller
 import apps.shoutit.controllers.user_controller, business_controller, item_controller
 import realtime_controller
 from apps.shoutit.models import GalleryItem, PredefinedCity
-from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Item, Trade, Experience, Currency, Post, Deal, BusinessProfile, SharedExperience, Comment, GalleryItem
+from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Item, Trade, Experience, Currency, Post, Deal, BusinessProfile, \
+    SharedExperience, Comment, GalleryItem

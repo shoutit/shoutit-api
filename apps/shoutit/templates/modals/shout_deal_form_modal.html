@@ -93,7 +93,7 @@
                 if (responseJSON.success) {
                     var img = $('<img src="' + responseJSON.url + '" title="' + fileName + '" alt="' + fileName + '" />');
                     $('#file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-                    $('form#shout_deal_form').append('<input type="hidden" value="' + responseJSON.url + '" name="shout_images"/>');
+                    $('form#shout_deal_form').append('<input type="hidden" value="' + responseJSON.url + '" name="images"/>');
                 }
             },
             params: {

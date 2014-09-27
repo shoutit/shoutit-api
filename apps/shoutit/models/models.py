@@ -11,7 +11,7 @@ from django.db.models.query_utils import Q
 from django.db.models import Min
 
 # PAUSE: Payment
-#from subscription.signals import subscribed, unsubscribed
+# from subscription.signals import subscribed, unsubscribed
 
 from apps.ActivityLogger.models import Request
 from apps.shoutit import settings
@@ -19,32 +19,32 @@ from apps.shoutit.constants import *
 
 
 class PostManager(models.Manager):
-    def GetValidPosts(self, types=[], country_code = None, province_code = None, get_muted = False ,get_expired = False):
+    def GetValidPosts(self, types=[], country_code=None, province_code=None, get_muted=False, get_expired=False):
         q = None
         for i in range(len(types)):
-            q = q|Q(Type=types[i]) if i!=0 else Q(Type=types[i])
+            q = q | Q(Type=types[i]) if i != 0 else Q(Type=types[i])
 
         post_qs = self.filter(q) if q else self
         if country_code:
-            post_qs = post_qs.filter(CountryCode__iexact = country_code)
+            post_qs = post_qs.filter(CountryCode__iexact=country_code)
         if province_code:
-            post_qs = post_qs.filter(ProvinceCode__iexact = province_code)
-        post_qs = post_qs.distinct().filter(IsDisabled = False)#.order_by("-DatePublished")
+            post_qs = post_qs.filter(ProvinceCode__iexact=province_code)
+        post_qs = post_qs.distinct().filter(IsDisabled=False)  #.order_by("-DatePublished")
         if not get_muted:
-            post_qs = post_qs.filter( IsMuted = False)
+            post_qs = post_qs.filter(IsMuted=False)
 
         if not get_expired:
             post_qs = self.filter_shout_expired(post_qs)
         return post_qs
 
-    def filter_shout_expired(self,query_set):
+    def filter_shout_expired(self, query_set):
         today = datetime.today()
-        days = timedelta(days = int(settings.MAX_EXPIRY_DAYS))
+        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         begin = today - days
         query_set = query_set.filter(
-            (~Q(Type=POST_TYPE_BUY)& ~Q(Type=POST_TYPE_SELL))
+            (~Q(Type=POST_TYPE_BUY) & ~Q(Type=POST_TYPE_SELL))
             | (
-                (Q(Type=POST_TYPE_BUY)|Q(Type=POST_TYPE_SELL))
+                (Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL))
                 & (
                     Q(shout__ExpiryDate__isnull=True, DatePublished__range=(begin, today))
                     |
@@ -56,48 +56,54 @@ class PostManager(models.Manager):
 
 
 class ShoutManager(PostManager):
-    def filter_shout_expired(self,query_set):
+    def filter_shout_expired(self, query_set):
         today = datetime.today()
-        days = timedelta(days = int(settings.MAX_EXPIRY_DAYS))
+        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         begin = today - days
-        query_set = query_set.filter( Q(ExpiryDate__isnull = True, DatePublished__range = (begin, today)) | Q(ExpiryDate__isnull = False, ExpiryDate__gte = today))
+        query_set = query_set.filter(
+            Q(ExpiryDate__isnull=True, DatePublished__range=(begin, today)) | Q(ExpiryDate__isnull=False, ExpiryDate__gte=today))
         return query_set
 
-    def GetValidShouts(self, types = [], country_code = None, province_code = None, get_expired = False, get_muted = False):
-        if not types : types = [POST_TYPE_SELL,POST_TYPE_BUY,POST_TYPE_DEAL]
-        types = [type for type in types if type in [POST_TYPE_SELL,POST_TYPE_BUY,POST_TYPE_DEAL]]
-        shout_qs = PostManager.GetValidPosts(self, types, country_code=country_code, province_code = province_code, get_muted = get_muted, get_expired = get_expired)
+    def GetValidShouts(self, types=[], country_code=None, province_code=None, get_expired=False, get_muted=False):
+        if not types: types = [POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL]
+        types = [type for type in types if type in [POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL]]
+        shout_qs = PostManager.GetValidPosts(self, types, country_code=country_code, province_code=province_code, get_muted=get_muted,
+                                             get_expired=get_expired)
         if not get_expired:
             shout_qs = self.filter_shout_expired(shout_qs)
         return shout_qs
 
 
 class TradeManager(ShoutManager):
-    def GetValidTrades(self, types = [], country_code = None, province_code = None, get_expired = False, get_muted = False):
-        if not types : types = [POST_TYPE_SELL,POST_TYPE_BUY]
-        types = [type for type in types if type in [POST_TYPE_SELL,POST_TYPE_BUY]]
-        trade_qs = ShoutManager.GetValidShouts(self, types=types, country_code=country_code, province_code = province_code, get_expired = get_expired, get_muted = get_muted)
+    def GetValidTrades(self, types=[], country_code=None, province_code=None, get_expired=False, get_muted=False):
+        if not types: types = [POST_TYPE_SELL, POST_TYPE_BUY]
+        types = [type for type in types if type in [POST_TYPE_SELL, POST_TYPE_BUY]]
+        trade_qs = ShoutManager.GetValidShouts(self, types=types, country_code=country_code, province_code=province_code,
+                                               get_expired=get_expired, get_muted=get_muted)
 
         return trade_qs
 
 
 class DealManager(ShoutManager):
-    def GetValidDeals(self, country_code = None, province_code = None, get_expired = False, get_muted = False):
-        deal_qs = ShoutManager.GetValidShouts(self, [POST_TYPE_DEAL], country_code=country_code, province_code = province_code, get_expired = get_expired, get_muted = get_muted)
+    def GetValidDeals(self, country_code=None, province_code=None, get_expired=False, get_muted=False):
+        deal_qs = ShoutManager.GetValidShouts(self, [POST_TYPE_DEAL], country_code=country_code, province_code=province_code,
+                                              get_expired=get_expired, get_muted=get_muted)
 
         return deal_qs
 
 
 class ExperienceManager(PostManager):
-    def GetValidExperiences(self, country_code = None, province_code = None, get_muted = False):
-        experience_qs = PostManager.GetValidPosts(self, types = [POST_TYPE_EXPERIENCE], country_code=country_code, province_code = province_code, get_muted = get_muted , get_expired = True)
+    def GetValidExperiences(self, country_code=None, province_code=None, get_muted=False):
+        experience_qs = PostManager.GetValidPosts(self, types=[POST_TYPE_EXPERIENCE], country_code=country_code,
+                                                  province_code=province_code, get_muted=get_muted, get_expired=True)
 
         return experience_qs
 
 
 class EventManager(PostManager):
-    def GetValidEvents(self, country_code = None, province_code = None, get_muted = False):
-        event_qs = PostManager.GetValidPosts(self, types=[POST_TYPE_EVENT] , country_code=country_code, province_code = province_code, get_muted = get_muted, get_expired=True)
+    def GetValidEvents(self, country_code=None, province_code=None, get_muted=False):
+        event_qs = PostManager.GetValidPosts(self, types=[POST_TYPE_EVENT], country_code=country_code, province_code=province_code,
+                                             get_muted=get_muted, get_expired=True)
 
         return event_qs
 
@@ -109,7 +115,7 @@ class ConfirmToken(models.Model):
     def __unicode__(self):
         return unicode(self.id) + ": " + unicode(self.User) + "::" + self.Token
 
-    Token = models.CharField(max_length=24, db_index=True, unique= True)
+    Token = models.CharField(max_length=24, db_index=True, unique=True)
     User = models.ForeignKey(User, related_name="Tokens")
     Type = models.IntegerField(default=0)
     DateCreated = models.DateField(auto_now_add=True)
@@ -121,16 +127,16 @@ class ConfirmToken(models.Model):
         self.save()
 
     @staticmethod
-    def getToken(token, get_disabled = True, case_sensitive = True):
+    def getToken(token, get_disabled=True, case_sensitive=True):
         today = datetime.today()
-        days = timedelta(days = int(settings.MAX_REG_DAYS))
+        days = timedelta(days=int(settings.MAX_REG_DAYS))
         begin = today - days
         if case_sensitive:
-            t = ConfirmToken.objects.filter(Token__exact = token, DateCreated__gte = begin, DateCreated__lte = today)
+            t = ConfirmToken.objects.filter(Token__exact=token, DateCreated__gte=begin, DateCreated__lte=today)
         else:
-            t = ConfirmToken.objects.filter(Token__iexact = token, DateCreated__gte = begin, DateCreated__lte = today)
+            t = ConfirmToken.objects.filter(Token__iexact=token, DateCreated__gte=begin, DateCreated__lte=today)
         if not get_disabled:
-            t = t.filter(IsDisabled = False)
+            t = t.filter(IsDisabled=False)
         t = t.select_related(depth=1)
         if len(t) > 0:
             return t[0]
@@ -144,8 +150,9 @@ class Currency(models.Model):
 
     def __unicode__(self):
         return '[' + self.Code + '] '
+
     Code = models.CharField(max_length=10)
-    Country = models.CharField(max_length=10, blank = True)
+    Country = models.CharField(max_length=10, blank=True)
     Name = models.CharField(max_length=64, null=True)
 
 
@@ -158,19 +165,19 @@ class UserProfile(models.Model):
 
     User = models.OneToOneField(User, related_name='Profile', unique=True, db_index=True)
     Image = models.URLField(max_length=1024, null=True)
-    Bio = models.TextField(null=True,max_length=512, default='New Shouter!')
+    Bio = models.TextField(null=True, max_length=512, default='New Shouter!')
     Mobile = models.CharField(unique=True, null=True, max_length=20)
 
     Following = models.ManyToManyField('Stream', through='FollowShip')
     Interests = models.ManyToManyField('Tag', related_name='Followers')
 
     Stream = models.OneToOneField('Stream', related_name='OwnerUser', db_index=True)
-#	FeedStream = models.OneToOneField('Stream', related_name='ViewerUser', db_index=True)
-#	isBlocked = models.BooleanField(default=False)
+    #	FeedStream = models.OneToOneField('Stream', related_name='ViewerUser', db_index=True)
+    #	isBlocked = models.BooleanField(default=False)
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
-    City = models.CharField(max_length=200, default='' , db_index=True)
-    Country = models.CharField(max_length=200, default='' , db_index=True)
+    City = models.CharField(max_length=200, default='', db_index=True)
+    Country = models.CharField(max_length=200, default='', db_index=True)
 
     Birthdate = models.DateField(null=True)
     Sex = models.NullBooleanField(default=True, null=True)
@@ -179,23 +186,24 @@ class UserProfile(models.Model):
     isSSS = models.BooleanField(default=False, db_index=True)
     isSMS = models.BooleanField(default=False, db_index=True)
 
-#	State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
+    #	State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
 
     #TODO: blocked field
 
     def GetNotifications(self):
         if not hasattr(self, 'notifications'):
-            min_date = self.User.Notifications.filter(ToUser = self.User, IsRead = False).aggregate(min_date = Min('DateCreated'))['min_date']
+            min_date = self.User.Notifications.filter(ToUser=self.User, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
             if min_date:
-                notifications = list(self.User.Notifications.filter(DateCreated__gte = min_date).order_by('-DateCreated'))
+                notifications = list(self.User.Notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
                 if len(notifications) < 5:
                     notifications = sorted(
-                        chain(notifications, list(self.User.Notifications.filter(DateCreated__lt = min_date).order_by('-DateCreated')[:5 - len(notifications)])),
+                        chain(notifications, list(
+                            self.User.Notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
                         key=lambda n: n.DateCreated,
                         reverse=True
                     )
             else:
-                notifications = list(self.User.Notifications.filter(IsRead = True).order_by('-DateCreated')[:5])
+                notifications = list(self.User.Notifications.filter(IsRead=True).order_by('-DateCreated')[:5])
             self.notifications = notifications
         return self.notifications
 
@@ -226,7 +234,7 @@ class UserProfile(models.Model):
         return self.User.get_full_name()
 
     def __getattribute__(self, name):
-        if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts' ,'get_full_name']:
+        if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts', 'get_full_name']:
             return getattr(self.User, name)
         else:
             return object.__getattribute__(self, name)
@@ -245,21 +253,21 @@ class UserProfile(models.Model):
 
 class UserFunctions(object):
     def name(self):
-        if hasattr(self,'Business') and self.Business:
+        if hasattr(self, 'Business') and self.Business:
             return self.Business.Name
         else:
-            return  self.get_full_name()
+            return self.get_full_name()
 
     def Image(self):
-        if hasattr(self,'Business'):
+        if hasattr(self, 'Business'):
             return self.Business.Image
-        elif hasattr(self,'Profile'):
-            return  self.Profile.Image
+        elif hasattr(self, 'Profile'):
+            return self.Profile.Image
         else:
             return ''
 
     def Sex(self):
-        profile = UserProfile.objects.filter(User__id =self.id).values('Sex')
+        profile = UserProfile.objects.filter(User__id=self.id).values('Sex')
         if profile:
             return profile[0]['Sex']
         else:
@@ -269,20 +277,21 @@ class UserFunctions(object):
         return Request.objects.filter(user__id=self.id).count()
 
     def Latitude(self):
-        if hasattr(self,'Business'):
+        if hasattr(self, 'Business'):
             return self.Business.Latitude
-        elif hasattr(self,'Profile'):
-            return  self.Profile.Latitude
+        elif hasattr(self, 'Profile'):
+            return self.Profile.Latitude
         else:
             return ''
 
     def Longitude(self):
-        if hasattr(self,'Business'):
+        if hasattr(self, 'Business'):
             return self.Business.Longitude
-        elif hasattr(self,'Profile'):
-            return  self.Profile.Longitude
+        elif hasattr(self, 'Profile'):
+            return self.Profile.Longitude
         else:
             return ''
+
 
 User.__bases__ += (UserFunctions,)
 
@@ -294,10 +303,10 @@ class LinkedFacebookAccount(models.Model):
     User = models.ForeignKey(User, related_name='LinkedFB')
     Uid = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
-    ExpiresIn = models.BigIntegerField(default = 0)
+    ExpiresIn = models.BigIntegerField(default=0)
     SignedRequest = models.CharField(max_length=1024)
     link = models.CharField(max_length=128)
-    verified = models.BooleanField(default = False)
+    verified = models.BooleanField(default=False)
 
 
 class Post(models.Model):
@@ -307,10 +316,10 @@ class Post(models.Model):
     objects = PostManager()
 
     OwnerUser = models.ForeignKey(User, related_name='Posts')
-    Streams = models.ManyToManyField('Stream',related_name='Posts')
+    Streams = models.ManyToManyField('Stream', related_name='Posts')
 
-    Text = models.TextField(max_length=2000, default='' , db_index=True)
-    Type = models.IntegerField(default = 0, db_index=True)
+    Text = models.TextField(max_length=2000, default='', db_index=True)
+    Type = models.IntegerField(default=0, db_index=True)
     DatePublished = models.DateTimeField(auto_now_add=True, db_index=True)
 
     IsMuted = models.BooleanField(default=False, db_index=True)
@@ -318,10 +327,9 @@ class Post(models.Model):
 
     Longitude = models.FloatField(default=0.0)
     Latitude = models.FloatField(default=0.0)
-    CountryCode = models.CharField(max_length=2, db_index=True , null = True)
-    ProvinceCode = models.CharField(max_length=200, db_index=True ,null = True)
-    Address = models.CharField(max_length=200, db_index=True, null = True)
-
+    CountryCode = models.CharField(max_length=2, db_index=True, null=True)
+    ProvinceCode = models.CharField(max_length=200, db_index=True, null=True)
+    Address = models.CharField(max_length=200, db_index=True, null=True)
 
     def Mute(self):
         self.IsMuted = True
@@ -333,9 +341,10 @@ class Shout(Post):
         app_label = 'shoutit'
 
     Tags = models.ManyToManyField('Tag', related_name='Shouts')
-    ExpiryDate = models.DateTimeField(null= True, default= None, db_index=True)
-    ExpiryNotified = models.BooleanField(default= False)
+    ExpiryDate = models.DateTimeField(null=True, default=None, db_index=True)
+    ExpiryNotified = models.BooleanField(default=False)
     objects = ShoutManager()
+
     def AppendTag(self, tag):
         if not hasattr(self, 'tags'):
             self.tags = []
@@ -355,7 +364,6 @@ class Shout(Post):
         if hasattr(self, 'images'):
             return self.images
         else:
-            from apps.shoutit.constants import POST_TYPE_EXPERIENCE
             if self.Type == POST_TYPE_EXPERIENCE:
                 self.images = list(self.Images.all().order_by('Image'))
             else:
@@ -366,13 +374,29 @@ class Shout(Post):
         return self.GetImages()[0]
 
     def SetImages(self, images):
-        from apps.shoutit.constants import POST_TYPE_EXPERIENCE
         images = sorted(images, key=lambda img: img.Image)
-        if self.Type == POST_TYPE_EXPERIENCE:
-            self.images = images
-        else:
-            self.images = images
+        self.images = images
+        if hasattr(self, 'Item'):
             self.Item.SetImages(images)
+
+    def get_videos(self):
+        if hasattr(self, '_videos'):
+            return self._videos
+        else:
+            if self.Type == POST_TYPE_EXPERIENCE:
+                self._videos = list(self.videos.all())
+            else:
+                self._videos = self.Item.get_videos()
+            return self._videos
+
+    def set_videos(self, videos):
+        self._videos = videos
+        if hasattr(self, 'Item'):
+            self.Item.set_videos(videos)
+
+    #TODO
+    def get_first_video(self):
+        pass
 
     def GetText(self):
         text = ''
@@ -388,7 +412,8 @@ class Shout(Post):
 
     def is_expired(self):
         now = datetime.now()
-        if (not self.ExpiryDate and now > self.DatePublished + timedelta(days = int(settings.MAX_EXPIRY_DAYS))) or (self.ExpiryDate and now > self.ExpiryDate):
+        if (not self.ExpiryDate and now > self.DatePublished + timedelta(days=int(settings.MAX_EXPIRY_DAYS))) or (
+            self.ExpiryDate and now > self.ExpiryDate):
             return True
 
     def __unicode__(self):
@@ -425,6 +450,7 @@ class StoredFile(models.Model):
 
     def __unicode__(self):
         return "(" + unicode(self.id) + ") " + unicode(self.File)
+
     User = models.ForeignKey(User, related_name='Documents', null=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
@@ -446,7 +472,7 @@ class Trade(Shout):
     MaxDistance = models.FloatField(default=180.0)
     MaxPrice = models.FloatField(default=1.0)
     IsShowMobile = models.BooleanField(default=True)
-    IsSSS = models.BooleanField(default= False)
+    IsSSS = models.BooleanField(default=False)
     BaseDatePublished = models.DateTimeField(auto_now_add=True)
     RenewalCount = models.IntegerField(default=0)
     objects = TradeManager()
@@ -480,13 +506,28 @@ class Item(models.Model):
     def GetFirstImage(self):
         return self.GetImages() and self.GetImages()[0] or None
 
+    def get_videos(self):
+        if hasattr(self, '_videos'):
+            return self._videos
+        else:
+            self._videos = list(self.videos.all())
+            return self._videos
+
+    def set_videos(self, videos):
+        self._videos = videos
+
+    #TODO
+    def get_first_video(self):
+        pass
+
 
 class Stream(models.Model):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ' ' + self.GetTypeText()  + ' (' + unicode(self.GetOwner()) + ')'
+        return unicode(self.id) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
+
     Type = models.IntegerField(default=0, db_index=True)
 
     def GetOwner(self):
@@ -499,11 +540,11 @@ class Stream(models.Model):
             elif self.Type == STREAM_TYPE_BUSINESS:
                 owner = self.OwnerBusiness
             elif self.Type == STREAM_TYPE_RECOMMENDED:
-                    owner = self.InitShoutRecommended
+                owner = self.InitShoutRecommended
             elif self.Type == STREAM_TYPE_RELATED:
-                    owner = self.InitShoutRelated
+                owner = self.InitShoutRelated
         except Exception, e:
-                return None
+            return None
         return owner
 
     def GetTypeText(self):
@@ -523,13 +564,16 @@ class Stream(models.Model):
     def PublishShout(self, shout):
         self.Posts.add(shout)
         self.save()
-#		followers = self.userprofile_set.all()
-#		for follower in followers:
-#			follower.FeedStream.PublishShout(shout)
+
+    #		followers = self.userprofile_set.all()
+    #		for follower in followers:
+    #			follower.FeedStream.PublishShout(shout)
 
     def UnPublishShout(self, shout):
         self.Posts.remove(shout)
         self.save()
+
+
 #		followers = self.userprofile_set.all()
 #		for follower in followers:
 #			follower.FeedStream.UnPublishShout(shout)
@@ -565,6 +609,7 @@ class FollowShip(models.Model):
 
     def __unicode__(self):
         return unicode(self.id) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
+
     follower = models.ForeignKey(UserProfile)
     stream = models.ForeignKey(Stream)
     date_followed = models.DateTimeField(auto_now_add=True)
@@ -577,15 +622,16 @@ class Tag(models.Model):
 
     def __unicode__(self):
         return unicode(self.id) + ": " + self.Name
+
     Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
-    Creator = models.ForeignKey(User, related_name='TagsCreated', null = True, on_delete = models.SET_NULL)
+    Creator = models.ForeignKey(User, related_name='TagsCreated', null=True, on_delete=models.SET_NULL)
     Image = models.URLField(max_length=1024, null=True, default='/static/img/shout_tag.png')
     DateCreated = models.DateTimeField(auto_now_add=True)
-    Parent = models.ForeignKey('Tag', related_name='ChildTags', blank=True, null= True, db_index=True)
+    Parent = models.ForeignKey('Tag', related_name='ChildTags', blank=True, null=True, db_index=True)
 
-#	Category = models.ForeignKey(Category, related_name='Tags', null= True, default=None, db_index=True)
-    Stream = models.OneToOneField('Stream', related_name='OwnerTag' , null= True, db_index=True)
-    Definition = models.TextField(null=True,max_length=512, default='New Tag!')
+    #	Category = models.ForeignKey(Category, related_name='Tags', null= True, default=None, db_index=True)
+    Stream = models.OneToOneField('Stream', related_name='OwnerTag', null=True, db_index=True)
+    Definition = models.TextField(null=True, max_length=512, default='New Tag!')
 
     @property
     def IsCategory(self):
@@ -598,9 +644,10 @@ class Category(models.Model):
 
     def __unicode__(self):
         return self.Name
+
     Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
-    TopTag = models.OneToOneField(Tag,related_name='OwnerCategory', null= True)
+    TopTag = models.OneToOneField(Tag, related_name='OwnerCategory', null=True)
     Tags = models.ManyToManyField(Tag, related_name='Category')
 
 
@@ -610,13 +657,16 @@ class Conversation(models.Model):
 
     def __unicode__(self):
         return unicode(self.id)
-    FromUser = models.ForeignKey(User,related_name='+')
-    ToUser = models.ForeignKey(User,related_name='+')
-    AboutPost = models.ForeignKey(Trade, related_name = '+')
-#	Text = models.TextField(max_length=256)
-    IsRead = models.BooleanField(default = False)
-    VisibleToRecivier = models.BooleanField(default = True)
-    VisibleToSender = models.BooleanField(default = True)
+
+    FromUser = models.ForeignKey(User, related_name='+')
+    ToUser = models.ForeignKey(User, related_name='+')
+    AboutPost = models.ForeignKey(Trade, related_name='+')
+    #	Text = models.TextField(max_length=256)
+    IsRead = models.BooleanField(default=False)
+    VisibleToRecivier = models.BooleanField(default=True)
+    VisibleToSender = models.BooleanField(default=True)
+
+
 #	DateCreated = models.DateTimeField(auto_now_add=True)
 
 
@@ -627,17 +677,17 @@ class Message(models.Model):
     def __unicode__(self):
         try:
             return unicode(self.id) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
-        except :
+        except:
             return unicode(self.id)
 
-    Conversation =models.ForeignKey(Conversation , related_name= 'Messages')
-    FromUser = models.ForeignKey(User, related_name = 'ReciviedMessages')
-    ToUser = models.ForeignKey(User, related_name = 'SentMessages')
-#	AboutPost = models.ForeignKey(Post, related_name = 'PostMessages')
+    Conversation = models.ForeignKey(Conversation, related_name='Messages')
+    FromUser = models.ForeignKey(User, related_name='ReciviedMessages')
+    ToUser = models.ForeignKey(User, related_name='SentMessages')
+    #	AboutPost = models.ForeignKey(Post, related_name = 'PostMessages')
     Text = models.TextField()
-    IsRead = models.BooleanField(default = False)
-    VisibleToRecivier = models.BooleanField(default = True)
-    VisibleToSender = models.BooleanField(default = True)
+    IsRead = models.BooleanField(default=False)
+    VisibleToRecivier = models.BooleanField(default=True)
+    VisibleToSender = models.BooleanField(default=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
@@ -647,6 +697,7 @@ class Notification(models.Model):
 
     def __unicode__(self):
         return unicode(self.id) + ": " + self.Text
+
     ToUser = models.ForeignKey(User, related_name='Notifications')
     FromUser = models.ForeignKey(User, related_name='+', null=True, default=None)
     IsRead = models.BooleanField(default=False)
@@ -678,7 +729,7 @@ class FbContest(models.Model):
 
 class PermissionsManager(models.Manager):
     def get_user_permissions(self, user):
-        return Permission.objects.filter(users = user)
+        return Permission.objects.filter(users=user)
 
 
 class Permission(models.Model):
@@ -710,7 +761,7 @@ class BusinessCategoryManager(models.Manager):
         return ((c.pk, c.Name) for c in self.all())
 
     def get_top_level_categories(self):
-        return self.filter(Parent = None)
+        return self.filter(Parent=None)
 
 
 class BusinessCategory(models.Model):
@@ -720,7 +771,7 @@ class BusinessCategory(models.Model):
     def __unicode__(self):
         return self.PrintHierarchy()
 
-    Name = models.CharField(max_length=1024, db_index=True ,null = False)
+    Name = models.CharField(max_length=1024, db_index=True, null=False)
     Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE)
     SourceID = models.CharField(max_length=128, blank=True)
     Parent = models.ForeignKey('self', null=True, default=None, related_name='children')
@@ -728,7 +779,7 @@ class BusinessCategory(models.Model):
     objects = BusinessCategoryManager()
 
     def PrintHierarchy(self):
-        return unicode('%s > %s' %(self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
+        return unicode('%s > %s' % (self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
 
 
 class BusinessProfile(models.Model):
@@ -740,27 +791,27 @@ class BusinessProfile(models.Model):
 
     User = models.OneToOneField(User, related_name='Business', db_index=True)
 
-    Name = models.CharField(max_length=1024, db_index=True ,null = False)
+    Name = models.CharField(max_length=1024, db_index=True, null=False)
     Category = models.ForeignKey(BusinessCategory, null=True, on_delete=models.SET_NULL)
 
     Image = models.URLField(max_length=1024, null=True)
-    About = models.TextField(null=True,max_length=512, default='')
+    About = models.TextField(null=True, max_length=512, default='')
     Phone = models.CharField(unique=True, null=True, max_length=20)
     Website = models.URLField(max_length=1024, null=True)
 
     Longitude = models.FloatField(default=0.0)
     Latitude = models.FloatField(default=0.0)
-    Country = models.CharField(max_length=2, db_index=True , null = True)
-    City = models.CharField(max_length=200, db_index=True ,null = True)
-    Address = models.CharField(max_length=200, db_index=True, null = True)
+    Country = models.CharField(max_length=2, db_index=True, null=True)
+    City = models.CharField(max_length=200, db_index=True, null=True)
+    Address = models.CharField(max_length=200, db_index=True, null=True)
 
-    Stream = models.OneToOneField('Stream', related_name='OwnerBusiness' , null= True, db_index=True)
+    Stream = models.OneToOneField('Stream', related_name='OwnerBusiness', null=True, db_index=True)
     LastToken = models.ForeignKey(ConfirmToken, null=True, default=None, on_delete=models.SET_NULL)
 
     Confirmed = models.BooleanField(default=False)
 
     def __getattribute__(self, name):
-        if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts' ,'get_full_name', 'is_active']:
+        if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts', 'get_full_name', 'is_active']:
             return getattr(self.User, name)
         else:
             return object.__getattribute__(self, name)
@@ -774,6 +825,7 @@ class BusinessProfile(models.Model):
     @property
     def Bio(self):
         return self.About
+
     @Bio.setter
     def Bio(self, value):
         self.About = value
@@ -782,6 +834,7 @@ class BusinessProfile(models.Model):
     @property
     def Mobile(self):
         return self.Phone
+
     @Mobile.setter
     def Mobile(self, value):
         self.Phone = value
@@ -803,22 +856,22 @@ class BusinessCreateApplication(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='BusinessCreateApplication', null = True, on_delete=models.SET_NULL)
-    Business = models.ForeignKey(BusinessProfile, related_name='UserApplications', null = True, on_delete=models.SET_NULL)
+    User = models.ForeignKey(User, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
+    Business = models.ForeignKey(BusinessProfile, related_name='UserApplications', null=True, on_delete=models.SET_NULL)
 
-    Name = models.CharField(max_length=1024, db_index=True ,null = True)
+    Name = models.CharField(max_length=1024, db_index=True, null=True)
     Category = models.ForeignKey(BusinessCategory, null=True, on_delete=models.SET_NULL)
 
     Image = models.URLField(max_length=1024, null=True)
-    About = models.TextField(null=True,max_length=512, default='')
+    About = models.TextField(null=True, max_length=512, default='')
     Phone = models.CharField(null=True, max_length=20)
     Website = models.URLField(max_length=1024, null=True)
 
     Longitude = models.FloatField(default=0.0)
     Latitude = models.FloatField(default=0.0)
-    Country = models.CharField(max_length=2, db_index=True , null = True)
-    City = models.CharField(max_length=200, db_index=True ,null = True)
-    Address = models.CharField(max_length=200, db_index=True, null = True)
+    Country = models.CharField(max_length=2, db_index=True, null=True)
+    City = models.CharField(max_length=200, db_index=True, null=True)
+    Address = models.CharField(max_length=200, db_index=True, null=True)
 
     LastToken = models.ForeignKey(ConfirmToken, null=True, default=None, on_delete=models.SET_NULL)
     DateApplied = models.DateField(auto_now_add=True)
@@ -839,7 +892,7 @@ class BusinessConfirmation(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name = 'BusinessConfirmations')
+    User = models.ForeignKey(User, related_name='BusinessConfirmations')
     Files = models.ManyToManyField(StoredFile, related_name='Comfirmation')
     DateSent = models.DateTimeField(auto_now_add=True)
 
@@ -847,16 +900,18 @@ class BusinessConfirmation(models.Model):
 class Deal(Shout):
     class Meta:
         app_label = 'shoutit'
-    MinBuyers = models.IntegerField(default = 0)
+
+    MinBuyers = models.IntegerField(default=0)
     MaxBuyers = models.IntegerField(null=True)
     OriginalPrice = models.FloatField()
     IsClosed = models.BooleanField(default=False)
-    Item = models.ForeignKey(Item, related_name = 'Deals', on_delete = models.SET_NULL, null = True)
-    ValidFrom = models.DateTimeField(null = True)
-    ValidTo = models.DateTimeField(null = True)
+    Item = models.ForeignKey(Item, related_name='Deals', on_delete=models.SET_NULL, null=True)
+    ValidFrom = models.DateTimeField(null=True)
+    ValidTo = models.DateTimeField(null=True)
     objects = DealManager()
+
     def BuyersCount(self):
-        return self.Buys.aggregate(buys = Sum('Amount'))['buys']
+        return self.Buys.aggregate(buys=Sum('Amount'))['buys']
 
     def AvailableCount(self):
         return self.MaxBuyers - self.BuyersCount()
@@ -866,17 +921,19 @@ class DealBuy(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    Deal = models.ForeignKey(Deal, related_name = 'Buys', on_delete = models.SET_NULL, null = True)
-    User = models.ForeignKey(User, related_name = 'DealsBought', on_delete = models.SET_NULL, null = True)
-    Amount = models.IntegerField(default = 1)
-    DateBought = models.DateTimeField(auto_now_add = True)
+    Deal = models.ForeignKey(Deal, related_name='Buys', on_delete=models.SET_NULL, null=True)
+    User = models.ForeignKey(User, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
+    Amount = models.IntegerField(default=1)
+    DateBought = models.DateTimeField(auto_now_add=True)
 
 
 class Experience(Post):
     class Meta:
         app_label = 'shoutit'
+
     def __unicode__(self):
         return unicode(self.id)
+
     AboutBusiness = models.ForeignKey('BusinessProfile', related_name='Experiences')
     State = models.IntegerField(null=False)
     objects = ExperienceManager()
@@ -887,9 +944,9 @@ class SharedExperience(models.Model):
         app_label = 'shoutit'
         unique_together = ('Experience', 'OwnerUser',)
 
-    Experience = models.ForeignKey(Experience, related_name = 'SharedExperiences')
-    OwnerUser = models.ForeignKey(User, related_name = 'SharedExperiences')
-    DateCreated = models.DateTimeField(auto_now_add = True)
+    Experience = models.ForeignKey(Experience, related_name='SharedExperiences')
+    OwnerUser = models.ForeignKey(User, related_name='SharedExperiences')
+    DateCreated = models.DateTimeField(auto_now_add=True)
 
 
 class Comment(models.Model):
@@ -898,10 +955,11 @@ class Comment(models.Model):
 
     def __unicode__(self):
         return unicode(self.id) + ": " + unicode(self.Text)
-    AboutPost = models.ForeignKey(Post, related_name = 'Comments', null=True)
-    OwnerUser = models.ForeignKey(User, related_name = '+')
-    IsDisabled = models.BooleanField(default = False)
-    Text = models.TextField(max_length = 300)
+
+    AboutPost = models.ForeignKey(Post, related_name='Comments', null=True)
+    OwnerUser = models.ForeignKey(User, related_name='+')
+    IsDisabled = models.BooleanField(default=False)
+    Text = models.TextField(max_length=300)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
@@ -910,8 +968,8 @@ class GalleryItem(models.Model):
         app_label = 'shoutit'
         unique_together = ('Item', 'Gallery',)
 
-    Item = models.ForeignKey(Item,related_name='+')
-    Gallery = models.ForeignKey('Gallery',related_name='GalleryItems')
+    Item = models.ForeignKey(Item, related_name='+')
+    Gallery = models.ForeignKey('Gallery', related_name='GalleryItems')
     IsDisable = models.BooleanField(default=False)
     IsMuted = models.BooleanField(default=False)
     DateCreated = models.DateTimeField(auto_now_add=True)
@@ -923,26 +981,27 @@ class Gallery(models.Model):
 
     def __unicode__(self):
         return unicode(self.id) + ": " + unicode(self.Description)
-    Description = models.TextField(max_length=500,default='')
-    OwnerBusiness = models.ForeignKey(BusinessProfile,related_name='Galleries')
-    Category = models.OneToOneField(Category,related_name='+',null=True)
+
+    Description = models.TextField(max_length=500, default='')
+    OwnerBusiness = models.ForeignKey(BusinessProfile, related_name='Galleries')
+    Category = models.OneToOneField(Category, related_name='+', null=True)
 
 
 class PaymentsManager(models.Manager):
     def GetUserPayments(self, user):
         if isinstance(user, User):
-            return self.filter(User = user)
+            return self.filter(User=user)
         elif isinstance(user, basestring):
-            return self.filter(User__username__iexact = user)
+            return self.filter(User__username__iexact=user)
         elif isinstance(user, UserProfile):
-            return self.filter(User__pk = user.User_id)
+            return self.filter(User__pk=user.User_id)
         elif isinstance(user, BusinessProfile):
-            return self.filter(User__pk = user.User_id)
+            return self.filter(User__pk=user.User_id)
         elif isinstance(user, int):
-            return self.filter(User__pk = user)
+            return self.filter(User__pk=user)
 
     def GetObjectPayments(self, object):
-        return self.filter(content_type = ContentType.objects.get_for_model(object.__class__), object_pk = object.pk)
+        return self.filter(content_type=ContentType.objects.get_for_model(object.__class__), object_pk=object.pk)
 
 
 class Payment(models.Model):
@@ -979,16 +1038,17 @@ class Voucher(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    DealBuy = models.ForeignKey(DealBuy, related_name = 'Vouchers')
-    Code = models.CharField(max_length = 22)
-    DateGenerated = models.DateTimeField(auto_now_add = True)
-    IsValidated = models.BooleanField(default = False)
-    IsSent = models.BooleanField(default = False)
+    DealBuy = models.ForeignKey(DealBuy, related_name='Vouchers')
+    Code = models.CharField(max_length=22)
+    DateGenerated = models.DateTimeField(auto_now_add=True)
+    IsValidated = models.BooleanField(default=False)
+    IsSent = models.BooleanField(default=False)
 
 
 class Event(Post):
     class Meta:
         app_label = 'shoutit'
+
     def __unicode__(self):
         return unicode(self.id)
 
@@ -1006,8 +1066,9 @@ class Report(models.Model):
 
     def __unicode__(self):
         return 'From : ' + self.Type()
+
     User = models.ForeignKey(User, related_name='Reports')
-    Text = models.TextField(default='',max_length=300)
+    Text = models.TextField(default='', max_length=300)
     Type = models.IntegerField(default=0)
     IsSolved = models.BooleanField(default=False)
     IsDisabled = models.BooleanField(default=False)
@@ -1026,25 +1087,27 @@ class Service(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    Code = models.CharField(max_length = 256)
-    Name = models.CharField(max_length = 1024)
+    Code = models.CharField(max_length=256)
+    Name = models.CharField(max_length=1024)
     Price = models.FloatField()
 
 
 class ServiceManager(models.Manager):
     def GetUserServiceBuyRemaining(self, user, service_code):
-        return self.values(ServiceBuy._meta.get_field_by_name('User')[0].column).filter(User = user, Service__Code__iexact = service_code).annotate(buys_count = Sum('Amount')).extra(select = {
-            'used_count' : 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(service_id)s" IN (%(sid)s)' % {
-                'table' : ServiceUsage._meta.db_table,
-                'user_id' : ServiceUsage._meta.get_field_by_name('User')[0].column,
-                'uid' : user.pk,
-                'service_id' : ServiceUsage._meta.get_field_by_name('Service')[0].column,
-                'sid' : """SELECT "%(table)s"."id" FROM "%(table)s" WHERE "%(table)s"."%(code)s" = '%(service_code)s'""" % {
-                    'table' : Service._meta.db_table,
-                    'code' : Service._meta.get_field_by_name('Code')[0].column,
-                    'service_code' : service_code
+        return self.values(ServiceBuy._meta.get_field_by_name('User')[0].column).filter(User=user,
+                                                                                        Service__Code__iexact=service_code).annotate(
+            buys_count=Sum('Amount')).extra(select={
+            'used_count': 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(service_id)s" IN (%(sid)s)' % {
+                'table': ServiceUsage._meta.db_table,
+                'user_id': ServiceUsage._meta.get_field_by_name('User')[0].column,
+                'uid': user.pk,
+                'service_id': ServiceUsage._meta.get_field_by_name('Service')[0].column,
+                'sid': """SELECT "%(table)s"."id" FROM "%(table)s" WHERE "%(table)s"."%(code)s" = '%(service_code)s'""" % {
+                    'table': Service._meta.db_table,
+                    'code': Service._meta.get_field_by_name('Code')[0].column,
+                    'service_code': service_code
                 },
-                'amount' : ServiceUsage._meta.get_field_by_name('Amount')[0].column,
+                'amount': ServiceUsage._meta.get_field_by_name('Amount')[0].column,
             }
         }).values('used_count', 'buys_count')
 
@@ -1055,8 +1118,8 @@ class ServiceBuy(models.Model):
 
     User = models.ForeignKey(User, related_name='Services')
     Service = models.ForeignKey('Service', related_name='Buyers')
-    Amount = models.IntegerField(default = 1)
-    DateBought = models.DateTimeField(auto_now_add = True)
+    Amount = models.IntegerField(default=1)
+    DateBought = models.DateTimeField(auto_now_add=True)
 
     objects = ServiceManager()
 
@@ -1067,8 +1130,8 @@ class ServiceUsage(models.Model):
 
     User = models.ForeignKey(User, related_name='ServicesUsages')
     Service = models.ForeignKey('Service', related_name='BuyersUsages')
-    Amount = models.IntegerField(default = 1)
-    DateUsed = models.DateTimeField(auto_now_add = True)
+    Amount = models.IntegerField(default=1)
+    DateUsed = models.DateTimeField(auto_now_add=True)
 
 
 class Subscription(models.Model):
@@ -1082,6 +1145,7 @@ class Subscription(models.Model):
     DeactivateDate = models.DateTimeField(null=True)
     UserName = models.CharField(max_length=64)
     Password = models.CharField(max_length=24)
+
 
 #PAUSE: PAYPAL
 

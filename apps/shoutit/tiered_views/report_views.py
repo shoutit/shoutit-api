@@ -32,7 +32,7 @@ def report(request,type,object_id):
 		if type == REPORT_TYPE_TRADE  or type == REPORT_TYPE_EXPERIENCE:
 			attached_object = shout_controller.GetPost(object_id)
 		elif type == REPORT_TYPE_ITEM:
-			attached_object = item_controller.GetItemByID(object_id)
+			attached_object = item_controller.get_item(object_id)
 		elif type == REPORT_TYPE_COMMENT:
 			attached_object = comment_controller.GetCommentByID(object_id)
 

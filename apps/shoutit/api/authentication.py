@@ -138,7 +138,7 @@ def get_gplus_access_token(request):
 
 
 @csrf_exempt
-def get_facebook_token(request):
+def get_facebook_access_token(request):
     oauth_request = get_oauth_request(request)
 
     if 'oauth_token' not in oauth_request:

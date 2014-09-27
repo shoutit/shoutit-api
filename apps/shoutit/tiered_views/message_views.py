@@ -156,8 +156,7 @@ def send_message(request, shout_id, conversation_id='0'):
 def reply_to_conversation(request, conversation_id):
     result = ResponseResult()
     conversation = message_controller.GetConversation(Base62ToInt(conversation_id), request.user)
-    msg = message_controller.SendMessage(request.user, conversation.With, conversation.AboutPost, request.POST['text'],
-                                         conversation.pk)
+    msg = message_controller.SendMessage(request.user, conversation.With, conversation.AboutPost, request.POST['text'], conversation.pk)
     # refresh_cache_dynamically([CACHE_TAG_MESSAGES.make_dynamic(conversation.FromUser), CACHE_TAG_MESSAGES.make_dynamic(conversation.ToUser)])
     result.data['message'] = msg
     result.messages.append(('success', _('Your message was sent successfully.')))

@@ -16,6 +16,7 @@ import sys
 import PIL.Image
 sys.modules['Image'] = PIL.Image
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
@@ -24,7 +25,30 @@ SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
 # Prod or Dev
 DEV = False if os.environ.get('HOME') == '/root' else True
-if DEV:
+
+
+def check_runserver_address_port():
+
+    if len(sys.argv) > 1 and sys.argv[1] == "runserver":
+        address_port = sys.argv[-1] if len(sys.argv) > 2 else "127.0.0.1:8000"
+        if address_port.startswith("-"):
+            return
+        else:
+            try:
+                address, port = address_port.split(':')
+            except ValueError:
+                address, port = '', address_port
+        if not address:
+            address = '127.0.0.1'
+        return address, port
+
+ADDRESS, PORT = check_runserver_address_port()
+
+if ADDRESS == 'shoutit.com' and PORT == '8000':
+    DEBUG = True
+    SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
+    SHOUT_IT_HOST = 'shoutit.com'
+elif DEV:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.syrex:8000'
     SHOUT_IT_HOST = '127.0.0.1'

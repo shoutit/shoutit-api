@@ -86,7 +86,7 @@ urlpatterns = patterns('',
                        url(r'^oauth/request_token/$', 'apps.shoutit.api.authentication.get_request_token'),
                        url(r'^oauth/access_token/$', 'apps.shoutit.api.authentication.get_access_token'),
                        url(r'^oauth/gplus_access_token/$', 'apps.shoutit.api.authentication.get_gplus_access_token'),
-                       # url(r'^oauth/shout_facebook_token/$', 'apps.shoutit.api.authentication.get_facebook_token'),
+                       # url(r'^oauth/facebook_access_token/$', 'apps.shoutit.api.authentication.get_facebook_access_token'),
 
                        ### XHR ###
 
@@ -194,7 +194,7 @@ urlpatterns = patterns('',
                        url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$', 'apps.shoutit.tiered_views.user_views.activate_modal'),
 
                        url(r'^contact-import/$', 'apps.shoutit.tiered_views.user_views.import_contacts', name = 'import_contacts'),
-                       url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitiations')
+                       url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitations')
                     )
 
 #urlpatterns += patterns('',

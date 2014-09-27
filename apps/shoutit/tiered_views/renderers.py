@@ -324,13 +324,13 @@ def shouts_api(request, result, *args, **kwargs):
 
         pre_json_result.update({
             'count': len(shouts),
-            'shouts': shouts,
-            })
+            'shouts': shouts
+        })
 
-        if result.data.has_key('pages_count'):
+        if 'pages_count' in result.data:
             pre_json_result['pages_count'] = result.data['pages_count']
 
-        if result.data.has_key('is_last_page'):
+        if 'is_last_page' in result.data:
             pre_json_result['is_last_page'] = result.data['is_last_page']
 
     response.content = json.dumps(pre_json_result)
@@ -344,8 +344,8 @@ def tags_api(request, result, *args, **kwargs):
         tags = [render_tag(tag) for tag in result.data]
         pre_json_result.update({
             'count': len(tags),
-            'tags': tags,
-            })
+            'tags': tags
+        })
 
     response.content = json.dumps(pre_json_result)
     return response
@@ -358,8 +358,8 @@ def currencies_api(request, result, *args, **kwargs):
         currencies = [render_currency(currency) for currency in result.data['currencies']]
         pre_json_result.update({
             'count': len(currencies),
-            'currencies': currencies,
-            })
+            'currencies': currencies
+        })
 
     response.content = json.dumps(pre_json_result)
     return response
@@ -371,21 +371,17 @@ def shout_api(request, result, *args, **kwargs):
     if not result.errors:
         shouts = [render_shout(shout) for shout in result.data['shouts']]
         shout = render_shout(result.data['shout'])
-        if result.data.has_key('conversations'):
-            shout.update({
-                'conversations': [render_conversation(conversation) for conversation in result.data['conversations']],
-                })
+        if 'conversations' in result.data:
+            shout.update({'conversations': [render_conversation(conversation) for conversation in result.data['conversations']]})
 
-        if result.data.has_key('conversation'):
-            shout.update({
-                'conversation': render_conversation_full(result.data['conversation']),
-                })
+        if 'conversation' in result.data:
+            shout.update({'conversation': render_conversation_full(result.data['conversation'])})
 
         pre_json_result.update({
             'count': len(shouts),
             'shout': shout,
-            'shouts': shouts,
-            })
+            'shouts': shouts
+        })
 
     response.content = json.dumps(pre_json_result)
     return response
@@ -396,7 +392,7 @@ def shout_brief_api(request, result, *args, **kwargs):
 
     if not result.errors:
         shout = render_shout(result.data['shout'])
-        pre_json_result.update({ 'shout': shout })
+        pre_json_result.update({'shout': shout})
 
     response.content = json.dumps(pre_json_result)
     return response
@@ -916,7 +912,6 @@ def comment_on_post_json_renderer(request, result, message=_('Your comment was p
 
 def profile_json_renderer(request, result):
     if not result.errors:
-
         data = {
             'users': [
                 {

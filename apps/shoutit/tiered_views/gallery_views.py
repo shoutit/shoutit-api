@@ -66,7 +66,7 @@ def add_gallery_item(request,business_name,gallery_id=None):
 @non_cached_view(
 	methods=['POST'],
 	json_renderer = lambda request, result ,item_id : gallery_item_json_renderer(request,result,message= _('Your item was edited successfully.')),
-	validator = lambda request,item_id: object_exists_validator(item_controller.GetItemByID,_('Item does not exist.'),Base62ToInt(item_id))
+	validator = lambda request,item_id: object_exists_validator(item_controller.get_item,_('Item does not exist.'),Base62ToInt(item_id))
 )
 @refresh_cache(tags = [CACHE_TAG_GALLERY])
 def edit_item(request,item_id):
@@ -80,7 +80,7 @@ def edit_item(request,item_id):
 	elif request.POST.has_key('item_images'):
 		images = request.POST.getlist('item_images')
 
-	result.data['item'] = item_controller.EditItem(Base62ToInt(item_id),
+	result.data['item'] = item_controller.edit_item(Base62ToInt(item_id),
 		form.cleaned_data['name'],
 		form.cleaned_data['price'],
 		images,
@@ -127,7 +127,7 @@ def shout_item(request,item_id):
 		longitude = float(latlong.split(',')[1].strip())
 
 
-		item = item_controller.GetItemByID(Base62ToInt(item_id))
+		item = item_controller.get_item(Base62ToInt(item_id))
 		gallery_controller.ShoutItem(request,request.user,item,
 			form.cleaned_data['description'],
 			longitude,

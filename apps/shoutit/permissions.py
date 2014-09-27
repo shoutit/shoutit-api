@@ -4,6 +4,7 @@ from apps.shoutit.constants import Constant
 from apps.shoutit.models import Permission
 from django.utils.translation import ugettext_lazy as _
 
+
 class ConstantPermission(Constant):
     counter = 0
     values = {}
