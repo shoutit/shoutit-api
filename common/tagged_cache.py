@@ -2,6 +2,7 @@ from django.core.cache import cache
 
 
 class TaggedCache(object):
+
     @staticmethod
     def get_tags_dict():
         result = TaggedCache.get("tags_dict")
@@ -85,6 +86,7 @@ class TaggedCache(object):
     @staticmethod
     def has_key(key):
         return cache.has_key(key)
+
 
     @staticmethod
     def get_perma(request, key):

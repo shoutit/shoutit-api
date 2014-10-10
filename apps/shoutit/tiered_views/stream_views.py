@@ -88,7 +88,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
         tag_ids.extend([tag.id for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
     #TODO session
-    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
+    if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
     all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
@@ -125,7 +125,7 @@ def index_stream(request, page_num=1):
 
     user = request.user if request.user.is_authenticated() else None
 
-    url_encoded_city = request.GET.has_key('url_encoded_city') and request.GET['url_encoded_city'] or request.session['user_city_encoded']
+    url_encoded_city = 'url_encoded_city' in request.GET and request.GET['url_encoded_city'] or request.session['user_city_encoded']
     try:
         pre_city = PredefinedCity.objects.get(EncodedCity = url_encoded_city)
     except ObjectDoesNotExist:
@@ -135,7 +135,6 @@ def index_stream(request, page_num=1):
     user_city = pre_city.City
     user_lat = pre_city.Latitude if pre_city and pre_city.City!=user_city else request.session['user_lat']
     user_lng = pre_city.Longitude if pre_city and pre_city.City!=user_city else request.session['user_lng']
-
 
     if not page_num:
         page_num = 1
@@ -168,10 +167,10 @@ def index_stream(request, page_num=1):
         tag_ids.extend([tag.id for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
     #TODO: session
-    if page_num == 1 and request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
+    if page_num == 1 and request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
-    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
+    if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
         all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
     else:
         all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
