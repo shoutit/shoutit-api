@@ -239,7 +239,9 @@ def view(
     return wrapper
 
 
-def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None, html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=['GET', 'POST'], validator=None, login_required=False, post_login_required=False, activation_required = False, post_activation_required = False, permissions_required = [], business_subscription_required = False):
+def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None, html_renderer=None, json_renderer=None, api_renderer=None,
+                mobile_renderer=None, methods=['GET', 'POST'], validator=None, login_required=False, post_login_required=False,
+                activation_required=False, post_activation_required=False, permissions_required=[], business_subscription_required=False):
     if not timeout:
         try:
             timeout = settings.CACHES['default']['TIMEOUT']
@@ -256,10 +258,14 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None
         'level': level
     }
 
-    return view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required, activation_required, post_activation_required, cache_settings, permissions_required = permissions_required, business_subscription_required = business_subscription_required)
+    return view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required,
+                activation_required, post_activation_required, cache_settings, permissions_required=permissions_required,
+                business_subscription_required=business_subscription_required)
 
 
-def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=['GET', 'POST'], validator=None, login_required=False, post_login_required=False, activation_required=False, post_activation_required=False, permissions_required=[], business_subscription_required=False):
+def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=['GET', 'POST'],
+                    validator=None, login_required=False, post_login_required=False, activation_required=False,
+                    post_activation_required=False, permissions_required=[], business_subscription_required=False):
     return view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,
                 mobile_renderer=mobile_renderer, methods=methods, validator=validator, login_required=login_required,
                 post_login_required=post_login_required, activation_required=activation_required,
@@ -271,7 +277,7 @@ def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=[], dynamic_tags=None):
     def wrapper(view=None):
         @wraps(view, assigned=available_attrs(view))
         def _wrapper(request, *args, **kwargs):
-            dirty_tags = get_cache_tags(request, { 'tags' : tags, 'dynamic_tags' : dynamic_tags }, *args, **kwargs)
+            dirty_tags = get_cache_tags(request, {'tags': tags, 'dynamic_tags': dynamic_tags}, *args, **kwargs)
             _refresh_cache(level, dirty_tags, str(request.session.session_key), request.user.is_authenticated() and str(request.user.id) or -1)
             return view(request, *args, **kwargs)
         return _wrapper

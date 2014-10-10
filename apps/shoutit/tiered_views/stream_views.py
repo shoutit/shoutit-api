@@ -87,13 +87,14 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
             tag_ids = []
         tag_ids.extend([tag.id for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
-    if TaggedCache.has_key(request.session.session_key + 'shout_ids'):
+    #TODO session
+    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
-    all_shout_ids = stream_controller.GetRankedShoutsIDs(
-        user, order_by, user_country, user_city, user_lat, user_lng,
-        0, DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
-    TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
+    all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
+                                                         DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
+    if request.session.session_key:
+        TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
 
     dict_shout_ids = dict(all_shout_ids)
     shout_ids = [k[0] for k in all_shout_ids if
@@ -166,28 +167,31 @@ def index_stream(request, page_num=1):
             tag_ids = []
         tag_ids.extend([tag.id for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
-    if page_num == 1 and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
+    #TODO: session
+    if page_num == 1 and request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
-    if not TaggedCache.has_key(request.session.session_key + 'shout_ids'):
-        all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng,
-            0, DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
-        result.data['browse_in'] = user_city
-        TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
-    else:
+    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
         all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
+    else:
+        all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
+                                                             DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
+        result.data['browse_in'] = user_city
+        if request.session.session_key:
+            TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
 
     dict_shout_ids = dict(all_shout_ids)
-    shout_ids = [k[0] for k in all_shout_ids if
-                 k in all_shout_ids[DEFAULT_PAGE_SIZE * (page_num - 1): DEFAULT_PAGE_SIZE * page_num]]
+    shout_ids = [k[0] for k in all_shout_ids if k in all_shout_ids[DEFAULT_PAGE_SIZE * (page_num - 1): DEFAULT_PAGE_SIZE * page_num]]
 
     if len(shout_ids):
         shouts = stream_controller.GetTradesByIDs(shout_ids)
-        for shout in shouts: shout.rank = dict_shout_ids[shout.id]
-        shouts.sort(key=lambda shout: shout.rank)
+        for shout in shouts:
+            shout.rank = dict_shout_ids[shout.id]
+        shouts.sort(key=lambda x: x.rank)
     else:
         shouts = []
 
+    #todo return info's regarding paging
     result.data['shouts'] = shouts
     result.data['count'] = len(shouts)
     return result

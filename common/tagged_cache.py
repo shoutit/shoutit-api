@@ -73,6 +73,7 @@ class TaggedCache(object):
             tags_dict[tag] = []
             TaggedCache.update_tags_dict(tags_dict)
         keys_to_delete = []
+
         def deferred_delete(key):
             cache.delete(key)
             keys_to_delete.append(key)
