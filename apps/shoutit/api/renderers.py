@@ -4,6 +4,9 @@ from apps.shoutit.api.api_utils import *
 
 
 def render_shout(shout):
+    images = [image.Image for image in shout.GetImages()]
+    videos = [render_video(video) for video in shout.get_videos()]
+    tags = [render_tag(tag) for tag in shout.GetTags()]
     return {
         'id': IntToBase62(shout.id),
         'url': get_object_url(shout),
@@ -13,14 +16,16 @@ def render_shout(shout):
         'price': 0 if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': '' if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
         'date_created': shout.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
-        'thumbnail':  shout.GetFirstImage().Image if shout.GetImages() else '',
-        'images': [image.Image for image in shout.GetImages()],
-        'videos': [render_video(video) for video in shout.get_videos()],
+        'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.GetFirstImage().Image if images else '',
+        'images': images,
+        'videos': videos,
         'text': shout.Text,
-        'tags': [render_tag(tag) for tag in shout.GetTags()],
+        'tags': tags,
         'location': {
             'latitude': shout.Latitude,
             'longitude': shout.Longitude,
+            'country': shout.CountryCode,
+            'city': shout.ProvinceCode,
             'address': shout.Address
         }
     }
@@ -31,11 +36,13 @@ def render_tag(tag):
         return {}
     if isinstance(tag, unicode):
         tag = Tag(Name=tag)
+    #TODO: find what is the case when tag is a dict not instance of Tag class
+    elif isinstance(tag, dict):
+        tag = Tag(Name=tag['Name'])
     return {
         'name': tag.Name,
         'url': get_object_url(tag),
         'image': tag.Image
-        #		'image' : get_custom_url(JSON_URL_TAG_IMAGE_THUMBNAIL, tag.Name)
     }
 
 
