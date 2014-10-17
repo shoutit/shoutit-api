@@ -214,7 +214,7 @@ def shout_buy(request):
                                                           latitude=longitude,
                                                           longitude=latitude,
                                                           tags=form.cleaned_data['tags'].split(' '),
-                                                          shouter=user_controller.GetUser(request.user.username),
+                                                          shouter=request.user,
                                                           country_code=country,
                                                           province_code=city,
                                                           address=address,
