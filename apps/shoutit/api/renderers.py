@@ -16,7 +16,7 @@ def render_shout(shout):
         'description': shout.Text,
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
-        'date_created': shout.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
+        'date_created': shout.DatePublished.strftime('%s'),
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.GetFirstImage().Image if images else '',
         'images': images,
         'videos': videos,
