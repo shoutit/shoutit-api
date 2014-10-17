@@ -51,9 +51,9 @@ class ShoutForm(forms.Form):
     description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=200)
     tags = forms.CharField(label=_('Tags'))
     image = forms.ImageField(label=_('Image'), required=False)
-    location = forms.CharField(label=_('Location'))
-    country = forms.CharField(label=_('Country'))
-    city = forms.CharField(label=_('City'))
+    location = forms.CharField(label=_('Location'), required=False)
+    country = forms.CharField(label=_('Country'), required=False)
+    city = forms.CharField(label=_('City'), required=False)
     address = forms.CharField(label=_('Address'), required=False)
 
 

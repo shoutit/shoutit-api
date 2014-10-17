@@ -219,8 +219,12 @@ def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, co
                   CountryCode=country_code, ProvinceCode=province_code, Address=address, IsSSS=issss)
     trade.save()
 
-    if not PredefinedCity.objects.filter(City=province_code):
-        encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+    #todo: check which to save encoded city or just normal. expectations are to get normal city from user
+    encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+    predefined_city = PredefinedCity.objects.filter(City=province_code)
+    if not predefined_city:
+            predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
+    if not predefined_city:
         PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     if date_published:
@@ -265,10 +269,12 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
         trade.ExpiryDate = exp_days and datetime.today() + timedelta(days=exp_days) or None
     trade.save()
 
-    if not PredefinedCity.objects.filter(City=province_code):
-        encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
-        PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude,
-                       Longitude=longitude).save()
+    encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+    predefined_city = PredefinedCity.objects.filter(City=province_code)
+    if not predefined_city:
+            predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
+    if not predefined_city:
+        PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     stream.PublishShout(trade)
     for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter.User):

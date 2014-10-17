@@ -163,14 +163,31 @@ def shout_buy(request):
         form = ShoutForm(request.POST, request.FILES)
         form.is_valid()
 
-        if form.cleaned_data['location'] == u'Error':
-            result.messages.append(('error', _("Location Not Valid")))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
+        if request.is_api:
+            if 'location' in request.POST and all(attr in request.POST['location'] for attr in constants.LOCATION_ATTRIBUTES):
+                location = request.POST['location']
+                country = location['country']
+                city = location['city']
+                latitude = float(location['latitude'])
+                longitude = float(location['longitude'])
+                address = 'address' in location and location['address'] or ''
+            else:
+                result.messages.append(('error', _("location is invalid")))
+                result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+                return result
 
-        latlong = form.cleaned_data['location'].split(',')
-        latitude = float(latlong[0].strip())
-        longitude = float(latlong[1].strip())
+        else:
+            if form.cleaned_data['location'] == u'Error':
+                result.messages.append(('error', _("location is invalid")))
+                result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+                return result
+
+            country = form.cleaned_data['country']
+            city = form.cleaned_data['city']
+            latlong = form.cleaned_data['location'].split(',')
+            latitude = float(latlong[0].strip())
+            longitude = float(latlong[1].strip())
+            address = form.cleaned_data['address']
 
         images = []
         if 'images[]' in request.POST:
@@ -190,17 +207,18 @@ def shout_buy(request):
             except AttributeError:
                 videos = request.POST.get('videos', [])
 
-        result.data['shout'] = shout_controller.shout_buy(request, form.cleaned_data['name'],
-                                                          form.cleaned_data['description'],
-                                                          form.cleaned_data['price'],
-                                                          longitude,
-                                                          latitude,
-                                                          form.cleaned_data['tags'].split(' '),
-                                                          request.user,
-                                                          form.cleaned_data['country'],
-                                                          form.cleaned_data['city'],
-                                                          form.cleaned_data['address'],
-                                                          form.cleaned_data['currency'],
+        result.data['shout'] = shout_controller.shout_buy(request,
+                                                          name=form.cleaned_data['name'],
+                                                          text=form.cleaned_data['description'],
+                                                          price=form.cleaned_data['price'],
+                                                          latitude=longitude,
+                                                          longitude=latitude,
+                                                          tags=form.cleaned_data['tags'].split(' '),
+                                                          shouter=user_controller.GetUser(request.user.username),
+                                                          country_code=country,
+                                                          province_code=city,
+                                                          address=address,
+                                                          currency=form.cleaned_data['currency'],
                                                           images=images, videos=videos)
 
         result.messages.append(('success', _('Your shout was shouted!')))
@@ -217,6 +235,7 @@ def shout_buy(request):
     return result
 
 
+#TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  html_renderer=lambda request, result, *args: page_html(request, result, 'shout_sell.html', _('Shout Sell')),
                  api_renderer=shout_form_renderer_api,
@@ -232,14 +251,31 @@ def shout_sell(request):
         form = ShoutForm(request.POST, request.FILES)
         form.is_valid()
 
-        if form.cleaned_data['location'] == u'Error':
-            result.messages.append(('error', _("Location Not Valid")))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
+        if request.is_api:
+            if 'location' in request.POST and all(attr in request.POST['location'] for attr in constants.LOCATION_ATTRIBUTES):
+                location = request.POST['location']
+                country = location['country']
+                city = location['city']
+                latitude = float(location['latitude'])
+                longitude = float(location['longitude'])
+                address = 'address' in location and location['address'] or ''
+            else:
+                result.messages.append(('error', _("location is invalid")))
+                result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+                return result
 
-        latlong = form.cleaned_data['location'].split(',')
-        latitude = float(latlong[0].strip())
-        longitude = float(latlong[1].strip())
+        else:
+            if form.cleaned_data['location'] == u'Error':
+                result.messages.append(('error', _("location is invalid")))
+                result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+                return result
+
+            country = form.cleaned_data['country']
+            city = form.cleaned_data['city']
+            latlong = form.cleaned_data['location'].split(',')
+            latitude = float(latlong[0].strip())
+            longitude = float(latlong[1].strip())
+            address = form.cleaned_data['address']
 
         images = []
         if 'images[]' in request.POST:
@@ -260,17 +296,17 @@ def shout_sell(request):
                 videos = request.POST.get('videos', [])
 
         result.data['shout'] = shout_controller.shout_sell(request,
-                                                           form.cleaned_data['name'],
-                                                           form.cleaned_data['description'],
-                                                           form.cleaned_data['price'],
-                                                           longitude,
-                                                           latitude,
-                                                           form.cleaned_data['tags'].split(' '),
-                                                           user_controller.GetUser(request.user.username),
-                                                           form.cleaned_data['country'],
-                                                           form.cleaned_data['city'],
-                                                           form.cleaned_data['address'],
-                                                           form.cleaned_data['currency'],
+                                                           name=form.cleaned_data['name'],
+                                                           text=form.cleaned_data['description'],
+                                                           price=form.cleaned_data['price'],
+                                                           latitude=longitude,
+                                                           longitude=latitude,
+                                                           tags=form.cleaned_data['tags'].split(' '),
+                                                           shouter=user_controller.GetUser(request.user.username),
+                                                           country_code=country,
+                                                           province_code=city,
+                                                           address=address,
+                                                           currency=form.cleaned_data['currency'],
                                                            images=images, videos=videos)
 
         result.messages.append(('success', _('Your shout was shouted!')))

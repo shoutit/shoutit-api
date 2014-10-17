@@ -396,6 +396,8 @@ DEFAULT_LOCATION = {
     'Ajman': [25.3607799496, 55.3896331787]
 }
 
+LOCATION_ATTRIBUTES = ('country', 'city', 'latitude', 'longitude')
+
 
 class PaymentStatus(Constant):
     counter = 0
@@ -679,3 +681,4 @@ COUNTRY_ISO = {
     "ZW": "Zimbabwe",
     "": "None"
 }
+

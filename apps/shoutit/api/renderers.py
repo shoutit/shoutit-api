@@ -12,20 +12,20 @@ def render_shout(shout):
         'url': get_object_url(shout),
         'user': render_user(shout.OwnerUser, True),
         'type': PostType.values[shout.Type],
-        'name': '' if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
-        'price': 0 if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
-        'currency': '' if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
+        'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
+        'description': shout.Text,
+        'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
+        'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
         'date_created': shout.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.GetFirstImage().Image if images else '',
         'images': images,
         'videos': videos,
-        'text': shout.Text,
         'tags': tags,
         'location': {
-            'latitude': shout.Latitude,
-            'longitude': shout.Longitude,
             'country': shout.CountryCode,
             'city': shout.ProvinceCode,
+            'latitude': shout.Latitude,
+            'longitude': shout.Longitude,
             'address': shout.Address
         }
     }
