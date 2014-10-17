@@ -133,19 +133,27 @@ def index_stream(request, page_num=1):
 
     user_country = pre_city.Country
     user_city = pre_city.City
-    user_lat = pre_city.Latitude if pre_city and pre_city.City!=user_city else request.session['user_lat']
-    user_lng = pre_city.Longitude if pre_city and pre_city.City!=user_city else request.session['user_lng']
+    user_lat = pre_city.Latitude if pre_city and pre_city.City != user_city else request.session['user_lat']
+    user_lng = pre_city.Longitude if pre_city and pre_city.City != user_city else request.session['user_lng']
 
     if not page_num:
         page_num = 1
     else:
         page_num = int(page_num)
 
-    tag_ids = request.GET.has_key('tag_ids[]') and request.GET.getlist('tag_ids[]') or []
-    types = request.GET.has_key('shout_types[]') and request.GET.getlist('shout_types[]') or []
-    query = request.GET.has_key('query') and request.GET['query'] or None
-    category = request.GET.has_key('category') and request.GET['category'] or None
-    order_by = request.GET.has_key('shouts_order') and int(request.GET['shouts_order']) or 0
+    if 'tag_ids[]' in request.GET:
+        tag_ids = request.GET.getlist('tag_ids[]')
+    else:
+        tag_ids = 'tag_ids' in request.GET and request.GET.getlist('tag_ids') or []
+
+    if 'shout_types[]' in request.GET:
+        types = request.GET.getlist('shout_types[]')
+    else:
+        types = 'shout_types' in request.GET and request.GET.getlist('shout_types') or []
+
+    query = 'query' in request.GET and request.GET['query'] or None
+    category = 'category' in request.GET and request.GET['category'] or None
+    order_by = 'shouts_order' in request.GET and int(request.GET['shouts_order']) or 0
 
     if int(order_by) <= 0:
         order_by = (TIME_RANK_TYPE | FOLLOW_RANK_TYPE | DISTANCE_RANK_TYPE)

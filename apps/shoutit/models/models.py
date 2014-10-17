@@ -739,9 +739,6 @@ class Permission(models.Model):
     def __unicode__(self):
         return self.name
 
-    def __str__(self):
-        return str(unicode(self))
-
     name = models.CharField(max_length=512, unique=True, db_index=True)
     users = models.ManyToManyField(User, through='UserPermission', related_name='permissions')
 
@@ -1198,6 +1195,9 @@ class Subscription(models.Model):
 class PredefinedCity(models.Model):
     class Meta:
         app_label = 'shoutit'
+
+    def __unicode__(self):
+        return unicode(self.Country + ':' + self.City)
 
     City = models.CharField(max_length=200, default='', db_index=True, unique=True)
     EncodedCity = models.CharField(max_length=200, default='', db_index=True, unique=True)
