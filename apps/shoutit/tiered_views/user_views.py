@@ -624,8 +624,6 @@ def user_profile(request, username):
         result.data['interests_count'] = len(user_controller.UserFollowing(username, 'tags', 'all')['tags'])
         result.data['requests_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).filter(OwnerUser=profile.User).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
-        result.data['is_following'] = (request.user.is_authenticated() and len(
-            FollowShip.objects.filter(follower__User__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
         fb_la = LinkedFacebookAccount.objects.filter(User=profile.User).order_by('-pk')[:1]
         result.data['user_profile_fb'] = fb_la[0].link if fb_la else None
         result.data['fb_og_type'] = 'user'
@@ -646,8 +644,8 @@ def user_profile(request, username):
 
     result.data['report_form'] = ReportForm()
     result.data['is_fb_og'] = True
-    result.data['fb_og_url'] = 'http%s://%s/user/%s/' % (
-    's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, profile.User.username)
+    result.data['fb_og_url'] = 'http%s://%s/user/%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN,
+                                                         profile.User.username)
     return result
 
 

@@ -491,28 +491,42 @@ def user_api(request, result, *args, **kwargs):
 
     if not result.errors:
         user = render_user(result.data['profile'])
-        if result.data.has_key('shouts'):
-            user['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
         user['your_profile'] = result.data['owner']
+
+        location = {
+            'country': result.data['profile'].Country,
+            'city': result.data['profile'].City
+        }
         if result.data['owner']:
-            user['longitude'] = result.data['profile'].Longitude
-            user['latitude'] = result.data['profile'].Latitude
-            user['city'] = result.data['profile'].City
-            user['country'] = result.data['profile'].Country
-        if result.data.has_key('shouts_count'):
+            location['latitude'] = result.data['profile'].Latitude
+            location['longitude'] = result.data['profile'].Longitude
+            location['address'] = hasattr(result.data['profile'], 'Address') and result.data['profile'].Address or None
+        user['location'] = location
+
+        if 'shouts' in result.data:
+            user['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
+
+        if 'shouts_count' in result.data:
             user['shouts_count'] = result.data['shouts_count']
-        if result.data.has_key('followers_count'):
+
+        if 'followers_count' in result.data:
             user['followers_count'] = result.data['followers_count']
-        if result.data.has_key('following_count'):
+
+        if 'following_count' in result.data:
             user['following_count'] = result.data['following_count']
-        if result.data.has_key('interests'):
+
+        if 'interests' in result.data:
             user['recent_interests'] = [render_tag(tag) for tag in result.data['interests']]
-        if result.data.has_key('tags_created'):
+
+        if 'tags_created' in result.data:
             user['recent_tags_created'] = [render_tag(tag) for tag in result.data['tags_created']]
+
         user['is_following'] = result.data['is_following']
-        if result.data.has_key('tags_created_count'):
+
+        if 'tags_created_count' in result.data:
             user['tags_created_count'] = result.data['tags_created_count']
-        if result.data.has_key('interests_count'):
+
+        if 'interests_count' in result.data:
             user['interests_count'] = result.data['interests_count']
     else:
         user = None
@@ -580,12 +594,13 @@ def stats_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        if result.data.has_key('followers'):
+        if 'followers' in result.data:
             pre_json_result['followers'] = [render_user(follower.User) for follower in result.data['followers']]
-        if result.data.has_key('followingUsers'):
-            pre_json_result['following_users'] = [render_user(following.User) for following in
-                                              result.data['followingUsers']]
-        if result.data.has_key('followingTags'):
+
+        if 'followingUsers' in result.data:
+            pre_json_result['following_users'] = [render_user(following.User) for following in result.data['followingUsers']]
+
+        if 'followingTags' in result.data:
             pre_json_result['following_tags'] = [render_tag(tag) for tag in result.data['followingTags']]
 
     response.content = json.dumps(pre_json_result)
