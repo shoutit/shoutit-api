@@ -56,13 +56,13 @@ def profile_picture_validator(request, type, name, size):
         result = user_profile_validator(request, name)
 
     elif type =='tag':
-        result = object_exists_validator(tag_controller.GetTag, _('Tag %(tag_name)s does not exist.') % {'tag_name' : name}, name)
+        result = object_exists_validator(tag_controller.GetTag, _('Tag %(tag_name)s does not exist.') % {'tag_name': name}, name)
 
     return result
 
 
 def user_edit_profile_validator(request, username, email):
-    result = object_exists_validator(user_controller.GetUser, _('User %(username)s does not exist.') % {'username' : username}, username)
+    result = object_exists_validator(user_controller.GetUser, _('User %(username)s does not exist.') % {'username': username}, username)
     if result.valid:
         if username == request.user.username or request.user.is_staff:
             init = {'username' : username, 'email' : email}
@@ -150,9 +150,9 @@ def user_profile_validator(request, username, *args, **kwargs):
         return ValidationResult(False, messages=[('error', _('You are not signed in.'))], errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN])
     user = user_controller.GetUser(username)
     if user is not None:
-        if not user.User.is_active and user.User != request.user and request.user.is_staff == False:
-            return ValidationResult(False, messages=[('error', _('User %(username)s is not active yet.') % {'username' : username})], errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
-    return object_exists_validator(user_controller.GetUser, _('User %(username)s does not exist.') % {'username' : username}, username)
+        if not user.User.is_active and user.User != request.user and not request.user.is_staff:
+            return ValidationResult(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})], errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+    return object_exists_validator(user_controller.GetUser, _('User %(username)s does not exist.') % {'username': username}, username)
 
 
 def activate_api_validator(request, token, *args, **kwargs):

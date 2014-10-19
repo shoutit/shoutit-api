@@ -21,6 +21,9 @@ class TieredResource(Resource):
 
 
 class MethodDependentAuthentication(object):
+    # Example
+    # MethodDependentAuthentication({'GET': no_oauth, 'POST': oauth, 'DELETE': oauth})
+
     def __init__(self, methods_auth_map=None, default=None):
         if not methods_auth_map:
             methods_auth_map = {}
@@ -50,106 +53,47 @@ oauth = OAuthAuthentication()
 no_oauth = NoAuthentication()
 
 urlpatterns = patterns('',
-                       url(r'^session/([0-9a-z]{32})/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': realtime_views.get_session_data,
-                           })
-                       ),
-
-                       url(r'^session/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': realtime_views.get_session_data,
-                           })
-                       ),
-
-                       url(r'^shouts/stream/(?:(\d+)/)?',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': stream_views.index_stream,
-                           })
-                       ),
-
-                       url(r'^shouts/nearby/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': stream_views.load_shouts
-                           })
-                       ),
-
-                       url(r'^shouts/nearby/clusters/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': stream_views.load_clusters
-                           })
-                       ),
-
-                       url(r'^tag/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': tag_views.search_tag,
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': tag_views.tag_profile,
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/brief/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': tag_views.tag_profile_brief,
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/stats/(\w+)/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': tag_views.tag_stats,
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/follow/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': tag_views.add_tag_to_interests,
-                               'DELETE': tag_views.remove_tag_from_interests,
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/stream/(?:(\d+)/)?$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': tag_views.tag_stream,
-                           })
-                       ),
-
-                       url(r'^(tag)/([^/]+)/picture(?:/(\d+))?/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': general_views.profile_picture,
-                           })
-                       ),
+                       # Users
 
                        url(r'^user/search/(\w+)/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.search_user,
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.search_user
                            })
                        ),
 
                        url(r'^user/(@me|\w+)/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_profile,
+                               'GET': user_views.user_profile
                            })
                        ),
 
                        url(r'^user/(@me|\w+)/brief/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.user_profile_brief,
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.user_profile_brief
                            })
                        ),
 
                        url(r'^user/(@me|\w+)/stats/(\w+)(?:/(\w+))?(?:/(\w+))?/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.user_stats,
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.user_stats
+                           })
+                       ),
+
+                       url(r'^user/(@me|\w+)/stream/(?:(\d+)/)?$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.user_stream
                            })
                        ),
 
                        url(r'^(user)/(@me|\w+)/picture(?:/(\d+))?/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': general_views.profile_picture,
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': general_views.profile_picture
+                           })
+                       ),
+
+                       url(r'^location/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': user_views.set_user_session_location_info
                            })
                        ),
 
@@ -160,24 +104,135 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/stream/(?:(\d+)/)?$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.user_stream,
+
+                       # Shouts
+
+                       url(r'^shout/stream/(?:(\d+)/)?',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': stream_views.index_stream,
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/stats/(\w+)(?:/(\w+))?(?:/(\w+))?/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.user_stats,
+                       url(r'^shout/nearby/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': stream_views.load_shouts
                            })
                        ),
 
-                       # TODO: deprecate?
-                       url(r'^signup/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'POST': user_views.signup,
+                       url(r'^shout/nearby/clusters/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': stream_views.load_clusters
                            })
                        ),
+
+                       url(r'^shout/buy/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': shout_views.shout_buy
+                           })
+                       ),
+
+                       url(r'^shout/sell/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': shout_views.shout_sell
+                           })
+                       ),
+
+                       url(r'^shout/experience/(?:(\w+)/)?$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': experience_views.post_exp
+                           })
+                       ),
+
+                       url(r'^shout/([0-9a-zA-Z]+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': shout_views.shout_view,
+                               'DELETE': shout_views.delete_shout,
+                               'POST': message_views.reply_to_shout
+                           })
+                       ),
+
+                       url(r'^shout/([0-9a-zA-Z]+)/brief/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': shout_views.load_shout
+                           })
+                       ),
+
+                       url(r'^shout/([0-9a-zA-Z]+)/messages/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': message_views.get_shout_conversations
+                           })
+                       ),
+
+
+                       # Messages
+
+                       url(r'^messages/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': message_views.read_conversations_stream
+                           })
+                       ),
+
+                       url(r'^messages/([a-zA-z0-9]+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': message_views.read_conversation,
+                               'POST': message_views.reply_to_conversation
+                           })
+                       ),
+
+                       url(r'^messages/(\w+)/read/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': message_views.mark_message_as_read
+                           })
+                       ),
+
+
+                       # Tags
+
+                       url(r'^tag/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': tag_views.search_tag
+                           })
+                       ),
+
+                       url(r'^tag/([^/]+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': tag_views.tag_profile
+                           })
+                       ),
+
+                       url(r'^tag/([^/]+)/brief/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': tag_views.tag_profile_brief
+                           })
+                       ),
+
+                       url(r'^tag/([^/]+)/stats/(\w+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': tag_views.tag_stats
+                           })
+                       ),
+
+                       url(r'^tag/([^/]+)/follow/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': tag_views.add_tag_to_interests,
+                               'DELETE': tag_views.remove_tag_from_interests
+                           })
+                       ),
+
+                       url(r'^tag/([^/]+)/stream/(?:(\d+)/)?$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': tag_views.tag_stream
+                           })
+                       ),
+
+                       url(r'^(tag)/([^/]+)/picture(?:/(\d+))?/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': general_views.profile_picture
+                           })
+                       ),
+
+
+                       # Notifications
 
                        url(r'^notifications/brief/$',
                            TieredResource(TieredHandler, oauth, {
@@ -199,90 +254,34 @@ urlpatterns = patterns('',
 
                        url(r'^notification/(\w+)/read/$',
                            TieredResource(TieredHandler, oauth, {
-                               'POST': realtime_views.mark_notification_as_read,
+                               'POST': realtime_views.mark_notification_as_read
                            })
                        ),
 
                        url(r'^notification/(\w+)/unread/$',
                            TieredResource(TieredHandler, oauth, {
-                               'POST': realtime_views.mark_notification_as_unread,
-                           })
-                       ),
-
-                    # Shouts: create, edit, delete, reply
-                       url(r'^shout/buy/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': shout_views.shout_buy,
-                           })
-                       ),
-
-                       url(r'^shout/sell/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': shout_views.shout_sell,
-                           })
-                       ),
-
-                       url(r'^shout/experience/(?:(\w+)/)?$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': experience_views.post_exp,
-                           })
-                       ),
-
-                       url(r'^shout/([0-9a-zA-Z]+)/$',
-                           TieredResource(TieredHandler, MethodDependentAuthentication({'GET': no_oauth, 'POST': oauth, 'DELETE': oauth}),
-                                          {
-                                              'GET': shout_views.shout_view,
-                                              'DELETE': shout_views.delete_shout,
-                                              'POST': message_views.reply_to_shout,
-                                          })
-                       ),
-
-                       url(r'^shout/([0-9a-zA-Z]+)/brief/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': shout_views.load_shout,
-                           })
-                       ),
-
-                       url(r'^shout/([0-9a-zA-Z]+)/messages/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': message_views.get_shout_conversations,
-                           })
-                       ),
-
-                       url(r'^upload/([\w_-]+)/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'POST': shout_views.cloud_upload,
-                           })
-                       ),
-
-                       url(r'^messages/(?:(\d+)/)?$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': message_views.read_conversations_stream
-                           })
-                       ),
-
-                       url(r'^message/([a-zA-z0-9]+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': message_views.read_conversation,
-                               'POST': message_views.reply_to_conversation,
-                           })
-                       ),
-
-                       url(r'^message/(\w+)/read/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': message_views.mark_message_as_read,
+                               'POST': realtime_views.mark_notification_as_unread
                            })
                        ),
 
                        url(r'^notify/([^/]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'GET': realtime_views.send_fake_notification,
+                               'GET': realtime_views.send_fake_notification
+                           })
+                       ),
+
+
+                       # Misc
+
+                       url(r'^upload/([\w_-]+)/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'POST': shout_views.cloud_upload
                            })
                        ),
 
                        url(r'^currencies/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'GET': general_views.currencies,
+                               'GET': general_views.currencies
                            })
                        ),
 
@@ -292,74 +291,91 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^apns_token/([0-9a-f]+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': realtime_views.add_apns_token,
-                               'DELETE': realtime_views.remove_apns_token,
+                       url(r'^session/([0-9a-z]{32})/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'GET': realtime_views.get_session_data,
                            })
                        ),
 
                        url(r'^sss/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'POST': user_views.sss,
+                               'POST': user_views.sss
                            })
                        ),
 
-                       #TODO: deprecate?
+                       # TODO: deprecate?
+                       url(r'^session/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'GET': realtime_views.get_session_data,
+                           })
+                       ),
+
+                       # TODO: deprecate?
+                       url(r'^apns_token/([0-9a-f]+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': realtime_views.add_apns_token,
+                               'DELETE': realtime_views.remove_apns_token
+                           })
+                       ),
+
+                       # TODO: deprecate?
+                       url(r'^signup/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'POST': user_views.signup,
+                           })
+                       ),
+
+                       # TODO: deprecate?
                        url(r'^fb_auth/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'POST': user_views.fb_auth,
+                               'POST': user_views.fb_auth
                            })
                        ),
 
                        #TODO: deprecate?
                        url(r'^gplus_auth/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'POST': user_views.gplus_auth,
-                           })
-                       ),
-
-                       url(r'^location/$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'POST': user_views.set_user_session_location_info,
+                               'POST': user_views.gplus_auth
                            })
                        ),
 
                        #TODO: deprecate?
                        url(r'^activate/([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]*)/$',
                            TieredResource(TieredHandler, oauth, {
-                               'POST': user_views.activate_api,
+                               'POST': user_views.activate_api
                            })
                        ),
 
-                       #shoutit2
+
+                       # TODO: to look at: shoutit2
+
                        url(r'^user/(@me|\w+)/experiences_stream/(?:(\d+)/)?$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'GET': experience_views.experiences_stream,
+                               'GET': experience_views.experiences_stream
                            })
                        ),
 
                        url(r'^user/(@me|\w+)/activities_stream/(?:(\d+)/)?$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.activities_stream,
+                               'GET': user_views.activities_stream
                            })
                        ),
 
                        url(r'^experience/([0-9a-zA-Z]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'GET': experience_views.view_experience,
+                               'GET': experience_views.view_experience
                            })
                        ),
 
                        url(r'^post_comments/([0-9a-zA-Z]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'GET': comment_views.post_comments,
+                               'GET': comment_views.post_comments
                            })
                        ),
 
                        url(r'^comment_on_post/([0-9a-zA-Z]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'POST': comment_views.comment_on_post,
+                               'POST': comment_views.comment_on_post
                            })
                        ),
 )

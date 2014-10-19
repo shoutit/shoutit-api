@@ -566,11 +566,9 @@ def conversations_api(request, result, *args, **kwargs):
         if result.data.has_key('is_last_page'):
             pre_json_result['is_last_page'] = result.data['is_last_page']
         if result.data.has_key('is_owner') and result.data['is_owner']:
-            pre_json_result['conversations'] = [render_conversation(conversation) for conversation in
-                                            result.data['conversations']]
+            pre_json_result['conversations'] = [render_conversation(conversation) for conversation in result.data['conversations']]
         else:
-            pre_json_result['conversations'] = [render_conversation_full(conversation) for conversation in
-                                            result.data['conversations']]
+            pre_json_result['conversations'] = [render_conversation_full(conversation) for conversation in result.data['conversations']]
         pre_json_result['count'] = len(pre_json_result['conversations'])
 
     response.content = json.dumps(pre_json_result)
@@ -582,9 +580,7 @@ def conversation_api(request, result, *args, **kwargs):
 
     if not result.errors:
         pre_json_result['conversation'] = render_conversation(result.data['conversation'])
-        pre_json_result['shout'] = render_shout(result.data['shout'])
-        pre_json_result['conversation_messages'] = [render_message(message) for message in
-                                                result.data['conversation_messages']]
+        pre_json_result['conversation_messages'] = [render_message(message) for message in result.data['conversation_messages']]
 
     response.content = json.dumps(pre_json_result)
     return response

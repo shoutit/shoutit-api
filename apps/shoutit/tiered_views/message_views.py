@@ -89,17 +89,14 @@ def mark_message_as_read(request, message_id):
                  validator=read_conversation_validator,
                  json_renderer=lambda request, result, conversation_id: conversation_json(request, result),
                  html_renderer=lambda request, result, conversation_id: page_html(request, result, 'conversations.html',
-                                                                                  result.data[
-                                                                                      'title'] if result.data.has_key(
-                                                                                      'title') else ''))
+                                                                                  'title' in result.data and result.data['title'] or ''))
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def read_conversation(request, conversation_id):
     result = ResponseResult()
     result.data['form'] = MessageForm()
     result.data['conversation'] = message_controller.GetConversation(Base62ToInt(conversation_id), request.user)
     result.data['shout'] = result.data['conversation'].AboutPost
-    result.data['conversation_messages'] = message_controller.ReadConversation(request.user,
-                                                                               Base62ToInt(conversation_id))
+    result.data['conversation_messages'] = message_controller.ReadConversation(request.user, Base62ToInt(conversation_id))
     result.data['conversation_id'] = Base62ToInt(conversation_id)
     name = result.data['conversation'].With.name()
     name = name if name != '' else result.data['conversation'].With.username
@@ -190,13 +187,12 @@ def reply_to_shout(request, shout_id):
              api_renderer=conversations_api,
              json_renderer=lambda request, result, username, *args: read_conversations_stream_json(request, result))
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
-def read_conversations_stream(request, page_num=None):
-    if not page_num:
-        page_num = 1
-    else:
-        page_num = int(page_num)
+def read_conversations_stream(request):
+
     result = ResponseResult()
-    # conversations_count = get_data([CACHE_TAG_MESSAGES.make_dynamic(request.user)], message_controller.ConversationsCount, request.user)
+
+    page_num = int(getattr(request.GET, 'page', 1))
+        # conversations_count = get_data([CACHE_TAG_MESSAGES.make_dynamic(request.user)], message_controller.ConversationsCount, request.user)
     conversations_count = message_controller.ConversationsCount(request.user)
     result.data['pages_count'] = int(math.ceil(conversations_count / float(DEFAULT_PAGE_SIZE)))
     result.data['conversations'] = message_controller.ReadConversations(request.user,

@@ -72,7 +72,7 @@ MAX_REG_DAYS = 14
 MAX_SHOUTS_INACTIVE_USER = 5
 MAX_EXPIRY_DAYS_SSS = 7
 SHOUT_EXPIRY_NOTIFY = 2
-MAX_EXPIRY_DAYS = 14
+MAX_EXPIRY_DAYS = 30
 ACCOUNT_ACTIVATION_DAYS = 7
 
 RANK_COEFFICIENT_TIME = 0.7  # value should be between 0.0 ~ 1.0
@@ -154,6 +154,7 @@ INSTALLED_APPS = (
     'apps.shoutit',
     'widget_tweaks',
     'piston3',
+    'push_notifications',
     'django_mobile',
     'djcelery',
     'djcelery_email',
@@ -174,6 +175,11 @@ if DEV:
 else:
     INSTALLED_APPS += (
     )
+
+PUSH_NOTIFICATIONS_SETTINGS = {
+    "GCM_API_KEY": "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
+    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'ShoutitPushCer.pem'),
+}
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -473,9 +479,9 @@ SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO' #'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'Certificates', 'PayPal', 'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'Certificates', 'PayPal', 'paypal-public-key.pem')
-PAYPAL_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'Certificates', 'PayPal', 'paypal-cert.pem')
+PAYPAL_PRIVATE_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-public-key.pem')
+PAYPAL_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-cert.pem')
 PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
 PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
 PAYPAL_RETURN_URL = 'http://80.227.53.34/paypal_return/'

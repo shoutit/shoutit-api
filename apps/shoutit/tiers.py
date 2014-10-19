@@ -164,41 +164,43 @@ def view(
         def _wrapper(request, *args, **kwargs):
             if getattr(request, 'json_to_post_fill', False):
                 JsonPostMiddleware.fill_request_post(request)
-            result = None
+            result = ResponseResult()
+
             if PERMISSION_USE_SHOUT_IT not in permissions_required:
                 permissions_required.append(PERMISSION_USE_SHOUT_IT)
+
             if not hasattr(request.user, 'constant_permissions'):
                 from apps.shoutit.middleware import UserPermissionsMiddleware
                 UserPermissionsMiddleware.attach_permissions_to_request(request)
+
             if business_subscription_required and request.user.is_authenticated():
                 try:
                     profile = request.user.Business
-                    request.user.groups
+                    groups = request.user.groups
                 except ObjectDoesNotExist:
-                    profile = None
+                    profile = groups = None
+            else:
+                profile = groups = None
+
             if (login_required and not request.user.is_authenticated()) or (post_login_required and request.method == 'POST' and not request.user.is_authenticated()):
-                if not result:
-                    result = ResponseResult()
                 result.errors.append(RESPONSE_RESULT_ERROR_NOT_LOGGED_IN)
+
             elif (activation_required and not request.user.is_active) or (post_activation_required and request.method == 'POST' and not request.user.is_active):
-                if not result:
-                    result = ResponseResult()
                 result.errors.append(RESPONSE_RESULT_ERROR_NOT_ACTIVATED)
                 result.messages.append(('error', _('You are not activated yet')))
+
             elif not request.user.is_superuser and permissions_required and not frozenset(permissions_required) <= frozenset(request.user.constant_permissions):
-                if not result:
-                    result = ResponseResult()
                 needed_permissions = frozenset(permissions_required) - frozenset(request.user.constant_permissions)
                 result.errors.append(RESPONSE_RESULT_ERROR_PERMISSION_NEEDED)
                 for permission in needed_permissions:
                     result.messages.append(('error', permission.message))
                 result.missing_permissions = list(needed_permissions)
-            elif business_subscription_required and request.user.is_authenticated() and profile and not request.user.groups.filter(name__iexact = 'activebusinesses').count():
-                if not result:
-                    result = ResponseResult()
+
+            elif business_subscription_required and request.user.is_authenticated() and profile and not groups.filter(name__iexact='activebusinesses').count():
                 result.messages.append(('error', _('Your subscription has ended.')))
                 result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
                 result.data['next'] = '/subscribe/'
+
             else:
                 validation_result = __validate_request(request, methods, validator, *args, **kwargs)
 
@@ -208,13 +210,16 @@ def view(
                             result = TaggedCache.get(get_cache_key(request, cache_settings['level']))
                             cache_settings['to_cache'] = False
                         else:
+                            result = None
                             cache_settings['to_cache'] = True
+                    else:
+                        result = None
                     if not result:
                         result = view(request, *args, **kwargs)
                     if result and cache_settings and cache_settings['to_cache']:
                         TaggedCache.set_with_tags(get_cache_key(request, cache_settings['level']), result, get_cache_tags(request, cache_settings, *args, **kwargs), cache_settings['timeout'])
+
                 else:
-                    result = ResponseResult()
                     result.errors.extend(validation_result.errors)
                     if not RESPONSE_RESULT_ERROR_BAD_REQUEST in validation_result.errors:
                         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -223,12 +228,16 @@ def view(
 
             if RESPONSE_RESULT_ERROR_REDIRECT in result.errors and not request.is_ajax():
                 return HttpResponseRedirect(result.data['next'])
+
             elif api_renderer and getattr(request, 'is_api', False):
                 output = api_renderer(request, result, *args, **kwargs)
+
             elif mobile_renderer and getattr(request, 'flavour', '') == 'mobile':
                 output = mobile_renderer(request, result, *args, **kwargs)
+
             elif html_renderer and not request.is_ajax():
                 output = html_renderer(request, result, *args, **kwargs)
+
             elif json_renderer and request.is_ajax():
                 output = json_renderer(request, result, *args, **kwargs)
             else:

@@ -603,6 +603,7 @@ class Stream(models.Model):
 #		stream.save()
 
 
+#todo: naming: Listen
 class FollowShip(models.Model):
     class Meta:
         app_label = 'shoutit'

@@ -129,6 +129,7 @@ def GetConversation(id, user=None):
 
 
 def GetShoutConversations(shout_id, user):
+    #todo: simplify
     shout = apps.shoutit.controllers.shout_controller.GetPost(shout_id, True, True)
     if user.is_authenticated() and user.pk == shout.OwnerUser.pk:
         conversations = Conversation.objects.filter(AboutPost=shout, ToUser=user, VisibleToRecivier=True).annotate(

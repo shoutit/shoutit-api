@@ -124,19 +124,17 @@ def hovercard(request):
 
 
 @cache_control(public=True, must_revalidate=False)
-@non_cached_view(methods=['GET'],
-    login_required=False,
-    validator=profile_picture_validator,
-    api_renderer=operation_api,
-    html_renderer=thumbnail_response)
-def profile_picture(request, type, name, size=''):
+@non_cached_view(methods=['GET'], login_required=False, validator=profile_picture_validator,
+                 api_renderer=operation_api,
+                 html_renderer=thumbnail_response)
+def profile_picture(request, profile_type, name, size=''):
     if name == '@me':
         name = request.user.username
 
     path = ''
-    if type == 'user':
+    if profile_type == 'user':
         d = user_controller.GetUser(name)
-    elif type == 'tag':
+    elif profile_type == 'tag':
         d = tag_controller.GetTag(name)
     if d.Image:
         path = d.Image
