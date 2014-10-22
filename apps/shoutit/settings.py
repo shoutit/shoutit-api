@@ -58,6 +58,8 @@ else:
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
     SHOUT_IT_HOST = 'shoutit.com'
 
+USE_X_FORWARDED_HOST = True
+
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.syrex', 'shoutit.com']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.syrex')
