@@ -48,7 +48,11 @@ def render_tag(tag):
     }
 
 
-def render_user(user, with_phone=False):
+#TODO: rendering levels in better way.
+# 1: username and name
+# 2: image, sex, bio,
+# 3:
+def render_user(user, level=1):
     if user is None:
         return {}
 
@@ -77,8 +81,6 @@ def render_user(user, with_phone=False):
                 'city': profile.City
             }
         }
-        if with_phone and profile.Mobile:
-            result['mobile'] = profile.Mobile
 
     elif isinstance(profile, BusinessProfile):
         result = {
@@ -98,7 +100,6 @@ def render_message(message):
         'message_id': IntToBase62(message.id),
         'conversation_id': IntToBase62(message.Conversation.id) ,
         'shout_id': IntToBase62(message.Conversation.AboutPost.id),
-        'conversation': get_object_url(message.Conversation),
         'from_user': render_user(message.FromUser),
         'to_user': render_user(message.ToUser),
         'text': message.Text,

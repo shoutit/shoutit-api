@@ -89,10 +89,10 @@
 				<h5>{% trans "Tag Stats" %}</h5>
 				<a class="btn large disabled"><span class="count">{{ shouts_count }}</span> <small>{% trans "shouts" %}</small></a>
 				<a id="aFollowers" class="btn large " data-controls-modal="FollowersModal" data-backdrop="static"><span class="count">{{ followers_count }}</span> <small>{% trans "Followers" %}</small></a>
-				{% if childs %}
+				{% if children %}
 					<br>
 					<h4> {% trans "Child Tags" %} </h4>
-					{% for child in childs %}
+					{% for child in children %}
 	{#					{% if child.Parent != Null %}{{child.Parent.Name}}{% else %}{{child.Name}}{% endif %}#}
 						<a class="post_tag hovercard unselectable" href="/tag/{{ child.Name }}/" hovercard-name="{{ child.Name }}" hovercard-type="tag" hovercard-data="">{{ child.Name }}</a>
 					{% endfor %}

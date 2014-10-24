@@ -18,14 +18,14 @@ def GetTagTrades(tag):
 
 def GetTags(type):
     if type == "Parents":
-        return Tag.objects.filter(Parent__isnull = True)
+        return Tag.objects.filter(Parent__isnull=True)
     elif type == "Childs":
-        return Tag.objects.filter(Parent__isnull = False)
+        return Tag.objects.filter(Parent__isnull=False)
     elif type == "All":
         return Tag.objects.all().order_by("Name")
 
 
-def GetTopTags(limit=10, country = '', city = ''):
+def GetTopTags(limit=10, country='', city=''):
     if not limit:
         limit = 10
     if not country:

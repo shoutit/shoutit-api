@@ -172,8 +172,9 @@ class UserProfile(models.Model):
     Interests = models.ManyToManyField('Tag', related_name='Followers')
 
     Stream = models.OneToOneField('Stream', related_name='OwnerUser', db_index=True)
-    #	FeedStream = models.OneToOneField('Stream', related_name='ViewerUser', db_index=True)
     #	isBlocked = models.BooleanField(default=False)
+
+    # Location attributes
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
     City = models.CharField(max_length=200, default='', db_index=True)
@@ -181,6 +182,7 @@ class UserProfile(models.Model):
 
     Birthdate = models.DateField(null=True)
     Sex = models.NullBooleanField(default=True, null=True)
+
     LastToken = models.ForeignKey(ConfirmToken, null=True, default=None, on_delete=models.SET_NULL)
 
     isSSS = models.BooleanField(default=False, db_index=True)
@@ -548,59 +550,26 @@ class Stream(models.Model):
         return owner
 
     def GetTypeText(self):
-        type = u'None'
+        stream_type = u'None'
         if self.Type == STREAM_TYPE_TAG:
-            type = unicode(STREAM_TYPE_TAG)
+            stream_type = unicode(STREAM_TYPE_TAG)
         elif self.Type == STREAM_TYPE_USER:
-            type = unicode(STREAM_TYPE_USER)
+            stream_type = unicode(STREAM_TYPE_USER)
         elif self.Type == STREAM_TYPE_BUSINESS:
-            type = unicode(STREAM_TYPE_BUSINESS)
+            stream_type = unicode(STREAM_TYPE_BUSINESS)
         elif self.Type == STREAM_TYPE_RECOMMENDED:
-            type = unicode(STREAM_TYPE_RECOMMENDED)
+            stream_type = unicode(STREAM_TYPE_RECOMMENDED)
         elif self.Type == STREAM_TYPE_RELATED:
-            type = unicode(STREAM_TYPE_RELATED)
-        return type
+            stream_type = unicode(STREAM_TYPE_RELATED)
+        return stream_type
 
     def PublishShout(self, shout):
         self.Posts.add(shout)
         self.save()
 
-    #		followers = self.userprofile_set.all()
-    #		for follower in followers:
-    #			follower.FeedStream.PublishShout(shout)
-
     def UnPublishShout(self, shout):
         self.Posts.remove(shout)
         self.save()
-
-
-#		followers = self.userprofile_set.all()
-#		for follower in followers:
-#			follower.FeedStream.UnPublishShout(shout)
-
-#	def PublishToAnother(self, stream):
-#		shouts = self.Shouts.all()
-##		shout_ids = [f.id for f in shouts]
-##		stream.Shouts.add(list(shouts))
-#		followers = stream.userprofile_set.all()
-#		if len(shouts):
-#			for shout in shouts:
-#				stream.Shouts.add(shout)
-#				for follower in followers:
-#					follower.FeedStream.PublishShout(shout)
-#		stream.save()
-#
-#	def UnPublishFromAnother(self, stream):
-#		shouts = self.Shouts.all()
-##		shout_ids = [f.id for f in shouts]
-##		stream.Shouts.remove(list(shouts))
-#		followers = stream.userprofile_set.all()
-#		if len(shouts):
-#			for shout in shouts:
-#				stream.Shouts.remove(shout)
-#				for follower in followers:
-#					follower.FeedStream.UnPublishShout(shout)
-#		stream.save()
 
 
 #todo: naming: Listen

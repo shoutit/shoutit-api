@@ -227,7 +227,6 @@ class StreamType(Constant):
 
 STREAM_TYPE_USER = StreamType('User')
 STREAM_TYPE_TAG = StreamType('Tag')
-#STREAM_TYPE_FEED = StreamType('Feed')
 STREAM_TYPE_RELATED = StreamType('Related')
 STREAM_TYPE_RECOMMENDED = StreamType('Recommended')
 STREAM_TYPE_BUSINESS = StreamType('Business')

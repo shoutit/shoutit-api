@@ -16,6 +16,7 @@ from apps.shoutit.constants import Constant
 from apps.shoutit.middleware import JsonPostMiddleware
 from common.tagged_cache import TaggedCache
 
+import json
 
 class ResponseResultError(Constant):
     counter = 0
@@ -230,7 +231,9 @@ def view(
                 return HttpResponseRedirect(result.data['next'])
 
             elif api_renderer and getattr(request, 'is_api', False):
-                output = api_renderer(request, result, *args, **kwargs)
+                response, pre_json_result = api_renderer(request, result, *args, **kwargs)
+                response.content = json.dumps(pre_json_result)
+                output = response
 
             elif mobile_renderer and getattr(request, 'flavour', '') == 'mobile':
                 output = mobile_renderer(request, result, *args, **kwargs)

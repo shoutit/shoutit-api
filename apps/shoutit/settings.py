@@ -214,7 +214,7 @@ MIDDLEWARE_CLASSES = (
 SITE_ID = 1
 
 ROOT_URLCONF = 'apps.shoutit.urls'
-APPEND_SLASH = True
+APPEND_SLASH = False
 IS_SITE_SECURE = False  # True
 
 WSGI_APPLICATION = 'apps.shoutit.wsgi.application'

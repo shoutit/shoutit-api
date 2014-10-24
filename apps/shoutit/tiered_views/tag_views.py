@@ -154,15 +154,13 @@ def tag_profile(request, tag_name):
 
     result.data['shouts'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),
                                                               DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
-    result.data['childs'] = list(tag.ChildTags.all())
+    result.data['children'] = list(tag.ChildTags.all())
 
     result.data['shouts_count'] = len(result.data['shouts'])
     result.data['followers_count'] = tag.Followers.count()
     if request.user.is_authenticated() and hasattr(request.user, 'Profile'):
         result.data['interested'] = (tag.Name,) in request.user.Profile.Interests.all().values_list('Name')
-    #	result.data['creator_username'] = tag.Creator.username if tag.Creator else ''
     result.data['creator_username'] = 'Shoutit'
-    #	result.data['creator'] = tag.Creator
     result.data['creator'] = None
     return result
 
@@ -180,12 +178,10 @@ def tag_profile_brief(request, tag_name):
     result = ResponseResult()
     result.data['tagProfile'] = tag
 
-    #	result.data['shouts_count'] = tag.Shouts.GetValidShouts(types=[POST_TYPE_BUY,POST_TYPE_SELL]).count()
-    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags = tag).count()
+    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags=tag).count()
     result.data['followers_count'] = tag.Followers.count()
     if request.user.is_authenticated():
         result.data['interested'] = tag in request.user.Profile.Interests.all()
-    #	result.data['creator'] = tag.Creator
     result.data['creator'] = None
     return result
 
