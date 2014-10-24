@@ -289,8 +289,8 @@ def get_initial_api_result(request, result, *args, **kwargs):
 
     # needs to be dumped before returned with json.dumps in the called function
     pre_json_result = {
-        'messages': [{'type': error[0], 'message': unicode(error[1])} for error in result.messages],
-        'form_errors': [{'field': k, 'messages': v} for k, v in result.form_errors.iteritems()]
+        'api_messages': [{'type': error[0], 'message': unicode(error[1])} for error in result.messages],
+        'api_errors': [{'key': k, 'messages': v} for k, v in result.form_errors.iteritems()]
     }
 
     response['content-type'] = 'application/json'
@@ -308,7 +308,7 @@ def operation_api(request, result, *args, **kwargs):
 def reply_message_api_render(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
     if not result.errors:
-        if result.data.has_key('url'):
+        if 'url' in result.data:
             pre_json_result['url'] = result.data['url']
         pre_json_result.update({
             'message': render_message(result.data['message'])

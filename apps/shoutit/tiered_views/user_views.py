@@ -592,13 +592,10 @@ def user_stream(request, username, page_num=None):
              tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS],
              methods=['GET'],
              api_renderer=user_api,
-             html_renderer=lambda request, result, username, *args: object_page_html(request, result,
-                                                                                     isinstance(user_controller.GetUser(username),
-                                                                                                UserProfile) and 'user_profile.html' or 'business_profile.html',
-                                                                                     result.data.has_key('profile') and result.data[
-                                                                                         'profile'].name() or '',
-                                                                                     result.data.has_key('profile') and result.data[
-                                                                                         'profile'].Bio or ''),
+             html_renderer=lambda request, result, username, *args:
+             object_page_html(request, result, isinstance(user_controller.GetUser(username), UserProfile) and 'user_profile.html' or 'business_profile.html',
+                              'profile' in result.data and result.data['profile'].name() or '',
+                              'profile' in result.data and result.data['profile'].Bio or ''),
              validator=user_profile_validator)
 def user_profile(request, username):
     if username == '@me':

@@ -1,6 +1,5 @@
-from apps.shoutit.models import *
 from apps.shoutit.constants import Constant
-from apps.shoutit.utils import *
+from apps.shoutit.utils import IntToBase62
 
 
 class JSONUrl(Constant):
@@ -13,16 +12,17 @@ JSON_URL_TAG_IMAGE_THUMBNAIL = JSONUrl()
 JSON_URL_MARK_NOTIFICATION_AS_READ = JSONUrl()
 JSON_URL_MARK_NOTIFICATION_AS_UNREAD = JSONUrl()
 
-urls = {
-    UserProfile: ('/user/%s/', 'username'),
-    User: ('/user/%s/', 'username'),
-    Shout: ('/shout/%s/', 'pk|base62'),
-    Trade: ('/shout/%s/', 'pk|base62'),
-    StoredImage: ('/image/%s/', 'pk|base62'),
-    Item: ('/item/%s/', 'pk|base62'),
-    Tag: ('/tag/%s/', 'Name'),
-    Conversation : ('/message/%s/', 'pk|base62'),
-    Experience: ('/experience/%s/', 'pk|base62'),
+api_urls = {
+    'User': ('/user/%s/', 'username'),
+    'UserProfile': ('/user/%s/', 'username'),
+    'BusinessProfile': ('/user/%s/', 'username'),
+    'Shout': ('/shout/%s/', 'pk|base62'),
+    'Trade': ('/shout/%s/', 'pk|base62'),
+    'StoredImage': ('/image/%s/', 'pk|base62'),
+    'Item': ('/item/%s/', 'pk|base62'),
+    'Tag': ('/tag/%s/', 'Name'),
+    'Conversation': ('/message/%s/', 'pk|base62'),
+    'Experience': ('/experience/%s/', 'pk|base62'),
 
     JSON_URL_USER_IMAGE_THUMBNAIL: '/xhr/user/%s/picture/50/',
     JSON_URL_TAG_IMAGE_THUMBNAIL: '/xhr/tag/%s/picture/50/',
@@ -32,23 +32,26 @@ urls = {
 }
 
 
-def get_object_url(obj, extra_params=[]):
-    if obj is not None and urls.has_key(obj.__class__):
-        url, params = urls[obj.__class__][0], list(urls[obj.__class__][1:])
+def get_object_url(obj, extra_params=None):
+    class_name = obj.__class__.__name__
+    if obj is not None and class_name in api_urls:
+        url_list = api_urls[class_name]
+        url, params = url_list[0], list(url_list[1:])
         for i in range(len(params)):
             if params[i].endswith('|base62'):
                 params[i] = IntToBase62(getattr(obj, params[i][:-7]))
             else:
                 params[i] = getattr(obj, params[i])
-        params.extend(extra_params)
+        if extra_params:
+            params.extend(extra_params)
         url = url % tuple(params)
         return url
     else:
-        raise Exception('URL for object %s of type %s was not found.' % (str(obj), obj.__class__.__name__))
+        raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
 
 
 def get_custom_url(json_url, *params):
-    if urls.has_key(json_url):
-        return urls[json_url] % tuple(params)
+    if json_url in api_urls:
+        return api_urls[json_url] % tuple(params)
     else:
         raise Exception('URL for %s was not found.' % str(json_url))

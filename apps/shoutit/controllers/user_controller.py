@@ -17,6 +17,7 @@ from apps.shoutit.models.user import LinkedGoogleAccount
 import apps.shoutit.settings as settings
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 
+
 #todo: naming: Profile
 def GetUser(username):
     if not isinstance(username, str) and not isinstance(username, unicode):

@@ -1,6 +1,7 @@
+from apps.shoutit.models import User, UserProfile, BusinessProfile, Tag
 from apps.shoutit.constants import *
 from apps.shoutit.utils import *
-from apps.shoutit.api.api_utils import *
+from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 
 
 def render_shout(shout):
@@ -50,38 +51,37 @@ def render_user(user, with_phone=False):
     if user is None:
         return {}
 
-    elif isinstance(user, unicode):
-        user = apps.shoutit.controllers.user_controller.GetUser(user)
+    profile = None
+    result = {}
+    if isinstance(user, unicode):
+        profile = apps.shoutit.controllers.user_controller.GetUser(user)
+
     elif isinstance(user, User):
         try:
-            user = user.Profile
-        except :
-            user = user.Business
+            profile = user.Profile
+        except AttributeError:
+            profile = user.Business
 
-    result = {}
-    if isinstance(user, UserProfile):
-        user, p = user.User, user
-        user.Profile = p
+    if isinstance(profile, UserProfile):
         result = {
-            'url': get_object_url(user),
-            'username': user.username,
-            'image': user.Profile.Image,
-            #		'image' : get_custom_url(JSON_URL_USER_IMAGE_THUMBNAIL, user.username),
             'name': user.name(),
-            'sex': user.Profile.Sex,
-            'bio': user.Profile.Bio,
+            'username': user.username,
+            'url': get_object_url(user),
+            'image': profile.Image,
+            'sex': profile.Sex,
+            'bio': profile.Bio,
             'is_active': user.is_active
         }
-        if with_phone and user.Profile.Mobile:
-            result['mobile'] = user.Profile.Mobile
-    elif isinstance(user, BusinessProfile):
+        if with_phone and profile.Mobile:
+            result['mobile'] = profile.Mobile
+
+    elif isinstance(profile, BusinessProfile):
         result = {
             'url': get_object_url(user.User),
             'username': user.username,
-            'image': user.Image,
-            #		'image' : get_custom_url(JSON_URL_USER_IMAGE_THUMBNAIL, user.username),
+            'image': profile.Image,
             'name': user.name(),
-            'bio': user.About
+            'bio': profile.About
         }
     return result
 
@@ -236,8 +236,8 @@ def render_notification(notification):
         'is_read': notification.IsRead,
         'type': NotificationType.values[notification.Type],
         'date_created': notification.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z'),
-        'mark_as_read_url': get_custom_url(JSON_URL_MARK_NOTIFICATION_AS_READ, IntToBase62(notification.pk)),
-        'mark_as_unread_url': get_custom_url(JSON_URL_MARK_NOTIFICATION_AS_UNREAD, IntToBase62(notification.pk)),
+        'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], IntToBase62(notification.pk)),
+        'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], IntToBase62(notification.pk)),
         'id': notification.id
     }
 
@@ -259,9 +259,9 @@ def render_event(event):
     if event is None:
         return {}
     result = {
-        'user' : render_user(event.OwnerUser),
-        'event_type' : EventType.values[event.EventType],
-        'date_created' : event.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z')
+        'user': render_user(event.OwnerUser),
+        'event_type': EventType.values[event.EventType],
+        'date_created': event.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z')
     }
 
     if event.AttachedObject:

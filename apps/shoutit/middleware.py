@@ -85,7 +85,7 @@ class UserLocationMiddleware(object):
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
-        if request.method == 'POST' and request.body != '' and request.META['CONTENT_TYPE'] == 'application/json':
+        if request.method == 'POST' and request.body != '' and 'application/json' in request.META['CONTENT_TYPE']:
             try:
                 request.json_data = json.loads(request.body)
                 request.json_to_post_fill = True
