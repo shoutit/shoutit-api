@@ -490,18 +490,15 @@ def user_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        user = render_user(result.data['profile'])
+        user = render_user(result.data['profile'].User)
         user['your_profile'] = result.data['owner']
 
-        location = {
-            'country': result.data['profile'].Country,
-            'city': result.data['profile'].City
-        }
+        extra_location = {}
         if result.data['owner']:
-            location['latitude'] = result.data['profile'].Latitude
-            location['longitude'] = result.data['profile'].Longitude
-            location['address'] = hasattr(result.data['profile'], 'Address') and result.data['profile'].Address or None
-        user['location'] = location
+            extra_location['latitude'] = result.data['profile'].Latitude
+            extra_location['longitude'] = result.data['profile'].Longitude
+            extra_location['address'] = hasattr(result.data['profile'], 'Address') and result.data['profile'].Address or None
+        user['location'].update(extra_location)
 
         if 'shouts' in result.data:
             user['shouts'] = [render_shout(shout) for shout in result.data['shouts']]

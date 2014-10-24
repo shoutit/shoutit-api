@@ -1,7 +1,8 @@
 from apps.shoutit.models import User, UserProfile, BusinessProfile, Tag
 from apps.shoutit.constants import *
-from apps.shoutit.utils import *
+from apps.shoutit.utils import IntToBase62
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
+from apps.shoutit.controllers.user_controller import GetUser
 
 
 def render_shout(shout):
@@ -54,7 +55,7 @@ def render_user(user, with_phone=False):
     profile = None
     result = {}
     if isinstance(user, unicode):
-        profile = apps.shoutit.controllers.user_controller.GetUser(user)
+        profile = GetUser(user)
 
     elif isinstance(user, User):
         try:
@@ -70,7 +71,11 @@ def render_user(user, with_phone=False):
             'image': profile.Image,
             'sex': profile.Sex,
             'bio': profile.Bio,
-            'is_active': user.is_active
+            'is_active': user.is_active,
+            'location': {
+                'country': profile.Country,
+                'city': profile.City
+            }
         }
         if with_phone and profile.Mobile:
             result['mobile'] = profile.Mobile
@@ -98,7 +103,7 @@ def render_message(message):
         'to_user': render_user(message.ToUser),
         'text': message.Text,
         'is_read': message.IsRead,
-        'date_created': message.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+        'date_created': message.DateCreated.strftime('%s')
     }
 
 
@@ -113,7 +118,7 @@ def render_conversation(conversation):
         'about': render_shout(conversation.AboutPost),
         'is_read': conversation.IsRead,
         'text': conversation.Text if hasattr(conversation, 'Text') else '',
-        'date_created': conversation.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z') if hasattr(conversation, 'DateCreated') else ''
+        'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
     }
 
 
@@ -128,7 +133,7 @@ def render_conversation_full(conversation):
         'is_read': conversation.IsRead,
         'text': conversation.Text if hasattr(conversation, 'Text') else '',
         'conversation_messages': [render_message(message) for message in conversation.messages],
-        'date_created': conversation.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z') if hasattr(conversation, 'DateCreated') else ''
+        'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
     }
 
 
@@ -143,7 +148,7 @@ def render_experience(experience):
             'business': render_user(experience.AboutBusiness),
             'state': experience.State,
             'text': experience.Text,
-            'date_created': experience.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
+            'date_created': experience.DatePublished.strftime('%s'),
             'detailed': experience.detailed if hasattr(experience,'detailed') else False
         }
 
@@ -169,7 +174,7 @@ def render_shared_exp(shared):
         'url': get_object_url(shared.Experience),
         'user': render_user(shared.OwnerUser),
         'experience': render_experience(shared.Experience),
-        'date_created': shared.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+        'date_created': shared.DateCreated.strftime('%s')
     }
 
 
@@ -181,7 +186,7 @@ def render_comment(comment):
         'user': render_user(comment.OwnerUser),
         'post': render_experience(comment.AboutPost.experience),
         'text': comment.Text,
-        'date_created': comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+        'date_created': comment.DateCreated.strftime('%s')
     }
 
 
@@ -192,7 +197,7 @@ def render_item(item):
         'name': item.Name,
         'price': item.Price,
         'currency': item.Currency.Code,
-        'date_created': item.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+        'date_created': item.DateCreated.strftime('%s')
     }
 
 
@@ -224,7 +229,7 @@ def render_gallery_item(gallery_item):
         'url': '/gallery_items/%s/' %gallery_item.Gallery.OwnerBusiness.User.username,
         'item': render_item(gallery_item.Item),
         'gallery': render_gallery(gallery_item.Gallery),
-        'date_created': gallery_item.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+        'date_created': gallery_item.DateCreated.strftime('%s')
     }
 
 
@@ -235,7 +240,7 @@ def render_notification(notification):
         'from_user': render_user(notification.FromUser),
         'is_read': notification.IsRead,
         'type': NotificationType.values[notification.Type],
-        'date_created': notification.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z'),
+        'date_created': notification.DateCreated.strftime('%s'),
         'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], IntToBase62(notification.pk)),
         'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], IntToBase62(notification.pk)),
         'id': notification.id
@@ -261,7 +266,7 @@ def render_event(event):
     result = {
         'user': render_user(event.OwnerUser),
         'event_type': EventType.values[event.EventType],
-        'date_created': event.DatePublished.strftime('%d/%m/%Y %H:%M:%S%z')
+        'date_created': event.DatePublished.strftime('%s')
     }
 
     if event.AttachedObject:
@@ -303,6 +308,3 @@ def render_post(post):
         return render_experience(post)
     else:
         return {}
-
-
-import apps.shoutit.controllers.user_controller
