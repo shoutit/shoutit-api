@@ -470,8 +470,10 @@ def user_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        user = render_user(result.data['profile'].User, result.data['owner'], 5)
-        user['your_profile'] = result.data['owner']
+        user = render_user(result.data['profile'].User, 'owner' in result.data and result.data['owner'] or False, 5)
+
+        if 'owner' in result.data:
+            user['your_profile'] = result.data['owner']
 
         if 'shouts' in result.data:
             user['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
@@ -491,7 +493,8 @@ def user_api(request, result, *args, **kwargs):
         if 'tags_created' in result.data:
             user['recent_tags_created'] = [render_tag(tag) for tag in result.data['tags_created']]
 
-        user['is_following'] = result.data['is_following']
+        if 'is_following' in result.data:
+            user['is_following'] = result.data['is_following']
 
         if 'tags_created_count' in result.data:
             user['tags_created_count'] = result.data['tags_created_count']
