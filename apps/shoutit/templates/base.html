@@ -756,7 +756,8 @@
         type: 'POST',
         url: '/gplus_auth/',
         data: JSON.stringify({
-          code: authResult['code']
+          code: authResult['code'],
+          access_token: authResult['access_token']
         }),
         contentType: 'application/json',
         successCallback: function (data) {
@@ -774,7 +775,7 @@
       // Possible error codes:
       //   "access_denied" - User denied access to your app
       //   "immediate_failed" - Could not automatially log in the user
-      // console.log('There was an error: ' + authResult['error']);
+      console.log('There was an error: ' + authResult['error']);
     }
   }
 </script>

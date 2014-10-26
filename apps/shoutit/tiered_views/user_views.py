@@ -187,18 +187,18 @@ def api_signup(request):
 def fb_auth(request):
     result = ResponseResult()
 
-    if request.method == "POST":
-        auth_response = json.loads(request.POST['data'])
-        user = facebook_controller.user_from_facebook_auth_response(request, auth_response)
-        if user:
-            result.data['profile'] = user.Profile
-            result.data['is_following'] = False
-            result.data['owner'] = True
-            result.data['username'] = user.username
-            result.messages.append(('success', _('Your Facebook account has been added to Shoutit!')))
-        else:
-            result.messages.append(('error', _('Error connecting to your Facebook account')))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+    fb_auth_response = request.json_data
+    user = facebook_controller.user_from_facebook_auth_response(request, fb_auth_response)
+    if user:
+        result.data['profile'] = user.Profile
+        result.data['is_following'] = False
+        result.data['owner'] = True
+        result.data['username'] = user.username
+        result.messages.append(('success', _('Your Facebook account has been added to Shoutit!')))
+    else:
+        result.messages.append(('error', _('Error connecting to your Facebook account')))
+        result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+
     return result
 
 
@@ -208,40 +208,26 @@ def fb_auth(request):
 def gplus_auth(request):
     result = ResponseResult()
 
-    if request.method == "POST":
-        try:
-            post_data = json.loads(request.body)
-            code = post_data['code']
-        except ValueError:
-            result.messages.append(('error', _('Invalid json')))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
-        except KeyError, e:
-            result.messages.append(('error', _('Missing parameter: ' + e.message)))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
+    try:
+        gplus_auth_response = request.json_data
+        code = gplus_auth_response['code']
+    except KeyError, e:
+        result.messages.append(('error', _("Invalid google response")))
+        result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+        return result
 
-        try:
-            error, user = user_from_gplus_code(request, code)
-        except KeyError, e:
-            result.messages.append(('error', _('Invalid client: ' + unicode(e.message))))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
-        except BaseException, e:
-            result.messages.append(('error', _(e.message)))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
+    error, user = user_from_gplus_code(request, code)
 
-        if user:
-            result.data['profile'] = user.Profile
-            result.data['is_following'] = False
-            result.data['owner'] = True
-            result.data['username'] = user.username
-            result.messages.append(('success', _('Your Google account has been added to Shoutit!')))
-        else:
-            result.messages.append(('error', _('Error connecting to your Google account')))
-            result.messages.append(('error', error.message))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+    if user:
+        result.data['profile'] = user.Profile
+        result.data['is_following'] = False
+        result.data['owner'] = True
+        result.data['username'] = user.username
+        result.messages.append(('success', _('Your Google account has been added to Shoutit!')))
+    else:
+        result.messages.append(('error', _('Error connecting to your Google account')))
+        result.messages.append(('error', error.message))
+        result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
 
     return result
 

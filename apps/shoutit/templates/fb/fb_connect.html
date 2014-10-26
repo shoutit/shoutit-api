@@ -42,7 +42,7 @@
 				var post_data = JSON.stringify(response.authResponse);
 				FbId = response.authResponse.userID;
 				$.ajax({
-					url: '/fb/auth/',
+					url: '/fb_auth/',
 					type: 'POST',
 					data: {'data':post_data},
 					success: function (data) {

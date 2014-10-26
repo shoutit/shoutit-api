@@ -147,7 +147,6 @@ urlpatterns = patterns('',
 
                        # Facebook Stuff
                        url(r'^fb_auth/$', 'apps.shoutit.tiered_views.user_views.fb_auth'),
-                       url(r'^fb/auth/$', 'apps.shoutit.tiered_views.user_views.fb_auth'),
                        url(r'^fb/connect/$', 'apps.shoutit.tiered_views.fb_views.fb_connect'),
                        url(r'^fb/share/$', 'apps.shoutit.tiered_views.fb_views.fb_share'),
                        url(r'^fb/tab/$', 'apps.shoutit.tiered_views.fb_views.fb_tab'),
