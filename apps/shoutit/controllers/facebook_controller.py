@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from apps.shoutit.controllers.user_controller import login_without_password, signup_fb
+from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook
 from apps.shoutit.models import LinkedFacebookAccount
 import apps.shoutit.settings as settings
 import json
@@ -8,7 +8,7 @@ import urllib2
 import urlparse
 
 
-def auth(request, auth_response):
+def user_from_facebook_auth_response(request, auth_response):
     long_lived_token = ExtendToken(auth_response['accessToken'])
     auth_response['accessToken'] = long_lived_token['access_token']
     auth_response['expiresIn'] = long_lived_token['expires']
@@ -23,11 +23,11 @@ def auth(request, auth_response):
         try:
             response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
             fb_user = json.loads(response.read())
-            if not fb_user.has_key('email'):
+            if not 'email' in fb_user:
                 return None
         except Exception, e:
             return None
-        user = signup_fb(request, fb_user, auth_response)
+        user = auth_with_facebook(request, fb_user, auth_response)
 
     if user:
         login_without_password(request, user)

@@ -254,6 +254,7 @@ class UserProfile(models.Model):
 
 
 class UserFunctions(object):
+    #todo: @property
     def name(self):
         if hasattr(self, 'Business') and self.Business:
             return self.Business.Name

@@ -50,9 +50,11 @@ def render_tag(tag):
 
 #TODO: rendering levels in better way.
 # 1: username and name
-# 2: image, sex, bio,
-# 3:
-def render_user(user, level=1):
+# 2: url, image, sex, is_active
+# 3: date_joined, bio, location
+# 4: ?
+# 5: ?
+def render_user(user, owner=False, level=1):
     if user is None:
         return {}
 
@@ -68,19 +70,35 @@ def render_user(user, level=1):
             profile = user.Business
 
     if isinstance(profile, UserProfile):
+
         result = {
             'name': user.name(),
-            'username': user.username,
-            'url': get_object_url(user),
-            'image': profile.Image,
-            'sex': profile.Sex,
-            'bio': profile.Bio,
-            'is_active': user.is_active,
-            'location': {
-                'country': profile.Country,
-                'city': profile.City
-            }
+            'username': user.username
         }
+
+        if level == 2:
+            result.update({
+                'url': get_object_url(user),
+                'image': profile.Image,
+                'sex': profile.Sex,
+                'is_active': user.is_active
+            })
+
+        if level >= 3:
+            result.update({
+                'date_joined': user.date_joined.strftime('%s'),
+                'bio': profile.Bio,
+                'location': {
+                    'country': profile.Country,
+                    'city': profile.City
+
+                }
+            })
+            if owner:
+                result['location'].update({
+                    'latitude': profile.Latitude,
+                    'longitude': profile.Longitude
+                })
 
     elif isinstance(profile, BusinessProfile):
         result = {
@@ -88,7 +106,14 @@ def render_user(user, level=1):
             'username': user.username,
             'image': profile.Image,
             'name': user.name(),
-            'bio': profile.About
+            'bio': profile.About,
+            'location': {
+                'country': profile.Country,
+                'city': profile.City,
+                'address': profile.Address
+            }
+            #todo: other business attributes
+
         }
     return result
 

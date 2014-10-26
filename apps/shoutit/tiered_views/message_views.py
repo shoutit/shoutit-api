@@ -192,11 +192,9 @@ def read_conversations_stream(request):
     result = ResponseResult()
 
     page_num = int(getattr(request.GET, 'page', 1))
-        # conversations_count = get_data([CACHE_TAG_MESSAGES.make_dynamic(request.user)], message_controller.ConversationsCount, request.user)
     conversations_count = message_controller.ConversationsCount(request.user)
     result.data['pages_count'] = int(math.ceil(conversations_count / float(DEFAULT_PAGE_SIZE)))
-    result.data['conversations'] = message_controller.ReadConversations(request.user,
-                                                                        DEFAULT_PAGE_SIZE * (page_num - 1),
+    result.data['conversations'] = message_controller.ReadConversations(request.user, DEFAULT_PAGE_SIZE * (page_num - 1),
                                                                         DEFAULT_PAGE_SIZE * page_num)
     result.data['is_last_page'] = page_num >= result.data['pages_count']
     result.data['is_owner'] = True

@@ -50,7 +50,7 @@ class FBMiddleware(object):
         if 'code' in request.GET and 'fb_source' in request.GET:
             auth_response = facebook_controller.ExchangeCode(request, request.GET['code'])
             if auth_response:
-                facebook_controller.auth(request, auth_response)
+                facebook_controller.user_from_facebook_auth_response(request, auth_response)
             pass
 
 

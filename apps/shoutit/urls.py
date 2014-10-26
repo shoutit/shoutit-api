@@ -84,9 +84,9 @@ urlpatterns = patterns('',
                        url(r'^api/', include('apps.shoutit.api.urls')),
 
                        url(r'^oauth/request_token/$', 'apps.shoutit.api.authentication.get_request_token'),
-                       url(r'^oauth/access_token/$', 'apps.shoutit.api.authentication.get_access_token'),
+                       # url(r'^oauth/access_token/$', 'apps.shoutit.api.authentication.get_basic_access_token'),
                        url(r'^oauth/gplus_access_token/$', 'apps.shoutit.api.authentication.get_gplus_access_token'),
-                       # url(r'^oauth/facebook_access_token/$', 'apps.shoutit.api.authentication.get_facebook_access_token'),
+                       url(r'^oauth/facebook_access_token/$', 'apps.shoutit.api.authentication.get_facebook_access_token'),
 
                        ### XHR ###
 
@@ -114,9 +114,8 @@ urlpatterns = patterns('',
                        url(r'^xhr/loadShout/([a-zA-z0-9]+)/$','apps.shoutit.tiered_views.shout_views.load_shout'),
                        url(r'^xhr/deleteShout/$','apps.shoutit.tiered_views.shout_views.delete_shout'),
                        url(r'^xhr/updateUserLocation/$','apps.shoutit.tiered_views.user_views.update_user_location'),
-                       url(r'^xhr/setTagParent/$','apps.shoutit.tiered_views.tag_views.set_tag_parent'),
+                       url(r'^xhr/setTagParent/$', 'apps.shoutit.tiered_views.tag_views.set_tag_parent'),
 
-                       #url(r'^search/', include('haystack.urls')),
                        url(r'^sts/$', 'apps.shoutit.tiered_views.general_views.admin_stats'),
 
                        url(r'^reactivate/$', 'apps.shoutit.tiered_views.user_views.resend_activation'),
@@ -135,7 +134,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/create_tiny_business/', 'apps.shoutit.tiered_views.business_views.create_tiny_business'),
 
                        url(r'^modal/(?:(\w+)/)?$', 'apps.shoutit.tiered_views.general_views.modal'),
-                       #	url(r'^xhr/([abcdefghkmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$', 'apps.shoutit.views.activate_user'),
 
                        url(r'^(?:xhr/)?shout_deal/', 'apps.shoutit.tiered_views.deal_views.shout_deal'),
                        url(r'^(?:xhr/)?close_deal/([a-zA-z0-9]+)/', 'apps.shoutit.tiered_views.deal_views.close_deal'),
@@ -162,10 +160,9 @@ urlpatterns = patterns('',
                        url(r'^gplus_auth/$', 'apps.shoutit.tiered_views.user_views.gplus_auth'),
 
                        url(r'^set_language/', 'apps.shoutit.tiered_views.general_views.set_language'),
-                       url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', {'packages' : ('apps.shoutit',)}),
+                       url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', {'packages': ('apps.shoutit',)}),
 
                        url(r'^(?:bad-|good-)?experience/([a-zA-z0-9]+)/', 'apps.shoutit.tiered_views.experience_views.view_experience'),
-                       #	url(r'^(?:xhr/)?experiences/(\w+)/$', 'apps.shoutit.tiered_views.experience_views.experiences'),
                        url(r'^xhr/experiences_stream/(\w+)/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.experience_views.experiences_stream'),
                        url(r'^xhr/post_experience/(?:(\w+)/)?$', 'apps.shoutit.tiered_views.experience_views.post_exp'),
                        url(r'^xhr/share_experience/([a-zA-z0-9]+)/$', 'apps.shoutit.tiered_views.experience_views.share_experience'),
@@ -186,16 +183,13 @@ urlpatterns = patterns('',
                        url(r'^xhr/delete_comment/([a-zA-z0-9]+)/$','apps.shoutit.tiered_views.comment_views.delete_comment'),
                        url(r'^paypal/$', 'apps.shoutit.tiered_views.deal_views.paypal'),
                        url(r'^paypal_return/$', 'apps.shoutit.tiered_views.payment_views.pdt'),
-                       #url(r'^paypal_ipn/', include('paypal.standard.ipn.urls')),
                        url(r'^cpsp_(\w+)/$', 'apps.shoutit.tiered_views.deal_views.cpsp_action'),
 
-                       #	url(r'^sub/', include('subscription.urls')),
 
-                       url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$', 'apps.shoutit.tiered_views.user_views.activate_modal'),
-
-                       url(r'^contact-import/$', 'apps.shoutit.tiered_views.user_views.import_contacts', name = 'import_contacts'),
-                       url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitations')
-                    )
+                       url(r'^contact-import/$', 'apps.shoutit.tiered_views.user_views.import_contacts', name='import_contacts'),
+                       url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitations'),
+                       url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$', 'apps.shoutit.tiered_views.user_views.activate_modal')
+                       )
 
 #urlpatterns += patterns('',
 #	url(r'^admin/django-lean/', include('django_lean.experiments.admin_urls')),

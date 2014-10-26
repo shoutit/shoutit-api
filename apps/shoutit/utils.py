@@ -430,7 +430,7 @@ def ShoutLink(post):
         city = ('-' + ToSeoFriendly(unicode.lower(experience.AboutBusiness.City))) if experience.AboutBusiness.City else ''
         type = 'bad' if experience.State == 0 else 'good'
         link = 'http%s://%s/%s-experience/%s/%s%s/' % (
-        's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, id, about, city)
+            's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, id, about, city)
     else:
         shout = post
         type = 'request' if shout.Type == 0 else 'offer' if shout.Type == 1 else 'shout'

@@ -1,17 +1,11 @@
-import urllib2
-import json
 from apps.shoutit.controllers.user_controller import auth_with_gplus, login_without_password
 from apps.shoutit.models import LinkedGoogleAccount
 from django.core.exceptions import ObjectDoesNotExist
-from apiclient.discovery import build
 import httplib2
 from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import credentials_from_clientsecrets_and_code, OOB_CALLBACK_URN
 from oauth2client.client import FlowExchangeError
-import apps.shoutit.settings as settings
-
-# TODO: this requires established external connection, try catch would handle it better.
-SERVICE = build('plus', 'v1')
+from django.conf import settings
 
 
 def user_from_gplus_code(request, code):
@@ -39,7 +33,7 @@ def user_from_gplus_code(request, code):
             http = httplib2.Http()
             http = credentials.authorize(http)
             # Get the logged gplus user.
-            google_request = SERVICE.people().get(userId='me')
+            google_request = settings.GPLUS_SERVICE.people().get(userId='me')
             gplus_user = google_request.execute(http=http)
         except AccessTokenRefreshError, e:
             return e, None

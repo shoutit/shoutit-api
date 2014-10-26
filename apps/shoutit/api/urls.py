@@ -55,12 +55,6 @@ no_oauth = NoAuthentication()
 urlpatterns = patterns('',
                        # Users
 
-                       url(r'^user/search/(\w+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.search_user
-                           })
-                       ),
-
                        url(r'^user/(@me|\w+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_profile
@@ -88,6 +82,12 @@ urlpatterns = patterns('',
                        url(r'^(user)/(@me|\w+)/picture(?:/(\d+))?/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': general_views.profile_picture
+                           })
+                       ),
+
+                       url(r'^user/search/(\w+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.search_user
                            })
                        ),
 

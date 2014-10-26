@@ -188,8 +188,8 @@ def fb_auth(request):
     result = ResponseResult()
 
     if request.method == "POST":
-        authResponse = json.loads(request.POST['data'])
-        user = facebook_controller.auth(request, authResponse)
+        auth_response = json.loads(request.POST['data'])
+        user = facebook_controller.user_from_facebook_auth_response(request, auth_response)
         if user:
             result.data['profile'] = user.Profile
             result.data['is_following'] = False
@@ -248,11 +248,9 @@ def gplus_auth(request):
 
 @non_cached_view(
     methods=['POST'],
-    validator=lambda request, *args, **kwargs: form_validator(request, RecoverForm,
-                                                              _('Username or email you entered does not exist.')),
-    json_renderer=lambda request, result, *args,
-                         **kwargs: json_renderer(request, result,
-                                                 _('We sent you an email with instructions to recover your account.'))
+    validator=lambda request, *args, **kwargs: form_validator(request, RecoverForm, _('Username or email you entered does not exist.')),
+    json_renderer=lambda request, result, *args, **kwargs:
+    json_renderer(request, result, _('We sent you an email with instructions to recover your account.'))
 )
 def recover(request):
     result = ResponseResult()

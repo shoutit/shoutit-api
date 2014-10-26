@@ -661,7 +661,7 @@
     show_modal_by_hash();
     $('a#signout_link').click(function () {
       requestAjaxily({
-        url: '/signout',
+        url: '/signout/',
         type: 'GET',
         successCallback: function (data) {
           setTimeout("window.location = '" + data.data.next + "';", 1500);

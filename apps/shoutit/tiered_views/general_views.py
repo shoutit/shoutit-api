@@ -71,9 +71,9 @@ def privacy(request):
     methods=['GET'])
 def rules(request):
     result = ResponseResult()
-    if request.GET.has_key('zwaar'):
+    if 'zwaar' in request.GET:
         result.data['flip'] = True
-    if request.GET.has_key('adfly'):
+    if 'adfly' in request.GET:
         result.data['adfly'] = True
     return result
 
@@ -82,9 +82,9 @@ def rules(request):
     methods=['GET'])
 def learnmore(request):
     result = ResponseResult()
-    if request.GET.has_key('zwaar'):
+    if 'zwaar' in request.GET:
         result.data['flip'] = True
-    if request.GET.has_key('adfly'):
+    if 'adfly' in request.GET:
         result.data['adfly'] = True
     return result
 
@@ -236,7 +236,7 @@ def modal(request, template=None):
         template = 'experience_form'
         business = None
         init = {}
-        if request.GET.has_key('username'):
+        if 'username' in request.GET:
             username = request.GET['username']
             business = business_controller.GetBusiness(username)
             cat = business.Category and business.Category.pk or 0
@@ -304,7 +304,7 @@ def modal(request, template=None):
         })
 
     elif template == 'report':
-        if request.GET.has_key('id') and request.GET.has_key('report_type'):
+        if 'id' in request.GET and 'report_type' in request.GET:
             variables = RequestContext(request, {
                 'form': ReportForm(),
                 'experience_id' : request.GET['id'],
@@ -487,7 +487,7 @@ def live_events(request):
     result = ResponseResult()
 
     url_encoded_city = None
-    if request.GET.has_key('url_encoded_city') and request.GET['url_encoded_city'] != '':
+    if 'url_encoded_city' in request.GET and request.GET['url_encoded_city'] != '':
         url_encoded_city = request.GET['url_encoded_city']
 
     try:
@@ -499,14 +499,14 @@ def live_events(request):
     user_city = pre_city.City
 
     events = []
-    if request.GET.has_key('timestamp') and request.GET['timestamp'] != '':
+    if 'timestamp' in request.GET and request.GET['timestamp'] != '':
         timestamp = float(request.GET['timestamp'])
         date = datetime.fromtimestamp(timestamp)
         events = event_controller.GetPublicEventsByLocation(country=user_country, city=user_city, date=date)
     else:
         events = event_controller.GetPublicEventsByLocation(country=user_country, city=user_city)
 
-    events  = event_controller.GetDetailedEvents(events)
+    events = event_controller.GetDetailedEvents(events)
     result.data['events'] = events
     result.data['count'] = events.count()
     result.data['timestamp'] = time.mktime(datetime.now().timetuple())
@@ -514,10 +514,8 @@ def live_events(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['POST'],
-    json_renderer = lambda request, result, *args: json_renderer(request,result),
-    validator=lambda request, event_id: delete_event_validator(request,event_id),
-    )
+@non_cached_view(methods=['POST'], json_renderer=lambda request, result, *args: json_renderer(request,result),
+                 validator=lambda request, event_id: delete_event_validator(request,event_id))
 def delete_event(request, event_id):
     result = ResponseResult()
     event_controller.DeleteEvent(Base62ToInt(event_id))

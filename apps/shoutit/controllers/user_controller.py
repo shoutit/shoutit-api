@@ -197,10 +197,12 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     stream.save()
     up = UserProfile(User=django_user, Stream=stream, Mobile=mobile)
 
-    up.Latitude = request.session['user_lat'] if request and request.session.has_key('user_lat') else 25.3573
-    up.Longitude = request.session['user_lng'] if request and request.session.has_key('user_lng') else 55.4033
-    up.Country = request.session['user_country'] if request and request.session.has_key('user_country') else 'AE'
-    up.City = request.session['user_city'] if request and request.session.has_key('user_city') else 'Dubai'
+    #todo: city, session, default location!
+    up.Latitude = request.session['user_lat'] if request and 'user_lat' in request.session else 25.3573
+    up.Longitude = request.session['user_lng'] if request and 'user_lng' in request.session else 55.4033
+    up.Country = request.session['user_country'] if request and 'user_country' in request.session else 'AE'
+    up.City = request.session['user_city'] if request and 'user_city' in request.session else 'Dubai'
+
     up.Image = '/static/img/_user_male.png'
     up.save()
 
@@ -302,7 +304,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
         ActivateUser(token, user)
 
 
-def complete_signup_fb(request, user, sex, birthdate):
+def complete_signup(request, user, sex, birthdate):
     user.Profile.Sex = sex
     if not sex:
         user.Profile.Image = '/static/img/_user_female.png'
@@ -366,7 +368,7 @@ def auth_with_gplus(request, gplus_user, credentials):
                        birthdate=bd, email=gplus_user['emails'][0]['value'], username=user.username, mobile='')
         GiveUserPermissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
     elif not user.is_active:
-        complete_signup_fb(request, user, gender, bd)
+        complete_signup(request, user, gender, bd)
         GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
@@ -430,12 +432,12 @@ def auth_with_gplus(request, gplus_user, credentials):
     return user
 
 
-def signup_fb(request, fb_user, authResponse):
+def auth_with_facebook(request, fb_user, auth_response):
     user = User.objects.filter(email__iexact=fb_user['email'])
     user = user[0] if user else None
 
-    gender = False if fb_user.has_key('gender') and fb_user['gender'] == 'female' else True
-    if not fb_user.has_key('birthday'):
+    gender = False if 'gender' in fb_user and fb_user['gender'] == 'female' else True
+    if not 'birthday' in fb_user:
         return None
     bd = datetime.strptime(fb_user['birthday'], "%m/%d/%Y")
     if not user:
@@ -448,14 +450,14 @@ def signup_fb(request, fb_user, authResponse):
                        email=fb_user['email'], username=user.username, mobile='')
         GiveUserPermissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
     elif not user.is_active:
-        complete_signup_fb(request, user, gender, bd)
+        complete_signup(request, user, gender, bd)
         GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
         la = LinkedFacebookAccount(
-            User=user, Uid=fb_user['id'], AccessToken=authResponse['accessToken'],
-            ExpiresIn=authResponse['expiresIn'], SignedRequest=authResponse['signedRequest'],
-            link=fb_user['link'] or '', verified=fb_user['verified'] if fb_user.has_key('verified') else False
+            User=user, Uid=fb_user['id'], AccessToken=auth_response['accessToken'],
+            ExpiresIn=auth_response['expiresIn'], SignedRequest=auth_response['signedRequest'],
+            link=fb_user['link'] or '', verified=fb_user['verified'] if 'verified' in fb_user else False
         )
         la.save()
     except BaseException, e:
@@ -469,7 +471,7 @@ def signup_fb(request, fb_user, authResponse):
                                                          servicenet=settings.CLOUD_FILES_SERVICE_NET)
             container = cloud_connection.create_container('user_image')
 
-            response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + authResponse['accessToken'],
+            response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + auth_response['accessToken'],
                                        timeout=20)
 
             no_pic = ['yDnr5YfbJCH', 'HsTZSDw4avx']
