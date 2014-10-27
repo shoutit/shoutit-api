@@ -470,7 +470,7 @@ def user_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        user = render_user(result.data['profile'].User, 'owner' in result.data and result.data['owner'] or False, 5)
+        user = render_user(result.data['profile'].User, level=5, owner='owner' in result.data and result.data['owner'] or False)
 
         if 'owner' in result.data:
             user['your_profile'] = result.data['owner']

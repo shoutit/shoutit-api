@@ -12,7 +12,7 @@ def render_shout(shout):
     return {
         'id': IntToBase62(shout.id),
         'url': get_object_url(shout),
-        'user': render_user(shout.OwnerUser, True),
+        'user': render_user(shout.OwnerUser, level=2),
         'type': PostType.values[shout.Type],
         'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
         'description': shout.Text,
@@ -54,7 +54,7 @@ def render_tag(tag):
 # 3: date_joined, bio, location
 # 4: ?
 # 5: ?
-def render_user(user, owner=False, level=1):
+def render_user(user, level=1, owner=False):
     if user is None:
         return {}
 
@@ -125,8 +125,8 @@ def render_message(message):
         'message_id': IntToBase62(message.id),
         'conversation_id': IntToBase62(message.Conversation.id) ,
         'shout_id': IntToBase62(message.Conversation.AboutPost.id),
-        'from_user': render_user(message.FromUser),
-        'to_user': render_user(message.ToUser),
+        'from_user': render_user(message.FromUser, level=1),
+        'to_user': render_user(message.ToUser, level=1),
         'text': message.Text,
         'is_read': message.IsRead,
         'date_created': message.DateCreated.strftime('%s')
@@ -139,8 +139,8 @@ def render_conversation(conversation):
     return {
         'conversation_id': IntToBase62(conversation.id),
         'url': get_object_url(conversation),
-        'from_user': render_user(conversation.FromUser),
-        'to_user': render_user(conversation.ToUser),
+        'from_user': render_user(conversation.FromUser, level=2),
+        'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost),
         'is_read': conversation.IsRead,
         'text': conversation.Text if hasattr(conversation, 'Text') else '',
@@ -153,8 +153,8 @@ def render_conversation_full(conversation):
         return {}
     return {
         'url': get_object_url(conversation),
-        'from_user': render_user(conversation.FromUser),
-        'to_user': render_user(conversation.ToUser),
+        'from_user': render_user(conversation.FromUser, level=2),
+        'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost),
         'is_read': conversation.IsRead,
         'text': conversation.Text if hasattr(conversation, 'Text') else '',
@@ -263,7 +263,7 @@ def render_notification(notification):
     if notification is None:
         return {}
     result = {
-        'from_user': render_user(notification.FromUser),
+        'from_user': render_user(notification.FromUser, level=2),
         'is_read': notification.IsRead,
         'type': NotificationType.values[notification.Type],
         'date_created': notification.DateCreated.strftime('%s'),
@@ -276,7 +276,7 @@ def render_notification(notification):
         if notification.Type == NOTIFICATION_TYPE_MESSAGE:
             result['attached_object'] = render_message(notification.AttachedObject)
         elif notification.Type == NOTIFICATION_TYPE_FOLLOWSHIP:
-            result['attached_object'] = render_user(notification.AttachedObject)
+            result['attached_object'] = render_user(notification.AttachedObject, level=2)
         elif notification.Type == NOTIFICATION_TYPE_EXP_POSTED:
             result['attached_object'] = render_experience(notification.AttachedObject)
         elif notification.Type == NOTIFICATION_TYPE_EXP_SHARED:
@@ -290,14 +290,14 @@ def render_event(event):
     if event is None:
         return {}
     result = {
-        'user': render_user(event.OwnerUser),
+        'user': render_user(event.OwnerUser, level=2),
         'event_type': EventType.values[event.EventType],
         'date_created': event.DatePublished.strftime('%s')
     }
 
     if event.AttachedObject:
         if event.EventType == EVENT_TYPE_FOLLOW_USER:
-            result['attached_object'] = render_user(event.AttachedObject)
+            result['attached_object'] = render_user(event.AttachedObject, level=2)
         elif event.EventType == EVENT_TYPE_FOLLOW_TAG:
             result['attached_object'] = render_tag(event.AttachedObject)
         elif event.EventType == EVENT_TYPE_SHOUT_OFFER or event.EventType == EVENT_TYPE_SHOUT_REQUEST:

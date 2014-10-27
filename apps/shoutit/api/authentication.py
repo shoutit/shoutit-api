@@ -64,7 +64,7 @@ def get_access_token(request, user):
     token = {
         'access_token': access_token.key,
         'access_token_secret': access_token.secret,
-        'user': render_user(user, True, 3)
+        'user': render_user(user, level=3, owner=True)
     }
     return JsonResponse(token)
 
