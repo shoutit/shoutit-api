@@ -76,7 +76,7 @@ def render_user(user, owner=False, level=1):
             'username': user.username
         }
 
-        if level == 2:
+        if level >= 2:
             result.update({
                 'url': get_object_url(user),
                 'image': profile.Image,
