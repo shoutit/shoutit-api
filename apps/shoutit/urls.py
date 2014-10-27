@@ -84,9 +84,8 @@ urlpatterns = patterns('',
                        url(r'^api/', include('apps.shoutit.api.urls')),
 
                        url(r'^oauth/request_token/$', 'apps.shoutit.api.authentication.get_request_token'),
+                       url(r'^oauth/access_token/(\w+)/$', 'apps.shoutit.api.authentication.get_access_token_using_social_channel'),
                        # url(r'^oauth/access_token/$', 'apps.shoutit.api.authentication.get_basic_access_token'),
-                       url(r'^oauth/gplus_access_token/$', 'apps.shoutit.api.authentication.get_gplus_access_token'),
-                       url(r'^oauth/facebook_access_token/$', 'apps.shoutit.api.authentication.get_facebook_access_token'),
 
                        ### XHR ###
 

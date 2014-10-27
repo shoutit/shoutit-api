@@ -18,6 +18,7 @@ from common.tagged_cache import TaggedCache
 
 import json
 
+
 class ResponseResultError(Constant):
     counter = 0
     values = {}

@@ -1,14 +1,12 @@
+from django.db import models
+from django.db.models.aggregates import Sum
+from django.db.models import Q, Min
 from datetime import timedelta, datetime
 from itertools import chain
-
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
-from django.db.models.aggregates import Sum
-from django.db.models.query_utils import Q
-from django.db.models import Min
 
 # PAUSE: Payment
 # from subscription.signals import subscribed, unsubscribed
@@ -175,10 +173,10 @@ class UserProfile(models.Model):
     #	isBlocked = models.BooleanField(default=False)
 
     # Location attributes
+    Country = models.CharField(max_length=200, default='', db_index=True)
+    City = models.CharField(max_length=200, default='', db_index=True)
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
-    City = models.CharField(max_length=200, default='', db_index=True)
-    Country = models.CharField(max_length=200, default='', db_index=True)
 
     Birthdate = models.DateField(null=True)
     Sex = models.NullBooleanField(default=True, null=True)
@@ -307,7 +305,7 @@ class LinkedFacebookAccount(models.Model):
     Uid = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
-    SignedRequest = models.CharField(max_length=1024)
+    SignedRequest = models.CharField(max_length=1024)     #todo: remove signed request
     link = models.CharField(max_length=128)
     verified = models.BooleanField(default=False)
 
@@ -767,10 +765,10 @@ class BusinessProfile(models.Model):
     Phone = models.CharField(unique=True, null=True, max_length=20)
     Website = models.URLField(max_length=1024, null=True)
 
-    Longitude = models.FloatField(default=0.0)
-    Latitude = models.FloatField(default=0.0)
     Country = models.CharField(max_length=2, db_index=True, null=True)
     City = models.CharField(max_length=200, db_index=True, null=True)
+    Latitude = models.FloatField(default=0.0)
+    Longitude = models.FloatField(default=0.0)
     Address = models.CharField(max_length=200, db_index=True, null=True)
 
     Stream = models.OneToOneField('Stream', related_name='OwnerBusiness', null=True, db_index=True)

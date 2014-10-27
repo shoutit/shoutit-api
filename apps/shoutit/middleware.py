@@ -48,10 +48,9 @@ class FBMiddleware(object):
     def process_request(request):
     # Check the requests coming from Facebook
         if 'code' in request.GET and 'fb_source' in request.GET:
-            auth_response = facebook_controller.ExchangeCode(request, request.GET['code'])
+            auth_response = facebook_controller.exchange_code(request, request.GET['code'])
             if auth_response:
                 facebook_controller.user_from_facebook_auth_response(request, auth_response)
-            pass
 
 
 class UserLocationMiddleware(object):

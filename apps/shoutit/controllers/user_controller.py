@@ -197,24 +197,27 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     stream.save()
     up = UserProfile(User=django_user, Stream=stream, Mobile=mobile)
 
-    #todo: city, session, default location!
-    up.Latitude = request.session['user_lat'] if request and 'user_lat' in request.session else 25.3573
-    up.Longitude = request.session['user_lng'] if request and 'user_lng' in request.session else 55.4033
-    up.Country = request.session['user_country'] if request and 'user_country' in request.session else 'AE'
-    up.City = request.session['user_city'] if request and 'user_city' in request.session else 'Dubai'
+    #todo: city, session!
+    up.Country = request.session['user_country'] if request and 'user_country' in request.session else DEFAULT_LOCATION['country']
+    up.City = request.session['user_city'] if request and 'user_city' in request.session else DEFAULT_LOCATION['city']
+    up.Latitude = request.session['user_lat'] if request and 'user_lat' in request.session else DEFAULT_LOCATION['latitude']
+    up.Longitude = request.session['user_lng'] if request and 'user_lng' in request.session else DEFAULT_LOCATION['longitude']
 
     up.Image = '/static/img/_user_male.png'
     up.save()
 
-    if not PredefinedCity.objects.filter(City=up.City):
-        encoded_city = ToSeoFriendly(unicode.lower(unicode(up.City)))
+    encoded_city = ToSeoFriendly(unicode.lower(unicode(up.City)))
+    predefined_city = PredefinedCity.objects.filter(City=up.City)
+    if not predefined_city:
+            predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
+    if not predefined_city:
         PredefinedCity(City=up.City, EncodedCity=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
 
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
     if email is not None and send_activation:
         apps.shoutit.controllers.email_controller.SendRegistrationActivationEmail(django_user, email, "http://%s%s" % (
-        settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
+            settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
     SignInUser(request, password, username)
     django_user.token = token
     return django_user
@@ -456,7 +459,7 @@ def auth_with_facebook(request, fb_user, auth_response):
     try:
         la = LinkedFacebookAccount(
             User=user, Uid=fb_user['id'], AccessToken=auth_response['accessToken'],
-            ExpiresIn=auth_response['expiresIn'], SignedRequest=auth_response['signedRequest'],
+            ExpiresIn=auth_response['expiresIn'], SignedRequest="code",
             link=fb_user['link'] or '', verified=fb_user['verified'] if 'verified' in fb_user else False
         )
         la.save()
@@ -762,6 +765,20 @@ def activities_stream(user, start_index=None, end_index=None):
     stream_posts = events
 
     return post_count, stream_posts
+
+
+def update_location(user_profile, location):
+    try:
+        user_profile.Country = location['country']
+        user_profile.City = location['city']
+        user_profile.Latitude = location['latitude']
+        user_profile.Longitude = location['longitude']
+        user_profile.save()
+        return True
+
+    except BaseException, e:
+        print(e.message)
+        return False
 
 
 import apps.shoutit.controllers.email_controller

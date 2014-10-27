@@ -388,7 +388,7 @@ REPORT_TYPE_EXPERIENCE = ReportType('Experience')
 REPORT_TYPE_COMMENT = ReportType('Comment')
 REPORT_TYPE_TRADE = ReportType('Trade')
 
-DEFAULT_LOCATION = {
+DEFAULT_LOCATIONS_LATLNG = {
     'Dubai': [24.9370093464, 55.2733800995],
     'Abu Dhabi': [24.4886619466, 54.3677276373],
     'Sharjah': [25.3607799496, 55.3896331787],
@@ -397,6 +397,12 @@ DEFAULT_LOCATION = {
 
 LOCATION_ATTRIBUTES = ('country', 'city', 'latitude', 'longitude')
 
+DEFAULT_LOCATION = {
+    'country': 'AE',
+    'city': 'Dubai',
+    'latitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][0],
+    'longitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][1]
+}
 
 class PaymentStatus(Constant):
     counter = 0

@@ -1,4 +1,4 @@
-from apps.shoutit.controllers.user_controller import auth_with_gplus, login_without_password
+from apps.shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_location
 from apps.shoutit.models import LinkedGoogleAccount
 from django.core.exceptions import ObjectDoesNotExist
 import httplib2
@@ -8,7 +8,7 @@ from oauth2client.client import FlowExchangeError
 from django.conf import settings
 
 
-def user_from_gplus_code(request, code):
+def user_from_gplus_code(request, code, initial_user=None):
     redirect_uri = 'postmessage'
     if hasattr(request, 'is_api') and request.is_api:
         redirect_uri = OOB_CALLBACK_URN
@@ -41,6 +41,9 @@ def user_from_gplus_code(request, code):
         user = auth_with_gplus(request, gplus_user, credentials)
 
     if user:
+        if initial_user and initial_user['location']:
+            update_location(user.Profile, initial_user['location'])
+
         login_without_password(request, user)
         request.session['user_renew_location'] = True
         return None, user
