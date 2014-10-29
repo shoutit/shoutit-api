@@ -307,7 +307,6 @@ def resend_activation(request):
 def follow_user(request, username):
     user_controller.FollowStream(request, request.user.username, user_controller.GetUser(username).Stream)
     realtime_controller.BindUserToUser(request.user.username, username)
-    #refresh_cache_dynamically([CACHE_TAG_STREAMS.make_dynamic(request.user)])
     return ResponseResult()
 
 
@@ -328,7 +327,6 @@ def follow_user(request, username):
 def unfollow_user(request, username):
     user_controller.UnfollowStream(request, request.user.username, user_controller.GetUser(username).Stream)
     realtime_controller.UnbindUserFromUser(request.user.username, username)
-    #refresh_cache_dynamically([CACHE_TAG_STREAMS.make_dynamic(request.user)])
     return ResponseResult()
 
 
@@ -583,7 +581,6 @@ def user_stream(request, username, page_num=None):
     user_profile = user_controller.GetUser(username)
     result.data['shouts_count'] = user_profile.Stream.Posts.filter(Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)).count()
     result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
-    #result.data['shouts'] = get_data([CACHE_TAG_STREAMS.make_dynamic(user_profile.Stream)], stream_controller.GetStreamShouts, user_profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num)
     result.data['shouts'] = stream_controller.GetStreamShouts(user_profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),
                                                               DEFAULT_PAGE_SIZE * page_num)
     result.data['is_last_page'] = page_num == result.data['pages_count']
@@ -659,7 +656,6 @@ def user_profile_brief(request, username):
     user_profile = user_controller.GetUser(username)
     result = ResponseResult()
 
-    #	result.data['shouts_count'] = user_profile.User.Posts.GetValidShouts(types=[POST_TYPE_BUY,POST_TYPE_SELL]).count()
     result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(OwnerUser=user_profile.User).count()
 
     result.data['followers_count'] = user_profile.Stream.userprofile_set.count()

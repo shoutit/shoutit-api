@@ -286,7 +286,7 @@ def ChangeEmailAndSendActivation(request, user, email):
                                                                               token)
 
 
-def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthdate):
+def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthdate=None):
     if mobile == '':
         mobile = None
     if email == '':
@@ -296,9 +296,9 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     user.username = username
     user.save()
     user.Profile.Sex = sex
+    user.Profile.Birthdate = birthdate or None
     if not sex:
         user.Profile.Image = '/static/img/_user_female.png'
-    user.Profile.Birthdate = birthdate
     user.Profile.save()
     import apps.shoutit.controllers.realtime_controller as realtime_controller
 
@@ -307,11 +307,11 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
         ActivateUser(token, user)
 
 
-def complete_signup(request, user, sex, birthdate):
+def complete_signup(request, user, sex, birthdate=None):
     user.Profile.Sex = sex
     if not sex:
         user.Profile.Image = '/static/img/_user_female.png'
-    user.Profile.Birthdate = birthdate
+    user.Profile.Birthdate = birthdate or None
     if user.Profile.LastToken:
         user.Profile.LastToken.delete()
     user.Profile.LastToken = None
@@ -361,17 +361,16 @@ def auth_with_gplus(request, gplus_user, credentials):
     user = User.objects.filter(email__iexact=gplus_user['emails'][0]['value'])
     user = user[0] if user else None
     gender = True if 'gender' in gplus_user and gplus_user['gender'] == 'male' else False
-    bd = datetime.strptime('01/01/1990', "%m/%d/%Y")
 
     if not user:
         password = GeneratePassword()
         user = SignUpUser(request, fname=gplus_user['name']['givenName'], lname=gplus_user['name']['familyName'], password=password,
                           email=gplus_user['emails'][0]['value'], send_activation=False)
         CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender,
-                       birthdate=bd, email=gplus_user['emails'][0]['value'], username=user.username, mobile='')
+                       email=gplus_user['emails'][0]['value'], username=user.username, mobile='')
         GiveUserPermissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
     elif not user.is_active:
-        complete_signup(request, user, gender, bd)
+        complete_signup(request, user, gender)
         GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
@@ -440,20 +439,19 @@ def auth_with_facebook(request, fb_user, auth_response):
     user = user[0] if user else None
 
     gender = False if 'gender' in fb_user and fb_user['gender'] == 'female' else True
-    if not 'birthday' in fb_user:
-        return None
-    bd = datetime.strptime(fb_user['birthday'], "%m/%d/%Y")
+
     if not user:
+        #todo: better email validation
         if len(fb_user['email']) > 75:
             return None
         password = GeneratePassword()
         user = SignUpUser(request, fname=fb_user['first_name'], lname=fb_user['last_name'], password=password, email=fb_user['email'],
                           send_activation=False)
-        CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender, birthdate=bd,
+        CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender,
                        email=fb_user['email'], username=user.username, mobile='')
         GiveUserPermissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
     elif not user.is_active:
-        complete_signup(request, user, gender, bd)
+        complete_signup(request, user, gender)
         GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
