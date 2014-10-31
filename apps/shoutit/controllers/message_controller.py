@@ -1,6 +1,11 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
 from django.core.exceptions import ObjectDoesNotExist
+
+from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade
+from apps.shoutit.controllers import email_controller, notifications_controller, shout_controller
+from apps.shoutit.utils import Base62ToInt
 
 
 def conversation_exist(conversation_id=None, user1=None, user2=None, about=None):
@@ -17,7 +22,7 @@ def conversation_exist(conversation_id=None, user1=None, user2=None, about=None)
         return False
 
 
-def send_message(from_user, to_user, about, text, conversation=None):
+def send_message(from_user, to_user, about, text, conversation=None, attachments=None):
 
     if not conversation:
         conversation = conversation_exist(user1=from_user, user2=to_user, about=about)
@@ -34,9 +39,19 @@ def send_message(from_user, to_user, about, text, conversation=None):
     message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, Text=text)
     message.save()
 
+    if not attachments:
+        attachments = []
+
+    for attachment in attachments:
+        object_id = Base62ToInt(attachment['object_id'])
+        # todo: map the content types to models
+        content_type = ContentType.objects.get_for_model(Trade)
+        message_attachment = MessageAttachment(message=message, content_type=content_type, object_id=object_id)
+        message_attachment.save()
+
     # todo: push notification test
-    apps.shoutit.controllers.notifications_controller.NotifyUserOfMessage(to_user, message)
-    apps.shoutit.controllers.email_controller.SendMessageEmail(message)
+    notifications_controller.NotifyUserOfMessage(to_user, message)
+    email_controller.SendMessageEmail(message)
 
     return message
 
@@ -129,7 +144,7 @@ def get_conversation(conversation_id, user=None):
 
 def get_shout_conversations(shout_id, user):
     #todo: simplify
-    shout = apps.shoutit.controllers.shout_controller.GetPost(shout_id, True, True)
+    shout = shout_controller.GetPost(shout_id, True, True)
     if user.is_authenticated() and user.pk == shout.OwnerUser.pk:
         conversations = Conversation.objects.filter(AboutPost=shout, ToUser=user, VisibleToRecivier=True).annotate(
             max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__Profile', 'FromUser',
@@ -188,9 +203,3 @@ def UnReadConversationsCount(user):
     return Conversation.objects.filter(Q(Messages__ToUser=user) & Q(Messages__IsRead=False) & (
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).values(
         "id").distinct().count()
-
-
-import apps.shoutit.controllers.email_controller
-import apps.shoutit.controllers.notifications_controller
-import apps.shoutit.controllers.shout_controller
-from apps.shoutit.models import Conversation, Message, Tag, Shout, StoredImage

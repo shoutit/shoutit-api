@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from apps.shoutit.models import Item, StoredImage, Video
-from apps.shoutit.controllers.shout_controller import make_cloud_thumbnails_for_image, get_currency
+from apps.shoutit.models import Item, StoredImage, Video, Currency
+from apps.shoutit.utils import make_cloud_thumbnails_for_image
 
 
 def get_item(item_id):
@@ -72,3 +72,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
 
     item.save()
     return item
+
+
+def get_currency(currency_code):
+    return Currency.objects.get(Code__iexact=currency_code)

@@ -1,17 +1,18 @@
-import StringIO
 from datetime import datetime, timedelta
-import os
-
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
-from django.core.files.base import ContentFile
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 
-from apps.ActivityLogger.logger import Logger
 from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE
 from apps.shoutit.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
 from apps.shoutit.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
 from apps.shoutit.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
+
+from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Currency, Post, PredefinedCity
+
+from apps.shoutit.controllers import email_controller, tag_controller, stream_controller, event_controller, item_controller, realtime_controller
+
+from apps.ActivityLogger.logger import Logger
 from apps.shoutit.utils import asynchronous_task, ToSeoFriendly, make_image_thumbnail
 import apps.shoutit.settings as settings
 
@@ -85,7 +86,7 @@ def NotifyPreExpiry():
                 expiry_date = shout.DatePublished + timedelta(days=settings.MAX_EXPIRY_DAYS)
             if (expiry_date - datetime.now()).days < settings.SHOUT_EXPIRY_NOTIFY:
                 if shout.OwnerUser.email:
-                    apps.shoutit.controllers.email_controller.SendExpiryNotificationEmail(shout.OwnerUser, shout)
+                    email_controller.SendExpiryNotificationEmail(shout.OwnerUser, shout)
                     shout.ExpiryNotified = True
                     shout.save()
 
@@ -126,7 +127,7 @@ def EditShout(request, shout_id, name=None, text=None, price=None, longitude=Non
             if len(tags) and shouter:
                 shout.OwnerUser = shouter
                 shout.Tags.clear()
-                for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter):
+                for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
                     shout.Tags.add(tag)
                     tag.Stream.PublishShout(shout)
             shout.StreamsCode = str([f.id for f in shout.Streams.all()])[1:-1]
@@ -148,11 +149,6 @@ def GetLandingShouts(DownLeftLat, DownLeftLng, UpRightLat, UpRightLng):
     }
     shouts = Trade.objects.GetValidTrades().filter(**filters).values('id', 'Type', 'Longitude', 'Latitude')[:10000]
     return shouts
-
-
-def make_cloud_thumbnails_for_image(image_url):
-    make_image_thumbnail(image_url, 145, 'shout_image')
-    make_image_thumbnail(image_url, 85, 'shout_image')
 
 
 def GetStreamAffectedByShout(shout):
@@ -185,7 +181,7 @@ def SaveRecolatedShouts(trade, stream_type):
         if trade.Type == POST_TYPE_SELL:
             type = POST_TYPE_SELL
 
-    shouts = apps.shoutit.controllers.stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10,
+    shouts = stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10,
                                                                                        stream_type == STREAM_TYPE_RECOMMENDED)
     stream = Stream(Type=stream_type)
     stream.save()
@@ -204,7 +200,7 @@ def SaveRecolatedShouts(trade, stream_type):
     for shout in shouts:
         shout_wrap = ShoutWrap(Shout=shout, Stream=stream, Rank=shout.rank)
         shout_wrap.save()
-        apps.shoutit.controllers.stream_controller.PublishShoutToShout(trade, shout)
+        stream_controller.PublishShoutToShout(trade, shout)
 
     trade.save()
 
@@ -236,7 +232,7 @@ def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, co
         trade.save()
 
     stream.PublishShout(trade)
-    for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter):
+    for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
 
@@ -277,7 +273,7 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
         PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     stream.PublishShout(trade)
-    for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, shouter.User):
+    for tag in tag_controller.GetOrCreateTags(request, tags, shouter.User):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
 
@@ -294,23 +290,9 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
     return trade
 
 
-def get_currency(currency_code):
-    return Currency.objects.get(Code__iexact=currency_code)
-
-
 def get_trade_images(trades):
     images = StoredImage.objects.filter(Shout__pk__in=[trade.pk for trade in trades]).order_by('Image').select_related('Item')
     for i in range(len(trades)):
         trades[i].Item.SetImages([image for image in images if image.Item_id == trades[i].Item.pk])
         images = [image for image in images if image.Item_id != trades[i].Item.pk]
     return trades
-
-
-import apps.shoutit.controllers.email_controller
-import apps.shoutit.controllers.tag_controller
-import apps.shoutit.controllers.stream_controller, event_controller
-import apps.shoutit.controllers.user_controller, business_controller, item_controller
-import realtime_controller
-from apps.shoutit.models import GalleryItem, PredefinedCity
-from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Item, Trade, Experience, Currency, Post, Deal, BusinessProfile, \
-    SharedExperience, Comment, GalleryItem

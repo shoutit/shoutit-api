@@ -4,6 +4,9 @@ from apps.shoutit.utils import asynchronous_task
 import apps.shoutit.settings as settings
 import os
 from apns import Payload, APNs
+from apps.shoutit import utils
+from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE
+from apps.shoutit.api.renderers import render_notification
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
 apns_instance = APNs(use_sandbox=False, cert_file=PROJECT_PATH+'/apps/shoutit/static/Certificates/iphone/ShoutitPushCer.pem', key_file=PROJECT_PATH+'/apps/shoutit/static/Certificates/iphone/ShoutitKey.pem')
@@ -46,6 +49,9 @@ def GetUserConnectedClientsCount(username):
 
 @asynchronous_task()
 def SendNotification(notification, username, count=0):
+    from apps.shoutit.controllers.user_controller import GetUser
+    from apps.shoutit.controllers.message_controller import UnReadConversationsCount
+    from apps.shoutit.controllers.notifications_controller import GetUserNotificationsWithoutMessagesCount
     try:
         from common.tagged_cache import TaggedCache
         apns_tokens = TaggedCache.get('apns|%s' % username)
@@ -53,9 +59,9 @@ def SendNotification(notification, username, count=0):
         if apns_tokens:
             for token in apns_tokens:
                 message = notification.FromUser.username + " has"
-                userProfile = apps.shoutit.controllers.user_controller.GetUser(username)
-                unread_conversations_num = apps.shoutit.controllers.message_controller.UnReadConversationsCount(userProfile.User)
-                notifications_count = apps.shoutit.controllers.notifications_controller.GetUserNotificationsWithoutMessagesCount(userProfile.User)
+                userProfile = GetUser(username)
+                unread_conversations_num = UnReadConversationsCount(userProfile.User)
+                notifications_count = GetUserNotificationsWithoutMessagesCount(userProfile.User)
                 customMessage = {}
                 if notification.Type == NOTIFICATION_TYPE_FOLLOWSHIP:
                     message += " " + _("started listening to your shouts")
@@ -198,10 +204,3 @@ def UnbindUserFromPost(username, post):
         channel.queue_unbind(exchange=exchange, queue=queue)
     except Exception, e:
         print e.message
-
-from apps.shoutit import utils
-from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE
-import apps.shoutit.controllers.message_controller
-import apps.shoutit.controllers.notifications_controller
-import apps.shoutit.controllers.user_controller
-from apps.shoutit.api.renderers import render_notification

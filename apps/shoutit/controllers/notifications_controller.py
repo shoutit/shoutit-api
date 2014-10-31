@@ -1,7 +1,10 @@
+from apps.shoutit.models import Notification
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 from apps.shoutit.api.renderers import render_notification
+from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
+from apps.shoutit.controllers import realtime_controller
 
 
 def MarkAllAsRead(user):
@@ -17,12 +20,12 @@ def NotifyUser(user, type, from_user=None, attached_object=None):
         notification.IsRead = False
         notification.save()
 
-    count = apps.shoutit.controllers.realtime_controller.GetUserConnectedClientsCount(user.username)
+    count = realtime_controller.GetUserConnectedClientsCount(user.username)
     if count:
         # todo: add the new push (apns/gcm)
-        apps.shoutit.controllers.realtime_controller.SendNotification(notification, user.username, count)
-        realtime_message = apps.shoutit.controllers.realtime_controller.WrapRealtimeMessage(render_notification(notification),RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
-        apps.shoutit.controllers.realtime_controller.SendRealtimeMessage(realtime_message, user.username)
+        realtime_controller.SendNotification(notification, user.username, count)
+        realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification),RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
+        realtime_controller.SendRealtimeMessage(realtime_message, user.username)
 
 
 def NotifyUserOfFollowship(user, follower):
@@ -52,8 +55,3 @@ def GetUserNotifications(user):
 
 def GetUserNotificationsWithoutMessagesCount(user):
     return Notification.objects.filter( Q(IsRead=False) & Q(ToUser=user) & ~Q(Type = NOTIFICATION_TYPE_MESSAGE)).count()
-
-
-from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
-import apps.shoutit.controllers.realtime_controller
-from apps.shoutit.models import Notification

@@ -1,37 +1,44 @@
-from apps.shoutit.models import User, UserProfile, BusinessProfile, Tag
 from apps.shoutit.constants import *
+from apps.shoutit.models import User, UserProfile, BusinessProfile, Tag
 from apps.shoutit.utils import IntToBase62
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
-from apps.shoutit.controllers.user_controller import GetUser
 
 
-def render_shout(shout):
+# todo: better levels
+def render_shout(shout, level=5):
     images = [image.Image for image in shout.GetImages()]
     videos = [render_video(video) for video in shout.get_videos()]
     tags = [render_tag(tag) for tag in shout.GetTags()]
-    return {
+
+    shout = {
         'id': IntToBase62(shout.id),
-        'url': get_object_url(shout),
-        'user': render_user(shout.OwnerUser, level=2),
         'type': PostType.values[shout.Type],
         'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
         'description': shout.Text,
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
-        'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
-        'date_created': shout.DatePublished.strftime('%s'),
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.GetFirstImage().Image if images else '',
-        'images': images,
-        'videos': videos,
-        'tags': tags,
-        'location': {
-            'country': shout.CountryCode,
-            'city': shout.ProvinceCode,
-            'latitude': shout.Latitude,
-            'longitude': shout.Longitude,
-            'address': shout.Address
-        }
+        'date_created': shout.DatePublished.strftime('%s'),
+        'url': get_object_url(shout),
+        'user': render_user(shout.OwnerUser, level=2),
     }
 
+    if level >= 2:
+        shout.update({
+            'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
+            'images': images,
+            'videos': videos,
+            'tags': tags,
+            'location': {
+                'country': shout.CountryCode,
+                'city': shout.ProvinceCode,
+                'latitude': shout.Latitude,
+                'longitude': shout.Longitude,
+                'address': shout.Address
+            }
+
+        })
+
+    return shout
 
 def render_tag(tag):
     if tag is None:
@@ -61,6 +68,7 @@ def render_user(user, level=1, owner=False):
     profile = None
     result = {}
     if isinstance(user, unicode):
+        from apps.shoutit.controllers.user_controller import GetUser
         profile = GetUser(user)
 
     elif isinstance(user, User):
@@ -119,8 +127,9 @@ def render_user(user, level=1, owner=False):
 
 
 def render_message(message):
-    if message is None:
+    if not message:
         return {}
+
     return {
         'message_id': IntToBase62(message.id),
         'conversation_id': IntToBase62(message.Conversation.id) ,
@@ -129,19 +138,30 @@ def render_message(message):
         'to_user': render_user(message.ToUser, level=1),
         'text': message.Text,
         'is_read': message.IsRead,
-        'date_created': message.DateCreated.strftime('%s')
+        'date_created': message.DateCreated.strftime('%s'),
+        'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
+    }
+
+
+def render_message_attachment(message_attachment):
+    if not message_attachment:
+        return {}
+    return {
+        'content_type': 'shout',
+        'object_id': IntToBase62(message_attachment.object_id),
+        'content_object': render_shout(message_attachment.content_object, level=1)
     }
 
 
 def render_conversation(conversation):
-    if conversation is None:
+    if not conversation:
         return {}
     return {
         'conversation_id': IntToBase62(conversation.id),
         'url': get_object_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
-        'about': render_shout(conversation.AboutPost),
+        'about': render_shout(conversation.AboutPost, level=1),
         'is_read': conversation.IsRead,
         'text': conversation.Text if hasattr(conversation, 'Text') else '',
         'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None

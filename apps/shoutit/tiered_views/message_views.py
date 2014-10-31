@@ -153,8 +153,10 @@ def reply_in_conversation(request, conversation_id):
 
     conversation = validation_result.data['conversation']
     text = validation_result.data['text']
+    attachments = request.json_data['attachments'] if 'attachments' in request.json_data else None
 
-    message = message_controller.send_message(request.user, conversation.With, conversation.AboutPost, text, conversation=conversation)
+    message = message_controller.send_message(request.user, conversation.With, conversation.AboutPost, text, conversation=conversation,
+                                              attachments=attachments)
 
     result.data['message'] = message
     result.messages.append(('success', _('Your message was sent successfully.')))
@@ -170,8 +172,9 @@ def reply_to_shout(request, shout_id):
 
     shout = validation_result.data['shout']
     text = validation_result.data['text']
+    attachments = request.json_data['attachments'] if 'attachments' in request.json_data else None
 
-    message = message_controller.send_message(request.user, shout.OwnerUser, shout, text)
+    message = message_controller.send_message(request.user, shout.OwnerUser, shout, text, attachments=attachments)
 
     result.messages.append(('success', _('Your message was sent successfully.')))
     result.data['url'] = get_object_url(message.Conversation)

@@ -405,6 +405,11 @@ def make_image_thumbnail(url, size, container_name):
     new_obj = container.store_object('%s_%d%s' % (name, size, extension), data=buff.buf, content_type=content_type)
 
 
+def make_cloud_thumbnails_for_image(image_url):
+    make_image_thumbnail(image_url, 145, 'shout_image')
+    make_image_thumbnail(image_url, 85, 'shout_image')
+
+
 def ToSeoFriendly(s, maxlen=50):
     import re
 

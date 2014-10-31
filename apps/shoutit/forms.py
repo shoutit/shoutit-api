@@ -7,10 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.extras.widgets import SelectDateWidget
-from apps.shoutit import constants, utils
-from apps.shoutit.constants import ExperienceState
-from apps.shoutit.controllers import user_controller
+
+from apps.shoutit.constants import ExperienceState, TOKEN_TYPE_HTML_NUM
 from apps.shoutit.models import Currency, BusinessProfile, BusinessCategory, BusinessCreateApplication
+from apps.shoutit.controllers import user_controller
+from apps.shoutit.utils import safe_string
 from common.tagged_cache import TaggedCache
 
 
@@ -240,7 +241,7 @@ class ExtenedSignUp(forms.Form):
             type = int(self.data['tokentype'])
         except KeyError:
             type = int(self.initial['tokentype'])
-        if type == constants.TOKEN_TYPE_HTML_NUM:
+        if type == TOKEN_TYPE_HTML_NUM:
             return mobile
         if mobile is None or mobile == '':
             return mobile
@@ -328,7 +329,7 @@ class UserEditProfileForm(forms.Form):
 
     def clean_firstname(self):
         firstname = self.data['firstname'].strip()
-        fname = utils.safe_string(firstname)
+        fname = safe_string(firstname)
         if not fname or len(fname) == 0:
             return firstname
         else:
@@ -336,7 +337,7 @@ class UserEditProfileForm(forms.Form):
 
     def clean_lastname(self):
         lastname = self.data['lastname'].strip()
-        lname = utils.safe_string(lastname)
+        lname = safe_string(lastname)
         if not lname or len(lname) == 0:
             return lastname
         else:
@@ -344,7 +345,7 @@ class UserEditProfileForm(forms.Form):
 
     def clean_bio(self):
         bioinfo = self.data['bio'].strip()
-        bio = utils.safe_string(self.data['bio'].strip())
+        bio = safe_string(self.data['bio'].strip())
         if not bio or len(bio) == 0:
             return bioinfo
         else:

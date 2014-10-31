@@ -8,11 +8,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from apps.shoutit.models import FollowShip, LinkedFacebookAccount, ConfirmToken, BusinessProfile, UserProfile, Trade
 
-from apps.shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, UserEditProfileForm, ExtenedSignUp
-
-from apps.shoutit.controllers import email_controller, realtime_controller, stream_controller, user_controller, shout_controller, experience_controller
+from apps.shoutit.controllers import user_controller, stream_controller, shout_controller, experience_controller, email_controller, realtime_controller
 from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
+
+from apps.shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, UserEditProfileForm, ExtenedSignUp
 
 from apps.shoutit.tiers import cached_view, non_cached_view, refresh_cache, ResponseResult, CACHE_REFRESH_LEVEL_ALL, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
 from apps.shoutit.tiers import CACHE_TAG_USERS, CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_NOTIFICATIONS

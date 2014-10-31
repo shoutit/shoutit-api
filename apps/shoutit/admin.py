@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from apps.ActivityLogger.models import Activity, ActivityData, Request
-from apps.shoutit.controllers import business_controller
 from apps.shoutit.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, BusinessProfile, BusinessConfirmation, BusinessCategory,\
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
+from apps.ActivityLogger.models import Activity, ActivityData, Request
+# from apps.shoutit.controllers import business_controller
 
 
 # Shout
@@ -74,33 +74,33 @@ admin.site.register(BusinessProfile, BusinessProfileAdmin)
 
 
 # BusinessCreateApplication
-class BusinessCreateApplicationAdmin(admin.ModelAdmin):
-    list_display = ('Name', 'User', 'Business','confirmation_url','Country', 'City', 'Status')
-    search_fields = ['Name', 'User__email','Website', 'Phone']
-    readonly_fields = ('User','Business','LastToken')
-    list_filter = ('Status',)
-    actions = ['accept_business', 'reject_business']
-
-    def confirmation_url(self, obj):
-        try:
-            confirmation = obj.User.BusinessConfirmations.all().order_by('id')[0]
-            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.id, obj.User)
-        except :
-            return 'Docs not yet submitted'
-
-    confirmation_url.allow_tags = True
-    confirmation_url.short_description = 'Confirmation Link'
-
-    def accept_business(self, request, queryset):
-        for q in queryset:
-            business_controller.AcceptBusiness(request, q)
-    accept_business.short_description = "Accept selected business creation applications"
-
-    def reject_business(self, request, queryset):
-        pass
-    #TODO send email with explanation to user via email
-    reject_business.short_description = "Reject selected business creation applications"
-admin.site.register(BusinessCreateApplication, BusinessCreateApplicationAdmin)
+# class BusinessCreateApplicationAdmin(admin.ModelAdmin):
+#     list_display = ('Name', 'User', 'Business','confirmation_url','Country', 'City', 'Status')
+#     search_fields = ['Name', 'User__email','Website', 'Phone']
+#     readonly_fields = ('User','Business','LastToken')
+#     list_filter = ('Status',)
+#     actions = ['accept_business', 'reject_business']
+#
+#     def confirmation_url(self, obj):
+#         try:
+#             confirmation = obj.User.BusinessConfirmations.all().order_by('id')[0]
+#             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.id, obj.User)
+#         except :
+#             return 'Docs not yet submitted'
+#
+#     confirmation_url.allow_tags = True
+#     confirmation_url.short_description = 'Confirmation Link'
+#
+#     def accept_business(self, request, queryset):
+#         for q in queryset:
+#             business_controller.AcceptBusiness(request, q)
+#     accept_business.short_description = "Accept selected business creation applications"
+#
+#     def reject_business(self, request, queryset):
+#         pass
+#     #TODO send email with explanation to user via email
+#     reject_business.short_description = "Reject selected business creation applications"
+# admin.site.register(BusinessCreateApplication, BusinessCreateApplicationAdmin)
 
 
 # BusinessConfirmation

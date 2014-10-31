@@ -1,7 +1,5 @@
 from itertools import chain
 import os
-from datetime import datetime
-
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,13 +7,17 @@ from django.utils.translation import ugettext as _
 from django.db.models.aggregates import Count, Min
 from django.db.models.query_utils import Q
 
+from apps.shoutit.models import Event, UserProfile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, BusinessProfile, PredefinedCity, LinkedGoogleAccount
+
+from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
+
 from apps.ActivityLogger.logger import Logger
 from apps.shoutit.constants import *
 
 from apps.shoutit.utils import ToSeoFriendly, generateConfirmToken, generateUsername, GeneratePassword, make_image_thumbnail, get_size_url
-from apps.shoutit.models.user import LinkedGoogleAccount
 import apps.shoutit.settings as settings
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
+
 
 
 #todo: naming: Profile
@@ -216,7 +218,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
     if email is not None and send_activation:
-        apps.shoutit.controllers.email_controller.SendRegistrationActivationEmail(django_user, email, "http://%s%s" % (
+        email_controller.SendRegistrationActivationEmail(django_user, email, "http://%s%s" % (
             settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
     SignInUser(request, password, username)
     django_user.token = token
@@ -281,7 +283,7 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
 
 def ChangeEmailAndSendActivation(request, user, email):
     token = SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
-    apps.shoutit.controllers.email_controller.SendRegistrationActivationEmail(user, email,
+    email_controller.SendRegistrationActivationEmail(user, email,
                                                                               "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'),
                                                                               token)
 
@@ -300,7 +302,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     if not sex:
         user.Profile.Image = '/static/img/_user_female.png'
     user.Profile.save()
-    import apps.shoutit.controllers.realtime_controller as realtime_controller
+    import realtime_controller as realtime_controller
 
     realtime_controller.BindUserToCity(user.username, user.Profile.City)
     if token is not None and len(token) > 0:
@@ -554,13 +556,13 @@ def FollowStream(request, follower, followed):
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.id})
         if followed.Type == STREAM_TYPE_USER:
             followedUser = UserProfile.objects.get(Stream=followed)
-            apps.shoutit.controllers.email_controller.SendFollowshipEmail(follower.User, followedUser.User)
-            apps.shoutit.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
+            email_controller.SendFollowshipEmail(follower.User, followedUser.User)
+            notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_USER, followedUser)
         elif followed.Type == STREAM_TYPE_BUSINESS:
             followedUser = BusinessProfile.objects.get(Stream=followed)
-            apps.shoutit.controllers.email_controller.SendFollowshipEmail(follower.User, followedUser.User)
-            apps.shoutit.controllers.notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
+            email_controller.SendFollowshipEmail(follower.User, followedUser.User)
+            notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_BUSINESS, followedUser)
 
 
@@ -777,9 +779,3 @@ def update_location(user_profile, location):
     except BaseException, e:
         print(e.message)
         return False
-
-
-import apps.shoutit.controllers.email_controller
-import apps.shoutit.controllers.notifications_controller,event_controller, shout_controller
-from apps.shoutit.models import Event, UserProfile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, Shout, UserPermission, Post, \
-    Trade, BusinessProfile, PredefinedCity
