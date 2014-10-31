@@ -75,7 +75,7 @@ class ResponseResult(object):
         errors: A list of errors that are instances of ResponseResultError class.
         messages: A list of 2d tuples, the first entry is the type of the message, and the second entry is the message. e.g. [('info', 'info message'), ('warning', 'warning message')]
         data: A dictionary of data that are passed from the view to the renderer function.
-        form_errors: A dicitioanry of form errors that are passed from the request validator function to the renderer function.
+        form_errors: A dictionary of form errors that are passed from the request validator function to the renderer function.
     """
 
     def __init__(self):
@@ -92,16 +92,11 @@ class ResponseResult(object):
 
 class ValidationResult(object):
     def __init__(self, valid, form_errors=None, errors=None, messages=None, data=None):
-        if not data: data = {}
-        if not messages: messages = []
-        if not errors: errors = []
-        if not form_errors: form_errors = {}
-
         self.valid = valid
-        self.form_errors = form_errors
-        self.errors = errors
-        self.messages = messages
-        self.data = {}
+        self.form_errors = form_errors or {}
+        self.errors = errors or []
+        self.messages = messages or []
+        self.data = data or {}
 
 
 def __validate_request(request, methods, validator, *args, **kwargs):
@@ -146,7 +141,7 @@ def get_cache_tags(request, cache_settings, *args, **kwargs):
     return result
 
 
-def view(
+def tiered_view(
     html_renderer=None,
     json_renderer=None,
     api_renderer=None,
@@ -217,6 +212,7 @@ def view(
                     else:
                         result = None
                     if not result:
+                        request.validation_result = validation_result
                         result = view(request, *args, **kwargs)
                     if result and cache_settings and cache_settings['to_cache']:
                         TaggedCache.set_with_tags(get_cache_key(request, cache_settings['level']), result, get_cache_tags(request, cache_settings, *args, **kwargs), cache_settings['timeout'])
@@ -271,7 +267,7 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None
         'level': level
     }
 
-    return view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required,
+    return tiered_view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required,
                 activation_required, post_activation_required, cache_settings, permissions_required=permissions_required,
                 business_subscription_required=business_subscription_required)
 
@@ -279,7 +275,7 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None
 def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=['GET', 'POST'],
                     validator=None, login_required=False, post_login_required=False, activation_required=False,
                     post_activation_required=False, permissions_required=[], business_subscription_required=False):
-    return view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,
+    return tiered_view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,
                 mobile_renderer=mobile_renderer, methods=methods, validator=validator, login_required=login_required,
                 post_login_required=post_login_required, activation_required=activation_required,
                 post_activation_required=post_activation_required, permissions_required=permissions_required,

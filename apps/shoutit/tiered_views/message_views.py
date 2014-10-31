@@ -1,14 +1,19 @@
 import math
+from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
-from apps.shoutit.forms import *
-from apps.shoutit.models import *
+from apps.shoutit.api.api_utils import get_object_url
+from apps.shoutit.models import Message
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE
-from apps.shoutit.tiered_views.renderers import *
+from apps.shoutit.tiered_views.renderers import operation_api, json_data_renderer, conversations_api, json_renderer, conversation_json, \
+    page_html, conversation_api, json_send_message, reply_message_api_render, read_conversations_stream_json
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
 from apps.shoutit.constants import *
 from apps.shoutit.controllers import message_controller, shout_controller
+from apps.shoutit.utils import IntToBase62
+from apps.shoutit.xhr_utils import xhr_respond
 
 
 @non_cached_view(methods=['GET', 'DELETE'],
@@ -21,7 +26,6 @@ def delete_conversation(request):
     id = request.GET[u'id']
     id = Base62ToInt(id)
     message_controller.DeleteConversation(request.user, id)
-    # refresh_cache_dynamically([CACHE_TAG_MESSAGES.make_dynamic(request.user)])
     return result
 
 
@@ -34,7 +38,6 @@ def delete_message(request):
     id = request.GET[u'id']
     id = Base62ToInt(id)
     message_controller.DeleteMessage(request.user, id)
-    # refresh_cache_dynamically([CACHE_TAG_MESSAGES.make_dynamic(request.user)])
     result = ResponseResult()
     return result
 
@@ -44,9 +47,8 @@ def get_html_message(request):
         variables = RequestContext(request, {'message': message_controller.GetMessage(Base62ToInt(request.GET[u'id']))})
         data = {'html': render_to_string("message.html", variables)}
     else:
-        variables = RequestContext(request,
-                                   {'conversation': message_controller.GetConversation(Base62ToInt(request.GET[u'id']),
-                                                                                       request.user)})
+        variables = RequestContext(request, {'conversation': message_controller.get_conversation(Base62ToInt(request.GET[u'id']),
+                                                                                                 request.user)})
         data = {'html': render_to_string("conversation.html", variables)}
 
     return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
@@ -61,7 +63,7 @@ def get_shout_conversations(request, shout_id):
     result = ResponseResult()
     shout_id = Base62ToInt(shout_id)
     shout = shout_controller.GetPost(shout_id, True, True)
-    result.data['conversations'] = message_controller.GetShoutConversations(shout_id, request.user)
+    result.data['conversations'] = message_controller.get_shout_conversations(shout_id, request.user)
     result.data['is_owner'] = (request.user.pk == shout.OwnerUser.pk)
     return result
 
@@ -94,7 +96,7 @@ def mark_message_as_read(request, message_id):
 def read_conversation(request, conversation_id):
     result = ResponseResult()
     result.data['form'] = MessageForm()
-    result.data['conversation'] = message_controller.GetConversation(Base62ToInt(conversation_id), request.user)
+    result.data['conversation'] = message_controller.get_conversation(Base62ToInt(conversation_id), request.user)
     result.data['shout'] = result.data['conversation'].AboutPost
     result.data['conversation_messages'] = message_controller.ReadConversation(request.user, Base62ToInt(conversation_id))
     result.data['conversation_id'] = Base62ToInt(conversation_id)
@@ -109,17 +111,17 @@ def read_conversation(request, conversation_id):
                  methods=['GET', 'POST'],
                  validator=send_message_validator,
                  json_renderer=lambda request, result, shout_id, conversation_id: json_send_message(request, result),
-                 html_renderer=lambda request, result, shout_id, conversation_id: page_html(request, result,
-                                                                                            'send_message.html',
-                                                                                            _('Messages')),
+                 html_renderer=lambda request, result, shout_id, conversation_id: page_html(request, result, 'send_message.html', _('Messages')),
                  permissions_required=[PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE])
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
-def send_message(request, shout_id, conversation_id='0'):
-    if not conversation_id:
-        conversation_id = '0'
+def send_message(request, shout_id, conversation_id=None):
     result = ResponseResult()
-    shout = shout_controller.GetPost(utils.Base62ToInt(shout_id))
-    to_user = shout.OwnerUser
+    validation_result = request.validation_result
+
+    shout = validation_result.data['shout']
+    conversation = validation_result.data['conversation']
+    to_user = conversation.With if conversation else shout.OwnerUser
+
     result.data['to_user'] = to_user
     if request.method == 'POST':
         permissions_result = permissions_point_cut(request, [PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE])
@@ -127,18 +129,14 @@ def send_message(request, shout_id, conversation_id='0'):
             return permissions_result
         form = MessageForm(request.POST)
         form.is_valid()
-        message = message_controller.SendMessage(request.user, to_user, shout, form.cleaned_data['text'],
-                                                 conversation_id=Base62ToInt(conversation_id))
+        message = message_controller.send_message(request.user, to_user, shout, form.cleaned_data['text'], conversation=conversation)
         result.data['conversation_id'] = message.Conversation_id
         result.data['message'] = message
-        # refresh_cache_dynamically([CACHE_TAG_MESSAGES.make_dynamic(message.Conversation.FromUser), CACHE_TAG_MESSAGES.make_dynamic(message.Conversation.ToUser)])
     else:
-        if request.user.is_authenticated():
-            conversation = message_controller.ConversationExist(request.user, shout.OwnerUser, shout)
-            if conversation:
-                result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
-                result.data['next'] = '/messages/%s/#send_message_form' % IntToBase62(conversation.pk)
-                return result
+        if request.user.is_authenticated() and conversation:
+            result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
+            result.data['next'] = '/messages/%s/#send_message_form' % IntToBase62(conversation.pk)
+            return result
         form = MessageForm()
 
     result.data['form'] = form
@@ -146,35 +144,35 @@ def send_message(request, shout_id, conversation_id='0'):
     return result
 
 
-@non_cached_view(login_required=True, methods=['POST'],
-                 api_renderer=reply_message_api_render,
-                 validator=read_conversation_validator)
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation_validator, api_renderer=reply_message_api_render)
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
-def reply_to_conversation(request, conversation_id):
+def reply_in_conversation(request, conversation_id):
+    """Reply in a Conversation."""
     result = ResponseResult()
-    conversation = message_controller.GetConversation(Base62ToInt(conversation_id), request.user)
-    msg = message_controller.SendMessage(request.user, conversation.With, conversation.AboutPost, request.POST['text'], conversation.pk)
-    # refresh_cache_dynamically([CACHE_TAG_MESSAGES.make_dynamic(conversation.FromUser), CACHE_TAG_MESSAGES.make_dynamic(conversation.ToUser)])
-    result.data['message'] = msg
+    validation_result = request.validation_result
+
+    conversation = validation_result.data['conversation']
+    text = validation_result.data['text']
+
+    message = message_controller.send_message(request.user, conversation.With, conversation.AboutPost, text, conversation=conversation)
+
+    result.data['message'] = message
     result.messages.append(('success', _('Your message was sent successfully.')))
     return result
 
 
-@non_cached_view(login_required=True, methods=['POST'],
-                 validator=lambda request, shout_id, *args, **kwargs:
-                 object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.Base62ToInt(shout_id)),
-                 api_renderer=reply_message_api_render)
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_to_shout_validator, api_renderer=reply_message_api_render)
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def reply_to_shout(request, shout_id):
+    """Reply to a Shout for first time. request.user shouldn't be the shout owner."""
     result = ResponseResult()
-    shout = shout_controller.GetPost(Base62ToInt(shout_id))
-    conversation = message_controller.ConversationExist(request.user, shout.OwnerUser, shout)
-    if conversation:
-        message = message_controller.SendMessage(request.user, shout.OwnerUser, shout, request.POST['text'], conversation.pk)
-    else:
-        message = message_controller.SendMessage(request.user, shout.OwnerUser, shout, request.POST['text'])
-        conversation = message_controller.ConversationExist(request.user, shout.OwnerUser, shout)
-        # refresh_cache_dynamically([CACHE_TAG_MESSAGES.make_dynamic(conversation.FromUser), CACHE_TAG_MESSAGES.make_dynamic(conversation.ToUser)])
+    validation_result = request.validation_result
+
+    shout = validation_result.data['shout']
+    text = validation_result.data['text']
+
+    message = message_controller.send_message(request.user, shout.OwnerUser, shout, text)
+
     result.messages.append(('success', _('Your message was sent successfully.')))
     result.data['url'] = get_object_url(message.Conversation)
     result.data['message'] = message
@@ -185,13 +183,13 @@ def reply_to_shout(request, shout_id):
              methods=['GET'],
              login_required=True,
              api_renderer=conversations_api,
-             json_renderer=lambda request, result, username, *args: read_conversations_stream_json(request, result))
+             json_renderer=lambda request, result, *args, **kwargs: read_conversations_stream_json(request, result))
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def read_conversations_stream(request):
 
     result = ResponseResult()
 
-    page_num = int(getattr(request.GET, 'page', 1))
+    page_num = int(request.GET.get('page', 1))
     conversations_count = message_controller.ConversationsCount(request.user)
     result.data['pages_count'] = int(math.ceil(conversations_count / float(DEFAULT_PAGE_SIZE)))
     result.data['conversations'] = message_controller.ReadConversations(request.user, DEFAULT_PAGE_SIZE * (page_num - 1),
@@ -208,6 +206,5 @@ def read_conversations_stream(request):
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def read_conversations(request):
     result = ResponseResult()
-    # result.data['conversations'] = get_data([CACHE_TAG_MESSAGES.make_dynamic(request.user)], message_controller.ReadConversations, request.user, 0, DEFAULT_PAGE_SIZE)
     result.data['conversations'] = message_controller.ReadConversations(request.user, 0, DEFAULT_PAGE_SIZE)
     return result

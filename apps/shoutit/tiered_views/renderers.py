@@ -159,14 +159,14 @@ def activate_modal_mobile(request, result, token):
 
 def browse_html(request, result, browse_type, url_encoded_city, browse_category=None):
     if 'redirect_category' in result.data:
-        return HttpResponseRedirect('/%s/%s/'%(browse_type,url_encoded_city))
+        return HttpResponseRedirect('/%s/%s/' % (browse_type,url_encoded_city))
     if 'redirect_city' in result.data:
-        redirect_city = '/%s/%s/'%(browse_type,request.session['user_city_encoded'])
+        redirect_city = '/%s/%s/' % (browse_type, request.session['user_city_encoded'])
         if browse_category:
             redirect_city += '%s/' % browse_category
         return HttpResponseRedirect(redirect_city)
     profile = None
-    page_title = unicode.title(u"%s%s %s" % (result.data['browse_city'],(" %s" % browse_category) if browse_category else '',browse_type))
+    page_title = unicode.title(u"%s%s %s" % (result.data['browse_city'], (" %s" % browse_category) if browse_category else '',browse_type))
     if not browse_category:
         page_desc = _('Shoutit is a social marketplace where buyers and sellers from %(city)s meet. Post or ask for Cars, Electronics, Properties, Food, or Jobs in %(city)s ')%{'city':result.data['browse_city']}
     else:

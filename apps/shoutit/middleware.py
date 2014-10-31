@@ -84,7 +84,8 @@ class UserLocationMiddleware(object):
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
-        if request.method == 'POST' and request.body != '' and 'application/json' in request.META['CONTENT_TYPE']:
+        # add the json_data attribute to all POST requests.
+        if request.method == 'POST' and 'application/json' in request.META['CONTENT_TYPE']:
             try:
                 request.json_data = json.loads(request.body)
                 request.json_to_post_fill = True
@@ -93,6 +94,9 @@ class JsonPostMiddleware(object):
                 return JsonResponseBadRequest({'error': 'invalid json format: ' + e.message})
             except BaseException, e:
                 return JsonResponseBadRequest({'error': e.message})
+
+        elif request.method == 'POST':
+            request.json_data = {}
         else:
             pass
 

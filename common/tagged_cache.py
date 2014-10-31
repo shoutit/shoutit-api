@@ -75,9 +75,10 @@ class TaggedCache(object):
             TaggedCache.update_tags_dict(tags_dict)
         keys_to_delete = []
 
-        def deferred_delete(key):
-            cache.delete(key)
-            keys_to_delete.append(key)
+        def deferred_delete(_key):
+            cache.delete(_key)
+            keys_to_delete.append(_key)
+
         [deferred_delete(key) for key in tags_dict[tag]]
         #[keys.remove(key) for key in keys_to_delete for keys in tags_dict.itervalues() if key in keys]
         [tags_dict[tag].remove(key) for key in keys_to_delete]

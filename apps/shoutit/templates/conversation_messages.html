@@ -16,7 +16,11 @@
 {#        <div class="arrow-left pull-left"></div>#}
         <div class="round shadow white-container pull-left form-body">
             <div class="pull-left">
-                <form action="/reply/{{ shout.pk|base62 }}/{{ conversation_id|base62 }}/" method="post" id='send_message_form'>
+                {% if conversation_id %}
+                  <form action="/reply/{{ shout.pk|base62 }}/{{ conversation_id|base62 }}/" method="post" id='send_message_form'>
+                {% else %}
+                  <form action="/reply/{{ shout.pk|base62 }}/" method="post" id='send_message_form'>
+                {% endif %}
                     {% csrf_token %}
                     {{ form.text }}
                     <button class="shout_message_reply_btn btn btn-primary" type="submit">{% trans "Reply" %}</button>

@@ -67,8 +67,10 @@ urlpatterns = patterns('',
                        url(r'^xhr/getHtmlMessage/$', 'apps.shoutit.tiered_views.message_views.get_html_message'),
 
                        url(r'^messages/$', 'apps.shoutit.tiered_views.message_views.read_conversations'),
+                        # todo: change the id system!
+                       url(r'^(?:xhr/)?messages/stream/$', 'apps.shoutit.tiered_views.message_views.read_conversations_stream'),
+
                        url(r'^(?:xhr/)?messages/([a-zA-z0-9]+)/$', 'apps.shoutit.tiered_views.message_views.read_conversation'),
-                       url(r'^(?:xhr/)?messages/stream/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.message_views.read_conversations_stream'),
                        url(r'^xhr/message/(\w+)/read/$', 'apps.shoutit.tiered_views.message_views.mark_message_as_read'),
 
                        url(r'^upload/files/$', 'apps.shoutit.tiered_views.general_views.cloud_file_upload'),

@@ -1,41 +1,47 @@
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
+from django.core.exceptions import ObjectDoesNotExist
 
 
-def ConversationExist(user1, user2, trade):
-    conversation = Conversation.objects.filter(
-        Q(AboutPost=trade)
-        & ((Q(FromUser=user1) & Q(ToUser=user2)) | (Q(FromUser=user2) & Q(ToUser=user1)))
-    )
-    if (conversation is not None) and (len(conversation)):
-        return conversation[0]
-    else:
-        return None
+def conversation_exist(conversation_id=None, user1=None, user2=None, about=None):
+    try:
+        if conversation_id:
+            return Conversation.objects.get(pk=conversation_id)
+        elif user1 and user2 and about:
+            return Conversation.objects.get(
+                Q(AboutPost=about) & ((Q(FromUser=user1) & Q(ToUser=user2)) | (Q(FromUser=user2) & Q(ToUser=user1)))
+            )
+        else:
+            return False
+    except ObjectDoesNotExist:
+        return False
 
 
-def SendMessage(fromUser, toUser, trade, text, conversation_id=0):
-    if not conversation_id:
-        conversation = ConversationExist(fromUser, toUser, trade)
-    else:
-        conversation = GetConversation(conversation_id, fromUser)
-        if fromUser.pk == conversation.ToUser_id:
-            toUser = conversation.FromUser
+def send_message(from_user, to_user, about, text, conversation=None):
 
-    if conversation is None:
-        conversation = Conversation(FromUser=fromUser, ToUser=toUser, AboutPost=trade)
-    else:
-        conversation.IsRead = False
+    if not conversation:
+        conversation = conversation_exist(user1=from_user, user2=to_user, about=about)
 
+    if not conversation:
+        conversation = Conversation(FromUser=from_user, ToUser=to_user, AboutPost=about)
+
+    # todo: fix visibility to sender receiver!?
+    conversation.IsRead = False
     conversation.VisibleToSender = True
     conversation.VisibleToRecivier = True
     conversation.save()
-    msg = Message(Conversation=conversation, FromUser=fromUser, ToUser=toUser, Text=text)
-    msg.save()
-    apps.shoutit.controllers.notifications_controller.NotifyUserOfMessage(toUser, msg)
-    apps.shoutit.controllers.email_controller.SendMessageEmail(msg)
-    return msg
+
+    message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, Text=text)
+    message.save()
+
+    # todo: push notification test
+    apps.shoutit.controllers.notifications_controller.NotifyUserOfMessage(to_user, message)
+    apps.shoutit.controllers.email_controller.SendMessageEmail(message)
+
+    return message
 
 
+# todo: simplify this SHIT!
 def getFullConversationDetails(conversations, user):
     result_conversations = []
     conversation_ids = [conversation.id for conversation in conversations]
@@ -46,26 +52,17 @@ def getFullConversationDetails(conversations, user):
     if shouts_ids:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(pk) for pk in shouts_ids])])
-        tags_with_shout_id = list(
-            tags.values('id', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags_with_shout_id = list(tags.values('id', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
 
-        # tags = Tag.objects.extra(select={'shout_id' : '"%s"."%s"' % (Shout.Tags.field.m2m_db_table(), Shout.Tags.field.m2m_column_name())})
-        #tags.query.join((None, Tag._meta.db_table, None, None))
-        #connection = (Tag._meta.db_table, Shout.Tags.field.m2m_db_table(), Tag._meta.pk.column, Shout.Tags.field.m2m_reverse_name())
-        #tags.query.join(connection, promote=True)
-        #tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(pk) for pk in shouts_ids])])
-        #tags_with_shout_id = list(tags)
     else:
         tags_with_shout_id = []
 
-    images = StoredImage.objects.filter(
-        Item__pk__in=[conversation.AboutPost.Item.pk for conversation in conversations]).order_by('Image')
+    images = StoredImage.objects.filter(Item__pk__in=[conversation.AboutPost.Item.pk for conversation in conversations]).order_by('Image')
 
     empty_conversations_to = []
     empty_conversations_from = []
     for conversation in conversations:
-        conversation.messages = [message for message in conversations_messages if
-                                 message.Conversation_id == conversation.id]
+        conversation.messages = [message for message in conversations_messages if message.Conversation_id == conversation.id]
         if not len(conversation.messages):
             if conversation.FromUser == user:
                 empty_conversations_from.append(conversation.id)
@@ -73,13 +70,11 @@ def getFullConversationDetails(conversations, user):
                 empty_conversations_to.append(conversation.id)
             continue
         conversation.AboutPost.SetImages([image for image in images if image.Item_id == conversation.AboutPost.Item_id])
-        conversation.AboutPost.SetTags(
-            [tag for tag in tags_with_shout_id if tag['Shouts__id'] == conversation.AboutPost.pk])
-        # conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag.shout_id == conversation.AboutPost.pk])
+        conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == conversation.AboutPost.pk])
         conversation.Text = list(conversation.messages)[-1].Text[0:256]
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
         conversation.With = conversation.FromUser if conversation.FromUser != user else conversation.ToUser
-        conversation.IsRead = False if [1 if message.ToUser == user and message.IsRead == False else 0 for message in
+        conversation.IsRead = False if [1 if message.ToUser == user and not message.IsRead else 0 for message in
                                         conversation.messages].count(1) else True
         result_conversations.append(conversation)
 
@@ -106,8 +101,8 @@ def ReadConversations(user, start_index=None, end_index=None):
     return getFullConversationDetails(conversations, user)
 
 
-def ReadConversation(user, id):
-    conversation = Conversation.objects.get(pk=id)
+def ReadConversation(user, conversation_id):
+    conversation = Conversation.objects.get(pk=conversation_id)
     Message.objects.filter(Q(Conversation=conversation) & (Q(FromUser=user) | Q(ToUser=user) )).update(IsRead=True)
     messages = Message.objects.filter(Q(Conversation=conversation) & (
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).order_by(
@@ -115,8 +110,12 @@ def ReadConversation(user, id):
     return messages
 
 
-def GetConversation(id, user=None):
-    conversation = Conversation.objects.get(pk=id)
+def get_conversation(conversation_id, user=None):
+    try:
+        conversation = Conversation.objects.get(pk=conversation_id)
+    except ObjectDoesNotExist:
+        conversation = None
+
     if user is None:
         if conversation:
             return conversation
@@ -128,7 +127,7 @@ def GetConversation(id, user=None):
         return conversation
 
 
-def GetShoutConversations(shout_id, user):
+def get_shout_conversations(shout_id, user):
     #todo: simplify
     shout = apps.shoutit.controllers.shout_controller.GetPost(shout_id, True, True)
     if user.is_authenticated() and user.pk == shout.OwnerUser.pk:

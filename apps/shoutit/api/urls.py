@@ -4,7 +4,7 @@ from piston3.authentication import OAuthAuthentication, NoAuthentication
 from apps.shoutit.tiered_views import user_views, realtime_views, tag_views, stream_views, shout_views, message_views
 from apps.shoutit.tiered_views import general_views, experience_views, comment_views, business_views
 
-from apps.shoutit.api.handlers import *
+from apps.shoutit.api.handlers import TieredHandler
 
 
 class TieredResource(Resource):
@@ -47,7 +47,6 @@ class MethodDependentAuthentication(object):
             return self.default.challenge()
         else:
             return None
-
 
 oauth = OAuthAuthentication()
 no_oauth = NoAuthentication()
@@ -175,7 +174,7 @@ urlpatterns = patterns('',
                        url(r'^messages/([a-zA-z0-9]+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': message_views.read_conversation,
-                               'POST': message_views.reply_to_conversation
+                               'POST': message_views.reply_in_conversation
                            })
                        ),
 

@@ -21,7 +21,7 @@ def object_exists_validator(function, message='', *args, **kwargs):
             return ValidationResult(False, messages=[('error', message)], errors=[RESPONSE_RESULT_ERROR_404])
     except ObjectDoesNotExist:
         return ValidationResult(False, messages=[('error', message)], errors=[RESPONSE_RESULT_ERROR_404])
-    return ValidationResult(True)
+    return ValidationResult(True, data=result)
 
 
 def form_validator(request, form_class, message='You have entered some invalid input.', initial={}):
@@ -43,9 +43,29 @@ def shout_form_validator(request, form_class, message='You have entered some inv
 
 
 def send_message_validator(request, shout_id, conversation_id):
+    # 1 - validating the form
     result = form_validator(request, MessageForm)
     if result.valid:
+
+        # 2 - validating the shout
         result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.Base62ToInt(shout_id), True, True)
+        if result.valid:
+            shout = result.data
+            conversation = None
+
+            # 3 - if there is no conversation_id, make sure user is not sending to himself
+            if not conversation_id and request.user.pk == shout.OwnerUser.pk:
+                return ValidationResult(False, messages=[('error', _("You can't start a conversation about your own shout."))])
+
+            # 4 - if there is conversation_id, make sure the conversation exists
+            if conversation_id:
+                result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),
+                                                 Base62ToInt(conversation_id), request.user)
+                if result.valid:
+                    conversation = result.data
+
+            result.data = {'shout': shout, 'conversation': conversation}
+
     return result
 
 
@@ -55,7 +75,7 @@ def profile_picture_validator(request, type, name, size):
     if type == 'user':
         result = user_profile_validator(request, name)
 
-    elif type =='tag':
+    elif type == 'tag':
         result = object_exists_validator(tag_controller.GetTag, _('Tag %(tag_name)s does not exist.') % {'tag_name': name}, name)
 
     return result
@@ -72,7 +92,8 @@ def user_edit_profile_validator(request, username, email):
             elif profile and isinstance(profile, BusinessProfile):
                 result = form_validator(request, BusinessEditProfileForm, initial=init)
             else:
-                result = ValidationResult(False, messages=[('error', _('User %(username)s does not exist.') % {'username' : username})], errors=[RESPONSE_RESULT_ERROR_404])
+                result = ValidationResult(False, messages=[('error', _('User %(username)s does not exist.') % {'username': username})],
+                                          errors=[RESPONSE_RESULT_ERROR_404])
             return result
         else:
             return ValidationResult(False, messages=[('error', _("You don't have permissions to edit this profile."))])
@@ -80,11 +101,39 @@ def user_edit_profile_validator(request, username, email):
 
 
 def read_conversation_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.GetConversation, _('Conversation does not exist.'),  Base62ToInt(conversation_id) ,request.user)
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),  Base62ToInt(conversation_id),
+                                     request.user)
     if result.valid:
-        conversation = message_controller.GetConversation(Base62ToInt(conversation_id), request.user)
+        conversation = result.data
         if request.user.pk != conversation.FromUser_id and request.user.pk != conversation.ToUser_id:
             return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
+    return result
+
+
+def reply_in_conversation_validator(request, conversation_id):
+    # todo: validator for json object attributes
+    if 'text' not in request.json_data or not request.json_data['text']:
+        return ValidationResult(False, form_errors={"text": ["This field is required and can't be empty."]})
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), Base62ToInt(conversation_id),
+                                     request.user)
+    if result.valid:
+        conversation = result.data
+        if request.user.pk != conversation.FromUser_id and request.user.pk != conversation.ToUser_id:
+            return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
+        result.data = {"conversation": conversation, "text": request.json_data['text']}
+    return result
+
+
+def reply_to_shout_validator(request, shout_id):
+    # todo: validator for json object attributes
+    if 'text' not in request.json_data or not request.json_data['text']:
+        return ValidationResult(False, form_errors={"text": ["This field is required and can't be empty."]})
+    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.Base62ToInt(shout_id))
+    if result.valid:
+        shout = result.data
+        if request.user.pk == shout.OwnerUser.pk:
+            return ValidationResult(False, messages=[('error', _("You can't start a conversation about your own shout."))])
+        result.data = {"shout": shout, "text": request.json_data['text']}
     return result
 
 
@@ -131,10 +180,9 @@ def delete_message_validator(request):
 
 
 def delete_conversation_validator(request):
-    id = request.GET[u'id']
-    id = Base62ToInt(id)
+    conversation_id = Base62ToInt(request.GET.get('id', '0'))
 
-    result = object_exists_validator(message_controller.GetConversation, _('Conversation does not exist.'), id)
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
     if result.valid:
         if request.user.is_authenticated():
             return result
@@ -157,11 +205,11 @@ def user_profile_validator(request, username, *args, **kwargs):
 
 def activate_api_validator(request, token, *args, **kwargs):
     if not token:
-        return ValidationResult(False, {'token' : [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])
+        return ValidationResult(False, {'token': [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])
     t = ConfirmToken.getToken(token, False, False)
     if not t:
-        return ValidationResult(False, {'token' : [_('Invalid activation token.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])
-    return form_validator(request, ExtenedSignUp, initial={'email' : request.user.email, 'tokentype' : TOKEN_TYPE_API_EMAIL.value})
+        return ValidationResult(False, {'token': [_('Invalid activation token.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])
+    return form_validator(request, ExtenedSignUp, initial={'email': request.user.email, 'tokentype' : TOKEN_TYPE_API_EMAIL.value})
 
 
 def shout_owner_view_validator(request, shout_id):
@@ -202,9 +250,7 @@ def experience_validator(request, *args, **kwargs):
         exp_frm.form_errors.update(extended_exp_frm.form_errors)
         exp_frm.valid = exp_frm.valid and extended_exp_frm.valid
         exp_frm.messages = exp_frm.messages if exp_frm.messages else extended_exp_frm.messages
-    return	ValidationResult(exp_frm.valid,
-                               messages = exp_frm.messages,
-                               form_errors = exp_frm.form_errors)
+    return ValidationResult(exp_frm.valid, messages=exp_frm.messages, form_errors=exp_frm.form_errors)
 
 
 def edit_experience_validator(request, exp_id, *args, **kwargs):

@@ -163,7 +163,7 @@ def shout_buy(request):
         form = ShoutForm(request.POST, request.FILES)
         form.is_valid()
 
-        if request.is_api:
+        if getattr(request, 'is_api', False):
             if 'location' in request.POST and all(attr in request.POST['location'] for attr in constants.LOCATION_ATTRIBUTES):
                 location = request.POST['location']
                 country = location['country']
@@ -251,7 +251,7 @@ def shout_sell(request):
         form = ShoutForm(request.POST, request.FILES)
         form.is_valid()
 
-        if request.is_api:
+        if getattr(request, 'is_api', False):
             if 'location' in request.POST and all(attr in request.POST['location'] for attr in constants.LOCATION_ATTRIBUTES):
                 location = request.POST['location']
                 country = location['country']
@@ -392,7 +392,7 @@ def shout_view(request, shout_id):
     result.data['desc'] = shout.Text
 
     if request.user.is_authenticated():
-        conversations = message_controller.GetShoutConversations(shout_id, request.user)
+        conversations = message_controller.get_shout_conversations(shout_id, request.user)
         if not conversations:
             result.data['new_message'] = True
         elif len(conversations) == 1:

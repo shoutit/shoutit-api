@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from apps.ActivityLogger.models import Activity, ActivityData, Request
 from apps.shoutit.controllers import business_controller
-from apps.shoutit.models.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
+from apps.shoutit.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, BusinessProfile, BusinessConfirmation, BusinessCategory,\
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
 

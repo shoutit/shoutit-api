@@ -382,7 +382,7 @@ $.fn.refreshScrollableStream = function (onSuccessFunction) {
     this.attr('data-current-page', ++currentPage);
     this.attr('data-is-loading', 'true');
     requestAjaxily({
-        url: this.attr('data-url') + currentPage + '/',
+        url: this.attr('data-url') + '?page=' + currentPage,
         scrollableObject: this,
         scrollBar: slimScrollBar,
         data: stream_data[this],

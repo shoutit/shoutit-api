@@ -285,7 +285,7 @@ function delete_gallery_item(id,clickedObject){
 function deleteMessage(id,domObj){
     post_data = {id : id}
     requestAjaxily({
-        url: '/xhr/deleteMessage',
+        url: '/xhr/deleteMessage/',
         data : post_data,
         type : 'GET',
         div : $(domObj).parents('div.message'),
@@ -298,7 +298,7 @@ function deleteMessage(id,domObj){
 function deleteConversation(id,domObj){
     post_data = {id : id}
     requestAjaxily({
-        url: '/xhr/deleteConversation',
+        url: '/xhr/deleteConversation/',
         data : post_data,
         type : 'GET',
         div : $(domObj).parents('div.message'),
@@ -313,7 +313,7 @@ function showMessagesAjaxly(id){
         current_conversation_id = id;
         post_data = {};
         requestAjaxily({
-            url: '/xhr/messages/' + id,
+            url: '/xhr/messages/' + id + '/',
             data : post_data,
             type : 'GET',
             successCallback:function(data){
@@ -357,7 +357,7 @@ function save_location(id_location,id_city,id_country){
     }
     var post_data = {latlong : $('#'+id_location).val() , city:$('#'+id_city).val() , country:$('#'+id_country).val()};
     requestAjaxily({
-        url : '/xhr/updateUserLocation',
+        url : '/xhr/updateUserLocation/',
         data : post_data ,
         type : 'GET' ,
         successCallback:function(data){
@@ -450,7 +450,7 @@ function fix_stream() {
 	$('a[id*="deleteShout"]').click(function(){
 		post_data = {id : this.id.toString().substr(6)}
 		requestAjaxily({
-			url: '/xhr/deleteShout',
+			url: '/xhr/deleteShout/',
 			data : post_data,
 			type : 'GET',
 			div : $(this).parents('div.shout_post').filter(':first'),

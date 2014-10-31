@@ -126,7 +126,7 @@
         lng = $('#id_location').val().split(",")[1];
         var post_data = {latlong : $('#id_location').val()};
         requestAjaxily({
-            url : '/xhr/updateUserLocation',
+            url : '/xhr/updateUserLocation/',
             data : post_data ,
             type : 'GET' ,
             successCallback:function(data){

@@ -19,9 +19,10 @@ def NotifyUser(user, type, from_user=None, attached_object=None):
 
     count = apps.shoutit.controllers.realtime_controller.GetUserConnectedClientsCount(user.username)
     if count:
+        # todo: add the new push (apns/gcm)
         apps.shoutit.controllers.realtime_controller.SendNotification(notification, user.username, count)
         realtime_message = apps.shoutit.controllers.realtime_controller.WrapRealtimeMessage(render_notification(notification),RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
-        apps.shoutit.controllers.realtime_controller.SendRealtimeMessage(realtime_message,user.username)
+        apps.shoutit.controllers.realtime_controller.SendRealtimeMessage(realtime_message, user.username)
 
 
 def NotifyUserOfFollowship(user, follower):
