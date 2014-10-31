@@ -689,7 +689,7 @@ def edit_profile_renderer_json(request, result, username):
         return json_renderer(request,
                              result,
                              success_message=_('Your profile was updated successfully.'),
-                             data={'next': result.data['next'] if 'next' in result.data else '/user/' + username})
+                             data={'next': result.data['next'] if 'next' in result.data else '/user/' + username + '/'})
     else:
         if result.errors:
             return get_initial_json_response(request, result)

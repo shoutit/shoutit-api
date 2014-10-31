@@ -330,7 +330,7 @@
 
 							html+= '<div class="clearfix"><h6>{% trans "Users" %}</h6>';
 							for(var i = 0;i<followingUsers.length; i++){
-								html+= '<a class="btn large user_thumb" href="/user/'+followingUsers[i].username+'"><img src="'+followingUsers[i].image+'"><span>' + followingUsers[i].name + '</span></a>';
+								html+= '<a class="btn large user_thumb" href="/user/'+followingUsers[i].username+'/"><img src="'+followingUsers[i].image+'"><span>' + followingUsers[i].name + '</span></a>';
 							}
 							html+= '</div>';
 
@@ -360,7 +360,7 @@
 
 							html+= '<div class="clearfix">';
 							for(var i = 0;i<followingUsers.length; i++){
-								html+= '<a class="btn large user_thumb" href="/user/'+followingUsers[i].username+'"><img src="'+followingUsers[i].image+'"><span>' + followingUsers[i].name + '</span></a>';
+								html+= '<a class="btn large user_thumb" href="/user/'+followingUsers[i].username+'/"><img src="'+followingUsers[i].image+'"><span>' + followingUsers[i].name + '</span></a>';
 							}
 							html+= '</div>';
 

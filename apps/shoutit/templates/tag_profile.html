@@ -141,7 +141,7 @@
 					var html = '';
 					html+= '<div class="clearfix">';
                     for(var i = 0;i<followers.length; i++){
-						html += '<a class="btn large user_thumb" href="/user/'+followers[i].username+'"><img src="'+followers[i].image+'"><span>' + followers[i].name + '</span></a>';
+						html += '<a class="btn large user_thumb" href="/user/'+followers[i].username+'/"><img src="'+followers[i].image+'"><span>' + followers[i].name + '</span></a>';
 					}
 					$('#FollowersModalContain').append(html);
                 }

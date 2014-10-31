@@ -10,7 +10,7 @@ def render_shout(shout, level=5):
     videos = [render_video(video) for video in shout.get_videos()]
     tags = [render_tag(tag) for tag in shout.GetTags()]
 
-    shout = {
+    shout_json = {
         'id': IntToBase62(shout.id),
         'type': PostType.values[shout.Type],
         'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
@@ -23,7 +23,7 @@ def render_shout(shout, level=5):
     }
 
     if level >= 2:
-        shout.update({
+        shout_json.update({
             'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
             'images': images,
             'videos': videos,
@@ -38,7 +38,7 @@ def render_shout(shout, level=5):
 
         })
 
-    return shout
+    return shout_json
 
 def render_tag(tag):
     if tag is None:

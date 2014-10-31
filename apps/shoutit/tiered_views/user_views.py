@@ -528,7 +528,7 @@ def user_edit_profile(request, username):
 
         if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
             user_profile.User.username = form.cleaned_data['username']
-            result.data['next'] = '/user/' + form.cleaned_data['username']
+            result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
         if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
             user_profile.User.email = form.cleaned_data['email']
         if form.cleaned_data.has_key('firstname') and form.cleaned_data['firstname']:
