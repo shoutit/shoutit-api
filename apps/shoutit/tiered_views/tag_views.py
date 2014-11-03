@@ -122,8 +122,7 @@ def tag_stream(request, tag_name, page_num=None):
 
     tag = tag_controller.GetTag(tag_name)
 
-    #	result.data['shouts_count'] = tag.Stream.Posts.GetValidShouts(types=[POST_TYPE_BUY,POST_TYPE_SELL]).count()
-    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags = tag).count()
+    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags=tag).count()
 
     result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
     result.data['shouts'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),

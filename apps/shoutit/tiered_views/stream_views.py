@@ -1,7 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
+from math import ceil
 from apps.shoutit.controllers import stream_controller, experience_controller
-from apps.shoutit.controllers import user_controller
-from apps.shoutit.controllers import notifications_controller
 from apps.shoutit.forms import *
 from apps.shoutit.models import *
 from apps.shoutit.tiered_views.renderers import *
@@ -201,6 +200,10 @@ def index_stream(request, page_num=1):
     #todo return info's regarding paging
     result.data['shouts'] = shouts
     result.data['count'] = len(shouts)
+
+    result.data['pages_count'] = int(ceil(len(all_shout_ids) / float(DEFAULT_PAGE_SIZE)))
+    result.data['is_last_page'] = page_num >= result.data['pages_count']
+
     return result
 
 
