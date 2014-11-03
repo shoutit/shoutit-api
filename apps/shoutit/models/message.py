@@ -37,7 +37,7 @@ class Message(models.Model):
     Conversation = models.ForeignKey(Conversation, related_name='Messages')
     FromUser = models.ForeignKey(User, related_name='ReciviedMessages')
     ToUser = models.ForeignKey(User, related_name='SentMessages')
-    Text = models.TextField()
+    Text = models.TextField(null=True, blank=False)
     IsRead = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)

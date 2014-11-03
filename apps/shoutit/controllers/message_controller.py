@@ -22,7 +22,7 @@ def conversation_exist(conversation_id=None, user1=None, user2=None, about=None)
         return False
 
 
-def send_message(from_user, to_user, about, text, conversation=None, attachments=None):
+def send_message(from_user, to_user, about, text=None, attachments=None, conversation=None):
 
     if not conversation:
         conversation = conversation_exist(user1=from_user, user2=to_user, about=about)
@@ -36,7 +36,7 @@ def send_message(from_user, to_user, about, text, conversation=None, attachments
     conversation.VisibleToRecivier = True
     conversation.save()
 
-    message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, Text=text)
+    message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, Text=text if text else None)
     message.save()
 
     if not attachments:
@@ -44,10 +44,8 @@ def send_message(from_user, to_user, about, text, conversation=None, attachments
 
     for attachment in attachments:
         object_id = Base62ToInt(attachment['object_id'])
-        # todo: map the content types to models
-        content_type = ContentType.objects.get_for_model(Trade)
-        message_attachment = MessageAttachment(message=message, content_type=content_type, object_id=object_id)
-        message_attachment.save()
+        content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
+        MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
 
     # todo: push notification test
     notifications_controller.NotifyUserOfMessage(to_user, message)
@@ -86,7 +84,8 @@ def getFullConversationDetails(conversations, user):
             continue
         conversation.AboutPost.SetImages([image for image in images if image.Item_id == conversation.AboutPost.Item_id])
         conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == conversation.AboutPost.pk])
-        conversation.Text = list(conversation.messages)[-1].Text[0:256]
+        last_message = list(conversation.messages)[-1]
+        conversation.Text = last_message.Text[0:256] if last_message.Text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
         conversation.With = conversation.FromUser if conversation.FromUser != user else conversation.ToUser
         conversation.IsRead = False if [1 if message.ToUser == user and not message.IsRead else 0 for message in

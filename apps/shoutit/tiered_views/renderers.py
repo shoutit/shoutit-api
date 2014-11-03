@@ -296,8 +296,6 @@ def reply_message_api_render(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        if 'url' in result.data:
-            pre_json_result['url'] = result.data['url']
         pre_json_result.update({
             'message': render_message(result.data['message'])
         })

@@ -16,6 +16,7 @@ def render_shout(shout, level=5):
         'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
         'description': shout.Text,
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
+        'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.GetFirstImage().Image if images else '',
         'date_created': shout.DatePublished.strftime('%s'),
         'url': get_object_url(shout),
@@ -24,7 +25,6 @@ def render_shout(shout, level=5):
 
     if level >= 2:
         shout_json.update({
-            'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
             'images': images,
             'videos': videos,
             'tags': tags,
@@ -146,10 +146,12 @@ def render_message(message):
 def render_message_attachment(message_attachment):
     if not message_attachment:
         return {}
+    content_type = 'shout'  # todo: possible other content types, therefore other content object
+    content_object = render_shout(message_attachment.content_object, level=1)
     return {
-        'content_type': 'shout',
+        'content_type': content_type,
         'object_id': IntToBase62(message_attachment.object_id),
-        'content_object': render_shout(message_attachment.content_object, level=1)
+        content_type: content_object
     }
 
 

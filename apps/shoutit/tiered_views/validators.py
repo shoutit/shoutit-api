@@ -110,30 +110,65 @@ def read_conversation_validator(request, conversation_id):
     return result
 
 
-def reply_in_conversation_validator(request, conversation_id):
+def message_validator(message):
+    result = ValidationResult(True)
     # todo: validator for json object attributes
-    if 'text' not in request.json_data or not request.json_data['text']:
-        return ValidationResult(False, form_errors={"text": ["This field is required and can't be empty."]})
+    if 'attachments' in message:
+        attachments = message['attachments']
+        if isinstance(attachments, list) and len(attachments) > 0:
+            for idx, attachment in enumerate(attachments):
+                if not ('content_type' in attachment and attachment['content_type'] == 'shout') \
+                        or not ('object_id' in attachment and attachment['object_id']):
+                    result = ValidationResult(False, form_errors={
+                        "attachments": ["attachments[%s] is missing valid 'content_type' or 'object_id'." % str(idx)]
+                    })
+                    return result
+
+        else:
+            result = ValidationResult(False, form_errors={"attachments": ["This field should be a non-empty list of {attachment}."]})
+
+    elif not ('text' in message and unicode(message['text']).strip()):
+        result = ValidationResult(False, form_errors={"text": ["This field is required and can't be empty."]})
+
+    return result
+
+
+def reply_in_conversation_validator(request, conversation_id):
+    message = request.json_data
+    result = message_validator(message)
+    if not result.valid:
+        return result
+
     result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), Base62ToInt(conversation_id),
                                      request.user)
     if result.valid:
         conversation = result.data
         if request.user.pk != conversation.FromUser_id and request.user.pk != conversation.ToUser_id:
             return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
-        result.data = {"conversation": conversation, "text": request.json_data['text']}
+        result.data = {
+            'conversation': conversation,
+            'text': 'text' in message and unicode(message['text']).strip() or None,
+            'attachments': 'attachments' in message and message['attachments'] or None
+        }
     return result
 
 
 def reply_to_shout_validator(request, shout_id):
-    # todo: validator for json object attributes
-    if 'text' not in request.json_data or not request.json_data['text']:
-        return ValidationResult(False, form_errors={"text": ["This field is required and can't be empty."]})
+    message = request.json_data
+    result = message_validator(message)
+    if not result.valid:
+        return result
+
     result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.Base62ToInt(shout_id))
     if result.valid:
         shout = result.data
         if request.user.pk == shout.OwnerUser.pk:
             return ValidationResult(False, messages=[('error', _("You can't start a conversation about your own shout."))])
-        result.data = {"shout": shout, "text": request.json_data['text']}
+        result.data = {
+            'shout': shout,
+            'text': 'text' in message and message['text'] or None,
+            'attachments': 'attachments' in message and message['attachments'] or None
+        }
     return result
 
 
