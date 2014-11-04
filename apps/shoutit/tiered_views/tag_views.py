@@ -23,7 +23,6 @@ from apps.shoutit.constants import *
 @refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
 def add_tag_to_interests(request, tag_name):
     tag_controller.AddToUserInterests(request, tag_name, request.user)
-    #refresh_cache_dynamically([CACHE_TAG_STREAMS.make_dynamic(request.user)])
     result = ResponseResult()
     return result
 
@@ -40,7 +39,6 @@ def add_tag_to_interests(request, tag_name):
 @refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
 def remove_tag_from_interests(request, tag_name):
     tag_controller.RemoveFromUserInterests(request, tag_name, request.user)
-    #refresh_cache_dynamically([CACHE_TAG_STREAMS.make_dynamic(request.user)])
     result = ResponseResult()
     return result
 

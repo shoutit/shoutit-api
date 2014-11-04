@@ -12,7 +12,7 @@ from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
 from apps.shoutit.constants import *
 from apps.shoutit.controllers import message_controller, shout_controller
-from apps.shoutit.utils import IntToBase62
+from apps.shoutit.utils import int_to_base62
 from apps.shoutit.xhr_utils import xhr_respond
 
 
@@ -24,7 +24,7 @@ from apps.shoutit.xhr_utils import xhr_respond
 def delete_conversation(request):
     result = ResponseResult()
     id = request.GET[u'id']
-    id = Base62ToInt(id)
+    id = base62_to_int(id)
     message_controller.DeleteConversation(request.user, id)
     return result
 
@@ -36,7 +36,7 @@ def delete_conversation(request):
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def delete_message(request):
     id = request.GET[u'id']
-    id = Base62ToInt(id)
+    id = base62_to_int(id)
     message_controller.DeleteMessage(request.user, id)
     result = ResponseResult()
     return result
@@ -44,10 +44,10 @@ def delete_message(request):
 
 def get_html_message(request):
     if request.GET[u'type'] == "message":
-        variables = RequestContext(request, {'message': message_controller.GetMessage(Base62ToInt(request.GET[u'id']))})
+        variables = RequestContext(request, {'message': message_controller.GetMessage(base62_to_int(request.GET[u'id']))})
         data = {'html': render_to_string("message.html", variables)}
     else:
-        variables = RequestContext(request, {'conversation': message_controller.get_conversation(Base62ToInt(request.GET[u'id']),
+        variables = RequestContext(request, {'conversation': message_controller.get_conversation(base62_to_int(request.GET[u'id']),
                                                                                                  request.user)})
         data = {'html': render_to_string("conversation.html", variables)}
 
@@ -56,12 +56,12 @@ def get_html_message(request):
 
 @cached_view(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_MESSAGES],
              methods=['GET'],
-             validator=lambda request, shout_id: shout_owner_view_validator(request, Base62ToInt(shout_id)),
+             validator=lambda request, shout_id: shout_owner_view_validator(request, base62_to_int(shout_id)),
              login_required=True,
              api_renderer=conversations_api)
 def get_shout_conversations(request, shout_id):
     result = ResponseResult()
-    shout_id = Base62ToInt(shout_id)
+    shout_id = base62_to_int(shout_id)
     shout = shout_controller.GetPost(shout_id, True, True)
     result.data['conversations'] = message_controller.get_shout_conversations(shout_id, request.user)
     result.data['is_owner'] = (request.user.pk == shout.OwnerUser.pk)
@@ -77,7 +77,7 @@ def get_shout_conversations(request, shout_id):
 def mark_message_as_read(request, message_id):
     result = ResponseResult()
     try:
-        message = Message.objects.get(pk=Base62ToInt(message_id))
+        message = Message.objects.get(pk=base62_to_int(message_id))
         message.IsRead = True
         message.save()
     except ObjectDoesNotExist:
@@ -96,10 +96,10 @@ def mark_message_as_read(request, message_id):
 def read_conversation(request, conversation_id):
     result = ResponseResult()
     result.data['form'] = MessageForm()
-    result.data['conversation'] = message_controller.get_conversation(Base62ToInt(conversation_id), request.user)
+    result.data['conversation'] = message_controller.get_conversation(base62_to_int(conversation_id), request.user)
     result.data['shout'] = result.data['conversation'].AboutPost
-    result.data['conversation_messages'] = message_controller.ReadConversation(request.user, Base62ToInt(conversation_id))
-    result.data['conversation_id'] = Base62ToInt(conversation_id)
+    result.data['conversation_messages'] = message_controller.ReadConversation(request.user, base62_to_int(conversation_id))
+    result.data['conversation_id'] = base62_to_int(conversation_id)
     name = result.data['conversation'].With.name()
     name = name if name != '' else result.data['conversation'].With.username
     result.data['title'] = _('You and ') + name
@@ -135,7 +135,7 @@ def send_message(request, shout_id, conversation_id=None):
     else:
         if request.user.is_authenticated() and conversation:
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
-            result.data['next'] = '/messages/%s/#send_message_form' % IntToBase62(conversation.pk)
+            result.data['next'] = '/messages/%s/#send_message_form' % int_to_base62(conversation.pk)
             return result
         form = MessageForm()
 

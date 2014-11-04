@@ -66,7 +66,7 @@ def add_gallery_item(request,business_name,gallery_id=None):
 @non_cached_view(
 	methods=['POST'],
 	json_renderer = lambda request, result ,item_id : gallery_item_json_renderer(request,result,message= _('Your item was edited successfully.')),
-	validator = lambda request,item_id: object_exists_validator(item_controller.get_item,_('Item does not exist.'),Base62ToInt(item_id))
+	validator = lambda request,item_id: object_exists_validator(item_controller.get_item,_('Item does not exist.'),base62_to_int(item_id))
 )
 @refresh_cache(tags = [CACHE_TAG_GALLERY])
 def edit_item(request,item_id):
@@ -80,7 +80,7 @@ def edit_item(request,item_id):
 	elif request.POST.has_key('item_images'):
 		images = request.POST.getlist('item_images')
 
-	result.data['item'] = item_controller.edit_item(Base62ToInt(item_id),
+	result.data['item'] = item_controller.edit_item(base62_to_int(item_id),
 		form.cleaned_data['name'],
 		form.cleaned_data['price'],
 		images,
@@ -96,7 +96,7 @@ def edit_item(request,item_id):
 	)
 @refresh_cache(tags = [CACHE_TAG_GALLERY])
 def delete_gallery_item(request, item_id):
-	gallery_controller.DeleteItemFromGallery(Base62ToInt(item_id))
+	gallery_controller.DeleteItemFromGallery(base62_to_int(item_id))
 	result = ResponseResult()
 	return result
 
@@ -107,7 +107,7 @@ def delete_gallery_item(request, item_id):
 	json_renderer=lambda request, result, *args : json_renderer(request,
 		result,
 		_('Your shout was shouted!'),
-		data=result.data.has_key('shout') and {'next': '/shout/' + IntToBase62(result.data['shout'].pk)} or {}),
+		data=result.data.has_key('shout') and {'next': '/shout/' + int_to_base62(result.data['shout'].pk)} or {}),
 	permissions_required = [PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS])
 def shout_item(request,item_id):
@@ -127,7 +127,7 @@ def shout_item(request,item_id):
 		longitude = float(latlong.split(',')[1].strip())
 
 
-		item = item_controller.get_item(Base62ToInt(item_id))
+		item = item_controller.get_item(base62_to_int(item_id))
 		gallery_controller.ShoutItem(request,request.user,item,
 			form.cleaned_data['description'],
 			longitude,

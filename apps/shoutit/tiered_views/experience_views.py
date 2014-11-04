@@ -20,7 +20,7 @@ from apps.shoutit.constants import *
 def view_experience(request,exp_id):
 	result = ResponseResult()
 	result.data['timestamp'] = time.mktime(datetime.now().timetuple())
-	experience = experience_controller.GetExperience(request.user, Base62ToInt(exp_id),detailed=True)
+	experience = experience_controller.GetExperience(request.user, base62_to_int(exp_id),detailed=True)
 	result.data['experience'] = experience
 	if experience:
 		result.data['recent_experiences'] = experience_controller.GetExperiences(user=request.user, about_business=result.data['experience'].AboutBusiness,start_index=0,end_index=5)
@@ -135,7 +135,7 @@ def post_exp(request, username = None):
 	)
 @refresh_cache(tags=[CACHE_TAG_EXPERIENCES])
 def share_experience(request, exp_id):
-	shared = experience_controller.ShareExperience(request.user, Base62ToInt(exp_id))
+	shared = experience_controller.ShareExperience(request.user, base62_to_int(exp_id))
 	result = ResponseResult()
 	return result
 
@@ -150,15 +150,15 @@ def edit_experience(request, exp_id):
 	result = ResponseResult()
 	form = ExperienceForm(request.POST)
 	form.is_valid()
-	result.data['experience'] = experience_controller.EditExperience(Base62ToInt(exp_id),EXPERIENCE_UP if int(form.cleaned_data['state']) else EXPERIENCE_DOWN,form.cleaned_data['text'])
+	result.data['experience'] = experience_controller.EditExperience(base62_to_int(exp_id),EXPERIENCE_UP if int(form.cleaned_data['state']) else EXPERIENCE_DOWN,form.cleaned_data['text'])
 	return result
 
 
 @non_cached_view(methods=['GET'],
 	json_renderer = lambda request, result, exp_id: user_json_renderer(request,result),
-	validator=lambda request, exp_id: object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), Base62ToInt(exp_id)),
+	validator=lambda request, exp_id: object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(exp_id)),
 	)
 def users_shared_experience(request, exp_id):
 	result = ResponseResult()
-	result.data['users'] = experience_controller.GetUsersSharedExperience(Base62ToInt(exp_id))
+	result.data['users'] = experience_controller.GetUsersSharedExperience(base62_to_int(exp_id))
 	return result

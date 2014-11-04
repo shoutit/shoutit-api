@@ -11,8 +11,8 @@ from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
 
 from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
-from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.constants import Constant
+from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.middleware import JsonPostMiddleware
 from common.tagged_cache import TaggedCache
 
@@ -268,18 +268,17 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None
     }
 
     return tiered_view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required,
-                activation_required, post_activation_required, cache_settings, permissions_required=permissions_required,
-                business_subscription_required=business_subscription_required)
+                       activation_required, post_activation_required, cache_settings, permissions_required=permissions_required,
+                       business_subscription_required=business_subscription_required)
 
 
 def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=['GET', 'POST'],
                     validator=None, login_required=False, post_login_required=False, activation_required=False,
                     post_activation_required=False, permissions_required=[], business_subscription_required=False):
-    return tiered_view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,
-                mobile_renderer=mobile_renderer, methods=methods, validator=validator, login_required=login_required,
-                post_login_required=post_login_required, activation_required=activation_required,
-                post_activation_required=post_activation_required, permissions_required=permissions_required,
-                business_subscription_required=business_subscription_required)
+    return tiered_view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,mobile_renderer=mobile_renderer,
+                       methods=methods, validator=validator, login_required=login_required, post_login_required=post_login_required,
+                       activation_required=activation_required, post_activation_required=post_activation_required,
+                       permissions_required=permissions_required, business_subscription_required=business_subscription_required)
 
 
 def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=[], dynamic_tags=None):

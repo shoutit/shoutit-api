@@ -274,7 +274,7 @@ urlpatterns = patterns('',
 
                        url(r'^upload/([\w_-]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
-                               'POST': shout_views.cloud_upload
+                               'POST': shout_views.upload_image
                            })
                        ),
 

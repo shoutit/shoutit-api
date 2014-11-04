@@ -13,8 +13,8 @@ from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Cu
 from apps.shoutit.controllers import email_controller, tag_controller, stream_controller, event_controller, item_controller, realtime_controller
 
 from apps.ActivityLogger.logger import Logger
-from apps.shoutit.utils import asynchronous_task, ToSeoFriendly, make_image_thumbnail
-import apps.shoutit.settings as settings
+from apps.shoutit.utils import asynchronous_task, to_seo_friendly, make_image_thumbnail
+from django.conf import settings
 
 
 def GetPost(post_id, find_muted=False, find_expired=False):
@@ -216,7 +216,7 @@ def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, co
     trade.save()
 
     #todo: check which to save encoded city or just normal. expectations are to get normal city from user
-    encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+    encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
     predefined_city = PredefinedCity.objects.filter(City=province_code)
     if not predefined_city:
             predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
@@ -265,7 +265,7 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
         trade.ExpiryDate = exp_days and datetime.today() + timedelta(days=exp_days) or None
     trade.save()
 
-    encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+    encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
     predefined_city = PredefinedCity.objects.filter(City=province_code)
     if not predefined_city:
             predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)

@@ -5,10 +5,10 @@ from apps.shoutit.models import Stream, BusinessProfile, ConfirmToken, StoredFil
 from apps.shoutit.controllers.user_controller import GetProfile, SetRegisterToken, GiveUserPermissions
 from apps.shoutit.controllers import email_controller
 from apps.shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
-import apps.shoutit.settings as settings
+from django.conf import settings
 from apps.shoutit import utils
 
-from apps.shoutit.utils import ToSeoFriendly
+from apps.shoutit.utils import to_seo_friendly
 
 def GetBusiness(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):
@@ -23,10 +23,10 @@ def GetBusiness(username):
 		return None
 
 def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, country_code = None, province_code = None, address = None, source_type = BUSINESS_SOURCE_TYPE_NONE, source_id = None):
-	username = utils.generateUsername()
+	username = utils.generate_username()
 	while len(User.objects.filter(username = username).select_related()):
-		username = utils.generateUsername()
-	password = utils.generateConfirmToken(TOKEN_LONG)
+		username = utils.generate_username()
+	password = utils.generate_confirm_token(TOKEN_LONG)
 	email = '%s@%s.com' % (username, 'shoutit')
 
 	django_user = User.objects.create_user(username, email, password)
@@ -51,7 +51,7 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 	bp.save()
 
 	if not PredefinedCity.objects.filter(City = province_code):
-		encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+		encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
 		PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 	if source_id is not None:
@@ -93,9 +93,9 @@ def ClaimTinyBusiness(request, tiny_username, email, phone, website, about = Non
 def SignUpTempBusiness(request, email, password, send_activation = True, business = None):
 	if email is None or email == '':
 		return None
-	username = utils.generateUsername()
+	username = utils.generate_username()
 	while len(User.objects.filter(username = username).select_related()):
-		username = utils.generateUsername()
+		username = utils.generate_username()
 	django_user = User.objects.create_user(username, email, password)
 	app = BusinessCreateApplication(User = django_user, Business = business)
 	app.save()
@@ -112,10 +112,10 @@ def SignUpTempBusiness(request, email, password, send_activation = True, busines
 	return django_user
 
 def SetTempRegisterToken(user, email, tokenLength, tokenType):
-	token = utils.generateConfirmToken(tokenLength)
+	token = utils.generate_confirm_token(tokenLength)
 	db_token = ConfirmToken.getToken(token)
 	while db_token is not None:
-		token = utils.generateConfirmToken(tokenLength)
+		token = utils.generate_confirm_token(tokenLength)
 		db_token = ConfirmToken.getToken(token)
 	tok = ConfirmToken(Token = token, User = user, Email = email, Type = tokenType)
 	tok.save()
@@ -163,7 +163,7 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 	ba.save()
 
 	if not PredefinedCity.objects.filter(City = province_code):
-		encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+		encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
 		PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 
@@ -222,7 +222,7 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 		business.save()
 
 		if not PredefinedCity.objects.filter(City = province_code):
-			encoded_city = ToSeoFriendly(unicode.lower(unicode(province_code)))
+			encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
 			PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 

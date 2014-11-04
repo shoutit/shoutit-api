@@ -14,8 +14,8 @@ from apps.shoutit.controllers import email_controller, notifications_controller,
 from apps.ActivityLogger.logger import Logger
 from apps.shoutit.constants import *
 
-from apps.shoutit.utils import ToSeoFriendly, generateConfirmToken, generateUsername, GeneratePassword, make_image_thumbnail, get_size_url
-import apps.shoutit.settings as settings
+from apps.shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image, get_size_url
+from django.conf import settings
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 
 
@@ -122,10 +122,10 @@ def GetUserByMobile(mobile):
 
 
 def SetRecoveryToken(user):
-    token = generateConfirmToken(TOKEN_LONG)
+    token = generate_confirm_token(TOKEN_LONG)
     db_token = ConfirmToken.getToken(token)
     while db_token is not None:
-        token = generateConfirmToken(TOKEN_LONG)
+        token = generate_confirm_token(TOKEN_LONG)
         db_token = ConfirmToken.getToken(token)
     tok = ConfirmToken(Token=token, User=user, Type=TOKEN_TYPE_RECOVER_PASSWORD)
     tok.save()
@@ -133,10 +133,10 @@ def SetRecoveryToken(user):
 
 
 def SetRegisterToken(user, email, tokenLength, tokenType):
-    token = generateConfirmToken(tokenLength)
+    token = generate_confirm_token(tokenLength)
     db_token = ConfirmToken.getToken(token)
     while db_token is not None:
-        token = generateConfirmToken(tokenLength)
+        token = generate_confirm_token(tokenLength)
         db_token = ConfirmToken.getToken(token)
     tok = ConfirmToken(Token=token, User=user, Email=email, Type=tokenType)
     tok.save()
@@ -185,9 +185,9 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
         token_type = TOKEN_TYPE_HTML_EMAIL
         token_length = TOKEN_LONG
 
-    username = generateUsername()
+    username = generate_username()
     while len(User.objects.filter(username=username).select_related()):
-        username = generateUsername()
+        username = generate_username()
 
     django_user = User.objects.create_user(username, email if email is not None else '', password)
     django_user.first_name = fname
@@ -208,7 +208,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     up.Image = '/static/img/_user_male.png'
     up.save()
 
-    encoded_city = ToSeoFriendly(unicode.lower(unicode(up.City)))
+    encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
     predefined_city = PredefinedCity.objects.filter(City=up.City)
     if not predefined_city:
             predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
@@ -229,11 +229,11 @@ def SignUpSSS(request, mobile, location, country, city):
     token_type = TOKEN_TYPE_HTML_NUM
     token_length = TOKEN_SHORT_UPPER
 
-    username = generateUsername()
+    username = generate_username()
     while len(User.objects.filter(username=username).select_related()):
-        username = generateUsername()
+        username = generate_username()
 
-    password = GeneratePassword()
+    password = generate_password()
 
     django_user = User.objects.create_user(username, "", password)
     django_user.is_active = False
@@ -252,7 +252,7 @@ def SignUpSSS(request, mobile, location, country, city):
     up.save()
 
     if not PredefinedCity.objects.filter(City=up.City):
-        encoded_city = ToSeoFriendly(unicode.lower(unicode(up.City)))
+        encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
         PredefinedCity(City=up.City, EncodedCity=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
 
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
@@ -365,7 +365,7 @@ def auth_with_gplus(request, gplus_user, credentials):
     gender = True if 'gender' in gplus_user and gplus_user['gender'] == 'male' else False
 
     if not user:
-        password = GeneratePassword()
+        password = generate_password()
         user = SignUpUser(request, fname=gplus_user['name']['givenName'], lname=gplus_user['name']['familyName'], password=password,
                           email=gplus_user['emails'][0]['value'], send_activation=False)
         CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender,
@@ -379,59 +379,21 @@ def auth_with_gplus(request, gplus_user, credentials):
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_user['id'])
         la.save()
     except BaseException, e:
+        print e.message
         return None
 
-    # todo: import profile pic from G+
     if user.Profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
-            import urllib2, mimetypes, Image, StringIO
-            from apps.shoutit.tiered_views.general_views import get_cloud_connection
-
+            import urllib2
             response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
             data = response.read()
-            name = GeneratePassword()
-            ext = '.jpg'
-            filename = name + ext
-            content_type = mimetypes.guess_type(filename)
-            buff = StringIO.StringIO()
-            buff.write(data)
-            buff.seek(0)
-            image = Image.open(buff)
-            width, height = image.size
-            if width != height:
-                box = (0, 0, min(width, height), min(width, height))
-                image = image.crop(box)
-            thumb1 = image.copy()
-            thumb2 = image.copy()
-            image.thumbnail((220, 220), Image.ANTIALIAS)
-            buff = StringIO.StringIO()
-            image.save(buff, format='JPEG', quality=60)
-            buff.seek(0)
-
-            cf = get_cloud_connection().cloudfiles
-            container = cf.get_container('user_image')
-            obj = container.store_object(obj_name=filename, data=buff.buf, content_type=content_type)
-
+            filename = generate_password()
+            obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
             user.Profile.Image = obj.container.cdn_uri + '/' + obj.name
             user.Profile.save()
 
-            # 1st thumb
-            size1 = 95
-            thumb1.thumbnail((size1, size1), Image.ANTIALIAS)
-            buff = StringIO.StringIO()
-            thumb1.save(buff, format=image.format)
-            buff.seek(0)
-            obj1 = container.store_object(obj_name='%s_%d%s' % (name, size1, ext), data=buff.buf, content_type=content_type)
-
-            # 2nd thumb
-            size2 = 32
-            thumb2.thumbnail((size2, size2), Image.ANTIALIAS)
-            buff = StringIO.StringIO()
-            thumb2.save(buff, format=image.format)
-            buff.seek(0)
-            obj2 = container.store_object(obj_name='%s_%d%s' % (name, size2, ext), data=buff.buf, content_type=content_type)
-
         except BaseException, e:
+            print e.message
             pass
     return user
 
@@ -446,7 +408,7 @@ def auth_with_facebook(request, fb_user, auth_response):
         #todo: better email validation
         if len(fb_user['email']) > 75:
             return None
-        password = GeneratePassword()
+        password = generate_password()
         user = SignUpUser(request, fname=fb_user['first_name'], lname=fb_user['last_name'], password=password, email=fb_user['email'],
                           send_activation=False)
         CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender,
@@ -464,47 +426,26 @@ def auth_with_facebook(request, fb_user, auth_response):
         )
         la.save()
     except BaseException, e:
+        print e.message
         return None
 
     if user.Profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
-            import urllib2, mimetypes, cloudfiles, Image, StringIO
-
-            cloud_connection = cloudfiles.get_connection(settings.CLOUD_FILES_AUTH, settings.CLOUD_FILES_KEY,
-                                                         servicenet=settings.CLOUD_FILES_SERVICE_NET)
-            container = cloud_connection.create_container('user_image')
-
+            import urllib2
             response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + auth_response['accessToken'],
                                        timeout=20)
-
             no_pic = ['yDnr5YfbJCH', 'HsTZSDw4avx']
             pic_file = os.path.splitext(response.geturl().split('/')[-1])
 
-            if pic_file[0] not in no_pic and pic_file[1] != '.gif':
+            if pic_file[0] not in no_pic and pic_file[1] != '.gif':  # todo: check if new changes to fb default profile pics
                 data = response.read()
-                filename = GeneratePassword() + '.jpg'
-                import Image
-                import StringIO
-
-                buff = StringIO.StringIO()
-                buff.write(data)
-                buff.seek(0)
-                image = Image.open(buff)
-                image.thumbnail((220, 220), Image.ANTIALIAS)
-                buff = StringIO.StringIO()
-                image.save(buff, format=image.format)
-                buff.seek(0)
-                cloud_file = container.create_object(filename)
-                cloud_file.content_type = mimetypes.guess_type(filename)
-                cloud_file.write(buff)
-
-                user.Profile.Image = cloud_file.public_uri()
+                filename = generate_password()
+                obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
+                user.Profile.Image = obj.container.cdn_uri + '/' + obj.name
                 user.Profile.save()
 
-                make_image_thumbnail(cloud_file.public_uri(), 95, 'user_image')
-                make_image_thumbnail(cloud_file.public_uri(), 32, 'user_image')
-
         except BaseException, e:
+            print e.message
             pass
 
     return user
@@ -626,7 +567,7 @@ def UpdateLocation(username, lat, lng, city, country):
     user.save()
 
     if not PredefinedCity.objects.filter(City=user.City):
-        encoded_city = ToSeoFriendly(unicode.lower(unicode(user.City)))
+        encoded_city = to_seo_friendly(unicode.lower(unicode(user.City)))
         PredefinedCity(City=user.City, EncodedCity=encoded_city, Country=user.Country, Latitude=user.Latitude,
                        Longitude=user.Longitude).save()
     return user

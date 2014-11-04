@@ -631,7 +631,8 @@ class FbContest(models.Model):
 
 
 class PermissionsManager(models.Manager):
-    def get_user_permissions(self, user):
+    @staticmethod
+    def get_user_permissions(user):
         return Permission.objects.filter(users=user)
 
 

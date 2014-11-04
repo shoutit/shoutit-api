@@ -27,7 +27,7 @@ def get_nearest_points_to_clusters(centroids, shoutPoints, shouts):
         nearest_index = int(argmin(dist))
 
         nearestPoints.append(str(shoutPoints[nearest_index][0]) + ' ' + str(shoutPoints[nearest_index][1]))
-        nearestPointsIds.append(IntToBase62(shouts[nearest_index]['id']))
+        nearestPointsIds.append(int_to_base62(shouts[nearest_index]['id']))
         nearestPointsTypes.append(shouts[nearest_index]['Type'])
     return nearestPoints, nearestPointsIds, nearestPointsTypes
 

@@ -70,7 +70,7 @@ for user in users:
 		shout = Trade.objects.GetValidTrades().filter(OwnerUser = user.User).select_related('Item')
 		content = 'an advertisement'
 		if len(shout):
-			content = utils.RemoveNonAscii(shout[0].Item.Name)
+			content = utils.remove_non_ascii(shout[0].Item.Name)
 
 		link = 'shoutit.com/' + user.LastToken.Token
 		title = utils.get_shout_name_preview(content,22)

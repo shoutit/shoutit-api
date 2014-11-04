@@ -1,7 +1,7 @@
 import datetime
 import pika
 from apps.shoutit.utils import asynchronous_task
-import apps.shoutit.settings as settings
+from django.conf import settings
 import os
 from apns import Payload, APNs
 from apps.shoutit import utils
@@ -68,7 +68,7 @@ def SendNotification(notification, username, count=0):
                     customMessage = {'URCnv':unread_conversations_num}
                 elif notification.Type == NOTIFICATION_TYPE_MESSAGE:
                     message += " " + _("sent you a message")
-                    customMessage = {'UC': unread_conversations_num, 'CID': utils.IntToBase62(notification.AttachedObject.Conversation_id)}
+                    customMessage = {'UC': unread_conversations_num, 'CID': utils.int_to_base62(notification.AttachedObject.Conversation_id)}
                 payload = Payload(alert=message, sound="default", badge=notifications_count, custom=customMessage)
                 try:
                     apns_instance.gateway_server.send_notification(token, payload)

@@ -6,7 +6,7 @@ from paypal.standard.forms import PayPalEncryptedPaymentsForm
 from apps.shoutit import utils
 
 from apps.shoutit.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency
-import apps.shoutit.settings as settings
+from django.conf import settings
 
 CONCURRENT_DEALS_SERVICE = 'CONCURRENT_DEALS'
 
@@ -177,7 +177,7 @@ def GetPaypalFormForSubscription(user):
 		"a1": "0",
 		"p1": "6",
 		"t1": "M",
-		'invoice' : 'Subscription_1_User_%d_%s' % (user.pk, utils.GeneratePassword()[:5]),
+		'invoice' : 'Subscription_1_User_%d_%s' % (user.pk, utils.generate_password()[:5]),
 		"cmd": "_xclick-subscriptions",
 		'business' : settings.PAYPAL_BUSINESS, #8FXFX2NN9E83L
 	}, button_type="subscribe")

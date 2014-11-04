@@ -4,9 +4,9 @@ from apps.shoutit.models import UserPermission
 from apps.shoutit.tiered_views.views_utils import set_request_language
 from common.tagged_cache import TaggedCache
 from apps.shoutit.controllers import facebook_controller
-from apps.shoutit.utils import ToSeoFriendly, IsSessionHasLocation, getLocationInfoByIP, MapWithPredefinedCity, JsonResponseBadRequest
+from apps.shoutit.utils import to_seo_friendly, is_session_has_location, get_location_info_by_ip, map_with_predefined_city, JsonResponseBadRequest
 from apps.shoutit.controllers import user_controller
-import apps.shoutit.settings as settings
+from django.conf import settings
 import json
 from django.utils import datastructures
 
@@ -57,13 +57,13 @@ class UserLocationMiddleware(object):
     @staticmethod
     def process_request(request):
 
-        if not IsSessionHasLocation(request) or request.session.has_key('user_renew_location'):
+        if not is_session_has_location(request) or request.session.has_key('user_renew_location'):
             if not request.user.is_authenticated():
-#				ip = utils.getIP(request)
+#				ip = utils.get_ip(request)
     #			if not request.session.has_key('user_ip')  or request.session['user_ip'] != ip:
-                location_info = getLocationInfoByIP(request)
+                location_info = get_location_info_by_ip(request)
     #			request.session['user_ip'] = location_info['ip']
-                mapped_location = MapWithPredefinedCity(location_info['city'])
+                mapped_location = map_with_predefined_city(location_info['city'])
                 request.session['user_lat'] = mapped_location['latitude']
                 request.session['user_lng'] = mapped_location['longitude']
                 request.session['user_country'] = mapped_location['country']
@@ -75,7 +75,7 @@ class UserLocationMiddleware(object):
                 request.session['user_lng'] = profile and profile.Longitude or 55.3117
                 request.session['user_country'] = profile and profile.Country or u'AE'
                 request.session['user_city'] = profile and profile.City or u'Dubai'
-                request.session['user_city_encoded'] = ToSeoFriendly(unicode.lower(request.session['user_city']))
+                request.session['user_city_encoded'] = to_seo_friendly(unicode.lower(request.session['user_city']))
 
             if request.session.has_key('user_renew_location'):
                 del(request.session['user_renew_location'])

@@ -9,7 +9,7 @@ from django.template.loader import get_template
 from apps.shoutit import utils
 import apps.shoutit.controllers.shout_controller as shout_controller
 from apps.shoutit.models import DealBuy, Payment, Transaction, Voucher, Shout
-from apps.shoutit.utils import GeneratePassword, asynchronous_task
+from apps.shoutit.utils import generate_password, asynchronous_task
 from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
 from reportlab.lib.colors import orange
 from geraldo.utils import cm, BAND_WIDTH, TA_CENTER, TA_RIGHT
@@ -187,7 +187,7 @@ def GenerateVoucherDocument(deal_buy):
     for i in range(deal_buy.Amount):
         vouchers.append(Voucher.objects.create(
             DealBuy = deal_buy,
-            Code = utils.IntToBase62(deal_buy.pk) + utils.RandomBase62(4) + utils.IntToBase62(i) + utils.RandomBase62(2) + utils.IntToBase62(deal_buy.Deal.pk),
+            Code = utils.int_to_base62(deal_buy.pk) + utils.random_base62(4) + utils.int_to_base62(i) + utils.random_base62(2) + utils.int_to_base62(deal_buy.Deal.pk),
         ))
     r = VoucherReport(queryset = vouchers)
     r.title =  '[%s] deal vouchers' % deal_buy.Deal.Item.Name

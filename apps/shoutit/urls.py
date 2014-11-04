@@ -18,7 +18,6 @@ urlpatterns = patterns('',
                        ### Shout Website ###
                        url(r'^$', 'apps.shoutit.tiered_views.general_views.index'),
                        url(r'^(requests|offers|experiences)/$', 'apps.shoutit.tiered_views.general_views.index'),
-                       #    url(r'^browse/$', 'apps.shoutit.tiered_views.stream_views.browse'),
                        #	[setOfCities]/[setOfTypes]/[optional categories]
                        url(r'^(requests|offers|experiences)/([\w-]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse'),
                        url(r'^tos/$', 'apps.shoutit.tiered_views.general_views.tos'),
@@ -73,8 +72,8 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?messages/([a-zA-z0-9]+)/$', 'apps.shoutit.tiered_views.message_views.read_conversation'),
                        url(r'^xhr/message/(\w+)/read/$', 'apps.shoutit.tiered_views.message_views.mark_message_as_read'),
 
-                       url(r'^upload/files/$', 'apps.shoutit.tiered_views.general_views.cloud_file_upload'),
-                       url(r'^upload/([\w_-]+)/$', 'apps.shoutit.tiered_views.shout_views.cloud_upload'),
+                       url(r'^upload/files/$', 'apps.shoutit.tiered_views.general_views.upload_file'),
+                       url(r'^upload/([\w_-]+)/$', 'apps.shoutit.tiered_views.shout_views.upload_image'),
 
                        url(r'notifications/$', 'apps.shoutit.tiered_views.realtime_views.notifications'),
                        url(r'^xhr/unReadNotificationsCount/$', 'apps.shoutit.tiered_views.realtime_views.unread_notifications_count'),

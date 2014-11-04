@@ -6,7 +6,7 @@ from django.db.models.query_utils import Q
 from apps.shoutit.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE
 
 from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Post, Trade
-import apps.shoutit.settings as settings
+from django.conf import settings
 
 def PublishShoutToShout(shout, other):
     rank = 0.0

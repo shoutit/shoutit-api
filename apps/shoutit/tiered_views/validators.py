@@ -9,9 +9,9 @@ from apps.shoutit.controllers import message_controller
 from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
 from apps.shoutit.models import ConfirmToken, Item, GalleryItem, UserProfile, BusinessProfile, Trade
 from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
-from apps.shoutit.utils import Base62ToInt
+from apps.shoutit.utils import base62_to_int
 from apps.shoutit.constants import *
-import apps.shoutit.settings as settings
+from django.conf import settings
 
 
 def object_exists_validator(function, message='', *args, **kwargs):
@@ -48,7 +48,7 @@ def send_message_validator(request, shout_id, conversation_id):
     if result.valid:
 
         # 2 - validating the shout
-        result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.Base62ToInt(shout_id), True, True)
+        result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.base62_to_int(shout_id), True, True)
         if result.valid:
             shout = result.data
             conversation = None
@@ -60,7 +60,7 @@ def send_message_validator(request, shout_id, conversation_id):
             # 4 - if there is conversation_id, make sure the conversation exists
             if conversation_id:
                 result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),
-                                                 Base62ToInt(conversation_id), request.user)
+                                                 base62_to_int(conversation_id), request.user)
                 if result.valid:
                     conversation = result.data
 
@@ -101,7 +101,7 @@ def user_edit_profile_validator(request, username, email):
 
 
 def read_conversation_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),  Base62ToInt(conversation_id),
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),  base62_to_int(conversation_id),
                                      request.user)
     if result.valid:
         conversation = result.data
@@ -139,7 +139,7 @@ def reply_in_conversation_validator(request, conversation_id):
     if not result.valid:
         return result
 
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), Base62ToInt(conversation_id),
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), base62_to_int(conversation_id),
                                      request.user)
     if result.valid:
         conversation = result.data
@@ -159,7 +159,7 @@ def reply_to_shout_validator(request, shout_id):
     if not result.valid:
         return result
 
-    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.Base62ToInt(shout_id))
+    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.base62_to_int(shout_id))
     if result.valid:
         shout = result.data
         if request.user.pk == shout.OwnerUser.pk:
@@ -175,9 +175,9 @@ def reply_to_shout_validator(request, shout_id):
 def modify_shout_validator(request, id=None):
     if not id:
         id = request.GET[u'id']
-        id = Base62ToInt(id)
+        id = base62_to_int(id)
     else:
-        id = Base62ToInt(id)
+        id = base62_to_int(id)
 
     result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), id, True, True)
     if result.valid:
@@ -203,7 +203,7 @@ def edit_shout_validator(request, id=None):
 
 def delete_message_validator(request):
     id = request.GET[u'id']
-    id = Base62ToInt(id)
+    id = base62_to_int(id)
 
     result = object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), id)
     if result.valid:
@@ -215,7 +215,7 @@ def delete_message_validator(request):
 
 
 def delete_conversation_validator(request):
-    conversation_id = Base62ToInt(request.GET.get('id', '0'))
+    conversation_id = base62_to_int(request.GET.get('id', '0'))
 
     result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
     if result.valid:
@@ -270,9 +270,9 @@ def shout_owner_view_validator(request, shout_id):
 
 
 def share_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), Base62ToInt(exp_id))
+    result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(exp_id))
     if result.valid:
-        experience = experience_controller.GetExperience(request.user, Base62ToInt(exp_id),detailed = True)
+        experience = experience_controller.GetExperience(request.user, base62_to_int(exp_id),detailed = True)
         if not experience.canShare:
             return ValidationResult(False, messages=[('error', _('You can not share this experience.'))])
     return result
@@ -289,18 +289,18 @@ def experience_validator(request, *args, **kwargs):
 
 
 def edit_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), Base62ToInt(exp_id))
+    result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(exp_id))
     if result.valid:
-        experience = experience_controller.GetExperience(request.user, Base62ToInt(exp_id),detailed=True)
+        experience = experience_controller.GetExperience(request.user, base62_to_int(exp_id),detailed=True)
         if not experience.canEdit:
             return ValidationResult(False, messages=[('error', _('You can not edit this experience.'))])
     return result
 
 
 def delete_gallery_item_validator(request, item_id, *args, **kwargs):
-    result = object_exists_validator(GalleryItem.objects.filter, _('Gallery Item dose not exist.'),Item = Item.objects.get(pk = Base62ToInt(item_id)), IsDisable = False)
+    result = object_exists_validator(GalleryItem.objects.filter, _('Gallery Item dose not exist.'),Item = Item.objects.get(pk = base62_to_int(item_id)), IsDisable = False)
     if result.valid:
-        gallery_item = GalleryItem.objects.filter(Item = Item.objects.get(pk = Base62ToInt(item_id)), IsDisable = False)[0]
+        gallery_item = GalleryItem.objects.filter(Item = Item.objects.get(pk = base62_to_int(item_id)), IsDisable = False)[0]
         try:
             #			galleries = request.user.Business.Galleries.all()
             galleries = business_controller.GetBusiness('business').Galleries.all()
@@ -332,23 +332,23 @@ def add_gallery_item_validator(request, business_name, *args, **kwargs):
 def comment_on_post_validator(request, post_id, form_class):
     result = form_validator(request,CommentForm)
     if result.valid:
-        result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), Base62ToInt(post_id))
+        result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(post_id))
     return result
 
 
 def delete_comment_validator(request, comment_id):
-    result = object_exists_validator(comment_controller.GetCommentByID,_('Comment dose not exist.'), Base62ToInt(comment_id))
+    result = object_exists_validator(comment_controller.GetCommentByID,_('Comment dose not exist.'), base62_to_int(comment_id))
     if result.valid:
-        comment = comment_controller.GetCommentByID(Base62ToInt(comment_id))
+        comment = comment_controller.GetCommentByID(base62_to_int(comment_id))
         if comment.OwnerUser != request.user:
             return ValidationResult(False, messages=[('error', _('You do not have permission to delete this comment'))])
     return result
 
 
 def delete_event_validator(request, event_id):
-    result = object_exists_validator(event_controller.GetEventByID,_('Activity dose not exist.'), Base62ToInt(event_id))
+    result = object_exists_validator(event_controller.GetEventByID,_('Activity dose not exist.'), base62_to_int(event_id))
     if result.valid:
-        event = event_controller.GetEventByID(Base62ToInt(event_id))
+        event = event_controller.GetEventByID(base62_to_int(event_id))
         if event.OwnerUser != request.user:
             return ValidationResult(False, messages=[('error', _('You do not have permission to delete this activity'))])
     return result

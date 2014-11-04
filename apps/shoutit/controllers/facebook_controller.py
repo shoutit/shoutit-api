@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_location
 from apps.shoutit.models import LinkedFacebookAccount
-import apps.shoutit.settings as settings
+from django.conf import settings
 import json
 import urllib
 import urllib2

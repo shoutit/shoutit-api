@@ -8,23 +8,32 @@ import re
 import urlparse
 import time
 import uuid
-from django.http import HttpResponse
+import math
+import base64
+import hashlib
+import hmac
+import Image
+import StringIO
 
+import mimetypes
+import pyrax
+
+from django.http import HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
-
 from numpy import array, argmax, sqrt, sum
-from apps.shoutit import constants
-from apps.shoutit.models import Post, Experience, PredefinedCity
-from pygeoip import *
-import pygeoip
+from pygeoip import GeoIP, MEMORY_CACHE
 from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
-import apps.shoutit.settings as settings
+from django.conf import settings
+
+from apps.shoutit import constants
+from apps.shoutit.models import Post, Experience, PredefinedCity
+
 
 BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-def IntToBase62(value):
+def int_to_base62(value):
     result = ''
 
     while value:
@@ -38,19 +47,19 @@ def IntToBase62(value):
 
 
 def TimeInBase62():
-    return IntToBase62(int(time.time()))
+    return int_to_base62(int(time.time()))
 
 
-def GeneratePassword():
-    return IntToBase62(uuid.uuid4().int)
+def generate_password():
+    return int_to_base62(uuid.uuid4().int)
 
 
-def RandomBase62(length):
+def random_base62(length):
     r = random.Random()
     return ''.join([r.choice(BASE62_ALPHABET) for i in range(length)])
 
 
-def Base62ToInt(value):
+def base62_to_int(value):
     result = 0
     if isinstance(value, int):
         value = str(value)
@@ -63,11 +72,8 @@ def Base62ToInt(value):
     return result
 
 
-def EntityID(entity):
-    return IntToBase62(entity.id)
-
-
-import math
+def entity_id(entity):
+    return int_to_base62(entity.id)
 
 
 def get_farest_point(observation, points):
@@ -111,12 +117,12 @@ def normalized_distance(lat1, long1, lat2, long2):
     return arc / math.pi
 
 
-def mutual_followings(StreamsCode1, StreamsCode2):
-    return len(set([int(x) for x in StreamsCode1.split(',')]) & set([int(x) for x in StreamsCode2.split(',')]))
+def mutual_followings(streams_code1, streams_code2):
+    return len(set([int(x) for x in streams_code1.split(',')]) & set([int(x) for x in streams_code2.split(',')]))
 
 
-# location_info = getLocationInfoBylatlng(latlong)
-#		country = "None"
+# location_info = get_location_info_by_latlng(latlong)
+# country = "None"
 #		city = "None"
 #		address = "None"
 #		if not location_info.has_key("error"):
@@ -133,29 +139,29 @@ def mutual_followings(StreamsCode1, StreamsCode2):
 #			return result
 
 
-def getLocationInfoBylatlng(latlong):
-    params = {"latlng": latlong, "sensor": "true"}
+def get_location_info_by_latlng(latlng):
+    params = {"latlng": latlng, "sensor": "true"}
     try:
         urldata = urllib.urlencode(params)
-        url = "https://maps.googleapis.com/maps/api/geocode/json" + "?" + urldata
+        url = "https://maps.googleapis.com/maps/api/geocode/json?" + urldata
         urlobj = urllib2.urlopen(url)
         data = urlobj.read()
         datadict = json.loads(data)
         if datadict["status"] == u"OK":
             results = datadict["results"]
 
-            # the frist object of the results give the most specific info of the latlng
+            # the first object of the results give the most specific info of the latlng
             address = results[0]['formatted_address']
 
             # last object of results give the country info object, and the one before give the city info object and country info object and so on >>>
-            # level2_addressComponents the object before the last one
-            level2_addressComponents = results[len(results) - 2]['address_components']
-            country = level2_addressComponents[len(level2_addressComponents) - 1]['short_name']
+            # level2_address_components the object before the last one
+            level2_address_components = results[len(results) - 2]['address_components']
+            country = level2_address_components[len(level2_address_components) - 1]['short_name']
 
-            if len(level2_addressComponents) >= 2:
-                city = level2_addressComponents[len(level2_addressComponents) - 2]['long_name']
+            if len(level2_address_components) >= 2:
+                city = level2_address_components[len(level2_address_components) - 2]['long_name']
             else:
-                city = level2_addressComponents[len(level2_addressComponents) - 1]['long_name']
+                city = level2_address_components[len(level2_address_components) - 1]['long_name']
             return {"address": address, "country": country, "city": city}
         else:
             return {"error": "Zero Results"}
@@ -163,7 +169,7 @@ def getLocationInfoBylatlng(latlong):
         return {"error": "exception"}
 
 
-def getIP(request):
+def get_ip(request):
     ip = None
     if request:
         ip = request.META.get('HTTP_X_REAL_IP')
@@ -172,13 +178,13 @@ def getIP(request):
     return ip
 
 
-def getLocationInfoByIP(request):
-    #Get User IP
-    ip = getIP(request)
+def get_location_info_by_ip(request):
+    # Get User IP
+    ip = get_ip(request)
 
-    #Get Info(lat lng) By IP
+    # Get Info(lat lng) By IP
     # TODO Move gi initialization in a global scope so its done only once.
-    gi = GeoIP(os.path.join(settings.BASE_DIR, 'libs', 'pygeoip') + '/GeoIPCity.dat', pygeoip.MEMORY_CACHE)
+    gi = GeoIP(os.path.join(settings.BASE_DIR, 'libs', 'pygeoip') + '/GeoIPCity.dat', MEMORY_CACHE)
     record = gi.record_by_addr(ip)  #168.144.92.219  82.137.200.83
 
     #another way to get locationInfo
@@ -187,8 +193,8 @@ def getLocationInfoByIP(request):
     #	record = locationInfo.split(';')
     #	result.data['location'] =  record[8] + ' ' + record[9]	#	"25.2644" + "+" + "55.3117"  #"33.5 + 36.4"
 
-    if record and record.has_key('city'):
-        return {"ip": ip, "country": record["country_code"], "city": unicode(RemoveNonAscii(record["city"])),
+    if record and 'city' in record:
+        return {"ip": ip, "country": record["country_code"], "city": unicode(remove_non_ascii(record["city"])),
                 "latitude": record['latitude'], "longitude": record['longitude']}
     #		else:
     #			return {"ip":ip, "country": record["country_code"] , "c":record['country_name'] , "city":u'Dubai' , "latitude" : record['latitude'] , "longitude": record['longitude']}
@@ -196,24 +202,24 @@ def getLocationInfoByIP(request):
         return {"ip": ip, "country": u'AE', "city": u'Dubai', "latitude": 25.2644, "longitude": 55.3117}
 
 
-def numberOfClustersBasedOnZoom(zoom):
-    if zoom >= 3 and zoom <= 4:
+def number_of_clusters_based_on_zoom(zoom):
+    if 3 <= zoom <= 4:
         return 15
-    if zoom >= 5 and zoom <= 6:
+    if 5 <= zoom <= 6:
         return 10
-    if zoom >= 7 and zoom <= 8:
+    if 7 <= zoom <= 8:
         return 8
-    if zoom >= 9 and zoom <= 12:
+    if 9 <= zoom <= 12:
         return 15
-    if zoom >= 13 and zoom <= 14:
+    if 13 <= zoom <= 14:
         return 20
-    if zoom >= 15 and zoom <= 18:
+    if 15 <= zoom <= 18:
         return 50
     return 0
 
 
-def distfunction(fmatrix, cs):
-    dists = np.dot(fmatrix, (-2) * cs.T)
+def dist_function(f_matrix, cs):
+    dists = np.dot(f_matrix, (-2) * cs.T)
     dists += np.array([np.dot(c, c) for c in cs])
     return dists
 
@@ -231,7 +237,7 @@ def kmeans(fmatrix, k, max_iter=1000):
     counts = np.empty(k, np.int32)
     dists = None
     for i in xrange(max_iter):
-        dists = distfunction(fmatrix, centroids)
+        dists = dist_function(fmatrix, centroids)
         assignments = dists.argmin(1)
         if np.all(assignments == prev):
             break
@@ -246,17 +252,17 @@ def kmeans(fmatrix, k, max_iter=1000):
     return assignments, centroids
 
 
-def generateConfirmToken(type):
+def generate_confirm_token(type):
     ran = random.Random()
     return ''.join([ran.choice(type[0]) for i in range(0, type[1])])
 
 
-def generateUsername():
+def generate_username():
     return str(random.randint(1000000000, 1999999999))
 
 
-def CorrectMobile(mobile):
-    mobile = RemoveNonAscii(mobile)
+def correct_mobile(mobile):
+    mobile = remove_non_ascii(mobile)
     mobile = mobile.replace(' ', '').replace('-', '').replace('+', '')
     if len(mobile) > 8:
         mobile = '971' + mobile[-9:]
@@ -266,21 +272,18 @@ def CorrectMobile(mobile):
         return None
 
 
-def RemoveNonAscii(s):
+def remove_non_ascii(s):
     return "".join(i for i in s if ord(i) < 128)
 
 
 def set_cookie(response, key, value, days_expire=7):
     if days_expire is None:
-        max_age = 365 * 24 * 60 * 60  #one year
+        max_age = 365 * 24 * 60 * 60  # one year
     else:
         max_age = days_expire * 24 * 60 * 60
     expires = datetime.datetime.strftime(datetime.datetime.utcnow() + datetime.timedelta(seconds=max_age), "%a, %d-%b-%Y %H:%M:%S GMT")
     response.set_cookie(key, value, max_age=max_age, expires=expires, domain=settings.SESSION_COOKIE_DOMAIN,
                         secure=settings.SESSION_COOKIE_SECURE or None)
-
-
-import base64, hashlib, hmac
 
 
 def base64_url_decode(inp):
@@ -299,7 +302,6 @@ def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECR
     data = json.loads(base64_url_decode(payload))
 
     if data.get('algorithm').upper() != 'HMAC-SHA256':
-        #		print('Unknown algorithm')
         return None
     else:
         expected_sig = hmac.new(secret, msg=payload, digestmod=hashlib.sha256).digest()
@@ -307,7 +309,6 @@ def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECR
     if sig != expected_sig:
         return None
     else:
-        #		print('valid signed request received..')
         return data
 
 
@@ -379,10 +380,11 @@ def asynchronous_task():
 
 @asynchronous_task()
 def make_image_thumbnail(url, size, container_name):
-    from Image import open as image_open, ANTIALIAS as IMAGE_ANTIALIAS
+    from Image import open as image_open, ANTIALIAS
     from mimetypes import guess_type
     import StringIO
     import pyrax
+    
     from django.core.files.base import ContentFile
 
     filename = os.path.basename(urlparse.urlparse(url)[2])
@@ -398,7 +400,7 @@ def make_image_thumbnail(url, size, container_name):
     content_file = ContentFile(obj.get())
     image = image_open(content_file)
     thumb = image.copy()
-    thumb.thumbnail((size, size), IMAGE_ANTIALIAS)
+    thumb.thumbnail((size, size), ANTIALIAS)
     buff = StringIO.StringIO()
     thumb.save(buff, format=image.format)
     buff.seek(0)
@@ -410,48 +412,48 @@ def make_cloud_thumbnails_for_image(image_url):
     make_image_thumbnail(image_url, 85, 'shout_image')
 
 
-def ToSeoFriendly(s, maxlen=50):
+def to_seo_friendly(s, max_len=50):
     import re
 
     allowed_chars = ['-', '.']
     t = '-'.join(s.split())  # join words with dashes
     u = ''.join([c for c in t if c.isalnum() or c in allowed_chars])  # remove punctuation
-    u = u[:maxlen].rstrip(''.join(allowed_chars)).lower()  # clip to maxlen
+    u = u[:max_len].rstrip(''.join(allowed_chars)).lower()  # clip to max_len
     u = re.sub(r'([' + r','.join(allowed_chars) + r'])\1+', r'\1', u)  # keep one occurrence of allowed chars
     return u
 
 
-def ShoutLink(post):
+def shout_link(post):
     if not post:
         return None
-    id = IntToBase62(post.pk)
+    post_id = int_to_base62(post.pk)
 
     if post.Type == constants.POST_TYPE_EXPERIENCE:
         if post._meta.module_name == Post._meta.module_name:
             post = Experience.objects.get(pk=post.id)
         experience = post
-        about = ToSeoFriendly(experience.AboutBusiness.name())
+        about = to_seo_friendly(experience.AboutBusiness.name())
 
-        city = ('-' + ToSeoFriendly(unicode.lower(experience.AboutBusiness.City))) if experience.AboutBusiness.City else ''
+        city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.City))) if experience.AboutBusiness.City else ''
         type = 'bad' if experience.State == 0 else 'good'
         link = 'http%s://%s/%s-experience/%s/%s%s/' % (
-            's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, id, about, city)
+            's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, post_id, about, city)
     else:
         shout = post
         type = 'request' if shout.Type == 0 else 'offer' if shout.Type == 1 else 'shout'
-        etc = ToSeoFriendly(shout.Item.Name if hasattr(shout, 'Item') else shout.trade.Item.Name)
-        city = ToSeoFriendly(unicode.lower(shout.ProvinceCode))
-        link = 'http%s://%s/%s/%s/%s-%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, id, etc, city)
+        etc = to_seo_friendly(shout.Item.Name if hasattr(shout, 'Item') else shout.trade.Item.Name)
+        city = to_seo_friendly(unicode.lower(shout.ProvinceCode))
+        link = 'http%s://%s/%s/%s/%s-%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, post_id, etc, city)
 
     return link
 
 
-def IsSessionHasLocation(request):
+def is_session_has_location(request):
     rs = request.session
     return True if 'user_lat' in rs and 'user_lng' in rs and 'user_country' in rs and 'user_city' in rs and 'user_city_encoded' in rs else False
 
 
-def MapWithPredefinedCity(city):
+def map_with_predefined_city(city):
     mapped_location = {}
     try:
         pdc = PredefinedCity.objects.get(City=city)
@@ -479,3 +481,66 @@ class JsonResponse(HttpResponse):
 
 class JsonResponseBadRequest(JsonResponse):
     status_code = 400
+
+
+def get_cloud_connection():
+    pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
+    pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
+    return pyrax
+cloud_connection = get_cloud_connection()
+
+
+def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
+    try:
+        cf = cloud_connection.cloudfiles
+        container = cf.get_container(container_name)
+        data = ''
+        if is_raw:
+            data = uploaded.body if hasattr(uploaded, 'body') else uploaded
+        else:
+            for c in uploaded.chunks():
+                data += c
+        filename = os.path.splitext(filename)[0] + '.jpg'
+        buff = StringIO.StringIO()
+        buff.write(data)
+        buff.seek(0)
+        image = Image.open(buff)
+        if container.name == 'user_image':
+            width, height = image.size
+            if width != height:
+                box = (0, 0, min(width, height), min(width, height))
+                image = image.crop(box)
+                image.format = "JPEG"
+            image.thumbnail((220, 220), Image.ANTIALIAS)
+        else:
+            image.thumbnail((800, 600), Image.ANTIALIAS)
+        
+        buff = StringIO.StringIO()
+        image.save(buff, format="JPEG", quality=60)
+        buff.seek(0)
+        obj = container.store_object(obj_name=filename, data=buff.buf, content_type=mimetypes.guess_type(filename))
+
+        if container.name == 'user_image':
+            make_image_thumbnail(obj.container.cdn_uri + '/' + obj.name, 95, 'user_image')
+            make_image_thumbnail(obj.container.cdn_uri + '/' + obj.name, 32, 'user_image')
+
+        return obj
+    except Exception, e:
+        raise Http404(e.message)
+
+
+def cloud_upload_file(uploaded, container, filename, is_raw):
+    try:
+        cf = cloud_connection.cloudfiles
+        container = cf.get_container(container)
+        data = ''
+        if is_raw:
+            data = uploaded.body
+        else:
+            for c in uploaded.chunks():
+                data += c
+        obj = container.store_object(obj_name=filename, data=data, content_type=mimetypes.guess_type(filename))
+        return obj
+    except Exception, e:
+        pass
+    return None

@@ -1,10 +1,11 @@
 from apps.shoutit.constants import Constant
-from apps.shoutit.utils import IntToBase62
+from apps.shoutit.utils import int_to_base62
 
 
 class JSONUrl(Constant):
     values = {}
     counter = 0
+
 
 JSON_URL_USER_IMAGE_THUMBNAIL = JSONUrl()
 JSON_URL_SHOUT_IMAGE_THUMBNAIL = JSONUrl()
@@ -39,7 +40,7 @@ def get_object_url(obj, extra_params=None):
         url, params = url_list[0], list(url_list[1:])
         for i in range(len(params)):
             if params[i].endswith('|base62'):
-                params[i] = IntToBase62(getattr(obj, params[i][:-7]))
+                params[i] = int_to_base62(getattr(obj, params[i][:-7]))
             else:
                 params[i] = getattr(obj, params[i])
         if extra_params:

@@ -29,7 +29,7 @@ from apps.shoutit.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, T
 
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 
-from apps.shoutit.utils import ToSeoFriendly
+from apps.shoutit.utils import to_seo_friendly
 
 from django.conf import settings
 import urllib2
@@ -502,7 +502,7 @@ def update_user_location(request):
     result.data['user_lng'] = request.session['user_lng'] = userProfile.Longitude
     result.data['user_country'] = request.session['user_country'] = userProfile.Country
     result.data['user_city'] = request.session['user_city'] = userProfile.City
-    result.data['user_city_encoded'] = request.session['user_city_encoded'] = ToSeoFriendly(unicode.lower(unicode(userProfile.City)))
+    result.data['user_city_encoded'] = request.session['user_city_encoded'] = to_seo_friendly(unicode.lower(unicode(userProfile.City)))
 
     if new_city and new_city != old_city:
         realtime_controller.UnbindUserFromCity(request.user.username, old_city)

@@ -7,7 +7,7 @@ SHOUT_URL = '/shout/%s/'
 DEAL_URL = '/deal/%s/'
 MUTE_URL = '/shout/%s/mute/'
 
-#message headings
+# message headings
 MESSAGE_HEAD = {
     'error': 'Oh snap!',
     'warning': 'Holy gaucamole!',
@@ -403,6 +403,7 @@ DEFAULT_LOCATION = {
     'latitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][0],
     'longitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][1]
 }
+
 
 class PaymentStatus(Constant):
     counter = 0

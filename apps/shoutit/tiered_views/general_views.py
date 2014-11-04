@@ -7,12 +7,13 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
 import time
+from django.views.decorators.http import require_POST
 from apps.shoutit.controllers import stream_controller, tag_controller, shout_controller, event_controller, experience_controller, gallery_controller, item_controller
 from apps.shoutit.controllers import user_controller
 
 from apps.shoutit.forms import *
 from apps.shoutit.models import Category, StoredImage, UserProfile, LinkedFacebookAccount, Message, Conversation, FollowShip, Trade
-from apps.shoutit.utils import *
+from apps.shoutit.utils import cloud_upload_file
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiered_views.renderers import *
 from apps.shoutit.tiered_views.views_utils import *
@@ -36,7 +37,7 @@ def index(request, browse_type=None):
 #		result.data['signin_form'] = signin_form
 #		result.data['shout_form'] = shout_form
 #
-#		location_info = getLocationInfoByIP(request)
+#		location_info = get_location_info_by_ip(request)
 #		order_by = TIME_RANK_TYPE
 #		shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, location_info['country'], None,
 #			location_info['latitude'], location_info['longitude'], 0, 3)
@@ -71,10 +72,6 @@ def privacy(request):
     methods=['GET'])
 def rules(request):
     result = ResponseResult()
-    if 'zwaar' in request.GET:
-        result.data['flip'] = True
-    if 'adfly' in request.GET:
-        result.data['adfly'] = True
     return result
 
 
@@ -82,10 +79,6 @@ def rules(request):
     methods=['GET'])
 def learnmore(request):
     result = ResponseResult()
-    if 'zwaar' in request.GET:
-        result.data['flip'] = True
-    if 'adfly' in request.GET:
-        result.data['adfly'] = True
     return result
 
 
@@ -153,12 +146,12 @@ def profile_picture(request, profile_type, name, size=''):
 @non_cached_view(methods=['GET'],
     login_required=False,
     validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get,
-        _('Image does not exist.'), pk=Base62ToInt(image_id)),
+        _('Image does not exist.'), pk=base62_to_int(image_id)),
     api_renderer=thumbnail_response,
     json_renderer=thumbnail_response,
     html_renderer=thumbnail_response)
 def stored_image(request, image_id, size=32):
-    image_id = Base62ToInt(image_id)
+    image_id = base62_to_int(image_id)
     image = StoredImage.objects.get(pk=image_id)
 
     result = ResponseResult()
@@ -184,7 +177,7 @@ def stored_image(request, image_id, size=32):
     json_renderer=json_data_renderer)
 def get_client_lat_lng(request):
     result = ResponseResult()
-    location_info = getLocationInfoByIP(request)
+    location_info = get_location_info_by_ip(request)
     result.data['location'] = str(location_info['latitude']) + ' ' + str(location_info['longitude'])
     return result
 
@@ -260,7 +253,7 @@ def modal(request, template=None):
     elif template == 'shout_edit':
         shout_id = request.GET['id']
         if modify_shout_validator(request, shout_id).valid:
-            shout = shout_controller.GetPost(Base62ToInt(shout_id), True, True)
+            shout = shout_controller.GetPost(base62_to_int(shout_id), True, True)
             variables = RequestContext(request, {
                 'method': 'edit',
                 'shout': shout,
@@ -278,7 +271,7 @@ def modal(request, template=None):
             raise Http404()
 
     elif template == 'shout_item_form' or template == 'edit_item_form':
-        item = item_controller.get_item(Base62ToInt(request.GET['id']))
+        item = item_controller.get_item(base62_to_int(request.GET['id']))
         if item:
             variables = RequestContext(request, {
                 'item_id': request.GET['id'],
@@ -294,7 +287,7 @@ def modal(request, template=None):
             raise Http404()
 
     elif template == 'experience_edit':
-        exp = experience_controller.GetExperience(request.user, Base62ToInt(request.GET['id']))
+        exp = experience_controller.GetExperience(request.user, base62_to_int(request.GET['id']))
         variables = RequestContext(request, {
             'form': ExperienceForm(initial={
                 'text': exp.Text,
@@ -420,65 +413,35 @@ def handler500(request):
     f.close()
     return HttpResponseServerError(content)
 
-cloud_connection = None
-import mimetypes
-import pyrax
-
-
-def get_cloud_connection():
-    global cloud_connection
-    if cloud_connection is None:
-        pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
-        pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
-        cloud_connection = pyrax
-    return cloud_connection
-
-
-def cloud_save_upload(uploaded, container, filename, raw_data):
-    try:
-        cf = get_cloud_connection().cloudfiles
-        container = cf.get_container(container)
-        data = ''
-        if raw_data:
-            data = uploaded.body
+@require_POST
+@csrf_exempt
+def upload_file(request):
+    if request.is_ajax():
+        upload = request
+        is_raw = True
+        try:
+            filename = request.GET['qqfile']
+        except KeyError:
+            return HttpResponseBadRequest("AJAX request not valid")
+    else:
+        is_raw = False
+        if len(request.FILES) == 1:
+            upload = request.FILES.values()[0]
         else:
-            for c in uploaded.chunks():
-                data += c
-        obj = container.store_object(obj_name=filename, data=data, content_type=mimetypes.guess_type(filename))
-        return obj
-    except Exception, e:
-        pass
-    return None
+            raise Http404("Bad Upload")
+        filename = upload.name
+    import os
 
+    filename = generate_password() + os.path.splitext(filename)[1]
+    cloud_file = cloud_upload_file(upload, 'files', filename, is_raw)
 
-def cloud_file_upload(request):
-    if request.method == "POST":
-        if request.is_ajax():
-            upload = request
-            is_raw = True
-            try:
-                filename = request.GET['qqfile']
-            except KeyError:
-                return HttpResponseBadRequest("AJAX request not valid")
-        else:
-            is_raw = False
-            if len(request.FILES) == 1:
-                upload = request.FILES.values()[0]
-            else:
-                raise Http404("Bad Upload")
-            filename = upload.name
-        import os
+    import json
 
-        filename = GeneratePassword() + os.path.splitext(filename)[1]
-        cloud_file = cloud_save_upload(upload, 'files', filename, is_raw)
-
-        import json
-
-        if cloud_file:
-            ret_json = {'success': True, 'url': cloud_file.public_uri()}
-        else:
-            ret_json = {'success': False}
-        return HttpResponse(json.dumps(ret_json))
+    if cloud_file:
+        ret_json = {'success': True, 'url': cloud_file.public_uri()}
+    else:
+        ret_json = {'success': False}
+    return HttpResponse(json.dumps(ret_json))
 
 
 @non_cached_view(methods=['GET'],
@@ -518,5 +481,5 @@ def live_events(request):
                  validator=lambda request, event_id: delete_event_validator(request,event_id))
 def delete_event(request, event_id):
     result = ResponseResult()
-    event_controller.DeleteEvent(Base62ToInt(event_id))
+    event_controller.DeleteEvent(base62_to_int(event_id))
     return result

@@ -1,16 +1,21 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.template import RequestContext
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from math import ceil
+from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
+    RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE
+from apps.shoutit.models import Category, PredefinedCity, Tag, Shout
 from apps.shoutit.controllers import stream_controller, experience_controller
-from apps.shoutit.forms import *
-from apps.shoutit.models import *
-from apps.shoutit.tiered_views.renderers import *
+from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CACHE_TAG_STREAMS, CACHE_LEVEL_SESSION, CACHE_LEVEL_GLOBAL
+from apps.shoutit.tiered_views.renderers import browse_html, shouts_api, user_stream_json, shout_xhr, shouts_location_api, \
+    json_data_renderer, shouts_clusters_api
 from apps.shoutit.tiered_views.views_utils import get_nearest_points_to_clusters, get_shouts_PointId_inViewPort
-from apps.shoutit.tiers import *
-from apps.shoutit.utils import kmeans, numberOfClustersBasedOnZoom
-from django.core.exceptions import ObjectDoesNotExist
+from apps.shoutit.utils import kmeans, number_of_clusters_based_on_zoom, int_to_base62
+from common.tagged_cache import TaggedCache
 
 
-@non_cached_view(html_renderer=browse_html, api_renderer=shouts_api, methods=['GET'])
+@non_cached_view(html_renderer=browse_html, methods=['GET'])
 def browse(request, browse_type, url_encoded_city, browse_category=None):
     result = ResponseResult()
     result.data['notifications'] = []
@@ -30,15 +35,15 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
         result.data['redirect_city'] = True
         return result
 
-    result.data['predefined_cities_approved'] = [pdc for pdc in result.data['predefined_cities'] if pdc.Approved ]
+    result.data['predefined_cities_approved'] = [pdc for pdc in result.data['predefined_cities'] if pdc.Approved]
     result.data['shouts'] = []
     result.data['count'] = 0
     result.data['browse_type'] = browse_type
 
     try:
-        pre_city = PredefinedCity.objects.get(EncodedCity = url_encoded_city)
+        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity = 'dubai')
+        pre_city = PredefinedCity.objects.get(EncodedCity='dubai')
 
     result.data['browse_city'] = pre_city.City
     result.data['browse_city_encoded'] = pre_city.EncodedCity
@@ -56,8 +61,8 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     user = request.user if request.user.is_authenticated() else None
     user_country = None
     user_city = result.data['browse_city']
-    user_lat = pre_city.Latitude if pre_city and pre_city.City!=user_city else request.session['user_lat']
-    user_lng = pre_city.Longitude if pre_city and pre_city.City!=user_city else request.session['user_lng']
+    user_lat = pre_city.Latitude if pre_city and pre_city.City != user_city else request.session['user_lat']
+    user_lng = pre_city.Longitude if pre_city and pre_city.City != user_city else request.session['user_lng']
 
     page_num = 1
     tag_ids = []
@@ -66,8 +71,8 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     category = browse_category
 
     if browse_type == 'experiences':
-        experiences = experience_controller.GetExperiences(user = user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                           end_index=DEFAULT_PAGE_SIZE * page_num, detailed=False, city = user_city)
+        experiences = experience_controller.GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
+                                                           end_index=DEFAULT_PAGE_SIZE * page_num, detailed=False, city=user_city)
         result.data['count'] = len(experiences)
         result.data['experiences'] = experiences
         return result
@@ -101,34 +106,31 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
     if len(shout_ids):
         shouts = stream_controller.GetTradesByIDs(shout_ids)
-        for shout in shouts: shout.rank = dict_shout_ids[shout.id]
-        shouts.sort(key=lambda shout: shout.rank)
+        for shout in shouts:
+            shout.rank = dict_shout_ids[shout.id]
+        shouts.sort(key=lambda _shout: _shout.rank)
     else:
         shouts = []
 
     result.data['shouts'] = shouts
     result.data['count'] = len(shouts)
 
-    if request.GET.has_key('zwaar'):
-        result.data['flip'] = True
     return result
 
-@cached_view(tags=[CACHE_TAG_STREAMS],
-    login_required=False,
-    level=CACHE_LEVEL_SESSION,
-    api_renderer=shouts_api,
-    json_renderer=lambda request, result, page_num: user_stream_json(request, result),
-    methods=['GET'])
+
+@cached_view(tags=[CACHE_TAG_STREAMS], login_required=False, level=CACHE_LEVEL_SESSION, api_renderer=shouts_api,
+             json_renderer=lambda request, result, page_num: user_stream_json(request, result), methods=['GET'])
 def index_stream(request, page_num=1):
     result = ResponseResult()
 
     user = request.user if request.user.is_authenticated() else None
 
     url_encoded_city = 'url_encoded_city' in request.GET and request.GET['url_encoded_city'] or request.session['user_city_encoded']
+    # todo: default location
     try:
-        pre_city = PredefinedCity.objects.get(EncodedCity = url_encoded_city)
+        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity = 'dubai')
+        pre_city = PredefinedCity.objects.get(EncodedCity='dubai')
 
     user_country = pre_city.Country
     user_city = pre_city.City
@@ -162,8 +164,8 @@ def index_stream(request, page_num=1):
         order_by = flag
 
     if POST_TYPE_EXPERIENCE in types and len(types) == 1:
-        experiences = experience_controller.GetExperiences(user = user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                                                  end_index=DEFAULT_PAGE_SIZE * page_num, city=user_city)
+        experiences = experience_controller.GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
+                                                           end_index=DEFAULT_PAGE_SIZE * page_num, city=user_city)
         result.data['count'] = len(experiences)
         result.data['experiences'] = experiences
         return result
@@ -197,7 +199,6 @@ def index_stream(request, page_num=1):
     else:
         shouts = []
 
-    #todo return info's regarding paging
     result.data['shouts'] = shouts
     result.data['count'] = len(shouts)
 
@@ -207,10 +208,7 @@ def index_stream(request, page_num=1):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_GLOBAL,
-    tags=[CACHE_TAG_STREAMS],
-    methods=['GET'],
-    api_renderer=shouts_clusters_api)
+@cached_view(level=CACHE_LEVEL_GLOBAL, tags=[CACHE_TAG_STREAMS], methods=['GET'], api_renderer=shouts_clusters_api)
 def load_clusters(request):
     result = ResponseResult()
 
@@ -319,12 +317,9 @@ def load_clusters(request):
 
     return result
 
-@cached_view(tags=[CACHE_TAG_STREAMS],
-    level=CACHE_LEVEL_GLOBAL,
-    login_required=False,
-    api_renderer=shouts_api,
-    json_renderer=shout_xhr,
-    methods=['GET'])
+
+@cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, login_required=False, api_renderer=shouts_api,
+             json_renderer=shout_xhr, methods=['GET'])
 def livetimeline(request, id=None):
     result = ResponseResult()
     user_country = request.session['user_country']
@@ -341,16 +336,13 @@ def livetimeline(request, id=None):
     shouts = []
     if index:
         shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, user_country, user_city, user_lat, user_lng, 0,index)
-#		if len(shout_ids) < DEFAULT_PAGE_SIZE:
-#			shout_ids = StreamController.GetRankedShoutsIDs(None, order_by, user_country, None, user_lat, user_lng, 0,
-#				index)
         if len(shout_ids):
             shout_ranks = dict(shout_ids)
             shout_ids = [k[0] for k in shout_ids]
             shouts = stream_controller.GetTradesByIDs(shout_ids)
             for shout in shouts:
                 shout.rank = shout_ranks[shout.id]
-            shouts.sort(key=lambda shout: shout.rank)
+            shouts.sort(key=lambda _shout: _shout.rank)
 
     shouts_arr = []
 
@@ -365,21 +357,18 @@ def livetimeline(request, id=None):
     result.data['count'] = len(shouts_arr)
     return result
 
+
 @csrf_exempt
-@cached_view(tags=[CACHE_TAG_STREAMS],
-    level=CACHE_LEVEL_GLOBAL,
-    api_renderer=shouts_location_api,
-    json_renderer=json_data_renderer)
+@cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, api_renderer=shouts_location_api, json_renderer=json_data_renderer)
 def load_shouts(request):
     result = ResponseResult()
-    shouts, shoutPoints = get_shouts_PointId_inViewPort(float(request.REQUEST[u'DownLeftLat']),
-        float(request.REQUEST[u'DownLeftLng']), float(request.REQUEST[u'UpRightLat']),
-        float(request.REQUEST[u'UpRightLng']))
+    shouts, shout_points = get_shouts_PointId_inViewPort(float(request.REQUEST[u'DownLeftLat']), float(request.REQUEST[u'DownLeftLng']),
+                                                         float(request.REQUEST[u'UpRightLat']), float(request.REQUEST[u'UpRightLng']))
 
-    if len(shoutPoints) <= 1:
-        if len(shoutPoints) == 1:
-            result.data['locations'] = [(str(shoutPoints[0][0]) + ' ' + str(shoutPoints[0][1]))]
-            result.data['shoutsId'] = [IntToBase62(shouts[0]['id'])]
+    if len(shout_points) <= 1:
+        if len(shout_points) == 1:
+            result.data['locations'] = [(str(shout_points[0][0]) + ' ' + str(shout_points[0][1]))]
+            result.data['shoutsId'] = [int_to_base62(shouts[0]['id'])]
             result.data['shoutsTypes'] = [shouts[0]['Type']]
         else:
             result.data['locations'] = []
@@ -387,16 +376,16 @@ def load_shouts(request):
             result.data['shoutsTypes'] = []
         return result
 
-    k = numberOfClustersBasedOnZoom(int(request.REQUEST[u'Zoom']))
+    k = number_of_clusters_based_on_zoom(int(request.REQUEST[u'Zoom']))
     if k:
-        cluster_ids, centroids = kmeans(shoutPoints, min(k, len(shoutPoints)), 100)
-        shoutPoints, shoutIds, shoutTypes = get_nearest_points_to_clusters(list(centroids), shoutPoints, shouts)
+        cluster_ids, centroids = kmeans(shout_points, min(k, len(shout_points)), 100)
+        shout_points, shout_ids, shout_types = get_nearest_points_to_clusters(list(centroids), shout_points, shouts)
     else:
-        shoutPoints = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
-        shoutIds = [IntToBase62(shout['id']) for shout in shouts]
-        shoutTypes = [shout['Type'] for shout in shouts]
+        shout_points = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
+        shout_ids = [int_to_base62(shout['id']) for shout in shouts]
+        shout_types = [shout['Type'] for shout in shouts]
 
-    result.data['locations'] = shoutPoints
-    result.data['shoutsId'] = shoutIds
-    result.data['shoutsTypes'] = shoutTypes
+    result.data['locations'] = shout_points
+    result.data['shoutsId'] = shout_ids
+    result.data['shoutsTypes'] = shout_types
     return result

@@ -1,14 +1,24 @@
 from importlib import import_module
-import apps.shoutit.settings as settings
-from apps.shoutit.controllers import realtime_controller, user_controller
-from apps.shoutit.controllers import notifications_controller
-from apps.shoutit.controllers import message_controller
-from apps.shoutit.forms import *
-from apps.shoutit.models import *
-from apps.shoutit.tiered_views.renderers import *
-from apps.shoutit.tiered_views.validators import *
-from apps.shoutit.tiers import *
-from apps.shoutit.constants import *
+import json
+from datetime import datetime
+
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404, HttpResponse
+from django.contrib.auth.models import User
+
+from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP
+
+from apps.shoutit.utils import base62_to_int
+
+from apps.shoutit.models import Notification
+from apps.shoutit.controllers import realtime_controller, user_controller, notifications_controller, message_controller
+from apps.shoutit.tiers import non_cached_view, ResponseResult, refresh_cache, CACHE_TAG_NOTIFICATIONS, cached_view
+from apps.shoutit.tiered_views.renderers import operation_api, json_renderer, notifications_html, notifications_json, notifications_api, \
+    unread_notifications_api
+from apps.shoutit.api.renderers import render_user
+
+
 num = 0
 
 
@@ -92,7 +102,7 @@ def get_session_data(request, session_key=None):
 def mark_notification_as_read(request, notification_id):
     result = ResponseResult()
     try:
-        notification = Notification.objects.get(pk=Base62ToInt(notification_id))
+        notification = Notification.objects.get(pk=base62_to_int(notification_id))
         notification.IsRead = True
         notification.save()
     except ObjectDoesNotExist:
@@ -108,7 +118,7 @@ def mark_notification_as_read(request, notification_id):
 def mark_notification_as_unread(request, notification_id):
     result = ResponseResult()
     try:
-        notification = Notification.objects.get(pk=Base62ToInt(notification_id))
+        notification = Notification.objects.get(pk=base62_to_int(notification_id))
         notification.IsRead = False
         notification.save()
     except ObjectDoesNotExist:
@@ -140,7 +150,6 @@ def notifications(request):
              methods=['GET'], login_required=True)
 def unread_notifications_count(request):
     result = ResponseResult()
-    #	result.data['count'] = request.user.Profile.GetUnreadNotificatiosCount()
     result.data['count'] = user_controller.GetUnreadNotificatiosCount(user_controller.GetProfile(request.user))
     result.data['notificationsWithouMessages'] = notifications_controller.GetUserNotificationsWithoutMessagesCount(
         request.user)

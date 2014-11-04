@@ -4,7 +4,7 @@ sys.path.append('D:/Shout/Code')
 os.environ['DJANGO_SETTINGS_MODULE'] ='Shout.settings'
 
 from django.core.management import setup_environ
-import apps.shoutit.settings as settings
+from django.conf import settings
 setup_environ(settings)
 
 from apps.shoutit.constants import BUSINESS_SOURCE_TYPE_FOURSQUARE

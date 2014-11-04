@@ -1,7 +1,7 @@
+from apps.shoutit.utils import int_to_base62
+from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 from apps.shoutit.constants import *
 from apps.shoutit.models import User, UserProfile, BusinessProfile, Tag
-from apps.shoutit.utils import IntToBase62
-from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 
 
 # todo: better levels
@@ -11,7 +11,7 @@ def render_shout(shout, level=5):
     tags = [render_tag(tag) for tag in shout.GetTags()]
 
     shout_json = {
-        'id': IntToBase62(shout.id),
+        'id': int_to_base62(shout.id),
         'type': PostType.values[shout.Type],
         'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
         'description': shout.Text,
@@ -131,9 +131,9 @@ def render_message(message):
         return {}
 
     return {
-        'message_id': IntToBase62(message.id),
-        'conversation_id': IntToBase62(message.Conversation.id) ,
-        'shout_id': IntToBase62(message.Conversation.AboutPost.id),
+        'message_id': int_to_base62(message.id),
+        'conversation_id': int_to_base62(message.Conversation.id) ,
+        'shout_id': int_to_base62(message.Conversation.AboutPost.id),
         'from_user': render_user(message.FromUser, level=1),
         'to_user': render_user(message.ToUser, level=1),
         'text': message.Text,
@@ -150,7 +150,7 @@ def render_message_attachment(message_attachment):
     content_object = render_shout(message_attachment.content_object, level=1)
     return {
         'content_type': content_type,
-        'object_id': IntToBase62(message_attachment.object_id),
+        'object_id': int_to_base62(message_attachment.object_id),
         content_type: content_object
     }
 
@@ -159,7 +159,7 @@ def render_conversation(conversation):
     if not conversation:
         return {}
     return {
-        'conversation_id': IntToBase62(conversation.id),
+        'conversation_id': int_to_base62(conversation.id),
         'url': get_object_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
@@ -190,7 +190,7 @@ def render_experience(experience):
         return {}
     else:
         rendered_experience = {
-            'id': IntToBase62(experience.id),
+            'id': int_to_base62(experience.id),
             'url': get_object_url(experience),
             'user': render_user(experience.OwnerUser),
             'business': render_user(experience.AboutBusiness),
@@ -289,8 +289,8 @@ def render_notification(notification):
         'is_read': notification.IsRead,
         'type': NotificationType.values[notification.Type],
         'date_created': notification.DateCreated.strftime('%s'),
-        'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], IntToBase62(notification.pk)),
-        'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], IntToBase62(notification.pk)),
+        'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], int_to_base62(notification.pk)),
+        'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], int_to_base62(notification.pk)),
         'id': notification.id
     }
 

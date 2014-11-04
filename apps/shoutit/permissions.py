@@ -14,7 +14,7 @@ class ConstantPermission(Constant):
     def __init__(self, text, message):
         self.message = message
         try:
-            self.permission, created = Permission.objects.get_or_create(name = text)
+            self.permission, created = Permission.objects.get_or_create(name=text)
             self.value = self.permission.pk
             self.__class__.instances[self] = self.permission
             self.__class__.reversed_instances[self.permission] = self
