@@ -53,8 +53,8 @@ def get_access_token_using_social_channel(request, social_channel=None):
 
         elif social_channel == 'facebook':
             # get or create shoutit user using the facebook auth response
-            if not all('accessToken' in auth_data and auth_data['accessToken']):
-                raise KeyError("valid facebook accessToken")
+            if not ('accessToken' in auth_data and auth_data['accessToken']):
+                raise KeyError("valid facebook 'accessToken'")
 
             error, user = user_from_facebook_auth_response(request, auth_data, initial_user)
 
