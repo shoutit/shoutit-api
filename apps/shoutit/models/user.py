@@ -167,7 +167,7 @@ class LinkedFacebookAccount(models.Model):
 
 class LinkedGoogleAccount(models.Model):
 
-    user = models.ForeignKey(User, related_name='linked_google')
+    user = models.ForeignKey(User, related_name='linked_gplus')
     credentials_json = models.CharField(max_length=2048)
     gplus_id = models.CharField(max_length=64, db_index=True)
 
