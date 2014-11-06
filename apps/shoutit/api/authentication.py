@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models.query_utils import Q
+from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from piston3 import oauth
@@ -59,7 +60,7 @@ def get_access_token_using_social_channel(request, social_channel=None):
             error, user = user_from_facebook_auth_response(request, auth_data, initial_user)
 
         else:
-            user, error = None, BaseException("unsupported social channel: " + social_channel)
+            error, user = BaseException("unsupported social channel: " + social_channel), None
 
     except KeyError, k:
                 return JsonResponseBadRequest({'error': "missing " + k.message})
@@ -100,7 +101,7 @@ def get_access_token_using_social_channel(request, social_channel=None):
     token = {
         'access_token': access_token.key,
         'access_token_secret': access_token.secret,
-        'user': render_user(user, level=3, owner=True)
+        'user': render_user(user, level=4, owner=True)
     }
     return JsonResponse(token)
 

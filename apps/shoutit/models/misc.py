@@ -1,0 +1,77 @@
+from datetime import timedelta, datetime
+from django.db import models
+from django.contrib.auth.models import User
+from apps.shoutit import settings
+
+
+class PredefinedCity(models.Model):
+    class Meta:
+        app_label = 'shoutit'
+
+    def __unicode__(self):
+        return unicode(self.Country + ':' + self.City)
+
+    City = models.CharField(max_length=200, default='', db_index=True, unique=True)
+    EncodedCity = models.CharField(max_length=200, default='', db_index=True, unique=True)
+    Country = models.CharField(max_length=2, default='', db_index=True)
+    Latitude = models.FloatField(default=0.0)
+    Longitude = models.FloatField(default=0.0)
+    Approved = models.BooleanField(default=False)
+
+
+class StoredFile(models.Model):
+    class Meta:
+        app_label = 'shoutit'
+
+    def __unicode__(self):
+        return "(" + unicode(self.id) + ") " + unicode(self.File)
+
+    User = models.ForeignKey(User, related_name='Documents', null=True)
+    File = models.URLField(max_length=1024)
+    Type = models.IntegerField()
+
+
+class ConfirmToken(models.Model):
+    class Meta:
+        app_label = 'shoutit'
+
+    def __unicode__(self):
+        return unicode(self.id) + ": " + unicode(self.User) + "::" + self.Token
+
+    Token = models.CharField(max_length=24, db_index=True, unique=True)
+    User = models.ForeignKey(User, related_name="Tokens")
+    Type = models.IntegerField(default=0)
+    DateCreated = models.DateField(auto_now_add=True)
+    Email = models.CharField(max_length=128, blank=True)
+    IsDisabled = models.BooleanField(default=False, null=False)
+
+    def disable(self):
+        self.IsDisabled = True
+        self.save()
+
+    @staticmethod
+    def getToken(token, get_disabled=True, case_sensitive=True):
+        today = datetime.today()
+        days = timedelta(days=int(settings.MAX_REG_DAYS))
+        begin = today - days
+        if case_sensitive:
+            t = ConfirmToken.objects.filter(Token__exact=token, DateCreated__gte=begin, DateCreated__lte=today)
+        else:
+            t = ConfirmToken.objects.filter(Token__iexact=token, DateCreated__gte=begin, DateCreated__lte=today)
+        if not get_disabled:
+            t = t.filter(IsDisabled=False)
+        t = t.select_related(depth=1)
+        if len(t) > 0:
+            return t[0]
+        else:
+            return None
+
+
+class FbContest(models.Model):
+    class Meta:
+        app_label = 'shoutit'
+
+    ContestId = models.IntegerField(db_index=True)
+    User = models.ForeignKey(User, related_name='Contest_1')
+    FbId = models.CharField(max_length=24, db_index=True)
+    ShareId = models.CharField(max_length=50, null=True, default=None)

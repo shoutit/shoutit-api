@@ -1,11 +1,11 @@
-from django.core.exceptions import ObjectDoesNotExist
-from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_location
-from apps.shoutit.models import LinkedFacebookAccount
-from django.conf import settings
 import json
 import urllib
 import urllib2
 import urlparse
+from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+from apps.shoutit.models import LinkedFacebookAccount
+from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_location
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
@@ -27,7 +27,7 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
             response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
             fb_user = json.loads(response.read())
             if not 'email' in fb_user:
-                return None
+                return KeyError("couldn't access user email"), None
         except urllib2.HTTPError, e:
             return e, None
 
@@ -79,6 +79,7 @@ def extend_token(short_lived_token):
         if not 'access_token' in params:
             return None
     except Exception, e:
+        print e.message
         return None
 
     long_lived_token = {

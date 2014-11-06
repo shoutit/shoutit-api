@@ -298,7 +298,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     user.username = username
     user.save()
     user.Profile.Sex = sex
-    user.Profile.Birthdate = birthdate or None
+    user.Profile.Birthdate = birthdate
     if not sex:
         user.Profile.Image = '/static/img/_user_female.png'
     user.Profile.save()
@@ -673,7 +673,7 @@ def GetAllNotifications(profile):
     return profile.all_notifications
 
 
-def GetUnreadNotificatiosCount(profile):
+def get_unread_notifications_count(profile):
     notifications = hasattr(profile, 'notifications') and profile.notifications
     if not notifications:
         notifications = hasattr(profile, 'all_notifications') and profile.all_notifications

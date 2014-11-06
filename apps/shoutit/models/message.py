@@ -4,9 +4,7 @@ from apps.shoutit.constants import ReportType, NotificationType
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 
-from models import Trade
-
-__author__ = 'SYRON'
+from apps.shoutit.models.post import Trade
 
 
 class Conversation(models.Model):
@@ -31,12 +29,12 @@ class Message(models.Model):
     def __unicode__(self):
         try:
             return unicode(self.id) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
-        except:
+        except AttributeError:
             return unicode(self.id)
 
     Conversation = models.ForeignKey(Conversation, related_name='Messages')
-    FromUser = models.ForeignKey(User, related_name='ReciviedMessages')
-    ToUser = models.ForeignKey(User, related_name='SentMessages')
+    FromUser = models.ForeignKey(User, related_name='received_messages')
+    ToUser = models.ForeignKey(User, related_name='sent_messages')
     Text = models.TextField(null=True, blank=False)
     IsRead = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)

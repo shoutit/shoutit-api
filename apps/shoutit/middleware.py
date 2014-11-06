@@ -3,9 +3,9 @@ from apps.shoutit.permissions import permissions_changed, ConstantPermission, AN
 from apps.shoutit.models import UserPermission
 from apps.shoutit.tiered_views.views_utils import set_request_language
 from common.tagged_cache import TaggedCache
-from apps.shoutit.controllers import facebook_controller
 from apps.shoutit.utils import to_seo_friendly, is_session_has_location, get_location_info_by_ip, map_with_predefined_city, JsonResponseBadRequest
 from apps.shoutit.controllers import user_controller
+from apps.shoutit.controllers import facebook_controller
 from django.conf import settings
 import json
 from django.utils import datastructures

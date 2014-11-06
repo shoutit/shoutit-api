@@ -40,6 +40,7 @@ def render_shout(shout, level=5):
 
     return shout_json
 
+
 def render_tag(tag):
     if tag is None:
         return {}
@@ -59,7 +60,7 @@ def render_tag(tag):
 # 1: username and name
 # 2: url, image, sex, is_active
 # 3: date_joined, bio, location
-# 4: ?
+# 4: email, social_channels
 # 5: ?
 def render_user(user, level=1, owner=False):
     if user is None:
@@ -107,6 +108,14 @@ def render_user(user, level=1, owner=False):
                     'latitude': profile.Latitude,
                     'longitude': profile.Longitude
                 })
+        if level >= 4:
+            result.update({
+                'email': user.email,
+                'social_channels': {
+                    'facebook': True if user.linked_facebook else False,
+                    'gplus': True if user.linked_gplus else False
+                }
+            })
 
     elif isinstance(profile, BusinessProfile):
         result = {
@@ -132,7 +141,7 @@ def render_message(message):
 
     return {
         'message_id': int_to_base62(message.id),
-        'conversation_id': int_to_base62(message.Conversation.id) ,
+        'conversation_id': int_to_base62(message.Conversation.id),
         'shout_id': int_to_base62(message.Conversation.AboutPost.id),
         'from_user': render_user(message.FromUser, level=1),
         'to_user': render_user(message.ToUser, level=1),
@@ -197,15 +206,15 @@ def render_experience(experience):
             'state': experience.State,
             'text': experience.Text,
             'date_created': experience.DatePublished.strftime('%s'),
-            'detailed': experience.detailed if hasattr(experience,'detailed') else False
+            'detailed': experience.detailed if hasattr(experience, 'detailed') else False
         }
 
-        if hasattr(experience,'detailed') and experience.detailed:
+        if hasattr(experience, 'detailed') and experience.detailed:
             rendered_experience.update({
                 'details': {
-                    'users_shared_exps': [render_user(user) for user in experience.usersSharedExperience],
+                    'users_shared_experiences': [render_user(user) for user in experience.usersSharedExperience],
                     'comments': [render_comment(comment) for comment in experience.comments],
-                    'shared_exps_count': experience.sharedExpsCount,
+                    'shared_experiences_count': experience.sharedExpsCount,
                     'comments_count': experience.commentsCount,
                     'can_share_exp': experience.canShare,
                     'can_edit_exp': experience.canEdit,
@@ -274,7 +283,7 @@ def render_gallery_item(gallery_item):
     if gallery_item is None:
         return {}
     return {
-        'url': '/gallery_items/%s/' %gallery_item.Gallery.OwnerBusiness.User.username,
+        'url': '/gallery_items/%s/' % gallery_item.Gallery.OwnerBusiness.User.username,
         'item': render_item(gallery_item.Item),
         'gallery': render_gallery(gallery_item.Gallery),
         'date_created': gallery_item.DateCreated.strftime('%s')

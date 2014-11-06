@@ -150,7 +150,7 @@ def notifications(request):
              methods=['GET'], login_required=True)
 def unread_notifications_count(request):
     result = ResponseResult()
-    result.data['count'] = user_controller.GetUnreadNotificatiosCount(user_controller.GetProfile(request.user))
+    result.data['count'] = user_controller.get_unread_notifications_count(user_controller.GetProfile(request.user))
     result.data['notificationsWithouMessages'] = notifications_controller.GetUserNotificationsWithoutMessagesCount(
         request.user)
     result.data['unread_conversations'] = message_controller.UnReadConversationsCount(request.user)
