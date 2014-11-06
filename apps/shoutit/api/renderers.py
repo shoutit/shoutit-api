@@ -112,8 +112,8 @@ def render_user(user, level=1, owner=False):
             result.update({
                 'email': user.email,
                 'social_channels': {
-                    'facebook': True if user.linked_facebook else False,
-                    'gplus': True if user.linked_gplus else False
+                    'facebook': True if (hasattr(user, 'linked_facebook') and user.linked_facebook) else False,
+                    'gplus': True if (hasattr(user, 'linked_gplus') and user.linked_gplus) else False
                 }
             })
 

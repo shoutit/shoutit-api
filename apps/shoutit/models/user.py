@@ -156,7 +156,7 @@ class LinkedFacebookAccount(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='LinkedFB')
+    User = models.ForeignKey(User, related_name='linked_facebook')
     Uid = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
