@@ -144,8 +144,6 @@ def shout_item(request,item_id):
 		if not request.user.is_active and Shout.objects.filter(OwnerUser = request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
 			user_controller.TakePermissionFromUser(request, PERMISSION_SHOUT_MORE)
 
-		#streams = ShoutController.GetStreamAffectedByShout(result.data['shout'])
-		#[refresh_cache_dynamically([CACHE_TAG_STREAMS.make_dynamic(stream)]) for stream in streams]
 	else:
 		form = ShoutForm()
 	result.data['form'] = form

@@ -98,6 +98,7 @@ def GetOrCreateTags(request, names, creator):
     return result
 
 
+# todo: [listen] remove
 def AddToUserInterests(request, tag, user):
     if isinstance(user, User):
         user = user.Profile
@@ -114,7 +115,7 @@ def AddToUserInterests(request, tag, user):
         event_controller.RegisterEvent(user.User, EVENT_TYPE_FOLLOW_TAG, tag)
         Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG : tag.id, ACTIVITY_DATA_USERNAME : user.username})
 
-
+# todo: [listen] remove
 def RemoveFromUserInterests(request, tag, user):
     if isinstance(user, User):
         user = user.Profile
@@ -144,5 +145,5 @@ def TagFollowers(tagName):
 
 from apps.ActivityLogger.logger import Logger
 from apps.shoutit.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG, POST_TYPE_SELL, POST_TYPE_BUY
-import apps.shoutit.controllers.user_controller,event_controller,shout_controller
+import apps.shoutit.controllers.user_controller, event_controller, shout_controller
 from apps.shoutit.models import Tag, Stream, Trade, StoredImage

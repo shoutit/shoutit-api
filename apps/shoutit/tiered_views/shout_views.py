@@ -335,8 +335,7 @@ def shout_view(request, shout_id):
             result.data['new_message'] = True
         elif len(conversations) == 1:
             result.data['conversation'] = conversations[0]
-            conversations[0].messages = get_data([CACHE_TAG_MESSAGES.make_dynamic(request.user)],
-                                                 lambda: message_controller.ReadConversation(request.user, conversations[0].id))
+            conversations[0].messages = message_controller.ReadConversation(request.user, conversations[0].id)
             result.data['conversation_messages'] = conversations[0].messages
             if not result.data['conversation_messages']:
                 result.data['new_message'] = True

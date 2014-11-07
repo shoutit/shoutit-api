@@ -45,27 +45,14 @@ class Setting(object):
         return self.value
 
 
-class DynamicConstant(object):
-    def __hash__(self):
-        return ('%s|%d|%d' % (self.class_name, self.value, self.key.__hash__())).__hash__()
-
-    def __int__(self):
-        return self.value
-
-    def __eq__(self, other):
-        return self.__hash__() == other.__hash__()
-
-    def __str__(self):
-        return self.text
-
-    def __unicode__(self):
-        return self.text
-
-    def get_text(self):
-        return self.text
-
-
 class Constant(object):
+    # should be redefined inside the classes who inherited Constant
+    # counter: is the number of specific type of constants
+    # values: is a dict of value:text
+    # texts: is a dict of text:value. if there is no text the value will be used as key
+    # choices: is tuple of (value, text) used for Model choices attribute
+    counter, values, texts, choices = 0, {}, {}, ()
+
     def __int__(self):
         return self.value
 
@@ -74,6 +61,8 @@ class Constant(object):
             self.value = self.__class__.counter
             self.__class__.counter += 1
         self.__class__.values[self.value] = text
+        self.__class__.texts[text or self.value] = self.value
+        self.__class__.choices += ((self.value, text),)
 
     def __eq__(self, other):
         if other is not None:
@@ -92,14 +81,6 @@ class Constant(object):
 
     def __unicode__(self):
         return self.get_text()
-
-    def make_dynamic(self, key):
-        dynamic_constant = DynamicConstant()
-        dynamic_constant.key = key
-        dynamic_constant.value = self.value
-        dynamic_constant.text = self.__class__.values[self.value]
-        dynamic_constant.class_name = self.__class__.__name__
-        return dynamic_constant
 
     def __str__(self):
         return self.get_text()
@@ -145,9 +126,7 @@ TOKEN_SHORT_LOWER = ('abcdefghkmnopqrstuvwxyz23456789', 6)
 
 
 class TokenType(Constant):
-    counter = 0
-    values = {}
-
+    counter, values, texts, choices = 0, {}, {}, ()
 
 TOKEN_TYPE_HTML_EMAIL = TokenType("Html Email")
 TOKEN_TYPE_API_EMAIL = TokenType("Api Email")
@@ -160,17 +139,14 @@ TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM = TokenType("Business Html Confirm")
 
 
 class FileType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 FILE_TYPE_BUSINESS_DOCUMENT = FileType("Business Document")
 
 
 class BusinessConfirmationState(Constant):
-    counter = 0
-    values = {}
-
+    counter, values, texts, choices = 0, {}, {}, ()
 
 BUSINESS_CONFIRMATION_STATUS_WAITING = BusinessConfirmationState("Waiting")
 BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT = BusinessConfirmationState("Waiting Payment")
@@ -183,8 +159,7 @@ business_source_types = {}
 
 
 class BusinessSourceType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
@@ -196,8 +171,7 @@ BUSINESS_SOURCE_TYPE_FOURSQUARE = BusinessSourceType('Foursquare')
 
 
 class UserState(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 #USER_STATE_INACTIVE = UserState("Inactive")
 USER_STATE_ACTIVE = UserState("Active")
@@ -208,8 +182,7 @@ user_type_flags = {}
 
 
 class UserTypeFlag(Flag):
-    counter = 1
-    values = {}
+    counter, values, texts, choices = 1, {}, {}, ()
 
     def __init__(self, text=''):
         Flag.__init__(self, text)
@@ -221,8 +194,7 @@ USER_TYPE_BUSINESS = UserTypeFlag('Business')
 
 
 class StreamType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 STREAM_TYPE_USER = StreamType('User')
@@ -250,8 +222,7 @@ FOLLOW_RANK_TYPE = RankTypeFlag('Follow')
 
 
 class ItemState(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 ITEM_STATE_AVAILABLE = ItemState('Available')
@@ -261,8 +232,7 @@ ITEM_STATE_EXPIRED = ItemState('Expired')
 
 
 class ExperienceState(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 EXPERIENCE_DOWN = ExperienceState('Thumbs down')
@@ -272,8 +242,7 @@ post_types = {}
 
 
 class PostType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
@@ -288,8 +257,7 @@ POST_TYPE_EVENT = PostType('Event')
 
 
 class ActivityType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 ACTIVITY_TYPE_SIGN_IN_SUCCESS = ActivityType('Sign In Success')
@@ -309,8 +277,7 @@ ACTIVITY_TYPE_TAG_INTEREST_REMOVED = ActivityType('Tag Interest Removed')
 
 
 class ActivityData(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 ACTIVITY_DATA_CREDENTIAL = ActivityData('Credential')
@@ -326,8 +293,7 @@ ACTIVITY_DATA_EVENT = ActivityData('Event')
 
 
 class NotificationType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 NOTIFICATION_TYPE_FOLLOWSHIP = NotificationType('Followship')
@@ -338,8 +304,7 @@ NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
 
 
 class RealtimeType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 REALTIME_TYPE_NOTIFICATION = RealtimeType('Notification')
@@ -349,8 +314,7 @@ event_types = {}
 
 
 class EventType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
@@ -373,8 +337,7 @@ report_types = {}
 
 
 class ReportType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
@@ -406,8 +369,7 @@ DEFAULT_LOCATION = {
 
 
 class PaymentStatus(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 PAYMENT_AUTHORIZED = PaymentStatus('Authorized')
@@ -418,16 +380,14 @@ PAYMENT_REFUNDED = PaymentStatus('Refunded')
 
 
 class SubscriptionType(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 SUBSCRIPE_BUSINESS = SubscriptionType('Business')
 
 
 class SubscriptionStatus(Constant):
-    counter = 0
-    values = {}
+    counter, values, texts, choices = 0, {}, {}, ()
 
 
 SUBSCRIPTION_TRAIL = SubscriptionStatus('Trail')

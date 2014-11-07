@@ -16,7 +16,7 @@
     <div class="round shadow white-container pull-{% if right %}right{% else %}left{% endif %} message-content">
         <span class="message-date pd" title="{{ conversation.DateCreated|ISO8601 }}">{{ conversation.DateCreated }}</span>
         {% trans "you and" %} <a class="shout_message_with" href="/user/{{ conversation.With }}/">{{ conversation.With.name }}</a>
-        {% trans "about" %} <a class="shout_message_about" href="{% shout_link  conversation.AboutPost%}/">{{ conversation.AboutPost.Item.Name }}</a>
+        {% trans "about" %} <a class="shout_message_about" href="{% shout_link  conversation.AboutPost%}">{{ conversation.AboutPost.Item.Name }}</a>
         <br>{{ conversation.Text|linebreaksbr }}
         <a class="shout_message_link btn" onclick="showMessagesAjaxly('{{conversation.id|base62}}')">{% trans "Read More" %}</a>
         <div class="controls">

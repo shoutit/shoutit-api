@@ -117,10 +117,10 @@ def ReadConversations(user, start_index=None, end_index=None):
 
 def ReadConversation(user, conversation_id):
     conversation = Conversation.objects.get(pk=conversation_id)
-    Message.objects.filter(Q(Conversation=conversation) & (Q(FromUser=user) | Q(ToUser=user) )).update(IsRead=True)
-    messages = Message.objects.filter(Q(Conversation=conversation) & (
-    (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).order_by(
-        'DateCreated')
+    Message.objects.filter(Q(Conversation=conversation) & (Q(FromUser=user) | Q(ToUser=user))).update(IsRead=True)
+    messages = Message.objects.filter(
+        Q(Conversation=conversation) & ((Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))
+    ).order_by('DateCreated')
     return messages
 
 

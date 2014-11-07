@@ -22,7 +22,10 @@ from apps.shoutit.constants import *
                  permissions_required=[PERMISSION_FOLLOW_TAG])
 @refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
 def add_tag_to_interests(request, tag_name):
+
+    # todo: [listen] replace
     tag_controller.AddToUserInterests(request, tag_name, request.user)
+
     result = ResponseResult()
     return result
 
@@ -38,7 +41,10 @@ def add_tag_to_interests(request, tag_name):
                                                                              _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 @refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
 def remove_tag_from_interests(request, tag_name):
+
+    # todo: [listen] replace
     tag_controller.RemoveFromUserInterests(request, tag_name, request.user)
+
     result = ResponseResult()
     return result
 

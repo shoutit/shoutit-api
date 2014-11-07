@@ -8,6 +8,7 @@ from apps.shoutit.models.tag import Tag
 from apps.shoutit.models.misc import ConfirmToken
 from apps.ActivityLogger.models import Request
 
+
 class UserProfile(models.Model):
     class Meta:
         app_label = 'shoutit'
@@ -20,9 +21,11 @@ class UserProfile(models.Model):
     Bio = models.TextField(null=True, max_length=512, default='New Shouter!')
     Mobile = models.CharField(unique=True, null=True, max_length=20)
 
+    # todo: [listen] remove and replace with followers inside stream
     Following = models.ManyToManyField(Stream, through='FollowShip')
     Interests = models.ManyToManyField(Tag, related_name='Followers')  # todo: interests is extra, following to be used for all
 
+    # todo: [listen] remove
     Stream = models.OneToOneField(Stream, related_name='OwnerUser', db_index=True)
     #	isBlocked = models.BooleanField(default=False)
 
@@ -41,8 +44,6 @@ class UserProfile(models.Model):
     isSMS = models.BooleanField(default=False, db_index=True)
 
     #	State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
-
-    #TODO: blocked field
 
     def GetNotifications(self):
         if not hasattr(self, 'notifications'):
@@ -73,11 +74,6 @@ class UserProfile(models.Model):
         if not notifications:
             notifications = self.GetNotifications()
         return len(filter(lambda n: not n.IsRead, notifications))
-
-    def GetInterests(self):
-        if not hasattr(self, 'interests'):
-            self.interests = self.Interests.select_related('Creator')
-        return self.interests
 
     def GetTagsCreated(self):
         if not hasattr(self, 'tags_created'):
@@ -160,7 +156,7 @@ class LinkedFacebookAccount(models.Model):
     Uid = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
-    SignedRequest = models.CharField(max_length=1024)     #todo: remove signed request
+    SignedRequest = models.CharField(max_length=1024)  # todo: remove signed request
     link = models.CharField(max_length=128)
     verified = models.BooleanField(default=False)
 
@@ -171,12 +167,8 @@ class LinkedGoogleAccount(models.Model):
     credentials_json = models.CharField(max_length=2048)
     gplus_id = models.CharField(max_length=64, db_index=True)
 
-    #expires_in = models.BigIntegerField(default=0)
-    #verified = models.BooleanField(default=False)
-
     class Meta:
         app_label = 'shoutit'
-
 
 
 class PermissionsManager(models.Manager):
