@@ -3,18 +3,18 @@ from django.db.models.query_utils import Q
 from apps.shoutit.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG, \
     EVENT_TYPE_SHOUT_REQUEST, EVENT_TYPE_EXPERIENCE, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_POST_DEAL, \
     EVENT_TYPE_BUY_DEAL, EVENT_TYPE_COMMENT, EVENT_TYPE_FOLLOW_BUSINESS
-from apps.shoutit.models import Event, Tag, Trade, Experience, Deal, Comment, UserProfile, BusinessProfile, SharedExperience
+from apps.shoutit.models import Event, Tag, Trade, Experience, Deal, Comment, Profile, Business, SharedExperience
 
 
 def RegisterEvent(user, type, attached_object=None):
-    from apps.shoutit.controllers.user_controller import GetUser
+    from apps.shoutit.controllers.user_controller import get_profile
 
     pk = attached_object and attached_object.pk or None
     ct = attached_object and ContentType.objects.db_manager(attached_object._state.db).get_for_model(attached_object) or None
     event = Event(OwnerUser=user, Type=POST_TYPE_EVENT, EventType=type, object_pk=pk, content_type=ct)
     event.save()
 
-    profile = GetUser(user.username)
+    profile = get_profile(user.username)
     profile.Stream.PublishShout(event)
 
 
@@ -38,10 +38,10 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
             EventType=EVENT_TYPE_FOLLOW_BUSINESS))
 
     if country:
-        events = events.filter(Q(OwnerUser__Profile__Country=country) | Q(OwnerUser__Business__Country=country))
+        events = events.filter(Q(OwnerUser__profile__Country=country) | Q(OwnerUser__business__Country=country))
 
     if city:
-        events = events.filter(Q(OwnerUser__Profile__City=city) | Q(OwnerUser__Business__City=city))
+        events = events.filter(Q(OwnerUser__profile__City=city) | Q(OwnerUser__business__City=city))
 
     #	extra_ids = Experience.objects.filter(AboutBusiness__City = city).values('id')
     #	ct = ContentType.objects.get_for_model(Experience)
@@ -106,9 +106,9 @@ def GetDetailedEvents(events):
 
     related = {'users': [], 'businesses': [], 'tags': [], 'trades': [], 'experiences': [], 'shared_exps': [], 'comments': [], 'deals': []}
     if related_ids['user_ids']:
-        related['users'] = list(UserProfile.objects.filter(pk__in=related_ids['user_ids']).select_related('User'))
+        related['users'] = list(Profile.objects.filter(pk__in=related_ids['user_ids']).select_related('User'))
     if related_ids['business_ids']:
-        related['businesses'] = list(BusinessProfile.objects.filter(pk__in=related_ids['user_ids']).select_related('User'))
+        related['businesses'] = list(Business.objects.filter(pk__in=related_ids['user_ids']).select_related('User'))
     if related_ids['tag_ids']:
         related['tags'] = list(Tag.objects.filter(pk__in=related_ids['tag_ids']))
     if related_ids['trade_ids']:

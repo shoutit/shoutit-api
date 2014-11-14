@@ -55,9 +55,9 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
         request.session['user_lng'] = pre_city.Longitude
         request.session['user_country'] = pre_city.Country
         request.session['user_city'] = pre_city.City
-        request.session['user_city_encoded'] =  pre_city.EncodedCity
+        request.session['user_city_encoded'] = pre_city.EncodedCity
 
-# Shouts of Landing Page
+    # Shouts of Landing Page
     user = request.user if request.user.is_authenticated() else None
     user_country = None
     user_city = result.data['browse_city']
@@ -119,8 +119,8 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
 
 @cached_view(tags=[CACHE_TAG_STREAMS], login_required=False, level=CACHE_LEVEL_SESSION, api_renderer=shouts_api,
-             json_renderer=lambda request, result, page_num: user_stream_json(request, result), methods=['GET'])
-def index_stream(request, page_num=1):
+             json_renderer=lambda request, result: user_stream_json(request, result), methods=['GET'])
+def index_stream(request):
     result = ResponseResult()
 
     user = request.user if request.user.is_authenticated() else None
@@ -137,10 +137,7 @@ def index_stream(request, page_num=1):
     user_lat = pre_city.Latitude if pre_city and pre_city.City != user_city else request.session['user_lat']
     user_lng = pre_city.Longitude if pre_city and pre_city.City != user_city else request.session['user_lng']
 
-    if not page_num:
-        page_num = 1
-    else:
-        page_num = int(page_num)
+    page_num = int(request.GET.get('page', 1))
 
     if 'tag_ids[]' in request.GET:
         tag_ids = request.GET.getlist('tag_ids[]')

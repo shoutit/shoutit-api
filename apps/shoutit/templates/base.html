@@ -122,9 +122,9 @@
   </div>
 {% endif %}
 {% if request.user.is_authenticated and not request.user.is_active %}
-  <div class="modal {% if request.user.Profile.isSSS %}sss{% endif %}" id="activate_modal">
+  <div class="modal {% if request.user.profile.isSSS %}sss{% endif %}" id="activate_modal">
     <div class="modal-header">
-      {#					{% if not request.user.Profile.isSSS %}<a class="close" data-dismiss="modal">x</a>{% endif %}#}
+      {#					{% if not request.user.profile.isSSS %}<a class="close" data-dismiss="modal">x</a>{% endif %}#}
     </div>
     <div class="modal-title">{% trans "please, complete your details" %}
     </div>
@@ -192,7 +192,7 @@
   </div>
   <div class="modal-body">
 
-    {% if not request.user.is_authenticated or request.user.Profile %}
+    {% if not request.user.is_authenticated or request.user.profile %}
       <div class="offer" data-toggle="modal" data-dismiss="modal" data-target="#shout_offer_modal">
         <div class="btn-offer"></div>
         <b>{% trans "Offer" %}</b><br/>{% trans "Got something to sell?" %}
@@ -375,23 +375,6 @@
 
     <p>#{text}</p>
   </div>
-  {% if android_campaign %}
-    <div id="google-play-template" class="alert alert-success">
-      <a class="close ui-notify-close">x</a>
-
-      <div>
-        <a href="https://play.google.com/store/apps/details?id=com.shoutit.android" target="_blank">
-          <img src="{% static "img/google-android-play.png" alt="Google Play" style="float:left;border:none;" %}"/>
-        </a>
-        <a href="https://play.google.com/store/apps/details?id=com.shoutit.android" target="_blank"
-           style="margin-left:10px;float:left;display:block;width:236px;">{% trans "Did you know that Shoutit is now available on Google Play for Android?" %}
-        <br/>{% trans "Check it out now!" %}
-        </a>
-
-        <div class="clear-both"></div>
-      </div>
-    </div>
-  {% endif %}
 </div>
 
 <div id='ajax_loading' style='position: fixed; bottom: 0px; right: 0px; display: none; z-index: 2050;'>
@@ -633,19 +616,6 @@
         show: false
       });
     {% endif %}
-    {% if android_campaign %}
-      $("#notification_container").notify("create", "google-play-template", {}, { custom: true, sticky: true, expires: false,
-        close: function () {
-          requestAjaxily({
-            type: 'POST',
-            url: '/set_perma/',
-            data: {
-              perma: 'android_campaign',
-              value: true
-            }
-          });
-        }});
-    {% endif %}
     {% if request.user.is_authenticated %}
       requestAjaxily({
         url: '/xhr/unReadNotificationsCount/',
@@ -656,7 +626,9 @@
             $('.notification-count').text(data.data.count);
         }
       });
-      poll();
+      {% if settings.REALTIME_SERVER_ON %}
+        poll();
+      {% endif %}
     {% endif %}
     show_modal_by_hash();
     $('a#signout_link').click(function () {

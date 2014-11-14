@@ -4,8 +4,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
 
-from apps.shoutit.models.user import UserProfile
-from apps.shoutit.models.business import BusinessProfile
+from apps.shoutit.models.user import Profile
+from apps.shoutit.models.business import Business
 from apps.shoutit.models.item import Currency
 from apps.shoutit.models.post import Deal
 
@@ -13,15 +13,15 @@ from apps.shoutit.models.post import Deal
 class PaymentsManager(models.Manager):
     def GetUserPayments(self, user):
         if isinstance(user, User):
-            return self.filter(User=user)
+            return self.filter(user=user)
         elif isinstance(user, basestring):
-            return self.filter(User__username__iexact=user)
-        elif isinstance(user, UserProfile):
-            return self.filter(User__pk=user.User_id)
-        elif isinstance(user, BusinessProfile):
-            return self.filter(User__pk=user.User_id)
+            return self.filter(user__username__iexact=user)
+        elif isinstance(user, Profile):
+            return self.filter(user__pk=user.User_id)
+        elif isinstance(user, Business):
+            return self.filter(user__pk=user.User_id)
         elif isinstance(user, int):
-            return self.filter(User__pk=user)
+            return self.filter(user__pk=user)
 
     def GetObjectPayments(self, object):
         return self.filter(content_type=ContentType.objects.get_for_model(object.__class__), object_pk=object.pk)
@@ -31,7 +31,7 @@ class Payment(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='Payments')
+    user =  models.ForeignKey(User, related_name='Payments')
     DateCreated = models.DateTimeField(auto_now_add=True)
     DateUpdated = models.DateTimeField(auto_now=True)
     Amount = models.FloatField()
@@ -73,7 +73,7 @@ class DealBuy(models.Model):
         app_label = 'shoutit'
 
     Deal = models.ForeignKey(Deal, related_name='Buys', on_delete=models.SET_NULL, null=True)
-    User = models.ForeignKey(User, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
+    user =  models.ForeignKey(User, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
 
@@ -89,7 +89,7 @@ class Service(models.Model):
 
 class ServiceManager(models.Manager):
     def GetUserServiceBuyRemaining(self, user, service_code):
-        return self.values(ServiceBuy._meta.get_field_by_name('User')[0].column).filter(User=user,
+        return self.values(ServiceBuy._meta.get_field_by_name('User')[0].column).filter(user=user,
                                                                                         Service__Code__iexact=service_code).annotate(
             buys_count=Sum('Amount')).extra(select={
             'used_count': 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(service_id)s" IN (%(sid)s)' % {
@@ -111,7 +111,7 @@ class ServiceBuy(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='Services')
+    user =  models.ForeignKey(User, related_name='Services')
     Service = models.ForeignKey('Service', related_name='Buyers')
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
@@ -123,7 +123,7 @@ class ServiceUsage(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='ServicesUsages')
+    user =  models.ForeignKey(User, related_name='ServicesUsages')
     Service = models.ForeignKey('Service', related_name='BuyersUsages')
     Amount = models.IntegerField(default=1)
     DateUsed = models.DateTimeField(auto_now_add=True)

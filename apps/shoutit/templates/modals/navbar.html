@@ -23,7 +23,7 @@
             <ul class="dropdown-menu">
               <li><a href="/user/{{ request.user.username }}/"><i class="icon-user"></i> {% trans "View Profile" %}</a></li>
               {% if user.is_active %}
-                {% if user.Profile  %}
+                {% if user.profile  %}
                   <li><a href="/user/{{ request.user.username }}/#edit" {% if request.path == "/user/"|add:request.user.username|add:"/" %} data-toggle="modal" data-target="#edit_profile_modal"{% endif %}><i class="icon-pencil"></i> {% trans "Edit Profile" %}</a></li>
                 {% else  %}
                   <li><a href="/user/{{ request.user.username }}/#edit" {% if request.path == "/user/"|add:request.user.username|add:"/" %} data-toggle="modal" data-target="#edit_bprofile_modal"{% endif %}><i class="icon-pencil"></i> {% trans "Edit Profile" %}</a></li>
@@ -31,8 +31,8 @@
               {% else %}
                 <li><a href="/user/{{ request.user.username }}/#reactivate" data-toggle="modal" data-target="#resend_activation_modal"><i class="icon-pencil"></i> {% trans "Activate" %}</a></li>
               {% endif %}
-              {% if user.Profile  %}
-                <li><a href="#" id="ShowMap" data-toggle="modal" data-target="#MapModal" title="Click to change your City"><i class="icon-map-marker"></i> {% if user.Profile.City != "" %}[{{user.Profile.City}}]{% endif %}</a></li>
+              {% if user.profile  %}
+                <li><a href="#" id="ShowMap" data-toggle="modal" data-target="#MapModal" title="Click to change your City"><i class="icon-map-marker"></i> {% if user.profile.City != "" %}[{{user.profile.City}}]{% endif %}</a></li>
               {% endif  %}
               <li class="divider"></li>
               <li><a id="signout_link" href="/signout/"><i class="icon-off"></i> {% trans "Sign Out" %}</a></li>

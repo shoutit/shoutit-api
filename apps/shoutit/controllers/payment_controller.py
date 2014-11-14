@@ -50,7 +50,7 @@ def PayForDeal(user, deal, amount, remote_transaction_data, remote_transaction_i
 	if old_status != 'Paid':
 		deal_buy = deal_controller.BuyDeal(user, deal, amount)
 		payment = Payment.objects.create(
-			User = user,
+			user =  user,
 			Amount = deal.Item.Price * amount,
 			Currency = deal.Item.Currency,
 			Status = 1,
@@ -77,12 +77,12 @@ def PayForService(user, service_code, amount, remote_transaction_data, remote_tr
 	transaction, old_status = UpdateOrCreateTransaction(remote_transaction_identifier, remote_transaction_data, 'Paid')
 	if old_status != 'Paid':
 		service_buy = ServiceBuy.objects.create(
-			User = user,
+			user =  user,
 			Service = service,
 			Amount = amount
 		)
 		payment = Payment.objects.create(
-			User = user,
+			user =  user,
 			Amount = service.Price * amount,
 			Currency = Currency.objects.get(Code = 'USD'),
 			Status = 1,

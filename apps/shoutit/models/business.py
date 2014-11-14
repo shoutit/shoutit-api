@@ -35,14 +35,14 @@ class BusinessCategory(models.Model):
         return unicode('%s > %s' % (self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
 
 
-class BusinessProfile(models.Model):
+class Business(models.Model):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return '[BP_%s | %s | %s]' % (unicode(self.id), unicode(self.Name), unicode(self.User))
+        return '[BP_%s | %s | %s]' % (unicode(self.id), unicode(self.Name), unicode(self.user))
 
-    User = models.OneToOneField(User, related_name='Business', db_index=True)
+    user = models.OneToOneField(User, related_name='business', db_index=True)
 
     Name = models.CharField(max_length=1024, db_index=True, null=False)
     Category = models.ForeignKey('BusinessCategory', null=True, on_delete=models.SET_NULL)
@@ -65,13 +65,13 @@ class BusinessProfile(models.Model):
 
     def __getattribute__(self, name):
         if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts', 'get_full_name', 'is_active']:
-            return getattr(self.User, name)
+            return getattr(self.user, name)
         else:
             return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
         if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts', 'get_full_name', 'is_active']:
-            setattr(self.User, name, value)
+            setattr(self.user, name, value)
         else:
             object.__setattr__(self, name, value)
 
@@ -109,8 +109,8 @@ class BusinessCreateApplication(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
-    Business = models.ForeignKey('BusinessProfile', related_name='UserApplications', null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
+    business = models.ForeignKey('Business', related_name='UserApplications', null=True, on_delete=models.SET_NULL)
 
     Name = models.CharField(max_length=1024, db_index=True, null=True)
     Category = models.ForeignKey('BusinessCategory', null=True, on_delete=models.SET_NULL)
@@ -136,7 +136,7 @@ class BusinessSource(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    Business = models.OneToOneField('BusinessProfile', related_name="Source")
+    business = models.OneToOneField('Business', related_name="Source")
     Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE)
     SourceID = models.CharField(max_length=128, blank=True)
 
@@ -145,7 +145,7 @@ class BusinessConfirmation(models.Model):
     class Meta:
         app_label = 'shoutit'
 
-    User = models.ForeignKey(User, related_name='BusinessConfirmations')
+    user = models.ForeignKey(User, related_name='BusinessConfirmations')
     Files = models.ManyToManyField(StoredFile, related_name='Confirmation')
     DateSent = models.DateTimeField(auto_now_add=True)
 
@@ -170,5 +170,5 @@ class Gallery(models.Model):
         return unicode(self.id) + ": " + unicode(self.Description)
 
     Description = models.TextField(max_length=500, default='')
-    OwnerBusiness = models.ForeignKey('BusinessProfile', related_name='Galleries')
+    OwnerBusiness = models.ForeignKey('Business', related_name='Galleries')
     Category = models.OneToOneField(Category, related_name='+', null=True)

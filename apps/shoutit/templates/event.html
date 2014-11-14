@@ -12,7 +12,7 @@
 		<span class="user-icon-listens"></span>
 		<div class="event-content">
         <a href="/user/{{ event.OwnerUser.username }}/">
-            {{ event.OwnerUser.Profile.name }}        </a>
+            {{ event.OwnerUser.profile.name }}        </a>
         {% trans "has started listening to" %}
         <a href="/user/{{event.AttachedObject.username}}/">
             {{ event.AttachedObject.name }}
@@ -24,7 +24,7 @@
 		<span class="user-icon-listens"></span>
 		<div class="event-content">
 		<a href="/user/{{ event.OwnerUser.username}}/">
-            {{ event.OwnerUser.Profile.name }}
+            {{ event.OwnerUser.profile.name }}
         </a>
         {% trans "has started listening to" %}
         <a href="/tag/{{event.AttachedObject.Name}}/">
@@ -37,7 +37,7 @@
 		<span class="user-icon-offers"></span>
 		<div class="event-content">
 		<a {% if event.OwnerUser.is_active or event.OwnerUser == request.user %}href="/user/{{ event.OwnerUser.username}}{% endif %}/">
-            {{ event.OwnerUser.Profile.name }}
+            {{ event.OwnerUser.profile.name }}
         </a>
         {% trans "added an offer" %}
         <a href="{% shout_link  event.AttachedObject%}">
@@ -50,7 +50,7 @@
 		<span class="user-icon-requests"></span>
 		<div class="event-content">
         <a {% if event.OwnerUser.is_active or event.OwnerUser == request.user %}href="/user/{{ event.OwnerUser.username}}{% endif %}/">
-            {{ event.OwnerUser.Profile.name }}
+            {{ event.OwnerUser.profile.name }}
         </a>
         {% trans "added a request" %}
         <a href="{% shout_link  event.AttachedObject%}">
@@ -68,7 +68,7 @@
 		{% endif %}
 		<div class="event-content">
         <a href="/user/{{ event.OwnerUser.username}}/">
-            {{ event.OwnerUser.Profile.name }}
+            {{ event.OwnerUser.profile.name }}
         </a>
 			{% trans "posted" %}
         <a href="{% shout_link event.AttachedObject %}">
@@ -90,7 +90,7 @@
 		{% endif %}
 		<div class="event-content">
         <a href="/user/{{ event.OwnerUser.username}}/">
-            {{ event.OwnerUser.Profile.name }}
+            {{ event.OwnerUser.profile.name }}
         </a>
 		{% trans "shared an experience" %}
         <a href="{% shout_link event.AttachedObject.Experience %}">
@@ -103,7 +103,7 @@
         <span class="user-icon-comment"></span>
 		<div class="event-content">
         <a href="/user/{{ event.OwnerUser.username}}/">
-            {% if event.OwnerUser.Profile  %} {{ event.OwnerUser.Profile.name }}  {% else %} {{ event.OwnerUser.first_name }} {% endif %}
+            {% if event.OwnerUser.profile  %} {{ event.OwnerUser.profile.name }}  {% else %} {{ event.OwnerUser.first_name }} {% endif %}
         </a>
 		{% trans "commented on experience" %}
         <a href="{% shout_link  event.AttachedObject.AboutPost.experience %}">
@@ -129,7 +129,7 @@
 		<span class="user-icon-buys"></span>
 		<div class="event-content">
 		<a href="/user/{{ event.OwnerUser.username}}/">
-            {{ event.OwnerUser.Profile.name }}
+            {{ event.OwnerUser.profile.name }}
         </a>
 		{% trans "bought a deal" %}
         <a href="/deal/{{event.AttachedObject.pk|base62}}/">

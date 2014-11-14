@@ -1573,11 +1573,11 @@ div.modal-footer.modal-error{padding:6px 15px 6px;background-color:#fde2e2;borde
 #activate_form input{width:320px}
 .modal#activate_modal{width:360px;max-width:360px;height:400px;max-height:400px;margin-left:-180px;margin-top:-200px}
 .modal#activate_modal.sss{height:480px;max-height:480px;margin-top:-240px}
-#profile_edit_form .birthdate,#profile_edit_form .sex,#activate_form .birthdate,#activate_form .sex{display:inline-block;margin-right:0}
+#profile_edit_form .birthday,#profile_edit_form .sex,#activate_form .birthday,#activate_form .sex{display:inline-block;margin-right:0}
 #profile_edit_form .sex select,#activate_form .sex select{width:90px}
-#profile_edit_form .birthdate select#id_birthdate_month,#activate_form .birthdate select#id_birthdate_month{width:108px}
-#profile_edit_form .birthdate select#id_birthdate_day,#activate_form .birthdate select#id_birthdate_day{width:50px}
-#profile_edit_form .birthdate select#id_birthdate_year,#activate_form .birthdate select#id_birthdate_year{width:70px}
+#profile_edit_form .birthday select#id_birthday_month,#activate_form .birthday select#id_birthday_month{width:108px}
+#profile_edit_form .birthday select#id_birthday_day,#activate_form .birthday select#id_birthday_day{width:50px}
+#profile_edit_form .birthday select#id_birthday_year,#activate_form .birthday select#id_birthday_year{width:70px}
 #profile_edit_form .divs-inline,#activate_form .divs-inline{clear:both}
 #profile_edit_form .divs-inline>div.input-field:first-child,#activate_form .divs-inline>div.input-field:first-child{width:201px}
 #profile_edit_form .divs-inline>div.input-field:first-child input,#activate_form .divs-inline>div.input-field:first-child input{width:191px}
@@ -1637,7 +1637,7 @@ span.qtip-error{position:relative;margin-left:310px;top:-24px;display:block}
 .user-btn.nohover:hover{background-color:#939598;cursor:default}
 [class^="user-icon-"]{display:inline-block;width:30px;height:30px;vertical-align:middle;background-image:url(/static/img/user-icon-set.png);background-position:-5px -5px;background-repeat:no-repeat;margin-right:3px}
 .user-icon-shouts{background-position:-5px -3px}
-.user-icon-followers{background-position:-5px -37px}
+.user-icon-listeners{background-position:-5px -37px}
 .user-icon-followings{background-position:-5px -72px}
 /*.follow-unfollow{cursor:pointer;margin:0!important;border:0;background:white;color:#a7a9ac}*/
 div#conversations_header_buttons{display:inline}

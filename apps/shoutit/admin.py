@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from apps.shoutit.models import Shout, UserProfile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
-    FollowShip, Tag, Conversation, Message, Notification, Category, Currency, BusinessProfile, BusinessConfirmation, BusinessCategory, \
+from apps.shoutit.models import Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
+    FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
 from apps.ActivityLogger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
@@ -32,8 +32,8 @@ class TradeAdmin(admin.ModelAdmin):
     Owner.short_description = 'Owner User'
 
     def OwnerProfile(self, obj):
-        if hasattr(obj.OwnerUser, 'Profile') and obj.OwnerUser.Profile:
-            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.OwnerUser.Profile.id, obj.OwnerUser.Profile)
+        if hasattr(obj.OwnerUser, 'profile') and obj.OwnerUser.profile:
+            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.OwnerUser.profile.id, obj.OwnerUser.profile)
         elif hasattr(obj.OwnerUser, 'Business') and obj.OwnerUser.Business:
             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessprofile/', obj.OwnerUser.Business.id, obj.OwnerUser.Business)
 
@@ -68,39 +68,39 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(User, CustomUserAdmin)
 
 
-# UserProfile
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'User', 'Country', 'City', 'Sex', 'Image', 'Stream')
-    search_fields = ['User__first_name', 'User__last_name', 'User__username', 'User__email', 'Bio', 'Mobile']
-    readonly_fields = ('User', 'Stream', 'LastToken')
+# Profile
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'Country', 'City', 'Sex', 'Image', 'Stream')
+    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
+    readonly_fields = ('user', 'Stream', 'LastToken')
     list_filter = ('Country', 'City', 'Sex')
 
 
-admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Profile, ProfileAdmin)
 
 
-# BusinessProfile
+# Business
 class BusinessProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'User', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
-    search_fields = ['Name', 'User__email', 'Website', 'Mobile']
-    readonly_fields = ('User', 'Stream', 'LastToken')
+    list_display = ('name', 'user', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
+    search_fields = ['Name', 'user__email', 'Website', 'Mobile']
+    readonly_fields = ('user', 'Stream', 'LastToken')
 
 
-admin.site.register(BusinessProfile, BusinessProfileAdmin)
+admin.site.register(Business, BusinessProfileAdmin)
 
 
 # BusinessCreateApplication
 # class BusinessCreateApplicationAdmin(admin.ModelAdmin):
-# list_display = ('Name', 'User', 'Business','confirmation_url','Country', 'City', 'Status')
-#     search_fields = ['Name', 'User__email','Website', 'Phone']
-#     readonly_fields = ('User','Business','LastToken')
+# list_display = ('Name', 'user', 'Business','confirmation_url','Country', 'City', 'Status')
+#     search_fields = ['Name', 'user__email','Website', 'Phone']
+#     readonly_fields = ('user','Business','LastToken')
 #     list_filter = ('Status',)
 #     actions = ['accept_business', 'reject_business']
 #
 #     def confirmation_url(self, obj):
 #         try:
-#             confirmation = obj.User.BusinessConfirmations.all().order_by('id')[0]
-#             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.id, obj.User)
+#             confirmation = obj.user.BusinessConfirmations.all().order_by('id')[0]
+#             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.id, obj.user)
 #         except :
 #             return 'Docs not yet submitted'
 #
@@ -121,7 +121,7 @@ admin.site.register(BusinessProfile, BusinessProfileAdmin)
 
 # BusinessConfirmation
 class BusinessConfirmationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'User')
+    list_display = ('id', 'user')
 
 
 admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
@@ -139,7 +139,7 @@ admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 # FollowShip
 class FollowShipAdmin(admin.ModelAdmin):
     list_display = ('pk', 'follower', 'stream', 'date_followed', 'state')
-    search_fields = ['follower__User__username', 'stream__id']
+    search_fields = ['follower__user__username', 'stream__id']
     readonly_fields = ('follower', 'stream',)
 
 
@@ -158,7 +158,7 @@ admin.site.register(Tag, TagAdmin)
 # Conversation
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ('FromUser', 'ToUser', 'AboutPost')
-    search_fields = ['FromUser__username', 'ToUser__username']
+    search_fields = ['Fromuser__username', 'Touser__username']
 
 
 admin.site.register(Conversation, ConversationAdmin)
@@ -167,7 +167,7 @@ admin.site.register(Conversation, ConversationAdmin)
 # Message
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('Conversation', 'FromUser', 'ToUser', 'Text', 'DateCreated', 'IsRead')
-    search_fields = ['FromUser__username', 'ToUser__username', 'Text']
+    search_fields = ['Fromuser__username', 'Touser__username', 'Text']
 
 
 admin.site.register(Message, MessageAdmin)
@@ -184,10 +184,10 @@ admin.site.register(Request, RequestAdmin)
 
 # Report
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('User', 'AttachedObject', 'content_type', 'Text', 'IsSolved', 'IsDisabled')
+    list_display = ('user', 'AttachedObject', 'content_type', 'Text', 'IsSolved', 'IsDisabled')
     list_filter = ('IsSolved', 'IsDisabled')
     actions = ['mark_as_solved', 'mark_as_disabled']
-    readonly_fields = ('User', 'AttachedObject', 'content_type')
+    readonly_fields = ('user', 'AttachedObject', 'content_type')
 
     def mark_as_solved(self, request, queryset):
         queryset.update(IsSolved=True)

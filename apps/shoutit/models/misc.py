@@ -26,7 +26,7 @@ class StoredFile(models.Model):
     def __unicode__(self):
         return "(" + unicode(self.id) + ") " + unicode(self.File)
 
-    User = models.ForeignKey(User, related_name='Documents', null=True)
+    user =  models.ForeignKey(User, related_name='Documents', null=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
 
@@ -36,10 +36,10 @@ class ConfirmToken(models.Model):
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.User) + "::" + self.Token
+        return unicode(self.id) + ": " + unicode(self.user) + "::" + self.Token
 
     Token = models.CharField(max_length=24, db_index=True, unique=True)
-    User = models.ForeignKey(User, related_name="Tokens")
+    user =  models.ForeignKey(User, related_name="Tokens")
     Type = models.IntegerField(default=0)
     DateCreated = models.DateField(auto_now_add=True)
     Email = models.CharField(max_length=128, blank=True)
@@ -72,6 +72,6 @@ class FbContest(models.Model):
         app_label = 'shoutit'
 
     ContestId = models.IntegerField(db_index=True)
-    User = models.ForeignKey(User, related_name='Contest_1')
+    user =  models.ForeignKey(User, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)
     ShareId = models.CharField(max_length=50, null=True, default=None)

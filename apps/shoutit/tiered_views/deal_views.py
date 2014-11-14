@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from apps.shoutit.constants import ENUM_XHR_RESULT, DEFAULT_PAGE_SIZE
 from apps.shoutit.utils import base62_to_int
-from apps.shoutit.models import BusinessProfile, Deal, ServiceBuy
+from apps.shoutit.models import Business, Deal, ServiceBuy
 from apps.shoutit.controllers import deal_controller, user_controller
 from apps.shoutit.forms import DealForm
 from apps.shoutit.tiered_views.renderers import get_initial_json_response, json_data_renderer, deals_stream_json
@@ -77,7 +77,7 @@ CONCURRENT_DEALS_SERVICE = 'CONCURRENT_DEALS'
 def shout_deal_validator(request):
     result = form_validator(request, DealForm)
     if result.valid:
-        bp = BusinessProfile.objects.get(User__pk=request.user.pk)
+        bp = Business.objects.get(user_id=request.user.pk)
         concurrent_deals = deal_controller.GetConcurrentDeals(bp)
         if False:  # concurrent_deals:
             service_buy = ServiceBuy.objects.GetUserServiceBuyRemaining(request.user, CONCURRENT_DEALS_SERVICE)
@@ -100,7 +100,7 @@ def shout_deal(request):
     if request.method == 'POST':
         result.data['form'] = DealForm(request.POST, request.FILES)
         result.data['form'].is_valid()
-        bp = BusinessProfile.objects.get(User__pk=request.user.pk)
+        bp = Business.objects.get(user__pk=request.user.pk)
         images = []
         if request.POST.has_key('images[]'):
             images = request.POST.getlist('images[]')
@@ -142,7 +142,7 @@ def is_voucher_valid(request):
     if request.GET.has_key('code') and request.GET['code']:
         try:
             voucher = deal_controller.GetValidVoucher(request.GET['code'])
-            if voucher.DealBuy.Deal.BusinessProfile.User == request.user:
+            if voucher.DealBuy.Deal.business.user == request.user:
                 result.data['is_valid'] = True
                 result.data['deal'] = voucher.DealBuy.Deal.Item.Name
                 return result
@@ -169,7 +169,7 @@ def invalidate_voucher(request):
     if request.GET.has_key('code') and request.GET['code']:
         try:
             voucher = deal_controller.GetValidVoucher(request.GET['code'])
-            if voucher.DealBuy.Deal.BusinessProfile.User == request.user:
+            if voucher.DealBuy.Deal.business.user == request.user:
                 deal_controller.InvalidateVoucher(voucher=voucher)
                 result.data['is_validated'] = True
                 result.data['deal'] = voucher.DealBuy.Deal.Item.Name
@@ -274,7 +274,7 @@ def deals_stream(request, business_name, page_num=None):
     else:
         page_num = int(page_num)
     result = ResponseResult()
-    business = user_controller.GetUser(business_name)
+    business = user_controller.get_profile(business_name)
 
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num

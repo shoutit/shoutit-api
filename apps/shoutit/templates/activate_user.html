@@ -3,7 +3,7 @@
 {% load widget_tweaks %}
     <form id='activate_form' method="post" action="{{ request.path }}" class="signup clearfix">
         {% csrf_token %}
-        {% if request.user.is_authenticated and request.user.Profile.isSSS %}
+        {% if request.user.is_authenticated and request.user.profile.isSSS %}
 			<div class="divs-inline">
 				<div class="input-field fifty">
 					{{ form.firstname|trans_attr:"placeholder:First Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
@@ -33,8 +33,8 @@
         <div class="input-field sex">
             {{ form.sex|trans_attr:"placeholder:Sex"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
         </div>
-        <div class="input-field birthdate">
-            {{ form.birthdate|trans_attr:"placeholder:Birthdate" }}
+        <div class="input-field birthday">
+            {{ form.birthday|trans_attr:"placeholder:birthday" }}
         </div>
         {{ form.tokentype }}
         <button class="btn btn-primary" type="submit">{% trans "Activate" %}</button>
@@ -42,7 +42,7 @@
 {% block scripts %}
     <script type="text/javascript" language="javascript">
         $('form#activate_form').data('fields_map', {
-            id_birthdate : 'select[id^="id_birthdate_"]'
+            id_birthday : 'select[id^="id_birthday_"]'
         });
         $('form#activate_form').submitAjaxily(function (data) {
             if (redirect_after_login)
@@ -54,7 +54,7 @@
         });
 
         var fix_date_issues = function () {
-            var yr = $('select#id_birthdate_year').val();
+            var yr = $('select#id_birthday_year').val();
             var is_leap = false;
             if ((parseInt(yr) % 4) == 0) {
                 if (parseInt(yr) % 100 == 0) {
@@ -73,36 +73,36 @@
                 is_leap = false;
             }
             var months = {1 : 31, 2 : 28, 3 : 31, 4 : 30, 5 : 31, 6 : 30, 7 : 31, 8: 31, 9 : 30, 10 : 31, 11 : 30, 12 : 31};
-            var month = $('select#id_birthdate_month').val();
+            var month = $('select#id_birthday_month').val();
             var days = months[month];
             if (is_leap && month == '2')
                 days++;
-            $('select#id_birthdate_day option').filter(function (index) {
+            $('select#id_birthday_day option').filter(function (index) {
                 return parseInt($(this).val()) <= days;
             }).prop('disabled', false);
-            $('select#id_birthdate_day option').filter(function (index) {
+            $('select#id_birthday_day option').filter(function (index) {
                 return parseInt($(this).val()) > days;
             }).prop('disabled', true);
-            if ($('select#id_birthdate_day option:selected').prop('disabled'))
-                $('select#id_birthdate_day option:not(:disabled):last').prop('selected', true)
+            if ($('select#id_birthday_day option:selected').prop('disabled'))
+                $('select#id_birthday_day option:not(:disabled):last').prop('selected', true)
         };
-        $('select#id_birthdate_month').bind('change', fix_date_issues);
-        $('select#id_birthdate_year').bind('change', fix_date_issues);
+        $('select#id_birthday_month').bind('change', fix_date_issues);
+        $('select#id_birthday_year').bind('change', fix_date_issues);
 
-        $('#id_birthdate_day').attr('placeholder', '{% trans "Birthdate [Day]" %}');
-        $('#id_birthdate_day').attr('data-qtip-my', 'top center');
-        $('#id_birthdate_day').attr('data-qtip-at', 'bottom center');
-        $('#id_birthdate_day').attr('data-qtip-error-my', 'bottom center');
-        $('#id_birthdate_day').attr('data-qtip-error-at', 'top center');
-        $('#id_birthdate_month').attr('placeholder', '{% trans "Birthdate [Month]" %}');
-        $('#id_birthdate_month').attr('data-qtip-my', 'top center');
-        $('#id_birthdate_month').attr('data-qtip-at', 'bottom center');
-        $('#id_birthdate_month').attr('data-qtip-error-my', 'bottom center');
-        $('#id_birthdate_month').attr('data-qtip-error-at', 'top center');
-        $('#id_birthdate_year').attr('placeholder', '{% trans "Birthdate [Year]" %}');
-        $('#id_birthdate_year').attr('data-qtip-my', 'left center');
-        $('#id_birthdate_year').attr('data-qtip-at', 'right center');
-        $('#id_birthdate_year').attr('data-qtip-error-my', 'bottom left');
-        $('#id_birthdate_year').attr('data-qtip-error-at', 'top right');
+        $('#id_birthday_day').attr('placeholder', '{% trans "birthday [Day]" %}');
+        $('#id_birthday_day').attr('data-qtip-my', 'top center');
+        $('#id_birthday_day').attr('data-qtip-at', 'bottom center');
+        $('#id_birthday_day').attr('data-qtip-error-my', 'bottom center');
+        $('#id_birthday_day').attr('data-qtip-error-at', 'top center');
+        $('#id_birthday_month').attr('placeholder', '{% trans "birthday [Month]" %}');
+        $('#id_birthday_month').attr('data-qtip-my', 'top center');
+        $('#id_birthday_month').attr('data-qtip-at', 'bottom center');
+        $('#id_birthday_month').attr('data-qtip-error-my', 'bottom center');
+        $('#id_birthday_month').attr('data-qtip-error-at', 'top center');
+        $('#id_birthday_year').attr('placeholder', '{% trans "birthday [Year]" %}');
+        $('#id_birthday_year').attr('data-qtip-my', 'left center');
+        $('#id_birthday_year').attr('data-qtip-at', 'right center');
+        $('#id_birthday_year').attr('data-qtip-error-my', 'bottom left');
+        $('#id_birthday_year').attr('data-qtip-error-at', 'top right');
     </script>
 {% endblock %}

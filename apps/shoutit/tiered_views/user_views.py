@@ -6,9 +6,9 @@ import math
 import json
 from django.utils.translation import ugettext_lazy as _
 
-from apps.shoutit.models import FollowShip, LinkedFacebookAccount, ConfirmToken, BusinessProfile, UserProfile, Trade
+from apps.shoutit.models import FollowShip, LinkedFacebookAccount, ConfirmToken, Business, Profile, Trade
 
-from apps.shoutit.controllers import user_controller, stream_controller, shout_controller, experience_controller, email_controller, realtime_controller
+from apps.shoutit.controllers import user_controller, stream_controller, experience_controller, email_controller, realtime_controller
 from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
 
@@ -25,7 +25,7 @@ from renderers import RESPONSE_RESULT_ERROR_REDIRECT
 from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator
 
 
-from apps.shoutit.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL
+from apps.shoutit.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 
@@ -34,6 +34,7 @@ from apps.shoutit.utils import to_seo_friendly
 from django.conf import settings
 import urllib2
 
+from apps.shoutit.templatetags.template_filters import thumbnail
 
 def urlencode(s):
     return urllib2.quote(s)
@@ -70,7 +71,7 @@ def activate_api(request, token):
         email = source_email
 
     user_controller.CompleteSignUp(request, request.user, token, t.Type, form.cleaned_data['username'], email,
-                                   form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthdate'])
+                                   form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthday'])
     result.messages.append(('success', _('You are now activated.')))
     user_controller.GiveUserPermissions(request, ACTIVATED_USER_PERMISSIONS)
     return result
@@ -102,9 +103,9 @@ def activate_modal(request, token):
 @non_cached_view(json_renderer=lambda request, result, *args: activate_renderer_json(request, result),
                  methods=['GET', 'POST'],
                  validator=lambda request, *args, **kwargs: form_validator(request,
-                                                                           request.user.Profile.isSSS and ExtenedSignUpSSS or ExtenedSignUp,
-                                                                           initial=request.user.Profile.isSSS and {
-                                                                               'mobile': request.user.Profile.Mobile,
+                                                                           request.user.profile.isSSS and ExtenedSignUpSSS or ExtenedSignUp,
+                                                                           initial=request.user.profile.isSSS and {
+                                                                               'mobile': request.user.profile.Mobile,
                                                                                'username': request.user.username
                                                                            } or {'email': request.user.email}),
                  login_required=True, post_login_required=True)
@@ -138,7 +139,7 @@ def activate_user(request):
         source_email = t.Email
 
     if request.method == 'POST':
-        if user.Profile.isSSS:
+        if user.profile.isSSS:
             form = ExtenedSignUpSSS(request.POST, request.FILES, initial={'username': user.username})
             if not form.is_valid():
                 result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -147,7 +148,7 @@ def activate_user(request):
             user_controller.CompleteSignUpSSS(request, form.cleaned_data['firstname'], form.cleaned_data['lastname'],
                                               form.cleaned_data['password'], user, form.cleaned_data['username'], token, type,
                                               form.cleaned_data['email'], bool(int(form.cleaned_data['sex'])),
-                                              form.cleaned_data['birthdate'])
+                                              form.cleaned_data['birthday'])
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
         else:
             form = ExtenedSignUp(request.POST, request.FILES, initial={'email': user.email})
@@ -159,11 +160,11 @@ def activate_user(request):
             if source_email is not None:
                 email = source_email
             user_controller.CompleteSignUp(request, user, token, type, form.cleaned_data['username'], email,
-                                           form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthdate'])
+                                           form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthday'])
             user_controller.GiveUserPermissions(request, ACTIVATED_USER_PERMISSIONS)
     else:
-        if request.user.Profile.isSSS:
-            init = {'tokentype': type, 'mobile': request.user.Profile.Mobile, 'username': request.user.username}
+        if request.user.profile.isSSS:
+            init = {'tokentype': type, 'mobile': request.user.profile.Mobile, 'username': request.user.username}
             if source_email:
                 init['email'] = source_email
             form = ExtenedSignUpSSS(initial=init)
@@ -176,7 +177,7 @@ def activate_user(request):
             if type == TOKEN_TYPE_HTML_EMAIL:
                 init['email'] = email
             elif type == TOKEN_TYPE_HTML_NUM:
-                init['mobile'] = request.user.Profile.Mobile
+                init['mobile'] = request.user.profile.Mobile
             form = ExtenedSignUp(initial=init)
     result.data['form'] = form
     return result
@@ -189,8 +190,8 @@ def activate_user(request):
 def api_signup(request):
     form = APISignUpForm(request.POST, request.FILES)
     form.is_valid()
-    user = user_controller.SignUpUserFromAPI(request, form.cleaned_data['username'], form.cleaned_data['email'],
-                                             form.cleaned_data['password'])
+    user = user_controller.SignUpUserFromAPI(request, username=form.cleaned_data['username'], email=form.cleaned_data['email'],
+                                             password=form.cleaned_data['password'])
     result = ResponseResult()
     result.messages.append(('success', _('Congratulations! You are now a member of the Shout community.')))
     user_controller.GiveUserPermissions(None, INITIAL_USER_PERMISSIONS, user)
@@ -207,7 +208,7 @@ def fb_auth(request):
     error, user = user_from_facebook_auth_response(request, fb_auth_response)
 
     if user:
-        result.data['profile'] = user.Profile
+        result.data['profile'] = user.profile
         result.data['is_following'] = False
         result.data['owner'] = True
         result.data['username'] = user.username
@@ -237,7 +238,7 @@ def gplus_auth(request):
     error, user = user_from_gplus_code(request, code)
 
     if user:
-        result.data['profile'] = user.Profile
+        result.data['profile'] = user.profile
         result.data['is_following'] = False
         result.data['owner'] = True
         result.data['username'] = user.username
@@ -263,11 +264,11 @@ def recover(request):
     username_or_email = form.cleaned_data['username_or_email']
     profile = user_controller.GetUserByEmail(username_or_email)
     if not profile:
-        profile = user_controller.GetUser(username_or_email)
+        profile = user_controller.get_profile(username_or_email)
         if profile is None:
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
             return result
-    user = profile.User
+    user = profile.user
     email = user.email
     token = user_controller.SetRecoveryToken(user)
     email_controller.SendPasswordRecoveryEmail(user, email,
@@ -298,15 +299,20 @@ def resend_activation(request):
 @non_cached_view(methods=['GET', 'POST'], login_required=True, api_renderer=operation_api,
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
-                     'name': user_controller.GetUser(username).name() if user_controller.GetUser(username) else ''}),
-                 validator=lambda request, username: object_exists_validator(user_controller.GetUser,
+                     'name': user_controller.get_profile(username).name() if user_controller.get_profile(username) else ''}),
+                 validator=lambda request, username: object_exists_validator(user_controller.get_profile,
                                                                              _('User %(username)s does not exist.') %
                                                                              {'username': username}, username),
                  permissions_required=[PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER])
 @refresh_cache(level=CACHE_LEVEL_GLOBAL, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_NOTIFICATIONS])
-def follow_user(request, username):
-    user_controller.FollowStream(request, request.user.username, user_controller.GetUser(username).Stream)
+def start_listening_to_user(request, username):
+    profile = request.validation_result.data
+    stream_controller.listen_to_stream(request.user, profile.stream2)
+
+    # todo: remove old streams
+    user_controller.FollowStream(request, request.user.username, profile.Stream)
     realtime_controller.BindUserToUser(request.user.username, username)
+
     return ResponseResult()
 
 
@@ -316,17 +322,22 @@ def follow_user(request, username):
                  json_renderer=lambda request, result, username: json_renderer(request,
                                                                                result,
                                                                                _('You are no longer listening to %(name)s\'s shouts.') % {
-                                                                                   'name': user_controller.GetUser(
-                                                                                       username).name() if user_controller.GetUser(
+                                                                                   'name': user_controller.get_profile(
+                                                                                       username).name() if user_controller.get_profile(
                                                                                        username) else ''},
                                                                                success_message_type='info'),
-                 validator=lambda request, username: object_exists_validator(user_controller.GetUser,
+                 validator=lambda request, username: object_exists_validator(user_controller.get_profile,
                                                                              _('User %(username)s does not exist.') % {
                                                                              'username': username}, username))
 @refresh_cache(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS])
-def unfollow_user(request, username):
-    user_controller.UnfollowStream(request, request.user.username, user_controller.GetUser(username).Stream)
+def stop_listening_to_user(request, username):
+    profile = request.validation_result.data
+    stream_controller.remove_listener_from_stream(request.user, profile.stream2)
+
+    # todo: remove old streams
+    user_controller.UnfollowStream(request, request.user.username, user_controller.get_profile(username).Stream)
     realtime_controller.UnbindUserFromUser(request.user.username, username)
+
     return ResponseResult()
 
 
@@ -436,6 +447,7 @@ def signout(request):
 
 
 def sss(request):
+    from apps.shoutit.controllers import shout_controller
     if request.method == "POST":
         shout = json.loads(request.POST['json'])
         try:
@@ -446,7 +458,7 @@ def sss(request):
                                                  country=shout['country'], city=shout['city'])
                 user_controller.GiveUserPermissions(None, INITIAL_USER_PERMISSIONS, user)
             else:
-                user = user.User
+                user = user.user
         except BaseException, e:
             return HttpResponseBadRequest("User Creation Error: " + str(e))
 
@@ -470,7 +482,7 @@ def sss(request):
                 shout = shout_controller.shout_sell(
                     None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
-                    longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.GetUser(user.username),
+                    longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.get_profile(user.username),
                     country_code=shout['country'],
                     province_code=shout['city'], address='', images=shout['images'], issss=True,
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
@@ -514,31 +526,31 @@ def update_user_location(request):
 @non_cached_view(
     json_renderer=edit_profile_renderer_json,
     login_required=True,
-    validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.GetUser(username).User.email),
+    validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.get_profile(username).user.email),
     permissions_required=[PERMISSION_ACTIVATED])
 @refresh_cache(tags=[CACHE_TAG_USERS])
 def user_edit_profile(request, username):
-    user_profile = user_controller.GetUser(username)
+    user_profile = user_controller.get_profile(username)
     result = ResponseResult()
     result.data['user_profile'] = user_profile
     if request.method == 'POST':
         form = UserEditProfileForm(request.POST, request.FILES,
-                                   initial={'username': username, 'email': user_profile.User.email})
+                                   initial={'username': username, 'email': user_profile.user.email})
         form.is_valid()
 
         if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
-            user_profile.User.username = form.cleaned_data['username']
+            user_profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
         if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
-            user_profile.User.email = form.cleaned_data['email']
+            user_profile.user.email = form.cleaned_data['email']
         if form.cleaned_data.has_key('firstname') and form.cleaned_data['firstname']:
-            user_profile.User.first_name = form.cleaned_data['firstname']
+            user_profile.user.first_name = form.cleaned_data['firstname']
         if form.cleaned_data.has_key('lastname') and form.cleaned_data['lastname']:
-            user_profile.User.last_name = form.cleaned_data['lastname']
+            user_profile.user.last_name = form.cleaned_data['lastname']
         if form.cleaned_data.has_key('mobile') and form.cleaned_data['mobile']:
             user_profile.Mobile = form.cleaned_data['mobile']
 
-        user_profile.Birthdate = form.cleaned_data['birthdate']
+        user_profile.birthday = form.cleaned_data['birthday']
         user_profile.Sex = bool(int(form.cleaned_data['sex']))
         if user_profile.Image.endswith('user_female.png') or user_profile.Image.endswith('user_male.png'):
             user_profile.Image = '/static/img/_user_' + (
@@ -546,16 +558,16 @@ def user_edit_profile(request, username):
 
         user_profile.Bio = form.cleaned_data['bio']
         if form.cleaned_data.has_key('password') and form.cleaned_data['password']:
-            user_profile.User.set_password(form.cleaned_data['password'])
+            user_profile.user.set_password(form.cleaned_data['password'])
 
-        user_profile.User.save()
+        user_profile.user.save()
         user_profile.save()
         result.messages.append(('success', _('Your profile was updated successfully.')))
     else:
         form = UserEditProfileForm(
             initial={'email': user_profile.email, 'bio': user_profile.Bio, 'username': user_profile.username,
-                     'firstname': user_profile.User.first_name, 'lastname': user_profile.User.last_name,
-                     'mobile': user_profile.Mobile, 'sex': int(user_profile.Sex), 'birthdate': user_profile.Birthdate})
+                     'firstname': user_profile.user.first_name, 'lastname': user_profile.user.last_name,
+                     'mobile': user_profile.Mobile, 'sex': int(user_profile.Sex), 'birthday': user_profile.birthday})
     result.data['form'] = form
     return result
 
@@ -578,7 +590,7 @@ def user_stream(request, username, page_num=None):
     else:
         page_num = int(page_num)
     result = ResponseResult()
-    user_profile = user_controller.GetUser(username)
+    user_profile = user_controller.get_profile(username)
     result.data['shouts_count'] = user_profile.Stream.Posts.filter(Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)).count()
     result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
     result.data['shouts'] = stream_controller.GetStreamShouts(user_profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),
@@ -592,46 +604,39 @@ def user_stream(request, username, page_num=None):
              methods=['GET'],
              api_renderer=user_api,
              html_renderer=lambda request, result, username, *args:
-             object_page_html(request, result, isinstance(user_controller.GetUser(username), UserProfile) and 'user_profile.html' or 'business_profile.html',
+             object_page_html(request, result, isinstance(user_controller.get_profile(username), Profile) and 'user_profile.html' or 'business_profile.html',
                               'profile' in result.data and result.data['profile'].name() or '',
                               'profile' in result.data and result.data['profile'].Bio or ''),
              validator=user_profile_validator)
 def user_profile(request, username):
-    if username == '@me':
-        username = request.user.username
-
-    profile = user_controller.GetUser(username)
-
     result = ResponseResult()
+    profile = request.validation_result.data['profile']
+
     result.data['profile'] = profile
-    result.data['owner'] = request.user.is_authenticated() and request.user.pk == profile.User.pk
-    result.data['shouts'] = stream_controller.GetStreamShouts(profile.Stream, 0, DEFAULT_PAGE_SIZE,
-                                                              result.data['owner'])
+    result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
+    result.data['shouts'] = stream_controller.GetStreamShouts(profile.Stream, 0, DEFAULT_PAGE_SIZE, result.data['is_owner'])
 
-    #	result.data['shouts_count'] = profile.User.Posts.GetValidShouts(types=[POST_TYPE_BUY,POST_TYPE_SELL]).count()
-    result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).filter(OwnerUser=profile.User).count()
-    result.data['followers_count'] = profile.Stream.userprofile_set.count()
+    #	result.data['shouts_count'] = profile.user.Posts.GetValidShouts(types=[POST_TYPE_BUY,POST_TYPE_SELL]).count()
+    result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).filter(OwnerUser=profile.user).count()
+    result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
     result.data['is_following'] = (request.user.is_authenticated() and len(
-        FollowShip.objects.filter(follower__User__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
+        FollowShip.objects.filter(follower__user__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
 
-    if isinstance(profile, UserProfile):
-        result.data['following_count'] = profile.Following.count()
-        result.data['interests'] = user_controller.UserFollowing(username, 'tags', 'recent')['tags']
-        result.data['interests_count'] = len(user_controller.UserFollowing(username, 'tags', 'all')['tags'])
-        result.data['requests_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).filter(OwnerUser=profile.User).count()
+    if isinstance(profile, Profile):
+        result.data['requests_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).filter(OwnerUser=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
-        fb_la = LinkedFacebookAccount.objects.filter(User=profile.User).order_by('-pk')[:1]
-        result.data['user_profile_fb'] = fb_la[0].link if fb_la else None
+        result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
+        fb_la = hasattr(profile.user, 'linked_facebook') and profile.user.linked_facebook or None
+        result.data['user_profile_fb'] = 'https://www.facebook.com/profile.php?id=' + str(fb_la.Uid) if fb_la else None
         result.data['fb_og_type'] = 'user'
 
-    if isinstance(profile, BusinessProfile):
+    if isinstance(profile, Business):
         thumps_count = experience_controller.GetBusinessThumbsCount(profile)
         result.data['thumb_up_count'] = thumps_count['ups']
         result.data['thumb_down_count'] = thumps_count['downs']
         result.data['recent_experiences'] = experience_controller.GetExperiences(user=request.user, about_business=profile, start_index=0,
                                                                                  end_index=5)
-        #		result.data['recent_items'] = gallery_controller.GetBusinessGalleryItems(profile,0,5)
-        if request.user == profile.User:
+        if request.user == profile.user:
             result.data['item_form'] = ItemForm()
             result.data['IsOwner'] = 1
         else:
@@ -641,7 +646,7 @@ def user_profile(request, username):
     result.data['report_form'] = ReportForm()
     result.data['is_fb_og'] = True
     result.data['fb_og_url'] = 'http%s://%s/user/%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN,
-                                                         profile.User.username)
+                                                         profile.user.username)
     return result
 
 
@@ -651,21 +656,16 @@ def user_profile(request, username):
              api_renderer=user_api,
              validator=user_profile_validator)
 def user_profile_brief(request, username):
-    if username == '@me':
-        username = request.user.username
-    user_profile = user_controller.GetUser(username)
     result = ResponseResult()
+    profile = request.validation_result.data['profile']
 
-    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(OwnerUser=user_profile.User).count()
-
-    result.data['followers_count'] = user_profile.Stream.userprofile_set.count()
-    result.data['following_count'] = user_profile.Following.count()
-    result.data['interests_count'] = len(user_controller.UserFollowing(username, 'tags', 'all')['tags'])
-    result.data['tags_created_count'] = user_profile.TagsCreated.count()
-    result.data['profile'] = user_profile
-    result.data['owner'] = request.user.is_authenticated() and request.user.pk == user_profile.User.pk
+    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(OwnerUser=profile.user).count()
+    result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
+    result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
+    result.data['profile'] = profile
+    result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
     result.data['is_following'] = (request.user.is_authenticated() and len(
-        FollowShip.objects.filter(follower__User__pk=request.user.pk, stream__id=user_profile.Stream_id)) > 0) or False
+        FollowShip.objects.filter(follower__user__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
     return result
 
 
@@ -675,34 +675,44 @@ def user_profile_brief(request, username):
              json_renderer=json_data_renderer,
              api_renderer=stats_api,
              validator=user_profile_validator)
-def user_stats(request, username, statsType, followingType, period='recent'):
-    if username == '@me':
-        username = request.user.username
+def user_stats(request, username, stats_type, listening_type='all', period='recent'):
     result = ResponseResult()
-    if statsType == 'followers':
-        followers = user_controller.UserFollowers(username)
-        if hasattr(request, 'is_api') and request.is_api:
-            result.data['followers'] = followers
-        else:
-            from apps.shoutit.templatetags import template_filters
+    profile = request.validation_result.data['profile']
 
-            result.data['followers'] = [
-                {'username': user.username, 'name': user.name(), 'image': template_filters.thumbnail(user.Image, 32)}
-                for user in followers]
-
-    if statsType == 'following':
-        following = user_controller.UserFollowing(username, followingType, period)
-        result.data['followingTags'] = following['tags']
+    # todo: period usage
+    if stats_type == 'listeners':
+        listeners = stream_controller.get_stream_listeners(profile.stream2)
 
         if hasattr(request, 'is_api') and request.is_api:
-            result.data['followingUsers'] = following['users']
+            result.data['listeners'] = listeners
         else:
-            from apps.shoutit.templatetags import template_filters
+            # todo: minimize the db queries
+            result.data['listeners'] = [
+                {'username': user.username, 'name': user.name(), 'image': thumbnail(user.profile.Image, 32)}
+                for user in listeners]
 
-            result.data['followingUsers'] = [
-                {'username': u.username, 'name': u.name(), 'image': template_filters.thumbnail(u.Image, 32)} for u in
-                following[
-                    'users']]
+    if stats_type == 'listening':
+        result.data['listening'] = {}
+        listening_tags = listening_type == 'all' or listening_type == 'tags'
+        listening_users = listening_type == 'all' or listening_type == 'users'
+
+        if listening_tags:
+            listening_tags = stream_controller.get_user_listening(request.user, STREAM2_TYPE_TAG)
+        if listening_users:
+            listening_users = stream_controller.get_user_listening(request.user, STREAM2_TYPE_PROFILE)
+
+        if hasattr(request, 'is_api') and request.is_api:
+            result.data['listening']['tags'] = listening_tags
+            result.data['listening']['users'] = listening_users
+        else:
+            # todo: minimize the db queries
+            # in the case of empty array the user requested this state so return it even if it is empty
+            if listening_tags or listening_tags == []:
+                result.data['listening']['tags'] = [tag.Name for tag in listening_tags]
+            if listening_users or listening_users == []:
+                result.data['listening']['users'] = [
+                    {'username': u.username, 'name': u.name(), 'image': thumbnail(u.profile.Image, 32)}
+                    for u in listening_users]
     return result
 
 
@@ -722,10 +732,10 @@ def top_users(request):
     result.data['top_users'] = user_controller.GetTopUsers(7, user_country, user_city)
     if request.user.is_authenticated():
         user_following = user_controller.UserFollowing(request.user.username, 'users', 'all')['users']
-        user_following = UserProfile.objects.values('User__username').filter(pk__in=[u.pk for u in user_following])
+        user_following = Profile.objects.values('user__username').filter(pk__in=[u.pk for u in user_following])
         for top_user in result.data['top_users']:
-            top_user['is_following'] = {'User__username': top_user['User__username']} in user_following
-            top_user['is_you'] = top_user['User__username'] == request.user.username
+            top_user['is_following'] = {'user__username': top_user['user__username']} in user_following
+            top_user['is_you'] = top_user['user__username'] == request.user.username
     else:
         for top_user in result.data['top_users']:
             top_user['is_following'] = False
@@ -773,7 +783,7 @@ def activities_stream(request, username, page_num=None):
     else:
         page_num = int(page_num)
     result = ResponseResult()
-    user = user_controller.GetUser(username)
+    user = user_controller.get_profile(username)
 
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num

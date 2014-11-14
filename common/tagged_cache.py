@@ -64,8 +64,6 @@ class TaggedCache(object):
     @staticmethod
     def delete(key):
         cache.delete(key)
-    #tags_dict = TaggedCache.get_tags_dict()
-    #[keys.remove(key) for keys in tags_dict.itervalues() if key in keys]
 
     @staticmethod
     def delete_by_tag(tag):
@@ -86,7 +84,7 @@ class TaggedCache(object):
 
     @staticmethod
     def has_key(key):
-        return cache.has_key(key)
+        return key in cache
 
 
     @staticmethod

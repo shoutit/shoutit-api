@@ -34,7 +34,7 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
     )
     deal.Text = description
     deal.Type = POST_TYPE_DEAL
-    deal.OwnerUser = business_profile.User
+    deal.OwnerUser = business_profile.user
     deal.ExpiryDate = expiry_date
     deal.ValidFrom = valid_from
     deal.ValidTo = valid_to
@@ -46,12 +46,12 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
         deal.Tags.add(tag)
         tag.Stream.PublishShout(deal)
 
-    event_controller.RegisterEvent(business_profile.User, EVENT_TYPE_POST_DEAL, deal)
+    event_controller.RegisterEvent(business_profile.user, EVENT_TYPE_POST_DEAL, deal)
     return deal
 
 
 def GetConcurrentDeals(business_profile):
-    return Deal.objects.GetValidDeals().filter(OwnerUser = business_profile.User, IsClosed = False)
+    return Deal.objects.GetValidDeals().filter(OwnerUser = business_profile.user, IsClosed = False)
 
 
 def get_image_for_voucher(voucher_band):
@@ -227,7 +227,7 @@ def CloseDeal(deal):
         apps.shoutit.controllers.email_controller.SendBusinessBuyersDocument(deal, document)
     else:
         for buy in buys:
-            apps.shoutit.controllers.email_controller.SendUserDealCancel(buy.User, deal)
+            apps.shoutit.controllers.email_controller.SendUserDealCancel(buy.user, deal)
             apps.shoutit.controllers.payment_controller.RefundTransaction(buy.Payment.Transaction)
         apps.shoutit.controllers.email_controller.SendBusinessDealCancel(deal)
 
@@ -239,7 +239,7 @@ def GetDealsToBeClosed():
 
 
 def BuyDeal(user, deal, amount):
-    deal_buy = DealBuy.objects.create(User = user, Deal = deal, Amount = amount)
+    deal_buy = DealBuy.objects.create(user =  user, Deal = deal, Amount = amount)
     if deal.MaxBuyers and deal.BuyersCount() == deal.MaxBuyers:
         CloseDeal(deal)
     event_controller.RegisterEvent(user, EVENT_TYPE_BUY_DEAL, deal)
@@ -279,19 +279,19 @@ def GetOpenDeals(user = None, business = None, start_index = None, end_index = N
     if province_code:
         qs = qs.filter(ProvinceCode = province_code)
     if business:
-        qs = qs.filter(OwnerUser = business.User)
+        qs = qs.filter(OwnerUser = business.user)
     qs = qs.extra(select = {
         'buys_count' : 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(deal_id)s" = "%(deal_table)s"."%(deal_table_pk)s"' % {'table' : DealBuy._meta.db_table, 'amount' : DealBuy._meta.get_field_by_name('Amount')[0].column, 'deal_id' : DealBuy.Deal.field.column, 'deal_table' : Deal._meta.db_table, 'deal_table_pk' : Deal._meta.get_ancestor_link(Shout).column},
     })
     if user:
-        qs = qs.extra(select = {'user_bought_deal' : 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(deal_id)s" = "%(deal_table)s"."%(deal_table_pk)s"' % {'table' : DealBuy._meta.db_table, 'amount' : DealBuy._meta.get_field_by_name('Amount')[0].column, 'user_id' : DealBuy.User.field.column, 'deal_id' : DealBuy.Deal.field.column, 'uid' : user.pk, 'deal_table' : Deal._meta.db_table, 'deal_table_pk' : Deal._meta.get_ancestor_link(Shout).column}})
+        qs = qs.extra(select = {'user_bought_deal' : 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(deal_id)s" = "%(deal_table)s"."%(deal_table_pk)s"' % {'table' : DealBuy._meta.db_table, 'amount' : DealBuy._meta.get_field_by_name('Amount')[0].column, 'user_id' : DealBuy.user.field.column, 'deal_id' : DealBuy.Deal.field.column, 'uid' : user.pk, 'deal_table' : Deal._meta.db_table, 'deal_table_pk' : Deal._meta.get_ancestor_link(Shout).column}})
     qs = qs.order_by('-DatePublished')
     qs = qs[start_index:end_index]
     return qs
 
 
 def HasUserBoughtDeal(user, deal):
-    return len(DealBuy.objects.filter(User = user, Deal = deal)) > 0
+    return len(DealBuy.objects.filter(user =  user, Deal = deal)) > 0
 
 import apps.shoutit.controllers.shout_controller
 import apps.shoutit.controllers.tag_controller

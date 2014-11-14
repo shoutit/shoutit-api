@@ -8,11 +8,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
 import time
 from django.views.decorators.http import require_POST
-from apps.shoutit.controllers import stream_controller, tag_controller, shout_controller, event_controller, experience_controller, gallery_controller, item_controller
+from apps.shoutit.controllers import stream_controller, tag_controller, shout_controller, event_controller, experience_controller, \
+    gallery_controller, item_controller
 from apps.shoutit.controllers import user_controller
 
 from apps.shoutit.forms import *
-from apps.shoutit.models import Category, StoredImage, UserProfile, LinkedFacebookAccount, Message, Conversation, FollowShip, Trade
+from apps.shoutit.models import Category, StoredImage, Profile, LinkedFacebookAccount, Message, Conversation, FollowShip, Trade
 from apps.shoutit.utils import cloud_upload_file
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiered_views.renderers import *
@@ -25,89 +26,89 @@ from apps.shoutit.controllers import user_controller
 def index(request, browse_type=None):
     result = ResponseResult()
     result.data['browse_type'] = browse_type or 'offers'
-#	if request.user.is_authenticated():
-#		result.data['shouts'] = []
-#		result.data['count'] = 0
-#		result.data['categories'] = Category.objects.all().order_by('Name')
-#	else:
-#		signup_form = SignUpForm()
-#		signin_form = LoginForm()
-#		shout_form = ShoutForm()
-#		result.data['signup_form'] = signup_form
-#		result.data['signin_form'] = signin_form
-#		result.data['shout_form'] = shout_form
-#
-#		location_info = get_location_info_by_ip(request)
-#		order_by = TIME_RANK_TYPE
-#		shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, location_info['country'], None,
-#			location_info['latitude'], location_info['longitude'], 0, 3)
-#		shouts = []
-#		if len(shout_ids):
-#			shout_ranks = dict(shout_ids)
-#			shout_ids = [k[0] for k in shout_ids]
-#			shouts = stream_controller.GetTradesByIDs(shout_ids)
-#			for shout in shouts:
-#				shout.rank = shout_ranks[shout.id]
-#			shouts.sort(key=lambda shout: shout.rank)
-#
-#		result.data['shouts'] = shouts
+    # if request.user.is_authenticated():
+    #		result.data['shouts'] = []
+    #		result.data['count'] = 0
+    #		result.data['categories'] = Category.objects.all().order_by('Name')
+    #	else:
+    #		signup_form = SignUpForm()
+    #		signin_form = LoginForm()
+    #		shout_form = ShoutForm()
+    #		result.data['signup_form'] = signup_form
+    #		result.data['signin_form'] = signin_form
+    #		result.data['shout_form'] = shout_form
+    #
+    #		location_info = get_location_info_by_ip(request)
+    #		order_by = TIME_RANK_TYPE
+    #		shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, location_info['country'], None,
+    #			location_info['latitude'], location_info['longitude'], 0, 3)
+    #		shouts = []
+    #		if len(shout_ids):
+    #			shout_ranks = dict(shout_ids)
+    #			shout_ids = [k[0] for k in shout_ids]
+    #			shouts = stream_controller.GetTradesByIDs(shout_ids)
+    #			for shout in shouts:
+    #				shout.rank = shout_ranks[shout.id]
+    #			shouts.sort(key=lambda shout: shout.rank)
+    #
+    #		result.data['shouts'] = shouts
     return result
 
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'tos.html', _('Terms of Service')),
-    methods=['GET'])
+                 methods=['GET'])
 def tos(request):
     result = ResponseResult()
     return result
 
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'privacy.html', _('Privacy Policy')),
-    methods=['GET'])
+                 methods=['GET'])
 def privacy(request):
     result = ResponseResult()
     return result
 
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'rules.html', _('Marketplace Rules')),
-    methods=['GET'])
+                 methods=['GET'])
 def rules(request):
     result = ResponseResult()
     return result
 
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'learnmore.html', _('Learn More')),
-    methods=['GET'])
+                 methods=['GET'])
 def learnmore(request):
     result = ResponseResult()
     return result
 
 
 @cached_view(tags=[CACHE_TAG_TAGS, CACHE_TAG_USERS], methods=['GET'],
-    json_renderer=json_data_renderer)
+             json_renderer=json_data_renderer)
 def hovercard(request):
     type = request.REQUEST['type'] if 'type' in request.REQUEST else None
     name = request.REQUEST['name'] if 'name' in request.REQUEST else None
     data = None
     if name is not None:
         if type == 'user':
-            data = user_controller.GetUser(name)
+            data = user_controller.get_profile(name)
             data.Name = data.username
-            if request.user.is_authenticated() and request.user.Profile == data:
+            if request.user.is_authenticated() and request.user.profile == data:
                 data.isFollowing = 0
-            elif request.user.is_authenticated() and data in request.user.Profile.Following.all():
+            elif request.user.is_authenticated() and data in request.user.profile.Following.all():
                 data.isFollowing = 1
             else:
                 data.isFollowing = -1
         elif type == 'tag':
-            data = tag_controller.GetTag(name)
-            if request.user.is_authenticated() and data in request.user.Profile.Interests.all():
+            data = tag_controller.get_tag(name)
+            if request.user.is_authenticated() and data in request.user.profile.Interests.all():
                 data.isFollowing = 1
             else:
                 data.isFollowing = -1
 
     if data:
         data = {'type': type, 'name': data.Name, 'id': data.id, 'image': str(data.Image),
-                'followers': data.Stream.userprofile_set.count(), 'shouts': data.Stream.Shouts.count(),
+                'listeners': data.Stream.userprofile_set.count(), 'shouts': data.Stream.Shouts.count(),
                 'isFollowing': data.isFollowing}
     else:
         data = {}
@@ -126,9 +127,9 @@ def profile_picture(request, profile_type, name, size=''):
 
     path = ''
     if profile_type == 'user':
-        d = user_controller.GetUser(name)
+        d = user_controller.get_profile(name)
     elif profile_type == 'tag':
-        d = tag_controller.GetTag(name)
+        d = tag_controller.get_tag(name)
     if d.Image:
         path = d.Image
     else:
@@ -144,12 +145,12 @@ def profile_picture(request, profile_type, name, size=''):
 
 @cache_control(public=True, must_revalidate=False)
 @non_cached_view(methods=['GET'],
-    login_required=False,
-    validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get,
-        _('Image does not exist.'), pk=base62_to_int(image_id)),
-    api_renderer=thumbnail_response,
-    json_renderer=thumbnail_response,
-    html_renderer=thumbnail_response)
+                 login_required=False,
+                 validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get,
+                                                                                   _('Image does not exist.'), pk=base62_to_int(image_id)),
+                 api_renderer=thumbnail_response,
+                 json_renderer=thumbnail_response,
+                 html_renderer=thumbnail_response)
 def stored_image(request, image_id, size=32):
     image_id = base62_to_int(image_id)
     image = StoredImage.objects.get(pk=image_id)
@@ -173,8 +174,9 @@ def stored_image(request, image_id, size=32):
         result.data['size'] = None
     return result
 
+
 @non_cached_view(methods=['GET'],
-    json_renderer=json_data_renderer)
+                 json_renderer=json_data_renderer)
 def get_client_lat_lng(request):
     result = ResponseResult()
     location_info = get_location_info_by_ip(request)
@@ -185,31 +187,33 @@ def get_client_lat_lng(request):
 def modal(request, template=None):
     if not template:
         template = ''
-    categories = [category.TopTag and category.TopTag.Name or tag_controller.GetOrCreateTag(request, category.Name, None, False ).Name for category in Category.objects.all().order_by('Name').select_related('TopTag')]
-    fb_la = LinkedFacebookAccount.objects.filter(User=request.user).order_by('-pk')[:1] if request.user.is_authenticated() else None
+    categories = [category.TopTag and category.TopTag.Name or tag_controller.GetOrCreateTag(request, category.Name, None, False).Name for
+                  category in Category.objects.all().order_by('Name').select_related('TopTag')]
+    fb_la = LinkedFacebookAccount.objects.filter(user=request.user).order_by('-pk')[
+            :1] if request.user.is_authenticated() else None  # todo onetone
     fb_access_token = fb_la[0].AccessToken if fb_la else None
 
     if template == 'signin':
         variables = RequestContext(request, {
             'form': LoginForm(),
-            })
+        })
     elif template == 'signup':
         variables = RequestContext(request, {
             'form': SignUpForm(),
-            })
+        })
     elif template == 'shout_form':
         variables = RequestContext(request, {
             'form': ShoutForm(),
-            })
+        })
     elif template == 'shout_buy':
         template = 'shout_form'
         variables = RequestContext(request, {
             'method': 'buy',
             'method_og_name': 'request',
             'form': ShoutForm(),
-            'categories' : categories,
+            'categories': categories,
             'fb_access_token': fb_access_token
-            })
+        })
     elif template == 'shout_sell':
         template = 'shout_form'
 
@@ -217,14 +221,14 @@ def modal(request, template=None):
             'method': 'sell',
             'method_og_name': 'offer',
             'form': ShoutForm(),
-            'categories' : categories,
+            'categories': categories,
             'fb_access_token': fb_access_token
-            })
+        })
     elif template == 'shout_deal':
         template = 'shout_deal_form'
         variables = RequestContext(request, {
             'form': DealForm(),
-            })
+        })
     elif template == 'experience':
         template = 'experience_form'
         business = None
@@ -237,9 +241,9 @@ def modal(request, template=None):
                     'country': business.Country, 'city': business.City, 'address': business.Address, 'username': username}
         variables = RequestContext(request, {
             'form': ExperienceForm(initial=init),
-            'tiny_business_form' : CreateTinyBusinessForm(initial=init),
+            'tiny_business_form': CreateTinyBusinessForm(initial=init),
             'business': business,
-            'business_constants' : constants.business_source_types,
+            'business_constants': constants.business_source_types,
             'user_constants': constants.user_type_flags,
             'fb_access_token': fb_access_token
         })
@@ -249,7 +253,7 @@ def modal(request, template=None):
     elif template == 'forgot_password':
         variables = RequestContext(request, {
             'form': RecoverForm(),
-            })
+        })
     elif template == 'shout_edit':
         shout_id = request.GET['id']
         if modify_shout_validator(request, shout_id).valid:
@@ -275,7 +279,7 @@ def modal(request, template=None):
         if item:
             variables = RequestContext(request, {
                 'item_id': request.GET['id'],
-                'images' : [image.Image for image in item.GetImages()],
+                'images': [image.Image for image in item.GetImages()],
                 'form': ShoutForm(initial={
                     'price': item.Price,
                     'name': item.Name,
@@ -293,15 +297,15 @@ def modal(request, template=None):
                 'text': exp.Text,
                 'state': exp.State
             }),
-            'experience_id' : request.GET['id']
+            'experience_id': request.GET['id']
         })
 
     elif template == 'report':
         if 'id' in request.GET and 'report_type' in request.GET:
             variables = RequestContext(request, {
                 'form': ReportForm(),
-                'experience_id' : request.GET['id'],
-                'report_type' : request.GET['report_type']
+                'experience_id': request.GET['id'],
+                'report_type': request.GET['report_type']
             })
         else:
             variables = RequestContext(request)
@@ -319,67 +323,69 @@ def admin_stats_mobile(request, result):
     return HttpResponseRedirect('/')
 
 
-@non_cached_view(html_renderer=admin_stats_mobile, mobile_renderer=admin_stats_mobile,
-    methods=['GET'])
+@non_cached_view(html_renderer=admin_stats_mobile, mobile_renderer=admin_stats_mobile, methods=['GET'])
 def admin_stats(request):
     result = ResponseResult()
     if request.user.is_authenticated():
         if request.user.is_staff:
-            result.data['users'] = UserProfile.objects.all().count()
+            result.data['users'] = Profile.objects.all().count()
 
-            users_a = UserProfile.objects.filter(User__is_active=True).values_list('User__id')
+            users_a = Profile.objects.filter(user__is_active=True).values_list('user__id')
             result.data['users_a'] = len(users_a)
 
-            users_e = UserProfile.objects.filter(~Q(User__email__iexact='')).values_list('User_id')
+            users_e = Profile.objects.filter(~Q(user__email__iexact='')).values_list('user_id')  # todo: check
             result.data['users_e'] = len(users_e)
 
-            result.data['sss'] = UserProfile.objects.filter(User__is_active=True, isSSS=True).count()
+            result.data['sss'] = Profile.objects.filter(user__is_active=True, isSSS=True).count()
             result.data['fb'] = LinkedFacebookAccount.objects.all().values('Uid').distinct().count()
             result.data['users_s'] = result.data['users_e'] - result.data['sss'] - result.data['fb']
 
-            result.data['shouts_req'] = Trade.objects.GetValidTrades(types = [POST_TYPE_BUY]).count()
-            result.data['shouts_ofr'] = Trade.objects.GetValidTrades(types= [POST_TYPE_SELL]).count()
+            result.data['shouts_req'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).count()
+            result.data['shouts_ofr'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).count()
             result.data['shouts_exp'] = Post.objects.GetValidPosts().filter(Type=POST_TYPE_EXPERIENCE).count()
             result.data['shouts'] = result.data['shouts_req'] + result.data['shouts_ofr'] + result.data['shouts_exp']
-            result.data['shouts_a'] = Trade.objects.GetValidTrades([POST_TYPE_BUY,POST_TYPE_SELL]).filter(OwnerUser__id__in=users_a).count()
-            result.data['shouts_e'] = Trade.objects.GetValidTrades([POST_TYPE_BUY,POST_TYPE_SELL]).filter(OwnerUser__id__in=users_e).count()
-            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_BUY,POST_TYPE_SELL]).filter(OwnerUser__id__in=users_e,IsSSS=False).count()
+            result.data['shouts_a'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(
+                OwnerUser__id__in=users_a).count()
+            result.data['shouts_e'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(
+                OwnerUser__id__in=users_e).count()
+            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(OwnerUser__id__in=users_e,
+                                                                                                           IsSSS=False).count()
 
-            result.data['mobiles'] = UserProfile.objects.filter(~Q(Mobile=None)).count()
-            result.data['changed_pic'] = UserProfile.objects.filter(~Q(
+            result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
+            result.data['changed_pic'] = Profile.objects.filter(~Q(
                 Image__in=['/static/img/_user_male.png',
                            '/static/img/_user_female.png'])).count()
-            result.data['changed_bio'] = UserProfile.objects.filter(~Q(Bio__iexact='New Shouter!')).count()
+            result.data['changed_bio'] = Profile.objects.filter(~Q(Bio__iexact='New Shouter!')).count()
 
             result.data['msgs'] = Message.objects.all().count()
             result.data['convs'] = Conversation.objects.all().count()
 
             result.data['followships'] = FollowShip.objects.all().count()
 
-            result.data['countries'] = UserProfile.objects.filter(~Q(User__email__iexact='')).values(
+            result.data['countries'] = Profile.objects.filter(~Q(user__email__iexact='')).values(
                 'Country').annotate(count=Count('Country'))
             for c in result.data['countries']:
                 c['Country'] = constants.COUNTRY_ISO[c['Country']]
             result.data['countries'] = sorted(result.data['countries'], key=lambda k: k['Country'])
 
-#			result.data['cities'] = UserProfile.objects.filter(~Q(User__email__iexact='')).values('City',
-#				'Country').annotate(count=Count('City'))
-#			for c in result.data['cities']:
-#				if c['City'] == '':
-#					c['City'] = 'None'
-#				c['Country'] = constants.COUNTRY_ISO[c['Country']]
-#			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
+            # result.data['cities'] = Profile.objects.filter(~Q(user__email__iexact='')).values('City',
+        #				'Country').annotate(count=Count('City'))
+        #			for c in result.data['cities']:
+        #				if c['City'] == '':
+        #					c['City'] = 'None'
+        #				c['Country'] = constants.COUNTRY_ISO[c['Country']]
+        #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
 
-#			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
-#			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
+        #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
+        #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
 
     return result
 
 
 @cached_view(level=CACHE_LEVEL_GLOBAL,
-    tags=[CACHE_TAG_CURRENCIES],
-    methods=['GET'],
-    api_renderer=currencies_api)
+             tags=[CACHE_TAG_CURRENCIES],
+             methods=['GET'],
+             api_renderer=currencies_api)
 def currencies(request):
     result = ResponseResult()
     result.data['currencies'] = list(Currency.objects.all())
@@ -391,10 +397,10 @@ def currencies(request):
 def set_perma(request):
     if request.user.is_authenticated():
         TaggedCache.set('perma|%s|%d' % (request.POST['perma'], request.user.pk), request.POST['value'],
-            timeout=10 * 356 * 24 * 60 * 60)
+                        timeout=10 * 356 * 24 * 60 * 60)
     elif hasattr(request, 'session'):
         TaggedCache.set('perma|%s|%s' % (request.POST['perma'], request.session.session_key), request.POST['value'],
-            timeout=10 * 356 * 24 * 60 * 60)
+                        timeout=10 * 356 * 24 * 60 * 60)
     result = ResponseResult()
     return result
 
@@ -412,6 +418,7 @@ def handler500(request):
     content = f.read()
     f.close()
     return HttpResponseServerError(content)
+
 
 @require_POST
 @csrf_exempt
@@ -445,7 +452,7 @@ def upload_file(request):
 
 
 @non_cached_view(methods=['GET'],
-json_renderer = lambda request,result : live_events_json_renderer(request,result))
+                 json_renderer=lambda request, result: live_events_json_renderer(request, result))
 def live_events(request):
     result = ResponseResult()
 
@@ -454,9 +461,9 @@ def live_events(request):
         url_encoded_city = request.GET['url_encoded_city']
 
     try:
-        pre_city = PredefinedCity.objects.get(EncodedCity = url_encoded_city or request.session['user_city_encoded'])
+        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city or request.session['user_city_encoded'])
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity = 'dubai')
+        pre_city = PredefinedCity.objects.get(EncodedCity='dubai')
 
     user_country = pre_city.Country
     user_city = pre_city.City
@@ -477,8 +484,8 @@ def live_events(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['POST'], json_renderer=lambda request, result, *args: json_renderer(request,result),
-                 validator=lambda request, event_id: delete_event_validator(request,event_id))
+@non_cached_view(methods=['POST'], json_renderer=lambda request, result, *args: json_renderer(request, result),
+                 validator=lambda request, event_id: delete_event_validator(request, event_id))
 def delete_event(request, event_id):
     result = ResponseResult()
     event_controller.DeleteEvent(base62_to_int(event_id))

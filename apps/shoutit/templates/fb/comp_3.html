@@ -8,7 +8,7 @@
 	<div class="fb_user_header"><div class="header_name">Name</div><div class="header_country">Country</div><div class="header_shouts">Shouts</div></div>
 	<ul class="fb_user_list">
 		{% for shouter in shouters %}
-		<li><img class="user_img" src=""/><div class="user_name">{{ shouter.User.email }}</div><div class="user_country">UAE</div><div class="user_shouts">2</div></li>
+		<li><img class="user_img" src=""/><div class="user_name">{{ shouter.user.email }}</div><div class="user_country">UAE</div><div class="user_shouts">2</div></li>
 		{% endfor %}
 	</ul>
 	<ul class="user_pager">

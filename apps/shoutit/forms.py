@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.extras.widgets import SelectDateWidget
 
 from apps.shoutit.constants import ExperienceState, TOKEN_TYPE_HTML_NUM
-from apps.shoutit.models import Currency, BusinessProfile, BusinessCategory, BusinessCreateApplication
+from apps.shoutit.models import Currency, Business, BusinessCategory, BusinessCreateApplication
 from apps.shoutit.controllers import user_controller
 from apps.shoutit.utils import safe_string
 from common.tagged_cache import TaggedCache
@@ -40,7 +40,7 @@ class LoginForm(forms.Form):
 class RecoverForm(forms.Form):
     username_or_email = forms.CharField(label=_('Username or Email'), max_length=75, min_length=3)
     def clean(self):
-        if not user_controller.GetUser(self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(self.data['username_or_email'].strip()):
+        if not user_controller.get_profile(self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(self.data['username_or_email'].strip()):
             raise ValidationError(_('Invalid credentials.'))
         return self.cleaned_data
 
@@ -144,7 +144,7 @@ class ExtenedSignUpSSS(forms.Form):
     lastname = forms.CharField(label=_('Last Name'), max_length=20, min_length=3, required=True)
     email = forms.EmailField(label=_('Email'),  required=True)
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
-    birthdate = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)),required=True)
+    birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)),required=True)
     sex = forms.ChoiceField(label=_('Sex'), choices= sex_choices, required=True)
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput())
     confirm_password = forms.CharField(label=_('Confirm Password'), widget=forms.PasswordInput())
@@ -216,7 +216,7 @@ class ExtenedSignUp(forms.Form):
     username = forms.CharField(label=_('Username'), max_length=20, min_length=3, required=False)
     email = forms.EmailField(label=_('Email'), required=False)
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
-    birthdate = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), required=True)
+    birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), required=True)
     sex = forms.ChoiceField(label=_('Sex'), choices=sex_choices, required=True)
     tokentype = forms.CharField(label='tt', widget=forms.HiddenInput(), required=False)
 
@@ -260,7 +260,7 @@ class APISignUpForm(forms.Form):
     mobile = forms.CharField(label=_('Mobile'), max_length=64, required=False)
     firstname = forms.CharField(label=_('First Name'), max_length=20, min_length=3, required=True)
     lastname = forms.CharField(label=_('Last Name'), max_length=20, min_length=3, required=True)
-    birthdate = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)),required=True)
+    birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)),required=True)
     sex = forms.ChoiceField(label=_('Sex'), choices= sex_choices, required=True)
 
     def clean_username(self):
@@ -323,7 +323,7 @@ class UserEditProfileForm(forms.Form):
 
     bio = forms.CharField(label=_('Bio'), widget=forms.Textarea(), max_length=512, required=False)
 
-    birthdate = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), initial=datetime.today()
+    birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), initial=datetime.today()
                                 ,required=False)
     sex = forms.ChoiceField(label=_('Sex'), choices= sex_choices, required=False)
 
@@ -414,14 +414,14 @@ class UserEditProfileForm(forms.Form):
             return mobile
         raise forms.ValidationError(_('Phone number is already in use by another user'))
 
-    def clean_birthdate(self):
+    def clean_birthday(self):
         try:
-            birthdate = datetime.strptime(self.data['birthdate_year'] +'-'+ self.data['birthdate_month'] +'-'+ self.data['birthdate_day'], '%Y-%m-%d')
+            birthday = datetime.strptime(self.data['birthday_year'] +'-'+ self.data['birthday_month'] +'-'+ self.data['birthday_day'], '%Y-%m-%d')
         except ValueError, e:
             return None
-        if birthdate and birthdate > datetime.now():
-            raise forms.ValidationError(_('Birthdate is not valid.'))
-        return birthdate
+        if birthday and birthday > datetime.now():
+            raise forms.ValidationError(_('birthday is not valid.'))
+        return birthday
 
 
 class BusinessSelect (forms.Select):
@@ -488,7 +488,7 @@ class BusinessSignUpForm(CreateTinyBusinessForm):
         if phone is None or phone == '':
             return phone
         try:
-            BusinessProfile.objects.get(Phone = phone)
+            Business.objects.get(Phone = phone)
             if not BusinessCreateApplication.objects.filter(Phone = phone).count():
                 return phone
         except ObjectDoesNotExist:

@@ -86,7 +86,7 @@
 					<div class="user-interactions listens">
 						<span id="aFollowers" class="user-icon-listens" data-toggle="modal" data-target="#FollowersModal"></span>
 						<label>{% trans "Listeners" %}</label>
-						<span class="counter">{{ followers_count }}</span>
+						<span class="counter">{{ listeners_count }}</span>
 					</div>
 					<div class="user-interactions thumb-up">
 						<span class="user-icon-thumbup"></span>
@@ -185,19 +185,19 @@
 			});
         });
 
-		var FollowersLoaded = false;
+		var listenersLoaded = false;
         function loadFollowers(){
-            if(FollowersLoaded)
+            if(listenersLoaded)
 				return;
 			requestAjaxily({
-                url: '/xhr/user/{{ profile.username }}/stats/followers/',
+                url: '/xhr/user/{{ profile.username }}/listeners/',
                 successCallback: function (data) {
-                    FollowersLoaded = true;
-					var followers =  data.data.followers;
+                    listenersLoaded = true;
+					var listeners =  data.data.listeners;
 					var html = '';
 					html+= '<div class="clearfix">';
-                    for(var i = 0;i<followers.length; i++){
-                        html += '<a class="btn large user_thumb" href="/user/'+followers[i].username+'"><img src="'+followers[i].image+'"><span>' + followers[i].name + '</span></a>';
+                    for(var i = 0;i<listeners.length; i++){
+                        html += '<a class="btn large user_thumb" href="/user/'+listeners[i].username+'"><img src="'+listeners[i].image+'"><span>' + listeners[i].name + '</span></a>';
                     }
 					$('#FollowersModalContain').append(html);
                 }
@@ -216,20 +216,20 @@
 
 		function follow_unfollow() {
 			if($('.follow-unfollow').attr('id')=='follow'){
-				follow();
+				listen();
 			}else if($('.follow-unfollow').attr('id')=='unfollow'){
 				unfollow();
 			}
 		}
 
-		function follow() {
+		function listen() {
 			requestAjaxily({
-							   url: '/xhr/user/{{ profile.username }}/follow/',
+							   url: '/xhr/user/{{ profile.username }}/start_listening/',
 							   successCallback: function (data) {
 								   $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id','unfollow');
 								   var counter = $('#aFollowers .count');
 								   counter.html(parseInt(counter.html())+1);
-								   FollowersLoaded = false;
+								   listenersLoaded = false;
 							   },
 							   tag: 'follow_user'
 						   });
@@ -237,12 +237,12 @@
 
 		function unfollow() {
 			requestAjaxily({
-							   url: '/xhr/user/{{ profile.username }}/unfollow/',
+							   url: '/xhr/user/{{ profile.username }}/stop_listening/',
 							   successCallback: function (data) {
-								   $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id','follow');
+								   $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id','listen');
 								   var counter = $('#aFollowers .count');
 								   counter.html(parseInt(counter.html())-1);
-								   FollowersLoaded = false;
+								   listenersLoaded = false;
 							   },
 							   tag: 'unfollow_user'
 						   });

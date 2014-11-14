@@ -10,7 +10,7 @@ from apps.shoutit.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQU
 
 from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Currency, Post, PredefinedCity
 
-from apps.shoutit.controllers import email_controller, tag_controller, stream_controller, event_controller, item_controller, realtime_controller
+from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
 
 from apps.ActivityLogger.logger import Logger
 from apps.shoutit.utils import asynchronous_task, to_seo_friendly, make_image_thumbnail
@@ -208,7 +208,7 @@ def SaveRecolatedShouts(trade, stream_type):
 def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, country_code, province_code, address,
               currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
     if stream is None:
-        stream = shouter.Profile.Stream
+        stream = shouter.profile.Stream
 
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
     trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_BUY, Item=item,
@@ -255,7 +255,7 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
         stream = shouter.Stream
 
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
-    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter.User, Type=POST_TYPE_SELL,
+    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter.user, Type=POST_TYPE_SELL,
                   Item=item, CountryCode=country_code, ProvinceCode=province_code, Address=address, IsSSS=issss)
 
     if date_published:
@@ -273,7 +273,7 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
         PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     stream.PublishShout(trade)
-    for tag in tag_controller.GetOrCreateTags(request, tags, shouter.User):
+    for tag in tag_controller.GetOrCreateTags(request, tags, shouter.user):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
 
@@ -284,9 +284,9 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
     SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
     SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(shouter.User, EVENT_TYPE_SHOUT_OFFER, trade)
+    event_controller.RegisterEvent(shouter.user, EVENT_TYPE_SHOUT_OFFER, trade)
     Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.id})
-    realtime_controller.BindUserToPost(shouter.User, trade)
+    realtime_controller.BindUserToPost(shouter.user, trade)
     return trade
 
 
@@ -296,3 +296,5 @@ def get_trade_images(trades):
         trades[i].Item.SetImages([image for image in images if image.Item_id == trades[i].Item.pk])
         images = [image for image in images if image.Item_id != trades[i].Item.pk]
     return trades
+
+from apps.shoutit.controllers import tag_controller

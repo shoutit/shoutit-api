@@ -92,11 +92,14 @@ class ResponseResult(object):
 
 class ValidationResult(object):
     def __init__(self, valid, form_errors=None, errors=None, messages=None, data=None):
-        self.valid = valid
+        self.valid = bool(valid)
         self.form_errors = form_errors or {}
         self.errors = errors or []
         self.messages = messages or []
         self.data = data or {}
+
+    def __nonzero__(self):
+        return self.valid
 
 
 def __validate_request(request, methods, validator, *args, **kwargs):

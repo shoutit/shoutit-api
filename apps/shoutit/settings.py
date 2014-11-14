@@ -93,6 +93,7 @@ CELERY_IMPORTS = ("celery_tasks", )
 #djcelery.setup_loader()
 
 # Realtime and Redis
+REALTIME_SERVER_ON = False
 REALTIME_SERVER_URL = 'http://' + SHOUT_IT_HOST + ':7772/'  # 'www.shoutit.com'
 REALTIME_SERVER_ADDRESS = SHOUT_IT_HOST
 REALTIME_SERVER_TCP_PORT = 7771

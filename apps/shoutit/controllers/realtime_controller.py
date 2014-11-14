@@ -20,9 +20,11 @@ from django.utils.translation import ugettext as _
 GET_USER_CONNECTED_CLIENTS_COUNT = 1
 
 try:
-    connection = pika.BlockingConnection(pika.ConnectionParameters(settings.RABBIT_MQ_HOST, settings.RABBIT_MQ_PORT))
-except:
-    connection = None
+    if settings.REALTIME_SERVER_ON:
+        realtime_connection = pika.BlockingConnection(pika.ConnectionParameters(settings.RABBIT_MQ_HOST, settings.RABBIT_MQ_PORT))
+except Exception, e:
+    print e.message
+    realtime_connection = None
 
 
 def GetUserConnectedClientsCount(username):
@@ -49,7 +51,7 @@ def GetUserConnectedClientsCount(username):
 
 @asynchronous_task()
 def SendNotification(notification, username, count=0):
-    from apps.shoutit.controllers.user_controller import GetUser
+    from apps.shoutit.controllers.user_controller import get_profile
     from apps.shoutit.controllers.message_controller import UnReadConversationsCount
     from apps.shoutit.controllers.notifications_controller import GetUserNotificationsWithoutMessagesCount
     try:
@@ -59,9 +61,9 @@ def SendNotification(notification, username, count=0):
         if apns_tokens:
             for token in apns_tokens:
                 message = notification.FromUser.username + " has"
-                userProfile = GetUser(username)
-                unread_conversations_num = UnReadConversationsCount(userProfile.User)
-                notifications_count = GetUserNotificationsWithoutMessagesCount(userProfile.User)
+                userProfile = get_profile(username)
+                unread_conversations_num = UnReadConversationsCount(userProfile.user)
+                notifications_count = GetUserNotificationsWithoutMessagesCount(userProfile.user)
                 customMessage = {}
                 if notification.Type == NOTIFICATION_TYPE_FOLLOWSHIP:
                     message += " " + _("started listening to your shouts")
@@ -79,7 +81,7 @@ def SendNotification(notification, username, count=0):
             if count and count == len(apns_tokens):
                 return
         try:
-            channel = connection.channel()
+            channel = realtime_connection.channel()
             channel.queue_declare(queue=str('Shout_' + username), durable=True)
             message = json.dumps(render_notification(notification))
             channel.basic_publish(exchange='', routing_key=str('Shout_%s' % username), body=message, properties=pika.BasicProperties(content_type="text/plain", delivery_mode=2))
@@ -101,7 +103,7 @@ def WrapRealtimeMessage(message, type):
 @asynchronous_task()
 def SendRealtimeMessage(message, username):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         channel.queue_declare(queue=str('Shout_%s' % username), durable=True)
         channel.basic_publish(exchange='', routing_key=str('Shout_%s' % username), body=message, properties=pika.BasicProperties(content_type="text/plain", delivery_mode=2))
     except Exception, e:
@@ -111,7 +113,7 @@ def SendRealtimeMessage(message, username):
 @asynchronous_task()
 def BroadcastRealtimeMessage(message, city='', username='', post=None):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         if city:
             exchange = str('Shout_E_%s_%s' % ('city', city))
             channel.exchange_declare(exchange=exchange, type='fanout')
@@ -131,7 +133,7 @@ def BroadcastRealtimeMessage(message, city='', username='', post=None):
 @asynchronous_task()
 def BindUserToCity(username, city):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         exchange = str('Shout_E_city_%s' % city)
         queue = str('Shout_%s' % username)
         channel.queue_declare(queue=queue, durable=True)
@@ -144,7 +146,7 @@ def BindUserToCity(username, city):
 @asynchronous_task()
 def BindUserToUser(username, username_to):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         exchange = str('Shout_E_user_%s' % username_to)
         queue = str('Shout_%s' % username)
         channel.queue_declare(queue=str(queue), durable=True)
@@ -157,7 +159,7 @@ def BindUserToUser(username, username_to):
 @asynchronous_task()
 def BindUserToPost(username, post):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         exchange = str('Shout_E_post_%s' % post.pk)
         queue = str('Shout_%s' % username)
         channel.queue_declare(queue=queue, durable=True)
@@ -170,7 +172,7 @@ def BindUserToPost(username, post):
 @asynchronous_task()
 def UnbindUserFromCity(username, city):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         exchange = str('Shout_E_city_%s' % city)
         queue = str('Shout_%s' % username)
         channel.queue_declare(queue=queue, durable=True)
@@ -183,7 +185,7 @@ def UnbindUserFromCity(username, city):
 @asynchronous_task()
 def UnbindUserFromUser(username, username_from):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         exchange = str('Shout_E_user_%s' % username_from)
         queue = str('Shout_%s' % username)
         channel.queue_declare(queue=queue, durable=True)
@@ -196,7 +198,7 @@ def UnbindUserFromUser(username, username_from):
 @asynchronous_task()
 def UnbindUserFromPost(username, post):
     try:
-        channel = connection.channel()
+        channel = realtime_connection.channel()
         exchange = str('Shout_E_post_%s' % post.pk)
         queue = str('Shout_%s' % username)
         channel.queue_declare(queue=queue, durable=True)

@@ -3,10 +3,12 @@ import time
 from django.db import connection
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
-from apps.shoutit.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE
+from apps.shoutit.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, \
+    STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
 
-from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Post, Trade
+from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Post, Trade, Stream2, User
 from django.conf import settings
+
 
 def PublishShoutToShout(shout, other):
     rank = 0.0
@@ -290,7 +292,7 @@ def __GetStreamOfShoutsWithTags(rank_flag , user = None, lat = None, long= None,
     # Calculating the Mutual Streams axis:
     if int(rank_flag & FOLLOW_RANK_TYPE):
         if user is not None:
-            ids = [x['id'] for x in Stream.objects.filter(followship__follower__pk = user.Profile.id).values('id')]
+            ids = [x['id'] for x in Stream.objects.filter(followship__follower__pk = user.profile.id).values('id')]
             max_followings = MaxFollowings(ids, country_code, province_code, filters)
             shout_qs = shout_qs.filter(Streams__pk__in = ids)
             #todo: find way to join tables
@@ -503,11 +505,62 @@ def GetRankedStreamShouts(stream):
 
         time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' %(now_timestamp_string, now_timestamp - base_timestamp)
 
-        shouts =  stream.ShoutWraps.select_related('Shout','Trade').filter(Q(Shout__ExpiryDate__isnull = True, Shout__DatePublished__range = (begin, today)) | Q(Shout__ExpiryDate__isnull = False, Shout__DatePublished__lte = F('Shout__ExpiryDate')) ,Shout__IsMuted = False, Shout__IsDisabled = False).extra(select = {'overall_rank' : '(("Rank" * 2) + %s) / 3' %time_axis}).extra(order_by = ['overall_rank'])
+        shouts = stream.ShoutWraps.select_related('Shout', 'Trade').filter(Q(Shout__ExpiryDate__isnull = True, Shout__DatePublished__range = (begin, today)) | Q(Shout__ExpiryDate__isnull = False, Shout__DatePublished__lte = F('Shout__ExpiryDate')) ,Shout__IsMuted = False, Shout__IsDisabled = False).extra(select = {'overall_rank' : '(("Rank" * 2) + %s) / 3' %time_axis}).extra(order_by = ['overall_rank'])
         if not shouts:
             return []
         return [shout.Shout.trade for shout in shouts]
-    else: return []
+    else:
+        return []
+
+
+def get_stream_listeners(stream, count_only=False):
+    if count_only:
+        listeners = stream.listeners.count()
+    else:
+        listeners = stream.listeners.all()
+    return listeners
+
+
+def get_user_listening(user, stream_type=None, count_only=False):
+    if stream_type:
+        qs = Listen.objects.filter(listener=user, stream__type=stream_type)
+    else:
+        qs = Listen.objects.filter(listener=user)
+
+    if count_only:
+        return qs.count()
+    else:
+        listens = qs.all()
+        stream_ids = [listen.stream_id for listen in listens]
+        streams = Stream2.objects.filter(id__in=stream_ids)
+        object_ids = [stream.object_id for stream in streams]
+
+        if stream_type == STREAM2_TYPE_PROFILE:
+            return list(User.objects.filter(id__in=object_ids))
+        elif stream_type == STREAM2_TYPE_TAG:
+            return list(Tag.objects.filter(id__in=object_ids))
+        else:
+            return listens
+
+
+def listen_to_stream(listener, stream):
+    try:
+        Listen.objects.get(listener=listener, stream=stream)
+    except Listen.DoesNotExist:
+        listen = Listen(listener=listener, stream=stream)
+        listen.save()
+
+
+def remove_listener_from_stream(listener, stream):
+    listen = None
+    try:
+        listen = Listen.objects.get(listener=listener, stream=stream)
+    except Listen.DoesNotExist:
+        pass
+
+    if listen:
+        listen.delete()
+
 
 from apps.shoutit import utils
-from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage
+from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Listen

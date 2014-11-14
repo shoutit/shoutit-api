@@ -203,6 +203,17 @@ STREAM_TYPE_RELATED = StreamType('Related')
 STREAM_TYPE_RECOMMENDED = StreamType('Recommended')
 STREAM_TYPE_BUSINESS = StreamType('Business')
 
+
+class StreamType2(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+STREAM2_TYPE_PROFILE = StreamType2('Profile')
+STREAM2_TYPE_TAG = StreamType2('Tag')
+STREAM2_TYPE_BUSINESS = StreamType2('Business')
+STREAM2_TYPE_RELATED = StreamType2('Related')
+STREAM2_TYPE_RECOMMENDED = StreamType2('Recommended')
+
 rank_flags = {}
 
 

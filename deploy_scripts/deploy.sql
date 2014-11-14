@@ -2,16 +2,16 @@
 
 -- DROP FUNCTION get_followings(text, text);
 
-CREATE OR REPLACE FUNCTION get_followings(p_userprofile_text text, p_shout_text text)
+CREATE OR REPLACE FUNCTION get_followings(p_profile_text text, p_shout_text text)
   RETURNS integer AS
 $BODY$
 BEGIN
 	return (select count(*) from (
 --	select distinct followship.stream_id
 --	from "shoutit_followship" AS followship
---	where followship.follower_id = p_userprofile_id
+--	where followship.follower_id = p_profile_id
 
-	select regexp_split_to_table(p_userprofile_text, ',')
+	select regexp_split_to_table(p_profile_text, ',')
 	intersect
 	select regexp_split_to_table(p_shout_text, ',')
 
@@ -66,7 +66,7 @@ ALTER FUNCTION normalized_distance(double precision, double precision, double pr
 
 -- DROP FUNCTION max_followings(numeric, numeric);
 
-CREATE OR REPLACE FUNCTION max_followings(p_userprofile_id numeric, p_begin numeric)
+CREATE OR REPLACE FUNCTION max_followings(p_profile_id numeric, p_begin numeric)
   RETURNS integer AS
 $BODY$
 BEGIN
@@ -76,7 +76,7 @@ BEGIN
 		INNER JOIN "shoutit_stream" AS stream ON
 		(shout_streams.stream_id = stream.id) INNER JOIN "shoutit_followship" AS followship ON
 		(followship.stream_id = stream.id)
-		where stream."Type" <> 3 and followship.follower_id = p_userprofile_id AND shout."IsMuted" = FALSE AND shout."IsDisabled" = FALSE AND EXTRACT (epoch from shout."DatePublished") > p_begin
+		where stream."Type" <> 3 and followship.follower_id = p_profile_id AND shout."IsMuted" = FALSE AND shout."IsDisabled" = FALSE AND EXTRACT (epoch from shout."DatePublished") > p_begin
 		group by shout_id
 		order by rank desc) as subq);
 END

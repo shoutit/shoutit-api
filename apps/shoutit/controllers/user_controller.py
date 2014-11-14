@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 from django.db.models.aggregates import Count, Min
 from django.db.models.query_utils import Q
 
-from apps.shoutit.models import Event, UserProfile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, BusinessProfile, PredefinedCity, LinkedGoogleAccount
+from apps.shoutit.models import Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, Business, PredefinedCity, LinkedGoogleAccount
 
 from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
 
@@ -19,17 +19,18 @@ from django.conf import settings
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 
 
-
-#todo: naming: Profile
-def GetUser(username):
-    if not isinstance(username, str) and not isinstance(username, unicode):
+def get_profile(username):
+    """
+    return Profile or Business for the username
+    """
+    if not isinstance(username, basestring):
         return None
     try:
-        q = UserProfile.objects.filter(User__username__iexact=username).select_related(depth=1)
+        q = Profile.objects.filter(user__username__iexact=username).select_related(depth=1)
         if q:
             return q[0]
         else:
-            q = BusinessProfile.objects.filter(User__username__iexact=username).select_related(depth=1)
+            q = Business.objects.filter(user__username__iexact=username).select_related(depth=1)
             if q:
                 return q[0]
             else:
@@ -45,21 +46,21 @@ def SearchUsers(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), star
 
     is_email = query.count('@') > 0
     if is_email and email_search:
-        users = User.objects.filter(email__iexact=query).select_related('UserProfile', 'BusinessProfile')[start_index:end_index]
+        users = User.objects.filter(email__iexact=query).select_related('Profile', 'Business')[start_index:end_index]
     else:
         queries = query.split()
         users = User.objects
-        related = ['Profile', 'Business']
+        related = ['profile', 'business']
         criterions = Q()
         for q in queries:
             criterions |= Q(first_name__icontains=q)
             criterions |= Q(last_name__icontains=q)
-            criterions |= Q(Business__isnull=False, Business__Name__icontains=q)
+            criterions |= Q(business__isnull=False, business__Name__icontains=q)
             if flag:
                 if not (flag & int(USER_TYPE_INDIVIDUAL)):
                     criterions &= Q(Profile__isnull=True)
                 if not (flag & int(USER_TYPE_BUSINESS)):
-                    criterions &= Q(Business__isnull=True)
+                    criterions &= Q(business__isnull=True)
 
         users = users.select_related(*related).filter(criterions)[start_index:end_index]
 
@@ -77,7 +78,7 @@ def GetProfile(user):
             return None
         try:
             try:
-                profile = user.Profile
+                profile = user.profile
                 if not profile:
                     raise ObjectDoesNotExist()
                 return profile
@@ -112,7 +113,7 @@ def GetUserByMobile(mobile):
     if not isinstance(mobile, str) and not isinstance(mobile, unicode):
         return None
     try:
-        q = UserProfile.objects.filter(Mobile__iexact=mobile).select_related(depth=1)
+        q = Profile.objects.filter(Mobile__iexact=mobile).select_related(depth=1)
         if q:
             return q[0]
         else:
@@ -127,7 +128,7 @@ def SetRecoveryToken(user):
     while db_token is not None:
         token = generate_confirm_token(TOKEN_LONG)
         db_token = ConfirmToken.getToken(token)
-    tok = ConfirmToken(Token=token, User=user, Type=TOKEN_TYPE_RECOVER_PASSWORD)
+    tok = ConfirmToken(Token=token, user=user, Type=TOKEN_TYPE_RECOVER_PASSWORD)
     tok.save()
     return token
 
@@ -138,7 +139,7 @@ def SetRegisterToken(user, email, tokenLength, tokenType):
     while db_token is not None:
         token = generate_confirm_token(tokenLength)
         db_token = ConfirmToken.getToken(token)
-    tok = ConfirmToken(Token=token, User=user, Email=email, Type=tokenType)
+    tok = ConfirmToken(Token=token, user=user, Email=email, Type=tokenType)
     tok.save()
     profile = GetProfile(user)
     profile.LastToken = tok
@@ -149,7 +150,7 @@ def SetRegisterToken(user, email, tokenLength, tokenType):
 def GetUserByToken(token, get_disabled=True, case_sensitive=True):
     db_token = ConfirmToken.getToken(token, get_disabled, case_sensitive)
     if db_token is not None:
-        return db_token.User
+        return db_token.user
     else:
         return None
 
@@ -195,9 +196,11 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
 
     django_user.is_active = False
     django_user.save()
+
     stream = Stream(Type=STREAM_TYPE_USER)
     stream.save()
-    up = UserProfile(User=django_user, Stream=stream, Mobile=mobile)
+
+    up = Profile(user=django_user, Stream=stream, Mobile=mobile)
 
     #todo: city, session!
     up.Country = request.session['user_country'] if request and 'user_country' in request.session else DEFAULT_LOCATION['country']
@@ -241,7 +244,7 @@ def SignUpSSS(request, mobile, location, country, city):
     stream = Stream(Type=STREAM_TYPE_USER)
     stream.save()
 
-    up = UserProfile(User=django_user, Stream=stream, Mobile=mobile, isSSS=True)
+    up = Profile(user=django_user, Stream=stream, Mobile=mobile, isSSS=True)
     up.save()
 
     up.Latitude = location[0]
@@ -262,7 +265,7 @@ def SignUpSSS(request, mobile, location, country, city):
     return django_user
 
 
-def CompleteSignUpSSS(request, firstname, lastname, password, user, username, token, tokenType, email, sex, birthdate):
+def CompleteSignUpSSS(request, firstname, lastname, password, user, username, token, tokenType, email, sex, birthday):
     if tokenType == TOKEN_TYPE_HTML_NUM:
         user.email = email
     user.first_name = firstname
@@ -272,11 +275,11 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
     if password is not None and password.strip() != '':
         user.set_password(password)
     user.save()
-    user.Profile.Sex = sex
+    user.profile.Sex = sex
     if not sex:
-        user.Profile.Image = '/static/img/_user_female.png'
-    user.Profile.Birthdate = birthdate
-    user.Profile.save()
+        user.profile.Image = '/static/img/_user_female.png'
+    user.profile.birthday = birthday
+    user.profile.save()
 
     ActivateUser(token, user)
 
@@ -288,7 +291,7 @@ def ChangeEmailAndSendActivation(request, user, email):
                                                                               token)
 
 
-def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthdate=None):
+def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthday=None):
     if mobile == '':
         mobile = None
     if email == '':
@@ -297,32 +300,32 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
         user.email = email
     user.username = username
     user.save()
-    user.Profile.Sex = sex
-    user.Profile.Birthdate = birthdate
+    user.profile.Sex = sex
+    user.profile.birthday = birthday
     if not sex:
-        user.Profile.Image = '/static/img/_user_female.png'
-    user.Profile.save()
+        user.profile.Image = '/static/img/_user_female.png'
+    user.profile.save()
     import realtime_controller as realtime_controller
 
-    realtime_controller.BindUserToCity(user.username, user.Profile.City)
+    realtime_controller.BindUserToCity(user.username, user.profile.City)
     if token is not None and len(token) > 0:
         ActivateUser(token, user)
 
 
-def complete_signup(request, user, sex, birthdate=None):
-    user.Profile.Sex = sex
+def complete_signup(request, user, sex, birthday=None):
+    user.profile.Sex = sex
     if not sex:
-        user.Profile.Image = '/static/img/_user_female.png'
-    user.Profile.Birthdate = birthdate or None
-    if user.Profile.LastToken:
-        user.Profile.LastToken.delete()
-    user.Profile.LastToken = None
-    user.Profile.save()
+        user.profile.Image = '/static/img/_user_female.png'
+    user.profile.birthday = birthday or None
+    if user.profile.LastToken:
+        user.profile.LastToken.delete()
+    user.profile.LastToken = None
+    user.profile.save()
     user.is_active = True
     user.save()
 
 
-def SignUpUserFromAPI(request, first_name, last_name, username, email, password, sex, birthdate, mobile=None):
+def SignUpUserFromAPI(request, first_name, last_name, username, email, password, sex, birthday, mobile=None):
     django_user = User.objects.create_user(username, email, password)
     django_user.first_name = first_name
     django_user.last_name = last_name
@@ -330,8 +333,8 @@ def SignUpUserFromAPI(request, first_name, last_name, username, email, password,
     django_user.save()
     stream = Stream(Type=STREAM_TYPE_USER)
     stream.save()
-    up = UserProfile(User=django_user, Stream=stream, Mobile=mobile)
-    up.Birthdate = birthdate
+    up = Profile(user=django_user, Stream=stream, Mobile=mobile)
+    up.birthday = birthday
     up.Sex = sex
     if not sex:
         up.Image = '/static/img/_user_female.png'
@@ -382,15 +385,15 @@ def auth_with_gplus(request, gplus_user, credentials):
         print e.message
         return None
 
-    if user.Profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
+    if user.profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
             response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
             data = response.read()
             filename = generate_password()
             obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-            user.Profile.Image = obj.container.cdn_uri + '/' + obj.name
-            user.Profile.save()
+            user.profile.Image = obj.container.cdn_uri + '/' + obj.name
+            user.profile.save()
 
         except BaseException, e:
             print e.message
@@ -419,17 +422,13 @@ def auth_with_facebook(request, fb_user, auth_response):
         GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
-        la = LinkedFacebookAccount(
-            User=user, Uid=fb_user['id'], AccessToken=auth_response['accessToken'],
-            ExpiresIn=auth_response['expiresIn'], SignedRequest="code",
-            link=fb_user['link'] or '', verified=fb_user['verified'] if 'verified' in fb_user else False
-        )
+        la = LinkedFacebookAccount(user=user, Uid=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
         la.save()
     except BaseException, e:
         print e.message
         return None
 
-    if user.Profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
+    if user.profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
             response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + auth_response['accessToken'],
@@ -441,8 +440,8 @@ def auth_with_facebook(request, fb_user, auth_response):
                 data = response.read()
                 filename = generate_password()
                 obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-                user.Profile.Image = obj.container.cdn_uri + '/' + obj.name
-                user.Profile.save()
+                user.profile.Image = obj.container.cdn_uri + '/' + obj.name
+                user.profile.save()
 
         except BaseException, e:
             print e.message
@@ -484,7 +483,7 @@ def SignOut(request):
 
 def FollowStream(request, follower, followed):
     if isinstance(follower, unicode):
-        follower = GetUser(follower)
+        follower = get_profile(follower)
         if not follower:
             raise ObjectDoesNotExist()
     if follower.Stream == followed:
@@ -496,20 +495,20 @@ def FollowStream(request, follower, followed):
         Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_CREATED,
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.id})
         if followed.Type == STREAM_TYPE_USER:
-            followedUser = UserProfile.objects.get(Stream=followed)
-            email_controller.SendFollowshipEmail(follower.User, followedUser.User)
-            notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
+            followedUser = Profile.objects.get(Stream=followed)
+            email_controller.SendFollowshipEmail(follower.user, followedUser.user)
+            notifications_controller.NotifyUserOfFollowship(followedUser.user, follower.user)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_USER, followedUser)
         elif followed.Type == STREAM_TYPE_BUSINESS:
-            followedUser = BusinessProfile.objects.get(Stream=followed)
-            email_controller.SendFollowshipEmail(follower.User, followedUser.User)
-            notifications_controller.NotifyUserOfFollowship(followedUser.User, follower.User)
+            followedUser = Business.objects.get(Stream=followed)
+            email_controller.SendFollowshipEmail(follower.user, followedUser.user)
+            notifications_controller.NotifyUserOfFollowship(followedUser.user, follower.user)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_BUSINESS, followedUser)
 
 
 def UnfollowStream(request, follower, followed):
     if isinstance(follower, unicode):
-        follower = GetUser(follower)
+        follower = get_profile(follower)
         if not follower:
             raise ObjectDoesNotExist()
     if followed in follower.Following.all():
@@ -520,17 +519,8 @@ def UnfollowStream(request, follower, followed):
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.id})
 
 
-def UserFollowers(username, count_only=False):
-    user = GetUser(username)
-    if count_only:
-        followers = user.Stream.userprofile_set.count()
-    else:
-        followers = user.Stream.userprofile_set.all()
-    return followers
-
-
 def UserFollowing(username, type='all', period='recent'):
-    user = GetUser(username)
+    user = get_profile(username)
     result = {'users': [], 'tags': []}
     if period == 'recent':
         limit = 5
@@ -543,7 +533,7 @@ def UserFollowing(username, type='all', period='recent'):
         users = [f[0] for f in
                  FollowShip.objects.filter(follower__pk=user.pk, stream__Type=STREAM_TYPE_USER).values_list('stream__OwnerUser').order_by(
                      '-date_followed')[:limit]]
-        result['users'] = [u for u in UserProfile.objects.all().filter(pk__in=users)]
+        result['users'] = [u for u in Profile.objects.all().filter(pk__in=users)]
 
     if type == 'tags' or type == 'all':
         result['tags'] = [f[0] for f in FollowShip.objects.filter(follower__pk=user.pk, stream__Type=STREAM_TYPE_TAG).values_list(
@@ -559,7 +549,7 @@ def IsInterested(user, interest):
 
 
 def UpdateLocation(username, lat, lng, city, country):
-    user = GetUser(username)
+    user = get_profile(username)
     user.Latitude = lat
     user.Longitude = lng
     user.City = city
@@ -581,7 +571,7 @@ def GetTopUsers(limit=10, country='', city=''):
     if not city:
         city = ''
 
-    top_users = UserProfile.objects.values('id').filter(User__is_active=True)
+    top_users = Profile.objects.values('id').filter(user__is_active=True)
 
     if len(country.strip()):
         top_users = top_users.filter(Country=country)
@@ -590,27 +580,27 @@ def GetTopUsers(limit=10, country='', city=''):
         top_users = top_users.filter(City=city)
 
         # Bases on Number of Listerns
-        # top_users = top_users.values('id').annotate(f_count=Count('Stream__userprofile')).values('User__username','User__first_name','User__last_name','f_count').order_by('-f_count')
+        # top_users = top_users.values('id').annotate(f_count=Count('Stream__userprofile')).values('user__username','user__first_name','user__last_name','f_count').order_by('-f_count')
 
         # Based on Number of Shouts
-    #		top_users = top_users.values('id').annotate(s_count=Count('User__Shouts')).values('User__username','User__first_name','User__last_name','s_count').order_by('-s_count')
+    #		top_users = top_users.values('id').annotate(s_count=Count('user__Shouts')).values('user__username','user__first_name','user__last_name','s_count').order_by('-s_count')
 
     # Based on Random who has changed his Pic
     top_users = top_users.filter(~Q(Image__in=['/static/img/_user_male.png', '/static/img/_user_female.png']))
-    # top_users = top_users.annotate(s_count=Count('User__Shouts')).values('User__username','User__first_name','User__last_name','s_count').order_by('?')[:limit]
-    top_users = top_users.values('User__username', 'User__first_name', 'User__last_name', 'Image').order_by('?')[:limit]
-    #		f_count = Shout.objects.GetValidShouts().values('id').filter(OwnerUser__username__in=[u['User__username']for u in top_users]).annotate(f_count=Count('pk')).values('OwnerUser__username','f_count')
-    f_count = UserProfile.objects.values('id').filter(User__username__in=[u['User__username'] for u in top_users]).annotate(
-        f_count=Count('Stream__userprofile')).values('User__username', 'f_count')
+    # top_users = top_users.annotate(s_count=Count('user__Shouts')).values('user__username','user__first_name','user__last_name','s_count').order_by('?')[:limit]
+    top_users = top_users.values('user__username', 'user__first_name', 'user__last_name', 'Image').order_by('?')[:limit]
+    #		f_count = Shout.objects.GetValidShouts().values('id').filter(Owneruser__username__in=[u['user__username']for u in top_users]).annotate(f_count=Count('pk')).values('OwnerUser__username','f_count')
+    f_count = Profile.objects.values('id').filter(user__username__in=[u['user__username'] for u in top_users]).annotate(
+        f_count=Count('Stream__userprofile')).values('user__username', 'f_count')
 
     users_valid_shouts = Trade.objects.GetValidTrades().filter(
-        OwnerUser__username__in=[user['User__username'] for user in top_users]).select_related('OwnerUser')
+        OwnerUser__username__in=[user['user__username'] for user in top_users]).select_related('OwnerUser')
     for user in top_users:
         for f in f_count:
-            if user['User__username'] == f['User__username']:
+            if user['user__username'] == f['user__username']:
                 user['f_count'] = f['f_count']
                 break
-        user['s_count'] = len([shout for shout in users_valid_shouts if shout.OwnerUser.username == user['User__username']])
+        user['s_count'] = len([shout for shout in users_valid_shouts if shout.OwnerUser.username == user['user__username']])
         user['Image'] = get_size_url(user['Image'], 32)
     return list(top_users)
 
@@ -651,25 +641,25 @@ def TakePermissionFromUser(request, permission):
 
 def GetNotifications(profile):
     if not hasattr(profile, 'notifications'):
-        min_date = profile.User.Notifications.filter(ToUser=profile.User, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
+        min_date = profile.user.Notifications.filter(ToUser=profile.user, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
         if min_date:
-            notifications = list(profile.User.Notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
+            notifications = list(profile.user.Notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
             if len(notifications) < 5:
                 notifications = sorted(
                     chain(notifications, list(
-                        profile.User.Notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
+                        profile.user.Notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
                     key=lambda n: n.DateCreated,
                     reverse=True
                 )
         else:
-            notifications = list(profile.User.Notifications.filter(IsRead=True).order_by('-DateCreated')[:5])
+            notifications = list(profile.user.Notifications.filter(IsRead=True).order_by('-DateCreated')[:5])
         profile.notifications = notifications
     return profile.notifications
 
 
 def GetAllNotifications(profile):
     if not hasattr(profile, 'all_notifications'):
-        profile.all_notifications = list(profile.User.Notifications.order_by('-DateCreated'))
+        profile.all_notifications = list(profile.user.Notifications.order_by('-DateCreated'))
     return profile.all_notifications
 
 

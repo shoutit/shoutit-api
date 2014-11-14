@@ -21,6 +21,7 @@ def user_from_gplus_code(request, code, initial_user=None):
         return flowError, None
 
     gplus_id = credentials.id_token['sub']
+
     try:
         linked_account = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         user = linked_account.user
@@ -42,7 +43,7 @@ def user_from_gplus_code(request, code, initial_user=None):
 
     if user:
         if initial_user and initial_user['location']:
-            update_location(user.Profile, initial_user['location'])
+            update_location(user.profile, initial_user['location'])
 
         login_without_password(request, user)
         request.session['user_renew_location'] = True

@@ -1230,8 +1230,8 @@ div.modal-footer.modal-error {
 	margin-top: -240px;
 }
 
-#profile_edit_form .birthdate, #profile_edit_form .sex,
-#activate_form .birthdate, #activate_form .sex {
+#profile_edit_form .birthday, #profile_edit_form .sex,
+#activate_form .birthday, #activate_form .sex {
     display: inline-block;
     margin-right: 0px;
 }
@@ -1241,18 +1241,18 @@ div.modal-footer.modal-error {
     width: 90px;
 }
 
-#profile_edit_form .birthdate select#id_birthdate_month,
-#activate_form .birthdate select#id_birthdate_month {
+#profile_edit_form .birthday select#id_birthday_month,
+#activate_form .birthday select#id_birthday_month {
     width: 108px;
 }
 
-#profile_edit_form .birthdate select#id_birthdate_day,
-#activate_form .birthdate select#id_birthdate_day {
+#profile_edit_form .birthday select#id_birthday_day,
+#activate_form .birthday select#id_birthday_day {
     width: 50px;
 }
 
-#profile_edit_form .birthdate select#id_birthdate_year,
-#activate_form .birthdate select#id_birthdate_year {
+#profile_edit_form .birthday select#id_birthday_year,
+#activate_form .birthday select#id_birthday_year {
     width: 70px;
 }
 
@@ -1632,7 +1632,7 @@ span.qtip-error {
 .user-icon-shouts {
 	background-position: -5px -3px;
 }
-.user-icon-followers {
+.user-icon-listeners {
 	background-position: -5px -37px;
 }
 .user-icon-followings {

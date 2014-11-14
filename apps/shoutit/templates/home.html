@@ -48,7 +48,7 @@
 	{#                <option>Abu Dhabi</option>#}
 	{#                <option>Sharjah</option>#}
 	{#              </select>#}
-			<a id="ShowMap" class="btn large " data-controls-modal="MapModal" data-backdrop="static">{% if user.Profile.City != "" %}{{user.Profile.City}}{% else %}Location{% endif %}</a>
+			<a id="ShowMap" class="btn large " data-controls-modal="MapModal" data-backdrop="static">{% if user.profile.City != "" %}{{user.profile.City}}{% else %}Location{% endif %}</a>
 			</div>
 		</div>
 	</div>
@@ -118,8 +118,8 @@
         }
     });
 
-    var lat = {{user.Profile.Latitude}};
-    var lng = {{user.Profile.Longitude}};
+    var lat = {{user.profile.Latitude}};
+    var lng = {{user.profile.Longitude}};
 
     $('#save_location').click(function(){
         lat = $('#id_location').val().split(",")[0];
@@ -225,8 +225,8 @@
     $(document).ready(function () {
         startLiveShoutsPolling('/xhr/shouts/livetimeline/', '#live_shouts');
         register_stream('/xhr/shouts/stream/', '#stream_container', 0);
-        {% if user.Profile.Latitude and user.Profile.Longitude %}
-            CreateProfileMap( {{user.Profile.Latitude}} , {{user.Profile.Longitude}} , "Map");
+        {% if user.profile.Latitude and user.profile.Longitude %}
+            CreateProfileMap( {{user.profile.Latitude}} , {{user.profile.Longitude}} , "Map");
         {% else %}
             CreateShoutMap("Map");
         {% endif %}

@@ -462,7 +462,7 @@ $('.search_icon').click(function() {$('#home-search-box').focus();});
 //follow tags
 function follow(name,selector){
 	requestAjaxily({
-		url: '/xhr/tag/'+name+'/interest/',
+		url: '/xhr/tag/'+name+'/start_listening/',
 		successCallback: function (data) {
 			$(selector).removeClass('tag_non_listening');
 			$(selector).attr('title',gettext('Stop listening'));			
@@ -473,7 +473,7 @@ function follow(name,selector){
 //unfollow the tag
 function unfollow(name,selector){
 	requestAjaxily({
-					   url: '/xhr/tag/'+name+'/uninterest/',
+					   url: '/xhr/tag/'+name+'/stop_listening/',
 					   successCallback: function (data) {
 						   $(selector).addClass('tag_non_listening');
 						   $(selector).attr('title',gettext('Listen'));						   
@@ -482,9 +482,9 @@ function unfollow(name,selector){
 				   });
 }
 //follow user
-function follow_user(name,selector) {
+function follow_user(name, selector) {
 	requestAjaxily({
-					   url: '/xhr/user/'+name+'/follow/',
+					   url: '/xhr/user/'+name+'/start_listening/',
 					   successCallback: function (data) {
 						   $(selector).addClass('shouters_listen');
 						   $(selector).removeClass('shouters_non_listen');
@@ -499,7 +499,7 @@ function follow_user(name,selector) {
 //unfollow user
 function unfollow_user(name,selector) {
 	requestAjaxily({
-					   url: '/xhr/user/'+name+'/unfollow/',
+					   url: '/xhr/user/'+name+'/stop_listening/',
 					   successCallback: function (data) {
 						   $(selector).addClass('shouters_non_listen');
 						   $(selector).removeClass('shouters_listen');

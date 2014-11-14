@@ -2,7 +2,7 @@
 <div class="shout{% if right %} shout-right{% endif %} {% if shout.featured %}featured{% endif %}">
 	<div class="shout-picture-contain pull-{% if right %}right{% else %}left{% endif %}">
 	<span class="user-icon-{% if shout.Type == 0 %}requests{% else %}offers{% endif %}"><a {% if shout.OwnerUser.is_active or shout.OwnerUser == request.user %}href="/user/{{ shout.OwnerUser.username }}/"{% endif %} title="{{ shout.OwnerUser.name }}"></a></span>
-{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.OwnerUser.Profile.Image|secure_url }}{% else %}{{ shout.OwnerUser.Profile.Image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.OwnerUser.name }}'s profile picture">#}
+{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.OwnerUser.profile.Image|secure_url }}{% else %}{{ shout.OwnerUser.profile.Image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.OwnerUser.name }}'s profile picture">#}
 {#        </a>#}
         <!--<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />-->
 {#		<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.Type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
@@ -12,9 +12,9 @@
             <div class="shout-title pull-{% if right %}right{% else %}left{% endif %}"><a href="{% shout_link shout %}" title="{{ shout.Item.Name|title }}">{% if shout.featured %}<i class="icon-star"></i>{% endif %}{{ shout.Item.Name|title }}</a></div>
             <div class="shout-price pull-{% if right %}left{% else %}right{% endif %}">{{ shout.Item.Price|price:shout.Item.Currency.Code }}</div>
             {% if detailed %}
-                {% if shout.OwnerUser.Profile.Mobile %}
+                {% if shout.OwnerUser.profile.Mobile %}
                     <div class="shout-phone pull-{% if right %}left{% else %}right{% endif %}" title="Call {{ shout.OwnerUser.name }}">
-                        <a href="tel:{{ shout.OwnerUser.Profile.Mobile }}">{{ shout.OwnerUser.Profile.Mobile }}</a></div>
+                        <a href="tel:{{ shout.OwnerUser.profile.Mobile }}">{{ shout.OwnerUser.profile.Mobile }}</a></div>
                 {% endif %}
             {% endif %}
             <div style="clear: both;"></div>

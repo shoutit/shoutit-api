@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from apps.shoutit.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE, POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_EVENT, EVENT_TYPE_GALLERY_ITEM
-from apps.shoutit.models import Stream, BusinessProfile, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, BusinessCreateApplication, PredefinedCity
+from apps.shoutit.models import Stream, Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, BusinessCreateApplication, PredefinedCity
 from apps.shoutit.controllers.user_controller import GetProfile, SetRegisterToken, GiveUserPermissions
 from apps.shoutit.controllers import email_controller
 from apps.shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
@@ -14,7 +14,7 @@ def GetBusiness(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):
 		return None
 	try:
-		q = BusinessProfile.objects.filter(User__username__iexact = username).select_related(depth=1)
+		q = Business.objects.filter(user__username__iexact = username).select_related(depth=1)
 		if q:
 			return q[0]
 		else:
@@ -45,7 +45,7 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 		except ObjectDoesNotExist, e:
 			cat = None
 
-	bp = BusinessProfile(User = django_user, Category = cat, Stream = stream, Name = name,
+	bp = Business(user =  django_user, Category = cat, Stream = stream, Name = name,
 						 Latitude = latitude, Longitude = longitude, Country = country_code, City = province_code, Address = address)
 	bp.Image = '/static/img/_user_male.png'
 	bp.save()
@@ -55,7 +55,7 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 		PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 	if source_id is not None:
-		source = BusinessSource(Business = bp, Source = source_type, SourceID = source_id)
+		source = BusinessSource(business = bp, Source = source_type, SourceID = source_id)
 		source.save()
 	return bp
 
@@ -66,7 +66,7 @@ def ClaimTinyBusiness(request, tiny_username, email, phone, website, about = Non
 	if business.Confirmed:
 		return None
 
-	django_user = business.User
+	django_user = business.user
 	django_user.email = email
 	django_user.save()
 
@@ -75,10 +75,10 @@ def ClaimTinyBusiness(request, tiny_username, email, phone, website, about = Non
 	business.About = about
 
 	if len(documents):
-		confirmation = BusinessConfirmation(User = django_user)
+		confirmation = BusinessConfirmation(user =  django_user)
 		confirmation.save()
 		for document in documents:
-			doc = StoredFile(User = django_user, File = document, Type = FILE_TYPE_BUSINESS_DOCUMENT)
+			doc = StoredFile(user =  django_user, File = document, Type = FILE_TYPE_BUSINESS_DOCUMENT)
 			doc.save()
 			confirmation.Files.add(doc)
 		confirmation.save()
@@ -97,7 +97,7 @@ def SignUpTempBusiness(request, email, password, send_activation = True, busines
 	while len(User.objects.filter(username = username).select_related()):
 		username = utils.generate_username()
 	django_user = User.objects.create_user(username, email, password)
-	app = BusinessCreateApplication(User = django_user, Business = business)
+	app = BusinessCreateApplication(user =  django_user, business = business)
 	app.save()
 
 	token = SetTempRegisterToken(django_user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
@@ -117,7 +117,7 @@ def SetTempRegisterToken(user, email, tokenLength, tokenType):
 	while db_token is not None:
 		token = utils.generate_confirm_token(tokenLength)
 		db_token = ConfirmToken.getToken(token)
-	tok = ConfirmToken(Token = token, User = user, Email = email, Type = tokenType)
+	tok = ConfirmToken(Token = token, user =  user, Email = email, Type = tokenType)
 	tok.save()
 
 	profile = user.BusinessCreateApplication.count() and user.BusinessCreateApplication.all()[0] or None
@@ -158,7 +158,7 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 		ba.Website = website
 
 	else:
-		ba = BusinessCreateApplication(User = user, Category = cat, Name = name, Phone = phone, About = about, Website = website,
+		ba = BusinessCreateApplication(user =  user, Category = cat, Name = name, Phone = phone, About = about, Website = website,
 					 Latitude = latitude, Longitude = longitude, Country = country_code, City = province_code, Address = address)
 	ba.save()
 
@@ -168,10 +168,10 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 
 
 	if len(documents):
-		confirmation = BusinessConfirmation(User = user)
+		confirmation = BusinessConfirmation(user =  user)
 		confirmation.save()
 		for document in documents:
-			doc = StoredFile(User = user, File = document, Type = FILE_TYPE_BUSINESS_DOCUMENT)
+			doc = StoredFile(user =  user, File = document, Type = FILE_TYPE_BUSINESS_DOCUMENT)
 			doc.save()
 			confirmation.Files.add(doc)
 		confirmation.save()
@@ -196,9 +196,9 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 		if name:
 			business.Name = name
 		if password:
-			business.User.set_password(password)
+			business.user.set_password(password)
 		if email:
-			business.User.email = email
+			business.user.email = email
 		if phone:
 			business.Phone = phone
 		if image:
@@ -218,7 +218,7 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 		if address:
 			business.Address = address
 
-		business.User.save()
+		business.user.save()
 		business.save()
 
 		if not PredefinedCity.objects.filter(City = province_code):
@@ -240,7 +240,7 @@ def AcceptBusiness(request, username):
 		else:
 			return
 	else:
-		user = username.User
+		user = username.user
 
 	profile = GetProfile(user)
 
@@ -249,25 +249,25 @@ def AcceptBusiness(request, username):
 	ba = user.BusinessCreateApplication.all()[0]
 
 	if ba.Business and not profile:
-		ba.Business.User.password = user.password
-		ba.Business.User.email = user.email
-		ba.Business.User.is_staff = user.is_staff
-		ba.Business.User.is_active = user.is_active
-		ba.Business.User.is_superuser = user.is_superuser
-		ba.Business.User.last_login = user.last_login
-		ba.Business.User.date_joined = user.date_joined
+		ba.Business.user.password = user.password
+		ba.Business.user.email = user.email
+		ba.Business.user.is_staff = user.is_staff
+		ba.Business.user.is_active = user.is_active
+		ba.Business.user.is_superuser = user.is_superuser
+		ba.Business.user.last_login = user.last_login
+		ba.Business.user.date_joined = user.date_joined
 
-		ba.Business.User.groups = user.groups.all()
-		ba.Business.User.user_permissions = user.user_permissions.all()
+		ba.Business.user.groups = user.groups.all()
+		ba.Business.user.user_permissions = user.user_permissions.all()
 
-		ba.User = ba.Business.User
+		ba.user = ba.Business.user
 		ba.LastToken = None
-		ba.Business.User.BusinessConfirmations = user.BusinessConfirmations.all()
+		ba.Business.user.BusinessConfirmations = user.BusinessConfirmations.all()
 		user.delete()
 
-		ba.Business.User.save()
+		ba.Business.user.save()
 
-		user = ba.Business.User
+		user = ba.Business.user
 
 		ba.Business.About = ba.About
 		ba.Business.Phone = ba.Phone
@@ -278,7 +278,7 @@ def AcceptBusiness(request, username):
 	elif not ba.Business and not profile:
 		stream = Stream(Type = STREAM_TYPE_BUSINESS)
 		stream.save()
-		bp = BusinessProfile(User = user, Name = ba.Name, Category = ba.Category, Image = "/static/img/_user_male.png",
+		bp = Business(user =  user, Name = ba.Name, Category = ba.Category, Image = "/static/img/_user_male.png",
 							About = ba.About, Phone = ba.Phone, Website = ba.Website, Latitude = ba.Latitude, Longitude = ba.Longitude,
 							Country = ba.Country, City = ba.City, Address = ba.Address, Stream = stream, Confirmed = True)
 		bp.save()

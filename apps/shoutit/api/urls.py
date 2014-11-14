@@ -66,7 +66,14 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/stats/(\w+)(?:/(\w+))?(?:/(\w+))?/$',
+                       url(r'^user/(\w+)/listen/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': user_views.start_listening_to_user,
+                               'DELETE': user_views.stop_listening_to_user
+                           })
+                       ),
+
+                       url(r'^user/(@me|\w+)/(\w+)/(?:(\w+)/)?(?:(\w+)/)?$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_stats
                            })
@@ -96,17 +103,9 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/(\w+)/follow/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': user_views.follow_user,
-                               'DELETE': user_views.unfollow_user
-                           })
-                       ),
-
-
                        # Shouts
 
-                       url(r'^shout/stream/(?:(\d+)/)?',
+                       url(r'^shout/stream/',
                            TieredResource(TieredHandler, oauth, {
                                'GET': stream_views.index_stream,
                            })
@@ -205,16 +204,16 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^tag/([^/]+)/stats/(\w+)/$',
+                       url(r'^tag/([^/]+)/listeners/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': tag_views.tag_stats
                            })
                        ),
 
-                       url(r'^tag/([^/]+)/follow/$',
+                       url(r'^tag/([^/]+)/listen/$',
                            TieredResource(TieredHandler, oauth, {
-                               'POST': tag_views.add_tag_to_interests,
-                               'DELETE': tag_views.remove_tag_from_interests
+                               'POST': tag_views.start_listening_to_tag,
+                               'DELETE': tag_views.stop_listening_to_tag
                            })
                        ),
 

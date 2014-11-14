@@ -7,7 +7,7 @@ from apps.shoutit.controllers import tag_controller
 from apps.shoutit.controllers import user_controller
 from apps.shoutit.controllers import message_controller
 from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
-from apps.shoutit.models import ConfirmToken, Item, GalleryItem, UserProfile, BusinessProfile, Trade
+from apps.shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
 from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
 from apps.shoutit.utils import base62_to_int
 from apps.shoutit.constants import *
@@ -69,27 +69,27 @@ def send_message_validator(request, shout_id, conversation_id):
     return result
 
 
-def profile_picture_validator(request, type, name, size):
+def profile_picture_validator(request, profile_type, name, size):
     result = ValidationResult(valid=False)
 
-    if type == 'user':
+    if profile_type == 'user':
         result = user_profile_validator(request, name)
 
-    elif type == 'tag':
-        result = object_exists_validator(tag_controller.GetTag, _('Tag %(tag_name)s does not exist.') % {'tag_name': name}, name)
+    elif profile_type == 'tag':
+        result = object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': name}, name)
 
     return result
 
 
 def user_edit_profile_validator(request, username, email):
-    result = object_exists_validator(user_controller.GetUser, _('User %(username)s does not exist.') % {'username': username}, username)
+    result = object_exists_validator(user_controller.get_profile, _('User %(username)s does not exist.') % {'username': username}, username)
     if result.valid:
         if username == request.user.username or request.user.is_staff:
-            init = {'username' : username, 'email' : email}
+            init = {'username': username, 'email': email}
             profile = user_controller.GetProfile(request.user)
-            if profile and isinstance(profile, UserProfile):
+            if profile and isinstance(profile, Profile):
                 result = form_validator(request, UserEditProfileForm, initial=init)
-            elif profile and isinstance(profile, BusinessProfile):
+            elif profile and isinstance(profile, Business):
                 result = form_validator(request, BusinessEditProfileForm, initial=init)
             else:
                 result = ValidationResult(False, messages=[('error', _('User %(username)s does not exist.') % {'username': username})],
@@ -231,11 +231,16 @@ def user_profile_validator(request, username, *args, **kwargs):
         username = request.user.username
     elif username == '@me':
         return ValidationResult(False, messages=[('error', _('You are not signed in.'))], errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN])
-    user = user_controller.GetUser(username)
-    if user is not None:
-        if not user.User.is_active and user.User != request.user and not request.user.is_staff:
+
+    result = object_exists_validator(user_controller.get_profile, _('User %(username)s does not exist.') % {'username': username}, username)
+    if not result.valid:
+        return result
+    else:
+        profile = result.data
+        if not profile.user.is_active and profile.user != request.user and not request.user.is_staff:
             return ValidationResult(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})], errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
-    return object_exists_validator(user_controller.GetUser, _('User %(username)s does not exist.') % {'username': username}, username)
+
+        return ValidationResult(True, data={'profile': profile})
 
 
 def activate_api_validator(request, token, *args, **kwargs):

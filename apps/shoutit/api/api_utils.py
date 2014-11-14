@@ -15,8 +15,8 @@ JSON_URL_MARK_NOTIFICATION_AS_UNREAD = JSONUrl()
 
 api_urls = {
     'User': ('/user/%s/', 'username'),
-    'UserProfile': ('/user/%s/', 'username'),
-    'BusinessProfile': ('/user/%s/', 'username'),
+    'Profile': ('/user/%s/', 'username'),
+    'Business': ('/user/%s/', 'username'),
     'Shout': ('/shout/%s/', 'pk|base62'),
     'Trade': ('/shout/%s/', 'pk|base62'),
     'StoredImage': ('/image/%s/', 'pk|base62'),

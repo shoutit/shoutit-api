@@ -2,123 +2,127 @@
 {% load template_filters %}
 {% load i18n %}
 {% block content %}
-	<div class="modal hide fade" id="FollowersModal">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
+  <div class="modal hide fade" id="FollowersModal">
+    <div class="modal-header">
+      <a class="close" data-dismiss="modal">×</a>
+    </div>
+    <div class="modal-title">
+      <h4>{{ tagProfile.username }} Listeners </h4>
+    </div>
+    <div id="FollowersModalContain" class="modal-body">
+    </div>
+    <div class="modal-footer">
+    </div>
+  </div>
+  <div class="tag-wrapper">
+    <div class="box-container white-container round shadow tag-details">
+      <div class="tag-image pull-left">
+        <img class="round" src="{{ tagProfile.Image|secure_url }}" alt="{{ tagProfile.Name }} picture">
+      </div>
+
+      <div class="pull-left">
+        <div class="tag-name">{{ tagProfile.Name }}</div>
+        <div class="tag-info pull-left">{{ tagProfile.Definition|linebreaksbr }}</div>
+        <div>
+          {% if interested %}
+            <div id="unfollow" class="follow-unfollow shadow"><span>{% trans "Listening" %}</span></div>
+          {% else %}
+            <div id="follow" class="follow-unfollow shadow"><span>{% trans "Listen" %}</span></div>
+          {% endif %}
         </div>
-        <div class="modal-title">
-			<h4>{{ tagProfile.username }} Listeners </h4>
-		</div>
-		<div id="FollowersModalContain" class="modal-body">
-		</div>
-		<div class="modal-footer">
-		</div>
-	</div>
-	<div class="tag-wrapper">
-		<div class="box-container white-container round shadow tag-details">
-			<div class="tag-image pull-left">
-				<img class="round" src="{{ tagProfile.Image|secure_url }}" alt="{{ tagProfile.Name }} picture">
-			</div>
+      </div>
 
-        <div class="pull-left">
-            <div class="tag-name">{{ tagProfile.Name }}</div>
-            <div class="tag-info pull-left">{{ tagProfile.Definition|linebreaksbr }}</div>
-            <div>
-                {% if interested %}
-					<div id="unfollow" class="follow-unfollow shadow" ><span>{% trans "Listening" %}</span></div>
-{#					<button id="unfollow" class="btn btn-success follow-button follow-unfollow"><i class="icon-star icon-white"></i> Following</button>#}
-				{% else  %}
-					<div id="follow" class="follow-unfollow shadow" ><span>{% trans "Listen" %}</span></div>
-{#					<button id="follow" class="btn btn-info follow-button follow-unfollow"><i class="icon-star icon-white"></i> Follow</button>#}
-				{% endif %}
+      <div class="tag-buttons pull-right">
+        <button id="aFollowers" class="user-btn listeners-button" data-toggle="modal" data-target="#FollowersModal"><i
+            class="user-icon-listeners"></i> <span class="count">{{ listeners_count }}</span> {% trans "Listeners" %}</button>
+      </div>
 
-            </div>
-
+      <div style="clear: both;"></div>
+    </div>
+    <div class="page_content">
+      <div class="left-column">
+        <div class="outer-box-header round shadow">
+          {{ tagProfile.Name }} shouts in <span class="browse_in">{{ city }}</span>
         </div>
-        <div class="tag-buttons pull-right">
-{#            <button class="user-btn nohover"><i class="user-icon-shouts"></i> {{ shouts_count }} Shouts</button>#}
-            <button id="aFollowers" class="user-btn followers-button" data-toggle="modal" data-target="#FollowersModal" ><i class="user-icon-followers"></i> <span class="count">{{ followers_count }}</span> {% trans "Listeners" %}</button>
+        <div class="box-container dark-container round shadow shouts">
+          <div class="box-content">
+            {% include 'stream.html' %}
+          </div>
         </div>
+      </div>
+      <div class="right-column">
+        {#                <div class="box-container white-container round shadow public-shouts">#}
+        {#                    <div class="box-header">#}
+        {#                        {% trans "public shouts" %}#}
+        {#                    </div>#}
+        {#                    <div class="box-content">#}
+        {#                    </div>#}
+        {#                </div>#}
 
-			<div style="clear: both;"></div>
-		</div>
-		<div class="page_content">
-			<div class="left-column">
-                <div class="outer-box-header round shadow">
-                    {{ tagProfile.Name }} shouts in <span class="browse_in">{{ city }}</span>
-                </div>
-				<div class="box-container dark-container round shadow shouts">
-					<div class="box-content">
-						{% include 'stream.html' %}
-					</div>
-				</div>
-			</div>
-            <div class="right-column">
-{#                <div class="box-container white-container round shadow public-shouts">#}
-{#                    <div class="box-header">#}
-{#                        {% trans "public shouts" %}#}
-{#                    </div>#}
-{#                    <div class="box-content">#}
-{#                    </div>#}
-{#                </div>#}
-
-            </div>
-			<div style="clear: both;"></div>
-		</div>
-	</div>
+      </div>
+      <div style="clear: both;"></div>
+    </div>
+  </div>
 {% endblock %}
 {% block contentx %}
-{#	left column#}
-{#	main column#}
-	<div class="span9">
-		<div class="shout_user_info well clearfix">
-			{% trans "some stuff about the tag can show here" %}<br>
-			{% trans "simply, a definition!" %}
-		</div>
+  {#	left column#}
+  {#	main column#}
+  <div class="span9">
+    <div class="shout_user_info well clearfix">
+      {% trans "some stuff about the tag can show here" %}<br>
+      {% trans "simply, a definition!" %}
+    </div>
 
-		<div class="stream clearfix">
-			<h4>{% trans "Shout Stream" %}</h4>
-			{% include 'stream.html' %}
-		</div>
-	</div>
-{#	right column#}
-	<div class="span4">
-		<div class="clearfix">
-			<div id="control_btns"></div>
-			<div id="stats_summary">
-				<h5>{% trans "Tag Stats" %}</h5>
-				<a class="btn large disabled"><span class="count">{{ shouts_count }}</span> <small>{% trans "shouts" %}</small></a>
-				<a id="aFollowers" class="btn large " data-controls-modal="FollowersModal" data-backdrop="static"><span class="count">{{ followers_count }}</span> <small>{% trans "Followers" %}</small></a>
-				{% if children %}
-					<br>
-					<h4> {% trans "Child Tags" %} </h4>
-					{% for child in children %}
-	{#					{% if child.Parent != Null %}{{child.Parent.Name}}{% else %}{{child.Name}}{% endif %}#}
-						<a class="post_tag hovercard unselectable" href="/tag/{{ child.Name }}/" hovercard-name="{{ child.Name }}" hovercard-type="tag" hovercard-data="">{{ child.Name }}</a>
-					{% endfor %}
-				{% endif %}
-				{% if tagProfile.Parent %}
-					<br>
-					<h4> {% trans "Parent Tag" %} </h4>
-					<a class="post_tag hovercard unselectable" href="/tag/{{ tagProfile.Parent.Name }}/" hovercard-name="{{ tagProfile.Parent.Name }}" hovercard-type="tag" hovercard-data="">{{ tagProfile.Parent.Name }}</a>
-				{% endif %}
-			</div>
-		</div>
-	</div>
+    <div class="stream clearfix">
+      <h4>{% trans "Shout Stream" %}</h4>
+      {% include 'stream.html' %}
+    </div>
+  </div>
+  {#	right column#}
+  <div class="span4">
+    <div class="clearfix">
+      <div id="control_btns"></div>
+      <div id="stats_summary">
+        <h5>{% trans "Tag Stats" %}</h5>
+        <a class="btn large disabled"><span class="count">{{ shouts_count }}</span>
+          <small>{% trans "shouts" %}</small>
+        </a>
+        <a id="aFollowers" class="btn large " data-controls-modal="FollowersModal" data-backdrop="static"><span
+            class="count">{{ listeners_count }}</span>
+          <small>{% trans "Followers" %}</small>
+        </a>
+        {% if children %}
+          <br>
+          <h4> {% trans "Child Tags" %} </h4>
+          {% for child in children %}
+            {#					{% if child.Parent != Null %}{{child.Parent.Name}}{% else %}{{child.Name}}{% endif %}#}
+            <a class="post_tag hovercard unselectable" href="/tag/{{ child.Name }}/" hovercard-name="{{ child.Name }}" hovercard-type="tag"
+               hovercard-data="">{{ child.Name }}</a>
+          {% endfor %}
+        {% endif %}
+        {% if tagProfile.Parent %}
+          <br>
+          <h4> {% trans "Parent Tag" %} </h4>
+          <a class="post_tag hovercard unselectable" href="/tag/{{ tagProfile.Parent.Name }}/" hovercard-name="{{ tagProfile.Parent.Name }}"
+             hovercard-type="tag" hovercard-data="">{{ tagProfile.Parent.Name }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block scripts %}
-	<script type="text/javascript" language="JavaScript">
-		$(document).ready(function () {
-            $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tagProfile.Name }}/stream/', '.shouts .box-content', 0);
-			setup_colorbox();
+  <script type="text/javascript" language="JavaScript">
+    $(document).ready(function () {
+      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tagProfile.Name }}/stream/', '.shouts .box-content', 0);
+      setup_colorbox();
 //			setup_shouts_hover();
-			$('.follow-unfollow').click(follow_unfollow);
-			$('.follow-unfollow').hover(following_hover_on,following_hover_off);
-            $('#aFollowers').click(loadFollowers);
+      $('.follow-unfollow').click(follow_unfollow);
+      $('.follow-unfollow').hover(following_hover_on, following_hover_off);
+      $('#aFollowers').click(loadFollowers);
 
 //			$('body').bind('location_available', function () {
-				$('.browse_in').html(user_city);
+      $('.browse_in').html(user_city);
 //				startLiveShoutsPolling('/xhr/shouts/livetimeline/', '.public-shouts .box-content');
 //			});
 
@@ -127,67 +131,67 @@
 //                size: '5px',
 //                resumePageScroll: false
 //            });
-		});
-		
-		var FollowersLoaded = false;
-        function loadFollowers(){
-            if(FollowersLoaded)
-				return;
-			requestAjaxily({
-				url: '/xhr/tag/{{ tagProfile.Name }}/stats/followers/',
-                successCallback: function (data) {
-                    FollowersLoaded = true;
-					var followers =  data.data.followers;
-					var html = '';
-					html+= '<div class="clearfix">';
-                    for(var i = 0;i<followers.length; i++){
-						html += '<a class="btn large user_thumb" href="/user/'+followers[i].username+'/"><img src="'+followers[i].image+'"><span>' + followers[i].name + '</span></a>';
-					}
-					$('#FollowersModalContain').append(html);
-                }
-            });
+    });
+
+    var listenersLoaded = false;
+    function loadFollowers() {
+      if (listenersLoaded)
+        return;
+      requestAjaxily({
+        url: '/xhr/tag/{{ tagProfile.Name }}/listeners/',
+        successCallback: function (data) {
+          listenersLoaded = true;
+          var listeners = data.data.listeners;
+          var html = '';
+          html += '<div class="clearfix">';
+          for (var i = 0; i < listeners.length; i++) {
+            html += '<a class="btn large user_thumb" href="/user/' + listeners[i].username + '/"><img src="' + listeners[i].image + '"><span>' + listeners[i].name + '</span></a>';
+          }
+          $('#FollowersModalContain').append(html);
         }
-		function following_hover_on(){
-			if($('.follow-unfollow').attr('id')=='unfollow')
-				$('.follow-unfollow').html(' <span>{% trans "Unlisten" %}</span>');
-		}
-		function following_hover_off(){
-			if($('.follow-unfollow').attr('id')=='unfollow')
-				$('.follow-unfollow').html('<span>{% trans "Listening" %}</span>');
-		}
+      });
+    }
+    function following_hover_on() {
+      if ($('.follow-unfollow').attr('id') == 'unfollow')
+        $('.follow-unfollow').html(' <span>{% trans "Unlisten" %}</span>');
+    }
+    function following_hover_off() {
+      if ($('.follow-unfollow').attr('id') == 'unfollow')
+        $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>');
+    }
 
-		function follow_unfollow() {
-			if($('.follow-unfollow').attr('id')=='follow'){
-				follow();
-			}else if($('.follow-unfollow').attr('id')=='unfollow'){
-				unfollow();
-			}
-		}
+    function follow_unfollow() {
+      if ($('.follow-unfollow').attr('id') == 'follow') {
+        listen();
+      } else if ($('.follow-unfollow').attr('id') == 'unfollow') {
+        unfollow();
+      }
+    }
 
-		function follow() {
-			requestAjaxily({
-							   url: '/xhr/tag/{{ tagProfile.Name }}/interest/',
-							   successCallback: function (data) {
-								   $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id','unfollow');
-								   var counter = $('#aFollowers .count');
-								   counter.html(parseInt(counter.html())+1);
-								   FollowersLoaded = false;
-							   },
-							   tag: 'follow_user'
-						   });
-		}
+    function listen() {
+      requestAjaxily({
+        url: '/xhr/tag/{{ tagProfile.Name }}/start_listening/',
+        successCallback: function (data) {
+          $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id', 'unfollow');
+          var counter = $('#aFollowers .count');
+          counter.html(parseInt(counter.html()) + 1);
+          listenersLoaded = false;
+        },
+        tag: 'follow_user'
+      });
+    }
 
-		function unfollow() {
-			requestAjaxily({
-							   url: '/xhr/tag/{{ tagProfile.Name }}/uninterest/',
-							   successCallback: function (data) {
-								   $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id','follow');
-								   var counter = $('#aFollowers .count');
-								   counter.html(parseInt(counter.html())-1);
-								   FollowersLoaded = false;
-							   },
-							   tag: 'unfollow_user'
-						   });
-		}
-	</script>
+    function unfollow() {
+      requestAjaxily({
+        url: '/xhr/tag/{{ tagProfile.Name }}/stop_listening/',
+        successCallback: function (data) {
+          $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id', 'follow');
+          var counter = $('#aFollowers .count');
+          counter.html(parseInt(counter.html()) - 1);
+          listenersLoaded = false;
+        },
+        tag: 'unfollow_user'
+      });
+    }
+  </script>
 {% endblock %}

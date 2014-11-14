@@ -9,7 +9,7 @@ from apps.shoutit.constants import TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_AC
 from apps.shoutit.controllers import user_controller, business_controller, email_controller, payment_controller
 from apps.shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditProfileForm, CreateTinyBusinessForm, RecoverForm, \
     BusinessTempSignUpForm
-from apps.shoutit.models import ConfirmToken, BusinessProfile, BusinessCategory
+from apps.shoutit.models import ConfirmToken, Business, BusinessCategory
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, ANONYMOUS_USER_PERMISSIONS
 from apps.shoutit.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, edit_profile_renderer_json, \
     create_tiny_business_renderer_json, categories_api
@@ -204,10 +204,10 @@ def recover_activation(request):
     if not profile:
         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
         return result
-    if not isinstance(profile, BusinessProfile):
+    if not isinstance(profile, Business):
         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
         return result
-    user = profile.User
+    user = profile.user
     email = user.email
     token = user_controller.SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
     email_controller.SendEmail(email, {
@@ -256,7 +256,7 @@ def confirm_business(request):
         return result
 
     profile = user_controller.GetProfile(user)
-    if profile is None or not isinstance(profile, BusinessProfile):
+    if profile is None or not isinstance(profile, Business):
         result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
         result.data['next'] = '/'
         return result
@@ -305,25 +305,25 @@ def confirm_business(request):
 @non_cached_view(
     json_renderer=edit_profile_renderer_json,
     login_required=True,
-    validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.GetUser(username).User.email),
+    validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.get_profile(username).user.email),
     permissions_required=[PERMISSION_ACTIVATED])
 @refresh_cache(tags=[CACHE_TAG_USERS])
 def business_edit_profile(request, username):
-    profile = user_controller.GetUser(username)
+    profile = user_controller.get_profile(username)
     result = ResponseResult()
     result.data['profile'] = profile
     if request.method == 'POST':
         form = BusinessEditProfileForm(request.POST, request.FILES,
-                                       initial={'username': username, 'email': profile.User.email})
+                                       initial={'username': username, 'email': profile.user.email})
         form.is_valid()
 
         if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
-            profile.User.username = form.cleaned_data['username']
+            profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
         if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
-            profile.User.email = form.cleaned_data['email']
+            profile.user.email = form.cleaned_data['email']
         if form.cleaned_data.has_key('name') and form.cleaned_data['name']:
-            profile.User.first_name = form.cleaned_data['name']
+            profile.user.first_name = form.cleaned_data['name']
         if form.cleaned_data.has_key('mobile') and form.cleaned_data['mobile']:
             profile.Mobile = form.cleaned_data['mobile']
         if form.cleaned_data.has_key('website') and form.cleaned_data['website']:
@@ -349,9 +349,9 @@ def business_edit_profile(request, username):
 
         profile.Bio = form.cleaned_data['bio']
         if form.cleaned_data.has_key('password') and form.cleaned_data['password']:
-            profile.User.set_password(form.cleaned_data['password'])
+            profile.user.set_password(form.cleaned_data['password'])
 
-        profile.User.save()
+        profile.user.save()
         profile.save()
         result.messages.append(('success', _('Your profile was updated successfully.')))
     else:
@@ -379,7 +379,7 @@ def subscribe(request):
         else:
             user = user[0]
     elif request.user.is_authenticated():
-        if isinstance(user_controller.GetProfile(request.user), BusinessProfile) and request.user.BusinessCreateApplication.all():
+        if isinstance(user_controller.GetProfile(request.user), Business) and request.user.BusinessCreateApplication.all():
             user = request.user
         else:
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)

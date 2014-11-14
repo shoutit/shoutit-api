@@ -9,33 +9,34 @@ from apps.shoutit.controllers.user_controller import login_without_password, aut
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
-    long_lived_token = extend_token(auth_response['accessToken'])
-    if not long_lived_token:
-        return Exception("could not extend the facebook short lived access_token with long lived one"), None
-
-    auth_response['accessToken'] = long_lived_token['access_token']
-    auth_response['expiresIn'] = long_lived_token['expires']
 
     try:
-        linked_account = LinkedFacebookAccount.objects.get(AccessToken=auth_response['accessToken'])
-        user = linked_account.User
+        response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
+        fb_user = json.loads(response.read())
+        if not 'email' in fb_user:
+            return KeyError("couldn't access user email"), None
+    except urllib2.HTTPError, e:
+        return e, None
+
+    try:
+        linked_account = LinkedFacebookAccount.objects.get(Uid=fb_user['id'])
+        user = linked_account.user
     except ObjectDoesNotExist:
         user = None
 
     if not user:
-        try:
-            response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
-            fb_user = json.loads(response.read())
-            if not 'email' in fb_user:
-                return KeyError("couldn't access user email"), None
-        except urllib2.HTTPError, e:
-            return e, None
+        long_lived_token = extend_token(auth_response['accessToken'])
+        if not long_lived_token:
+            return Exception("could not extend the facebook short lived access_token with long lived one"), None
+
+        auth_response['accessToken'] = long_lived_token['access_token']
+        auth_response['expiresIn'] = long_lived_token['expires']
 
         user = auth_with_facebook(request, fb_user, auth_response)
 
     if user:
         if initial_user and initial_user['location']:
-            update_location(user.Profile, initial_user['location'])
+            update_location(user.profile, initial_user['location'])
 
         login_without_password(request, user)
         request.session['user_renew_location'] = True

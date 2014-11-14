@@ -3,153 +3,154 @@
 {% load template_filters %}
 {% load staticfiles %}
 {% block fb_og_meta %}
-	<meta property="og:type"        content="shoutitcom:user" />
-	<meta property="og:url"         content="{{ fb_og_url }}" />
-	<meta property="og:title"       content="{{ page_title }}" />
-	<meta property="og:description" content="{{ page_desc }}" />
-	<meta property="og:image"       content="{{ profile.Image|secure_url }}" />
+  <meta property="og:type" content="shoutitcom:user"/>
+  <meta property="og:url" content="{{ fb_og_url }}"/>
+  <meta property="og:title" content="{{ page_title }}"/>
+  <meta property="og:description" content="{{ page_desc }}"/>
+  <meta property="og:image" content="{{ profile.Image|secure_url }}"/>
 {% endblock %}
 
 {% block content %}
-{#	Modals#}
-	<div class="modal hide fade" id="FollowingModal">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
+  {#	Modals#}
+  <div class="modal hide fade" id="FollowingModal">
+    <div class="modal-header">
+      <a class="close" data-dismiss="modal">×</a>
+    </div>
+    <div class="modal-title">
+      <h4>{{ profile.name }} Listening's </h4>
+    </div>
+    <div id="FollowingModalContain" class="modal-body">
+      <ul class="nav nav-tabs">
+        <li id="recentFollowedTab" class="active">
+          <a data-toggle="tab" href="#recentFollowed">{% trans "Recent Listened" %}</a>
+        </li>
+        <li id="usersFollowedTab">
+          <a data-toggle="tab" href="#usersFollowed">{% trans "Users" %}</a>
+        </li>
+        <li id="tagsFollowedTab">
+          <a data-toggle="tab" href="#tagsFollowed">{% trans "Tags" %}</a>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane active" id="recentFollowed"></div>
+        <div class="tab-pane" id="usersFollowed"></div>
+        <div class="tab-pane" id="tagsFollowed"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+    </div>
+  </div>
+
+  <div class="modal hide fade" id="FollowersModal">
+    <div class="modal-header">
+      <a class="close" data-dismiss="modal">×</a>
+    </div>
+    <div class="modal-title">
+      <h4>{{ profile.name }} Listeners </h4>
+    </div>
+    <div id="FollowersModalContain" class="modal-body">
+    </div>
+    <div class="modal-footer">
+    </div>
+  </div>
+
+  {% if is_owner %}
+    <div class="modal" id="edit_profile_modal">
+      <div class="modal-header">
+        <a class="close" data-dismiss="modal">×</a>
+      </div>
+      <div class="modal-title">
+        {% trans "edit profile" %}
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center;"><img src="{% static "img/modal-loading.gif" %}" alt=""></div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="user-wrapper">
+    <div class="box-container white-container round shadow user-details">
+      <div class="user-image pull-left">
+        <img class="round" src="{{ profile.Image|secure_url }}" alt="{{ profile.name }}'s profile picture">
+      </div>
+      <div class="pull-left">
+        <div class="user-name">{{ profile.name }}
         </div>
-        <div class="modal-title">
-			<h4>{{ profile.name }} Listening's </h4>
-		</div>
-		<div id="FollowingModalContain" class="modal-body">
-			<ul class="nav nav-tabs">
-				<li id="recentFollowedTab" class="active">
-					<a data-toggle="tab" href="#recentFollowed">{% trans "Recent Listened" %}</a>
-				</li>
-				<li id="usersFollowedTab">
-					<a data-toggle="tab" href="#usersFollowed">{% trans "Users" %}</a>
-				</li>
-				<li id="tagsFollowedTab">
-					<a data-toggle="tab" href="#tagsFollowed">{% trans "Tags" %}</a>
-				</li>
-			</ul>
-
-			<div class="tab-content">
-				<div class="tab-pane active" id="recentFollowed"></div>
-				<div class="tab-pane" id="usersFollowed"></div>
-				<div class="tab-pane" id="tagsFollowed"></div>
-			</div>
-		</div>
-		<div class="modal-footer">
-		</div>
-	</div>
-
-	<div class="modal hide fade" id="FollowersModal">
-        <div class="modal-header">
-            <a class="close" data-dismiss="modal">×</a>
+        <div class="user-started">Started Shouting on {{ profile.user.date_joined.date }}</div>
+        {#				<div class="user-started">Started Shouting on 10.05.2012</div>#}
+        <div class="user-location"><i class="lang-icon dark-earth"></i>{{ profile.City }}, {{ profile.Country }}</div>
+        {#				<div class="user-location"><i class="lang-icon dark-earth"></i>DUBAI, United Arab Emirates</div>#}
+        {% if not is_owner %}
+          {% if is_following %}
+            <div id="unfollow" class="follow-unfollow shadow"><span>{% trans "Listening" %}</span></div>
+          {% else %}
+            <div id="follow" class="follow-unfollow shadow"><span>{% trans "Listen" %}</span></div>
+          {% endif %}
+        {% else %}
+          <div data-target="#edit_profile_modal" data-toggle="modal" id="my_profile" class="follow-unfollow shadow">
+            <span>{% trans "Edit profile" %}</span></div>
+        {% endif %}
+        {% if user_profile_fb %}
+          <div class="user-profile-social">
+            <span>connect with</span>
+            <a href="{{ user_profile_fb }}" target="_blank" class="user-fb"></a>
+            {#					<a href="#" class="user-twit"></a>#}
+            {#					<a href="#" class="user-linked"></a>#}
+          </div>
+        {% endif %}
+      </div>
+      <div class="seprator-border"></div>
+      <div class="user-buttons pull-right">
+        {% if not is_owner %}
+          <div style="text-align: right; height: 30px;">
+            {#					<span>report this user :</span>#}
+            <span onclick="report_profile('{{ profile.username }}')" class="icon-remove" title="{% trans "Report this user" %}"></span>
+          </div>
+        {% endif %}
+        <div class="user-info">{{ profile.Bio|linebreaksbr }}</div>
+        <div class="pull-right">
+          <div class="user-interactions offers">
+            {#					<a data-toggle="tab" href="#shouts"><span class="user-icon-offers"></span></a>#}
+            <span onclick="change_tap('shout')" class="user-icon-offers"></span>
+            <label>{% trans "Offers" %}</label>
+            <span class="counter">{{ offers_count }}</span>
+          </div>
+          <div class="user-interactions requests">
+            {#					<a data-toggle="tab" href="#shouts"><span class="user-icon-requests"></span></a>#}
+            <span onclick="change_tap('shout')" class="user-icon-requests"></span>
+            <label>{% trans "Requests" %}</label>
+            <span class="counter">{{ requests_count }}</span>
+          </div>
+          <div class="user-interactions experiences">
+            {#					<a data-toggle="tab" href="#experiences"><span class="user-icon-experiences"></span></a>#}
+            <span onclick="change_tap('experience')" class="user-icon-experiences"></span>
+            <label>{% trans "Experiences" %}</label>
+            <span class="counter">{{ experiences_count }}</span>
+          </div>
+          <div class="user-interactions listens">
+            <span id="aFollowers" class="user-icon-listens" data-toggle="modal" data-target="#FollowersModal"></span>
+            <label>{% trans "listeners" %}</label>
+            <span class="counter">{{ listeners_count }}</span>
+          </div>
+          {#				<div class="user-interactions buys">#}
+          {#					<span class="user-icon-buys"></span>#}
+          {#					<label>Buys</label>#}
+          {#					<span class="counter">0</span>#}
+          {#				</div>#}
+          <div class="user-interactions listenings">
+            <span id="aFollowing" class="user-icon-listenings" data-toggle="modal" data-target="#FollowingModal"></span>
+            <label>{% trans "Listening" %}</label>
+            <span class="counter">{{ listening_count }}</span>
+          </div>
         </div>
-        <div class="modal-title">
-			<h4>{{ profile.name }} Listeners </h4>
-		</div>
-		<div id="FollowersModalContain" class="modal-body">
-		</div>
-		<div class="modal-footer">
-		</div>
-	</div>
-
-    {% if owner %}
-        <div class="modal" id="edit_profile_modal">
-            <div class="modal-header">
-                <a class="close" data-dismiss="modal">×</a>
-            </div>
-            <div class="modal-title">
-                {% trans "edit profile" %}
-            </div>
-            <div class="modal-body">
-                <div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>
-            </div>
-            <div class="modal-footer">
-            </div>
-        </div>
-    {% endif %}
-
-	<div class="user-wrapper">
-		<div class="box-container white-container round shadow user-details">
-			<div class="user-image pull-left">
-				<img class="round" src="{{ profile.Image|secure_url }}" alt="{{ profile.name }}'s profile picture">
-			</div>
-            <div class="pull-left">
-                <div class="user-name">{{ profile.name }}
-				</div>
-                <div class="user-started">Started Shouting on {{ profile.User.date_joined.date }}</div>
-{#				<div class="user-started">Started Shouting on 10.05.2012</div>#}
-				<div class="user-location"><i class="lang-icon dark-earth"></i>{{ profile.City }}, {{ profile.Country }}</div>
-{#				<div class="user-location"><i class="lang-icon dark-earth"></i>DUBAI, United Arab Emirates</div>#}
-                {% if not owner %}
-                    {% if is_following %}
-                        <div id="unfollow" class="follow-unfollow shadow" ><span>{% trans "Listening" %}</span></div>
-                    {% else %}
-                        <div id="follow" class="follow-unfollow shadow" ><span>{% trans "Listen" %}</span></div>
-                    {% endif %}
-				{% else %}
-					<div data-target="#edit_profile_modal" data-toggle="modal" id="my_profile" class="follow-unfollow shadow" ><span>{% trans "Edit profile" %}</span></div>
-                {% endif %}
-				{% if user_profile_fb %}
-			<div class="user-profile-social">
-			<span>connect with</span>
-					<a href="{{ user_profile_fb }}" target="_blank" class="user-fb"></a>
-{#					<a href="#" class="user-twit"></a>#}
-{#					<a href="#" class="user-linked"></a>#}
-			</div>
-				{% endif %}
-            </div>
-			<div class="seprator-border"></div>
-            <div class="user-buttons pull-right">
-				{% if not owner  %}
-					<div style="text-align: right; height: 30px;">
-{#					<span>report this user :</span>#}
-					<span onclick="report_profile('{{ profile.username }}')" class="icon-remove" title="{% trans "Report this user"%}"></span>
-					</div>
-				{% endif %}
-				<div class="user-info">{{ profile.Bio|linebreaksbr }}</div>
-				<div class="pull-right">
-				<div class="user-interactions offers">
-{#					<a data-toggle="tab" href="#shouts"><span class="user-icon-offers"></span></a>#}
-					<span onclick="change_tap('shout')" class="user-icon-offers"></span>
-					<label>{% trans "Offers" %}</label>
-					<span class="counter">{{ offers_count }}</span>
-				</div>
-				<div class="user-interactions requests">
-{#					<a data-toggle="tab" href="#shouts"><span class="user-icon-requests"></span></a>#}
-					<span onclick="change_tap('shout')" class="user-icon-requests"></span>
-					<label>{% trans "Requests" %}</label>
-					<span class="counter">{{ requests_count }}</span>
-				</div>
-				<div class="user-interactions experiences">
-{#					<a data-toggle="tab" href="#experiences"><span class="user-icon-experiences"></span></a>#}
-					<span onclick="change_tap('experience')" class="user-icon-experiences"></span>
-					<label>{% trans "Experiences" %}</label>
-					<span class="counter">{{ experiences_count }}</span>
-				</div>
-				<div class="user-interactions listens">
-					<span id="aFollowers" class="user-icon-listens" data-toggle="modal" data-target="#FollowersModal"></span>
-					<label>{% trans "listeners" %}</label>
-					<span class="counter">{{ followers_count }}</span>
-				</div>
-{#				<div class="user-interactions buys">#}
-{#					<span class="user-icon-buys"></span>#}
-{#					<label>Buys</label>#}
-{#					<span class="counter">0</span>#}
-{#				</div>#}
-				<div class="user-interactions listenings">
-					<span id="aFollowing" class="user-icon-listenings" data-toggle="modal" data-target="#FollowingModal" ></span>
-					<label>{% trans "Listenings" %}</label>
-					<span class="counter">{{ interests_count }}</span>
-				</div>
-				</div>
-			</div>
-			<div style="clear: both;"></div>
-		</div>
-		<div class="page_content">
-{% comment %}			<div class="new-left-column">
+      </div>
+      <div style="clear: both;"></div>
+    </div>
+    <div class="page_content">
+      {% comment %}			<div class="new-left-column">
 				<div class="box-container white-container round shadow shouters_list">
 					<div class="box-header">
 						<div class="top_user_div">Listening to</div>
@@ -161,286 +162,287 @@
 					</div>
 				</div>
 			</div>{% endcomment %}
-            <div class="left-column">
-                <div class="tap-container">
-                    <ul class="nav" id="myTab">
-                      <li class="active"><a class="activitie_tap" href="#activities" data-toggle="tab">{% trans "Activities" %}</a></li>
-                      <li><a class="shout_tap" data-target="#shouts" href="#shouts" data-toggle="tab">{% trans "Shouts" %}</a></li>
-                      <li><a class="experience_tap"  data-target="#experiences" href="#experiences" data-toggle="tab">{% trans "Experiences" %}</a></li>
-{#                      <li><a href="#buys" data-toggle="tab">Buys</a></li>#}
-                    </ul>
-                </div>
-                <div id="myTabContent" class="tab-content">
+      <div class="left-column">
+        <div class="tap-container">
+          <ul class="nav" id="myTab">
+            <li class="active"><a class="activitie_tap" href="#activities" data-toggle="tab">{% trans "Activities" %}</a></li>
+            <li><a class="shout_tap" data-target="#shouts" href="#shouts" data-toggle="tab">{% trans "Shouts" %}</a></li>
+            <li><a class="experience_tap" data-target="#experiences" href="#experiences" data-toggle="tab">{% trans "Experiences" %}</a>
+            </li>
+            {#                      <li><a href="#buys" data-toggle="tab">Buys</a></li>#}
+          </ul>
+        </div>
+        <div id="myTabContent" class="tab-content">
 
-                    <div class="tab-pane fade in active" id="activities">
-                        <div class="box-container dark-container round shadow activities">
-                            <div class="box-content">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="shouts">
-                        <div class="box-container dark-container round shadow shouts">
-                            <div class="box-content">
-{#        						{% include 'stream.html' %}#}
-        					</div>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="experiences">
-                        {% include 'experiences.html' %}
-                    </div>
-{#                    <div class="tab-pane fade" id="buys">#}
-{#                        {% include 'deals.html' %}#}
-{#                    </div>#}
-                </div>
-			</div>
+          <div class="tab-pane fade in active" id="activities">
+            <div class="box-container dark-container round shadow activities">
+              <div class="box-content">
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="shouts">
+            <div class="box-container dark-container round shadow shouts">
+              <div class="box-content">
+                {#        						{% include 'stream.html' %}#}
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="experiences">
+            {% include 'experiences.html' %}
+          </div>
+          {#                    <div class="tab-pane fade" id="buys">#}
+          {#                        {% include 'deals.html' %}#}
+          {#                    </div>#}
+        </div>
+      </div>
 
-			<div class="right-column">
-{#				<div class="box-container white-container round shadow public-shouts">#}
-{#					<div class="box-header">#}
-{#						{% trans "public shouts" %}#}
-{#					</div>#}
-{#					<div class="box-content">#}
-{#					</div>#}
-{#				</div>#}
-				<div class="box-container white-container round shadow public-events">
-					<div class="box-header">
-						{% trans "Public Activities" %}
-					</div>
-					<div class="box-content">
-					</div>
-				</div>
-			</div>
-			<div style="clear: both;"></div>
-		</div>
-	</div>
+      <div class="right-column">
+        {#				<div class="box-container white-container round shadow public-shouts">#}
+        {#					<div class="box-header">#}
+        {#						{% trans "public shouts" %}#}
+        {#					</div>#}
+        {#					<div class="box-content">#}
+        {#					</div>#}
+        {#				</div>#}
+        <div class="box-container white-container round shadow public-events">
+          <div class="box-header">
+            {% trans "Public Activities" %}
+          </div>
+          <div class="box-content">
+          </div>
+        </div>
+      </div>
+      <div style="clear: both;"></div>
+    </div>
+  </div>
 {% endblock %}
 {#make them active#}
 {% block scripts %}
-	{#new scripts#}
-<script type="text/javascript" language="JavaScript">
+  {#new scripts#}
+  <script type="text/javascript" language="JavaScript">
 
-    function report_profile(id){
-        report(id,{{ report_constants|key:"User" }});
-    }
-	function change_tap(selected_tap){
-	$("."+selected_tap+"_tap").trigger("click");
-	}
-		$(document).ready(function () {
+  function report_profile(id) {
+    report(id, {{ report_constants|key:"User" }});
+  }
+  function change_tap(selected_tap) {
+    $("." + selected_tap + "_tap").trigger("click");
+  }
+  $(document).ready(function () {
 //			$('body').bind('location_available', function () {
-				startLiveEventsPolling('/xhr/live_events/', '.public-events .box-content');
+    startLiveEventsPolling('/xhr/live_events/', '.public-events .box-content');
 //			});
-			$('.public-events .box-content').slimScroll({
-															height: '630px',
-															size: '5px',
-															resumePageScroll: false
-														});
-{#            $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/stream/', '.shouts .box-content');#}
-            $('.activities .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/activities_stream/', '.activities .box-content', 0);
-            $('.activities .box-content').refreshScrollableStream();
+    $('.public-events .box-content').slimScroll({
+      height: '630px',
+      size: '5px',
+      resumePageScroll: false
+    });
+    {#            $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/stream/', '.shouts .box-content');#}
+    $('.activities .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/activities_stream/', '.activities .box-content', 0);
+    $('.activities .box-content').refreshScrollableStream();
 
-            $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/stream/', '.shouts .box-content', 0);
-            $('.shouts .box-content').refreshScrollableStream();
-			setup_colorbox();
+    $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/stream/', '.shouts .box-content', 0);
+    $('.shouts .box-content').refreshScrollableStream();
+    setup_colorbox();
 //			setup_shouts_hover();
 
-			$('.follow-unfollow').click(follow_unfollow);
-			$('.follow-unfollow').hover(following_hover_on,following_hover_off);
-            
-            $('#aFollowers').click(loadFollowers);
-            $('#aFollowing').click(function(){
-				$('#recentFollowedTab a').click();
-				loadFollowing('all','recent');
-			});
-			$('#usersFollowedTab a').click(function(){
-				loadFollowing('users','all');
-			});
-			$('#tagsFollowedTab a').click(function(){
-				loadFollowing('tags','all');
-			});
+    $('.follow-unfollow').click(follow_unfollow);
+    $('.follow-unfollow').hover(following_hover_on, following_hover_off);
+
+    $('#aFollowers').click(loadFollowers);
+    $('#aFollowing').click(function () {
+      $('#recentFollowedTab a').click();
+      loadFollowing('all', 'recent');
+    });
+    $('#usersFollowedTab a').click(function () {
+      loadFollowing('users', 'all');
+    });
+    $('#tagsFollowedTab a').click(function () {
+      loadFollowing('tags', 'all');
+    });
 //			$('#storesFollowedTab a').click(function(){
 //				loadFollowing('stores','all');
 //			});
 
-            {% if owner %}
-                $('#edit_profile_modal button.btn-primary').click(function () {
-                    //Submit ajaxily!
-                    $('#edit_profile_modal').modal('hide');
-                });
+    {% if is_owner %}
+      $('#edit_profile_modal button.btn-primary').click(function () {
+        //Submit ajaxily!
+        $('#edit_profile_modal').modal('hide');
+      });
 
-                setup_modal('#edit_profile_modal', 'editProfile/', '#edit');
-            {% endif %}
+      setup_modal('#edit_profile_modal', 'editProfile/', '#edit');
+    {% endif %}
 
 
-{#            {% if not request.user.is_authenticated and new_ip %}#}
-{#                $('body').bind('location_available', function () {#}
-{#                    startLiveShoutsPolling('/xhr/shouts/livetimeline/', '.public-shouts .box-content');#}
-{#                });#}
-{#            {% else %}#}
-{#                startLiveShoutsPolling('/xhr/shouts/livetimeline/', '.public-shouts .box-content');#}
-{#            {% endif %}#}
+    {#            {% if not request.user.is_authenticated and new_ip %}#}
+    {#                $('body').bind('location_available', function () {#}
+    {#                    startLiveShoutsPolling('/xhr/shouts/livetimeline/', '.public-shouts .box-content');#}
+    {#                });#}
+    {#            {% else %}#}
+    {#                startLiveShoutsPolling('/xhr/shouts/livetimeline/', '.public-shouts .box-content');#}
+    {#            {% endif %}#}
 //            startLiveShoutsPolling('/xhr/shouts/livetimeline/', '.public-shouts .box-content');
-{##}
+    {##}
 //			$('.public-shouts .box-content').slimScroll({
 //				height: '430px',
 //				size: '5px',
 //				resumePageScroll: false
 //			});
+  });
+
+  var listenersLoaded = false;
+  function loadFollowers() {
+    if (listenersLoaded)
+      return;
+    requestAjaxily({
+      url: '/xhr/user/{{ profile.username }}/listeners/',
+      successCallback: function (data) {
+        listenersLoaded = true;
+        var listeners = data.data.listeners;
+        var html = '';
+        html += '<div class="clearfix">';
+        for (var i = 0; i < listeners.length; i++) {
+          html += '<a class="btn large user_thumb" href="/user/' + listeners[i].username + '/"><img src="' + listeners[i].image + '"><span>' + listeners[i].name + '</span></a>';
+        }
+        $('#FollowersModalContain').append(html);
+      }
+    });
+  }
+
+  var RecentFollowingLoaded = false;
+  var UsersFollowingLoaded = false;
+  var TagsFollowingLoaded = false;
+  function loadFollowing(type, period) {
+    if (typeof type == 'undefined')
+      type = 'all';
+    if (typeof period == 'undefined')
+      period = 'recent';
+    switch (type) {
+      case 'all':
+        if (RecentFollowingLoaded)
+          return;
+        requestAjaxily({
+          url: '/xhr/user/{{ profile.username }}/listening/' + type + '/' + period + '/',
+          successCallback: function (data) {
+            RecentFollowingLoaded = true;
+            var listening_users = data.data.listening.users;
+            var listening_tags = data.data.listening.tags;
+
+            var elm = $('#recentFollowed');
+            var html = '';
+
+            html += '<div class="clearfix"><h6>{% trans "Users" %}</h6>';
+            for (var i = 0; i < listening_users.length; i++) {
+              html += '<a class="btn large user_thumb" href="/user/' + listening_users[i].username + '/"><img src="' + listening_users[i].image + '"><span>' + listening_users[i].name + '</span></a>';
+            }
+            html += '</div>';
+
+            html += '<div class="clearfix"><h6>{% trans "Tags" %}</h6>';
+            html += '<ul class="tags-listend">';
+            for (i = 0; i < listening_tags.length; i++) {
+              html += '<li><a class="post_tag unselectable" href="/tag/' + listening_tags[i] + '/">' + listening_tags[i] + '</a></li>';
+            }
+            html += '</ul></div>';
+
+            elm.append(html);
+          }
+        });
+        break;
+
+      case 'users':
+        if (UsersFollowingLoaded)
+          return;
+        requestAjaxily({
+          url: '/xhr/user/{{ profile.username }}/listening/' + type + '/' + period + '/',
+          successCallback: function (data) {
+            UsersFollowingLoaded = true;
+            var listening_users = data.data.listening.users;
+
+            var elm = $('#usersFollowed');
+            var html = '';
+
+            html += '<div class="clearfix">';
+            for (var i = 0; i < listening_users.length; i++) {
+              html += '<a class="btn large user_thumb" href="/user/' + listening_users[i].username + '/"><img src="' + listening_users[i].image + '"><span>' + listening_users[i].name + '</span></a>';
+            }
+            html += '</div>';
+
+            elm.append(html);
+          }
         });
 
-		var FollowersLoaded = false;
-        function loadFollowers(){
-            if(FollowersLoaded)
-				return;
-			requestAjaxily({
-                url: '/xhr/user/{{ profile.username }}/stats/followers/',
-                successCallback: function (data) {
-                    FollowersLoaded = true;
-					var followers =  data.data.followers;
-					var html = '';
-					html+= '<div class="clearfix">';
-                    for(var i = 0;i<followers.length; i++){
-                        html += '<a class="btn large user_thumb" href="/user/'+followers[i].username+'"><img src="'+followers[i].image+'"><span>' + followers[i].name + '</span></a>';
-                    }
-					$('#FollowersModalContain').append(html);
-                }
-            });
-        }
+        break;
+      case 'tags':
+        if (TagsFollowingLoaded)
+          return;
+        requestAjaxily({
+          url: '/xhr/user/{{ profile.username }}/listening/' + type + '/' + period + '/',
+          successCallback: function (data) {
+            TagsFollowingLoaded = true;
+            var listening_tags = data.data.listening.tags;
 
-		var RecentFollowingLoaded = false;
-		var UsersFollowingLoaded = false;
-		var TagsFollowingLoaded = false;
-        function loadFollowing(type, period){
-            if(typeof type == 'undefined')
-				type ='all';
-			if(typeof period == 'undefined')
-				period ='recent';
-			switch(type){
-				case 'all':
-					if(RecentFollowingLoaded)
-						return;
-					requestAjaxily({
-						url: '/xhr/user/{{ profile.username }}/stats/following/'+type+'/'+period+'/',
-						successCallback: function (data) {
-							RecentFollowingLoaded = true;
-							var followingUsers =  data.data.followingUsers;
-							var followingTags = data.data.followingTags;
+            var elm = $('#tagsFollowed');
+            var html = '';
 
-							var elm = $('#recentFollowed');
-							var html = '';
+            html += '<div class="clearfix">';
+            html += '<ul class="unstyled">';
+            for (var i = 0; i < listening_tags.length; i++) {
+              html += '<li><a class="post_tag unselectable" href="/tag/' + listening_tags[i] + '/">' + listening_tags[i] + '</a></li>';
+            }
+            html += '</ul></div>';
 
-							html+= '<div class="clearfix"><h6>{% trans "Users" %}</h6>';
-							for(var i = 0;i<followingUsers.length; i++){
-								html+= '<a class="btn large user_thumb" href="/user/'+followingUsers[i].username+'/"><img src="'+followingUsers[i].image+'"><span>' + followingUsers[i].name + '</span></a>';
-							}
-							html+= '</div>';
+            elm.append(html);
+          }
+        });
+        break;
+    }
 
-							html+= '<div class="clearfix"><h6>{% trans "Tags" %}</h6>';
-							html+= '<ul class="tags-listend">';
-							for(i = 0;i<followingTags.length; i++){
-								html+= '<li><a class="post_tag unselectable" href="/tag/'+followingTags[i]+'">' + followingTags[i] + '</a></li>';
-							}
-							html+= '</ul></div>';
+  }
 
-							elm.append(html);
-						}
-					});
-					break;
+  function following_hover_on() {
+    if ($('.follow-unfollow').attr('id') == 'unfollow')
+      $('.follow-unfollow').html(' <span>{% trans "Unlisten" %}</span>');
+  }
+  function following_hover_off() {
+    if ($('.follow-unfollow').attr('id') == 'unfollow')
+      $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>');
+  }
 
-				case 'users':
-					if(UsersFollowingLoaded)
-						return;
-					requestAjaxily({
-						url: '/xhr/user/{{ profile.username }}/stats/following/'+type+'/'+period+'/',
-						successCallback: function (data) {
-							UsersFollowingLoaded = true;
-							var followingUsers =  data.data.followingUsers;
-
-							var elm = $('#usersFollowed');
-							var html = '';
-
-							html+= '<div class="clearfix">';
-							for(var i = 0;i<followingUsers.length; i++){
-								html+= '<a class="btn large user_thumb" href="/user/'+followingUsers[i].username+'/"><img src="'+followingUsers[i].image+'"><span>' + followingUsers[i].name + '</span></a>';
-							}
-							html+= '</div>';
-
-							elm.append(html);
-						}
-					});
-
-					break;
-				case 'tags':
-					if(TagsFollowingLoaded)
-						return;
-					requestAjaxily({
-						url: '/xhr/user/{{ profile.username }}/stats/following/'+type+'/'+period+'/',
-						successCallback: function (data) {
-							TagsFollowingLoaded = true;
-							var followingTags = data.data.followingTags;
-
-							var elm = $('#tagsFollowed');
-							var html = '';
-
-							html+= '<div class="clearfix">';
-							html+= '<ul class="unstyled">';
-							for(var i = 0;i<followingTags.length; i++){
-								html+= '<li><a class="post_tag unselectable" href="/tag/'+followingTags[i]+'">' + followingTags[i] + '</a></li>';
-							}
-							html+= '</ul></div>';
-
-							elm.append(html);
-						}
-					});
-					break;
-			}
-
-        }
-
-		function following_hover_on(){
-			if($('.follow-unfollow').attr('id')=='unfollow')
-				$('.follow-unfollow').html(' <span>{% trans "Unlisten" %}</span>');
-		}
-		function following_hover_off(){
-			if($('.follow-unfollow').attr('id')=='unfollow')
-				$('.follow-unfollow').html('<span>{% trans "Listening" %}</span>');
-		}
-
-		function follow_unfollow() {
-			if($('.follow-unfollow').attr('id')=='follow'){
-				follow();
-			}else if($('.follow-unfollow').attr('id')=='unfollow'){
-				unfollow();
-			}
+  function follow_unfollow() {
+    if ($('.follow-unfollow').attr('id') == 'follow') {
+      follow();
+    } else if ($('.follow-unfollow').attr('id') == 'unfollow') {
+      unfollow();
+    }
 //			else if($('.follow-unfollow').attr('id')=='my_profile'){
 //
 //			}
-		}
-		
-		function follow() {
-            requestAjaxily({
-                url: '/xhr/user/{{ profile.username }}/follow/',
-                successCallback: function (data) {
-                    $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id','unfollow');
-					var counter = $('#aFollowers .count');
-					counter.html(parseInt(counter.html())+1);
-					FollowersLoaded = false;
-                },
-                tag: 'follow_user'
-            });
-		}
+  }
 
-		function unfollow() {
-            requestAjaxily({
-                url: '/xhr/user/{{ profile.username }}/unfollow/',
-                successCallback: function (data) {
-                    $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id','follow');
-					var counter = $('#aFollowers .count');
-					counter.html(parseInt(counter.html())-1);
-					FollowersLoaded = false;
-                },
-                tag: 'unfollow_user'
-            });
-		}
+  function follow() {
+    requestAjaxily({
+      url: '/xhr/user/{{ profile.username }}/start_listening/',
+      successCallback: function (data) {
+        $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id', 'unfollow');
+        var counter = $('#aFollowers .count');
+        counter.html(parseInt(counter.html()) + 1);
+        listenersLoaded = false;
+      },
+      tag: 'follow_user'
+    });
+  }
 
-	</script>
+  function unfollow() {
+    requestAjaxily({
+      url: '/xhr/user/{{ profile.username }}/stop_listening/',
+      successCallback: function (data) {
+        $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id', 'follow');
+        var counter = $('#aFollowers .count');
+        counter.html(parseInt(counter.html()) - 1);
+        listenersLoaded = false;
+      },
+      tag: 'unfollow_user'
+    });
+  }
+
+  </script>
 {% endblock %}

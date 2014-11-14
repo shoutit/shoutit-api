@@ -10,7 +10,7 @@ from apps.shoutit import constants
 
 from apps.shoutit.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_BUY, POST_TYPE_SELL, POST_TYPE_EXPERIENCE
 from apps.shoutit.controllers import user_controller
-from apps.shoutit.models import Shout, ConfirmToken, Post, UserProfile, BusinessProfile, Trade
+from apps.shoutit.models import Shout, ConfirmToken, Post, Profile, Business, Trade
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
 from apps.shoutit.templatetags import template_filters
 from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
@@ -172,7 +172,7 @@ def browse_html(request, result, browse_type, url_encoded_city, browse_category=
 
     if request.user.is_authenticated():
         profile = user_controller.GetProfile(request.user)
-    if profile and isinstance(profile, BusinessProfile):
+    if profile and isinstance(profile, Business):
         return page_html(request, result, 'business_browse.html', page_title, page_desc)
     return page_html(request, result, 'browse.html', page_title, page_desc)
 
@@ -448,8 +448,8 @@ def tag_api(request, result, *args, **kwargs):
         pre_json_result.update(render_tag(result.data['tagProfile']))
         if 'shouts_count' in result.data:
             pre_json_result['shouts_count'] = result.data['shouts_count']
-        if 'followers_count' in result.data:
-            pre_json_result['followers_count'] = result.data['followers_count']
+        if 'listeners_count' in result.data:
+            pre_json_result['listeners_count'] = result.data['listeners_count']
         if 'creator' in result.data:
             pre_json_result['creator'] = render_user(result.data['creator'])
         if 'shouts' in result.data:
@@ -466,10 +466,10 @@ def user_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        user = render_user(result.data['profile'].User, level=5, owner='owner' in result.data and result.data['owner'] or False)
+        is_owner = 'is_owner' in result.data and result.data['is_owner'] or False
+        user = render_user(result.data['profile'].user, level=5, owner=is_owner)
 
-        if 'owner' in result.data:
-            user['your_profile'] = result.data['owner']
+        user['is_owner'] = is_owner
 
         if 'shouts' in result.data:
             user['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
@@ -477,26 +477,15 @@ def user_api(request, result, *args, **kwargs):
         if 'shouts_count' in result.data:
             user['shouts_count'] = result.data['shouts_count']
 
-        if 'followers_count' in result.data:
-            user['followers_count'] = result.data['followers_count']
+        if 'listeners_count' in result.data:
+            user['listeners_count'] = result.data['listeners_count']
 
-        if 'following_count' in result.data:
-            user['following_count'] = result.data['following_count']
-
-        if 'interests' in result.data:
-            user['recent_interests'] = [render_tag(tag) for tag in result.data['interests']]
-
-        if 'tags_created' in result.data:
-            user['recent_tags_created'] = [render_tag(tag) for tag in result.data['tags_created']]
+        if 'listening_count' in result.data:
+            user['listening_count'] = result.data['listening_count']
 
         if 'is_following' in result.data:
             user['is_following'] = result.data['is_following']
 
-        if 'tags_created_count' in result.data:
-            user['tags_created_count'] = result.data['tags_created_count']
-
-        if 'interests_count' in result.data:
-            user['interests_count'] = result.data['interests_count']
     else:
         user = None
 
@@ -554,14 +543,15 @@ def stats_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        if 'followers' in result.data:
-            pre_json_result['followers'] = [render_user(follower.User) for follower in result.data['followers']]
+        if 'listeners' in result.data:
+            pre_json_result['listeners'] = [render_user(listener) for listener in result.data['listeners']]
 
-        if 'followingUsers' in result.data:
-            pre_json_result['following_users'] = [render_user(following.User) for following in result.data['followingUsers']]
-
-        if 'followingTags' in result.data:
-            pre_json_result['following_tags'] = [render_tag(tag) for tag in result.data['followingTags']]
+        if 'listening' in result.data:
+            pre_json_result['listening'] = {}
+            if 'users' in result.data['listening']:
+                pre_json_result['listening']['users'] = [render_user(following.user) for following in result.data['listening']['users']]
+            if 'tags' in result.data['listening']:
+                pre_json_result['listening']['tags'] = [render_tag(tag) for tag in result.data['listening']['tags']]
 
     return response, pre_json_result
 
@@ -642,10 +632,10 @@ def resend_activation_json(request, result):
 def activate_modal_html(request, result, token):
     if not result.errors:
         t = ConfirmToken.getToken(token, True, False)
-        user = t.User
+        user = t.user
         profile = user_controller.GetProfile(user)
 
-        if t and (isinstance(profile, UserProfile) and not request.user.Profile.isSSS) or (isinstance(profile, BusinessProfile)) or (user.BusinessCreateApplication.count()):
+        if t and (isinstance(profile, Profile) and not request.user.profile.isSSS) or (isinstance(profile, Business)) or (user.BusinessCreateApplication.count()):
             t.disable()
 
         link = 'http://' + settings.SHOUT_IT_DOMAIN
@@ -662,7 +652,7 @@ def activate_modal_html(request, result, token):
             response.set_cookie('bc_t_' + request.session.session_key, token)
             return response
 
-        shout = Trade.objects.GetValidTrades().filter(OwnerUser=t.User)
+        shout = Trade.objects.GetValidTrades().filter(OwnerUser=t.user)
         if len(shout):
             url = utils.ShoutLink(shout[0])
         else:
@@ -674,7 +664,7 @@ def activate_modal_html(request, result, token):
 
 
         response = HttpResponseRedirect(url + '#activate')
-        response.set_cookie('a_t_' + str(t.User.username), token)
+        response.set_cookie('a_t_' + str(t.user.username), token)
 
         return response
     return HttpResponseRedirect('/')
@@ -691,9 +681,9 @@ def edit_profile_renderer_json(request, result, username):
             return get_initial_json_response(request, result)
         variables = RequestContext(request, result.data)
         profile = request.user.is_authenticated() and user_controller.GetProfile(request.user) or None
-        if profile and isinstance(profile, BusinessProfile):
+        if profile and isinstance(profile, Business):
             return render_to_response('business_edit_profile.html', variables)
-        elif profile and isinstance(profile, UserProfile):
+        elif profile and isinstance(profile, Profile):
             return render_to_response('user_edit_profile.html', variables)
         return HttpResponseRedirect('/')
 
@@ -876,7 +866,7 @@ def profile_json_renderer(request, result):
                 {
                     'username': user.username,
                     'name': user.name(),
-                    'category_id': isinstance(user_controller.GetProfile(user), BusinessProfile) and user.Profile.Category.pk or None,
+                    'category_id': isinstance(user_controller.GetProfile(user), Business) and user.profile.Category.pk or None,
                     'about': user.Bio,
                     'lat': user.Latitude,
                     'lng': user.Longitude,

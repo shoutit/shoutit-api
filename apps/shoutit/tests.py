@@ -43,8 +43,8 @@ import datetime
 #         for i in range(3):
 #             user = UserController.GetUserByEmail('user_%d@hotmail.com' %i)
 #             token = UserController.GetUserToken(user)
-#             UserController.CompleteSignUp(None, user.User, token.Token, token.Type, user.username, user.email, user.Mobile , 1, datetime.date.today())
-#             self.assertEqual(user.User.is_active , True, "User User_%d couldn't be Activited." % i)
+#             UserController.CompleteSignUp(None, user.user, token.Token, token.Type, user.username, user.email, user.Mobile , 1, datetime.date.today())
+#             self.assertEqual(user.user.is_active , True, "User User_%d couldn't be Activited." % i)
 #
 #     def test_ValidateCredentials(self):
 #         for i in range(3):
@@ -72,8 +72,8 @@ import datetime
 #     def test_UserFollowing(self):
 #         for i in range(3):
 #             user = UserController.GetUserByEmail('user_%d@hotmail.com' % i)
-#             followers = UserController.UserFollowers(user.username)
-#             self.assertEqual(len(followers), 0, "incorrect number of followers")
+#             listeners = UserController.get_user_listeners(user.username)
+#             self.assertEqual(len(listeners), 0, "incorrect number of listeners")
 #
 #     def test_UserFollowers(self):
 #         for i in range(3):
@@ -93,11 +93,11 @@ import datetime
 #         for i in range(3):
 #             shout_buy = ShoutController.shout_buy(None, 'Shout_Buy_%d' % i, 'this is shout__buy_%d' % i,
 #                                                  23.4 * i, 20.34234 + i, 50.423463 + i, ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
-#                                                  self.user.User, 'AE', 'Dubai', '', 'aed')
+#                                                  self.user.user, 'AE', 'Dubai', '', 'aed')
 #             self.ids.append(shout_buy.id)
 #             shout_sell = ShoutController.shout_sell(None, 'Shout_sell_%d' % i, 'this is shout__sell_%d' % i,
 #                                                    19.8 * i, 20.2434 + i, 50.636 + i, ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
-#                                                    self.user.User, 'AE', 'Dubai', '', 'aed')
+#                                                    self.user.user, 'AE', 'Dubai', '', 'aed')
 #             self.ids.append(shout_sell.id)
 #             self.assertNotEqual(shout_buy, None, 'Could not create shout_buy_%d' % i)
 #             self.assertNotEqual(shout_sell, None, 'Could not create shout_sell_%d' % i)
@@ -128,39 +128,39 @@ import datetime
 #         create_users()
 #         self.user = UserController.GetUserByEmail('user_0@hotmail.com')
 #         for i in range(50):
-#             TagController.GetOrCreateTag(None, 'Tag_%d' % i, self.user.User, None)
-#             tag = TagController.GetTag('Tag_%d' % i)
+#             TagController.GetOrCreateTag(None, 'Tag_%d' % i, self.user.user, None)
+#             tag = TagController.get_tag('Tag_%d' % i)
 #             self.assertNotEqual(tag, None, "Tag_%d was not found, it may has been created and not fetched or it hasn't been created at all" % i )
 #
 #     def test_GetOrCreateTag(self):
-#         exist_tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.User, None)
+#         exist_tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.user, None)
 #         self.assertNotEqual(exist_tag, None, "Exist tag Tag_0 was not found")
 #
-#         nonexist_tag = TagController.GetTag('Tag_99')
+#         nonexist_tag = TagController.get_tag('Tag_99')
 #         self.assertEqual(nonexist_tag, None, "NonExist tag Tag_99 was found !!")
 #
-#         nonexist_tag = TagController.GetOrCreateTag(None, 'Tag_99', self.user.User, None)
+#         nonexist_tag = TagController.GetOrCreateTag(None, 'Tag_99', self.user.user, None)
 #         self.assertNotEqual(nonexist_tag, None, "Newly created tag Tag_99 was not found")
 #
 #         for i in range(100):
-#             tag = TagController.GetOrCreateTag(None, 'Tag_%d' % i, self.user.User, None)
+#             tag = TagController.GetOrCreateTag(None, 'Tag_%d' % i, self.user.user, None)
 #             self.assertNotEqual(tag, None, "tag Tag_%d was not found nor created!" % i)
 #
 #         tags = []
 #         for i in range(50,150):
 #             tags.append('Tag_%d' % i)
-#         created_tags = TagController.GetOrCreateTags(None, tags, self.user.User)
+#         created_tags = TagController.GetOrCreateTags(None, tags, self.user.user)
 #         self.assertEqual(len(tags), len(created_tags), "Not All tags created or found")
 #
 #     def test_AddToUserInterests(self):
 #         user = UserController.GetUserByEmail('user_1@hotmail.com')
-#         tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.User, None)
-#         TagController.AddToUserInterests(None, tag, user.User)
+#         tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.user, None)
+#         TagController.AddToUserInterests(None, tag, user.user)
 #         self.assertEqual(tag in list(user.Interests.all()), True, 'Tag_0 was not followed by User_1')
 #
 #     def test_RemoveFromUserInterests(self):
 #         user = UserController.GetUserByEmail('user_2@hotmail.com')
-#         tag = TagController.GetOrCreateTag(None, 'Tag_1', self.user.User, None)
+#         tag = TagController.GetOrCreateTag(None, 'Tag_1', self.user.user, None)
 #
 #         TagController.AddToUserInterests(None, tag, user)
 #         self.assertEqual(tag in list(user.Interests.all()), True, 'Tag_1 was not followed by User_2')
@@ -174,8 +174,8 @@ import datetime
 #
 #     def test_TagFollowers(self):
 #         user = UserController.GetUserByEmail('user_1@hotmail.com')
-#         tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.User, None)
-#         TagController.AddToUserInterests(None, tag, user.User)
+#         tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.user, None)
+#         TagController.AddToUserInterests(None, tag, user.user)
 #
 #         tags = TagController.TagFollowers("Tag_0")
 #         self.assertEqual(len(tags),1 ,'Not All Followers retrieve')
@@ -184,9 +184,9 @@ import datetime
 # class MessageTestCase(TestCase):
 #     def setUp(self):
 #         create_users()
-#         self.user1 = UserController.GetUserByEmail('user_0@hotmail.com').User
-#         self.user2 = UserController.GetUserByEmail('user_1@hotmail.com').User
-#         self.user3 = UserController.GetUserByEmail('user_2@hotmail.com').User
+#         self.user1 = UserController.GetUserByEmail('user_0@hotmail.com').user
+#         self.user2 = UserController.GetUserByEmail('user_1@hotmail.com').user
+#         self.user3 = UserController.GetUserByEmail('user_2@hotmail.com').user
 #         self.post  = ShoutController.shout_buy(None, 'Shout', 'test shout',
 #                                               23.4, 20.34234 , 50.423463 , ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
 #                                               self.user1, 'AE', 'Dubai', '')

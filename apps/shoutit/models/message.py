@@ -90,7 +90,7 @@ class Report(models.Model):
     def __unicode__(self):
         return 'From : ' + self.Type()
 
-    User = models.ForeignKey(User, related_name='Reports')
+    user =  models.ForeignKey(User, related_name='Reports')
     Text = models.TextField(default='', max_length=300)
     Type = models.IntegerField(default=0)
     IsSolved = models.BooleanField(default=False)

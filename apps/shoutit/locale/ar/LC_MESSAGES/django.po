@@ -238,7 +238,7 @@ msgid "Please, keep it clean."
 msgstr "يمنع استخدام الألفاظ البذيئة ضمن الموقع."
 
 #: ShoutWebsite/forms.py:416
-msgid "Birthdate is not valid."
+msgid "birthday is not valid."
 msgstr "تاريخ الميلاد خاطئ."
 
 #: ShoutWebsite/forms.py:448
@@ -458,7 +458,7 @@ msgid "email"
 msgstr "البريد الالكتروني"
 
 #: ShoutWebsite/templatetags/translating_variables.py:15
-msgid "Birthdate"
+msgid "birthday"
 msgstr "تاريخ الميلاد"
 
 #: ShoutWebsite/templatetags/translating_variables.py:18
@@ -1078,15 +1078,15 @@ msgid "Activate"
 msgstr "تفعيل"
 
 #: templates/activate_user.html:92 templates/user_edit_profile.html:117
-msgid "Birthdate [Day]"
+msgid "birthday [Day]"
 msgstr "تاريخ الميلاد [اليوم]"
 
 #: templates/activate_user.html:97 templates/user_edit_profile.html:118
-msgid "Birthdate [Month]"
+msgid "birthday [Month]"
 msgstr "تاريخ الميلاد [الشهر]"
 
 #: templates/activate_user.html:102 templates/user_edit_profile.html:119
-msgid "Birthdate [Year]"
+msgid "birthday [Year]"
 msgstr "تاريخ الميلاد [السنة]"
 
 #: templates/base.html:67

@@ -1,10 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-from apps.shoutit.models.stream import Stream
+from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin
 
 
-class Tag(models.Model):
+class Tag(models.Model, Stream2Mixin):
     class Meta:
         app_label = 'shoutit'
 
@@ -24,6 +26,16 @@ class Tag(models.Model):
     @property
     def IsCategory(self):
         return True if Category.objects.get(TopTag=self) else False
+
+
+@receiver(post_save, sender=Tag)
+def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs):
+
+    # on new profile create stream2 and attach it
+    if created:
+        # creating the stream2
+        stream2 = Stream2(owner=instance)
+        stream2.save()
 
 
 class Category(models.Model):

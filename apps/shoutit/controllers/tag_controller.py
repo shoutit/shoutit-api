@@ -1,19 +1,18 @@
 import difflib
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.aggregates import Count
+from apps.ActivityLogger.logger import Logger
+from apps.shoutit.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, \
+    ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG
+from apps.shoutit.models import Tag, Stream
+from apps.shoutit.controllers import user_controller, event_controller
 
-def GetTag(name):
-    tag = Tag.objects.filter(Name__iexact = name)
-    if tag:
-        return tag[0]
-    else:
+
+def get_tag(name):
+    try:
+        return Tag.objects.get(Name__iexact=name)
+    except Tag.DoesNotExist:
         return None
-
-def GetTagTrades(tag):
-    trades = Trade.objects.GetValidTrades().filter(Tags = tag).select_related('OwnerUser','OwnerUser__Profile','Item','Item__Currency')
-    trades = shout_controller.get_trade_images(trades)
-    return list(trades)
 
 
 def GetTags(type):
@@ -33,7 +32,6 @@ def GetTopTags(limit=10, country='', city=''):
     if not city:
         city = ''
 
-
     filters = {}
     if len(country.strip()):
         filters['Followers__Country'] = country
@@ -47,13 +45,12 @@ def GetTopTags(limit=10, country='', city=''):
 
 def setTagParent(child_id,parent_name):
     tag = Tag.objects.get(pk = child_id)
-    parent = GetTag(parent_name)
+    parent = get_tag(parent_name)
     if len(tag.ChildTags.all()):
         tag.Parent = None
     else:
         tag.Parent = parent
     tag.save()
-
 
 
 def GetSynonymParent(name):
@@ -98,35 +95,36 @@ def GetOrCreateTags(request, names, creator):
     return result
 
 
-# todo: [listen] remove
+# todo: remove
 def AddToUserInterests(request, tag, user):
     if isinstance(user, User):
-        user = user.Profile
+        user = user.profile
     if isinstance(tag, unicode):
         tag = Tag.objects.filter(Name__iexact = tag)
         if not tag:
-            raise ObjectDoesNotExist()
+            raise Tag.DoesNotExist()
         else:
             tag = tag[0]
     if tag not in user.Interests.all():
         user.Interests.add(tag)
-        apps.shoutit.controllers.user_controller.FollowStream(request, user,tag.Stream)
+        user_controller.FollowStream(request, user,tag.Stream)
         user.save()
-        event_controller.RegisterEvent(user.User, EVENT_TYPE_FOLLOW_TAG, tag)
+        event_controller.RegisterEvent(user.user, EVENT_TYPE_FOLLOW_TAG, tag)
         Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG : tag.id, ACTIVITY_DATA_USERNAME : user.username})
 
-# todo: [listen] remove
+
+# todo: remove
 def RemoveFromUserInterests(request, tag, user):
     if isinstance(user, User):
-        user = user.Profile
+        user = user.profile
     if isinstance(tag, unicode):
         tag = Tag.objects.filter(Name__iexact = tag)[:]
         if not tag:
-            raise ObjectDoesNotExist()
+            raise Tag.DoesNotExist()
         else:
             tag = tag[0]
     if tag in user.Interests.all():
-        apps.shoutit.controllers.user_controller.UnfollowStream(request, user, tag.Stream)
+        user_controller.UnfollowStream(request, user, tag.Stream)
         user.Interests.remove(tag)
         user.save()
 
@@ -136,14 +134,3 @@ def RemoveFromUserInterests(request, tag, user):
 def SearchTags(keyword, limit):
     tags = Tag.objects.filter(Name__icontains = keyword).values_list('Name', flat=True)[:limit]
     return tags
-
-
-def TagFollowers(tagName):
-    tag = GetTag(tagName)
-    followers = tag.Stream.userprofile_set.all()
-    return followers
-
-from apps.ActivityLogger.logger import Logger
-from apps.shoutit.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG, POST_TYPE_SELL, POST_TYPE_BUY
-import apps.shoutit.controllers.user_controller, event_controller, shout_controller
-from apps.shoutit.models import Tag, Stream, Trade, StoredImage

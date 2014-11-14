@@ -20,7 +20,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] ='Shout.settings'
 from django.core.management import setup_environ
 from apps.shoutit import settings
 setup_environ(settings)
-from apps.shoutit.models import UserProfile, Shout, Post, Trade
+from apps.shoutit.models import Profile, Shout, Post, Trade
 from apps.shoutit import utils
 
 def FormatList(list):
@@ -61,13 +61,13 @@ cur.execute("UPDATE ads SET fetched=4 WHERE fetched=3 and mobile IN(%s)" % str('
 print 'updating db done'
 
 print 'checking users'
-users = UserProfile.objects.filter(isSSS = True, Mobile__in=mobiles, User__is_active = False, isSMS = False)
+users = Profile.objects.filter(isSSS = True, Mobile__in=mobiles, user__is_active = False, isSMS = False)
 print 'Going to send %d SMS\'s' % (len(users))
 
 for user in users:
 	print str(list(users).index(user) + 1)+ ' : ',
 	try:
-		shout = Trade.objects.GetValidTrades().filter(OwnerUser = user.User).select_related('Item')
+		shout = Trade.objects.GetValidTrades().filter(OwnerUser = user.user).select_related('Item')
 		content = 'an advertisement'
 		if len(shout):
 			content = utils.remove_non_ascii(shout[0].Item.Name)
@@ -82,19 +82,19 @@ for user in users:
 
 		if user.Country == 'US':
 			message = client.sms.messages.create(to="+"+mobile, from_="+16464309339",body=text)
-			print 'sms via Twilio US to: %s mobile: %s sent' % (user.User.pk, mobile)
+			print 'sms via Twilio US to: %s mobile: %s sent' % (user.user.pk, mobile)
 			user.isSMS = True
 			user.save()
 
 		elif user.Country == 'GB':
 			message = client.sms.messages.create(to="+"+mobile, from_="+442033224455",body=text)
-			print 'sms via Twilio UK to: %s mobile: %s sent' % (user.User.pk, mobile)
+			print 'sms via Twilio UK to: %s mobile: %s sent' % (user.user.pk, mobile)
 			user.isSMS = True
 			user.save()
 
 		elif user.Country == 'CA':
 			message = client.sms.messages.create(to="+"+mobile, from_="+16479315866",body=text)
-			print 'sms via Twilio CA to: %s mobile: %s sent' % (user.User.pk, mobile)
+			print 'sms via Twilio CA to: %s mobile: %s sent' % (user.user.pk, mobile)
 			user.isSMS = True
 			user.save()
 
@@ -103,11 +103,11 @@ for user in users:
 
 			sms_res = urllib2.urlopen(sms_url,timeout=10).read()
 			if sms_res.find('OK: 0') != -1:
-				print 'sms to: %s mobile: %s sent' % (user.User.pk, mobile)
+				print 'sms to: %s mobile: %s sent' % (user.user.pk, mobile)
 				user.isSMS = True
 				user.save()
 			else:
-				print 'sms via Smsglobal to: %s mobile: %s error: %s' % (user.User.pk,  mobile, sms_res)
+				print 'sms via Smsglobal to: %s mobile: %s error: %s' % (user.user.pk,  mobile, sms_res)
 				cur.execute("UPDATE ads SET fetched=3 WHERE fetched=4 and mobile ='%s'" % mobile)
 				errors += 1
 
@@ -115,7 +115,7 @@ for user in users:
 	except BaseException, e:
 		errors += 1
 		cur.execute("UPDATE ads SET fetched=3 WHERE fetched=4 and mobile ='%s'" % user.Mobile)
-		print 'sms to: %s mobile: %s error: %s' % (user.User.pk,  user.Mobile, e.message)
+		print 'sms to: %s mobile: %s error: %s' % (user.user.pk,  user.Mobile, e.message)
 
 #	time.sleep(1)
 

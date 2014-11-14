@@ -10,7 +10,7 @@ from apps.shoutit.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.tag import Tag
-from apps.shoutit.models.business import BusinessProfile
+from apps.shoutit.models.business import Business
 
 
 class PostManager(models.Manager):
@@ -110,7 +110,7 @@ class Post(models.Model):
     objects = PostManager()
 
     OwnerUser = models.ForeignKey(User, related_name='Posts')
-    Streams = models.ManyToManyField(Stream, related_name='Posts')
+    Streams = models.ManyToManyField(Stream, related_name='Posts')  # todo: move to stream as posts
 
     Text = models.TextField(max_length=2000, default='', db_index=True)
     Type = models.IntegerField(default=0, db_index=True)
@@ -275,7 +275,7 @@ class Experience(Post):
     def __unicode__(self):
         return unicode(self.id)
 
-    AboutBusiness = models.ForeignKey(BusinessProfile, related_name='Experiences')
+    AboutBusiness = models.ForeignKey(Business, related_name='Experiences')
     State = models.IntegerField(null=False)
     objects = ExperienceManager()
 

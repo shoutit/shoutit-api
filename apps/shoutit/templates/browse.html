@@ -201,7 +201,7 @@
 
             landing_map = new GoogleMap("#Map");
             {% if user.is_authenticated %}
-                landing_map.CreateLandingMap({{ user.Profile.Latitude }},{{ user.Profile.Longitude }});
+                landing_map.CreateLandingMap({{ user.profile.Latitude }},{{ user.profile.Longitude }});
             {% else %}
                 landing_map.CreateLandingMap(0,0);
             {% endif %}

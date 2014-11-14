@@ -164,7 +164,7 @@ def unread_notifications_count(request):
              login_required=True)
 def notifications_all(request):
     result = ResponseResult()
-    result.data['notifications'] = user_controller.GetAllNotifications(request.user.Profile)
+    result.data['notifications'] = user_controller.GetAllNotifications(request.user.profile)
     notifications_controller.MarkAllAsRead(request.user)
     return result
 

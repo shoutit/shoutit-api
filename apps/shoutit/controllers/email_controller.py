@@ -320,7 +320,7 @@ def SendUserDealCancel(user, deal):
 @asynchronous_task()
 def SendBusinessDealCancel(deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
-    to_name = deal.BusinessProfile.name()
+    to_name = deal.Business.name()
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
     deal_name = deal.Item.Name
@@ -341,7 +341,7 @@ def SendBusinessDealCancel(deal):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [deal.BusinessProfile.email])
+    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [deal.Business.email])
     msg.attach_alternative(html_message, "text/html")
     msg.send()
 
@@ -433,7 +433,7 @@ def SendBusinessAcceptanceEmail(user, email, link):
 @asynchronous_task()
 def SendBusinessBuyersDocument(deal, document):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': deal.Item.Name}
-    to_name = deal.BusinessProfile.User.get_full_name()
+    to_name = deal.Business.user.get_full_name()
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
     deal_name = deal.Item.Name
@@ -456,7 +456,7 @@ def SendBusinessBuyersDocument(deal, document):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [deal.BusinessProfile.User.email])
+    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [deal.Business.user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.attach('%s_vouchers.pdf' % deal_name.replace(' ', '_'), document, 'application/pdf')
     msg.send()
@@ -465,7 +465,7 @@ def SendBusinessBuyersDocument(deal, document):
 @asynchronous_task()
 def SendUserDealVoucher(buy, voucher):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': buy.Deal.Item.Name}
-    to_name = buy.User.get_full_name()
+    to_name = buy.user.get_full_name()
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(buy.Deal)))
     deal_name = buy.Deal.Item.Name
@@ -488,7 +488,7 @@ def SendUserDealVoucher(buy, voucher):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [buy.User.email])
+    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [buy.user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.attach('%s_vouchers.pdf' % deal_name.replace(' ', '_'), voucher, 'application/pdf')
     msg.send()

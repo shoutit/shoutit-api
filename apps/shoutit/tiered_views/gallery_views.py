@@ -21,7 +21,7 @@ def galleryItems_stream(request,business_name,page_num=None):
 	result = ResponseResult()
 	business = business_controller.GetBusiness(business_name)
 	result.data['items'] = gallery_controller.GetBusinessGalleryItems(business, start_index = DEFAULT_PAGE_SIZE * (page_num - 1), end_index = DEFAULT_PAGE_SIZE * page_num)
-	result.data['IsOwner'] = 1 if business.User == request.user else 0
+	result.data['IsOwner'] = 1 if business.user == request.user else 0
 	items_count = len(result.data['items'])
 	result.data['pages_count'] = int(math.ceil(items_count / float(DEFAULT_PAGE_SIZE)))
 	result.data['is_last_page'] = page_num >= result.data['pages_count']

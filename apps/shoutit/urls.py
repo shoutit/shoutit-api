@@ -8,6 +8,7 @@ admin.autodiscover()
 #import apps.shoutit.controllers.payment_controller
 #handler500 = 'apps.shoutit.tiered_views.general_views.handler500'
 
+# TODO: general reg ex for all user names, tag names, etc
 urlpatterns = patterns('',
                        ### Admin ###
                        (r'^grappelli/', include('grappelli.urls')),# grappelli URLS
@@ -25,7 +26,7 @@ urlpatterns = patterns('',
                        url(r'^privacy/$', 'apps.shoutit.tiered_views.general_views.privacy'),
                        url(r'^rules/$', 'apps.shoutit.tiered_views.general_views.rules'),
                        url(r'^learnmore/$', 'apps.shoutit.tiered_views.general_views.learnmore'),
-                       url(r'^xhr/shouts/stream/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.stream_views.index_stream'),
+                       url(r'^xhr/shouts/stream/$', 'apps.shoutit.tiered_views.stream_views.index_stream'),
                        url(r'^xhr/shouts/livetimeline/(?:([a-zA-z0-9]+)/)?$', 'apps.shoutit.tiered_views.stream_views.livetimeline'),
                        url(r'^xhr/live_events/$', 'apps.shoutit.tiered_views.general_views.live_events'),
                        url(r'^xhr/delete_event/([a-zA-z0-9]+)/$','apps.shoutit.tiered_views.general_views.delete_event'),
@@ -90,15 +91,15 @@ urlpatterns = patterns('',
 
                        ### XHR ###
 
-                       url(r'^xhr/user/(\w+)/follow/$', 'apps.shoutit.tiered_views.user_views.follow_user'),
-                       url(r'^xhr/user/(\w+)/stats/(\w+)(?:/(\w+))?(?:/(\w+))?/$', 'apps.shoutit.tiered_views.user_views.user_stats'),
-                       url(r'^xhr/user/(\w+)/unfollow/$', 'apps.shoutit.tiered_views.user_views.unfollow_user'),
+                       url(r'^xhr/user/(\w+)/start_listening/$', 'apps.shoutit.tiered_views.user_views.start_listening_to_user'),
+                       url(r'^xhr/user/(\w+)/stop_listening/$', 'apps.shoutit.tiered_views.user_views.stop_listening_to_user'),
+                       url(r'^xhr/user/(\w+)/(\w+)/(?:(\w+)/)?(?:(\w+)/)?$', 'apps.shoutit.tiered_views.user_views.user_stats'),
+
+                       url(r'^xhr/tag/([^/]+)/start_listening/$', 'apps.shoutit.tiered_views.tag_views.start_listening_to_tag'),
+                       url(r'^xhr/tag/([^/]+)/stop_listening/$', 'apps.shoutit.tiered_views.tag_views.stop_listening_to_tag'),
+                       url(r'^xhr/tag/([^/]+)/listeners/$', 'apps.shoutit.tiered_views.tag_views.tag_stats'),
 
                        url(r'^xhr/(user|tag)/([\.\w-]+)/picture(?:/(\d+))?/$', 'apps.shoutit.tiered_views.general_views.profile_picture'),
-
-                       url(r'^(?:xhr/)?tag/([^/]+)/interest/$', 'apps.shoutit.tiered_views.tag_views.add_tag_to_interests'),
-                       url(r'^(?:xhr/)?tag/([^/]+)/uninterest/$', 'apps.shoutit.tiered_views.tag_views.remove_tag_from_interests'),
-                       url(r'^(?:xhr/)?tag/([^/]+)/stats/(\w+)/$', 'apps.shoutit.tiered_views.tag_views.tag_stats'),
 
                        url(r'^(?:xhr/)?image/([a-zA-z0-9]+)(?:/(\d+))?/(?:i\.png)?$', 'apps.shoutit.tiered_views.general_views.stored_image'),
 

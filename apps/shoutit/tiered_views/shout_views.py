@@ -40,7 +40,7 @@ def upload_image(request, method=None):
         filename = generate_password() + os.path.splitext(filename)[1]
         cloud_image = cloud_upload_image(upload, 'shout_image', filename, is_raw)
     else:
-        # TODO: DELETE request.user.Profile.Image
+        # TODO: DELETE request.user.profile.Image
         filename = generate_password() + os.path.splitext(filename)[1]
         cloud_image = cloud_upload_image(upload, method, filename, is_raw)
 
@@ -247,7 +247,7 @@ def shout_sell(request):
                                                            latitude=longitude,
                                                            longitude=latitude,
                                                            tags=form.cleaned_data['tags'].split(' '),
-                                                           shouter=user_controller.GetUser(request.user.username),
+                                                           shouter=user_controller.get_profile(request.user.username),
                                                            country_code=country,
                                                            province_code=city,
                                                            address=address,

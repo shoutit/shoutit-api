@@ -26,7 +26,7 @@ def report(request,type,object_id):
 	
 	attached_object = None
 	if type == REPORT_TYPE_USER or type == REPORT_TYPE_BUSINESS:
-		attached_object = user_controller.GetUser(object_id)
+		attached_object = user_controller.get_profile(object_id)
 	else:
 		object_id = base62_to_int(object_id)
 		if type == REPORT_TYPE_TRADE  or type == REPORT_TYPE_EXPERIENCE:

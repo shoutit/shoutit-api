@@ -1,7 +1,7 @@
 from apps.shoutit.utils import int_to_base62
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 from apps.shoutit.constants import *
-from apps.shoutit.models import User, UserProfile, BusinessProfile, Tag
+from apps.shoutit.models import User, Profile, Business, Tag
 
 
 # todo: better levels
@@ -44,7 +44,7 @@ def render_shout(shout, level=5):
 def render_tag(tag):
     if tag is None:
         return {}
-    if isinstance(tag, unicode):
+    if isinstance(tag, basestring):
         tag = Tag(Name=tag)
     #TODO: find what is the case when tag is a dict not instance of Tag class
     elif isinstance(tag, dict):
@@ -62,23 +62,28 @@ def render_tag(tag):
 # 3: date_joined, bio, location
 # 4: email, social_channels
 # 5: ?
+# todo: enhanced function for rendering array of users/profiles/businesses
 def render_user(user, level=1, owner=False):
     if user is None:
         return {}
 
     profile = None
     result = {}
-    if isinstance(user, unicode):
-        from apps.shoutit.controllers.user_controller import GetUser
-        profile = GetUser(user)
+    if isinstance(user, basestring):
+        # todo: fix import
+        from apps.shoutit.controllers.user_controller import get_profile
+        profile = get_profile(user)
 
     elif isinstance(user, User):
         try:
-            profile = user.Profile
+            profile = user.profile
         except AttributeError:
-            profile = user.Business
+            profile = user.business
 
-    if isinstance(profile, UserProfile):
+    elif isinstance(user, (Profile, Business)):
+        profile = user
+
+    if isinstance(profile, Profile):
 
         result = {
             'name': user.name(),
@@ -117,9 +122,9 @@ def render_user(user, level=1, owner=False):
                 }
             })
 
-    elif isinstance(profile, BusinessProfile):
+    elif isinstance(profile, Business):
         result = {
-            'url': get_object_url(user.User),
+            'url': get_object_url(user.user),
             'username': user.username,
             'image': profile.Image,
             'name': user.name(),
@@ -283,7 +288,7 @@ def render_gallery_item(gallery_item):
     if gallery_item is None:
         return {}
     return {
-        'url': '/gallery_items/%s/' % gallery_item.Gallery.OwnerBusiness.User.username,
+        'url': '/gallery_items/%s/' % gallery_item.Gallery.OwnerBusiness.user.username,
         'item': render_item(gallery_item.Item),
         'gallery': render_gallery(gallery_item.Gallery),
         'date_created': gallery_item.DateCreated.strftime('%s')
