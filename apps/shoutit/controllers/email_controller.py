@@ -7,6 +7,7 @@ from django.conf import settings
 
 from apps.shoutit.utils import asynchronous_task, entity_id, get_shout_name_preview, remove_non_ascii, int_to_base62
 from apps.shoutit import constants
+from apps.shoutit.controllers import sms_controller
 
 
 @asynchronous_task()
@@ -38,7 +39,7 @@ def SendPasswordRecoveryEmail(user, email, link):
     html_template = get_template('password_recovery_email.html')
     html_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'link': link
     })
     html_message = html_template.render(html_context)
@@ -46,7 +47,7 @@ def SendPasswordRecoveryEmail(user, email, link):
     text_template = get_template('password_recovery_email.txt')
     text_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'link': link
     })
     text_message = text_template.render(text_context)
@@ -66,7 +67,7 @@ def SendRegistrationActivationEmail(user, email, link, token):
     html_template = get_template('registration_email.html')
     html_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'link': link,
         'token': token
     })
@@ -75,7 +76,7 @@ def SendRegistrationActivationEmail(user, email, link, token):
     text_template = get_template('registration_email.txt')
     text_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'link': link,
         'token': token
     })
@@ -89,23 +90,23 @@ def SendRegistrationActivationEmail(user, email, link, token):
 
 @asynchronous_task()
 def SendFollowshipEmail(follower, followed):
-    subject = _('[ShoutIt] %(name)s has started listening to your shouts') % {'name': follower.name()}
+    subject = _('[ShoutIt] %(name)s has started listening to your shouts') % {'name': follower.name}
     link = 'http%s://%s%s' % (settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % follower.username)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = followed.email
 
     html_template = get_template('followship_email.html')
     html_context = Context({
-        'followed': followed.name(),
-        'follower': follower.name(),
+        'followed': followed.name,
+        'follower': follower.name,
         'link': link
     })
     html_message = html_template.render(html_context)
 
     text_template = get_template('followship_email.txt')
     text_context = Context({
-        'followed': followed.name(),
-        'follower': follower.name(),
+        'followed': followed.name,
+        'follower': follower.name,
         'link': link
     })
     text_message = text_template.render(text_context)
@@ -227,27 +228,27 @@ def SendSellOfferEmail(shout, seller):
 
 @asynchronous_task()
 def SendMessageEmail(message):
-    from apps.shoutit.controllers import user_controller, sms_controller
 
     user = message.ToUser
+    profile = user.profile
 
-    if not user.is_active and user_controller.GetProfile(user).Mobile:
+    if not user.is_active and profile.Mobile:
         shout = message.Conversation.AboutPost
         content = remove_non_ascii(shout.Item.Name)
         title = get_shout_name_preview(content, 25)
-        link = 'shoutit.com/' + user_controller.GetProfile(user).LastToken.Token
+        link = 'shoutit.com/' + profile.LastToken.Token
         msg = get_shout_name_preview(remove_non_ascii(message.Text), 30)
 
         text = _(
             'A Shouter has replied to your ad \'%(shout_title)s\' on Shoutit, visit %(link)s to make your deal happen.\n-\n"%(message)s"') % {
                    'shout_title': title, 'link': link, 'message': msg}
-        mobile = user_controller.GetProfile(user).Mobile
+        mobile = profile.Mobile
         sms_controller.SendSMS2('ShoutIt.com', mobile, text)
         return
 
     subject = _('[ShoutIt] %(name)s has sent you a message') % {'name': message.FromUser.get_full_name()}
-    to_name = message.ToUser.name()
-    from_name = message.FromUser.name()
+    to_name = message.ToUser.name
+    from_name = message.FromUser.name
     from_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % message.FromUser.username)
     shout_link = 'http%s://%s%s' % (
@@ -287,7 +288,7 @@ def SendMessageEmail(message):
 @asynchronous_task()
 def SendUserDealCancel(user, deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
-    to_name = user.name()
+    to_name = user.name
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
     deal_name = deal.Item.Name
@@ -320,7 +321,7 @@ def SendUserDealCancel(user, deal):
 @asynchronous_task()
 def SendBusinessDealCancel(deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
-    to_name = deal.Business.name()
+    to_name = deal.Business.name
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
     deal_name = deal.Item.Name
@@ -381,7 +382,7 @@ def SendBusinessRejectionEmail(user, email, link):
     html_template = get_template('business_rejection_email.html')
     html_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'link': link,
     })
     html_message = html_template.render(html_context)
@@ -389,7 +390,7 @@ def SendBusinessRejectionEmail(user, email, link):
     text_template = get_template('business_rejection_email.txt')
     text_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'link': link,
     })
     text_message = text_template.render(text_context)
@@ -409,7 +410,7 @@ def SendBusinessAcceptanceEmail(user, email, link):
     html_template = get_template('business_acceptance_email.html')
     html_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'email': email,
         'link': link,
     })
@@ -418,7 +419,7 @@ def SendBusinessAcceptanceEmail(user, email, link):
     text_template = get_template('business_acceptance_email.txt')
     text_context = Context({
         'username': user.username,
-        'name': user.name(),
+        'name': user.name,
         'email': email,
         'link': link,
     })

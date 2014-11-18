@@ -25,7 +25,7 @@ class BusinessCategory(models.Model):
         return self.PrintHierarchy()
 
     Name = models.CharField(max_length=1024, db_index=True, null=False)
-    Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE)
+    Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE.value)
     SourceID = models.CharField(max_length=128, blank=True)
     Parent = models.ForeignKey('self', null=True, default=None, related_name='children')
 
@@ -92,6 +92,7 @@ class Business(models.Model):
     def Mobile(self, value):
         self.Phone = value
 
+    @property
     def name(self):
         return self.Name
 
@@ -137,7 +138,7 @@ class BusinessSource(models.Model):
         app_label = 'shoutit'
 
     business = models.OneToOneField('Business', related_name="Source")
-    Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE)
+    Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE.value)
     SourceID = models.CharField(max_length=128, blank=True)
 
 

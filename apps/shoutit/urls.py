@@ -9,6 +9,7 @@ admin.autodiscover()
 #handler500 = 'apps.shoutit.tiered_views.general_views.handler500'
 
 # TODO: general reg ex for all user names, tag names, etc
+# todo: change the id system!
 urlpatterns = patterns('',
                        ### Admin ###
                        (r'^grappelli/', include('grappelli.urls')),# grappelli URLS
@@ -50,14 +51,14 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?shout/([a-zA-z0-9]+)/renew/$', 'apps.shoutit.tiered_views.shout_views.renew_shout'),
 
                        url(r'^user/(\w+)/$', 'apps.shoutit.tiered_views.user_views.user_profile'),
-                       url(r'^(?:xhr/)?user/(\w+)/stream/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.user_views.user_stream'),
-                       url(r'^(?:xhr/)?user/(\w+)/activities_stream/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.user_views.activities_stream'),
-                       url(r'^(?:xhr/)?user/(\w+)/editProfile/$', 'apps.shoutit.tiered_views.user_views.user_edit_profile'),
+                       url(r'^xhr/user/(\w+)/stream/?$', 'apps.shoutit.tiered_views.user_views.user_stream'),
+                       url(r'^xhr/user/(\w+)/activities_stream/?$', 'apps.shoutit.tiered_views.user_views.activities_stream'),
+                       url(r'^xhr/user/(\w+)/editProfile/$', 'apps.shoutit.tiered_views.user_views.user_edit_profile'),
 
                        url(r'^(?:xhr/)?user/(\w+)/editBusinessProfile/$', 'apps.shoutit.tiered_views.business_views.business_edit_profile'),
 
                        url(r'^tag/([^/]+)/$', 'apps.shoutit.tiered_views.tag_views.tag_profile'),
-                       url(r'^(?:xhr/)?tag/([^/]+)/stream/(?:(\d+)/)?$', 'apps.shoutit.tiered_views.tag_views.tag_stream'),
+                       url(r'^xhr/tag/([^/]+)/stream/?$', 'apps.shoutit.tiered_views.tag_views.tag_stream'),
 
                        url(r'^(?:xhr/)?reply/([a-zA-z0-9]+)/(?:([a-zA-z0-9]+)/)?$', 'apps.shoutit.tiered_views.message_views.send_message'),
 
@@ -67,7 +68,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/getHtmlMessage/$', 'apps.shoutit.tiered_views.message_views.get_html_message'),
 
                        url(r'^messages/$', 'apps.shoutit.tiered_views.message_views.read_conversations'),
-                        # todo: change the id system!
                        url(r'^(?:xhr/)?messages/stream/$', 'apps.shoutit.tiered_views.message_views.read_conversations_stream'),
 
                        url(r'^(?:xhr/)?messages/([a-zA-z0-9]+)/$', 'apps.shoutit.tiered_views.message_views.read_conversation'),

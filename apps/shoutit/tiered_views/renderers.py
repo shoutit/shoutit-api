@@ -71,10 +71,11 @@ def json_renderer(request, result, success_message='', data={}, success_message_
 def user_stream_json(request, result):
     if not result.errors:
         types = 'shout_types[]' in request.GET and request.GET.getlist('shout_types[]') or []
+
         if POST_TYPE_EXPERIENCE in types and len(types) == 1:
             variables = {
-                'experiences': result.data['experiences'],
-                }
+                'experiences': result.data['experiences']
+            }
             variables = RequestContext(request, variables)
             data = {'html': render_to_string("experiences_stream.html", variables)}
             for k, v in result.data.iteritems():
@@ -82,9 +83,10 @@ def user_stream_json(request, result):
                     data[k] = v
             data['count'] = len(variables['experiences'])
             return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
+
         variables = {
-            'shouts': result.data['shouts'],
-            }
+            'shouts': result.data['shouts']
+        }
         variables = RequestContext(request, variables)
         data = {'html': render_to_string("stream.html", variables)}
         for k, v in result.data.iteritems():
@@ -92,6 +94,7 @@ def user_stream_json(request, result):
                 data[k] = v
         data['count'] = len(variables['shouts'])
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
+
     else:
         return get_initial_json_response(request, result, _('User not found'))
 
@@ -470,9 +473,6 @@ def user_api(request, result, *args, **kwargs):
         user = render_user(result.data['profile'].user, level=5, owner=is_owner)
 
         user['is_owner'] = is_owner
-
-        if 'shouts' in result.data:
-            user['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
 
         if 'shouts_count' in result.data:
             user['shouts_count'] = result.data['shouts_count']
@@ -865,7 +865,7 @@ def profile_json_renderer(request, result):
             'users': [
                 {
                     'username': user.username,
-                    'name': user.name(),
+                    'name': user.name,
                     'category_id': isinstance(user_controller.GetProfile(user), Business) and user.profile.Category.pk or None,
                     'about': user.Bio,
                     'lat': user.Latitude,
@@ -889,7 +889,7 @@ def user_json_renderer(request, result):
             'users': [
                 {
                     'username': user.username,
-                    'name': user.name(),
+                    'name': user.name,
                     'image': template_filters.thumbnail(user_controller.GetProfile(user).Image, 32)
                 } for user in result.data['users']
             ]

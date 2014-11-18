@@ -113,19 +113,16 @@
         <div class="user-info">{{ profile.Bio|linebreaksbr }}</div>
         <div class="pull-right">
           <div class="user-interactions offers">
-            {#					<a data-toggle="tab" href="#shouts"><span class="user-icon-offers"></span></a>#}
             <span onclick="change_tap('shout')" class="user-icon-offers"></span>
             <label>{% trans "Offers" %}</label>
             <span class="counter">{{ offers_count }}</span>
           </div>
           <div class="user-interactions requests">
-            {#					<a data-toggle="tab" href="#shouts"><span class="user-icon-requests"></span></a>#}
             <span onclick="change_tap('shout')" class="user-icon-requests"></span>
             <label>{% trans "Requests" %}</label>
             <span class="counter">{{ requests_count }}</span>
           </div>
           <div class="user-interactions experiences">
-            {#					<a data-toggle="tab" href="#experiences"><span class="user-icon-experiences"></span></a>#}
             <span onclick="change_tap('experience')" class="user-icon-experiences"></span>
             <label>{% trans "Experiences" %}</label>
             <span class="counter">{{ experiences_count }}</span>
@@ -169,7 +166,6 @@
             <li><a class="shout_tap" data-target="#shouts" href="#shouts" data-toggle="tab">{% trans "Shouts" %}</a></li>
             <li><a class="experience_tap" data-target="#experiences" href="#experiences" data-toggle="tab">{% trans "Experiences" %}</a>
             </li>
-            {#                      <li><a href="#buys" data-toggle="tab">Buys</a></li>#}
           </ul>
         </div>
         <div id="myTabContent" class="tab-content">

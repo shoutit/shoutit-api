@@ -672,8 +672,8 @@ def get_unread_notifications_count(profile):
     return len(filter(lambda n: not n.IsRead, notifications))
 
 
-def activities_stream(user, start_index=None, end_index=None):
-    stream_posts_query_set = user.Stream.Posts.GetValidPosts([POST_TYPE_EVENT]).filter(
+def activities_stream(profile, start_index=None, end_index=None):
+    stream_posts_query_set = profile.Stream.Posts.GetValidPosts([POST_TYPE_EVENT]).filter(
         ~Q(Type=POST_TYPE_EVENT) |
         (Q(Type=POST_TYPE_EVENT)
          & Q(event__IsDisabled=False)

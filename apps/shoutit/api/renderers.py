@@ -86,7 +86,7 @@ def render_user(user, level=1, owner=False):
     if isinstance(profile, Profile):
 
         result = {
-            'name': user.name(),
+            'name': user.name,
             'username': user.username
         }
 
@@ -127,7 +127,7 @@ def render_user(user, level=1, owner=False):
             'url': get_object_url(user.user),
             'username': user.username,
             'image': profile.Image,
-            'name': user.name(),
+            'name': user.name,
             'bio': profile.About,
             'location': {
                 'country': profile.Country,

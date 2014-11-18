@@ -11,11 +11,17 @@ import json
 from django.utils import datastructures
 
 
+class APIDetectionMiddleware(object):
+    @staticmethod
+    def process_request(request):
+        request.is_api = "/api/" in request.META.get('PATH_INFO')
+
+
 class SetLanguageMiddleware(object):
     @staticmethod
     def process_request(request):
         lang = settings.DEFAULT_LANGUAGE_CODE
-        if request.GET.has_key('lang'):
+        if 'lang' in request.GET:
             lang = request.GET['lang']
         elif request.user.is_authenticated():
             lang = TaggedCache.get('perma|language|%d' % request.user.pk)
@@ -56,13 +62,13 @@ class FBMiddleware(object):
 class UserLocationMiddleware(object):
     @staticmethod
     def process_request(request):
+        # no session or location
+        if request.is_api:
+            return
 
-        if not is_session_has_location(request) or request.session.has_key('user_renew_location'):
+        if not is_session_has_location(request) or 'user_renew_location' in request.session:
             if not request.user.is_authenticated():
-#				ip = utils.get_ip(request)
-    #			if not request.session.has_key('user_ip')  or request.session['user_ip'] != ip:
                 location_info = get_location_info_by_ip(request)
-    #			request.session['user_ip'] = location_info['ip']
                 mapped_location = map_with_predefined_city(location_info['city'])
                 request.session['user_lat'] = mapped_location['latitude']
                 request.session['user_lng'] = mapped_location['longitude']
@@ -77,7 +83,7 @@ class UserLocationMiddleware(object):
                 request.session['user_city'] = profile and profile.City or u'Dubai'
                 request.session['user_city_encoded'] = to_seo_friendly(unicode.lower(request.session['user_city']))
 
-            if request.session.has_key('user_renew_location'):
+            if 'user_renew_location' in request.session:
                 del(request.session['user_renew_location'])
 
 

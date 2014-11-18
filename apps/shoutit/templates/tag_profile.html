@@ -114,7 +114,7 @@
 {% block scripts %}
   <script type="text/javascript" language="JavaScript">
     $(document).ready(function () {
-      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tagProfile.Name }}/stream/', '.shouts .box-content', 0);
+      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tagProfile.Name }}/stream/', '.shouts .box-content', 1);
       setup_colorbox();
 //			setup_shouts_hover();
       $('.follow-unfollow').click(follow_unfollow);

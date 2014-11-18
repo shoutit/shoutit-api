@@ -1,0 +1,370 @@
+[
+  {
+    "pk": 1,
+    "model": "shoutit.currency",
+    "fields": {
+      "Country": "AE",
+      "Code": "AED",
+      "Name": "Dirham"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "shoutit.currency",
+    "fields": {
+      "Country": "US",
+      "Code": "USD",
+      "Name": "Dollar"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "shoutit.currency",
+    "fields": {
+      "Country": "EU",
+      "Code": "EUR",
+      "Name": "Euro"
+    }
+  },
+
+
+  {
+    "pk": 1,
+    "model": "shoutit.predefinedcity",
+    "fields": {
+      "City": "Dubai",
+      "EncodedCity": "dubai",
+      "Country": "AE",
+      "Longitude": 55.3117,
+      "Latitude": 25.2644,
+      "Approved": true
+    }
+  },
+  {
+    "pk": 2,
+    "model": "shoutit.predefinedcity",
+    "fields": {
+      "City": "Aachen",
+      "EncodedCity": "aachen",
+      "Country": "AE",
+      "Longitude": 50.7738792,
+      "Latitude": 6.0844869,
+      "Approved": true
+    }
+  },
+
+
+  {
+    "pk": 1,
+    "model": "auth.user",
+    "fields": {
+      "username": "syron",
+      "first_name": "Mo",
+      "last_name": "Chawich",
+      "is_active": true,
+      "is_superuser": true,
+      "is_staff": true,
+      "last_login": "2014-11-17T15:38:19.602",
+      "groups": [],
+      "user_permissions": [],
+      "password": "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg=",
+      "email": "mo.chawich@gmail.com",
+      "date_joined": "2014-09-03T00:46:18"
+    }
+  },
+
+
+  {
+    "pk": 1,
+    "model": "shoutit.stream",
+    "fields": {
+      "Type": 0
+    }
+  },
+
+
+  {
+    "pk": 26,
+    "model": "contenttypes.contenttype",
+    "fields": {
+      "model": "profile",
+      "name": "profile",
+      "app_label": "shoutit"
+    }
+  },
+
+
+  {
+    "pk": 1,
+    "model": "shoutit.profile",
+    "fields": {
+      "isSSS": false,
+      "City": "Dubai",
+      "Stream": 1,
+      "Bio": "New Shouter!",
+      "Mobile": null,
+      "Country": "AE",
+      "Image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
+      "Longitude": 55.3117,
+      "Sex": true,
+      "isSMS": false,
+      "birthday": null,
+      "user": 1,
+      "Latitude": 25.2644,
+      "Interests": [],
+      "LastToken": null
+    }
+  },
+
+
+  {
+    "pk": 1,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "USE_SHOUT_IT"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "SHOUT_MORE"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "SHOUT_REQUEST"
+    }
+  },
+  {
+    "pk": 4,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "SHOUT_OFFER"
+    }
+  },
+  {
+    "pk": 5,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "FOLLOW_TAG"
+    }
+  },
+  {
+    "pk": 6,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "FOLLOW_USER"
+    }
+  },
+  {
+    "pk": 7,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "ACTIVATED"
+    }
+  },
+  {
+    "pk": 8,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "SEND_MESSAGE"
+    }
+  },
+  {
+    "pk": 9,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "SHOUT_DEAL"
+    }
+  },
+  {
+    "pk": 10,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "POST_EXPERIENCE"
+    }
+  },
+  {
+    "pk": 11,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "SHARE_EXPERIENCE"
+    }
+  },
+  {
+    "pk": 12,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "COMMENT_ON_POST"
+    }
+  },
+  {
+    "pk": 13,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "ADD_GALLERY_ITEM"
+    }
+  },
+  {
+    "pk": 14,
+    "model": "shoutit.permission",
+    "fields": {
+      "name": "REPORT"
+    }
+  },
+
+
+  {
+    "pk": 1,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.882",
+      "user": 1,
+      "permission": 1
+    }
+  },
+  {
+    "pk": 2,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.886",
+      "user": 1,
+      "permission": 2
+    }
+  },
+  {
+    "pk": 3,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.890",
+      "user": 1,
+      "permission": 3
+    }
+  },
+  {
+    "pk": 4,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.895",
+      "user": 1,
+      "permission": 4
+    }
+  },
+  {
+    "pk": 5,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.899",
+      "user": 1,
+      "permission": 5
+    }
+  },
+  {
+    "pk": 6,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.902",
+      "user": 1,
+      "permission": 7
+    }
+  },
+  {
+    "pk": 7,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.906",
+      "user": 1,
+      "permission": 6
+    }
+  },
+  {
+    "pk": 8,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.908",
+      "user": 1,
+      "permission": 8
+    }
+  },
+  {
+    "pk": 9,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.911",
+      "user": 1,
+      "permission": 10
+    }
+  },
+  {
+    "pk": 10,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.914",
+      "user": 1,
+      "permission": 11
+    }
+  },
+  {
+    "pk": 11,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.916",
+      "user": 1,
+      "permission": 12
+    }
+  },
+  {
+    "pk": 12,
+    "model": "shoutit.userpermission",
+    "fields": {
+      "date_given": "2014-11-17T23:21:48.918",
+      "user": 1,
+      "permission": 14
+    }
+  },
+
+
+
+  {
+    "pk": 1,
+    "model": "piston3.consumer",
+    "fields": {
+      "status": "accepted",
+      "name": "test consumer",
+      "secret": "123456",
+      "user": 1,
+      "key": "123",
+      "description": "test consumer"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "piston3.consumer",
+    "fields": {
+      "status": "accepted",
+      "name": "Android",
+      "secret": "1546cf51-6ec7-4f0c-a75a-2bdfc0e",
+      "user": 1,
+      "key": "shoutit-android",
+      "description": "The Consumer for our first tier Android Application"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "piston3.consumer",
+    "fields": {
+      "status": "accepted",
+      "name": "iOS",
+      "secret": "2a108cb4-4789-46f2-8f21-74d9111",
+      "user": 1,
+      "key": "shoutit-ios",
+      "description": "The consumer for our first tier ios application."
+    }
+  }
+
+]
+
+

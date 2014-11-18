@@ -113,31 +113,31 @@ def top_tags(request):
              tags=[CACHE_TAG_STREAMS, CACHE_TAG_TAGS],
              methods=['GET'],
              api_renderer=shouts_api,
-             json_renderer=lambda request, result, username, *args: user_stream_json(request, result),
+             json_renderer=lambda request, result, tag_name, *args: user_stream_json(request, result),
              validator=lambda request, tag_name, *args, **kwargs: object_exists_validator(tag_controller.get_tag,
                                                                                           _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
-def tag_stream(request, tag_name, page_num=None):
+def tag_stream(request, tag_name):
     result = ResponseResult()
-    if not request.session.has_key('user_country'):
-        result.data['shouts_count'] = 0
-        result.data['shouts'] = []
-        return result
+    tag = request.validation_result.data
 
-    if not page_num:
-        page_num = 1
-    else:
-        page_num = int(page_num)
+    # todo: check!
+    # if not request.session.has_key('user_country'):
+    #     result.data['shouts_count'] = 0
+    #     result.data['shouts'] = []
+    #     return result
 
-    user_country = request.session['user_country']
-    user_city = request.session['user_city']
+    page_num = int(request.GET.get('page', 1))
+    start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
+    end_index = DEFAULT_PAGE_SIZE * page_num
 
-    tag = tag_controller.get_tag(tag_name)
+    user_country = request.session['user_country'] if hasattr(request, 'session ') and 'user_country' in request.session else None
+    user_city = request.session['user_city'] if hasattr(request, 'session') and 'user_city' in request.session else None
 
-    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags=tag).count()
+    result.data['shouts_count'] = stream_controller.get_stream_shouts_count(tag.Stream)
+    result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream, start_index, end_index, country=user_country, city=user_city)
 
     result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
-    result.data['shouts'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                              DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
+
     result.data['is_last_page'] = page_num >= result.data['pages_count']
     result.data['browse_in'] = user_city
     return result
@@ -151,25 +151,30 @@ def tag_stream(request, tag_name, page_num=None):
              validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag,
                                                                          _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_profile(request, tag_name):
-    tag = tag_controller.get_tag(tag_name)
+    result = ResponseResult()
+    tag = request.validation_result.data
+
     if not tag.Image:
         tag.Image = '/static/img/shout_tag.png'
-    result = ResponseResult()
     result.data['tagProfile'] = tag
 
-    page_num = 1
 
-    user_country = request.session['user_country']
-    user_city = request.session['user_city']
+    user_country = request.session['user_country'] if hasattr(request, 'session ') and 'user_country' in request.session else None
+    user_city = request.session['user_city'] if hasattr(request, 'session') and 'user_city' in request.session else None
 
-    result.data['shouts'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                              DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
     result.data['children'] = list(tag.ChildTags.all())
 
-    result.data['shouts_count'] = len(result.data['shouts'])
+    # result.data['shouts2'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
+    # result.data['shouts_count2'] = len(result.data['shouts2'])
+
+    result.data['shouts_count'] = stream_controller.get_stream_shouts_count(tag.Stream)
+    result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream)
+
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
+    # todo: better way
     if request.user.is_authenticated() and hasattr(request.user, 'profile'):
         result.data['interested'] = (tag.Name,) in request.user.profile.Interests.all().values_list('Name')
+
     result.data['creator_username'] = 'Shoutit'
     result.data['creator'] = None
     return result
@@ -211,6 +216,6 @@ def tag_stats(request, tag_name):
         result.data['listeners'] = listeners
     else:
         result.data['listeners'] = [
-            {'username': listener.username, 'name': listener.name(), 'image': thumbnail(listener.profile.Image, 32)}
+            {'username': listener.username, 'name': listener.name, 'image': thumbnail(listener.profile.Image, 32)}
             for listener in listeners]
     return result

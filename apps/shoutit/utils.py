@@ -26,7 +26,7 @@ from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
 from django.conf import settings
 
-from apps.shoutit import constants
+from apps.shoutit.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL
 from apps.shoutit.models import Post, Experience, PredefinedCity
 
 
@@ -178,14 +178,16 @@ def get_ip(request):
     return ip
 
 
+# TODO Move gi initialization in a global scope so its done only once.
+GI = GeoIP(os.path.join(settings.BASE_DIR, 'libs', 'pygeoip') + '/GeoIPCity.dat', MEMORY_CACHE)
+
+
 def get_location_info_by_ip(request):
     # Get User IP
     ip = get_ip(request)
 
     # Get Info(lat lng) By IP
-    # TODO Move gi initialization in a global scope so its done only once.
-    gi = GeoIP(os.path.join(settings.BASE_DIR, 'libs', 'pygeoip') + '/GeoIPCity.dat', MEMORY_CACHE)
-    record = gi.record_by_addr(ip)  #168.144.92.219  82.137.200.83
+    record = GI.record_by_addr(ip)  #168.144.92.219  82.137.200.83
 
     #another way to get locationInfo
     #	ipInfo = IPInfo(apikey='0efaf242211014c381d34b89402833abb29bfaf2d6e2a6d5ef8268c0d2025e82')
@@ -423,27 +425,28 @@ def to_seo_friendly(s, max_len=50):
     return u
 
 
+# check who calls this method
 def shout_link(post):
     if not post:
         return None
     post_id = int_to_base62(post.pk)
 
-    if post.Type == constants.POST_TYPE_EXPERIENCE:
+    if post.Type == POST_TYPE_EXPERIENCE:
         if post._meta.module_name == Post._meta.module_name:
             post = Experience.objects.get(pk=post.id)
         experience = post
-        about = to_seo_friendly(experience.AboutBusiness.name())
+        about = to_seo_friendly(experience.AboutBusiness.name)
 
         city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.City))) if experience.AboutBusiness.City else ''
-        type = 'bad' if experience.State == 0 else 'good'
+        experience_type = 'bad' if experience.State == 0 else 'good'
         link = 'http%s://%s/%s-experience/%s/%s%s/' % (
-            's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, post_id, about, city)
+            's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, experience_type, post_id, about, city)
     else:
         shout = post
-        type = 'request' if shout.Type == 0 else 'offer' if shout.Type == 1 else 'shout'
+        shout_type = 'request' if shout.Type == POST_TYPE_BUY else 'offer' if shout.Type == POST_TYPE_SELL else 'shout'
         etc = to_seo_friendly(shout.Item.Name if hasattr(shout, 'Item') else shout.trade.Item.Name)
         city = to_seo_friendly(unicode.lower(shout.ProvinceCode))
-        link = 'http%s://%s/%s/%s/%s-%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, type, post_id, etc, city)
+        link = 'http%s://%s/%s/%s/%s-%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, shout_type, post_id, etc, city)
 
     return link
 
@@ -487,7 +490,8 @@ def get_cloud_connection():
     pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
     pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
     return pyrax
-cloud_connection = get_cloud_connection()
+if not settings.OFFLINE_MODE:
+    cloud_connection = get_cloud_connection()
 
 
 def cloud_upload_image(uploaded, container_name, filename, is_raw=True):

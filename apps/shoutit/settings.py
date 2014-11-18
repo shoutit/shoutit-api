@@ -25,6 +25,7 @@ SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
 # Prod or Dev
 DEV = False if os.environ.get('HOME') == '/root' else True
+OFFLINE_MODE = False
 
 
 def check_runserver_address_port():
@@ -199,6 +200,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     # Shoutit Custom Middleware
+    'apps.shoutit.middleware.APIDetectionMiddleware',
     'apps.shoutit.middleware.JsonPostMiddleware',
     'apps.shoutit.middleware.SetLanguageMiddleware',
     'apps.shoutit.middleware.UserPermissionsMiddleware',
@@ -410,7 +412,9 @@ GOOGLE_APP_CLIENT_ID = '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googl
 GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
 
 from apiclient.discovery import build
-GPLUS_SERVICE = build('plus', 'v1')
+
+if not OFFLINE_MODE:
+    GPLUS_SERVICE = build('plus', 'v1')
 
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {

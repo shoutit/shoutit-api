@@ -98,7 +98,7 @@ def signup(request, token=None):
 
         if application.Business:
             business = application.Business
-            business_init = {'name': business.name(), 'category': application.Category and application.Category.pk or 0,
+            business_init = {'name': business.name, 'category': application.Category and application.Category.pk or 0,
                              'location': unicode(business.Latitude) + ', ' + unicode(business.Longitude), 'city': business.City,
                              'country': business.Country}
             lat = business.Latitude
@@ -211,7 +211,7 @@ def recover_activation(request):
     email = user.email
     token = user_controller.SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
     email_controller.SendEmail(email, {
-        'name': profile.name(),
+        'name': profile.name,
         'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
     }, '', '')
     return result
@@ -357,7 +357,7 @@ def business_edit_profile(request, username):
     else:
         form = BusinessEditProfileForm(
             initial={'email': profile.email, 'bio': profile.Bio, 'username': profile.username,
-                     'name': profile.name(),
+                     'name': profile.name,
                      'mobile': profile.Mobile, 'website': profile.Website})
     result.data['form'] = form
     return result

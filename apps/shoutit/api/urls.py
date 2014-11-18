@@ -79,7 +79,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/stream/(?:(\d+)/)?$',
+                       url(r'^user/(@me|\w+)/stream/?$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_stream
                            })
@@ -217,7 +217,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^tag/([^/]+)/stream/(?:(\d+)/)?$',
+                       url(r'^tag/([^/]+)/stream/?$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': tag_views.tag_stream
                            })

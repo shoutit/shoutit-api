@@ -299,7 +299,7 @@ def resend_activation(request):
 @non_cached_view(methods=['GET', 'POST'], login_required=True, api_renderer=operation_api,
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
-                     'name': user_controller.get_profile(username).name() if user_controller.get_profile(username) else ''}),
+                     'name': user_controller.get_profile(username).name if user_controller.get_profile(username) else ''}),
                  validator=lambda request, username: object_exists_validator(user_controller.get_profile,
                                                                              _('User %(username)s does not exist.') %
                                                                              {'username': username}, username),
@@ -323,7 +323,7 @@ def start_listening_to_user(request, username):
                                                                                result,
                                                                                _('You are no longer listening to %(name)s\'s shouts.') % {
                                                                                    'name': user_controller.get_profile(
-                                                                                       username).name() if user_controller.get_profile(
+                                                                                       username).name if user_controller.get_profile(
                                                                                        username) else ''},
                                                                                success_message_type='info'),
                  validator=lambda request, username: object_exists_validator(user_controller.get_profile,
@@ -496,7 +496,6 @@ def sss(request):
 
 @non_cached_view(methods=['GET'],
                  json_renderer=json_data_renderer)
-#@refresh_cache(level=CACHE_REFRESH_LEVEL_USER, tags=[CACHE_TAG_USERS, CACHE_TAG_STREAMS, CACHE_TAG_TAGS])
 def update_user_location(request):
     result = ResponseResult()
 
@@ -530,72 +529,46 @@ def update_user_location(request):
     permissions_required=[PERMISSION_ACTIVATED])
 @refresh_cache(tags=[CACHE_TAG_USERS])
 def user_edit_profile(request, username):
-    user_profile = user_controller.get_profile(username)
     result = ResponseResult()
-    result.data['user_profile'] = user_profile
+    profile = user_controller.get_profile(username)
+
+    result.data['user_profile'] = profile
     if request.method == 'POST':
         form = UserEditProfileForm(request.POST, request.FILES,
-                                   initial={'username': username, 'email': user_profile.user.email})
+                                   initial={'username': username, 'email': profile.user.email})
         form.is_valid()
 
         if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
-            user_profile.user.username = form.cleaned_data['username']
+            profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
         if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
-            user_profile.user.email = form.cleaned_data['email']
+            profile.user.email = form.cleaned_data['email']
         if form.cleaned_data.has_key('firstname') and form.cleaned_data['firstname']:
-            user_profile.user.first_name = form.cleaned_data['firstname']
+            profile.user.first_name = form.cleaned_data['firstname']
         if form.cleaned_data.has_key('lastname') and form.cleaned_data['lastname']:
-            user_profile.user.last_name = form.cleaned_data['lastname']
+            profile.user.last_name = form.cleaned_data['lastname']
         if form.cleaned_data.has_key('mobile') and form.cleaned_data['mobile']:
-            user_profile.Mobile = form.cleaned_data['mobile']
+            profile.Mobile = form.cleaned_data['mobile']
 
-        user_profile.birthday = form.cleaned_data['birthday']
-        user_profile.Sex = bool(int(form.cleaned_data['sex']))
-        if user_profile.Image.endswith('user_female.png') or user_profile.Image.endswith('user_male.png'):
-            user_profile.Image = '/static/img/_user_' + (
-                user_profile.Sex and 'male.png' or 'female.png')
+        profile.birthday = form.cleaned_data['birthday']
+        profile.Sex = bool(int(form.cleaned_data['sex']))
+        if profile.Image.endswith('user_female.png') or profile.Image.endswith('user_male.png'):
+            profile.Image = '/static/img/_user_' + (
+                profile.Sex and 'male.png' or 'female.png')
 
-        user_profile.Bio = form.cleaned_data['bio']
+        profile.Bio = form.cleaned_data['bio']
         if form.cleaned_data.has_key('password') and form.cleaned_data['password']:
-            user_profile.user.set_password(form.cleaned_data['password'])
+            profile.user.set_password(form.cleaned_data['password'])
 
-        user_profile.user.save()
-        user_profile.save()
+        profile.user.save()
+        profile.save()
         result.messages.append(('success', _('Your profile was updated successfully.')))
     else:
         form = UserEditProfileForm(
-            initial={'email': user_profile.email, 'bio': user_profile.Bio, 'username': user_profile.username,
-                     'firstname': user_profile.user.first_name, 'lastname': user_profile.user.last_name,
-                     'mobile': user_profile.Mobile, 'sex': int(user_profile.Sex), 'birthday': user_profile.birthday})
+            initial={'email': profile.email, 'bio': profile.Bio, 'username': profile.username,
+                     'firstname': profile.user.first_name, 'lastname': profile.user.last_name,
+                     'mobile': profile.Mobile, 'sex': int(profile.Sex), 'birthday': profile.birthday})
     result.data['form'] = form
-    return result
-
-
-@cached_view(level=CACHE_LEVEL_USER,
-             tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS],
-             methods=['GET'],
-             api_renderer=shouts_api,
-             json_renderer=lambda request, result, username, *args: user_stream_json(request, result),
-             html_renderer=lambda request, result, username, *args: object_page_html(request, result, 'user_profile.html',
-                                                                                     result.data.has_key('user_profile') and result.data[
-                                                                                         'user_profile'].username or ''),
-             validator=user_profile_validator)
-def user_stream(request, username, page_num=None):
-    if username == '@me':
-        username = request.user.username
-
-    if not page_num:
-        page_num = 1
-    else:
-        page_num = int(page_num)
-    result = ResponseResult()
-    user_profile = user_controller.get_profile(username)
-    result.data['shouts_count'] = user_profile.Stream.Posts.filter(Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)).count()
-    result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
-    result.data['shouts'] = stream_controller.GetStreamShouts(user_profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                              DEFAULT_PAGE_SIZE * page_num)
-    result.data['is_last_page'] = page_num == result.data['pages_count']
     return result
 
 
@@ -605,7 +578,7 @@ def user_stream(request, username, page_num=None):
              api_renderer=user_api,
              html_renderer=lambda request, result, username, *args:
              object_page_html(request, result, isinstance(user_controller.get_profile(username), Profile) and 'user_profile.html' or 'business_profile.html',
-                              'profile' in result.data and result.data['profile'].name() or '',
+                              'profile' in result.data and result.data['profile'].name or '',
                               'profile' in result.data and result.data['profile'].Bio or ''),
              validator=user_profile_validator)
 def user_profile(request, username):
@@ -614,9 +587,7 @@ def user_profile(request, username):
 
     result.data['profile'] = profile
     result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
-    result.data['shouts'] = stream_controller.GetStreamShouts(profile.Stream, 0, DEFAULT_PAGE_SIZE, result.data['is_owner'])
 
-    #	result.data['shouts_count'] = profile.user.Posts.GetValidShouts(types=[POST_TYPE_BUY,POST_TYPE_SELL]).count()
     result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).filter(OwnerUser=profile.user).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
     result.data['is_following'] = (request.user.is_authenticated() and len(
@@ -688,31 +659,31 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
         else:
             # todo: minimize the db queries
             result.data['listeners'] = [
-                {'username': user.username, 'name': user.name(), 'image': thumbnail(user.profile.Image, 32)}
+                {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.Image, 32)}
                 for user in listeners]
 
     if stats_type == 'listening':
         result.data['listening'] = {}
         listening_tags = listening_type == 'all' or listening_type == 'tags'
-        listening_users = listening_type == 'all' or listening_type == 'users'
+        listening_profiles = listening_type == 'all' or listening_type == 'users'
 
         if listening_tags:
             listening_tags = stream_controller.get_user_listening(request.user, STREAM2_TYPE_TAG)
-        if listening_users:
-            listening_users = stream_controller.get_user_listening(request.user, STREAM2_TYPE_PROFILE)
+        if listening_profiles:
+            listening_profiles = stream_controller.get_user_listening(request.user, STREAM2_TYPE_PROFILE)
 
         if hasattr(request, 'is_api') and request.is_api:
             result.data['listening']['tags'] = listening_tags
-            result.data['listening']['users'] = listening_users
+            result.data['listening']['users'] = listening_profiles
         else:
             # todo: minimize the db queries
             # in the case of empty array the user requested this state so return it even if it is empty
             if listening_tags or listening_tags == []:
                 result.data['listening']['tags'] = [tag.Name for tag in listening_tags]
-            if listening_users or listening_users == []:
+            if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = [
-                    {'username': u.username, 'name': u.name(), 'image': thumbnail(u.profile.Image, 32)}
-                    for u in listening_users]
+                    {'username': p.username, 'name': p.name, 'image': thumbnail(p.Image, 32)}
+                    for p in listening_profiles]
     return result
 
 
@@ -772,23 +743,41 @@ def send_invitations(request):
 
 
 @non_cached_view(methods=['GET'],
-                 api_renderer=activities_api,
-                 json_renderer=lambda request, result, *args: activities_stream_json(request, result))
-def activities_stream(request, username, page_num=None):
-    if username == '@me':
-        username = request.user.username
-
-    if not page_num:
-        page_num = 1
-    else:
-        page_num = int(page_num)
+                 validator=user_profile_validator,
+                 api_renderer=shouts_api,
+                 json_renderer=lambda request, result, *args, **kwargs: user_stream_json(request, result)
+)
+def user_stream(request, username):
     result = ResponseResult()
-    user = user_controller.get_profile(username)
-
+    profile = request.validation_result.data['profile']
+    page_num = int(request.GET.get('page', 1))
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num
 
-    post_count, stream_posts = user_controller.activities_stream(user, start_index, end_index)
+    # result.data['shouts_count2'] = profile.Stream.Posts.filter(Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)).count()
+    # result.data['shouts2'] = stream_controller.GetStreamShouts(profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num)
+
+    result.data['shouts_count'] = stream_controller.get_stream_shouts_count(profile.Stream)
+    result.data['shouts'] = stream_controller.get_stream_shouts(profile.Stream, start_index, end_index)
+
+    result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
+    result.data['is_last_page'] = page_num == result.data['pages_count']
+
+    return result
+
+
+@non_cached_view(methods=['GET'],
+                 validator=user_profile_validator,
+                 api_renderer=activities_api,
+                 json_renderer=lambda request, result, *args, **kwargs: activities_stream_json(request, result))
+def activities_stream(request, username):
+    result = ResponseResult()
+    profile = request.validation_result.data['profile']
+    page_num = int(request.GET.get('page', 1))
+    start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
+    end_index = DEFAULT_PAGE_SIZE * page_num
+
+    post_count, stream_posts = user_controller.activities_stream(profile, start_index, end_index)
     result.data['pages_count'] = int(math.ceil(post_count / float(DEFAULT_PAGE_SIZE)))
     result.data['is_last_page'] = page_num >= result.data['pages_count']
     result.data['posts'] = stream_posts

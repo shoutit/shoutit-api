@@ -1,37 +1,21 @@
 -- Function: get_followings(text, text)
-
--- DROP FUNCTION get_followings(text, text);
-
 CREATE OR REPLACE FUNCTION get_followings(p_profile_text text, p_shout_text text)
   RETURNS integer AS
 $BODY$
 BEGIN
 	return (select count(*) from (
---	select distinct followship.stream_id
---	from "shoutit_followship" AS followship
---	where followship.follower_id = p_profile_id
-
 	select regexp_split_to_table(p_profile_text, ',')
 	intersect
 	select regexp_split_to_table(p_shout_text, ',')
-
---	select distinct stream_id
---	from "shoutit_shout_Streams" AS shout_streams
---	INNER JOIN "shoutit_stream" AS stream ON
---	(shout_streams.stream_id = stream.id)
---	where shout_id = p_shout_id and stream."Type" <> 3
 	) as subq);
 END
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION get_followings(text, text) OWNER TO postgres;
+ALTER FUNCTION get_followings(text, text) OWNER TO syron;
 
 
 -- Function: normalized_distance(double precision, double precision, double precision, double precision)
-
--- DROP FUNCTION normalized_distance(double precision, double precision, double precision, double precision);
-
 CREATE OR REPLACE FUNCTION normalized_distance(lat1 double precision, long1 double precision, lat2 double precision, long2 double precision)
   RETURNS double precision AS
 $BODY$
@@ -60,12 +44,10 @@ END
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION normalized_distance(double precision, double precision, double precision, double precision) OWNER TO postgres;
+ALTER FUNCTION normalized_distance(double precision, double precision, double precision, double precision) OWNER TO syron;
+
 
 -- Function: max_followings(numeric, numeric)
-
--- DROP FUNCTION max_followings(numeric, numeric);
-
 CREATE OR REPLACE FUNCTION max_followings(p_profile_id numeric, p_begin numeric)
   RETURNS integer AS
 $BODY$
@@ -83,6 +65,6 @@ END
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION max_followings(numeric, numeric) OWNER TO postgres;
+ALTER FUNCTION max_followings(numeric, numeric) OWNER TO syron;
 
 

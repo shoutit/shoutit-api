@@ -6,10 +6,11 @@ from django.db.models import Min
 from django.db.models.signals import post_delete, pre_delete, post_save
 from django.dispatch import receiver
 
+from apps.shoutit.constants import DEFAULT_LOCATION
+from apps.ActivityLogger.models import Request
 from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin
 from apps.shoutit.models.tag import Tag
 from apps.shoutit.models.misc import ConfirmToken
-from apps.ActivityLogger.models import Request
 
 
 class AbstractProfile(models.Model, Stream2Mixin):
@@ -19,10 +20,10 @@ class AbstractProfile(models.Model, Stream2Mixin):
     Image = models.URLField(max_length=1024, null=True)
 
     # Location attributes
-    Country = models.CharField(max_length=200, default='', db_index=True)
-    City = models.CharField(max_length=200, default='', db_index=True)
-    Latitude = models.FloatField(default=0.0)
-    Longitude = models.FloatField(default=0.0)
+    Country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
+    City = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)
+    Latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
+    Longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
 
     class Meta:
         abstract = True
@@ -91,6 +92,7 @@ class Profile(AbstractProfile):
             self.tags_created = self.TagsCreated.select_related('Creator')
         return self.tags_created
 
+    @property
     def name(self):
         return self.user.get_full_name()
 
@@ -146,7 +148,14 @@ def delete_attached_user(sender, instance, using, **kwargs):
 
 
 class UserFunctions(object):
-    #todo: @property
+    @property
+    def abstract_profile(self):
+        try:
+            return self.profile
+        except AttributeError:
+            return self.business
+
+    @property
     def name(self):
         if hasattr(self, 'Business') and self.Business:
             return self.Business.Name

@@ -100,7 +100,7 @@ def read_conversation(request, conversation_id):
     result.data['shout'] = result.data['conversation'].AboutPost
     result.data['conversation_messages'] = message_controller.ReadConversation(request.user, base62_to_int(conversation_id))
     result.data['conversation_id'] = base62_to_int(conversation_id)
-    name = result.data['conversation'].With.name()
+    name = result.data['conversation'].With.name
     name = name if name != '' else result.data['conversation'].With.username
     result.data['title'] = _('You and ') + name
 
