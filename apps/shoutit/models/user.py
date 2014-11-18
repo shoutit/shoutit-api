@@ -7,7 +7,7 @@ from django.db.models.signals import post_delete, pre_delete, post_save
 from django.dispatch import receiver
 
 from apps.shoutit.constants import DEFAULT_LOCATION
-from apps.ActivityLogger.models import Request
+# from apps.ActivityLogger.models import Request
 from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin
 from apps.shoutit.models.tag import Tag
 from apps.shoutit.models.misc import ConfirmToken
@@ -177,8 +177,8 @@ class UserFunctions(object):
         else:
             return 'No Profile'
 
-    def request_count(self):
-        return Request.objects.filter(user__id=self.id).count()
+    # def request_count(self):
+    #     return Request.objects.filter(user__id=self.id).count()
 
     def Latitude(self):
         if hasattr(self, 'business'):

@@ -86,14 +86,12 @@ def set_tag_parent(request):
 def top_tags(request):
     result = ResponseResult()
 
-    url_encoded_city = None
-    if request.GET.has_key('url_encoded_city') and request.GET['url_encoded_city'] != '':
-        url_encoded_city = request.GET['url_encoded_city']
+    city = request.GET.get('city', '')
 
     try:
-        pre_city = PredefinedCity.objects.get(EncodedCity = url_encoded_city or request.session['user_city_encoded'])
+        pre_city = PredefinedCity.objects.get(City=city or request.session['user_city_encoded'])
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity = 'dubai')
+        pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
 
     user_country = pre_city.Country
     user_city = pre_city.City

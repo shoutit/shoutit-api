@@ -4,7 +4,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from math import ceil
 from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
-    RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE
+    RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
 from apps.shoutit.models import Category, PredefinedCity, Tag, Shout
 from apps.shoutit.controllers import stream_controller, experience_controller
 from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CACHE_TAG_STREAMS, CACHE_LEVEL_SESSION, CACHE_LEVEL_GLOBAL
@@ -22,11 +22,6 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
     result.data['categories'] = Category.objects.all().order_by('Name')
     result.data['predefined_cities'] = PredefinedCity.objects.all()
-    # HACK: add dubai
-    if not len(result.data['predefined_cities']):
-        dubai = PredefinedCity(City='Dubai', EncodedCity='dubai', Country='AE', Approved=True, Latitude=25.2644, Longitude=55.3117)
-        dubai.save()
-        result.data['predefined_cities'] = PredefinedCity.objects.all()
 
     if browse_category and browse_category not in [unicode.lower(c.Name) for c in result.data['categories']]:
         result.data['redirect_category'] = True
@@ -43,7 +38,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     try:
         pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity='dubai')
+        pre_city = PredefinedCity.objects.get(EncodedCity=DEFAULT_LOCATION['url_encoded_city'])
 
     result.data['browse_city'] = pre_city.City
     result.data['browse_city_encoded'] = pre_city.EncodedCity
@@ -118,24 +113,33 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS], login_required=False, level=CACHE_LEVEL_SESSION, api_renderer=shouts_api,
-             json_renderer=lambda request, result: user_stream_json(request, result), methods=['GET'])
+# todo: check cache!
+# @cached_view(tags=[CACHE_TAG_STREAMS], login_required=False, level=CACHE_LEVEL_SESSION, api_renderer=shouts_api,
+#              json_renderer=lambda request, result: user_stream_json(request, result), methods=['GET'])
+@non_cached_view(methods=['GET'], login_required=False, api_renderer=shouts_api,
+                 json_renderer=lambda request, result: user_stream_json(request, result))
 def index_stream(request):
     result = ResponseResult()
 
     user = request.user if request.user.is_authenticated() else None
 
-    url_encoded_city = 'url_encoded_city' in request.GET and request.GET['url_encoded_city'] or request.session['user_city_encoded']
-    # todo: default location
-    try:
-        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
-    except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity='dubai')
+    city = request.GET.get('city', None)
+    if not city:
+        if request.user.is_authenticated():
+            city = user.profile.City
+        else:
+            city = DEFAULT_LOCATION['city']
 
+    try:
+        pre_city = PredefinedCity.objects.get(City=city)
+    except ObjectDoesNotExist:
+        pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
+
+    # todo: more cases of default location
     user_country = pre_city.Country
     user_city = pre_city.City
-    user_lat = pre_city.Latitude if pre_city and pre_city.City != user_city else request.session['user_lat']
-    user_lng = pre_city.Longitude if pre_city and pre_city.City != user_city else request.session['user_lng']
+    user_lat = user.profile.Latitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Latitude
+    user_lng = user.profile.Longitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Longitude
 
     page_num = int(request.GET.get('page', 1))
 
@@ -144,14 +148,13 @@ def index_stream(request):
     else:
         tag_ids = 'tag_ids' in request.GET and request.GET.getlist('tag_ids') or []
 
-    if 'shout_types[]' in request.GET:
-        types = request.GET.getlist('shout_types[]')
-    else:
-        types = 'shout_types' in request.GET and request.GET.getlist('shout_types') or []
+    shout_types = request.GET.getlist('shout_types[]', None)
+    if not shout_types:
+        shout_types = request.GET.getlist('shout_types', [])
 
-    query = 'query' in request.GET and request.GET['query'] or None
-    category = 'category' in request.GET and request.GET['category'] or None
-    order_by = 'shouts_order' in request.GET and int(request.GET['shouts_order']) or 0
+    query = request.GET.get('query', None)
+    category = request.GET.get('category', None)
+    order_by = int(request.GET.get('shouts_order', 0))
 
     if int(order_by) <= 0:
         order_by = (TIME_RANK_TYPE | FOLLOW_RANK_TYPE | DISTANCE_RANK_TYPE)
@@ -160,7 +163,7 @@ def index_stream(request):
         flag.value = int(order_by)
         order_by = flag
 
-    if POST_TYPE_EXPERIENCE in types and len(types) == 1:
+    if POST_TYPE_EXPERIENCE in shout_types and len(shout_types) == 1:
         experiences = experience_controller.GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
                                                            end_index=DEFAULT_PAGE_SIZE * page_num, city=user_city)
         result.data['count'] = len(experiences)
@@ -180,7 +183,7 @@ def index_stream(request):
         all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
     else:
         all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
-                                                             DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
+                                                             DEFAULT_HOME_SHOUT_COUNT, shout_types, query, tag_ids)
         result.data['browse_in'] = user_city
         if request.session.session_key:
             TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
@@ -198,6 +201,7 @@ def index_stream(request):
 
     result.data['shouts'] = shouts
     result.data['count'] = len(shouts)
+    result.data['city'] = user_city
 
     result.data['pages_count'] = int(ceil(len(all_shout_ids) / float(DEFAULT_PAGE_SIZE)))
     result.data['is_last_page'] = page_num >= result.data['pages_count']

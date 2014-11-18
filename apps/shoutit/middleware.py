@@ -59,6 +59,7 @@ class FBMiddleware(object):
                 facebook_controller.user_from_facebook_auth_response(request, auth_response)
 
 
+# todo: not used anymore
 class UserLocationMiddleware(object):
     @staticmethod
     def process_request(request):
@@ -69,12 +70,15 @@ class UserLocationMiddleware(object):
         if not is_session_has_location(request) or 'user_renew_location' in request.session:
             if not request.user.is_authenticated():
                 location_info = get_location_info_by_ip(request)
+
+                # todo: no mapping with ip
                 mapped_location = map_with_predefined_city(location_info['city'])
+
                 request.session['user_lat'] = mapped_location['latitude']
                 request.session['user_lng'] = mapped_location['longitude']
                 request.session['user_country'] = mapped_location['country']
                 request.session['user_city'] = mapped_location['city']
-                request.session['user_city_encoded'] =  mapped_location['city_encoded']
+                request.session['user_city_encoded'] = mapped_location['city_encoded']
             else:
                 profile = user_controller.GetProfile(request.user)
                 request.session['user_lat'] = profile and profile.Latitude or 25.2644

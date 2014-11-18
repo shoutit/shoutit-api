@@ -204,7 +204,7 @@ MIDDLEWARE_CLASSES = (
     'apps.shoutit.middleware.JsonPostMiddleware',
     'apps.shoutit.middleware.SetLanguageMiddleware',
     'apps.shoutit.middleware.UserPermissionsMiddleware',
-    'apps.shoutit.middleware.UserLocationMiddleware',
+    # 'apps.shoutit.middleware.UserLocationMiddleware',
     'apps.shoutit.middleware.FBMiddleware',
     #'apps.ActivityLogger.middleware.ActivityLogger',
     #'common.middleware.ProfilerMiddleware.ProfileMiddleware',

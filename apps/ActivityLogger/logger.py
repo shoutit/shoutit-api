@@ -1,9 +1,12 @@
-from apps.ActivityLogger.models import Activity
+# from apps.ActivityLogger.models import Activity
 
 
 class Logger(object):
     @staticmethod
     def log(request, activity=None, type=0, data={}):
+        # todo: hack
+        return
+
         if request is None:
             return
         if not hasattr(request, 'request_object'):

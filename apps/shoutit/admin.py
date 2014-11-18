@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from apps.shoutit.models import Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
-from apps.ActivityLogger.models import Activity, ActivityData, Request
+# from apps.ActivityLogger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
 
 
@@ -61,7 +61,8 @@ admin.site.unregister(User)
 
 class CustomUserAdmin(UserAdmin):
     save_on_top = True
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login', 'request_count')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
+    # list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login', 'request_count')
     list_per_page = 50
 
 
@@ -179,7 +180,7 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = ['ip_address', 'plain_url', 'user__username', 'referer']
 
 
-admin.site.register(Request, RequestAdmin)
+# admin.site.register(Request, RequestAdmin)
 
 
 # Report
@@ -211,5 +212,5 @@ admin.site.register(Notification)
 admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
-admin.site.register(Activity)
-admin.site.register(ActivityData)
+# admin.site.register(Activity)
+# admin.site.register(ActivityData)

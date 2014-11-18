@@ -26,32 +26,15 @@ from apps.shoutit.controllers import user_controller
 def index(request, browse_type=None):
     result = ResponseResult()
     result.data['browse_type'] = browse_type or 'offers'
-    # if request.user.is_authenticated():
-    #		result.data['shouts'] = []
-    #		result.data['count'] = 0
-    #		result.data['categories'] = Category.objects.all().order_by('Name')
-    #	else:
-    #		signup_form = SignUpForm()
-    #		signin_form = LoginForm()
-    #		shout_form = ShoutForm()
-    #		result.data['signup_form'] = signup_form
-    #		result.data['signin_form'] = signin_form
-    #		result.data['shout_form'] = shout_form
-    #
-    #		location_info = get_location_info_by_ip(request)
-    #		order_by = TIME_RANK_TYPE
-    #		shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, location_info['country'], None,
-    #			location_info['latitude'], location_info['longitude'], 0, 3)
-    #		shouts = []
-    #		if len(shout_ids):
-    #			shout_ranks = dict(shout_ids)
-    #			shout_ids = [k[0] for k in shout_ids]
-    #			shouts = stream_controller.GetTradesByIDs(shout_ids)
-    #			for shout in shouts:
-    #				shout.rank = shout_ranks[shout.id]
-    #			shouts.sort(key=lambda shout: shout.rank)
-    #
-    #		result.data['shouts'] = shouts
+
+    if request.user.is_authenticated():
+        city = request.user.profile.City
+    else:
+        city = DEFAULT_LOCATION['city']
+
+    pre_city = PredefinedCity.objects.get(City=city)
+
+    result.data['browse_city'] = pre_city.EncodedCity
     return result
 
 
@@ -456,14 +439,14 @@ def upload_file(request):
 def live_events(request):
     result = ResponseResult()
 
-    url_encoded_city = None
-    if 'url_encoded_city' in request.GET and request.GET['url_encoded_city'] != '':
-        url_encoded_city = request.GET['url_encoded_city']
+    city = None
+    if 'city' in request.GET and request.GET['city'] != '':
+        city = request.GET['city']
 
     try:
-        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city or request.session['user_city_encoded'])
+        pre_city = PredefinedCity.objects.get(City=city or request.session['user_city_encoded'])
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity='dubai')
+        pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
 
     user_country = pre_city.Country
     user_city = pre_city.City

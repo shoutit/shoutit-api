@@ -139,7 +139,7 @@ def json_data_renderer(request, result, *args, **kwargs):
 
 
 def index_html(request, result, browse_type=None):
-    return HttpResponseRedirect('/%s/%s/' % (result.data['browse_type'], request.session['user_city_encoded']))
+    return HttpResponseRedirect('/%s/%s/' % (result.data['browse_type'], result.data['browse_city']))
 
 
 def index_mobile(request, result, *args, **kwargs):
@@ -160,7 +160,7 @@ def activate_modal_mobile(request, result, token):
 
 def browse_html(request, result, browse_type, url_encoded_city, browse_category=None):
     if 'redirect_category' in result.data:
-        return HttpResponseRedirect('/%s/%s/' % (browse_type,url_encoded_city))
+        return HttpResponseRedirect('/%s/%s/' % (browse_type, url_encoded_city))
     if 'redirect_city' in result.data:
         redirect_city = '/%s/%s/' % (browse_type, request.session['user_city_encoded'])
         if browse_category:
@@ -320,6 +320,9 @@ def shouts_api(request, result, *args, **kwargs):
 
         if 'is_last_page' in result.data:
             pre_json_result['is_last_page'] = result.data['is_last_page']
+
+        if 'city' in result.data:
+            pre_json_result['city'] = result.data['city']
 
     return response, pre_json_result
 

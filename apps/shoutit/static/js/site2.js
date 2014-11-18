@@ -434,12 +434,12 @@ $.fn.appendScrollableStreamData = function (key, value) {
     stream_data[this][key] = value;
 };
 
-function getTopTags(encoded_city){
-	if (typeof encoded_city === 'undefined')
-		encoded_city = '';
+function getTopTags(city){
+	if (typeof city === 'undefined')
+		city = '';
 	$('#tags ul').html('');
 	requestAjaxily({
-		url: '/xhr/top_tags/?url_encoded_city='+encoded_city,
+		url: '/xhr/top_tags/?city='+city,
 		successCallback: function (data) {
 			for(var i in data.data.top_tags){
 				var tag = data.data.top_tags[i];

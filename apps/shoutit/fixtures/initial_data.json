@@ -46,7 +46,7 @@
     "fields": {
       "City": "Aachen",
       "EncodedCity": "aachen",
-      "Country": "AE",
+      "Country": "DE",
       "Longitude": 50.7738792,
       "Latitude": 6.0844869,
       "Approved": true
@@ -327,7 +327,6 @@
   },
 
 
-
   {
     "pk": 1,
     "model": "piston3.consumer",
@@ -362,6 +361,38 @@
       "user": 1,
       "key": "shoutit-ios",
       "description": "The consumer for our first tier ios application."
+    }
+  },
+  {
+    "pk": 1,
+    "model": "piston3.token",
+    "fields": {
+      "is_approved": true,
+      "timestamp": 1416270388,
+      "verifier": "Vtu3npMEby",
+      "token_type": 1,
+      "callback": "",
+      "secret": "spggySeZkTMJQhJUEq73GSJe2NH7vPpn",
+      "user": 1,
+      "key": "yZ4GtEqVKzPFyEUUzn",
+      "consumer": 1,
+      "callback_confirmed": false
+    }
+  },
+  {
+    "pk": 2,
+    "model": "piston3.token",
+    "fields": {
+      "is_approved": false,
+      "timestamp": 1416271280,
+      "verifier": "",
+      "token_type": 2,
+      "callback": "",
+      "secret": "9QygNQnG7yFeLney6qQszGAXng9g9RTL",
+      "user": 1,
+      "key": "M7UWMcfnVVQ6DkzujU",
+      "consumer": 1,
+      "callback_confirmed": false
     }
   }
 
