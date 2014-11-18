@@ -6,6 +6,7 @@ import apps.shoutit.models
 
 
 def custom_sql(sender, **kwargs):
+    print "Adding Shoutit custom SQL functions (deploy.sql) ..."
     cursor = connection.cursor()
     cursor.execute(open(os.path.join(settings.BASE_DIR, 'deploy_scripts', 'deploy.sql'), 'r').read())
 
