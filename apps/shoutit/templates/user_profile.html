@@ -84,7 +84,7 @@
         <div class="user-location"><i class="lang-icon dark-earth"></i>{{ profile.City }}, {{ profile.Country }}</div>
         {#				<div class="user-location"><i class="lang-icon dark-earth"></i>DUBAI, United Arab Emirates</div>#}
         {% if not is_owner %}
-          {% if is_following %}
+          {% if is_listening %}
             <div id="unfollow" class="follow-unfollow shadow"><span>{% trans "Listening" %}</span></div>
           {% else %}
             <div id="follow" class="follow-unfollow shadow"><span>{% trans "Listen" %}</span></div>

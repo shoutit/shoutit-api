@@ -53,7 +53,7 @@
                 {% if profile.Website %}<a href="{{ profile.Website }}" target="_blank">{{ profile.Website }}</a>{% endif %}
 				</br></br>
 					{% if not owner %}
-						{% if is_following %}
+						{% if is_listening %}
 							<div id="unfollow" class="follow-unfollow shadow" ><span>{% trans "Listening" %}</span></div>
 						{% else %}
 							<div id="follow" class="follow-unfollow shadow" ><span>{% trans "Listen" %}</span></div>

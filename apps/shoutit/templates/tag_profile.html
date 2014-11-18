@@ -7,7 +7,7 @@
       <a class="close" data-dismiss="modal">×</a>
     </div>
     <div class="modal-title">
-      <h4>{{ tagProfile.username }} Listeners </h4>
+      <h4>{{ tag.username }} Listeners </h4>
     </div>
     <div id="FollowersModalContain" class="modal-body">
     </div>
@@ -17,14 +17,14 @@
   <div class="tag-wrapper">
     <div class="box-container white-container round shadow tag-details">
       <div class="tag-image pull-left">
-        <img class="round" src="{{ tagProfile.Image|secure_url }}" alt="{{ tagProfile.Name }} picture">
+        <img class="round" src="{{ tag.Image|secure_url }}" alt="{{ tag.Name }} picture">
       </div>
 
       <div class="pull-left">
-        <div class="tag-name">{{ tagProfile.Name }}</div>
-        <div class="tag-info pull-left">{{ tagProfile.Definition|linebreaksbr }}</div>
+        <div class="tag-name">{{ tag.Name }}</div>
+        <div class="tag-info pull-left">{{ tag.Definition|linebreaksbr }}</div>
         <div>
-          {% if interested %}
+          {% if is_listening %}
             <div id="unfollow" class="follow-unfollow shadow"><span>{% trans "Listening" %}</span></div>
           {% else %}
             <div id="follow" class="follow-unfollow shadow"><span>{% trans "Listen" %}</span></div>
@@ -42,7 +42,7 @@
     <div class="page_content">
       <div class="left-column">
         <div class="outer-box-header round shadow">
-          {{ tagProfile.Name }} shouts in <span class="browse_in">{{ city }}</span>
+          {{ tag.Name }} shouts in <span class="browse_in">{{ city }}</span>
         </div>
         <div class="box-container dark-container round shadow shouts">
           <div class="box-content">
@@ -91,21 +91,6 @@
             class="count">{{ listeners_count }}</span>
           <small>{% trans "Followers" %}</small>
         </a>
-        {% if children %}
-          <br>
-          <h4> {% trans "Child Tags" %} </h4>
-          {% for child in children %}
-            {#					{% if child.Parent != Null %}{{child.Parent.Name}}{% else %}{{child.Name}}{% endif %}#}
-            <a class="post_tag hovercard unselectable" href="/tag/{{ child.Name }}/" hovercard-name="{{ child.Name }}" hovercard-type="tag"
-               hovercard-data="">{{ child.Name }}</a>
-          {% endfor %}
-        {% endif %}
-        {% if tagProfile.Parent %}
-          <br>
-          <h4> {% trans "Parent Tag" %} </h4>
-          <a class="post_tag hovercard unselectable" href="/tag/{{ tagProfile.Parent.Name }}/" hovercard-name="{{ tagProfile.Parent.Name }}"
-             hovercard-type="tag" hovercard-data="">{{ tagProfile.Parent.Name }}</a>
-        {% endif %}
       </div>
     </div>
   </div>
@@ -114,7 +99,7 @@
 {% block scripts %}
   <script type="text/javascript" language="JavaScript">
     $(document).ready(function () {
-      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tagProfile.Name }}/stream/', '.shouts .box-content', 1);
+      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tag.Name }}/stream/', '.shouts .box-content', 1);
       setup_colorbox();
 //			setup_shouts_hover();
       $('.follow-unfollow').click(follow_unfollow);
@@ -138,7 +123,7 @@
       if (listenersLoaded)
         return;
       requestAjaxily({
-        url: '/xhr/tag/{{ tagProfile.Name }}/listeners/',
+        url: '/xhr/tag/{{ tag.Name }}/listeners/',
         successCallback: function (data) {
           listenersLoaded = true;
           var listeners = data.data.listeners;
@@ -170,7 +155,7 @@
 
     function listen() {
       requestAjaxily({
-        url: '/xhr/tag/{{ tagProfile.Name }}/start_listening/',
+        url: '/xhr/tag/{{ tag.Name }}/start_listening/',
         successCallback: function (data) {
           $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id', 'unfollow');
           var counter = $('#aFollowers .count');
@@ -183,7 +168,7 @@
 
     function unfollow() {
       requestAjaxily({
-        url: '/xhr/tag/{{ tagProfile.Name }}/stop_listening/',
+        url: '/xhr/tag/{{ tag.Name }}/stop_listening/',
         successCallback: function (data) {
           $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id', 'follow');
           var counter = $('#aFollowers .count');

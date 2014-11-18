@@ -7,7 +7,8 @@ from django.utils.translation import ugettext as _
 from django.db.models.aggregates import Count, Min
 from django.db.models.query_utils import Q
 
-from apps.shoutit.models import Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, Business, PredefinedCity, LinkedGoogleAccount
+from apps.shoutit.models import Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, Business, PredefinedCity, LinkedGoogleAccount, \
+    Listen
 
 from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
 
@@ -542,10 +543,12 @@ def UserFollowing(username, type='all', period='recent'):
     return result
 
 
-def IsInterested(user, interest):
-    result = FollowShip.objects.filter(follower__pk=GetProfile(user).pk, stream__Type=STREAM_TYPE_TAG,
-                                       stream__OwnerTag__Name=interest).values('id')
-    return True if result else False
+def is_listening(user, stream):
+    try:
+        Listen.objects.get(listener=user, stream=stream)
+        return True
+    except Listen.DoesNotExist:
+        return False
 
 
 def UpdateLocation(username, lat, lng, city, country):

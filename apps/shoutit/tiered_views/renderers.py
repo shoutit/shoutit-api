@@ -311,7 +311,7 @@ def shouts_api(request, result, *args, **kwargs):
         shouts = [render_shout(shout) for shout in result.data['shouts']]
 
         pre_json_result.update({
-            'count': len(shouts),
+            'shouts_count': len(shouts),
             'shouts': shouts
         })
 
@@ -451,19 +451,21 @@ def tag_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        pre_json_result.update(render_tag(result.data['tagProfile']))
+        tag = render_tag(result.data['tag'])
+
         if 'shouts_count' in result.data:
-            pre_json_result['shouts_count'] = result.data['shouts_count']
+            tag['shouts_count'] = result.data['shouts_count']
+
         if 'listeners_count' in result.data:
-            pre_json_result['listeners_count'] = result.data['listeners_count']
-        if 'creator' in result.data:
-            pre_json_result['creator'] = render_user(result.data['creator'])
-        if 'shouts' in result.data:
-            pre_json_result['shouts'] = [render_shout(shout) for shout in result.data['shouts']]
-        if 'children' in result.data:
-            pre_json_result['children'] = result.data['children']
-        if 'interested' in result.data:
-            pre_json_result['interested'] = result.data['interested']
+            tag['listeners_count'] = result.data['listeners_count']
+
+        if 'is_listening' in result.data:
+            tag['is_listening'] = result.data['is_listening']
+
+    else:
+        tag = None
+
+    pre_json_result['tag'] = tag
 
     return response, pre_json_result
 
@@ -486,8 +488,8 @@ def user_api(request, result, *args, **kwargs):
         if 'listening_count' in result.data:
             user['listening_count'] = result.data['listening_count']
 
-        if 'is_following' in result.data:
-            user['is_following'] = result.data['is_following']
+        if 'is_listening' in result.data:
+            user['is_listening'] = result.data['is_listening']
 
     else:
         user = None
@@ -547,12 +549,12 @@ def stats_api(request, result, *args, **kwargs):
 
     if not result.errors:
         if 'listeners' in result.data:
-            pre_json_result['listeners'] = [render_user(listener) for listener in result.data['listeners']]
+            pre_json_result['listeners'] = [render_user(listener, 2) for listener in result.data['listeners']]
 
         if 'listening' in result.data:
             pre_json_result['listening'] = {}
             if 'users' in result.data['listening']:
-                pre_json_result['listening']['users'] = [render_user(following.user) for following in result.data['listening']['users']]
+                pre_json_result['listening']['users'] = [render_user(following.user, 2) for following in result.data['listening']['users']]
             if 'tags' in result.data['listening']:
                 pre_json_result['listening']['tags'] = [render_tag(tag) for tag in result.data['listening']['tags']]
 

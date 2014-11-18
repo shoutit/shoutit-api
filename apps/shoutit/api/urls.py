@@ -66,18 +66,33 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/(\w+)/listen/$',
+                       url(r'^user/(@me|\w+)/listen/$',
                            TieredResource(TieredHandler, oauth, {
                                'POST': user_views.start_listening_to_user,
                                'DELETE': user_views.stop_listening_to_user
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/(\w+)/(?:(\w+)/)?(?:(\w+)/)?$',
+                       url(r'^user/(@me|\w+)/(listening|listeners)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_stats
                            })
                        ),
+
+                       url(r'^user/(@me|\w+)/(listening)/(users|tags|all)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.user_stats
+                           })
+                       ),
+
+                       url(r'^user/(@me|\w+)/(listening)/(users|tags|all)/(recent|all)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.user_stats
+                           })
+                       ),
+
+
+
 
                        url(r'^user/(@me|\w+)/stream/?$',
                            TieredResource(TieredHandler, oauth, {

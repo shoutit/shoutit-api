@@ -209,7 +209,7 @@ def fb_auth(request):
 
     if user:
         result.data['profile'] = user.profile
-        result.data['is_following'] = False
+        result.data['is_listening'] = False
         result.data['owner'] = True
         result.data['username'] = user.username
         result.messages.append(('success', _('Your Facebook account has been added to Shoutit!')))
@@ -239,7 +239,7 @@ def gplus_auth(request):
 
     if user:
         result.data['profile'] = user.profile
-        result.data['is_following'] = False
+        result.data['is_listening'] = False
         result.data['owner'] = True
         result.data['username'] = user.username
         result.messages.append(('success', _('Your Google account has been added to Shoutit!')))
@@ -590,7 +590,7 @@ def user_profile(request, username):
 
     result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).filter(OwnerUser=profile.user).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
-    result.data['is_following'] = (request.user.is_authenticated() and len(
+    result.data['is_listening'] = (request.user.is_authenticated() and len(
         FollowShip.objects.filter(follower__user__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
 
     if isinstance(profile, Profile):
@@ -635,17 +635,12 @@ def user_profile_brief(request, username):
     result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
     result.data['profile'] = profile
     result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
-    result.data['is_following'] = (request.user.is_authenticated() and len(
+    result.data['is_listening'] = (request.user.is_authenticated() and len(
         FollowShip.objects.filter(follower__user__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
     return result
 
 
-@cached_view(level=CACHE_LEVEL_GLOBAL,
-             tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS],
-             methods=['GET'],
-             json_renderer=json_data_renderer,
-             api_renderer=stats_api,
-             validator=user_profile_validator)
+@non_cached_view(methods=['GET'], json_renderer=json_data_renderer, api_renderer=stats_api, validator=user_profile_validator)
 def user_stats(request, username, stats_type, listening_type='all', period='recent'):
     result = ResponseResult()
     profile = request.validation_result.data['profile']
@@ -668,13 +663,15 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
         listening_profiles = listening_type == 'all' or listening_type == 'users'
 
         if listening_tags:
-            listening_tags = stream_controller.get_user_listening(request.user, STREAM2_TYPE_TAG)
+            listening_tags = stream_controller.get_user_listening(profile.user, STREAM2_TYPE_TAG)
         if listening_profiles:
-            listening_profiles = stream_controller.get_user_listening(request.user, STREAM2_TYPE_PROFILE)
+            listening_profiles = stream_controller.get_user_listening(profile.user, STREAM2_TYPE_PROFILE)
 
         if hasattr(request, 'is_api') and request.is_api:
-            result.data['listening']['tags'] = listening_tags
-            result.data['listening']['users'] = listening_profiles
+            if listening_tags or listening_tags == []:
+                result.data['listening']['tags'] = listening_tags
+            if listening_profiles or listening_profiles == []:
+                result.data['listening']['users'] = listening_profiles
         else:
             # todo: minimize the db queries
             # in the case of empty array the user requested this state so return it even if it is empty
@@ -705,11 +702,11 @@ def top_users(request):
         user_following = user_controller.UserFollowing(request.user.username, 'users', 'all')['users']
         user_following = Profile.objects.values('user__username').filter(pk__in=[u.pk for u in user_following])
         for top_user in result.data['top_users']:
-            top_user['is_following'] = {'user__username': top_user['user__username']} in user_following
+            top_user['is_listening'] = {'user__username': top_user['user__username']} in user_following
             top_user['is_you'] = top_user['user__username'] == request.user.username
     else:
         for top_user in result.data['top_users']:
-            top_user['is_following'] = False
+            top_user['is_listening'] = False
     return result
 
 

@@ -443,11 +443,11 @@ function getTopTags(city){
 		successCallback: function (data) {
 			for(var i in data.data.top_tags){
 				var tag = data.data.top_tags[i];
-				var tag_bool = tag.is_interested;
+				var tag_bool = tag.is_listening;
 				if(tag_bool==true){
-					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-interested="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Stop listening')+'"  class="tag_listening"></span></div></li>';
+					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Stop listening')+'"  class="tag_listening"></span></div></li>';
 				}else{
-					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-interested="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Listen')+'" class="tag_listening tag_non_listening"></span></div></li>';
+					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Listen')+'" class="tag_listening tag_non_listening"></span></div></li>';
 				}
 				$('#tags ul').append(tag_html);
 			}

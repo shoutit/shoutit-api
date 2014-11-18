@@ -100,10 +100,10 @@ def top_tags(request):
     if request.user.is_authenticated() and isinstance(profile, Profile):
         user_interests = profile.Interests.all().values_list('Name')
         for tag in result.data['top_tags']:
-            tag['is_interested'] = (tag['Name'], ) in user_interests
+            tag['is_listening'] = (tag['Name'], ) in user_interests
     else:
         for tag in result.data['top_tags']:
-            tag['is_interested'] = False
+            tag['is_listening'] = False
     return result
 
 
@@ -154,13 +154,11 @@ def tag_profile(request, tag_name):
 
     if not tag.Image:
         tag.Image = '/static/img/shout_tag.png'
-    result.data['tagProfile'] = tag
+    result.data['tag'] = tag
 
 
     user_country = request.session['user_country'] if hasattr(request, 'session ') and 'user_country' in request.session else None
     user_city = request.session['user_city'] if hasattr(request, 'session') and 'user_city' in request.session else None
-
-    result.data['children'] = list(tag.ChildTags.all())
 
     # result.data['shouts2'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
     # result.data['shouts_count2'] = len(result.data['shouts2'])
@@ -169,12 +167,9 @@ def tag_profile(request, tag_name):
     result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream)
 
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
-    # todo: better way
-    if request.user.is_authenticated() and hasattr(request.user, 'profile'):
-        result.data['interested'] = (tag.Name,) in request.user.profile.Interests.all().values_list('Name')
+    if request.user.is_authenticated():
+        result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)
 
-    result.data['creator_username'] = 'Shoutit'
-    result.data['creator'] = None
     return result
 
 
@@ -189,13 +184,12 @@ def tag_profile_brief(request, tag_name):
     if not tag.Image:
         tag.Image = '/static/img/shout_tag.png'
     result = ResponseResult()
-    result.data['tagProfile'] = tag
+    result.data['tag'] = tag
 
     result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags=tag).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
     if request.user.is_authenticated():
-        result.data['interested'] = tag in request.user.profile.Interests.all()
-    result.data['creator'] = None
+        result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)
     return result
 
 
