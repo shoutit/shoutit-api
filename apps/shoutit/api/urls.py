@@ -291,7 +291,7 @@ urlpatterns = patterns('',
                        ),
 
                        url(r'^push/(apns|gcm)/$',
-                           TieredResource(TieredHandler, no_oauth, {
+                           TieredResource(TieredHandler, oauth, {
                                'GET': user_views.push,
                                'POST': user_views.push,
                                'DELETE': user_views.push
