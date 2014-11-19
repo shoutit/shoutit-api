@@ -203,12 +203,6 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
 
     up = Profile(user=django_user, Stream=stream, Mobile=mobile)
 
-    #todo: city, session!
-    up.Country = request.session['user_country'] if request and 'user_country' in request.session else DEFAULT_LOCATION['country']
-    up.City = request.session['user_city'] if request and 'user_city' in request.session else DEFAULT_LOCATION['city']
-    up.Latitude = request.session['user_lat'] if request and 'user_lat' in request.session else DEFAULT_LOCATION['latitude']
-    up.Longitude = request.session['user_lng'] if request and 'user_lng' in request.session else DEFAULT_LOCATION['longitude']
-
     up.Image = '/static/img/_user_male.png'
     up.save()
 
@@ -551,61 +545,22 @@ def is_listening(user, stream):
         return False
 
 
-def UpdateLocation(username, lat, lng, city, country):
-    user = get_profile(username)
-    user.Latitude = lat
-    user.Longitude = lng
-    user.City = city
-    user.Country = country
-    user.save()
+def update_profile_location(profile, location):
 
-    if not PredefinedCity.objects.filter(City=user.City):
-        encoded_city = to_seo_friendly(unicode.lower(unicode(user.City)))
-        PredefinedCity(City=user.City, EncodedCity=encoded_city, Country=user.Country, Latitude=user.Latitude,
-                       Longitude=user.Longitude).save()
-    return user
+    profile.Latitude = location['latitude']
+    profile.Longitude = location['longitude']
+    profile.City = location['city']
+    profile.Country = location['country']
+    profile.save()
 
+    try:
+        PredefinedCity.objects.get(City=location['city'])
+    except PredefinedCity.DoesNotExist :
+        encoded_city = to_seo_friendly(unicode.lower(unicode(location['city'])))
+        PredefinedCity(City=location['city'], EncodedCity=encoded_city, Country=location['country'], Latitude=location['latitude'],
+                       Longitude=location['longitude']).save()
 
-def GetTopUsers(limit=10, country='', city=''):
-    if not limit:
-        limit = 10
-    if not country:
-        country = ''
-    if not city:
-        city = ''
-
-    top_users = Profile.objects.values('id').filter(user__is_active=True)
-
-    if len(country.strip()):
-        top_users = top_users.filter(Country=country)
-
-    if len(city.strip()):
-        top_users = top_users.filter(City=city)
-
-        # Bases on Number of Listerns
-        # top_users = top_users.values('id').annotate(f_count=Count('Stream__userprofile')).values('user__username','user__first_name','user__last_name','f_count').order_by('-f_count')
-
-        # Based on Number of Shouts
-    #		top_users = top_users.values('id').annotate(s_count=Count('user__Shouts')).values('user__username','user__first_name','user__last_name','s_count').order_by('-s_count')
-
-    # Based on Random who has changed his Pic
-    top_users = top_users.filter(~Q(Image__in=['/static/img/_user_male.png', '/static/img/_user_female.png']))
-    # top_users = top_users.annotate(s_count=Count('user__Shouts')).values('user__username','user__first_name','user__last_name','s_count').order_by('?')[:limit]
-    top_users = top_users.values('user__username', 'user__first_name', 'user__last_name', 'Image').order_by('?')[:limit]
-    #		f_count = Shout.objects.GetValidShouts().values('id').filter(Owneruser__username__in=[u['user__username']for u in top_users]).annotate(f_count=Count('pk')).values('OwnerUser__username','f_count')
-    f_count = Profile.objects.values('id').filter(user__username__in=[u['user__username'] for u in top_users]).annotate(
-        f_count=Count('Stream__userprofile')).values('user__username', 'f_count')
-
-    users_valid_shouts = Trade.objects.GetValidTrades().filter(
-        OwnerUser__username__in=[user['user__username'] for user in top_users]).select_related('OwnerUser')
-    for user in top_users:
-        for f in f_count:
-            if user['user__username'] == f['user__username']:
-                user['f_count'] = f['f_count']
-                break
-        user['s_count'] = len([shout for shout in users_valid_shouts if shout.OwnerUser.username == user['user__username']])
-        user['Image'] = get_size_url(user['Image'], 32)
-    return list(top_users)
+    return profile
 
 
 # todo: use the GiveUserPermission
@@ -699,17 +654,3 @@ def activities_stream(profile, start_index=None, end_index=None):
     stream_posts = events
 
     return post_count, stream_posts
-
-
-def update_location(user_profile, location):
-    try:
-        user_profile.Country = location['country']
-        user_profile.City = location['city']
-        user_profile.Latitude = location['latitude']
-        user_profile.Longitude = location['longitude']
-        user_profile.save()
-        return True
-
-    except BaseException, e:
-        print(e.message)
-        return False

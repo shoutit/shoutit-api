@@ -54,6 +54,12 @@ no_oauth = NoAuthentication()
 urlpatterns = patterns('',
                        # Users
 
+                       url(r'^user/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.search_user
+                           })
+                       ),
+
                        url(r'^user/(@me|\w+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_profile
@@ -91,9 +97,6 @@ urlpatterns = patterns('',
                            })
                        ),
 
-
-
-
                        url(r'^user/(@me|\w+)/stream/?$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_stream
@@ -106,17 +109,6 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/search/(\w+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.search_user
-                           })
-                       ),
-
-                       url(r'^location/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': user_views.set_user_session_location_info
-                           })
-                       ),
 
                        # Shouts
 
@@ -298,6 +290,19 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                       url(r'^push/(apns|gcm)/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'GET': user_views.push,
+                               'POST': user_views.push,
+                               'DELETE': user_views.push
+                           })
+                       ),
+
+                       url(r'^update_location/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': user_views.update_user_location
+                           })
+                       ),
                        url(r'^business_categories/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'GET': business_views.business_categories

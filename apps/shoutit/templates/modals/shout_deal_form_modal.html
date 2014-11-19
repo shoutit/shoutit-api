@@ -2,169 +2,169 @@
 {% load template_filters %}
 {% load i18n %}
 <div class="container-fluid">
-    <form method="post" id="shout_deal_form" class="shout_form" action="/shout_deal/">
-        {% csrf_token %}
-        {% if form %}
-            <div class="divs-inline">
-                <div class="input-field item-name">
-                    {{ form.name|trans_attr:"placeholder:what are you shouting about?"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
-                </div>
-                <div class="input-field item-price">
-                    {{ form.price|trans_attr:"placeholder:for what price?"|attr:"data-qtip-my:top center"|attr:"data-qtip-at:bottom center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
-                </div>
-                <div class="input-field item-currency">
-                    {{ form.currency|trans_attr:"placeholder:currency"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
-                </div>
-			</div>
-			<div class="divs-inline">
-                <div class="input-field">
-                    {{ form.expiry_date|trans_attr:"placeholder:expiry date"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right"}}
-                </div>
-                </br>
-                <div class="input-field">
-                    {{ form.min_buyers|trans_attr:"placeholder:minimum buyers"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right"}}
-                </div>
-                <div class="input-field">
-                    {{ form.max_buyers|trans_attr:"placeholder:maximum buyers"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right"}}
-                </div>
-                <div class="input-field">
-                    {{ form.original_price|trans_attr:"placeholder:original price"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right"}}
-                </div>
-                <div class="input-field">
-                    {{ form.valid_from|trans_attr:"placeholder:valid from date"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right"}}
-                </div>
-                <div class="input-field">
-                    {{ form.valid_to|trans_attr:"placeholder:valid to date"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right"}}
-                </div>
-            <div class="input-field">
-                {{ form.description|trans_attr:"placeholder:description" }}
-            </div>
-            <div class="input-field">
-                {{ form.tags }}
-            </div>
-            <div class="input-field" id="file-uploader">
-                <noscript>
-                    <p>{% trans "Please enable JavaScript to use file uploader." %}</p>
-                </noscript>
-            </div>
-			</div>
-            <input type="text" id="input_search_deal" class="noSubmit">
-            <div class="input-field" id="deal_location">
-                {{ form.location|attr:"style:display:none" }}
-{#                {{ form.location}}#}
-                <div class="input" id="shout_map_deal" style="width: 513px; height: 146px;"></div>
-            </div>
+  <form method="post" id="shout_deal_form" class="shout_form" action="/shout_deal/">
+    {% csrf_token %}
+    {% if form %}
+      <div class="divs-inline">
+        <div class="input-field item-name">
+          {{ form.name|trans_attr:"placeholder:what are you shouting about?"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
+        </div>
+        <div class="input-field item-price">
+          {{ form.price|trans_attr:"placeholder:for what price?"|attr:"data-qtip-my:top center"|attr:"data-qtip-at:bottom center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        <div class="input-field item-currency">
+          {{ form.currency|trans_attr:"placeholder:currency"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+      </div>
+      <div class="divs-inline">
+        <div class="input-field">
+          {{ form.expiry_date|trans_attr:"placeholder:expiry date"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        </br>
+        <div class="input-field">
+          {{ form.min_buyers|trans_attr:"placeholder:minimum buyers"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        <div class="input-field">
+          {{ form.max_buyers|trans_attr:"placeholder:maximum buyers"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        <div class="input-field">
+          {{ form.original_price|trans_attr:"placeholder:original price"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        <div class="input-field">
+          {{ form.valid_from|trans_attr:"placeholder:valid from date"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        <div class="input-field">
+          {{ form.valid_to|trans_attr:"placeholder:valid to date"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+        </div>
+        <div class="input-field">
+          {{ form.description|trans_attr:"placeholder:description" }}
+        </div>
+        <div class="input-field">
+          {{ form.tags }}
+        </div>
+        <div class="input-field" id="file-uploader">
+          <noscript>
+            <p>{% trans "Please enable JavaScript to use file uploader." %}</p>
+          </noscript>
+        </div>
+      </div>
+      <input type="text" id="input_search_deal" class="noSubmit">
+      <div class="input-field" id="deal_location">
+        {{ form.location|attr:"style:display:none" }}
+        {#                {{ form.location}}#}
+        <div class="input" id="shout_map_deal" style="width: 513px; height: 146px;"></div>
+      </div>
 
-            <div class="input-field" id="deal_city">
-                {{ form.city|attr:"style:display:none" }}
-{#                {{ form.city}}#}
-            </div>
-            <div class="input-field" id="deal_country">
-                {{ form.country|attr:"style:display:none" }}
-{#                {{ form.country}}#}
-            </div>
+      <div class="input-field" id="deal_city">
+        {{ form.city|attr:"style:display:none" }}
+        {#                {{ form.city}}#}
+      </div>
+      <div class="input-field" id="deal_country">
+        {{ form.country|attr:"style:display:none" }}
+        {#                {{ form.country}}#}
+      </div>
 
-            <button disabled="disabled" type="submit" class="btn btn-primary">{% trans "Shout It!" %}</button>
-        {% endif %}
-    </form>
+      <button disabled="disabled" type="submit" class="btn btn-primary">{% trans "Shout It!" %}</button>
+    {% endif %}
+  </form>
 </div>
 <script type="text/javascript" language="JavaScript">
-	$(document).ready(function(){
-		var box = $('.noSubmit');
+  $(document).ready(function () {
+    var box = $('.noSubmit');
 
-		box.keypress(function(e){
-			var k=e.keyCode || e.which;
-			if(k==13){
-				e.preventDefault();
-			}
-		});
+    box.keypress(function (e) {
+      var k = e.keyCode || e.which;
+      if (k == 13) {
+        e.preventDefault();
+      }
+    });
 
-        $('form#shout_deal_form').data('fields_map', {
-            id_tags : '#id_tags_tag'
-        });
-        $('form#shout_deal_form').submitAjaxily();
-        var uploader = new qq.FileUploader({
-            action: "/upload/shout_deal/",
-            element: $('#file-uploader')[0],
-            multiple: true,
-            onComplete: function( id, fileName, responseJSON ) {
-                $('#ajax_loading').hide();
-                $('form#shout_deal_form [type="submit"]').prop('disabled', false);
-                if (responseJSON.success) {
-                    var img = $('<img src="' + responseJSON.url + '" title="' + fileName + '" alt="' + fileName + '" />');
-                    $('#file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-                    $('form#shout_deal_form').append('<input type="hidden" value="' + responseJSON.url + '" name="images"/>');
+    $('form#shout_deal_form').data('fields_map', {
+      id_tags: '#id_tags_tag'
+    });
+    $('form#shout_deal_form').submitAjaxily();
+    var uploader = new qq.FileUploader({
+      action: "/upload/shout_deal/",
+      element: $('#file-uploader')[0],
+      multiple: true,
+      onComplete: function (id, fileName, responseJSON) {
+        $('#ajax_loading').hide();
+        $('form#shout_deal_form [type="submit"]').prop('disabled', false);
+        if (responseJSON.success) {
+          var img = $('<img src="' + responseJSON.url + '" title="' + fileName + '" alt="' + fileName + '" />');
+          $('#file-uploader').find('.qq-uploader .qq-upload-button').after(img);
+          $('form#shout_deal_form').append('<input type="hidden" value="' + responseJSON.url + '" name="images"/>');
+        }
+      },
+      params: {
+        'csrf_token': '{% csrf_token_value %}',
+        'csrf_name': 'csrfmiddlewaretoken',
+        'csrf_xname': 'X-CSRFToken'
+      },
+      onSubmit: function (id, fileName) {
+        $('#ajax_loading').show();
+        $('form#shout_deal_form [type="submit"]').prop('disabled', true);
+      },
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
+      sizeLimit: 5 * 1024 * 1024
+    });
+
+    $('.qq-upload-drop-area').remove();
+
+    $('.qq-upload-button').click(function () {
+      $('.qq-upload-button input[type="file"]').click();
+      $('.qq-upload-button input[type="file"]').show().focus().click().hide();
+    });
+
+    $('#id_tags').tagsInput({
+      autocomplete_url: '/xhr/search/tag/',
+      autocomplete: {
+        autoFocus: true, minLength: 2, delay: 300,
+        source: function (request, response) {
+          $.ajax({
+            url: "/xhr/search/tag/",
+            dataType: "json",
+            data: {
+              term: request.term
+            },
+            success: function (data) {
+              data = data.data;
+              response($.map(data, function (item) {
+                return {
+                  label: item,
+                  value: item
                 }
-            },
-            params: {
-                'csrf_token': '{% csrf_token_value %}',
-                'csrf_name': 'csrfmiddlewaretoken',
-                'csrf_xname': 'X-CSRFToken'
-            },
-            onSubmit: function(id, fileName){
-                $('#ajax_loading').show();
-                $('form#shout_deal_form [type="submit"]').prop('disabled', true);
-            },
-            allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
-            sizeLimit: 5 * 1024 * 1024
-        });
+              }));
+            }
+          });
+        }
+      },
+      onChange: function (obj, tag) {
+        $('#id_tags_tag').qtip('reposition');
+      },
+      height: '',
+      width: '',
+      interactive: true,
+      delimiter: [' ', ','],
+      defaultText: 'add a keyword',
+      onAddTag: function (tag) {
+        $('#id_tags_tag').qtip('reposition');
+      },
+      onRemoveTag: function (tag) {
+        $('#id_tags_tag').qtip('reposition');
+      },
+      removeWithBackspace: true,
+      minChars: 2,
+      maxChars: 30, //if not provided there is no limit,
+      placeholderColor: '#808080',
+      max_tags: 6
+    });
 
-        $('.qq-upload-drop-area').remove();
-
-        $('.qq-upload-button').click(function () {
-            $('.qq-upload-button input[type="file"]').click();
-            $('.qq-upload-button input[type="file"]').show().focus().click().hide();
-        });
-
-        $('#id_tags').tagsInput({
-            autocomplete_url:'/xhr/search/tag/',
-            autocomplete:{
-                autoFocus:true, minLength:2, delay:300,
-                source: function(request, response) {
-                    $.ajax({
-                        url: "/xhr/search/tag/",
-                        dataType: "json",
-                        data: {
-                            term: request.term
-                        },
-                        success: function(data) {
-                            data = data.data;
-                            response($.map(data, function(item) {
-                                return {
-                                    label: item,
-                                    value: item
-                                }
-                            }));
-                        }
-                    });
-                }
-            },
-            onChange: function (obj, tag) {
-                $('#id_tags_tag').qtip('reposition');
-            },
-            height:'',
-            width:'',
-            interactive:true,
-            delimiter: [' ',','],
-            defaultText:'add a keyword',
-            onAddTag: function (tag) {
-                $('#id_tags_tag').qtip('reposition');
-            },
-            onRemoveTag: function (tag) {
-                $('#id_tags_tag').qtip('reposition');
-            },
-            removeWithBackspace : true,
-            minChars : 2,
-            maxChars : 30, //if not provided there is no limit,
-            placeholderColor : '#808080',
-            max_tags:6
-        });
-
-        $('#id_tags_tag').attr('placeholder', '{% trans "add a keyword       <br>example:<br> bmw, Apple, apartment, white" %}');
-        $('#id_tags_tag').attr('data-qtip-error-my', 'top left');
-        $('#id_tags_tag').attr('data-qtip-error-at', 'bottom right');
-        $('#id_tags_tag').attr('data-qtip-my', 'left center');
-        $('#id_tags_tag').attr('data-qtip-at', 'right center');
+    $('#id_tags_tag').attr('placeholder', '{% trans "add a keyword       <br>example:<br> bmw, Apple, apartment, white" %}');
+    $('#id_tags_tag').attr('data-qtip-error-my', 'top left');
+    $('#id_tags_tag').attr('data-qtip-error-at', 'bottom right');
+    $('#id_tags_tag').attr('data-qtip-my', 'left center');
+    $('#id_tags_tag').attr('data-qtip-at', 'right center');
 
 //        $('#id_tags_tag').blur(function () {
 //            var auto = $('.ui-autocomplete:visible');
@@ -173,7 +173,7 @@
 //            }
 //        });
 
-        var shout_map = new GoogleMap("#shout_map_deal", "deal_location input");
-        shout_map.CreateShoutMap("input_search_deal","deal_city input","deal_country input","deal_address input", undefined, undefined, "offer");
-    });
+    var shout_map = new GoogleMap("#shout_map_deal", "deal_location input");
+    shout_map.CreateShoutMap("input_search_deal", "deal_city input", "deal_country input", "deal_address input", {{ default_location.latitude }}, {{ default_location.longitude }}, "offer");
+  });
 </script>

@@ -1,4 +1,5 @@
 from django.dispatch.dispatcher import receiver
+from apps.shoutit.constants import DEFAULT_LOCATION
 from apps.shoutit.permissions import permissions_changed, ConstantPermission, ANONYMOUS_USER_PERMISSIONS
 from apps.shoutit.models import UserPermission
 from apps.shoutit.tiered_views.views_utils import set_request_language
@@ -59,38 +60,6 @@ class FBMiddleware(object):
                 facebook_controller.user_from_facebook_auth_response(request, auth_response)
 
 
-# todo: not used anymore
-class UserLocationMiddleware(object):
-    @staticmethod
-    def process_request(request):
-        # no session or location
-        if request.is_api:
-            return
-
-        if not is_session_has_location(request) or 'user_renew_location' in request.session:
-            if not request.user.is_authenticated():
-                location_info = get_location_info_by_ip(request)
-
-                # todo: no mapping with ip
-                mapped_location = map_with_predefined_city(location_info['city'])
-
-                request.session['user_lat'] = mapped_location['latitude']
-                request.session['user_lng'] = mapped_location['longitude']
-                request.session['user_country'] = mapped_location['country']
-                request.session['user_city'] = mapped_location['city']
-                request.session['user_city_encoded'] = mapped_location['city_encoded']
-            else:
-                profile = user_controller.GetProfile(request.user)
-                request.session['user_lat'] = profile and profile.Latitude or 25.2644
-                request.session['user_lng'] = profile and profile.Longitude or 55.3117
-                request.session['user_country'] = profile and profile.Country or u'AE'
-                request.session['user_city'] = profile and profile.City or u'Dubai'
-                request.session['user_city_encoded'] = to_seo_friendly(unicode.lower(request.session['user_city']))
-
-            if 'user_renew_location' in request.session:
-                del(request.session['user_renew_location'])
-
-
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
@@ -130,3 +99,7 @@ def refresh_permissions_cache(sender, **kwargs):
     permissions = [ConstantPermission.reversed_instances[p] for p in permissions]
     TaggedCache.set('perma|permissions|%s' % kwargs['request'].user.username, permissions, timeout=10 * 356 * 24 * 60 * 60)
     kwargs['request'].user.constant_permissions = permissions
+
+
+def default_location(request):
+    return {'default_location': DEFAULT_LOCATION}

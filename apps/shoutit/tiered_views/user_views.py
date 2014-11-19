@@ -6,7 +6,7 @@ import math
 import json
 from django.utils.translation import ugettext_lazy as _
 
-from apps.shoutit.models import FollowShip, LinkedFacebookAccount, ConfirmToken, Business, Profile, Trade
+from apps.shoutit.models import FollowShip, LinkedFacebookAccount, ConfirmToken, Business, Profile, Trade, PredefinedCity
 
 from apps.shoutit.controllers import user_controller, stream_controller, experience_controller, email_controller, realtime_controller
 from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
@@ -18,14 +18,15 @@ from apps.shoutit.tiers import cached_view, non_cached_view, refresh_cache, Resp
 from apps.shoutit.tiers import CACHE_TAG_USERS, CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_NOTIFICATIONS
 from apps.shoutit.tiers import CACHE_LEVEL_GLOBAL, CACHE_LEVEL_USER
 
-from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html
+from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api
 from renderers import user_api, operation_api, profiles_api, shouts_api, stats_api, activities_api
 from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
-from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator
+from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator, \
+    push_validator
 
-
-from apps.shoutit.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
+from apps.shoutit.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE, \
+    DEFAULT_LOCATION
 
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 
@@ -35,6 +36,8 @@ from django.conf import settings
 import urllib2
 
 from apps.shoutit.templatetags.template_filters import thumbnail
+from push_notifications.models import GCMDevice, APNSDevice
+
 
 def urlencode(s):
     return urllib2.quote(s)
@@ -96,7 +99,6 @@ def activate_modal(request, token):
 
     if user_controller.GetProfile(user):
         user_controller.login_without_password(request, user)
-        request.session['user_renew_location'] = True
     return result
 
 
@@ -342,12 +344,12 @@ def stop_listening_to_user(request, username):
 
 
 @non_cached_view(
-    json_renderer=lambda request, result, *args, **kwrgs: profile_json_renderer(request, result),
+    json_renderer=lambda request, result, *args, **kwargs: profile_json_renderer(request, result),
     api_renderer=profiles_api,
     methods=['GET'])
-def search_user(request, keyword):
+def search_user(request):
     limit = 6
-
+    query = request.GET.get('query', '')
     flag = int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS)
     email_search = False
 
@@ -361,22 +363,9 @@ def search_user(request, keyword):
     except ValueError, e:
         email_search = False
 
-    users = list(user_controller.SearchUsers(keyword, flag, 0, limit, email_search))
+    users = list(user_controller.SearchUsers(query, flag, 0, limit, email_search))
     result = ResponseResult()
     result.data['users'] = users
-    return result
-
-
-@csrf_exempt
-@non_cached_view(methods=['GET', 'POST'], json_renderer=json_data_renderer, api_renderer=operation_api)
-# @refresh_cache(level=CACHE_REFRESH_LEVEL_SESSION, tags=[CACHE_TAG_STREAMS, CACHE_TAG_TAGS])
-#TODO: is it important the refresh cache decorator?
-def set_user_session_location_info(request):
-    result = ResponseResult()
-    request.session['user_lat'] = float(request.REQUEST['user_lat'])
-    request.session['user_lng'] = float(request.REQUEST['user_lng'])
-    request.session['user_country'] = request.REQUEST['user_country']
-    request.session['user_city'] = request.REQUEST['user_city']
     return result
 
 
@@ -494,30 +483,40 @@ def sss(request):
         return HttpResponse('Done')
 
 
-@non_cached_view(methods=['GET'],
-                 json_renderer=json_data_renderer)
+@csrf_exempt
+@non_cached_view(methods=['POST'], login_required=True, json_renderer=json_data_renderer, api_renderer=user_location)
 def update_user_location(request):
     result = ResponseResult()
+    profile = request.user.profile
 
-    latlong = request.GET[u'latlong']
-    latitude = float(latlong.split(',')[0].strip())
-    longitude = float(latlong.split(',')[1].strip())
+    city = request.POST.get('city', None)
+    country = request.POST.get('country', None)
+    latitude = request.POST.get('latitude', None)
+    longitude = request.POST.get('longitude', None)
 
-    userProfile = user_controller.GetProfile(request.user)
-    old_city = userProfile.City
-    new_city = request.GET[u'city']
+    if not (city and country and latitude and longitude):
+        result.messages.append(('error', _("Location should contain 'country', 'city', 'latitude', 'longitude'")))
+        result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+        return result
 
-    userProfile = user_controller.UpdateLocation(request.user.username, latitude, longitude, new_city,
-                                                 request.GET[u'country'])
-    result.data['user_lat'] = request.session['user_lat'] = userProfile.Latitude
-    result.data['user_lng'] = request.session['user_lng'] = userProfile.Longitude
-    result.data['user_country'] = request.session['user_country'] = userProfile.Country
-    result.data['user_city'] = request.session['user_city'] = userProfile.City
-    result.data['user_city_encoded'] = request.session['user_city_encoded'] = to_seo_friendly(unicode.lower(unicode(userProfile.City)))
+    old_city = profile.City
+    location = {
+        'country': country,
+        'city': city,
+        'latitude': latitude,
+        'longitude': longitude
+    }
 
-    if new_city and new_city != old_city:
+    profile = user_controller.update_profile_location(profile, location)
+    result.data['user_lat'] = profile.Latitude
+    result.data['user_lng'] = profile.Longitude
+    result.data['user_country'] = profile.Country
+    result.data['user_city'] = profile.City
+    result.data['user_city_encoded'] = to_seo_friendly(unicode.lower(unicode(profile.City)))
+
+    if city != old_city:
         realtime_controller.UnbindUserFromCity(request.user.username, old_city)
-        realtime_controller.BindUserToCity(request.user.username, new_city)
+        realtime_controller.BindUserToCity(request.user.username, city)
 
     return result
 
@@ -590,8 +589,9 @@ def user_profile(request, username):
 
     result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).filter(OwnerUser=profile.user).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
-    result.data['is_listening'] = (request.user.is_authenticated() and len(
-        FollowShip.objects.filter(follower__user__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
+
+    if request.user.is_authenticated():
+        result.data['is_listening'] = user_controller.is_listening(request.user, profile.stream2)
 
     if isinstance(profile, Profile):
         result.data['requests_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).filter(OwnerUser=profile.user).count()
@@ -635,8 +635,46 @@ def user_profile_brief(request, username):
     result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
     result.data['profile'] = profile
     result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
-    result.data['is_listening'] = (request.user.is_authenticated() and len(
-        FollowShip.objects.filter(follower__user__pk=request.user.pk, stream__id=profile.Stream_id)) > 0) or False
+    if request.user.is_authenticated():
+        result.data['is_listening'] = user_controller.is_listening(request.user, profile.stream2)
+    return result
+
+
+@non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True, api_renderer=push_user_api, validator=push_validator)
+def push(request, push_type):
+    result = ResponseResult()
+
+    if request.method == 'POST':
+        token = request.validation_result.data['token']
+        if push_type == 'apns':
+            apns_device = request.user.apns_device
+            if apns_device:
+                apns_device.registration_id = token
+                apns_device.save()
+            else:
+                apns_device = APNSDevice(registration_id=token, user=request.user)
+                apns_device.save()
+
+        elif push_type == 'gcm':
+            gcm_device = request.user.gcm_device
+            if gcm_device:
+                gcm_device.registration_id = token
+                gcm_device.save()
+            else:
+                gcm_device = GCMDevice(registration_id=token, user=request.user)
+                gcm_device.save()
+
+    elif request.method == 'DELETE':
+        if push_type == 'apns':
+            apns_device = request.user.apns_device
+            if apns_device:
+                apns_device.delete()
+
+        elif push_type == 'gcm':
+            gcm_device = request.user.gcm_device
+            if gcm_device:
+                gcm_device.delete()
+
     return result
 
 
@@ -681,32 +719,6 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
                 result.data['listening']['users'] = [
                     {'username': p.username, 'name': p.name, 'image': thumbnail(p.Image, 32)}
                     for p in listening_profiles]
-    return result
-
-
-@cached_view(level=CACHE_LEVEL_GLOBAL,
-             tags=[CACHE_TAG_USERS],
-             json_renderer=json_data_renderer,
-             methods=['GET'])
-def top_users(request):
-    result = ResponseResult()
-    if not request.session.has_key('user_country'):
-        result.data['top_users'] = []
-        return result
-
-    user_country = request.session['user_country']
-    user_city = request.session['user_city']
-
-    result.data['top_users'] = user_controller.GetTopUsers(7, user_country, user_city)
-    if request.user.is_authenticated():
-        user_following = user_controller.UserFollowing(request.user.username, 'users', 'all')['users']
-        user_following = Profile.objects.values('user__username').filter(pk__in=[u.pk for u in user_following])
-        for top_user in result.data['top_users']:
-            top_user['is_listening'] = {'user__username': top_user['user__username']} in user_following
-            top_user['is_you'] = top_user['user__username'] == request.user.username
-    else:
-        for top_user in result.data['top_users']:
-            top_user['is_listening'] = False
     return result
 
 

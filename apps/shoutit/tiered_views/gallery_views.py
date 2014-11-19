@@ -122,9 +122,9 @@ def shout_item(request,item_id):
 			result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
 			return result
 
-		latlong = form.cleaned_data['location']
-		latitude = float(latlong.split(',')[0].strip())
-		longitude = float(latlong.split(',')[1].strip())
+		latlng = form.cleaned_data['location']
+		latitude = float(latlng.split(',')[0].strip())
+		longitude = float(latlng.split(',')[1].strip())
 
 
 		item = item_controller.get_item(base62_to_int(item_id))

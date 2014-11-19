@@ -8,9 +8,9 @@ from django.utils.translation import ugettext_lazy as _
 from piston3.utils import rc
 from apps.shoutit import constants
 
-from apps.shoutit.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_BUY, POST_TYPE_SELL, POST_TYPE_EXPERIENCE
+from apps.shoutit.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_BUY, POST_TYPE_SELL, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
 from apps.shoutit.controllers import user_controller
-from apps.shoutit.models import Shout, ConfirmToken, Post, Profile, Business, Trade
+from apps.shoutit.models import Shout, ConfirmToken, Post, Profile, Business, Trade, PredefinedCity
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
 from apps.shoutit.templatetags import template_filters
 from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
@@ -33,10 +33,14 @@ def render_in_master_page(request, template, variables, page_title='', page_desc
     variables['report_constants'] = constants.report_types
     variables['settings'] = settings
 
-    variables['user_lat'] = request.session['user_lat']
-    variables['user_lng'] = request.session['user_lng']
-    variables['user_country'] = request.session['user_country']
-    variables['user_city'] = request.session['user_city']
+    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(City=city)
+
+    variables['user_lat'] = pre_city.Latitude
+    variables['user_lng'] = pre_city.Longitude
+    variables['user_country'] = pre_city.Country
+    variables['user_city'] = pre_city.City
+    variables['user_city_encoded'] = pre_city.EncodedCity
 
     if 'loop' in request.GET:
         variables['loop'] = True
@@ -162,7 +166,7 @@ def browse_html(request, result, browse_type, url_encoded_city, browse_category=
     if 'redirect_category' in result.data:
         return HttpResponseRedirect('/%s/%s/' % (browse_type, url_encoded_city))
     if 'redirect_city' in result.data:
-        redirect_city = '/%s/%s/' % (browse_type, request.session['user_city_encoded'])
+        redirect_city = '/%s/%s/' % (browse_type, result.data['browse_city_encoded'])
         if browse_category:
             redirect_city += '%s/' % browse_category
         return HttpResponseRedirect(redirect_city)
@@ -499,6 +503,33 @@ def user_api(request, result, *args, **kwargs):
     return response, pre_json_result
 
 
+def push_user_api(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        user = render_user(request.user, level=5, owner=True)
+
+    else:
+        user = None
+
+    pre_json_result['user'] = user
+
+    return response, pre_json_result
+
+
+def user_location(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        user = render_user(request.user, level=3, owner=True)
+    else:
+        user = None
+
+    pre_json_result['user'] = user
+
+    return response, pre_json_result
+
+
 def notifications_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
@@ -659,7 +690,7 @@ def activate_modal_html(request, result, token):
 
         shout = Trade.objects.GetValidTrades().filter(OwnerUser=t.user)
         if len(shout):
-            url = utils.ShoutLink(shout[0])
+            url = shout_link(shout[0])
         else:
             url = link + '/'
 
@@ -845,7 +876,7 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
             'text': result.data['experience'].Text,
             'state': int(result.data['experience'].State),
             'date': result.data['experience'].DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
-            'next': utils.ShoutLink(result.data['experience'])
+            'next': shout_link(result.data['experience'])
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message , data=data)
     else:
@@ -994,6 +1025,6 @@ def profiles_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result)
 
     if not result.errors:
-        pre_json_result['users'] = [render_user(user) for user in result.data['users']]
+        pre_json_result['users'] = [render_user(user, 2) for user in result.data['users']]
 
     return response, pre_json_result

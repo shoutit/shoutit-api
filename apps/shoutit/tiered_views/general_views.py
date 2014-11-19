@@ -158,15 +158,6 @@ def stored_image(request, image_id, size=32):
     return result
 
 
-@non_cached_view(methods=['GET'],
-                 json_renderer=json_data_renderer)
-def get_client_lat_lng(request):
-    result = ResponseResult()
-    location_info = get_location_info_by_ip(request)
-    result.data['location'] = str(location_info['latitude']) + ' ' + str(location_info['longitude'])
-    return result
-
-
 def modal(request, template=None):
     if not template:
         template = ''
@@ -295,6 +286,7 @@ def modal(request, template=None):
     else:
         variables = RequestContext(request)
 
+
     return render_to_response('modals/' + template + '_modal.html', variables)
 
 
@@ -371,6 +363,7 @@ def admin_stats(request):
              api_renderer=currencies_api)
 def currencies(request):
     result = ResponseResult()
+    # todo: use the cache
     result.data['currencies'] = list(Currency.objects.all())
     return result
 
@@ -434,18 +427,14 @@ def upload_file(request):
     return HttpResponse(json.dumps(ret_json))
 
 
-@non_cached_view(methods=['GET'],
-                 json_renderer=lambda request, result: live_events_json_renderer(request, result))
+@non_cached_view(methods=['GET'], json_renderer=lambda request, result: live_events_json_renderer(request, result))
 def live_events(request):
     result = ResponseResult()
 
-    city = None
-    if 'city' in request.GET and request.GET['city'] != '':
-        city = request.GET['city']
-
+    city = request.GET.get('city', DEFAULT_LOCATION['city'])
     try:
-        pre_city = PredefinedCity.objects.get(City=city or request.session['user_city_encoded'])
-    except ObjectDoesNotExist:
+        pre_city = PredefinedCity.objects.get(City=city)
+    except PredefinedCity.DoesNotExist:
         pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
 
     user_country = pre_city.Country

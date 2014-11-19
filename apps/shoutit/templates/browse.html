@@ -216,7 +216,7 @@
       {% if user.is_authenticated %}
         landing_map.CreateLandingMap({{ user.profile.Latitude }}, {{ user.profile.Longitude }});
       {% else %}
-        landing_map.CreateLandingMap(0, 0);
+        landing_map.CreateLandingMap({{ browse_latitude }}, {{ browse_longitude }});
       {% endif %}
 
       $('.shouts .box-content').scrollableStream('885px', true, '/xhr/shouts/stream/', '.shouts .box-content', 1);

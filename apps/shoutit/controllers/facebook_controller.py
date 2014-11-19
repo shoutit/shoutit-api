@@ -5,7 +5,7 @@ import urlparse
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from apps.shoutit.models import LinkedFacebookAccount
-from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_location
+from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_profile_location
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
@@ -36,10 +36,9 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
 
     if user:
         if initial_user and initial_user['location']:
-            update_location(user.profile, initial_user['location'])
+            update_profile_location(user.profile, initial_user['location'])
 
         login_without_password(request, user)
-        request.session['user_renew_location'] = True
         return None, user
     else:
         return Exception('Could not login the user'), None

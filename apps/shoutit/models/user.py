@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models import Min
 from django.db.models.signals import post_delete, pre_delete, post_save
 from django.dispatch import receiver
+from push_notifications.models import APNSDevice, GCMDevice
 
 from apps.shoutit.constants import DEFAULT_LOCATION
 # from apps.ActivityLogger.models import Request
@@ -195,6 +196,30 @@ class UserFunctions(object):
             return self.profile.Longitude
         else:
             return ''
+
+    @property
+    def apns_device(self):
+        if hasattr(self, '_apns_device') and self._apns_device:
+            return self._apns_device
+
+        try:
+            self._apns_device = APNSDevice.objects.get(user=self)
+        except APNSDevice.DoesNotExist:
+            self._apns_device = None
+
+        return self._apns_device
+
+    @property
+    def gcm_device(self):
+        if hasattr(self, '_gcm_device') and self._gcm_device:
+            return self._gcm_device
+
+        try:
+            self._gcm_device = GCMDevice.objects.get(user=self)
+        except GCMDevice.DoesNotExist:
+            self._gcm_device = None
+
+        return self._gcm_device
 
 
 User.__bases__ += (UserFunctions,)

@@ -1,7 +1,6 @@
 ActivityLogger/*
 api/*
 html_messages/*
-pygeoip/*
 ShoutWebsite/*
 ShoutWebsite/controllers/*
 ShoutWebsite/tiered_views/*

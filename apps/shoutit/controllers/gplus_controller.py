@@ -1,4 +1,4 @@
-from apps.shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_location
+from apps.shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_profile_location
 from apps.shoutit.models import LinkedGoogleAccount
 from django.core.exceptions import ObjectDoesNotExist
 import httplib2
@@ -43,10 +43,9 @@ def user_from_gplus_code(request, code, initial_user=None):
 
     if user:
         if initial_user and initial_user['location']:
-            update_location(user.profile, initial_user['location'])
+            update_profile_location(user.profile, initial_user['location'])
 
         login_without_password(request, user)
-        request.session['user_renew_location'] = True
         return None, user
     else:
         return Exception('Could not login the user'), None

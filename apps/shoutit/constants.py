@@ -374,7 +374,7 @@ LOCATION_ATTRIBUTES = ('country', 'city', 'latitude', 'longitude')
 DEFAULT_LOCATION = {
     'country': 'AE',
     'city': 'Dubai',
-    'url_encoded_city': 'dubai',
+    'city_encoded': 'dubai',
     'latitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][0],
     'longitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][1]
 }

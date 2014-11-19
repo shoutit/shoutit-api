@@ -1,3 +1,4 @@
+from push_notifications.models import APNSDevice, GCMDevice
 from apps.shoutit.utils import int_to_base62
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 from apps.shoutit.constants import *
@@ -61,7 +62,7 @@ def render_tag(tag):
 # 2: url, image, sex, is_active
 # 3: date_joined, bio, location
 # 4: email, social_channels
-# 5: ?
+# 5: push tokens
 # todo: enhanced function for rendering array of users/profiles/businesses
 def render_user(user, level=1, owner=False):
     if user is None:
@@ -82,6 +83,7 @@ def render_user(user, level=1, owner=False):
 
     elif isinstance(user, (Profile, Business)):
         profile = user
+        user = user.user
 
     if isinstance(profile, Profile):
 
@@ -119,6 +121,14 @@ def render_user(user, level=1, owner=False):
                 'social_channels': {
                     'facebook': True if (hasattr(user, 'linked_facebook') and user.linked_facebook) else False,
                     'gplus': True if (hasattr(user, 'linked_gplus') and user.linked_gplus) else False
+                }
+            })
+
+        if level >= 5:
+            result.update({
+                'push_tokens': {
+                    'apns': user.apns_device.registration_id if user.apns_device else None,
+                    'gcm': user.gcm_device.registration_id if user.gcm_device else None
                 }
             })
 

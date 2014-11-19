@@ -2,103 +2,104 @@
 {% load template_filters %}
 
 <form enctype="multipart/form-data" method="post" action="{{ request.path }}" id='business_edit_form'>
-    {% csrf_token %}
+  {% csrf_token %}
 
-    <div class="input-field">
-        <div class='user-image'><img src="{{ profile.Image|thumbnail:95|secure_url }}"></div>
-        <div id="file-uploader">
-            <noscript>
-                <p>Please enable JavaScript to use file uploader.</p>
-            </noscript>
-        </div>
+  <div class="input-field">
+    <div class='user-image'><img src="{{ profile.Image|thumbnail:95|secure_url }}"></div>
+    <div id="file-uploader">
+      <noscript>
+        <p>Please enable JavaScript to use file uploader.</p>
+      </noscript>
     </div>
-	<div class="divs-inline">
-	<div class="input-field">
-        {{ form.name|attr:"placeholder:Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
-    </div>
-		<div class="input-field b-eamil">
-			{{ form.email|attr:"placeholder:Email"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
-		</div>
-		<div class="input-field">
-			{{ form.username|attr:"placeholder:Username"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
-		</div>
-	</div>
+  </div>
+  <div class="divs-inline">
     <div class="input-field">
-        {{ form.bio|attr:"placeholder:Description" }}
+      {{ form.name|attr:"placeholder:Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
     </div>
-    <div class="divs-inline">
+    <div class="input-field b-eamil">
+      {{ form.email|attr:"placeholder:Email"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
+    </div>
     <div class="input-field">
-        {{ form.mobile|attr:"placeholder:Phone" }}
+      {{ form.username|attr:"placeholder:Username"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+    </div>
+  </div>
+  <div class="input-field">
+    {{ form.bio|attr:"placeholder:Description" }}
+  </div>
+  <div class="divs-inline">
+    <div class="input-field">
+      {{ form.mobile|attr:"placeholder:Phone" }}
     </div>
     <div class="input-field sex">
-        {{ form.website|attr:"placeholder:Website"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
+      {{ form.website|attr:"placeholder:Website"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
     </div>
-	    </div>
-    <div class="input-field">
-        To change your password please supply the following:
+  </div>
+  <div class="input-field">
+    To change your password please supply the following:
+  </div>
+  <div class="divs-inline">
+    <div class="input-field fifty">
+      {{ form.password|attr:"placeholder:New Password"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
     </div>
-    <div class="divs-inline">
-        <div class="input-field fifty">
-            {{ form.password|attr:"placeholder:New Password"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
-        </div>
-        <div class="input-field fifty">
-            {{ form.password_confirm|attr:"placeholder:Confirm Password"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
-        </div>
+    <div class="input-field fifty">
+      {{ form.password_confirm|attr:"placeholder:Confirm Password"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
     </div>
+  </div>
 
-    <input type="text" id="business_location_input_search" class="noSubmit">
-    <div class="input-field" id="location">
-        {{ form.location|attr:"style:display:none" }}
-        <div class="input" id="business_edit_map" style="width: 513px; height: 146px;"></div>
-    </div>
+  <input type="text" id="business_location_input_search" class="noSubmit">
 
-    <div class="input-field" id="city">
-        {{ form.city|attr:"style:display:none" }}
-    </div>
-    <div class="input-field" id="country">
-        {{ form.country|attr:"style:display:none" }}
-    </div>
-    <div class="input-field" id="address">
-        {{ form.address|attr:"style:display:none" }}
-    </div>
+  <div class="input-field" id="location">
+    {{ form.location|attr:"style:display:none" }}
+    <div class="input" id="business_edit_map" style="width: 513px; height: 146px;"></div>
+  </div>
 
-	<button class="btn btn-primary" type="submit">Save Changes</button>
-	<button class="btn" data-dismiss="modal">Cancel</button>
+  <div class="input-field" id="city">
+    {{ form.city|attr:"style:display:none" }}
+  </div>
+  <div class="input-field" id="country">
+    {{ form.country|attr:"style:display:none" }}
+  </div>
+  <div class="input-field" id="address">
+    {{ form.address|attr:"style:display:none" }}
+  </div>
+
+  <button class="btn btn-primary" type="submit">Save Changes</button>
+  <button class="btn" data-dismiss="modal">Cancel</button>
 
 </form>
 
 <script type="text/javascript" language="javascript">
-    $('form#business_edit_form').submitAjaxilyAndRedirect();
+  $('form#business_edit_form').submitAjaxilyAndRedirect();
 
-    $(document).ready(function(){
-        var shout_map = new GoogleMap("#business_edit_map", "location input");
-        shout_map.CreateShoutMap("business_location_input_search","city input","country input","address input", {{ profile.Latitude }}, {{ profile.Longitude }}, "sell");
-    });
+  $(document).ready(function () {
+    var shout_map = new GoogleMap("#business_edit_map", "location input");
+    shout_map.CreateShoutMap("business_location_input_search", "city input", "country input", "address input", {{ profile.Latitude }}, {{ profile.Longitude }}, "sell");
+  });
 
-    var uploader = new qq.FileUploader({
-        action: "/upload/user_image/",
-        element: $('#file-uploader')[0],
-        multiple: false,
+  var uploader = new qq.FileUploader({
+    action: "/upload/user_image/",
+    element: $('#file-uploader')[0],
+    multiple: false,
 
-        onComplete: function( id, fileName, responseJSON ) {
-            $('#ajax_loading').hide();
-            $('form#business_edit_form [type="submit"]').prop('disabled', false);
-            if (responseJSON.success) {
-                $('.input-field .user-image img').attr('src', responseJSON.url);
-            }
-        },
-        params: {
-          'csrf_token': '{% csrf_token_value %}',
-          'csrf_name': 'csrfmiddlewaretoken',
-          'csrf_xname': 'X-CSRFToken'
-        },
-        onSubmit: function(id, fileName){
-            $('form#business_edit_form [type="submit"]').prop('disabled', true);
-            $('#ajax_loading').show();
-        },
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
-        sizeLimit: 200 * 1024
-    });
+    onComplete: function (id, fileName, responseJSON) {
+      $('#ajax_loading').hide();
+      $('form#business_edit_form [type="submit"]').prop('disabled', false);
+      if (responseJSON.success) {
+        $('.input-field .user-image img').attr('src', responseJSON.url);
+      }
+    },
+    params: {
+      'csrf_token': '{% csrf_token_value %}',
+      'csrf_name': 'csrfmiddlewaretoken',
+      'csrf_xname': 'X-CSRFToken'
+    },
+    onSubmit: function (id, fileName) {
+      $('form#business_edit_form [type="submit"]').prop('disabled', true);
+      $('#ajax_loading').show();
+    },
+    allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
+    sizeLimit: 200 * 1024
+  });
 
-	$('.qq-upload-drop-area').remove();
+  $('.qq-upload-drop-area').remove();
 </script>

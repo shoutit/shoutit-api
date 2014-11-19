@@ -97,7 +97,6 @@ def renew_shout(request, shout_id):
 
 
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
-                 html_renderer=lambda request, result, *args: page_html(request, result, 'shout_buy.html', _('Shout Buy')),
                  api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args:
                  json_renderer(request, result, _('Your shout was shouted!'),
@@ -131,9 +130,9 @@ def shout_buy(request):
 
             country = form.cleaned_data['country']
             city = form.cleaned_data['city']
-            latlong = form.cleaned_data['location'].split(',')
-            latitude = float(latlong[0].strip())
-            longitude = float(latlong[1].strip())
+            latlng = form.cleaned_data['location'].split(',')
+            latitude = float(latlng[0].strip())
+            longitude = float(latlng[1].strip())
             address = form.cleaned_data['address']
 
         images = []
@@ -182,7 +181,6 @@ def shout_buy(request):
 
 #TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
-                 html_renderer=lambda request, result, *args: page_html(request, result, 'shout_sell.html', _('Shout Sell')),
                  api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args:
                  json_renderer(request, result, _('Your shout was shouted!'),
@@ -217,9 +215,9 @@ def shout_sell(request):
 
             country = form.cleaned_data['country']
             city = form.cleaned_data['city']
-            latlong = form.cleaned_data['location'].split(',')
-            latitude = float(latlong[0].strip())
-            longitude = float(latlong[1].strip())
+            latlng = form.cleaned_data['location'].split(',')
+            latitude = float(latlng[0].strip())
+            longitude = float(latlng[1].strip())
             address = form.cleaned_data['address']
 
         images = []
@@ -274,9 +272,9 @@ def shout_edit(request, shout_id):
     result = ResponseResult()
     form = ShoutForm(request.POST, request.FILES)
     form.is_valid()
-    latlong = form.cleaned_data['location']
-    latitude = float(latlong.split(',')[0].strip())
-    longitude = float(latlong.split(',')[1].strip())
+    latlng = form.cleaned_data['location']
+    latitude = float(latlng.split(',')[0].strip())
+    longitude = float(latlng.split(',')[1].strip())
 
     shouter = Shout.objects.get(pk=shout_id).OwnerUser
 

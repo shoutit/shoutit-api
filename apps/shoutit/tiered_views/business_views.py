@@ -330,9 +330,9 @@ def business_edit_profile(request, username):
             profile.Website = form.cleaned_data['website']
 
         if form.cleaned_data.has_key('location') and form.cleaned_data['location']:
-            latlong = form.cleaned_data['location']
-            latitude = float(latlong.split(',')[0].strip())
-            longitude = float(latlong.split(',')[1].strip())
+            latlng = form.cleaned_data['location']
+            latitude = float(latlng.split(',')[0].strip())
+            longitude = float(latlng.split(',')[1].strip())
             city = form.cleaned_data['city']
             country = form.cleaned_data['country']
             address = form.cleaned_data['address']

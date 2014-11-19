@@ -662,39 +662,6 @@
   </script>
 {% endif %}
 
-<script>
-  $(document).ready(function () {
-
-    {#		{% if not request.user.is_authenticated and new_ip %}#}
-    {#			getLocationInfoByLatLng({{ user_lat }},{{ user_lng }}, function (info) {#}
-    {#				var post_data = null;#}
-    {##}
-    {#				if (info == null)#}
-    {#					post_data = {user_lat :{{ user_lat }}, user_lng: {{ user_lng }} , user_country:'AE', user_city:'Dubai'};#}
-    {#				else#}
-    {#					post_data = {user_lat :{{ user_lat }}, user_lng: {{ user_lng }} , user_country:info['country'], user_city:info['city']};#}
-    {#				requestAjaxily({#}
-    {#								   url: '/xhr/setUserSessionLoactionInfo',#}
-    {#								   data : post_data,#}
-    {#								   type : 'GET',#}
-    {#								   successCallback:function(data){#}
-    {#									   user_country = info['country'];#}
-    {#									   user_city = info['city'];#}
-    {#									   user_lat = {{ user_lat }};#}
-    {#									   user_lng = {{ user_lng}};#}
-    {#									   $('body').trigger('location_available');#}
-    {#								   }#}
-    {#							   });#}
-    {#			});#}
-    {#		{% else %}#}
-    {#			user_country = '{{ user_country }}';#}
-    {#			user_city = '{{ user_city }}';#}
-    {#			user_lat = '{{ user_lat }}';#}
-    {#			user_lng = '{{ user_lng }}';#}
-    {#			$('body').trigger('location_available');#}
-    {#		{% endif %}#}
-  });
-</script>
 <script type="text/javascript" charset="utf-8">
   var is_ssl = ("https:" == document.location.protocol);
   var asset_host = is_ssl ? "https://d3rdqalhjaisuu.cloudfront.net/" : "http://d3rdqalhjaisuu.cloudfront.net/";
@@ -764,6 +731,5 @@
   })();
 </script>
 <!-- END Pre-requisites -->
-
 </body>
 </html>

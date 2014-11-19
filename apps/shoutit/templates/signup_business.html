@@ -3,133 +3,133 @@
 {% load template_filters %}
 
 {% block content %}
-    <form enctype="multipart/form-data" method="post" action="{{ request.path }}" id='signup_business_form'>
-        {% csrf_token %}
-        <div class="input-field">
-{#			<span>Business Name:</span>#}
-            {{ tiny_business_form.name|attr:"placeholder:Business Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
-        </div>
+  <form enctype="multipart/form-data" method="post" action="{{ request.path }}" id='signup_business_form'>
+    {% csrf_token %}
+    <div class="input-field">
+      {#			<span>Business Name:</span>#}
+      {{ tiny_business_form.name|attr:"placeholder:Business Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
+    </div>
 
-        {% if not business %}
-        <div class="input-field" id="category">
-            {{ tiny_business_form.category}}
-        </div>
-        {% endif %}
+    {% if not business %}
+      <div class="input-field" id="category">
+        {{ tiny_business_form.category }}
+      </div>
+    {% endif %}
 
-        <div class="input-field">
-{#			<span>Email:</span>#}
-            {{ form.email|attr:"placeholder:Email"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
-        </div>
+    <div class="input-field">
+      {#			<span>Email:</span>#}
+      {{ form.email|attr:"placeholder:Email"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
+    </div>
 
-        <div class="input-field">
-{#			<span>Phone:</span>#}
-            {{ form.phone|attr:"placeholder:Phone" }}
-        </div>
+    <div class="input-field">
+      {#			<span>Phone:</span>#}
+      {{ form.phone|attr:"placeholder:Phone" }}
+    </div>
 
-        <div class="input-field">
-{#			<span>Website:</span>#}
-            {{ form.website|attr:"placeholder:Website" }}
-        </div>
+    <div class="input-field">
+      {#			<span>Website:</span>#}
+      {{ form.website|attr:"placeholder:Website" }}
+    </div>
 
-        <div class="input-field">
-{#			<span>Description:</span>#}
-            {{ form.description|attr:"placeholder:Description" }}
-        </div>
-		<div>
-        {% if not business %}
+    <div class="input-field">
+      {#			<span>Description:</span>#}
+      {{ form.description|attr:"placeholder:Description" }}
+    </div>
+    <div>
+      {% if not business %}
         <input type="text" id="input_search" class="noSubmit">
-		</div>
+        </div>
         <div class="input-field" id="location">
-            {{ tiny_business_form.location|attr:"style:display:none" }}
-            <div class="input" id="business_map" style="width: 513px; height: 146px;"></div>
+          {{ tiny_business_form.location|attr:"style:display:none" }}
+          <div class="input" id="business_map" style="width: 513px; height: 146px;"></div>
         </div>
 
         <div class="input-field" id="city">
-            {{ tiny_business_form.city|attr:"style:display:none" }}
+          {{ tiny_business_form.city|attr:"style:display:none" }}
         </div>
         <div class="input-field" id="country">
-            {{ tiny_business_form.country|attr:"style:display:none" }}
+          {{ tiny_business_form.country|attr:"style:display:none" }}
         </div>
         <div class="input-field" id="address">
-            {{ tiny_business_form.address|attr:"style:display:none" }}
+          {{ tiny_business_form.address|attr:"style:display:none" }}
         </div>
-        {% endif %}
-	<div>
-        <div class="input-field">
-			Please upload any document that verifies your ownership of this business
-            <div id="file-uploader">
-                <noscript>
-                    <p>Please enable JavaScript to use file uploader.</p>
-                </noscript>
-            </div>
-{#			<input type="hidden" value="" name="business_documents"/>#}
+      {% endif %}
+    <div>
+      <div class="input-field">
+        Please upload any document that verifies your ownership of this business
+        <div id="file-uploader">
+          <noscript>
+            <p>Please enable JavaScript to use file uploader.</p>
+          </noscript>
+        </div>
+        {#			<input type="hidden" value="" name="business_documents"/>#}
 
-		</div>
+      </div>
 
-        <button class="btn btn-primary" type="submit">Sign up</button>
-	</div>
+      <button class="btn btn-primary" type="submit">Sign up</button>
+    </div>
     {#    <button class="btn primary" type="submit">Save Changes</button>#}
-    </form>
+  </form>
 {% endblock %}
 {% block scripts %}
-    <script type="text/javascript" language="javascript">
-        $('form#signup_business_form').submitAjaxily(function (data) {
-            if (redirect_after_login)
-                redirect_by_response(data);
-            else {
-                $('body').trigger('signup_business_ok', [data.data.username]);
-                redirect_after_login = true;
-            }
-        });
+  <script type="text/javascript" language="javascript">
+    $('form#signup_business_form').submitAjaxily(function (data) {
+      if (redirect_after_login)
+        redirect_by_response(data);
+      else {
+        $('body').trigger('signup_business_ok', [data.data.username]);
+        redirect_after_login = true;
+      }
+    });
 
-        var uploader = new qq.FileUploader({
-            action: "/upload/files/",
-            element: $('#file-uploader')[0],
-            multiple: true,
+    var uploader = new qq.FileUploader({
+      action: "/upload/files/",
+      element: $('#file-uploader')[0],
+      multiple: true,
 
-            onComplete: function( id, fileName, responseJSON ) {
-                $('#ajax_loading').hide();
-                $('form#signup_business_form [type="submit"]').prop('disabled', false);
-                if (responseJSON.success) {
+      onComplete: function (id, fileName, responseJSON) {
+        $('#ajax_loading').hide();
+        $('form#signup_business_form [type="submit"]').prop('disabled', false);
+        if (responseJSON.success) {
 //                    $('.input-field .user-image img').attr('src', responseJSON.url);
-                    $('#file-uploader').append('<span>' + fileName + '</span>');
-                    $('form#signup_business_form').append('<input type="hidden" value="' + responseJSON.url + '" name="business_documents"/>');
+          $('#file-uploader').append('<span>' + fileName + '</span>');
+          $('form#signup_business_form').append('<input type="hidden" value="' + responseJSON.url + '" name="business_documents"/>');
 //					$('form#signup_business_form #docs input').attr('value',responseJSON.url);
-                }
-            },
-            params: {
-              'csrf_token': '{% csrf_token_value %}',
-              'csrf_name': 'csrfmiddlewaretoken',
-              'csrf_xname': 'X-CSRFToken'
-            },
-            onSubmit: function(id, fileName){
-                $('form#activate_business_form [type="submit"]').prop('disabled', true);
-                $('#ajax_loading').show();
-            },
-            allowedExtensions: ['zip','pdf','doc','png','jpg','jpeg','gif','tif'],
-            sizeLimit: 5 * 1024 * 1024,
-			template: '<div class="qq-uploader">' +
-					'<div class="qq-upload-drop-area"><span>Drop pictures here to upload</span></div>' +
-					'<div class="qq-upload-button">Upload</div>' +
-					'<ul class="qq-upload-list"></ul>' +
-					'</div>'
+        }
+      },
+      params: {
+        'csrf_token': '{% csrf_token_value %}',
+        'csrf_name': 'csrfmiddlewaretoken',
+        'csrf_xname': 'X-CSRFToken'
+      },
+      onSubmit: function (id, fileName) {
+        $('form#activate_business_form [type="submit"]').prop('disabled', true);
+        $('#ajax_loading').show();
+      },
+      allowedExtensions: ['zip', 'pdf', 'doc', 'png', 'jpg', 'jpeg', 'gif', 'tif'],
+      sizeLimit: 5 * 1024 * 1024,
+      template: '<div class="qq-uploader">' +
+          '<div class="qq-upload-drop-area"><span>Drop pictures here to upload</span></div>' +
+          '<div class="qq-upload-button">Upload</div>' +
+          '<ul class="qq-upload-list"></ul>' +
+          '</div>'
 
-		});
+    });
 
-        $('.qq-upload-drop-area').remove();
-
-
-        $(document).ready(function(){
-            var shout_map = new GoogleMap("#business_map", "location input");
-            {% if not business %}
-                {% if lat and lng %}
-                    shout_map.CreateShoutMap("input_search","city input","country input","address input", {{  lat }}, {{  lng }}, "sell");
-                {% else %}
-                    shout_map.CreateShoutMap("input_search","city input","country input","address input", undefined, undefined, "sell");
-                {% endif %}
-            {% endif %}
-        });
+    $('.qq-upload-drop-area').remove();
 
 
-    </script>
+    $(document).ready(function () {
+      var shout_map = new GoogleMap("#business_map", "location input");
+      {% if not business %}
+        {% if lat and lng %}
+          shout_map.CreateShoutMap("input_search", "city input", "country input", "address input", {{  lat }}, {{  lng }}, "sell");
+        {% else %}
+          shout_map.CreateShoutMap("input_search", "city input", "country input", "address input", {{ default_location.latitude }}, {{ default_location.longitude }}, "sell");
+        {% endif %}
+      {% endif %}
+    });
+
+
+  </script>
 {% endblock %}

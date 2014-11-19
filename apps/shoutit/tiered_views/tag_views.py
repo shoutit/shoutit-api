@@ -86,11 +86,11 @@ def set_tag_parent(request):
 def top_tags(request):
     result = ResponseResult()
 
-    city = request.GET.get('city', '')
+    city = request.GET.get('city', DEFAULT_LOCATION['city'])
 
     try:
-        pre_city = PredefinedCity.objects.get(City=city or request.session['user_city_encoded'])
-    except ObjectDoesNotExist:
+        pre_city = PredefinedCity.objects.get(City=city)
+    except PredefinedCity.DoesNotExist:
         pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
 
     user_country = pre_city.Country
@@ -118,18 +118,14 @@ def tag_stream(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
 
-    # todo: check!
-    # if not request.session.has_key('user_country'):
-    #     result.data['shouts_count'] = 0
-    #     result.data['shouts'] = []
-    #     return result
-
     page_num = int(request.GET.get('page', 1))
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num
 
-    user_country = request.session['user_country'] if hasattr(request, 'session ') and 'user_country' in request.session else None
-    user_city = request.session['user_city'] if hasattr(request, 'session') and 'user_city' in request.session else None
+    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(City=city)
+    user_country = pre_city.Country
+    user_city = pre_city.City
 
     result.data['shouts_count'] = stream_controller.get_stream_shouts_count(tag.Stream)
     result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream, start_index, end_index, country=user_country, city=user_city)
@@ -151,14 +147,12 @@ def tag_stream(request, tag_name):
 def tag_profile(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
-
-    if not tag.Image:
-        tag.Image = '/static/img/shout_tag.png'
     result.data['tag'] = tag
 
-
-    user_country = request.session['user_country'] if hasattr(request, 'session ') and 'user_country' in request.session else None
-    user_city = request.session['user_city'] if hasattr(request, 'session') and 'user_city' in request.session else None
+    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(City=city)
+    user_country = pre_city.Country
+    user_city = pre_city.City
 
     # result.data['shouts2'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
     # result.data['shouts_count2'] = len(result.data['shouts2'])

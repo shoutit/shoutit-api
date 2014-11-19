@@ -1,8 +1,6 @@
 from datetime import datetime
 import random
 import json
-import urllib
-import urllib2
 import os
 import re
 import urlparse
@@ -21,7 +19,6 @@ import pyrax
 from django.http import HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
 from numpy import array, argmax, sqrt, sum
-from pygeoip import GeoIP, MEMORY_CACHE
 from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
 from django.conf import settings
@@ -121,54 +118,6 @@ def mutual_followings(streams_code1, streams_code2):
     return len(set([int(x) for x in streams_code1.split(',')]) & set([int(x) for x in streams_code2.split(',')]))
 
 
-# location_info = get_location_info_by_latlng(latlong)
-# country = "None"
-#		city = "None"
-#		address = "None"
-#		if not location_info.has_key("error"):
-#			country = location_info["country"]
-#			city = location_info["city"]
-#			address = location_info["address"]
-#		elif location_info["error"]=="Zero Results":
-#			result.messages.append(('error', "Location Not Valid"))
-#			result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-#			return result
-#		else:
-#			result.messages.append(('error', "Connection Error"))
-#			result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-#			return result
-
-
-def get_location_info_by_latlng(latlng):
-    params = {"latlng": latlng, "sensor": "true"}
-    try:
-        urldata = urllib.urlencode(params)
-        url = "https://maps.googleapis.com/maps/api/geocode/json?" + urldata
-        urlobj = urllib2.urlopen(url)
-        data = urlobj.read()
-        datadict = json.loads(data)
-        if datadict["status"] == u"OK":
-            results = datadict["results"]
-
-            # the first object of the results give the most specific info of the latlng
-            address = results[0]['formatted_address']
-
-            # last object of results give the country info object, and the one before give the city info object and country info object and so on >>>
-            # level2_address_components the object before the last one
-            level2_address_components = results[len(results) - 2]['address_components']
-            country = level2_address_components[len(level2_address_components) - 1]['short_name']
-
-            if len(level2_address_components) >= 2:
-                city = level2_address_components[len(level2_address_components) - 2]['long_name']
-            else:
-                city = level2_address_components[len(level2_address_components) - 1]['long_name']
-            return {"address": address, "country": country, "city": city}
-        else:
-            return {"error": "Zero Results"}
-    except Exception:
-        return {"error": "exception"}
-
-
 def get_ip(request):
     ip = None
     if request:
@@ -176,32 +125,6 @@ def get_ip(request):
     if not ip or ip == '':
         ip = '80.227.53.34'
     return ip
-
-
-# TODO Move gi initialization in a global scope so its done only once.
-GI = GeoIP(os.path.join(settings.BASE_DIR, 'libs', 'pygeoip') + '/GeoIPCity.dat', MEMORY_CACHE)
-
-
-def get_location_info_by_ip(request):
-    # Get User IP
-    ip = get_ip(request)
-
-    # Get Info(lat lng) By IP
-    record = GI.record_by_addr(ip)  #168.144.92.219  82.137.200.83
-
-    #another way to get locationInfo
-    #	ipInfo = IPInfo(apikey='0efaf242211014c381d34b89402833abb29bfaf2d6e2a6d5ef8268c0d2025e82')
-    #	locationInfo = ipInfo.GetIPInfo('http://api.ipinfodb.com/v3/ip-city/',ip = ip)
-    #	record = locationInfo.split(';')
-    #	result.data['location'] =  record[8] + ' ' + record[9]	#	"25.2644" + "+" + "55.3117"  #"33.5 + 36.4"
-
-    if record and 'city' in record:
-        return {"ip": ip, "country": record["country_code"], "city": unicode(remove_non_ascii(record["city"])),
-                "latitude": record['latitude'], "longitude": record['longitude']}
-    #		else:
-    #			return {"ip":ip, "country": record["country_code"] , "c":record['country_name'] , "city":u'Dubai' , "latitude" : record['latitude'] , "longitude": record['longitude']}
-    else:
-        return {"ip": ip, "country": u'AE', "city": u'Dubai', "latitude": 25.2644, "longitude": 55.3117}
 
 
 def number_of_clusters_based_on_zoom(zoom):

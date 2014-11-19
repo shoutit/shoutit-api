@@ -243,6 +243,17 @@ def user_profile_validator(request, username, *args, **kwargs):
         return ValidationResult(True, data={'profile': profile})
 
 
+def push_validator(request, push_type, *args, **kwargs):
+    if request.method == 'POST':
+        token = 'token' in request.json_data and request.json_data['token'] or None
+        if not token:
+            return ValidationResult(False, messages=[('error', _('Invalid Push token'))], errors=[RESPONSE_RESULT_ERROR_BAD_REQUEST])
+        return ValidationResult(True, data={'token': token})
+    else:
+        return ValidationResult(True)
+
+
+
 def activate_api_validator(request, token, *args, **kwargs):
     if not token:
         return ValidationResult(False, {'token': [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])

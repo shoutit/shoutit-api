@@ -60,7 +60,8 @@ class ShoutManager(PostManager):
         return query_set
 
     def GetValidShouts(self, types=[], country_code=None, province_code=None, get_expired=False, get_muted=False):
-        if not types: types = [POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL]
+        if not types:
+            types = [POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL]
         types = [shout_type for shout_type in types if shout_type in [POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL]]
         shout_qs = PostManager.GetValidPosts(self, types, country_code=country_code, province_code=province_code, get_muted=get_muted,
                                              get_expired=get_expired)
@@ -71,7 +72,8 @@ class ShoutManager(PostManager):
 
 class TradeManager(ShoutManager):
     def GetValidTrades(self, types=[], country_code=None, province_code=None, get_expired=False, get_muted=False):
-        if not types: types = [POST_TYPE_SELL, POST_TYPE_BUY]
+        if not types:
+            types = [POST_TYPE_SELL, POST_TYPE_BUY]
         types = [trade_type for trade_type in types if trade_type in [POST_TYPE_SELL, POST_TYPE_BUY]]
         trade_qs = ShoutManager.GetValidShouts(self, types=types, country_code=country_code, province_code=province_code,
                                                get_expired=get_expired, get_muted=get_muted)

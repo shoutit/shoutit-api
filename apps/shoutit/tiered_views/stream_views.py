@@ -20,12 +20,19 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     result = ResponseResult()
     result.data['notifications'] = []
 
-    result.data['categories'] = Category.objects.all().order_by('Name')
+    # City
     result.data['predefined_cities'] = PredefinedCity.objects.all()
+    try:
+        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
+    except ObjectDoesNotExist:
+        pre_city = PredefinedCity.objects.get(EncodedCity=DEFAULT_LOCATION['city_encoded'])
 
-    if browse_category and browse_category not in [unicode.lower(c.Name) for c in result.data['categories']]:
-        result.data['redirect_category'] = True
-        return result
+    result.data['browse_country'] = pre_city.Country
+    result.data['browse_city'] = pre_city.City
+    result.data['browse_city_encoded'] = pre_city.EncodedCity
+    result.data['browse_latitude'] = pre_city.Latitude
+    result.data['browse_longitude'] = pre_city.Longitude
+
     if url_encoded_city not in [c.EncodedCity for c in result.data['predefined_cities']]:
         result.data['redirect_city'] = True
         return result
@@ -35,29 +42,20 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     result.data['count'] = 0
     result.data['browse_type'] = browse_type
 
-    try:
-        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
-    except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity=DEFAULT_LOCATION['url_encoded_city'])
-
-    result.data['browse_city'] = pre_city.City
-    result.data['browse_city_encoded'] = pre_city.EncodedCity
+    # Category
     result.data['browse_category'] = browse_category
-
-    # save new session for non-users
-    if not request.user.is_authenticated():
-        request.session['user_lat'] = pre_city.Latitude
-        request.session['user_lng'] = pre_city.Longitude
-        request.session['user_country'] = pre_city.Country
-        request.session['user_city'] = pre_city.City
-        request.session['user_city_encoded'] = pre_city.EncodedCity
+    result.data['categories'] = Category.objects.all().order_by('Name')
+    if browse_category and browse_category not in [unicode.lower(c.Name) for c in result.data['categories']]:
+        result.data['redirect_category'] = True
+        return result
 
     # Shouts of Landing Page
     user = request.user if request.user.is_authenticated() else None
-    user_country = None
-    user_city = result.data['browse_city']
-    user_lat = pre_city.Latitude if pre_city and pre_city.City != user_city else request.session['user_lat']
-    user_lng = pre_city.Longitude if pre_city and pre_city.City != user_city else request.session['user_lng']
+    # todo: more cases of default location
+    user_country = pre_city.Country
+    user_city = pre_city.City
+    user_lat = user.profile.Latitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Latitude
+    user_lng = user.profile.Longitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Longitude
 
     page_num = 1
     tag_ids = []
@@ -123,13 +121,7 @@ def index_stream(request):
 
     user = request.user if request.user.is_authenticated() else None
 
-    city = request.GET.get('city', None)
-    if not city:
-        if request.user.is_authenticated():
-            city = user.profile.City
-        else:
-            city = DEFAULT_LOCATION['city']
-
+    city = request.GET.get('city', user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city'])
     try:
         pre_city = PredefinedCity.objects.get(City=city)
     except ObjectDoesNotExist:
@@ -323,10 +315,13 @@ def load_clusters(request):
              json_renderer=shout_xhr, methods=['GET'])
 def livetimeline(request, id=None):
     result = ResponseResult()
-    user_country = request.session['user_country']
-    user_city = request.session['user_city']
-    user_lat = request.session['user_lat']
-    user_lng = request.session['user_lng']
+
+    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(City=city)
+    user_country = pre_city.Country
+    user_city = pre_city.City
+    user_lat = pre_city.Latitude
+    user_lng = pre_city.Longitude
 
     if id is not None:
         index = stream_controller.GetShoutTimeOrder(int(id), user_country, user_city)
@@ -336,7 +331,7 @@ def livetimeline(request, id=None):
 
     shouts = []
     if index:
-        shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, user_country, user_city, user_lat, user_lng, 0,index)
+        shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, user_country, user_city, user_lat, user_lng, 0, index)
         if len(shout_ids):
             shout_ranks = dict(shout_ids)
             shout_ids = [k[0] for k in shout_ids]
