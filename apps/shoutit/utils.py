@@ -374,26 +374,6 @@ def shout_link(post):
     return link
 
 
-def is_session_has_location(request):
-    rs = request.session
-    return True if 'user_lat' in rs and 'user_lng' in rs and 'user_country' in rs and 'user_city' in rs and 'user_city_encoded' in rs else False
-
-
-def map_with_predefined_city(city):
-    mapped_location = {}
-    try:
-        pdc = PredefinedCity.objects.get(City=city)
-        mapped_location['latitude'] = pdc.Latitude
-        mapped_location['longitude'] = pdc.Longitude
-        mapped_location['country'] = pdc.Country
-        mapped_location['city'] = pdc.City
-        mapped_location['city_encoded'] = pdc.EncodedCity
-    except ObjectDoesNotExist:
-        mapped_location = {'latitude': 25.2644, 'longitude': 55.3117, 'country': u'AE', 'city': u'Dubai', 'city_encoded': 'dubai'}
-
-    return mapped_location
-
-
 class JsonResponse(HttpResponse):
     """
     An HTTP response class that consumes data to be serialized to JSON.

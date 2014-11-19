@@ -35,8 +35,8 @@
       "City": "Dubai",
       "EncodedCity": "dubai",
       "Country": "AE",
-      "Longitude": 55.3117,
       "Latitude": 25.2644,
+      "Longitude": 55.3117,
       "Approved": true
     }
   },
@@ -47,8 +47,20 @@
       "City": "Aachen",
       "EncodedCity": "aachen",
       "Country": "DE",
-      "Longitude": 50.7738792,
-      "Latitude": 6.0844869,
+      "Latitude": 50.7738792,
+      "Longitude": 6.0844869,
+      "Approved": true
+    }
+  },
+ {
+    "pk": 3,
+    "model": "shoutit.predefinedcity",
+    "fields": {
+      "City": "Berlin",
+      "EncodedCity": "berlin",
+      "Country": "DE",
+      "Latitude": 52.522594,
+      "Longitude": 13.402388,
       "Approved": true
     }
   },
