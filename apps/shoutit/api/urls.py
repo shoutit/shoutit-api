@@ -149,7 +149,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^shout/([0-9a-zA-Z]+)/$',
+                       url(r'^shout/([-\w]+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': shout_views.shout_view,
                                'DELETE': shout_views.delete_shout,
@@ -157,13 +157,13 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^shout/([0-9a-zA-Z]+)/brief/$',
+                       url(r'^shout/([-\w]+)/brief/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': shout_views.load_shout
                            })
                        ),
 
-                       url(r'^shout/([0-9a-zA-Z]+)/messages/$',
+                       url(r'^shout/([-\w]+)/messages/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': message_views.get_shout_conversations
                            })
@@ -178,14 +178,14 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^messages/([a-zA-z0-9]+)/$',
+                       url(r'^messages/([-\w]+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': message_views.read_conversation,
                                'POST': message_views.reply_in_conversation
                            })
                        ),
 
-                       url(r'^messages/(\w+)/read/$',
+                       url(r'^messages/([-\w]+)/read/$',
                            TieredResource(TieredHandler, oauth, {
                                'POST': message_views.mark_message_as_read
                            })
@@ -380,19 +380,19 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^experience/([0-9a-zA-Z]+)/$',
+                       url(r'^experience/([-\w]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'GET': experience_views.view_experience
                            })
                        ),
 
-                       url(r'^post_comments/([0-9a-zA-Z]+)/$',
+                       url(r'^post_comments/([-\w]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'GET': comment_views.post_comments
                            })
                        ),
 
-                       url(r'^comment_on_post/([0-9a-zA-Z]+)/$',
+                       url(r'^comment_on_post/([-\w]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'POST': comment_views.comment_on_post
                            })
