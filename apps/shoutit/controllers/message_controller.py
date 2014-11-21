@@ -61,10 +61,11 @@ def getFullConversationDetails(conversations, user):
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
         'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile')
     shouts_ids = [conversation.AboutPost.pk for conversation in conversations]
+
     if shouts_ids:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(pk) for pk in shouts_ids])])
-        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__pk'))
 
     else:
         tags_with_shout_id = []
@@ -82,7 +83,7 @@ def getFullConversationDetails(conversations, user):
                 empty_conversations_to.append(conversation.pk)
             continue
         conversation.AboutPost.SetImages([image for image in images if image.Item_id == conversation.AboutPost.Item_id])
-        conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == conversation.AboutPost.pk])
+        conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__pk'] == conversation.AboutPost.pk])
         last_message = list(conversation.messages)[-1]
         conversation.Text = last_message.Text[0:256] if last_message.Text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated

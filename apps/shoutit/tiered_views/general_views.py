@@ -305,7 +305,7 @@ def admin_stats(request):
         if request.user.is_staff:
             result.data['users'] = Profile.objects.all().count()
 
-            users_a = Profile.objects.filter(user__is_active=True).values_list('user__id')
+            users_a = Profile.objects.filter(user__is_active=True).values_list('user__pk')
             result.data['users_a'] = len(users_a)
 
             users_e = Profile.objects.filter(~Q(user__email__iexact='')).values_list('user_id')  # todo: check

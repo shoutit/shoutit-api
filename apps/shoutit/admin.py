@@ -140,7 +140,7 @@ admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 # FollowShip
 class FollowShipAdmin(admin.ModelAdmin):
     list_display = ('pk', 'follower', 'stream', 'date_followed', 'state')
-    search_fields = ['follower__user__username', 'stream__id']
+    search_fields = ['follower__user__username', 'stream__pk']
     readonly_fields = ('follower', 'stream',)
 
 
