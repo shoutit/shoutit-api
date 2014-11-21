@@ -4,6 +4,9 @@ from apps.shoutit.models import User, Profile, Business, Tag
 
 
 # todo: better levels
+from apps.shoutit.utils import full_image_path
+
+
 def render_shout(shout, level=5):
     images = [image.Image for image in shout.GetImages()]
     videos = [render_video(video) for video in shout.get_videos()]
@@ -51,7 +54,7 @@ def render_tag(tag):
     return {
         'name': tag.Name,
         'url': get_object_url(tag),
-        'image': tag.Image
+        'image': full_image_path(tag.Image)
     }
 
 
@@ -93,7 +96,7 @@ def render_user(user, level=1, owner=False):
         if level >= 2:
             result.update({
                 'url': get_object_url(user),
-                'image': profile.Image,
+                'image': full_image_path(profile.Image),
                 'sex': profile.Sex,
                 'is_active': user.is_active
             })
@@ -132,18 +135,7 @@ def render_user(user, level=1, owner=False):
 
     elif isinstance(profile, Business):
         result = {
-            'url': get_object_url(user.user),
-            'username': user.username,
-            'image': profile.Image,
-            'name': user.name,
-            'bio': profile.About,
-            'location': {
-                'country': profile.Country,
-                'city': profile.City,
-                'address': profile.Address
-            }
             #todo: other business attributes
-
         }
     return result
 

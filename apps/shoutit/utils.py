@@ -336,6 +336,15 @@ def shout_link(post):
     return link
 
 
+def full_image_path(image_url):
+    if isinstance(image_url, basestring):
+        if image_url.startswith('/'):
+            return 'http%s://%s%s' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, image_url)
+    return image_url
+
+
+
+
 class JsonResponse(HttpResponse):
     """
     An HTTP response class that consumes data to be serialized to JSON.
