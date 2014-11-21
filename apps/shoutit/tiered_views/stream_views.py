@@ -23,17 +23,17 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     # City
     result.data['predefined_cities'] = PredefinedCity.objects.all()
     try:
-        pre_city = PredefinedCity.objects.get(EncodedCity=url_encoded_city)
+        pre_city = PredefinedCity.objects.get(city_encoded=url_encoded_city)
     except ObjectDoesNotExist:
-        pre_city = PredefinedCity.objects.get(EncodedCity=DEFAULT_LOCATION['city_encoded'])
+        pre_city = PredefinedCity.objects.get(city_encoded=DEFAULT_LOCATION['city_encoded'])
 
     result.data['browse_country'] = pre_city.Country
     result.data['browse_city'] = pre_city.City
-    result.data['browse_city_encoded'] = pre_city.EncodedCity
+    result.data['browse_city_encoded'] = pre_city.city_encoded
     result.data['browse_latitude'] = pre_city.Latitude
     result.data['browse_longitude'] = pre_city.Longitude
 
-    if url_encoded_city not in [c.EncodedCity for c in result.data['predefined_cities']]:
+    if url_encoded_city not in [c.city_encoded for c in result.data['predefined_cities']]:
         result.data['redirect_city'] = True
         return result
 

@@ -42,7 +42,7 @@
                       class="caret dropdown-toggle" style=""></b>
                     <ul class="">
                       {% for predefined_city in predefined_cities_approved %}
-                        <li><a href="/{{ browse_type }}/{{ predefined_city.EncodedCity }}/">{{ predefined_city.City }}</a></li>
+                        <li><a href="/{{ browse_type }}/{{ predefined_city.city_encoded }}/">{{ predefined_city.City }}</a></li>
                       {% endfor %}
                     </ul>
                   </li>

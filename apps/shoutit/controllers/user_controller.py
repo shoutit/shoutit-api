@@ -209,9 +209,9 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
     predefined_city = PredefinedCity.objects.filter(City=up.City)
     if not predefined_city:
-            predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
+            predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(City=up.City, EncodedCity=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
+        PredefinedCity(City=up.City, city_encoded=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
 
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
@@ -251,7 +251,7 @@ def SignUpSSS(request, mobile, location, country, city):
 
     if not PredefinedCity.objects.filter(City=up.City):
         encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
-        PredefinedCity(City=up.City, EncodedCity=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
+        PredefinedCity(City=up.City, city_encoded=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
 
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, '', token_length, token_type)
@@ -557,7 +557,7 @@ def update_profile_location(profile, location):
         PredefinedCity.objects.get(City=location['city'])
     except PredefinedCity.DoesNotExist :
         encoded_city = to_seo_friendly(unicode.lower(unicode(location['city'])))
-        PredefinedCity(City=location['city'], EncodedCity=encoded_city, Country=location['country'], Latitude=location['latitude'],
+        PredefinedCity(City=location['city'], city_encoded=encoded_city, Country=location['country'], Latitude=location['latitude'],
                        Longitude=location['longitude']).save()
 
     return profile

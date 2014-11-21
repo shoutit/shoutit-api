@@ -15,7 +15,7 @@ def patchDatabase():
 
 
 def createCities():
-    dubai = PredefinedCity(City='Dubai', EncodedCity='dubai', Country='AE', Approved=True, Latitude=25.2644,
+    dubai = PredefinedCity(City='Dubai', city_encoded='dubai', Country='AE', Approved=True, Latitude=25.2644,
                            Longitude=55.3117)
     dubai.save()
 

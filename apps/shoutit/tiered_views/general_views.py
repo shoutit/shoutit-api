@@ -34,7 +34,7 @@ def index(request, browse_type=None):
 
     pre_city = PredefinedCity.objects.get(City=city)
 
-    result.data['browse_city'] = pre_city.EncodedCity
+    result.data['browse_city'] = pre_city.city_encoded
     return result
 
 

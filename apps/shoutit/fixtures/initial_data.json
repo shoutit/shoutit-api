@@ -33,7 +33,7 @@
     "model": "shoutit.predefinedcity",
     "fields": {
       "City": "Dubai",
-      "EncodedCity": "dubai",
+      "city_encoded": "dubai",
       "Country": "AE",
       "Latitude": 25.1993957,
       "Longitude": 55.2738326,
@@ -45,7 +45,7 @@
     "model": "shoutit.predefinedcity",
     "fields": {
       "City": "Aachen",
-      "EncodedCity": "aachen",
+      "city_encoded": "aachen",
       "Country": "DE",
       "Latitude": 50.7738792,
       "Longitude": 6.0844869,
@@ -57,7 +57,7 @@
     "model": "shoutit.predefinedcity",
     "fields": {
       "City": "Berlin",
-      "EncodedCity": "berlin",
+      "city_encoded": "berlin",
       "Country": "DE",
       "Latitude": 52.522594,
       "Longitude": 13.402388,

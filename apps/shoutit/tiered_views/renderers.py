@@ -40,7 +40,7 @@ def render_in_master_page(request, template, variables, page_title='', page_desc
     variables['user_lng'] = pre_city.Longitude
     variables['user_country'] = pre_city.Country
     variables['user_city'] = pre_city.City
-    variables['user_city_encoded'] = pre_city.EncodedCity
+    variables['user_city_encoded'] = pre_city.city_encoded
 
     if 'loop' in request.GET:
         variables['loop'] = True

@@ -52,7 +52,7 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 
 	if not PredefinedCity.objects.filter(City = province_code):
 		encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-		PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
+		PredefinedCity(City = province_code, city_encoded = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 	if source_id is not None:
 		source = BusinessSource(business = bp, Source = source_type, SourceID = source_id)
@@ -164,7 +164,7 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 
 	if not PredefinedCity.objects.filter(City = province_code):
 		encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-		PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
+		PredefinedCity(City = province_code, city_encoded = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 
 	if len(documents):
@@ -223,7 +223,7 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 
 		if not PredefinedCity.objects.filter(City = province_code):
 			encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-			PredefinedCity(City = province_code, EncodedCity = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
+			PredefinedCity(City = province_code, city_encoded = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
 
 
 		# TODO log editing activity

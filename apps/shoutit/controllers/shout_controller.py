@@ -216,9 +216,9 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
     encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
     predefined_city = PredefinedCity.objects.filter(City=province_code)
     if not predefined_city:
-            predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
+            predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
+        PredefinedCity(City=province_code, city_encoded=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     if date_published:
         trade.DatePublished = date_published
@@ -265,9 +265,9 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
     predefined_city = PredefinedCity.objects.filter(City=province_code)
     if not predefined_city:
-            predefined_city = PredefinedCity.objects.filter(EncodedCity=encoded_city)
+            predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(City=province_code, EncodedCity=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
+        PredefinedCity(City=province_code, city_encoded=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
 
     stream.PublishShout(trade)
     for tag in tag_controller.GetOrCreateTags(request, tags, shouter.user):
