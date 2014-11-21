@@ -64,7 +64,7 @@ def getFullConversationDetails(conversations, user):
 
     if shouts_ids:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
-        tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(pk) for pk in shouts_ids])])
+        tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout.pk) for shout in shouts_ids])])
         tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__pk'))
 
     else:
