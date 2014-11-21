@@ -60,11 +60,11 @@ def getFullConversationDetails(conversations, user):
     conversations_messages = Message.objects.filter(Q(Conversation__pk__in=conversation_ids) & (
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
         'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile')
-    shouts_ids = [conversation.AboutPost.pk for conversation in conversations]
+    shouts_pks = [conversation.AboutPost.pk for conversation in conversations]
 
-    if shouts_ids:
+    if shouts_pks:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
-        tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout.pk) for shout in shouts_ids])])
+        tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout_pk) for shout_pk in shouts_pks])])
         tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__pk'))
 
     else:
