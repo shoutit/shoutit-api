@@ -130,12 +130,12 @@ def profile_picture(request, profile_type, name, size=''):
 @non_cached_view(methods=['GET'],
                  login_required=False,
                  validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get,
-                                                                                   _('Image does not exist.'), pk=base62_to_int(image_id)),
+                                                                                   _('Image does not exist.'), pk=image_id),
                  api_renderer=thumbnail_response,
                  json_renderer=thumbnail_response,
                  html_renderer=thumbnail_response)
 def stored_image(request, image_id, size=32):
-    image_id = base62_to_int(image_id)
+    image_id = image_id
     image = StoredImage.objects.get(pk=image_id)
 
     result = ResponseResult()
@@ -231,7 +231,7 @@ def modal(request, template=None):
     elif template == 'shout_edit':
         shout_id = request.GET['id']
         if modify_shout_validator(request, shout_id).valid:
-            shout = shout_controller.GetPost(base62_to_int(shout_id), True, True)
+            shout = shout_controller.GetPost(shout_id, True, True)
             variables = RequestContext(request, {
                 'method': 'edit',
                 'shout': shout,
@@ -249,7 +249,7 @@ def modal(request, template=None):
             raise Http404()
 
     elif template == 'shout_item_form' or template == 'edit_item_form':
-        item = item_controller.get_item(base62_to_int(request.GET['id']))
+        item = item_controller.get_item(request.GET['id'])
         if item:
             variables = RequestContext(request, {
                 'item_id': request.GET['id'],
@@ -265,7 +265,7 @@ def modal(request, template=None):
             raise Http404()
 
     elif template == 'experience_edit':
-        exp = experience_controller.GetExperience(request.user, base62_to_int(request.GET['id']))
+        exp = experience_controller.GetExperience(request.user, request.GET['id'])
         variables = RequestContext(request, {
             'form': ExperienceForm(initial={
                 'text': exp.Text,
@@ -460,5 +460,5 @@ def live_events(request):
                  validator=lambda request, event_id: delete_event_validator(request, event_id))
 def delete_event(request, event_id):
     result = ResponseResult()
-    event_controller.DeleteEvent(base62_to_int(event_id))
+    event_controller.DeleteEvent(event_id)
     return result

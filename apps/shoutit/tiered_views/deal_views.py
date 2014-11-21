@@ -10,7 +10,6 @@ from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 
 from apps.shoutit.constants import ENUM_XHR_RESULT, DEFAULT_PAGE_SIZE
-from apps.shoutit.utils import base62_to_int
 from apps.shoutit.models import Business, Deal, ServiceBuy
 from apps.shoutit.controllers import deal_controller, user_controller
 from apps.shoutit.forms import DealForm
@@ -188,12 +187,12 @@ def invalidate_voucher(request):
 @cached_view(
     tags=[CACHE_TAG_DEALS],
     methods=['GET'],
-    validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, _('Deal does not exist.'), base62_to_int(deal_id)),
+    validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, _('Deal does not exist.'), deal_id),
     json_renderer=deal_renderer_json,
     html_renderer=lambda request, result, deal_id: page_html(request, result, 'deal.html'),
 )
 def view_deal(request, deal_id):
-    deal = deal_controller.GetDeal(base62_to_int(deal_id))
+    deal = deal_controller.GetDeal(deal_id)
 
     result = ResponseResult()
     result.data['deal'] = deal

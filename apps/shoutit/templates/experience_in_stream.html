@@ -24,10 +24,10 @@
 		<div class="pd" title="{{ experience.DatePublished|ISO8601 }}">{{ experience.DatePublished }}</div>
 	</div>
 	{% if user.is_authenticated and not experience.isOwner  %}
-		<span onclick="report_experience('{{ experience.pk|base62 }}')" class="report-user" title="{% trans "Report"%}"></span>
+		<span onclick="report_experience('{{ experience.pk }}')" class="report-user" title="{% trans "Report"%}"></span>
 	{% else %}
 		{% if user.is_authenticated and experience.canEdit %}
-			<span onclick="edit_experience('{{experience.pk|base62}}')" class="edit-user-exper" title="{% trans "Edit"%}" ></span>
+			<span onclick="edit_experience('{{experience.pk}}')" class="edit-user-exper" title="{% trans "Edit"%}" ></span>
 		{% endif %}
 	{% endif %}
 	<div class="details-experience">
@@ -36,27 +36,27 @@
 		{% if experience.State == 0 %}<span class="user-icon-thumbdown pull-right"></span>{% else %}<span class="user-icon-thumbup pull-right"></span>{% endif %}
 
 		<a class="experience-text" href="{% shout_link experience %}">{{ experience.Text }}</a>
-		<span class="experience-comments" onclick="comments_on_experience('{{experience.pk|base62}}','{{timestamp}}')">{% trans "Comment" %}</span> ·
+		<span class="experience-comments" onclick="comments_on_experience('{{experience.pk}}','{{timestamp}}')">{% trans "Comment" %}</span> ·
 
 		{% if experience.canShare %}
-			<span class="share-experience" onclick="share_experience('{{experience.pk|base62}}',this)">{% trans "Share" %}</span> ·
+			<span class="share-experience" onclick="share_experience('{{experience.pk}}',this)">{% trans "Share" %}</span> ·
 		{% endif %}
 
-		<a class="experience-comment" onclick="comments_on_experience('{{experience.pk|base62}}','{{timestamp}}')" >
-			<label id="numberOfComments{{ experience.pk|base62 }}">{{ experience.commentsCount }}<i class="comment-icon"></i></label>
+		<a class="experience-comment" onclick="comments_on_experience('{{experience.pk}}','{{timestamp}}')" >
+			<label id="numberOfComments{{ experience.pk }}">{{ experience.commentsCount }}<i class="comment-icon"></i></label>
 		</a>
 
-		<a class="experience-share" onclick="users_shared_experience('{{ experience.pk|base62 }}')"  data-toggle="modal" data-target="#users_shared_experience_modal">
-			<label id="numberOfSharedExps{{ experience.pk|base62 }}">{{ experience.sharedExpsCount }} <i class="share-icon"></i></label>
+		<a class="experience-share" onclick="users_shared_experience('{{ experience.pk }}')"  data-toggle="modal" data-target="#users_shared_experience_modal">
+			<label id="numberOfSharedExps{{ experience.pk }}">{{ experience.sharedExpsCount }} <i class="share-icon"></i></label>
 		</a>
 
 		<div class="social_comments">
 			<div class='comments'>
-				<input id="{{ experience.pk|base62 }}" type="text" autocomplete="off" value="0" style="display:none">
+				<input id="{{ experience.pk }}" type="text" autocomplete="off" value="0" style="display:none">
 			</div>
 
 			{% if user.is_authenticated %}
-				<form method="post" class="comment_on_experience_form" action="/comment_on_post/{{ experience.pk|base62 }}/">
+				<form method="post" class="comment_on_experience_form" action="/comment_on_post/{{ experience.pk }}/">
 					{% csrf_token %}
 					{{ comment_form.as_p }}
 					<input type="submit" value="comment"/>
@@ -78,4 +78,4 @@
 {% endif%}
 {% endif%}
 {% endif%}
-{#$('#{{experience.pk|base62}}').val(0);#}
+{#$('#{{experience.pk}}').val(0);#}

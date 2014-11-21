@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from django.conf import settings
 
-from apps.shoutit.utils import asynchronous_task, entity_id, get_shout_name_preview, remove_non_ascii, int_to_base62
+from apps.shoutit.utils import asynchronous_task, get_shout_name_preview, remove_non_ascii
 from apps.shoutit import constants
 from apps.shoutit.controllers import sms_controller
 
@@ -89,7 +89,7 @@ def SendRegistrationActivationEmail(user, email, link, token):
 
 
 @asynchronous_task()
-def SendFollowshipEmail(follower, followed):
+def SendListenEmail(follower, followed):
     subject = _('[ShoutIt] %(name)s has started listening to your shouts') % {'name': follower.name}
     link = 'http%s://%s%s' % (settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % follower.username)
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -121,7 +121,7 @@ def SendExpiryNotificationEmail(user, shout):
     subject = _('[ShoutIt] your shout is about to expire! reshout it now.')
     title = shout.Item.Name
     link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % int_to_base62(shout.pk))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = user.email
 
@@ -151,10 +151,10 @@ def SendExpiryNotificationEmail(user, shout):
 def SendBuyOfferEmail(shout, buyer):
     subject = u'[ShoutIt] %s offered to buy your %s' % (buyer.username, shout.Name)
     shout_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % (entity_id(shout)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
     buyer_link = 'http%s://%s%s' % (settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % buyer.username)
     mute_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % (entity_id(shout)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = shout.OwnerUser.email
 
@@ -190,11 +190,11 @@ def SendBuyOfferEmail(shout, buyer):
 def SendSellOfferEmail(shout, seller):
     subject = u'[ShoutIt] %s has %s and willing to sell it to you' % (seller.username, shout.Name)
     shout_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % (entity_id(shout)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
     seller_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % seller.username)
     mute_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % (entity_id(shout)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = shout.OwnerUser.email
 
@@ -253,7 +253,7 @@ def SendMessageEmail(message):
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % message.FromUser.username)
     shout_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN,
-        constants.SHOUT_URL % (entity_id(message.Conversation.AboutPost)))
+        constants.SHOUT_URL % message.Conversation.AboutPost.pk)
     shout_name = message.Conversation.AboutPost.Item.Name
     message_text = message.Text
 
@@ -290,7 +290,7 @@ def SendUserDealCancel(user, deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
     to_name = user.name
     deal_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
     deal_name = deal.Item.Name
 
     html_template = get_template('deal_cancel_user.html')
@@ -323,7 +323,7 @@ def SendBusinessDealCancel(deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
     to_name = deal.Business.name
     deal_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
     deal_name = deal.Item.Name
 
     html_template = get_template('deal_cancel_business.html')
@@ -436,7 +436,7 @@ def SendBusinessBuyersDocument(deal, document):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': deal.Item.Name}
     to_name = deal.Business.user.get_full_name()
     deal_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(deal)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
     deal_name = deal.Item.Name
     buyers_count = deal.BuyersCount()
     html_template = get_template('deal_close_business.html')
@@ -468,7 +468,7 @@ def SendUserDealVoucher(buy, voucher):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': buy.Deal.Item.Name}
     to_name = buy.user.get_full_name()
     deal_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % (entity_id(buy.Deal)))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % buy.Deal.pk)
     deal_name = buy.Deal.Item.Name
     vouchers_count = buy.Amount
     html_template = get_template('deal_close_user.html')
@@ -506,7 +506,7 @@ def SendInvitationEmail(from_user, names_emails_dict):
             'from_name': from_user.get_full_name(),
             'from_email': from_user.email,
             'from_link': 'http%s://%s%s' % (
-                settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % (entity_id(from_user))),
+                settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % from_user.pk),
             'to_name': name,
         })
         html_message = html_template.render(context)

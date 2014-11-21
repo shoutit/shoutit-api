@@ -5,7 +5,6 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade
 from apps.shoutit.controllers import email_controller, notifications_controller, shout_controller
-from apps.shoutit.utils import base62_to_int
 
 
 def conversation_exist(conversation_id=None, user1=None, user2=None, about=None):
@@ -43,7 +42,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         attachments = []
 
     for attachment in attachments:
-        object_id = base62_to_int(attachment['object_id'])
+        object_id = attachment['object_id']
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
         MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
 

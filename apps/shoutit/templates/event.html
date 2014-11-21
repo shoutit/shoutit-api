@@ -2,7 +2,7 @@
 {% load i18n %}
 <div class="shout-brief">
 	{% if request.user == event.OwnerUser and user_stream == 1 %}
-		<a class="event-delete pull-right" onclick="delete_event('{{ event.id|base62 }}',this)">
+		<a class="event-delete pull-right" onclick="delete_event('{{ event.pk }}',this)">
 			<i class="icon-trash" title="{% trans 'Delete Event' %}"></i>
 		</a>
 	{% endif %}
@@ -72,7 +72,7 @@
         </a>
 			{% trans "posted" %}
         <a href="{% shout_link event.AttachedObject %}">
-{#        <a href="/experience/{{event.AttachedObject.pk|base62}}">#}
+{#        <a href="/experience/{{event.AttachedObject.pk}}">#}
             {{ event.AttachedObject.Text|rangeToIndex:30 }}
         </a>
 			{% trans "on" %}
@@ -119,7 +119,7 @@
             {{ event.OwnerUser.first_name }}
         </a>
 		{% trans "posted a new deal" %}
-        <a href="/deal/{{event.AttachedObject.pk|base62}}/">
+        <a href="/deal/{{event.AttachedObject.pk}}/">
             {{ event.AttachedObject.Item.Name }}
         </a>
 		</div>
@@ -132,7 +132,7 @@
             {{ event.OwnerUser.profile.name }}
         </a>
 		{% trans "bought a deal" %}
-        <a href="/deal/{{event.AttachedObject.pk|base62}}/">
+        <a href="/deal/{{event.AttachedObject.pk}}/">
             {{ event.AttachedObject.Item.Name }}
         </a>
 		</div>

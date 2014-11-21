@@ -2,7 +2,6 @@ import datetime
 import os
 import re
 import time
-import urlparse
 
 from django import template
 from django.template.base import VariableDoesNotExist
@@ -11,7 +10,7 @@ from django.utils.translation import ugettext as _
 from widget_tweaks.templatetags.widget_tweaks import _process_field_attributes
 from django.conf import settings
 
-from apps.shoutit.utils import int_to_base62, shout_link as _shout_link, get_size_url, get_https_cdn, to_seo_friendly
+from apps.shoutit.utils import shout_link as _shout_link, get_size_url, get_https_cdn, to_seo_friendly
 
 
 register = template.Library()
@@ -37,11 +36,6 @@ def active(request, pattern, ext=''):
     if re.search(pattern + ext, request.path):
         return 'active'
     return ''
-
-
-@register.filter
-def base62(v):
-    return int_to_base62(v)
 
 
 @register.filter

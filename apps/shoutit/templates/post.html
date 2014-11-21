@@ -16,11 +16,11 @@
 {#				<b><a href="/user/{{shout.OwnerUser.username }}/" class="hovercard" hovercard-name="{{ shout.OwnerUser.username }}" hovercard-type="user" hovercard-data="">{{shout.OwnerUser.username }}</a></b>#}
 
 {#				{% if shout.Type == 0 %}#}
-{#					<span>is willing to pay {{ shout.Item.Price|price }} for <a href="/shout/{{ shout.id|base62 }}/">{{ shout.Item.Name }}</a></span>#}
+{#					<span>is willing to pay {{ shout.Item.Price|price }} for <a href="/shout/{{ shout.pk }}/">{{ shout.Item.Name }}</a></span>#}
 {#				{% else %}#}
-{#					<span>is selling <a href="/shout/{{ shout.id|base62 }}/">{{ shout.Item.Name }}</a> for {{ shout.Item.Price|price }}</span>#}
+{#					<span>is selling <a href="/shout/{{ shout.id }}/">{{ shout.Item.Name }}</a> for {{ shout.Item.Price|price }}</span>#}
 {#				{% endif %}#}
-				<a class="shout_post_name" href="/shout/{{ shout.id|base62 }}/">{{ shout.Item.Name }}</a>
+				<a class="shout_post_name" href="/shout/{{ shout.pk }}/">{{ shout.Item.Name }}</a>
 				<span class="shout_post_price">{{ shout.Item.Price|price }}</span>
 {#				{% if user.username == shout.OwnerUser.username %}#}
 {#				<span class="shout_post_delete btn" id="delete{{shout.id}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></span>#}
@@ -35,9 +35,9 @@
 				{% if shout.Type < 2 and shout.GetImages %}
 					{% for image in shout.GetImages %}
 						{% if forloop.first %}
-							<div class="shout_post_image" style="cursor: pointer;" rel="shout_{{ shout.pk }}" href="/image/{{ image.pk|base62 }}/i.png"><img src="/xhr/image/{{ image.pk|base62 }}/100/"></div>
+							<div class="shout_post_image" style="cursor: pointer;" rel="shout_{{ shout.pk }}" href="/image/{{ image.pk }}/i.png"><img src="/xhr/image/{{ image.pk }}/100/"></div>
 						{% else %}
-							<a class="shout_post_image" rel="shout_{{ shout.pk }}" href="/image/{{ image.pk|base62 }}/i.png" style="display: none;"></a>
+							<a class="shout_post_image" rel="shout_{{ shout.pk }}" href="/image/{{ image.pk }}/i.png" style="display: none;"></a>
 						{% endif %}
 					{% endfor %}
 				{% endif %}
@@ -52,13 +52,13 @@
 
             <div class="shout_post_buttons">
 			{% if user.is_staff and  user.username != shout.OwnerUser.username%}
-				<a id="reply_to_{{shout.id|base62}}" class="btn" href="/shout/{{ shout.pk|base62 }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
-				<a class="shout_post_delete btn" id="deleteShout{{shout.pk|base62}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
+				<a id="reply_to_{{shout.pk}}" class="btn" href="/shout/{{ shout.pk }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
+				<a class="shout_post_delete btn" id="deleteShout{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
             {%  else %}
 				{% if user.username == shout.OwnerUser.username %}
-                <a class="shout_post_delete btn" id="deleteShout{{shout.pk|base62}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
+                <a class="shout_post_delete btn" id="deleteShout{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
 				{% else %}
-					<a id="reply_to_{{shout.id|base62}}" class="btn" href="/shout/{{ shout.pk|base62 }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
+					<a id="reply_to_{{shout.pk}}" class="btn" href="/shout/{{ shout.pk }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
 				{% endif %}
 			{% endif %}
             </div>

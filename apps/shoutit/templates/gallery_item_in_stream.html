@@ -1,5 +1,5 @@
 {% load template_filters %}
-    <div id="item{{ item.pk|base62 }}">
+    <div id="item{{ item.pk }}">
     <h4>item</h4>
     {{ item.Name }} <br />
     {{ item.Description }} <br />
@@ -7,22 +7,22 @@
     {{ item.DateCreated }} <br/>
     {% for image in item.images %}
         {% if forloop.counter0 == 0 %}
-            <div class="round shout-images" rel="shout_{{ item.pk|base62 }}" href="{{ image|secure_url }}" style="background-image: url('{{ image|thumbnail:145|secure_url }}');">
+            <div class="round shout-images" rel="shout_{{ item.pk }}" href="{{ image|secure_url }}" style="background-image: url('{{ image|thumbnail:145|secure_url }}');">
             </div>
             <i class="icon-search"></i>
         {% else %}
-            <a href="{{ image|secure_url }}" rel="shout_{{ item.pk|base62 }}" style="display: none;"></a>
+            <a href="{{ image|secure_url }}" rel="shout_{{ item.pk }}" style="display: none;"></a>
         {% endif %}
     {% endfor %}
 
     {% if IsOwner %}
-        <button onclick="delete_gallery_item('{{item.pk|base62}}',this)" type="button" > Delete </button>
-        <button onclick="shout_item('{{item.pk|base62}}',this)" class="user-btn"  > <span class="count">shout item</span>  </button>
-{#        <a id="shout{{ item.pk|base62 }}" href="#shout" data-toggle="modal" data-target="#shout_item_modal">Shout Now</a>#}
-        <button onclick="edit_item('{{ item.pk|base62 }}')"  class="user-btn" > <span class="count">edit</span> </button>
+        <button onclick="delete_gallery_item('{{item.pk}}',this)" type="button" > Delete </button>
+        <button onclick="shout_item('{{item.pk}}',this)" class="user-btn"  > <span class="count">shout item</span>  </button>
+{#        <a id="shout{{ item.pk }}" href="#shout" data-toggle="modal" data-target="#shout_item_modal">Shout Now</a>#}
+        <button onclick="edit_item('{{ item.pk }}')"  class="user-btn" > <span class="count">edit</span> </button>
     {% endif %}
     {% if not IsOwner %}
-        <button onclick="report_item('{{ item.pk|base62 }}')" class="user-btn" > <span class="count">Report</span> </button>
+        <button onclick="report_item('{{ item.pk }}')" class="user-btn" > <span class="count">Report</span> </button>
     {% endif %}
     <br/><br/>
     </div>

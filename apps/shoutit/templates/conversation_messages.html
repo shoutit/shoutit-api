@@ -17,9 +17,9 @@
         <div class="round shadow white-container pull-left form-body">
             <div class="pull-left">
                 {% if conversation_id %}
-                  <form action="/reply/{{ shout.pk|base62 }}/{{ conversation_id|base62 }}/" method="post" id='send_message_form'>
+                  <form action="/reply/{{ shout.pk }}/{{ conversation_id }}/" method="post" id='send_message_form'>
                 {% else %}
-                  <form action="/reply/{{ shout.pk|base62 }}/" method="post" id='send_message_form'>
+                  <form action="/reply/{{ shout.pk }}/" method="post" id='send_message_form'>
                 {% endif %}
                     {% csrf_token %}
                     {{ form.text }}

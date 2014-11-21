@@ -46,7 +46,7 @@
     <tr>
         <td>{{ tag.Name }}</td>
         <td>
-            <select name="tag{{ tag.id }}">
+            <select name="tag{{ tag.pk }}">
                     {% if tag.Parent != Null %}
                         <option selected="selected" >
                         {{ tag.Parent.Name }}

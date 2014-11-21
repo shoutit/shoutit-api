@@ -2,14 +2,16 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from apps.shoutit import utils
 from apps.shoutit.constants import TOKEN_TYPE_API_EMAIL, POST_TYPE_SELL, POST_TYPE_BUY
-from apps.shoutit.controllers import shout_controller, business_controller, experience_controller, comment_controller, gallery_controller, event_controller
+from apps.shoutit.controllers import shout_controller, business_controller, experience_controller, comment_controller, gallery_controller, \
+    event_controller
 from apps.shoutit.controllers import tag_controller
 from apps.shoutit.controllers import user_controller
 from apps.shoutit.controllers import message_controller
-from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
+from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, \
+    BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
 from apps.shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
-from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
-from apps.shoutit.utils import base62_to_int
+from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, \
+    RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
 from apps.shoutit.constants import *
 from django.conf import settings
 
@@ -37,8 +39,11 @@ def form_validator(request, form_class, message='You have entered some invalid i
 def shout_form_validator(request, form_class, message='You have entered some invalid input.', initial={}):
     validation_result = form_validator(request, form_class, _(message), initial)
     if validation_result.valid:
-        if not request.user.is_active and Trade.objects.GetValidTrades().filter(OwnerUser = request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
-            return ValidationResult(False, messages=[('error', _('Please, activate your account to add more shouts (check your email for activation link)'))], errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+        if not request.user.is_active and Trade.objects.GetValidTrades().filter(
+                OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
+            return ValidationResult(False, messages=[
+                ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],
+                                    errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
     return validation_result
 
 
@@ -48,7 +53,7 @@ def send_message_validator(request, shout_id, conversation_id):
     if result.valid:
 
         # 2 - validating the shout
-        result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.base62_to_int(shout_id), True, True)
+        result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), shout_id, True, True)
         if result.valid:
             shout = result.data
             conversation = None
@@ -60,7 +65,7 @@ def send_message_validator(request, shout_id, conversation_id):
             # 4 - if there is conversation_id, make sure the conversation exists
             if conversation_id:
                 result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),
-                                                 base62_to_int(conversation_id), request.user)
+                                                 conversation_id, request.user)
                 if result.valid:
                     conversation = result.data
 
@@ -101,7 +106,7 @@ def user_edit_profile_validator(request, username, email):
 
 
 def read_conversation_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),  base62_to_int(conversation_id),
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id,
                                      request.user)
     if result.valid:
         conversation = result.data
@@ -139,7 +144,7 @@ def reply_in_conversation_validator(request, conversation_id):
     if not result.valid:
         return result
 
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), base62_to_int(conversation_id),
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id,
                                      request.user)
     if result.valid:
         conversation = result.data
@@ -159,7 +164,7 @@ def reply_to_shout_validator(request, shout_id):
     if not result.valid:
         return result
 
-    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), utils.base62_to_int(shout_id))
+    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), shout_id)
     if result.valid:
         shout = result.data
         if request.user.pk == shout.OwnerUser.pk:
@@ -175,9 +180,9 @@ def reply_to_shout_validator(request, shout_id):
 def modify_shout_validator(request, pk=None):
     if not pk:
         pk = request.GET[u'id']
-        pk = base62_to_int(pk)
+        pk = pk
     else:
-        pk = base62_to_int(pk)
+        pk = pk
 
     result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), pk, True, True)
     if result.valid:
@@ -186,7 +191,8 @@ def modify_shout_validator(request, pk=None):
             if request.user.is_staff or shout.OwnerUser.pk == request.user.pk:
                 return result
             else:
-                return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_404], messages=[('error', _('You are not allowed to modify this shout.'))])
+                return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_404],
+                                        messages=[('error', _('You are not allowed to modify this shout.'))])
         return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN], messages=[('error', _('You are not signed in.'))])
     else:
         return result
@@ -203,7 +209,7 @@ def edit_shout_validator(request, pk=None):
 
 def delete_message_validator(request):
     pk = request.GET[u'id']
-    pk = base62_to_int(pk)
+    pk = pk
 
     result = object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), pk)
     if result.valid:
@@ -215,7 +221,7 @@ def delete_message_validator(request):
 
 
 def delete_conversation_validator(request):
-    conversation_id = base62_to_int(request.GET.get('id', '0'))
+    conversation_id = request.GET.get('id', '0')
 
     result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
     if result.valid:
@@ -238,7 +244,8 @@ def user_profile_validator(request, username, *args, **kwargs):
     else:
         profile = result.data
         if not profile.user.is_active and profile.user != request.user and not request.user.is_staff:
-            return ValidationResult(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})], errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+            return ValidationResult(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})],
+                                    errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
 
         return ValidationResult(True, data={'profile': profile})
 
@@ -253,14 +260,15 @@ def push_validator(request, push_type, *args, **kwargs):
         return ValidationResult(True)
 
 
-
 def activate_api_validator(request, token, *args, **kwargs):
     if not token:
-        return ValidationResult(False, {'token': [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])
+        return ValidationResult(False, {'token': [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
+                                [('error', _('You have entered some invalid input.'))])
     t = ConfirmToken.getToken(token, False, False)
     if not t:
-        return ValidationResult(False, {'token': [_('Invalid activation token.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST], [('error', _('You have entered some invalid input.'))])
-    return form_validator(request, ExtenedSignUp, initial={'email': request.user.email, 'tokentype' : TOKEN_TYPE_API_EMAIL.value})
+        return ValidationResult(False, {'token': [_('Invalid activation token.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
+                                [('error', _('You have entered some invalid input.'))])
+    return form_validator(request, ExtenedSignUp, initial={'email': request.user.email, 'tokentype': TOKEN_TYPE_API_EMAIL.value})
 
 
 def shout_owner_view_validator(request, shout_id):
@@ -276,7 +284,8 @@ def shout_owner_view_validator(request, shout_id):
                                         errors=[RESPONSE_RESULT_ERROR_404])
     return result
 
-#def post_experience_validator(request,business_name,*args,**kwargs):
+
+# def post_experience_validator(request,business_name,*args,**kwargs):
 #	result = form_validator(request, ExperienceForm)
 #	if result.valid:
 #		business = business_controller.GetBusiness(business_name)
@@ -286,9 +295,9 @@ def shout_owner_view_validator(request, shout_id):
 
 
 def share_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(exp_id))
+    result = object_exists_validator(shout_controller.GetPost, _('Experience dose not exist.'), exp_id)
     if result.valid:
-        experience = experience_controller.GetExperience(request.user, base62_to_int(exp_id),detailed = True)
+        experience = experience_controller.GetExperience(request.user, exp_id, detailed=True)
         if not experience.canShare:
             return ValidationResult(False, messages=[('error', _('You can not share this experience.'))])
     return result
@@ -305,20 +314,21 @@ def experience_validator(request, *args, **kwargs):
 
 
 def edit_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(exp_id))
+    result = object_exists_validator(shout_controller.GetPost, _('Experience dose not exist.'), exp_id)
     if result.valid:
-        experience = experience_controller.GetExperience(request.user, base62_to_int(exp_id),detailed=True)
+        experience = experience_controller.GetExperience(request.user, exp_id, detailed=True)
         if not experience.canEdit:
             return ValidationResult(False, messages=[('error', _('You can not edit this experience.'))])
     return result
 
 
 def delete_gallery_item_validator(request, item_id, *args, **kwargs):
-    result = object_exists_validator(GalleryItem.objects.filter, _('Gallery Item dose not exist.'),Item = Item.objects.get(pk = base62_to_int(item_id)), IsDisable = False)
+    result = object_exists_validator(GalleryItem.objects.filter, _('Gallery Item dose not exist.'), Item=Item.objects.get(pk=item_id),
+                                     IsDisable=False)
     if result.valid:
-        gallery_item = GalleryItem.objects.filter(Item = Item.objects.get(pk = base62_to_int(item_id)), IsDisable = False)[0]
+        gallery_item = GalleryItem.objects.filter(Item=Item.objects.get(pk=item_id), IsDisable=False)[0]
         try:
-            #			galleries = request.user.Business.Galleries.all()
+            # galleries = request.user.Business.Galleries.all()
             galleries = business_controller.GetBusiness('business').Galleries.all()
             gallery = galleries[0] if galleries else None
             if not gallery_item.Gallery == gallery:
@@ -336,35 +346,35 @@ def add_gallery_item_validator(request, business_name, *args, **kwargs):
         gallery = business_galleries[0] if business_galleries else None
         try:
             if request.user.Business != business:
-                return ValidationResult(False, messages=[('error', _('You do not have permission to add item.'))],)
-        except :
-            return ValidationResult(False, messages=[('error', _('You do not have permission to add item.'))],)
+                return ValidationResult(False, messages=[('error', _('You do not have permission to add item.'))], )
+        except:
+            return ValidationResult(False, messages=[('error', _('You do not have permission to add item.'))], )
 
         if not gallery:
-            return ValidationResult(False, messages=[('error', _('Gallery does not exist.'))],)
+            return ValidationResult(False, messages=[('error', _('Gallery does not exist.'))], )
     return result
 
 
 def comment_on_post_validator(request, post_id, form_class):
-    result = form_validator(request,CommentForm)
+    result = form_validator(request, CommentForm)
     if result.valid:
-        result = object_exists_validator(shout_controller.GetPost,_('Experience dose not exist.'), base62_to_int(post_id))
+        result = object_exists_validator(shout_controller.GetPost, _('Experience dose not exist.'), post_id)
     return result
 
 
 def delete_comment_validator(request, comment_id):
-    result = object_exists_validator(comment_controller.GetCommentByID,_('Comment dose not exist.'), base62_to_int(comment_id))
+    result = object_exists_validator(comment_controller.GetCommentByID, _('Comment dose not exist.'), comment_id)
     if result.valid:
-        comment = comment_controller.GetCommentByID(base62_to_int(comment_id))
+        comment = comment_controller.GetCommentByID(comment_id)
         if comment.OwnerUser != request.user:
             return ValidationResult(False, messages=[('error', _('You do not have permission to delete this comment'))])
     return result
 
 
 def delete_event_validator(request, event_id):
-    result = object_exists_validator(event_controller.GetEventByID,_('Activity dose not exist.'), base62_to_int(event_id))
+    result = object_exists_validator(event_controller.GetEventByID, _('Activity dose not exist.'), event_id)
     if result.valid:
-        event = event_controller.GetEventByID(base62_to_int(event_id))
+        event = event_controller.GetEventByID(event_id)
         if event.OwnerUser != request.user:
             return ValidationResult(False, messages=[('error', _('You do not have permission to delete this activity'))])
     return result

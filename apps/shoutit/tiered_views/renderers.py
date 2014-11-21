@@ -14,7 +14,7 @@ from apps.shoutit.models import Shout, ConfirmToken, Post, Profile, Business, Tr
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
 from apps.shoutit.templatetags import template_filters
 from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
-from apps.shoutit.utils import int_to_base62, base62_to_int, shout_link
+from apps.shoutit.utils import shout_link
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from apps.shoutit.api.api_utils import get_object_url
 from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment
@@ -129,7 +129,7 @@ def json_send_message(request, result):
             }
         variables = RequestContext(request, variables)
         data = {'html': render_to_string("message.html", variables),
-                'conversation_id': int_to_base62(result.data['message'].Conversation_id)}
+                'conversation_id': result.data['message'].Conversation_id}
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result, _('You need to enter some text!'))
@@ -424,7 +424,7 @@ def shouts_location_api(request, result, *args, **kwargs):
         pre_json_result['shouts'] = []
         for i in range(len(result.data['shoutsId'])):
             pre_json_result['shouts'].append({
-                'url': get_object_url(Shout(pk = base62_to_int(result.data['shoutsId'][i]))),
+                'url': get_object_url(Shout(pk=result.data['shoutsId'][i])),
                 'longitude': result.data['locations'][i].split(' ')[1],
                 'latitude': result.data['locations'][i].split(' ')[0],
                 'type': result.data['shoutsTypes'][i]
@@ -886,7 +886,7 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
 def comment_on_post_json_renderer(request, result, message=_('Your comment was post successfully.')):
     if not result.errors:
         data = {
-            'id': int_to_base62(result.data['comment'].pk),
+            'id': result.data['comment'].pk,
             'text': result.data['comment'].Text,
             'date': result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
         }
@@ -955,7 +955,7 @@ def post_comments_json_renderer(request, result):
         data = {
             'comments': [
                 {
-                    'id': int_to_base62(comment.pk),
+                    'id': comment.pk,
                     'isOwner': comment.isOwner,
                     'text': comment.Text,
                     'date': comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')

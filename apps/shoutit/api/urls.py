@@ -14,6 +14,7 @@ class TieredResource(Resource):
         super(TieredResource, self).__init__(handler, authentication)
         self.csrf_exempt = getattr(self.handler, 'csrf_exempt', True)
         self.handler.methods_map = methods_map
+        self.handler.allowed_methods = methods_map.keys()
 
     def __call__(self, request, *args, **kwargs):
         request.is_api = True
@@ -278,7 +279,7 @@ urlpatterns = patterns('',
 
                        # Misc
 
-                       url(r'^upload/([\w_-]+)/$',
+                       url(r'^upload/([-_\w]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'POST': shout_views.upload_image
                            })

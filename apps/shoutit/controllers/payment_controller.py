@@ -3,6 +3,7 @@ import re
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from paypal.standard.forms import PayPalEncryptedPaymentsForm
+import time
 from apps.shoutit import utils
 
 from apps.shoutit.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency
@@ -185,7 +186,7 @@ def GetPaypalFormForSubscription(user):
 def GetCPSPFormForDeal(deal, user, amount = 1):
 	cpsp_dict = {
 		'PSPID' : settings.CPSP_ID,
-		'ORDERID' : 'D_%d_U_%d_x_%d_%s' % (deal.pk, user.pk, amount, utils.TimeInBase62()),
+		'ORDERID' : 'D_%d_U_%d_x_%d_%s' % (deal.pk, user.pk, amount, str(time.time())),  # todo: check
 		'AMOUNT' : str(int(deal.Item.Price * amount * 100)),
 		'CURRENCY' : deal.Item.Currency.Code,
 		'LANGUAGE' : 'en_US',

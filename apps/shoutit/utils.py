@@ -27,58 +27,12 @@ from apps.shoutit.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYP
 from apps.shoutit.models import Post, Experience, PredefinedCity
 
 
-BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-
-def int_to_base62(value):
-    # todo: remove all base62
-    if True:
-        return value
-
-    result = ''
-
-    while value:
-        result = BASE62_ALPHABET[value % 62] + result
-        value /= 62
-
-    if not result:
-        result = '0'
-
-    return result
-
-
-def TimeInBase62():
-    return int_to_base62(int(time.time()))
-
-
 def generate_password():
-    return int_to_base62(uuid.uuid4().int)
+    return random_uuid_str()[24:]
 
 
-def random_base62(length):
-    r = random.Random()
-    return ''.join([r.choice(BASE62_ALPHABET) for i in range(length)])
-
-
-def base62_to_int(value):
-    # todo: remove all base62
-    if True:
-        return value
-
-    result = 0
-    if isinstance(value, int):
-        value = str(value)
-    for c in value:
-        if c not in BASE62_ALPHABET:
-            raise Exception("Invalide Base62 format.")
-        else:
-            result = result * 62 + BASE62_ALPHABET.index(c)
-
-    return result
-
-
-def entity_id(entity):
-    return int_to_base62(entity.pk)
+def random_uuid_str():
+    return str(uuid.uuid4())
 
 
 def get_farest_point(observation, points):
@@ -356,11 +310,11 @@ def to_seo_friendly(s, max_len=50):
     return u
 
 
-# check who calls this method
+# todo: check who calls this method
 def shout_link(post):
     if not post:
         return None
-    post_id = int_to_base62(post.pk)
+    post_id = post.pk
 
     if post.Type == POST_TYPE_EXPERIENCE:
         if post._meta.module_name == Post._meta.module_name:

@@ -5,7 +5,7 @@ from django.conf import settings
 import os
 from apns import Payload, APNs
 from apps.shoutit import utils
-from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE
+from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE
 from apps.shoutit.api.renderers import render_notification
 
 PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
@@ -65,12 +65,12 @@ def SendNotification(notification, username, count=0):
                 unread_conversations_num = UnReadConversationsCount(userProfile.user)
                 notifications_count = GetUserNotificationsWithoutMessagesCount(userProfile.user)
                 customMessage = {}
-                if notification.Type == NOTIFICATION_TYPE_FOLLOWSHIP:
+                if notification.Type == NOTIFICATION_TYPE_LISTEN:
                     message += " " + _("started listening to your shouts")
                     customMessage = {'URCnv':unread_conversations_num}
                 elif notification.Type == NOTIFICATION_TYPE_MESSAGE:
                     message += " " + _("sent you a message")
-                    customMessage = {'UC': unread_conversations_num, 'CID': utils.int_to_base62(notification.AttachedObject.Conversation_id)}
+                    customMessage = {'UC': unread_conversations_num, 'CID': notification.AttachedObject.Conversation_id}
                 payload = Payload(alert=message, sound="default", badge=notifications_count, custom=customMessage)
                 try:
                     apns_instance.gateway_server.send_notification(token, payload)

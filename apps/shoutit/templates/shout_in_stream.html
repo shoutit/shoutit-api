@@ -41,9 +41,9 @@
 			{% if shout.GetImages %}
 				{% for image in shout.GetImages %}
 					{% if forloop.counter0 == 0 %}
-						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk|base62 }}" href="{{ image.Image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.Image|thumbnail:85|secure_url }}{% else %}{{ image.Image|thumbnail:145|secure_url }}{% endif %}');">
+						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.Image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.Image|thumbnail:85|secure_url }}{% else %}{{ image.Image|thumbnail:145|secure_url }}{% endif %}');">
 					{% else %}
-						<a href="{{ image.Image|secure_url }}" rel="shout_{{ shout.pk|base62 }}" style="display: none;"></a>
+						<a href="{{ image.Image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 					{% endif %}
 				{% endfor %}
 			</div>
@@ -56,9 +56,9 @@
 	{% if shout.GetImages %}
 		{% for image in shout.GetImages %}
 			{% if forloop.counter0 == 0 %}
-				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk|base62 }}" href="{{ image.Image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.Image|thumbnail:85|secure_url }}{% else %}{{ image.Image|thumbnail:145|secure_url }}{% endif %}');">
+				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.Image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.Image|thumbnail:85|secure_url }}{% else %}{{ image.Image|thumbnail:145|secure_url }}{% endif %}');">
 			{% else %}
-				<a href="{{ image.Image|secure_url }}" rel="shout_{{ shout.pk|base62 }}" style="display: none;"></a>
+				<a href="{{ image.Image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 			{% endif %}
 		{% endfor %}
 	</div>

@@ -15,7 +15,7 @@ from apps.shoutit.tiered_views.validators import modify_shout_validator, shout_f
     edit_shout_validator
 from apps.shoutit.tiers import non_cached_view, cached_view, refresh_cache, CACHE_TAG_STREAMS, ResponseResult, \
     RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES, get_data
-from apps.shoutit.utils import generate_password, base62_to_int, shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image
+from apps.shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
 
 
 @require_POST
@@ -36,12 +36,12 @@ def upload_image(request, method=None):
             return HttpResponseBadRequest("Bad Upload")
         filename = upload.name
 
+    filename = random_uuid_str() + os.path.splitext(filename)[1]
+
     if method.startswith('shout_'):
-        filename = generate_password() + os.path.splitext(filename)[1]
         cloud_image = cloud_upload_image(upload, 'shout_image', filename, is_raw)
     else:
         # TODO: DELETE request.user.profile.Image
-        filename = generate_password() + os.path.splitext(filename)[1]
         cloud_image = cloud_upload_image(upload, method, filename, is_raw)
 
     if cloud_image:
@@ -56,7 +56,6 @@ def upload_image(request, method=None):
         return JsonResponseBadRequest({'success': False})
 
 
-
 @non_cached_view(methods=['GET', 'DELETE'],
                  validator=modify_shout_validator,
                  api_renderer=operation_api,
@@ -65,9 +64,9 @@ def upload_image(request, method=None):
 def delete_shout(request, pk=None):
     if not pk:
         pk = request.GET[u'id']
-        pk = base62_to_int(pk)
+        pk = pk
     else:
-        pk = base62_to_int(pk)
+        pk = pk
     result = ResponseResult()
     shout_controller.DeletePost(pk)
     return result
@@ -79,7 +78,7 @@ def delete_shout(request, pk=None):
              api_renderer=shout_brief_api)
 def load_shout(request, shout_id):
     result = ResponseResult()
-    result.data['shout'] = shout_controller.GetPost(base62_to_int(shout_id))
+    result.data['shout'] = shout_controller.GetPost(shout_id)
     return result
 
 
@@ -90,7 +89,7 @@ def load_shout(request, shout_id):
                  post_login_required=True)
 @refresh_cache(tags=[CACHE_TAG_STREAMS])
 def renew_shout(request, shout_id):
-    shout_id = base62_to_int(shout_id)
+    shout_id = shout_id
     shout_controller.RenewShout(request, shout_id)
     result = ResponseResult()
     return result
@@ -179,7 +178,7 @@ def shout_buy(request):
     return result
 
 
-#TODO: better validation for api requests, using other form classes or another validation function
+# TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args:
@@ -268,7 +267,7 @@ def shout_sell(request):
                  json_renderer(request, result, _('This shout was edited successfully.'), data=result.data))
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS])
 def shout_edit(request, shout_id):
-    shout_id = base62_to_int(shout_id)
+    shout_id = shout_id
     result = ResponseResult()
     form = ShoutForm(request.POST, request.FILES)
     form.is_valid()
@@ -299,10 +298,10 @@ def shout_edit(request, shout_id):
              object_page_html(request, result, 'shout.html', 'title' in result.data and result.data['title'] or '',
                               'desc' in result.data and result.data['desc'] or ''),
              methods=['GET'],
-             validator=lambda request, shout_id: shout_owner_view_validator(request, base62_to_int(shout_id)))
+             validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id))
 def shout_view(request, shout_id):
     result = ResponseResult()
-    shout_id = base62_to_int(shout_id)
+    shout_id = shout_id
     if request.user.is_authenticated():
         shout = shout_controller.GetPost(shout_id, True, True)
     else:

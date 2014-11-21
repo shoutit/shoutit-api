@@ -1,23 +1,27 @@
--- Function: max_followings(numeric, numeric)
+-- Function: max_followings(uuid, numeric)
+CREATE OR REPLACE FUNCTION max_followings(p_profile_id UUID , p_begin NUMERIC)
+	RETURNS INTEGER AS
+	$BODY$
+	BEGIN
+		RETURN (SELECT
+							max(subq.rank)
+						FROM (
 
--- DROP FUNCTION max_followings(numeric, numeric);
-
-CREATE OR REPLACE FUNCTION max_followings(p_userprofile_id numeric, p_begin numeric)
-  RETURNS integer AS
-$BODY$
-BEGIN
-	return (select max(subq.rank) from(
-		select distinct count(*) as rank
-		from "shoutit_shout" as shout INNER JOIN "shoutit_shout_Streams" AS shout_streams ON (shout.id = shout_streams.shout_id)
-		INNER JOIN "shoutit_stream" AS stream ON
-		(shout_streams.stream_id = stream.id) INNER JOIN "shoutit_followship" AS followship ON
-		(followship.stream_id = stream.id)
-		where stream."Type" <> 3 and followship.follower_id = p_userprofile_id AND shout."IsMuted" = FALSE AND shout."IsDisabled" = FALSE AND EXTRACT (epoch from shout."DatePublished") > p_begin
-		group by shout_id
-		order by rank desc) as subq);
-END
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION max_followings(numeric, numeric) OWNER TO postgres;
-
+									 SELECT DISTINCT
+										 count(*) AS rank
+									 FROM "shoutit_post" AS post INNER JOIN "shoutit_post_Streams" AS post_streams ON (post.uuid = post_streams.id)
+										 INNER JOIN "shoutit_stream" AS stream ON
+																														 (post_streams.stream_id = stream.uuid)
+										 INNER JOIN "shoutit_followship" AS followship ON (followship.stream_id = stream.uuid)
+									 WHERE
+										 stream."Type" <> 3 AND followship.follower_id = p_profile_id AND post."IsMuted" = FALSE AND post."IsDisabled" = FALSE
+										 AND
+										 EXTRACT(EPOCH FROM post."DatePublished") > p_begin
+									 GROUP BY post_id
+									 ORDER BY rank DESC) AS subq);
+	END
+	$BODY$
+LANGUAGE plpgsql VOLATILE
+COST 100;
+ALTER FUNCTION max_followings( NUMERIC, NUMERIC )
+OWNER TO syron;

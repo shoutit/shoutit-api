@@ -7,9 +7,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponse
 from django.contrib.auth.models import User
 
-from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP
+from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN
 
-from apps.shoutit.utils import base62_to_int, JsonResponse
+from apps.shoutit.utils import JsonResponse
 
 from apps.shoutit.models import Notification
 from apps.shoutit.controllers import realtime_controller, user_controller, notifications_controller, message_controller
@@ -102,7 +102,7 @@ def get_session_data(request, session_key=None):
 def mark_notification_as_read(request, notification_id):
     result = ResponseResult()
     try:
-        notification = Notification.objects.get(pk=base62_to_int(notification_id))
+        notification = Notification.objects.get(pk=notification_id)
         notification.IsRead = True
         notification.save()
     except ObjectDoesNotExist:
@@ -118,7 +118,7 @@ def mark_notification_as_read(request, notification_id):
 def mark_notification_as_unread(request, notification_id):
     result = ResponseResult()
     try:
-        notification = Notification.objects.get(pk=base62_to_int(notification_id))
+        notification = Notification.objects.get(pk=notification_id)
         notification.IsRead = False
         notification.save()
     except ObjectDoesNotExist:
@@ -176,7 +176,7 @@ def send_fake_notification(request, username):
     num += 1
     notification.ToUser = User.objects.get(username__iexact=username)
     notification.FromUser = User.objects.get(username__iexact='syron')
-    notification.Type = NOTIFICATION_TYPE_FOLLOWSHIP
+    notification.Type = NOTIFICATION_TYPE_LISTEN
     notification.DateCreated = datetime.now()
     notification.IsRead = False
     notification.AttachedObject = notification.FromUser

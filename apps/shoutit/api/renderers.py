@@ -1,5 +1,3 @@
-from push_notifications.models import APNSDevice, GCMDevice
-from apps.shoutit.utils import int_to_base62
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 from apps.shoutit.constants import *
 from apps.shoutit.models import User, Profile, Business, Tag
@@ -155,9 +153,9 @@ def render_message(message):
         return {}
 
     return {
-        'message_id': int_to_base62(message.pk),
-        'conversation_id': int_to_base62(message.Conversation.pk),
-        'shout_id': int_to_base62(message.Conversation.AboutPost.pk),
+        'message_id': message.pk,
+        'conversation_id': message.Conversation.pk,
+        'shout_id': message.Conversation.AboutPost.pk,
         'from_user': render_user(message.FromUser, level=1),
         'to_user': render_user(message.ToUser, level=1),
         'text': message.Text,
@@ -174,7 +172,7 @@ def render_message_attachment(message_attachment):
     content_object = render_shout(message_attachment.content_object, level=1)
     return {
         'content_type': content_type,
-        'object_id': int_to_base62(message_attachment.object_id),
+        'object_id': message_attachment.object_id,
         content_type: content_object
     }
 
@@ -183,7 +181,7 @@ def render_conversation(conversation):
     if not conversation:
         return {}
     return {
-        'conversation_id': int_to_base62(conversation.pk),
+        'conversation_id': conversation.pk,
         'url': get_object_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
@@ -214,7 +212,7 @@ def render_experience(experience):
         return {}
     else:
         rendered_experience = {
-            'id': int_to_base62(experience.pk),
+            'id': experience.pk,
             'url': get_object_url(experience),
             'user': render_user(experience.OwnerUser),
             'business': render_user(experience.AboutBusiness),
@@ -313,15 +311,15 @@ def render_notification(notification):
         'is_read': notification.IsRead,
         'type': NotificationType.values[notification.Type],
         'date_created': notification.DateCreated.strftime('%s'),
-        'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], int_to_base62(notification.pk)),
-        'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], int_to_base62(notification.pk)),
+        'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], notification.pk),
+        'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], notification.pk),
         'id': notification.pk
     }
 
     if notification.AttachedObject:
         if notification.Type == NOTIFICATION_TYPE_MESSAGE:
             result['attached_object'] = render_message(notification.AttachedObject)
-        elif notification.Type == NOTIFICATION_TYPE_FOLLOWSHIP:
+        elif notification.Type == NOTIFICATION_TYPE_LISTEN:
             result['attached_object'] = render_user(notification.AttachedObject, level=2)
         elif notification.Type == NOTIFICATION_TYPE_EXP_POSTED:
             result['attached_object'] = render_experience(notification.AttachedObject)

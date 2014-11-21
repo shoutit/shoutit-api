@@ -117,7 +117,7 @@
     });
 
     $('form#shout_{{ method }}_form #id_tags').tagsInput({
-      autocomplete_url: '/xhr/search/tag/',
+      autocomplete_url: '/xhr/tag/',
       autocomplete: {
         autoFocus: true, minLength: 2, delay: 300,
         source: function (request, response) {
@@ -145,7 +145,8 @@
       height: '',
       width: '',
       interactive: true,
-      delimiter: [' ', ','],
+      delimiter: ' ',
+{#      delimiter: [' ', ','],#}
       defaultText: '{% trans "Add a keyword" %}',
       onAddTag: function (tag) {
         $('form#shout_{{ method }}_form #id_tags_tag').qtip('reposition');

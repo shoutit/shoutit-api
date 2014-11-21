@@ -6,9 +6,9 @@
 	{% if deal.GetImages %}
 		{% for image in deal.GetImages %}
 			{% if forloop.counter0 == 0 %}
-				<div class="round shout-images shadow" rel="shout_{{ deal.pk|base62 }}" href="{{ image.Image|secure_url }}" style="background-image: url('{{ image.Image|thumbnail:145|secure_url }}');">
+				<div class="round shout-images shadow" rel="shout_{{ deal.pk }}" href="{{ image.Image|secure_url }}" style="background-image: url('{{ image.Image|thumbnail:145|secure_url }}');">
 			{% else %}
-				<a href="{{ image.Image|secure_url }}" rel="shout_{{ deal.pk|base62 }}" style="display: none;"></a>
+				<a href="{{ image.Image|secure_url }}" rel="shout_{{ deal.pk }}" style="display: none;"></a>
 			{% endif %}
 		{% endfor %}
 	<i class="icon-search"></i>

@@ -11,7 +11,7 @@ from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CAC
 from apps.shoutit.tiered_views.renderers import browse_html, shouts_api, user_stream_json, shout_xhr, shouts_location_api, \
     json_data_renderer, shouts_clusters_api
 from apps.shoutit.tiered_views.views_utils import get_nearest_points_to_clusters, get_shouts_PointId_inViewPort
-from apps.shoutit.utils import kmeans, number_of_clusters_based_on_zoom, int_to_base62
+from apps.shoutit.utils import kmeans, number_of_clusters_based_on_zoom
 from common.tagged_cache import TaggedCache
 
 
@@ -364,7 +364,7 @@ def load_shouts(request):
     if len(shout_points) <= 1:
         if len(shout_points) == 1:
             result.data['locations'] = [(str(shout_points[0][0]) + ' ' + str(shout_points[0][1]))]
-            result.data['shoutsId'] = [int_to_base62(shouts[0]['pk'])]
+            result.data['shoutsId'] = [shouts[0]['pk']]
             result.data['shoutsTypes'] = [shouts[0]['Type']]
         else:
             result.data['locations'] = []
@@ -378,7 +378,7 @@ def load_shouts(request):
         shout_points, shout_ids, shout_types = get_nearest_points_to_clusters(list(centroids), shout_points, shouts)
     else:
         shout_points = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
-        shout_ids = [int_to_base62(shout['pk']) for shout in shouts]
+        shout_ids = [shout['pk'] for shout in shouts]
         shout_types = [shout['Type'] for shout in shouts]
 
     result.data['locations'] = shout_points

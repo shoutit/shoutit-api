@@ -5,10 +5,10 @@
         <div class="notification round {% if not notification.IsRead %}un{% endif %}read{% if not forloop.first %} bordered{% endif %}">
             <div class='notification-content'>
                 {% switch notification.Type %}
-                    {% case NOTIFICATION_TYPE_FOLLOWSHIP %}
+                    {% case NOTIFICATION_TYPE_LISTEN %}
                         <a href='/user/{{ notification.FromUser.username }}/'>{{ notification.FromUser.name }}</a> {% trans "has started listening to your shouts." %}
                     {% case NOTIFICATION_TYPE_MESSAGE %}
-                        <a href='/user/{{ notification.FromUser.username }}/'>{{ notification.FromUser.name }}</a> {% trans "sent you a" %} <a href='/messages/{{ notification.AttachedObject.Conversation_id|base62 }}/'>{% trans "message" %}</a>.
+                        <a href='/user/{{ notification.FromUser.username }}/'>{{ notification.FromUser.name }}</a> {% trans "sent you a" %} <a href='/messages/{{ notification.AttachedObject.Conversation_id }}/'>{% trans "message" %}</a>.
                     {% case NOTIFICATION_TYPE_EXP_POSTED %}
                         <a href='/user/{{ notification.FromUser.username }}/'>{{ notification.FromUser.name }}</a> posted an experience <a href='{% shout_link notification.AttachedObject %}/'>{{ notification.AttachedObject.Text }}</a> on your profile.
                     {% case NOTIFICATION_TYPE_EXP_SHARED %}

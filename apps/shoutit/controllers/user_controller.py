@@ -491,13 +491,13 @@ def FollowStream(request, follower, followed):
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
         if followed.Type == STREAM_TYPE_USER:
             followedUser = Profile.objects.get(Stream=followed)
-            email_controller.SendFollowshipEmail(follower.user, followedUser.user)
-            notifications_controller.NotifyUserOfFollowship(followedUser.user, follower.user)
+            email_controller.SendListenEmail(follower.user, followedUser.user)
+            notifications_controller.NotifyUserOfListen(followedUser.user, follower.user)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_USER, followedUser)
         elif followed.Type == STREAM_TYPE_BUSINESS:
             followedUser = Business.objects.get(Stream=followed)
-            email_controller.SendFollowshipEmail(follower.user, followedUser.user)
-            notifications_controller.NotifyUserOfFollowship(followedUser.user, follower.user)
+            email_controller.SendListenEmail(follower.user, followedUser.user)
+            notifications_controller.NotifyUserOfListen(followedUser.user, follower.user)
             event_controller.RegisterEvent(request.user, EVENT_TYPE_FOLLOW_BUSINESS, followedUser)
 
 

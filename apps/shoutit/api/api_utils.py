@@ -1,5 +1,4 @@
 from apps.shoutit.constants import Constant
-from apps.shoutit.utils import int_to_base62
 
 
 class JSONUrl(Constant):
@@ -39,10 +38,7 @@ def get_object_url(obj, extra_params=None):
         url_list = api_urls[class_name]
         url, params = url_list[0], list(url_list[1:])
         for i in range(len(params)):
-            if params[i].endswith('|base62'):
-                params[i] = int_to_base62(getattr(obj, params[i][:-7]))
-            else:
-                params[i] = getattr(obj, params[i])
+            params[i] = getattr(obj, params[i])
         if extra_params:
             params.extend(extra_params)
         url = url % tuple(params)

@@ -3,7 +3,7 @@ from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 from apps.shoutit.api.renderers import render_notification
-from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
+from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
 from apps.shoutit.controllers import realtime_controller
 
 
@@ -28,8 +28,8 @@ def NotifyUser(user, type, from_user=None, attached_object=None):
         realtime_controller.SendRealtimeMessage(realtime_message, user.username)
 
 
-def NotifyUserOfFollowship(user, follower):
-    NotifyUser(user, NOTIFICATION_TYPE_FOLLOWSHIP, follower, follower)
+def NotifyUserOfListen(user, follower):
+    NotifyUser(user, NOTIFICATION_TYPE_LISTEN, follower, follower)
 
 
 def NotifyUserOfMessage(user, message):
