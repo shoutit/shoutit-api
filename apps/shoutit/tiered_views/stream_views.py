@@ -82,7 +82,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.id for tag in Tag.objects.filter(Category__Name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
     #TODO session
     if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
@@ -100,7 +100,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     if len(shout_ids):
         shouts = stream_controller.GetTradesByIDs(shout_ids)
         for shout in shouts:
-            shout.rank = dict_shout_ids[shout.id]
+            shout.rank = dict_shout_ids[shout.pk]
         shouts.sort(key=lambda _shout: _shout.rank)
     else:
         shouts = []
@@ -165,7 +165,7 @@ def index_stream(request):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.id for tag in Tag.objects.filter(Category__Name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
     #TODO: session
     if page_num == 1 and request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
@@ -186,7 +186,7 @@ def index_stream(request):
     if len(shout_ids):
         shouts = stream_controller.GetTradesByIDs(shout_ids)
         for shout in shouts:
-            shout.rank = dict_shout_ids[shout.id]
+            shout.rank = dict_shout_ids[shout.pk]
         shouts.sort(key=lambda x: x.rank)
     else:
         shouts = []
@@ -313,7 +313,7 @@ def load_clusters(request):
 
 @cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, login_required=False, api_renderer=shouts_api,
              json_renderer=shout_xhr, methods=['GET'])
-def livetimeline(request, id=None):
+def livetimeline(request, pk=None):
     result = ResponseResult()
 
     city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
@@ -323,8 +323,8 @@ def livetimeline(request, id=None):
     user_lat = pre_city.Latitude
     user_lng = pre_city.Longitude
 
-    if id is not None:
-        index = stream_controller.GetShoutTimeOrder(int(id), user_country, user_city)
+    if pk is not None:
+        index = stream_controller.GetShoutTimeOrder(pk, user_country, user_city)
     else:
         index = DEFAULT_PAGE_SIZE
     order_by = TIME_RANK_TYPE
@@ -337,7 +337,7 @@ def livetimeline(request, id=None):
             shout_ids = [k[0] for k in shout_ids]
             shouts = stream_controller.GetTradesByIDs(shout_ids)
             for shout in shouts:
-                shout.rank = shout_ranks[shout.id]
+                shout.rank = shout_ranks[shout.pk]
             shouts.sort(key=lambda _shout: _shout.rank)
 
     shouts_arr = []
@@ -348,7 +348,7 @@ def livetimeline(request, id=None):
         }
         variables = RequestContext(request, variables)
 
-        shouts_arr.append({'id': shout.id, 'html': render_to_string("shout_brief.html", variables)})
+        shouts_arr.append({'id': shout.pk, 'html': render_to_string("shout_brief.html", variables)})
     result.data['shouts'] = shouts_arr
     result.data['count'] = len(shouts_arr)
     return result
@@ -364,7 +364,7 @@ def load_shouts(request):
     if len(shout_points) <= 1:
         if len(shout_points) == 1:
             result.data['locations'] = [(str(shout_points[0][0]) + ' ' + str(shout_points[0][1]))]
-            result.data['shoutsId'] = [int_to_base62(shouts[0]['id'])]
+            result.data['shoutsId'] = [int_to_base62(shouts[0]['pk'])]
             result.data['shoutsTypes'] = [shouts[0]['Type']]
         else:
             result.data['locations'] = []
@@ -378,7 +378,7 @@ def load_shouts(request):
         shout_points, shout_ids, shout_types = get_nearest_points_to_clusters(list(centroids), shout_points, shouts)
     else:
         shout_points = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
-        shout_ids = [int_to_base62(shout['id']) for shout in shouts]
+        shout_ids = [int_to_base62(shout['pk']) for shout in shouts]
         shout_types = [shout['Type'] for shout in shouts]
 
     result.data['locations'] = shout_points

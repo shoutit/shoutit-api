@@ -19,7 +19,7 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
         return e, None
 
     try:
-        linked_account = LinkedFacebookAccount.objects.get(Uid=fb_user['id'])
+        linked_account = LinkedFacebookAccount.objects.get(facebook_id=fb_user['id'])
         user = linked_account.user
     except ObjectDoesNotExist:
         user = None

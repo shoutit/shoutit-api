@@ -3,16 +3,17 @@ from django.contrib.auth.models import User
 from apps.shoutit.constants import ReportType, NotificationType
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
+from apps.shoutit.models.misc import UUIDModel
 
 from apps.shoutit.models.post import Trade
 
 
-class Conversation(models.Model):
+class Conversation(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id)
+        return unicode(self.pk)
 
     FromUser = models.ForeignKey(User, related_name='+')
     ToUser = models.ForeignKey(User, related_name='+')
@@ -22,15 +23,15 @@ class Conversation(models.Model):
     VisibleToSender = models.BooleanField(default=True)
 
 
-class Message(models.Model):
+class Message(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
         try:
-            return unicode(self.id) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
+            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
         except AttributeError:
-            return unicode(self.id)
+            return unicode(self.pk)
 
     Conversation = models.ForeignKey(Conversation, related_name='Messages')
     FromUser = models.ForeignKey(User, related_name='received_messages')
@@ -42,7 +43,7 @@ class Message(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
-class MessageAttachment(models.Model):
+class MessageAttachment(UUIDModel):
 
     class Meta:
         app_label = 'shoutit'
@@ -57,12 +58,12 @@ class MessageAttachment(models.Model):
         return ''
 
 
-class Notification(models.Model):
+class Notification(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + self.Text
+        return unicode(self.pk) + ": " + self.Text
 
     ToUser = models.ForeignKey(User, related_name='Notifications')
     FromUser = models.ForeignKey(User, related_name='+', null=True, default=None)
@@ -83,7 +84,7 @@ class Notification(models.Model):
         self.save()
 
 
-class Report(models.Model):
+class Report(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 

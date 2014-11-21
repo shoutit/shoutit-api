@@ -1,6 +1,7 @@
-from datetime import timedelta
-import sys,os
+import sys
+import os
 
+import settings
 
 
 sys.path.append('D:/Shout/Code')
@@ -9,7 +10,7 @@ sys.path.append('/Users/SYRON/Desktop/Syrex/The Social Market/shout/Code/')
 os.environ['DJANGO_SETTINGS_MODULE'] ='Shout.settings'
 
 from django.core.management import setup_environ
-from apps.shoutit import settings
+
 setup_environ(settings)
 
 from django.contrib.auth.models import User
@@ -44,7 +45,7 @@ if choice.lower() == 'yes':
 	for user in users:
 		if i >= count:
 			break
-		print ('\t deleting user %s\n' % ('(id: ' + unicode(user.id) + ', username: ' + unicode(user) + ')'))
+		print ('\t deleting user %s\n' % ('(id: ' + unicode(user.pk) + ', username: ' + unicode(user) + ')'))
 		user.delete()
 		i += 1
 print('%d users have been deleted!' % i)

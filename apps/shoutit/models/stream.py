@@ -1,14 +1,16 @@
 from django.db import models
+from uuidfield import UUIDField
 
 from apps.shoutit.constants import *
+from apps.shoutit.models.misc import UUIDModel
 
 
-class Stream(models.Model):
+class Stream(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
+        return unicode(self.pk) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
 
     Type = models.IntegerField(default=0, db_index=True)
 
@@ -58,18 +60,18 @@ class Stream(models.Model):
 from apps.shoutit.models import User
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 
-class Stream2(models.Model):
+class Stream2(UUIDModel):
 
     class Meta:
         app_label = 'shoutit'
-        unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
+        unique_together = ('content_type', 'object_uuid', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
-        return unicode(self.id) + ':' + StreamType2.values[self.type] + ' (' + unicode(self.owner) + ')'
+        return unicode(self.pk) + ':' + StreamType2.values[self.type] + ' (' + unicode(self.owner) + ')'
 
     def __init__(self, *args, **kwargs):
         if 'owner' in kwargs and 'type' not in kwargs:
@@ -80,8 +82,9 @@ class Stream2(models.Model):
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType2.choices)
     # owner
     content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    owner = GenericForeignKey('content_type', 'object_id')
+    object_uuid = UUIDField(auto=True, hyphenate=True, version=4)
+
+    owner = GenericForeignKey('content_type', 'object_uuid')
 
     posts = models.ManyToManyField('Post', related_name='streams')
     listeners = models.ManyToManyField(User, through='Listen', related_name='listening')
@@ -93,13 +96,43 @@ class Stream2Mixin(object):
         if not hasattr(self, '_stream2'):
             ct = ContentType.objects.get_for_model(self.__class__)
             try:
-                self._stream2 = Stream2.objects.get(content_type__pk=ct.id, object_id=self.id)
+                self._stream2 = Stream2.objects.get(content_type__pk=ct.pk, object_uuid=self.pk)
             except Stream2.DoesNotExist:
                 return None
         return self._stream2
 
 
-class Listen(models.Model):
+@receiver(post_save)
+def attach_user_and_stream(sender, instance, created, raw, using, update_fields, **kwargs):
+    if not issubclass(sender, Stream2Mixin):
+        return
+
+    # on new profile create stream and attach it
+    if created:
+        print 'post save on first time'
+        # creating the user and attaching it to profile
+        # todo: activate it
+        # user = User(username=str(random.randint(1000000000, 1999999999)))
+        # user.save()
+        # instance.user = user
+        # instance.save()
+
+        # creating the stream
+        stream2 = Stream2(owner=instance)
+        stream2.save()
+
+
+@receiver(pre_delete)
+def delete_attached_stream(sender, instance, using, **kwargs):
+    if not issubclass(sender, Stream2Mixin):
+        return
+
+    # before deleting remove the stream
+    print 'pre_delete'
+    instance.stream2.delete()
+
+
+class Listen(UUIDModel):
     class Meta:
         app_label = 'shoutit'
         unique_together = ('listener', 'stream')  # so the user can follow the stream only once

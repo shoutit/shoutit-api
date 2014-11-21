@@ -1,12 +1,14 @@
-from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY
-from sss3_zones import *
-import sys,os
+import sys
+import os
 import urllib
 import urllib2
+
+import settings
+from sss3_zones import *
 import MySQLdb
 import MySQLdb.cursors
-import time
 from twilio.rest import TwilioRestClient
+
 account = "AC68c05fc538824b5e9939ef7e2129a2a6"
 token = "abdbd895fbf816e2d898be7e1b27a6dd"
 client = TwilioRestClient(account, token)
@@ -18,9 +20,9 @@ sys.path.append('/home/django/')
 os.environ['DJANGO_SETTINGS_MODULE'] ='Shout.settings'
 
 from django.core.management import setup_environ
-from apps.shoutit import settings
+
 setup_environ(settings)
-from apps.shoutit.models import Profile, Shout, Post, Trade
+from apps.shoutit.models import Profile, Trade
 from apps.shoutit import utils
 
 def FormatList(list):

@@ -129,7 +129,7 @@ def MakePaymentToken(user, payment_type, timestamp = None):
 	if not timestamp:
 		delta = datetime.today() - datetime(2012, 3, 1)
 		timestamp = int_to_base36(int(delta.total_seconds()))
-	value = (unicode(user.id) + unicode(user.email) + unicode(payment_type) + unicode(timestamp))
+	value = (unicode(user.pk) + unicode(user.email) + unicode(payment_type) + unicode(timestamp))
 	key_salt = "Sh0u+1t-payment-token-generator"
 	hash = salted_hmac(key_salt, value).hexdigest()[::2]
 	return "%s-%s" % (timestamp, hash)

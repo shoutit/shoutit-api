@@ -1,13 +1,15 @@
 from datetime import timedelta, datetime
+
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Sum
 from django.contrib.auth.models import User
-from apps.shoutit import settings
-from apps.shoutit.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
+from django.conf import settings
 
+from apps.shoutit.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
 from apps.shoutit.models.item import Item
+from apps.shoutit.models.misc import UUIDModel
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.tag import Tag
 from apps.shoutit.models.business import Business
@@ -105,7 +107,7 @@ class EventManager(PostManager):
         return event_qs
 
 
-class Post(models.Model):
+class Post(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -213,15 +215,15 @@ class Shout(Post):
             return True
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + self.GetText()
+        return unicode(self.pk) + ": " + self.GetText()
 
 
-class ShoutWrap(models.Model):
+class ShoutWrap(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.Shout) + " # " + unicode(self.Rank)
+        return unicode(self.pk) + ": " + unicode(self.Shout) + " # " + unicode(self.Rank)
 
     Shout = models.ForeignKey('Shout', related_name='ShoutWraps')
     Stream = models.ForeignKey(Stream, related_name='ShoutWraps')
@@ -233,7 +235,7 @@ class Trade(Shout):
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.Item)
+        return unicode(self.pk) + ": " + unicode(self.Item)
 
     Item = models.OneToOneField('Item', related_name='Shout', db_index=True, null=True)
     RelatedStream = models.OneToOneField(Stream, related_name='InitShoutRelated', null=True)
@@ -275,14 +277,14 @@ class Experience(Post):
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id)
+        return unicode(self.pk)
 
     AboutBusiness = models.ForeignKey(Business, related_name='Experiences')
     State = models.IntegerField(null=False)
     objects = ExperienceManager()
 
 
-class SharedExperience(models.Model):
+class SharedExperience(UUIDModel):
     class Meta:
         app_label = 'shoutit'
         unique_together = ('Experience', 'OwnerUser',)
@@ -292,12 +294,12 @@ class SharedExperience(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
-class Video(models.Model):
+class Video(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
+        return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
 
     shout = models.ForeignKey(Shout, related_name='videos', null=True)
     item = models.ForeignKey(Item, related_name='videos', null=True)
@@ -309,24 +311,24 @@ class Video(models.Model):
     duration = models.IntegerField(default=0)
 
 
-class StoredImage(models.Model):
+class StoredImage(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + self.Image + " @ " + unicode(self.Item)
+        return unicode(self.pk) + ": " + self.Image + " @ " + unicode(self.Item)
 
     Shout = models.ForeignKey('Shout', related_name='Images', null=True)
     Item = models.ForeignKey('Item', related_name='Images', null=True)
     Image = models.URLField(max_length=1024)
 
 
-class Comment(models.Model):
+class Comment(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.Text)
+        return unicode(self.pk) + ": " + unicode(self.Text)
 
     AboutPost = models.ForeignKey(Post, related_name='Comments', null=True)
     OwnerUser = models.ForeignKey(User, related_name='+')
@@ -340,7 +342,7 @@ class Event(Post):
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id)
+        return unicode(self.pk)
 
     EventType = models.IntegerField(default=0)
     objects = EventManager()

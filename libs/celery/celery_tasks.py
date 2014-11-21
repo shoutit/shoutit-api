@@ -1,11 +1,16 @@
-import os, sys
+import os
+import sys
+
 from celery.task import task
+
+from django.conf import settings
+
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.dirname(__file__))
 
 from django.core.management import setup_environ
-from apps.shoutit import settings
+
 setup_environ(settings)
 
 @task(name='execute')

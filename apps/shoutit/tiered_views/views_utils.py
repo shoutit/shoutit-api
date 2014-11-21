@@ -4,6 +4,7 @@ from common.tagged_cache import TaggedCache
 from apps.shoutit.utils import *
 from apps.shoutit.constants import *
 
+
 def get_shouts_PointId_inViewPort(downLeftLat, downLeftLng, upRightLat, upRightLng):
     if downLeftLng > upRightLng:
         right_shouts = shout_controller.GetLandingShouts(downLeftLat, -180.0, upRightLat, upRightLng)
@@ -14,6 +15,7 @@ def get_shouts_PointId_inViewPort(downLeftLat, downLeftLng, upRightLat, upRightL
     else:
         shouts = shout_controller.GetLandingShouts(downLeftLat, downLeftLng, upRightLat, upRightLng)
     return shouts, [[shout['Latitude'], shout['Longitude']] for shout in shouts]
+
 
 def get_nearest_points_to_clusters(centroids, shoutPoints, shouts):
     nearestPoints = []
@@ -27,7 +29,7 @@ def get_nearest_points_to_clusters(centroids, shoutPoints, shouts):
         nearest_index = int(argmin(dist))
 
         nearestPoints.append(str(shoutPoints[nearest_index][0]) + ' ' + str(shoutPoints[nearest_index][1]))
-        nearestPointsIds.append(int_to_base62(shouts[nearest_index]['id']))
+        nearestPointsIds.append(int_to_base62(shouts[nearest_index]['pk']))
         nearestPointsTypes.append(shouts[nearest_index]['Type'])
     return nearestPoints, nearestPointsIds, nearestPointsTypes
 

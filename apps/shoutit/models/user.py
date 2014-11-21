@@ -8,13 +8,13 @@ from django.dispatch import receiver
 from push_notifications.models import APNSDevice, GCMDevice
 
 from apps.shoutit.constants import DEFAULT_LOCATION
-# from apps.ActivityLogger.models import Request
+# from apps.activity_logger.models import Request
 from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin
 from apps.shoutit.models.tag import Tag
-from apps.shoutit.models.misc import ConfirmToken
+from apps.shoutit.models.misc import ConfirmToken, UUIDModel
 
 
-class AbstractProfile(models.Model, Stream2Mixin):
+class AbstractProfile(UUIDModel, Stream2Mixin):
 
     user = models.OneToOneField(User, related_name='%(class)s', unique=True, db_index=True, null=True)
 
@@ -35,7 +35,7 @@ class Profile(AbstractProfile):
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return '[UP_' + unicode(self.id) + "] " + unicode(self.user.get_full_name())
+        return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())
 
     Bio = models.TextField(null=True, max_length=512, default='New Shouter!')
     Mobile = models.CharField(unique=True, null=True, max_length=20)
@@ -117,7 +117,7 @@ class Profile(AbstractProfile):
 
 
 @receiver(post_save, sender=Profile)
-def attach_user_and_stream(sender, instance, created, raw, using, update_fields, **kwargs):
+def attach_user(sender, instance, created, raw, using, update_fields, **kwargs):
 
     # on new profile create stream and attach it
     if created:
@@ -128,17 +128,6 @@ def attach_user_and_stream(sender, instance, created, raw, using, update_fields,
         # user.save()
         # instance.user = user
         # instance.save()
-
-        # creating the stream
-        stream2 = Stream2(owner=instance)
-        stream2.save()
-
-
-@receiver(pre_delete, sender=Profile)
-def delete_attached_stream(sender, instance, using, **kwargs):
-    # before deleting remove the stream
-    print 'pre_delete'
-    instance.stream2.delete()
 
 
 @receiver(post_delete, sender=Profile)
@@ -172,14 +161,14 @@ class UserFunctions(object):
             return ''
 
     def Sex(self):
-        profile = Profile.objects.filter(user__id=self.id).values('Sex')
+        profile = Profile.objects.filter(user__pk=self.pk).values('Sex')
         if profile:
             return profile[0]['Sex']
         else:
             return 'No Profile'
 
     # def request_count(self):
-    #     return Request.objects.filter(user__id=self.id).count()
+    #     return Request.objects.filter(user__pk=self.pk).count()
 
     def Latitude(self):
         if hasattr(self, 'business'):
@@ -225,17 +214,17 @@ class UserFunctions(object):
 User.__bases__ += (UserFunctions,)
 
 
-class LinkedFacebookAccount(models.Model):
+class LinkedFacebookAccount(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     user = models.OneToOneField(User, related_name='linked_facebook')  # todo: one to one
-    Uid = models.CharField(max_length=24, db_index=True)
+    facebook_id = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
 
 
-class LinkedGoogleAccount(models.Model):
+class LinkedGoogleAccount(UUIDModel):
 
     user = models.OneToOneField(User, related_name='linked_gplus')  # todo: one to one
     credentials_json = models.CharField(max_length=2048)
@@ -262,7 +251,7 @@ class Permission(models.Model):
     users = models.ManyToManyField(User, through='UserPermission', related_name='permissions')
 
 
-class UserPermission(models.Model):
+class UserPermission(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -275,16 +264,15 @@ class UserPermission(models.Model):
 # todo: naming: Listen
 # todo: move to stream
 # todo: reference the user not profile
-class FollowShip(models.Model):
+class FollowShip(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
+        return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
 
     follower = models.ForeignKey('Profile')
     stream = models.ForeignKey('Stream')
     date_followed = models.DateTimeField(auto_now_add=True)
     state = models.IntegerField(default=0, db_index=True)
-
 

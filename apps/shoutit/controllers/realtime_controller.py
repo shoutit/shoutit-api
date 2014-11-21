@@ -1,6 +1,6 @@
 import datetime
 import pika
-from apps.shoutit.utils import asynchronous_task
+from apps.shoutit.utils import asynchronous_task, UUIDJSONEncoder
 from django.conf import settings
 import os
 from apns import Payload, APNs
@@ -83,7 +83,7 @@ def SendNotification(notification, username, count=0):
         try:
             channel = realtime_connection.channel()
             channel.queue_declare(queue=str('Shout_' + username), durable=True)
-            message = json.dumps(render_notification(notification))
+            message = json.dumps(render_notification(notification), cls=UUIDJSONEncoder)
             channel.basic_publish(exchange='', routing_key=str('Shout_%s' % username), body=message, properties=pika.BasicProperties(content_type="text/plain", delivery_mode=2))
         except Exception, e:
             print e.message
@@ -97,7 +97,7 @@ def WrapRealtimeMessage(message, type):
         'type': type,
         'date_sent': datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S%z')
     }
-    return json.dumps(result)
+    return json.dumps(result, cls=UUIDJSONEncoder)
 
 
 @asynchronous_task()

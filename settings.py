@@ -10,10 +10,12 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+BASE_DIR = os.path.dirname(__file__)
 
 import sys
 import PIL.Image
+
 sys.modules['Image'] = PIL.Image
 
 
@@ -43,6 +45,7 @@ def check_runserver_address_port():
         return address, port
     else:
         return '127.0.0.1', '8000'
+
 
 ADDRESS, PORT = check_runserver_address_port()
 
@@ -85,7 +88,7 @@ RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 # Celery Settings
 BROKER_HOST = 'localhost'
 BROKER_PORT = 5672
-#BROKER_USER = "celery"
+# BROKER_USER = "celery"
 #BROKER_PASSWORD = "celery"
 #BROKER_VHOST = "celery_host"
 CELERY_RESULT_BACKEND = "amqp"
@@ -135,6 +138,7 @@ if DEV:
 else:
     try:
         import redis
+
         SESSION_ENGINE = REDIS_SESSION_ENGINE
         CACHES = REDIS_CACHES
     except ImportError:
@@ -154,7 +158,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'apps.ActivityLogger',
+    # 'apps.activity_logger',
     'apps.shoutit',
     'widget_tweaks',
     'piston3',
@@ -167,9 +171,10 @@ INSTALLED_APPS = (
     #'paypal.standard.pdt',
     #'keyedcache',
     #'livesettings',
-    #'l10n',
+    #'l10n',,
     #'payment',
     #'subscription',
+    'south'
 )
 # apps only on development
 if DEV:
@@ -182,7 +187,7 @@ else:
 
 PUSH_NOTIFICATIONS_SETTINGS = {
     "GCM_API_KEY": "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'ShoutitPushCer.pem'),
+    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-dev.pem'),
 }
 
 STATICFILES_FINDERS = (
@@ -206,7 +211,7 @@ MIDDLEWARE_CLASSES = (
     'apps.shoutit.middleware.UserPermissionsMiddleware',
     # 'apps.shoutit.middleware.UserLocationMiddleware',
     'apps.shoutit.middleware.FBMiddleware',
-    #'apps.ActivityLogger.middleware.ActivityLogger',
+    #'apps.activity_logger.middleware.activity_logger',
     #'common.middleware.ProfilerMiddleware.ProfileMiddleware',
 
     'django_mobile.middleware.MobileDetectionMiddleware',
@@ -216,11 +221,11 @@ MIDDLEWARE_CLASSES = (
 # URLs
 SITE_ID = 1
 
-ROOT_URLCONF = 'apps.shoutit.urls'
+ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
 IS_SITE_SECURE = False  # True
 
-WSGI_APPLICATION = 'apps.shoutit.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
@@ -228,12 +233,12 @@ WSGI_APPLICATION = 'apps.shoutit.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'shoutdb',                      # Or path to database file if using sqlite3.
-        'USER': 'syron',                      # Not used with sqlite3.
-        'PASSWORD': '123',                  # Not used with sqlite3.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'shoutdb',  # Or path to database file if using sqlite3.
+        'USER': 'syron',  # Not used with sqlite3.
+        'PASSWORD': '123',  # Not used with sqlite3.
         'HOST': 'localhost',
-        'PORT': ''                      # Set to empty string for default. Not used with sqlite3.
+        'PORT': ''  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -318,8 +323,8 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, 'logs', 'sql.log')
         },
         'sql_console': {
-            'level':'INFO',
-            'class':'logging.StreamHandler',
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
             'formatter': 'message_only'
         }
     },
@@ -334,7 +339,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False
         },
-        'SqlLogMiddleware_console' : {
+        'SqlLogMiddleware_console': {
             'handlers': ['sql_console'],
             'level': 'INFO',
             'propagate': False
@@ -419,7 +424,7 @@ if not OFFLINE_MODE:
 
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {
-    'google': {'consumer_key': '572868510623.apps.googleusercontent.com', 'consumer_secret': 'GkQnvuCaAzgdIn6V1wZ70DW8' },
+    'google': {'consumer_key': '572868510623.apps.googleusercontent.com', 'consumer_secret': 'GkQnvuCaAzgdIn6V1wZ70DW8'},
     'yahoo': {
         'consumer_key': 'dj0yJmk9akptTldFWW1qd1F1JmQ9WVdrOWVWZzRkbTVGTmpJbWNHbzlOak13T0RNNU5qSS0mcz1jb25zdW1lcnNlY3JldCZ4PTE2',
         'consumer_secret': 'c3d0cd060d1085000f7b5d1698f2c9e65632a4e6'
@@ -442,7 +447,7 @@ PROFANITIES_LIST = (
     'ass', 'ass lick', 'asses', 'asshole', 'assholes', 'asskisser', 'asswipe',
     'balls', 'bastard', 'beastial', 'beastiality', 'beastility', 'beaver',
     'belly whacker', 'bestial', 'bestiality', 'bitch', 'bitcher', 'bitchers',
-    'bitches', 'bitchin', 'bitching', 'blow job', 'blowjob', 'blowjobs','bonehead',
+    'bitches', 'bitchin', 'bitching', 'blow job', 'blowjob', 'blowjobs', 'bonehead',
     'boner', 'brown eye', 'browneye', 'browntown', 'bucket cunt', 'bull shit',
     'bullshit', 'bum', 'bung hole', 'butch', 'butt', 'butt breath', 'butt fucker',
     'butt hair', 'buttface', 'buttfuck', 'buttfucker', 'butthead', 'butthole',
@@ -485,13 +490,15 @@ PROFANITIES_LIST = (
 CLOUD_USERNAME = 'noorsyron'
 CLOUD_API_KEY = '3528746c5ca336ee6be4f293fdb66a57'
 CLOUD_IDENTITY = 'rackspace'
-CLOUD_FILES_SERVICE_NET = False # True
+CLOUD_FILES_SERVICE_NET = False  # True
 SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
-PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO' #'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
+PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  #'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-public-key.pem')
+PAYPAL_PRIVATE_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal',
+                                   'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal',
+                                  'paypal-public-key.pem')
 PAYPAL_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-cert.pem')
 PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
 PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
@@ -505,11 +512,11 @@ PAYPAL_BUSINESS = 'biz_1339997492_biz@syrex.me'
 PAYPAL_TEST = True
 
 SUBSCRIPTION_PAYPAL_SETTINGS = {
-    'notify_url' : PAYPAL_NOTIFY_URL,
+    'notify_url': PAYPAL_NOTIFY_URL,
     'return': PAYPAL_RETURN_URL,
-    'cancel_return' : PAYPAL_CANCEL_URL,
+    'cancel_return': PAYPAL_CANCEL_URL,
     'business': PAYPAL_BUSINESS,
-    }
+}
 
 SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 

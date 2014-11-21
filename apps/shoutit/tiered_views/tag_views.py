@@ -63,8 +63,8 @@ def stop_listening_to_tag(request, tag_name):
              methods=['GET'])
 def search_tag(request):
     limit = 6
-    keyword = request.REQUEST['term']
-    tags = list(tag_controller.SearchTags(keyword, limit))
+    query = request.GET.get('query', '')
+    tags = list(tag_controller.SearchTags(query, limit))
     result = ResponseResult()
     result.data = tags
     return result

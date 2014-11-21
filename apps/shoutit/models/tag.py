@@ -1,18 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from apps.shoutit.models.misc import UUIDModel
 
-from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin
+from apps.shoutit.models.stream import Stream, Stream2Mixin
 
 
-class Tag(models.Model, Stream2Mixin):
+class Tag(UUIDModel, Stream2Mixin):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + self.Name
-
+        return unicode(self.pk) + ": " + self.Name
     Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
     Creator = models.ForeignKey(User, related_name='TagsCreated', null=True, on_delete=models.SET_NULL)
     Image = models.URLField(max_length=1024, null=True, default='/static/img/shout_tag.png')
@@ -28,17 +26,7 @@ class Tag(models.Model, Stream2Mixin):
         return True if Category.objects.get(TopTag=self) else False
 
 
-@receiver(post_save, sender=Tag)
-def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs):
-
-    # on new profile create stream2 and attach it
-    if created:
-        # creating the stream2
-        stream2 = Stream2(owner=instance)
-        stream2.save()
-
-
-class Category(models.Model):
+class Category(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 

@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
+from apps.shoutit.models.misc import UUIDModel
 
 from apps.shoutit.models.user import Profile
 from apps.shoutit.models.business import Business
@@ -27,7 +28,7 @@ class PaymentsManager(models.Manager):
         return self.filter(content_type=ContentType.objects.get_for_model(object.__class__), object_pk=object.pk)
 
 
-class Payment(models.Model):
+class Payment(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -46,7 +47,7 @@ class Payment(models.Model):
     objects = PaymentsManager()
 
 
-class Transaction(models.Model):
+class Transaction(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -57,7 +58,7 @@ class Transaction(models.Model):
     DateUpdated = models.DateTimeField(auto_now=True)
 
 
-class Voucher(models.Model):
+class Voucher(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -68,7 +69,7 @@ class Voucher(models.Model):
     IsSent = models.BooleanField(default=False)
 
 
-class DealBuy(models.Model):
+class DealBuy(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -78,7 +79,7 @@ class DealBuy(models.Model):
     DateBought = models.DateTimeField(auto_now_add=True)
 
 
-class Service(models.Model):
+class Service(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -107,7 +108,7 @@ class ServiceManager(models.Manager):
         }).values('used_count', 'buys_count')
 
 
-class ServiceBuy(models.Model):
+class ServiceBuy(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -119,7 +120,7 @@ class ServiceBuy(models.Model):
     objects = ServiceManager()
 
 
-class ServiceUsage(models.Model):
+class ServiceUsage(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -129,7 +130,7 @@ class ServiceUsage(models.Model):
     DateUsed = models.DateTimeField(auto_now_add=True)
 
 
-class Subscription(models.Model):
+class Subscription(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 

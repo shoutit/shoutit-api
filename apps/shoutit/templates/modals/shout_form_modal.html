@@ -154,10 +154,10 @@
         autoFocus: true, minLength: 2, delay: 300,
         source: function (request, response) {
           $.ajax({
-            url: "/xhr/search/tag/",
+            url: "/xhr/tag/",
             dataType: "json",
             data: {
-              term: request.term
+              query: request.term
             },
             success: function (data) {
               data = data.data;

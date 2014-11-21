@@ -1,7 +1,7 @@
 import difflib
 from django.contrib.auth.models import User
 from django.db.models.aggregates import Count
-from apps.ActivityLogger.logger import Logger
+from apps.activity_logger.logger import Logger
 from apps.shoutit.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, \
     ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG
 from apps.shoutit.models import Tag, Stream
@@ -39,7 +39,7 @@ def GetTopTags(limit=10, country='', city=''):
     if len(city.strip()):
         filters['Followers__City'] = city
 
-    top_tags = Tag.objects.filter(**filters).values('id').annotate(listen_count=Count('Followers')).values('Name', 'listen_count').order_by('-listen_count')[:limit]
+    top_tags = Tag.objects.filter(**filters).values('pk').annotate(listen_count=Count('Followers')).values('Name', 'listen_count').order_by('-listen_count')[:limit]
     return list(top_tags)
 
 
@@ -83,7 +83,7 @@ def GetOrCreateTag(request, name, creator, isParent):
         stream = Stream(Type = STREAM_TYPE_TAG)
         stream.save()
         tag = Tag.objects.create(Name = name, Creator = creator, Stream = stream, Parent = None)
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_CREATED, data={ACTIVITY_DATA_TAG : tag.id})
+        Logger.log(request, type=ACTIVITY_TYPE_TAG_CREATED, data={ACTIVITY_DATA_TAG : tag.pk})
         return tag
 
 
@@ -110,7 +110,7 @@ def AddToUserInterests(request, tag, user):
         user_controller.FollowStream(request, user,tag.Stream)
         user.save()
         event_controller.RegisterEvent(user.user, EVENT_TYPE_FOLLOW_TAG, tag)
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG : tag.id, ACTIVITY_DATA_USERNAME : user.username})
+        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG : tag.pk, ACTIVITY_DATA_USERNAME : user.username})
 
 
 # todo: remove
@@ -128,7 +128,7 @@ def RemoveFromUserInterests(request, tag, user):
         user.Interests.remove(tag)
         user.save()
 
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_REMOVED, data={ACTIVITY_DATA_TAG : tag.id, ACTIVITY_DATA_USERNAME : user.username})
+        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_REMOVED, data={ACTIVITY_DATA_TAG : tag.pk, ACTIVITY_DATA_USERNAME : user.username})
 
 
 def SearchTags(keyword, limit):

@@ -62,14 +62,14 @@ def upload_image(request, method=None):
                  api_renderer=operation_api,
                  json_renderer=lambda request, result: json_renderer(request, result, _('This shout was deleted.')))
 @refresh_cache(tags=[CACHE_TAG_STREAMS])
-def delete_shout(request, id=None):
-    if not id:
-        id = request.GET[u'id']
-        id = base62_to_int(id)
+def delete_shout(request, pk=None):
+    if not pk:
+        pk = request.GET[u'id']
+        pk = base62_to_int(pk)
     else:
-        id = base62_to_int(id)
+        pk = base62_to_int(pk)
     result = ResponseResult()
-    shout_controller.DeletePost(id)
+    shout_controller.DeletePost(pk)
     return result
 
 
@@ -157,8 +157,8 @@ def shout_buy(request):
                                                           name=form.cleaned_data['name'],
                                                           text=form.cleaned_data['description'],
                                                           price=form.cleaned_data['price'],
-                                                          latitude=longitude,
-                                                          longitude=latitude,
+                                                          latitude=latitude,
+                                                          longitude=longitude,
                                                           tags=form.cleaned_data['tags'].split(' '),
                                                           shouter=request.user,
                                                           country_code=country,
@@ -242,8 +242,8 @@ def shout_sell(request):
                                                            name=form.cleaned_data['name'],
                                                            text=form.cleaned_data['description'],
                                                            price=form.cleaned_data['price'],
-                                                           latitude=longitude,
-                                                           longitude=latitude,
+                                                           latitude=latitude,
+                                                           longitude=longitude,
                                                            tags=form.cleaned_data['tags'].split(' '),
                                                            shouter=user_controller.get_profile(request.user.username),
                                                            country_code=country,
@@ -284,11 +284,11 @@ def shout_edit(request, shout_id):
     elif request.POST.has_key('images'):
         images = request.POST.getlist('images')
 
-    shout = shout_controller.EditShout(request, shout_id, form.cleaned_data['name'], form.cleaned_data['description'],
-                                       form.cleaned_data['price'],
-                                       longitude, latitude, form.cleaned_data['tags'].split(' '),
-                                       shouter, form.cleaned_data['country'], form.cleaned_data['city'],
-                                       form.cleaned_data['address'], form.cleaned_data['currency'], images)
+    shout = shout_controller.EditShout(request=request, shout_id=shout_id, name=form.cleaned_data['name'],
+                                       text=form.cleaned_data['description'], price=form.cleaned_data['price'],
+                                       latitude=latitude, longitude=longitude, tags=form.cleaned_data['tags'].split(' '),
+                                       shouter=shouter, country_code=form.cleaned_data['country'], province_code=form.cleaned_data['city'],
+                                       address=form.cleaned_data['address'], currency=form.cleaned_data['currency'], images=images)
     result.data['next'] = shout_link(shout)
     return result
 
@@ -333,11 +333,11 @@ def shout_view(request, shout_id):
             result.data['new_message'] = True
         elif len(conversations) == 1:
             result.data['conversation'] = conversations[0]
-            conversations[0].messages = message_controller.ReadConversation(request.user, conversations[0].id)
+            conversations[0].messages = message_controller.ReadConversation(request.user, conversations[0].pk)
             result.data['conversation_messages'] = conversations[0].messages
             if not result.data['conversation_messages']:
                 result.data['new_message'] = True
-            result.data['conversation_id'] = conversations[0].id
+            result.data['conversation_id'] = conversations[0].pk
         else:
             result.data['conversations'] = conversations
 

@@ -145,9 +145,9 @@
       SetUpFqBusinessSearchField(search_field_id, {{ business_constants|key:"Foursquare" }}, function (callback) {
             if ($(search_field_id).val() != '') {
               requestAjaxily({
-                url: '/xhr/user/search/' + $(search_field_id).val() + '/',
+                url: '/xhr/user/',
                 type: 'GET',
-                data: {type: {{ user_constants|key:"Business" }} },
+                data: {query: $(search_field_id).val(), type: {{ user_constants|key:"Business" }} },
                 successCallback: function (data) {
                   var items = [];
                   for (var i = 0; i < data.data.users.length; i++) {

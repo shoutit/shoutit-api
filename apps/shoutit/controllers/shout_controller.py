@@ -12,7 +12,7 @@ from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Cu
 
 from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
 
-from apps.ActivityLogger.logger import Logger
+from apps.activity_logger.logger import Logger
 from apps.shoutit.utils import asynchronous_task, to_seo_friendly, make_image_thumbnail
 from django.conf import settings
 
@@ -91,52 +91,50 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def EditShout(request, shout_id, name=None, text=None, price=None, longitude=None, latitude=None, tags=[], shouter=None, country_code=None,
+def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country_code=None,
               province_code=None, address=None, currency=None, images=[], date_published=None, stream=None):
-    shout = Shout.objects.get(pk=shout_id)
+    trade = Trade.objects.get(pk=shout_id)
 
-    if not shout:
+    if not trade:
         raise ObjectDoesNotExist()
     else:
-        if shout.Type == POST_TYPE_BUY or shout.Type == POST_TYPE_SELL:
+        if trade.Type == POST_TYPE_BUY or trade.Type == POST_TYPE_SELL:
 
             if text:
-                shout.Text = text
+                trade.Text = text
             if longitude:
-                shout.Longitude = longitude
+                trade.Longitude = longitude
             if latitude:
-                shout.Latitude = latitude
+                trade.Latitude = latitude
             if shouter:
-                shout.shouter = shouter
+                trade.shouter = shouter
             if province_code:
-                shout.ProvinceCode = province_code
+                trade.ProvinceCode = province_code
             if country_code:
-                shout.CountryCode = country_code
+                trade.CountryCode = country_code
             if address:
-                shout.Address = address
+                trade.Address = address
             if date_published:
-                shout.DatePublished = date_published
+                trade.DatePublished = date_published
 
-            item_controller.edit_item(shout.trade.Item, name, price, images, currency)
+            item_controller.edit_item(trade.trade.Item, name, price, images, currency)
 
-            if stream and shout.Stream != stream:
-                shout.Stream.UnPublishShout(shout)
-                shout.Stream = stream
-                stream.PublishShout(shout)
+            if stream and trade.Stream != stream:
+                trade.Stream.UnPublishShout(trade)
+                trade.Stream = stream
+                stream.PublishShout(trade)
 
             if len(tags) and shouter:
-                shout.OwnerUser = shouter
-                shout.Tags.clear()
+                trade.OwnerUser = shouter
+                trade.Tags.clear()
                 for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
-                    shout.Tags.add(tag)
-                    tag.Stream.PublishShout(shout)
-            shout.StreamsCode = str([f.id for f in shout.Streams.all()])[1:-1]
+                    trade.Tags.add(tag)
+                    tag.Stream.PublishShout(trade)
+            trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
+            trade.save()
 
-            shout.trade.save()
-            shout.save()
-
-            SaveRecolatedShouts(shout.trade, STREAM_TYPE_RELATED)
-            return shout
+            SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
+            return trade
     return None
 
 
@@ -147,7 +145,7 @@ def GetLandingShouts(DownLeftLat, DownLeftLng, UpRightLat, UpRightLng):
         'Longitude__gte': DownLeftLng,
         'Longitude__lte': UpRightLng,
     }
-    shouts = Trade.objects.GetValidTrades().filter(**filters).values('id', 'Type', 'Longitude', 'Latitude')[:10000]
+    shouts = Trade.objects.GetValidTrades().filter(**filters).values('pk', 'Type', 'Longitude', 'Latitude')[:10000]
     return shouts
 
 
@@ -181,8 +179,7 @@ def SaveRecolatedShouts(trade, stream_type):
         if trade.Type == POST_TYPE_SELL:
             type = POST_TYPE_SELL
 
-    shouts = stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10,
-                                                                                       stream_type == STREAM_TYPE_RECOMMENDED)
+    shouts = stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
     stream = Stream(Type=stream_type)
     stream.save()
     if stream_type == STREAM_TYPE_RECOMMENDED:
@@ -205,7 +202,7 @@ def SaveRecolatedShouts(trade, stream_type):
     trade.save()
 
 
-def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, country_code, province_code, address,
+def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, country_code, province_code, address,
               currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
     if stream is None:
         stream = shouter.profile.Stream
@@ -237,19 +234,19 @@ def shout_buy(request, name, text, price, longitude, latitude, tags, shouter, co
         tag.Stream.PublishShout(trade)
 
     if trade:
-        trade.StreamsCode = str([f.id for f in trade.Streams.all()])[1:-1]
+        trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
         trade.save()
 
     SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
     SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.id})
+    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 
-def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, country_code, province_code, address,
+def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, country_code, province_code, address,
                currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
     if stream is None:
         stream = shouter.Stream
@@ -278,14 +275,14 @@ def shout_sell(request, name, text, price, longitude, latitude, tags, shouter, c
         tag.Stream.PublishShout(trade)
 
     if trade:
-        trade.StreamsCode = str([f.id for f in trade.Streams.all()])[1:-1]
+        trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
         trade.save()
 
     SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
     SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter.user, EVENT_TYPE_SHOUT_OFFER, trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.id})
+    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
     realtime_controller.BindUserToPost(shouter.user, trade)
     return trade
 

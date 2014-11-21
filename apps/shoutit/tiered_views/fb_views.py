@@ -40,7 +40,7 @@ def fb_comp(request, comp_num, template=None):
     fb_data = parse_signed_request(signed_request, '1411c146d781128661db9ecef42ea97c')
     fb_data['page_num'] = 1
     user = request.user
-    fb_contest = FbContest.objects.filter(user=user) if user.id else None
+    fb_contest = FbContest.objects.filter(user=user) if user.pk else None
     fb_data['joined'] = True if fb_contest else False
     variables = RequestContext(request, fb_data)
     return render_to_response('fb/comp_1.html', variables)
@@ -53,7 +53,7 @@ def fb_comp_page(request, comp_num, template=None):
     variables['page_num'] = int(page_num)
     if variables['page_num'] == 1:
         user = request.user
-        fb_contest = FbContest.objects.filter(user=user) if user.id else None
+        fb_contest = FbContest.objects.filter(user=user) if user.pk else None
         variables['joined'] = True if fb_contest else False
 
     variables = RequestContext(request, variables)
@@ -68,5 +68,5 @@ def fb_comp_add(request, comp_num=1, user_name=None, fb_id=None, share_id=None, 
     if user and fb_id and share_id:
         fb_contest = FbContest(ContestId=comp_num, user=user, FbId=fb_id, ShareId=share_id)
         fb_contest.save()
-    result.data['fb_contest'] = fb_contest.id if fb_contest else None
+    result.data['fb_contest'] = fb_contest.pk if fb_contest else None
     return json_data_renderer(request, result)

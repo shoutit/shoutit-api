@@ -1,12 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from uuidfield import UUIDField
 from apps.shoutit.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from django.contrib.auth.models import User
 
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.tag import Category
-from apps.shoutit.models.misc import ConfirmToken, StoredFile
+from apps.shoutit.models.misc import ConfirmToken, StoredFile, UUIDModel
 
 
 class BusinessCategoryManager(models.Manager):
@@ -17,7 +18,7 @@ class BusinessCategoryManager(models.Manager):
         return self.filter(Parent=None)
 
 
-class BusinessCategory(models.Model):
+class BusinessCategory(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -35,12 +36,12 @@ class BusinessCategory(models.Model):
         return unicode('%s > %s' % (self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
 
 
-class Business(models.Model):
+class Business(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return '[BP_%s | %s | %s]' % (unicode(self.id), unicode(self.Name), unicode(self.user))
+        return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.Name), unicode(self.user))
 
     user = models.OneToOneField(User, related_name='business', db_index=True)
 
@@ -106,7 +107,7 @@ class Business(models.Model):
             return False
 
 
-class BusinessCreateApplication(models.Model):
+class BusinessCreateApplication(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -133,7 +134,7 @@ class BusinessCreateApplication(models.Model):
     Status = models.IntegerField(default=int(BUSINESS_CONFIRMATION_STATUS_WAITING), db_index=True)
 
 
-class BusinessSource(models.Model):
+class BusinessSource(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -142,7 +143,7 @@ class BusinessSource(models.Model):
     SourceID = models.CharField(max_length=128, blank=True)
 
 
-class BusinessConfirmation(models.Model):
+class BusinessConfirmation(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -151,7 +152,7 @@ class BusinessConfirmation(models.Model):
     DateSent = models.DateTimeField(auto_now_add=True)
 
 
-class GalleryItem(models.Model):
+class GalleryItem(UUIDModel):
     class Meta:
         app_label = 'shoutit'
         unique_together = ('Item', 'Gallery',)
@@ -163,12 +164,12 @@ class GalleryItem(models.Model):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
-class Gallery(models.Model):
+class Gallery(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.Description)
+        return unicode(self.pk) + ": " + unicode(self.Description)
 
     Description = models.TextField(max_length=500, default='')
     OwnerBusiness = models.ForeignKey('Business', related_name='Galleries')

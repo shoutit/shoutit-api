@@ -2,9 +2,10 @@ from django.contrib.auth.models import User
 from django.db import models
 from apps.shoutit import constants
 from piston3.models import Token
+from apps.shoutit.models.misc import UUIDModel
 
 
-class Request(models.Model):
+class Request(UUIDModel):
     ip_address = models.IPAddressField(default='0.0.0.0', db_index=True)
     user = models.ForeignKey(User, null=True, related_name='requests', db_index=True)
     session_id = models.TextField(default='', db_index=True)
@@ -43,7 +44,7 @@ class DataDict(object):
         self.activity.data.add(kv)
 
 
-class Activity(models.Model):
+class Activity(UUIDModel):
     type = models.IntegerField(default=0, db_index=True)
     request = models.ForeignKey(Request, related_name='activities', db_index=True)
     __dict = None
@@ -65,10 +66,10 @@ class Activity(models.Model):
         return unicode(constants.ActivityType.values[self.type]) + ' : ' + unicode(self.request)
 
 
-class ActivityData(models.Model):
+class ActivityData(UUIDModel):
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.activity_id) + ": " + unicode(self.value)
+        return unicode(self.pk) + ": " + unicode(self.activity_id) + ": " + unicode(self.value)
 
     activity = models.ForeignKey(Activity, related_name='data', db_index=True)
     key = models.IntegerField(default=0, db_index=True)

@@ -31,6 +31,10 @@ BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 
 
 def int_to_base62(value):
+    # todo: remove all base62
+    if True:
+        return value
+
     result = ''
 
     while value:
@@ -57,6 +61,10 @@ def random_base62(length):
 
 
 def base62_to_int(value):
+    # todo: remove all base62
+    if True:
+        return value
+
     result = 0
     if isinstance(value, int):
         value = str(value)
@@ -70,7 +78,7 @@ def base62_to_int(value):
 
 
 def entity_id(entity):
-    return int_to_base62(entity.id)
+    return int_to_base62(entity.pk)
 
 
 def get_farest_point(observation, points):
@@ -115,7 +123,7 @@ def normalized_distance(lat1, long1, lat2, long2):
 
 
 def mutual_followings(streams_code1, streams_code2):
-    return len(set([int(x) for x in streams_code1.split(',')]) & set([int(x) for x in streams_code2.split(',')]))
+    return len(set([x for x in streams_code1.split(',')]) & set([x for x in streams_code2.split(',')]))
 
 
 def get_ip(request):
@@ -356,7 +364,7 @@ def shout_link(post):
 
     if post.Type == POST_TYPE_EXPERIENCE:
         if post._meta.module_name == Post._meta.module_name:
-            post = Experience.objects.get(pk=post.id)
+            post = Experience.objects.get(pk=post.pk)
         experience = post
         about = to_seo_friendly(experience.AboutBusiness.name)
 
@@ -381,12 +389,20 @@ class JsonResponse(HttpResponse):
 
     def __init__(self, data, **kwargs):
         kwargs.setdefault('content_type', 'application/json')
-        data = json.dumps(data)
+        data = json.dumps(data, cls=UUIDJSONEncoder)
         super(JsonResponse, self).__init__(content=data, **kwargs)
 
 
 class JsonResponseBadRequest(JsonResponse):
     status_code = 400
+
+
+class UUIDJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
+
 
 
 def get_cloud_connection():

@@ -94,11 +94,11 @@ import datetime
 #             shout_buy = ShoutController.shout_buy(None, 'Shout_Buy_%d' % i, 'this is shout__buy_%d' % i,
 #                                                  23.4 * i, 20.34234 + i, 50.423463 + i, ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
 #                                                  self.user.user, 'AE', 'Dubai', '', 'aed')
-#             self.ids.append(shout_buy.id)
+#             self.ids.append(shout_buy.pk)
 #             shout_sell = ShoutController.shout_sell(None, 'Shout_sell_%d' % i, 'this is shout__sell_%d' % i,
 #                                                    19.8 * i, 20.2434 + i, 50.636 + i, ['tag_1', 'tag_2', 'tag_3', 'tag_4', 'tag_5', 'tag_6'],
 #                                                    self.user.user, 'AE', 'Dubai', '', 'aed')
-#             self.ids.append(shout_sell.id)
+#             self.ids.append(shout_sell.pk)
 #             self.assertNotEqual(shout_buy, None, 'Could not create shout_buy_%d' % i)
 #             self.assertNotEqual(shout_sell, None, 'Could not create shout_sell_%d' % i)
 #
@@ -115,7 +115,7 @@ import datetime
 #
 #     def test_DeleteShout(self):
 #         shout = ShoutController.GetPost(self.ids[2])
-#         shout = ShoutController.DeletePost(shout.id)
+#         shout = ShoutController.DeletePost(shout.pk)
 #         self.assertEqual(shout.IsDisabled,True,"couldn't delete shout")
 #
 #
@@ -216,27 +216,27 @@ import datetime
 #
 #     def test_ReadConversation(self):
 #         msg = MessageController.SendMessage(self.user2, self.user1, self.post, 'first From user2 message on ur post')
-#         msgs = MessageController.ReadConversation(self.user1, msg.Conversation.id,None)
+#         msgs = MessageController.ReadConversation(self.user1, msg.Conversation.pk,None)
 #         self.assertEqual(len(msgs),1,'Retrieve wrong messages')
 #
 #
 #     def test_GetConversation(self):
 #         msg = MessageController.SendMessage(self.user2, self.user1, self.post, 'first From user2 message on ur post')
-#         conversation = MessageController.GetConversation(msg.Conversation.id)
+#         conversation = MessageController.GetConversation(msg.Conversation.pk)
 #         self.assertNotEqual(conversation,None,'Conversation Could not retrieve')
 #         self.assertEqual(msg.Conversation,conversation,'Conversation retrieved wrong')
 #
-#         conversation = MessageController.GetConversation(msg.Conversation.id,self.user1)
+#         conversation = MessageController.GetConversation(msg.Conversation.pk,self.user1)
 #         self.assertNotEqual(conversation,None,'Conversation Could not retrieve for user 1')
 #         self.assertEqual(msg.Conversation,conversation,'Conversation retrieved wrong for user 1')
 #
 #     def test_GetShoutConversations(self):
 #         msgFromUser2 = MessageController.SendMessage(self.user2, self.user1, self.post, 'first From user2 message on ur post')
 #         msgFromUser3 = MessageController.SendMessage(self.user3, self.user1, self.post, 'first From user3 message on ur post')
-#         conversations = MessageController.GetShoutConversations(self.post.id, self.user1)
+#         conversations = MessageController.GetShoutConversations(self.post.pk, self.user1)
 #         self.assertEqual(len(conversations),2,'Not All Conversations Retrieved')
 #
-#         conversations = MessageController.GetShoutConversations(self.post.id, self.user2)
+#         conversations = MessageController.GetShoutConversations(self.post.pk, self.user2)
 #         self.assertNotEqual(conversations,None,'Conversation could not Retrieved')
 #         self.assertEqual(len(conversations),1,'Number of Conversations Retrieved Wrong')
 #         self.assertEqual(conversations[0],msgFromUser2.Conversation,'Conversation Retrieved Wrong')
@@ -244,16 +244,16 @@ import datetime
 #     def test_DeleteMessage(self):
 #         msgFromUser2 = MessageController.SendMessage(self.user2, self.user1, self.post, 'first From user2 message on ur post')
 #         msgFromUser3 = MessageController.SendMessage(self.user3, self.user1, self.post, 'first From user3 message on ur post')
-#         msg2AccordingToUser1 = MessageController.DeleteMessage(self.user1,msgFromUser2.id)
+#         msg2AccordingToUser1 = MessageController.DeleteMessage(self.user1,msgFromUser2.pk)
 #         self.assertEqual(msg2AccordingToUser1.VisibleToRecivier,False,'Message could not deleted')
-#         msg2AccordingToUser2 = MessageController.GetMessage(msgFromUser2.id)
+#         msg2AccordingToUser2 = MessageController.GetMessage(msgFromUser2.pk)
 #         self.assertEqual(msg2AccordingToUser2.VisibleToSender,True,'Wrong Message deleted')
 #
 #     def test_DeleteConversation(self):
 #         msgFromUser2 = MessageController.SendMessage(self.user2, self.user1, self.post, 'first From user2 message on ur post')
 #         msgFromUser3 = MessageController.SendMessage(self.user3, self.user1, self.post, 'first From user3 message on ur post')
-#         conversation2AccordingToUser1 = MessageController.DeleteConversation(self.user1,msgFromUser2.Conversation.id)
+#         conversation2AccordingToUser1 = MessageController.DeleteConversation(self.user1,msgFromUser2.Conversation.pk)
 #         self.assertEqual(conversation2AccordingToUser1.VisibleToRecivier,False,'Conversation could not deleted')
-#         Conversation2AccordingToUser2 = MessageController.GetConversation(msgFromUser2.Conversation.id)
+#         Conversation2AccordingToUser2 = MessageController.GetConversation(msgFromUser2.Conversation.pk)
 #         self.assertEqual(Conversation2AccordingToUser2.VisibleToSender,True,'Wrong Conversation deleted')
 #

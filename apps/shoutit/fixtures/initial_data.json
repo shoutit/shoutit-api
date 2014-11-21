@@ -1,6 +1,6 @@
 [
   {
-    "pk": 1,
+    "pk": "4dd03aff-338a-4c13-83e8-7d7b882cfb6e",
     "model": "shoutit.currency",
     "fields": {
       "Country": "AE",
@@ -9,7 +9,7 @@
     }
   },
   {
-    "pk": 2,
+    "pk": "32d4ead9-da5d-4dda-8b24-4a44c91d98d7",
     "model": "shoutit.currency",
     "fields": {
       "Country": "US",
@@ -18,7 +18,7 @@
     }
   },
   {
-    "pk": 3,
+    "pk": "d1fe5bc8-7958-4ee4-8c8a-8c982c1c46cd",
     "model": "shoutit.currency",
     "fields": {
       "Country": "EU",
@@ -29,19 +29,19 @@
 
 
   {
-    "pk": 1,
+    "pk": "7e2631fb-36a0-4d31-b3ae-64eb8a886672",
     "model": "shoutit.predefinedcity",
     "fields": {
       "City": "Dubai",
       "EncodedCity": "dubai",
       "Country": "AE",
-      "Latitude": 25.2644,
-      "Longitude": 55.3117,
+      "Latitude": 25.1993957,
+      "Longitude": 55.2738326,
       "Approved": true
     }
   },
   {
-    "pk": 2,
+    "pk": "4cbcabaa-8aa5-404c-8bf9-c05da93c3cce",
     "model": "shoutit.predefinedcity",
     "fields": {
       "City": "Aachen",
@@ -52,8 +52,8 @@
       "Approved": true
     }
   },
- {
-    "pk": 3,
+  {
+    "pk": "e8ed3e71-7e87-4479-96d5-eb93d772a858",
     "model": "shoutit.predefinedcity",
     "fields": {
       "City": "Berlin",
@@ -87,7 +87,7 @@
 
 
   {
-    "pk": 1,
+    "pk": "19f6e681-f738-4c90-a1dd-9101da41a455",
     "model": "shoutit.stream",
     "fields": {
       "Type": 0
@@ -96,33 +96,22 @@
 
 
   {
-    "pk": 26,
-    "model": "contenttypes.contenttype",
-    "fields": {
-      "model": "profile",
-      "name": "profile",
-      "app_label": "shoutit"
-    }
-  },
-
-
-  {
-    "pk": 1,
+    "pk": "c6131ea1-eaab-4ff7-af1e-6be94fce709c",
     "model": "shoutit.profile",
     "fields": {
       "isSSS": false,
       "City": "Dubai",
-      "Stream": 1,
+      "Stream": "19f6e681-f738-4c90-a1dd-9101da41a455",
       "Bio": "New Shouter!",
       "Mobile": null,
       "Country": "AE",
       "Image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
-      "Longitude": 55.3117,
+      "Longitude": 55.2738326,
       "Sex": true,
       "isSMS": false,
       "birthday": null,
       "user": 1,
-      "Latitude": 25.2644,
+      "Latitude": 25.1993957,
       "Interests": [],
       "LastToken": null
     }
@@ -230,7 +219,7 @@
 
 
   {
-    "pk": 1,
+    "pk": "908809c6-d9d2-4cc6-9863-0589d8df443d",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.882",
@@ -239,7 +228,7 @@
     }
   },
   {
-    "pk": 2,
+    "pk": "561f7a1c-b0c0-4644-bf52-8dac93368e5f",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.886",
@@ -248,7 +237,7 @@
     }
   },
   {
-    "pk": 3,
+    "pk": "ac232707-3362-415b-a3d3-087e7bb1b4da",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.890",
@@ -257,7 +246,7 @@
     }
   },
   {
-    "pk": 4,
+    "pk": "936e4272-a456-4c06-9eff-40f53cc8bb77",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.895",
@@ -266,7 +255,7 @@
     }
   },
   {
-    "pk": 5,
+    "pk": "4e38133a-c1f8-410c-8bd0-0b353f80d561",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.899",
@@ -275,7 +264,7 @@
     }
   },
   {
-    "pk": 6,
+    "pk": "79d3c706-36d0-4e3d-8e4e-41407180d101",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.902",
@@ -284,7 +273,7 @@
     }
   },
   {
-    "pk": 7,
+    "pk": "0b83d9d5-6697-4e7d-b60a-0fef537ebcc0",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.906",
@@ -293,7 +282,7 @@
     }
   },
   {
-    "pk": 8,
+    "pk": "dc2fe50c-2303-42f0-82fe-2b9f5f80342a",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.908",
@@ -302,7 +291,7 @@
     }
   },
   {
-    "pk": 9,
+    "pk": "dcd3ad0e-57f3-4a1b-b5e8-f5b8a1eee6ca",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.911",
@@ -311,7 +300,7 @@
     }
   },
   {
-    "pk": 10,
+    "pk": "19c7ec0a-2d7b-458c-952d-ad41e78ccd80",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.914",
@@ -320,7 +309,7 @@
     }
   },
   {
-    "pk": 11,
+    "pk": "9ae46a8e-d387-4fe2-aa77-5b464286615e",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.916",
@@ -329,7 +318,7 @@
     }
   },
   {
-    "pk": 12,
+    "pk": "fd0143b7-cad0-4b9d-b981-fb12d6ba0e80",
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.918",

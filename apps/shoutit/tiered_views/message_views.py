@@ -23,9 +23,9 @@ from apps.shoutit.xhr_utils import xhr_respond
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def delete_conversation(request):
     result = ResponseResult()
-    id = request.GET[u'id']
-    id = base62_to_int(id)
-    message_controller.DeleteConversation(request.user, id)
+    pk = request.GET[u'id']
+    pk = base62_to_int(pk)
+    message_controller.DeleteConversation(request.user, pk)
     return result
 
 
@@ -35,9 +35,9 @@ def delete_conversation(request):
                  json_renderer=json_data_renderer)
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def delete_message(request):
-    id = request.GET[u'id']
-    id = base62_to_int(id)
-    message_controller.DeleteMessage(request.user, id)
+    pk = request.GET[u'id']
+    pk = base62_to_int(pk)
+    message_controller.DeleteMessage(request.user, pk)
     result = ResponseResult()
     return result
 

@@ -57,15 +57,15 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
 # todo: simplify this SHIT!
 def getFullConversationDetails(conversations, user):
     result_conversations = []
-    conversation_ids = [conversation.id for conversation in conversations]
-    conversations_messages = Message.objects.filter(Q(Conversation__id__in=conversation_ids) & (
+    conversation_ids = [conversation.pk for conversation in conversations]
+    conversations_messages = Message.objects.filter(Q(Conversation__pk__in=conversation_ids) & (
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
         'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile')
     shouts_ids = [conversation.AboutPost.pk for conversation in conversations]
     if shouts_ids:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(pk) for pk in shouts_ids])])
-        tags_with_shout_id = list(tags.values('id', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
 
     else:
         tags_with_shout_id = []
@@ -75,12 +75,12 @@ def getFullConversationDetails(conversations, user):
     empty_conversations_to = []
     empty_conversations_from = []
     for conversation in conversations:
-        conversation.messages = [message for message in conversations_messages if message.Conversation_id == conversation.id]
+        conversation.messages = [message for message in conversations_messages if message.Conversation_id == conversation.pk]
         if not len(conversation.messages):
             if conversation.FromUser == user:
-                empty_conversations_from.append(conversation.id)
+                empty_conversations_from.append(conversation.pk)
             else:
-                empty_conversations_to.append(conversation.id)
+                empty_conversations_to.append(conversation.pk)
             continue
         conversation.AboutPost.SetImages([image for image in images if image.Item_id == conversation.AboutPost.Item_id])
         conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == conversation.AboutPost.pk])
@@ -166,8 +166,8 @@ def get_shout_conversations(shout_id, user):
     return conversations
 
 
-def DeleteMessage(user, id):
-    message = Message.objects.get(pk=id)
+def DeleteMessage(user, pk):
+    message = Message.objects.get(pk=pk)
     if user.username == message.FromUser.username:
         message.VisibleToSender = False
 
@@ -176,16 +176,16 @@ def DeleteMessage(user, id):
     message.save()
 
 
-def GetMessage(id):
-    message = Message.objects.get(pk=id)
+def GetMessage(pk):
+    message = Message.objects.get(pk=pk)
     if message:
         return message
     else:
         return None
 
 
-def DeleteConversation(user, id):
-    conversation = Conversation.objects.get(pk=id)
+def DeleteConversation(user, pk):
+    conversation = Conversation.objects.get(pk=pk)
     if user.username == conversation.FromUser.username:
         conversation.VisibleToSender = False
     else:
@@ -201,4 +201,4 @@ def ConversationsCount(user):
 def UnReadConversationsCount(user):
     return Conversation.objects.filter(Q(Messages__ToUser=user) & Q(Messages__IsRead=False) & (
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).values(
-        "id").distinct().count()
+        "pk").distinct().count()

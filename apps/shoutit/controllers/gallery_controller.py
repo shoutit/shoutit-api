@@ -1,5 +1,5 @@
-import apps.shoutit
 from apps.shoutit.constants import *
+from apps.shoutit.controllers.tag_controller import GetOrCreateTags
 
 
 def GetBusinessGalleryItems(business, start_index=None, end_index=None):
@@ -62,12 +62,12 @@ def ShoutItem(request, business, item, text, longitude, latitude, country_code, 
     trade.save()
 
     stream.PublishShout(trade)
-    for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(request, tags, business):
+    for tag in GetOrCreateTags(request, tags, business):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
 
     if trade:
-        trade.StreamsCode = str([f.id for f in trade.Streams.all()])[1:-1]
+        trade.StreamsCode = str([f.pk for f in trade.Streams.all()])[1:-1]
         trade.save()
 
     shout_controller.SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)

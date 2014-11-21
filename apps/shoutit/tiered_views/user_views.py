@@ -598,7 +598,7 @@ def user_profile(request, username):
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
         result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
         fb_la = hasattr(profile.user, 'linked_facebook') and profile.user.linked_facebook or None
-        result.data['user_profile_fb'] = 'https://www.facebook.com/profile.php?id=' + str(fb_la.Uid) if fb_la else None
+        result.data['user_profile_fb'] = 'https://www.facebook.com/profile.php?id=' + str(fb_la.facebook_id) if fb_la else None
         result.data['fb_og_type'] = 'user'
 
     if isinstance(profile, Business):

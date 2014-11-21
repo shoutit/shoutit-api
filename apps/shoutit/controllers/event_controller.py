@@ -43,7 +43,7 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
     if city:
         events = events.filter(Q(OwnerUser__profile__City=city) | Q(OwnerUser__business__City=city))
 
-    #	extra_ids = Experience.objects.filter(AboutBusiness__City = city).values('id')
+    #	extra_ids = Experience.objects.filter(AboutBusiness__City = city).values('pk')
     #	ct = ContentType.objects.get_for_model(Experience)
     #	extra_events = Event.objects.filter( object_pk__in=extra_ids)
     #	extra_events += events
@@ -57,7 +57,7 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
 
 
 def DeleteEventAboutObj(AttachedObject):
-    event = Event.objects.get(content_type__name=AttachedObject._meta.module_name, object_pk=AttachedObject.id)
+    event = Event.objects.get(content_type__name=AttachedObject._meta.module_name, object_pk=AttachedObject.pk)
     if event:
         event.IsDisabled = True
         event.save()
@@ -137,49 +137,49 @@ def GetDetailedEvents(events):
     for event in events:
         if event.EventType == EVENT_TYPE_FOLLOW_USER:
             for user in related['users']:
-                if user.pk == int(event.object_pk):
+                if user.pk == event.object_pk:
                     event.AttachedObject = user
                     #					related['users'].remove(user)
                     break
         elif event.EventType == EVENT_TYPE_FOLLOW_BUSINESS:
             for business in related['businesses']:
-                if business.pk == int(event.object_pk):
+                if business.pk == event.object_pk:
                     event.AttachedObject = business
                     #					related['users'].remove(user)
                     break
         elif event.EventType == EVENT_TYPE_FOLLOW_TAG:
             for tag in related['tags']:
-                if tag.pk == int(event.object_pk):
+                if tag.pk == event.object_pk:
                     event.AttachedObject = tag
                     #					related['tags'].remove(tag)
                     break
         elif event.EventType == EVENT_TYPE_SHOUT_OFFER or event.EventType == EVENT_TYPE_SHOUT_REQUEST:
             for trade in related['trades']:
-                if trade.pk == int(event.object_pk):
+                if trade.pk == event.object_pk:
                     event.AttachedObject = trade
                     #					related['trades'].remove(trade)
                     break
         elif event.EventType == EVENT_TYPE_EXPERIENCE:
             for experience in related['experiences']:
-                if experience.pk == int(event.object_pk):
+                if experience.pk == event.object_pk:
                     event.AttachedObject = experience
                     #					related['experiences'].remove(experience)
                     break
         elif event.EventType == EVENT_TYPE_SHARE_EXPERIENCE:
             for shared in related['shared_exps']:
-                if shared.pk == int(event.object_pk):
+                if shared.pk == event.object_pk:
                     event.AttachedObject = shared
                     #					related['experiences'].remove(experience)
                     break
         elif event.EventType == EVENT_TYPE_COMMENT:
             for comment in related['comments']:
-                if comment.pk == int(event.object_pk):
+                if comment.pk == event.object_pk:
                     event.AttachedObject = comment
                     #					related['comments'].remove(comment)
                     break
         elif event.EventType == EVENT_TYPE_POST_DEAL or event.EventType == EVENT_TYPE_BUY_DEAL:
             for deal in related['deals']:
-                if deal.pk == int(event.object_pk):
+                if deal.pk == event.object_pk:
                     event.AttachedObject = deal
                     #					related['deals'].remove(deal)
                     break

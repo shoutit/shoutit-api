@@ -1,12 +1,13 @@
 from django.db import models
+from apps.shoutit.models.misc import UUIDModel
 
 
-class Item(models.Model):
+class Item(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + self.Name
+        return unicode(self.pk) + ": " + self.Name
 
     Name = models.CharField(max_length=512, default='')
     Description = models.CharField(max_length=1000, default='')
@@ -44,7 +45,7 @@ class Item(models.Model):
         pass
 
 
-class Currency(models.Model):
+class Currency(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 

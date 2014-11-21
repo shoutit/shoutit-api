@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 
 from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
 from apps.shoutit.constants import Constant
-from apps.shoutit.utils import asynchronous_task
+from apps.shoutit.utils import asynchronous_task, UUIDJSONEncoder
 from apps.shoutit.middleware import JsonPostMiddleware
 from common.tagged_cache import TaggedCache
 
@@ -126,11 +126,11 @@ def get_cache_key(request, level):
 
     if level == CACHE_LEVEL_SESSION:
         if request.user.is_authenticated():
-            key_parameters['user_id'] = str(request.user.id)
+            key_parameters['user_id'] = str(request.user.pk)
         key_parameters['session_key'] = str(request.session.session_key)
     elif level == CACHE_LEVEL_USER:
         if request.user.is_authenticated():
-            key_parameters['user_id'] = str(request.user.id)
+            key_parameters['user_id'] = str(request.user.pk)
         else:
             key_parameters['session_key'] = str(request.session.session_key)
 
@@ -232,7 +232,7 @@ def tiered_view(
 
             elif api_renderer and getattr(request, 'is_api', False):
                 response, pre_json_result = api_renderer(request, result, *args, **kwargs)
-                response.content = json.dumps(pre_json_result)
+                response.content = json.dumps(pre_json_result, cls=UUIDJSONEncoder)
                 output = response
 
             elif mobile_renderer and getattr(request, 'flavour', '') == 'mobile':
@@ -289,7 +289,7 @@ def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=[], dynamic_tags=None):
         @wraps(view, assigned=available_attrs(view))
         def _wrapper(request, *args, **kwargs):
             dirty_tags = get_cache_tags(request, {'tags': tags, 'dynamic_tags': dynamic_tags}, *args, **kwargs)
-            _refresh_cache(level, dirty_tags, str(request.session.session_key), request.user.is_authenticated() and str(request.user.id) or -1)
+            _refresh_cache(level, dirty_tags, str(request.session.session_key), request.user.is_authenticated() and str(request.user.pk) or -1)
             return view(request, *args, **kwargs)
         return _wrapper
     return wrapper

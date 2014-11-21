@@ -1,10 +1,20 @@
 from datetime import timedelta, datetime
+
 from django.db import models
 from django.contrib.auth.models import User
-from apps.shoutit import settings
+from uuidfield import UUIDField
+
+from django.conf import settings
 
 
-class PredefinedCity(models.Model):
+class UUIDModel(models.Model):
+    class Meta:
+        abstract = True
+
+    uuid = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
+
+
+class PredefinedCity(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
@@ -19,24 +29,24 @@ class PredefinedCity(models.Model):
     Approved = models.BooleanField(default=False)
 
 
-class StoredFile(models.Model):
+class StoredFile(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return "(" + unicode(self.id) + ") " + unicode(self.File)
+        return "(" + unicode(self.pk) + ") " + unicode(self.File)
 
     user =  models.ForeignKey(User, related_name='Documents', null=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
 
 
-class ConfirmToken(models.Model):
+class ConfirmToken(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
-        return unicode(self.id) + ": " + unicode(self.user) + "::" + self.Token
+        return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
 
     Token = models.CharField(max_length=24, db_index=True, unique=True)
     user =  models.ForeignKey(User, related_name="Tokens")
@@ -67,11 +77,11 @@ class ConfirmToken(models.Model):
             return None
 
 
-class FbContest(models.Model):
+class FbContest(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
     ContestId = models.IntegerField(db_index=True)
-    user =  models.ForeignKey(User, related_name='Contest_1')
+    user = models.ForeignKey(User, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)
     ShareId = models.CharField(max_length=50, null=True, default=None)

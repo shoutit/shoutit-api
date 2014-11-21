@@ -4,13 +4,13 @@ from django.contrib.auth.admin import UserAdmin
 from apps.shoutit.models import Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
-# from apps.ActivityLogger.models import Activity, ActivityData, Request
+# from apps.activity_logger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
 
 
 # Shout
 class ShoutAdmin(admin.ModelAdmin):
-    list_display = ('id', 'DatePublished', 'OwnerUser', 'Text', 'CountryCode', 'ProvinceCode')
+    list_display = ('pk', 'DatePublished', 'OwnerUser', 'Text', 'CountryCode', 'ProvinceCode')
     readonly_fields = ('OwnerUser', 'Streams', 'Tags')
 
 
@@ -20,7 +20,7 @@ admin.site.register(Shout, ShoutAdmin)
 # Trade
 class TradeAdmin(admin.ModelAdmin):
     list_display = (
-    'id', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
+    'pk', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
     list_filter = ('Type', 'IsSSS', 'IsDisabled')
     readonly_fields = ('OwnerUser', 'Streams', 'Tags', 'RelatedStream', 'RecommendedStream', 'StreamsCode', 'Item')
 
@@ -33,9 +33,9 @@ class TradeAdmin(admin.ModelAdmin):
 
     def OwnerProfile(self, obj):
         if hasattr(obj.OwnerUser, 'profile') and obj.OwnerUser.profile:
-            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.OwnerUser.profile.id, obj.OwnerUser.profile)
+            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.OwnerUser.profile.pk, obj.OwnerUser.profile)
         elif hasattr(obj.OwnerUser, 'Business') and obj.OwnerUser.Business:
-            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessprofile/', obj.OwnerUser.Business.id, obj.OwnerUser.Business)
+            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessprofile/', obj.OwnerUser.Business.pk, obj.OwnerUser.Business)
 
     OwnerProfile.allow_tags = True
     OwnerProfile.short_description = 'Owner Profile/Business'
@@ -100,8 +100,8 @@ admin.site.register(Business, BusinessProfileAdmin)
 #
 #     def confirmation_url(self, obj):
 #         try:
-#             confirmation = obj.user.BusinessConfirmations.all().order_by('id')[0]
-#             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.id, obj.user)
+#             confirmation = obj.user.BusinessConfirmations.all().order_by('pk')[0]
+#             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.pk, obj.user)
 #         except :
 #             return 'Docs not yet submitted'
 #
@@ -122,7 +122,7 @@ admin.site.register(Business, BusinessProfileAdmin)
 
 # BusinessConfirmation
 class BusinessConfirmationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user')
+    list_display = ('pk', 'user')
 
 
 admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
@@ -130,7 +130,7 @@ admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 
 # BusinessCategory
 class BusinessCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'Name', 'Source', 'SourceID', 'Parent')
+    list_display = ('pk', 'Name', 'Source', 'SourceID', 'Parent')
     search_fields = ['Name', 'Parent__Name']
 
 
@@ -149,8 +149,8 @@ admin.site.register(FollowShip, FollowShipAdmin)
 
 # Tag
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('id', 'Name', 'Stream')
-    search_fields = ['id', 'Name']
+    list_display = ('pk', 'Name', 'Stream')
+    search_fields = ['pk', 'Name']
 
 
 admin.site.register(Tag, TagAdmin)

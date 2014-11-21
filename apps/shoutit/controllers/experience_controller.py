@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 # from django.core.files.base import ContentFile
 #from django.db.models.query_utils import Q
-#from apps.ActivityLogger.logger import Logger
+#from apps.activity_logger.logger import Logger
 from apps.shoutit.constants import *
 
 
@@ -67,7 +67,7 @@ def GetExperiences(user, owner_user=None, about_business=None, start_index=None,
         experiences_posts = experiences_posts.filter(experience__AboutBusiness=about_business)
     if city:
         experiences_posts = experiences_posts.filter(experience__AboutBusiness__City=city)
-    experiences_post_ids = experiences_posts.values('id')
+    experiences_post_ids = experiences_posts.values('pk')
 
     experiences = Experience.objects.GetValidExperiences().filter(pk__in=experiences_post_ids).select_related('AboutBusiness',
                                                                                                               'AboutBusiness__Profile',

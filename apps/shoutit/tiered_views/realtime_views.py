@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 
 from apps.shoutit.constants import NOTIFICATION_TYPE_FOLLOWSHIP
 
-from apps.shoutit.utils import base62_to_int
+from apps.shoutit.utils import base62_to_int, JsonResponse
 
 from apps.shoutit.models import Notification
 from apps.shoutit.controllers import realtime_controller, user_controller, notifications_controller, message_controller
@@ -68,22 +68,22 @@ def get_session_data(request, session_key=None):
             r = redis.Redis(host=settings.SESSION_REDIS_HOST, port=settings.SESSION_REDIS_PORT,
                             socket_timeout=settings.REDIS_SOCKET_TIMEOUT)
             if request.user.is_authenticated():
-                old_session = r.get('usersession:%d' % request.user.id)
+                old_session = r.get('usersession:%d' % request.user.pk)
         except ImportError:
             pass
         if old_session:
             session = engine.SessionStore(old_session)
             if not session._session:
-                session[SESSION_KEY] = request.user.id
+                session[SESSION_KEY] = request.user.pk
                 session.save()
-                r.setnx('usersession:%d' % request.user.id, session._get_session_key())
+                r.setnx('usersession:%d' % request.user.pk, session._get_session_key())
         else:
             session = engine.SessionStore()
             if request.user.is_authenticated():
-                session[SESSION_KEY] = request.user.id
+                session[SESSION_KEY] = request.user.pk
             session.save()
             if is_radis and request.user.is_authenticated():
-                r.setnx('usersession:%d' % request.user.id, session._get_session_key())
+                r.setnx('usersession:%d' % request.user.pk, session._get_session_key())
     try:
         result = {}
         if SESSION_KEY in session:
@@ -91,7 +91,7 @@ def get_session_data(request, session_key=None):
         result['session_key'] = session._get_session_key()
     except:
         raise Http404()
-    return HttpResponse(content=json.dumps(result), content_type='application/json')
+    return JsonResponse(data=result)
 
 
 @non_cached_view(json_renderer=json_renderer,
@@ -172,7 +172,7 @@ def notifications_all(request):
 def send_fake_notification(request, username):
     global num
     notification = Notification()
-    notification.id = num
+    notification.pk = num
     num += 1
     notification.ToUser = User.objects.get(username__iexact=username)
     notification.FromUser = User.objects.get(username__iexact='syron')

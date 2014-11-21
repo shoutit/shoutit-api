@@ -47,10 +47,10 @@ def PublishShoutToShout(shout, other):
     return rank
 
 
-def MaxFollowings(ids, country_code, province_code, filters):
+def MaxFollowings(pks, country_code, province_code, filters):
     shouts = Trade.objects.GetValidTrades(country_code=country_code, province_code=province_code).filter(**filters).select_related(
-        'Streams').filter(Streams__pk__in=ids).values('StreamsCode')
-    mutuals = [len(set(int(f) for f in shout['StreamsCode'].split(',') if len(shout['StreamsCode'].strip()) > 0) & set(ids)) for shout in
+        'Streams').filter(Streams__pk__in=pks).values('StreamsCode')
+    mutuals = [len(set(f for f in shout['StreamsCode'].split(',') if len(shout['StreamsCode'].strip()) > 0) & set(pks)) for shout in
                shouts]
     return max(mutuals) if mutuals else 0
 
@@ -67,13 +67,13 @@ def MaxDistance(points, lat, long):
     return max_distance
 
 
-def GetShoutTimeOrder(id, country_code, province_code, limit=0):
+def GetShoutTimeOrder(pk, country_code, province_code, limit=0):
     shout_qs = Trade.objects.GetValidTrades(country_code=country_code, province_code=province_code).order_by('-DatePublished')
-    shout_qs = shout_qs.values('id')
+    shout_qs = shout_qs.values('pk')
     shouts = list(shout_qs)
-    shouts = [shout['id'] for shout in shouts]
+    shouts = [shout['pk'] for shout in shouts]
     try:
-        index = shouts.index(id)
+        index = shouts.index(pk)
         return index > DEFAULT_PAGE_SIZE and DEFAULT_PAGE_SIZE or index
     except ValueError, e:
         return 0
@@ -91,13 +91,13 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', 
     #		filter_types: array of types you like to filter on(see constants.py for types).
     #		filter_query: a search string, work on shout item name and shout text.
     #		filter_tags: array of tags you like to filter on.
-    #		RETURNS: array of tuple(shout id, shout rank).
+    #		RETURNS: array of tuple(shout pk, shout rank).
 
     # initializing variables
-    user_followings_ids = []
+    user_followings_pks = []
     if user is not None:
-        #     user_followings_ids = [x['id'] for x in Stream.objects.filter(followship__follower=user.profile).values('id')]  # todo: check!
-        user_followings_ids = [stream['id'] for stream in Stream2.objects.filter(listen__listener=user).values('id')]
+        #     user_followings_pks = [x['pk'] for x in Stream.objects.filter(followship__follower=user.profile).values('pk')]  # todo: check!
+        user_followings_pks = [stream['pk'] for stream in Stream2.objects.filter(listen__listener=user).values('pk')]
 
     where_custom_clause = []
     additional_selects = []
@@ -141,7 +141,7 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', 
     # Calculating the stream following rank attribute
     if int(rank_type_flag & FOLLOW_RANK_TYPE):
         if user is not None:
-            max_followings = MaxFollowings(user_followings_ids, country_code, province_code, filters)
+            max_followings = MaxFollowings(user_followings_pks, country_code, province_code, filters)
             #todo: find way to join tables
             #_connection = (None, Shout._meta.db_table, None)
             #shout_qs.query.join(connection=_connection)
@@ -228,7 +228,7 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', 
         shout_qs = shout_qs.distinct().order_by('-DatePublished')[start_index:end_index]
 
     # extracting the raw SQl from the QuerySet
-    query_string = unicode(shout_qs.values('id', 'rank', *additional_selects).query)
+    query_string = unicode(shout_qs.values('pk', 'rank', *additional_selects).query)
     index = (query_string.find('ORDER BY') - 1)
     if group_by_string != '':
         query_string = unicode(query_string[:index]) + ' GROUP BY ' + group_by_string + ' ' + str(query_string[index:])
@@ -241,10 +241,10 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', 
             query_string = unicode(query_string[:where_index]) + unicode(qp) + unicode(query_string[where_index:])
 
     if int(rank_type_flag & FOLLOW_RANK_TYPE):
-        if len(user_followings_ids):
+        if len(user_followings_pks):
             index = (query_string.find(qp) + len(qp))
             query_string = \
-                unicode(query_string[:index]) + ' and "shoutit_post_Streams"."stream_id" IN (%s) ' % unicode(user_followings_ids)[
+                unicode(query_string[:index]) + ' and "shoutit_post_Streams"."stream_id" IN (%s) ' % unicode(user_followings_pks)[
                                                                                                      1:-1] + unicode(query_string[index:])
 
     # executing query SQL & fetching shout IDs
@@ -307,9 +307,9 @@ def __GetStreamOfShoutsWithTags(rank_flag, user=None, lat=None, long=None, count
     # Calculating the Mutual Streams axis:
     if int(rank_flag & FOLLOW_RANK_TYPE):
         if user is not None:
-            ids = [x['id'] for x in Stream.objects.filter(followship__follower__pk=user.profile.id).values('id')]
-            max_followings = MaxFollowings(ids, country_code, province_code, filters)
-            shout_qs = shout_qs.filter(Streams__pk__in=ids)
+            pks = [x['pk'] for x in Stream.objects.filter(followship__follower__pk=user.profile.pk).values('pk')]
+            max_followings = MaxFollowings(pks, country_code, province_code, filters)
+            shout_qs = shout_qs.filter(Streams__pk__in=pks)
             #todo: find way to join tables
             _connection = (None, Shout.get_meta().db_table, ((None, None),))
             shout_qs.query.join(connection=_connection)
@@ -357,7 +357,7 @@ def __GetStreamOfShoutsWithTags(rank_flag, user=None, lat=None, long=None, count
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(shout.pk) for shout in shouts])])
         #todo: find way to join tables
-        tags_with_shout_id = list(tags.values('id', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
         #tags = Tag.objects.select_related('Creator').extra(select={'shout_id' : '"%s"."%s"' % (Shout.Tags.field.m2m_db_table(), Shout.Tags.field.m2m_column_name())})
         #_connection = (None, Tag._meta.db_table, ((None, None),))
         #tags.query.join(connection=_connection)
@@ -391,7 +391,7 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
     days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
     begin = today - days
     filters['Type'] = int(type)
-    filters['Tags__pk__in'] = [t.id for t in base_shout.GetTags()]
+    filters['Tags__pk__in'] = [t.pk for t in base_shout.GetTags()]
 
     base_timestamp = int(time.mktime(begin.utctimetuple()))
     now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
@@ -402,8 +402,8 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
         Trade.objects.GetValidTrades(country_code=base_shout.CountryCode, province_code=base_shout.ProvinceCode).filter(**filters).values(
             'Latitude', 'Longitude'))
     max_distance = MaxDistance(points, float(base_shout.Latitude), float(base_shout.Longitude))
-    ids = [int(x) for x in base_shout.StreamsCode.split(',')]
-    max_followings = MaxFollowings(ids, base_shout.CountryCode, base_shout.ProvinceCode, filters)
+    pks = [x for x in base_shout.StreamsCode.split(',')]
+    max_followings = MaxFollowings(pks, base_shout.CountryCode, base_shout.ProvinceCode, filters)
     max_price = 1.0
 
     extra_order_bys += 'power( ' + str(
@@ -430,7 +430,7 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
     extra_order_bys = '(|/(' + extra_order_bys.strip()[:-1] + ')) / |/(%d)' % rank_count
 
     shout_qs = Trade.objects.GetValidTrades(country_code=base_shout.CountryCode, province_code=base_shout.ProvinceCode).select_related(
-        'Item', 'Item__Currency', 'OwnerUser__Profile', 'Tags').filter(**filters).filter(~Q(pk=base_shout.id))
+        'Item', 'Item__Currency', 'OwnerUser__Profile', 'Tags').filter(**filters).filter(~Q(pk=base_shout.pk))
     if exclude_shouter:
         shout_qs = shout_qs.filter(~Q(OwnerUser=base_shout.OwnerUser))
     shout_qs = shout_qs.extra(select={'time_rank': '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' % (
@@ -439,8 +439,8 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
     shouts = list(shout_qs)
     if shouts:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
-        tags = tags.extra(where=['shout_id IN (%s)' % ','.join([str(shout.pk) for shout in shouts])])
-        tags_with_shout_id = list(tags.values('id', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout.pk) for shout in shouts])])
+        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__pk'))
         # tags = Tag.objects.select_related('Creator').extra(select={'shout_id' : '"%s"."%s"' % (Shout.Tags.field.m2m_db_table(), Shout.Tags.field.m2m_column_name())})
         #_connection = (None, Tag._meta.db_table, ((None, None),))
         #tags.query.join(connection=_connection)
@@ -462,8 +462,8 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
 
         shout.rank = ((shout.rank ** 2) * rank_count - shout.time_rank) / (rank_count - 1)
 
-        shouts[i].SetTags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == shouts[i].pk])
-        tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['Shouts__id'] != shouts[i].pk]
+        shouts[i].SetTags([tag for tag in tags_with_shout_id if tag['Shouts__pk'] == shouts[i].pk])
+        tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['Shouts__pk'] != shouts[i].pk]
         # shouts[i].SetTags([tag for tag in tags_with_shout_id if tag.shout_id == shouts[i].pk])
         #tags_with_shout_id = [tag for tag in tags_with_shout_id if tag.shout_id != shouts[i].pk]
 
@@ -472,18 +472,18 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
     return shouts
 
 
-def GetTradesByIDs(ids):
+def GetTradesByIDs(pks):
     # Select shouts from database according to their IDs, including other objects related to every shout.
-    #		ids: array of shout IDs
+    #		pks: array of shout IDs
     #		RETURNS: array of shout objects
 
-    if ids is None or len(ids) == 0:
+    if pks is None or len(pks) == 0:
         return []
     #todo: choose which statement with less queries and enough data
     #todo: find way to join tables
-    #shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = ids)
-    #shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = ids)
-    shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(pk__in=ids)
+    #shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = pks)
+    #shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = pks)
+    shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(pk__in=pks)
     shouts = list(shout_qs)
     #if shouts:
     #    tags = Tag.objects.select_related('Creator').extra(select={'shout_id' : '"%s"."%s"' % (Trade.Tags.field.m2m_db_table(), Trade.Tags.field.m2m_column_name())})
@@ -551,8 +551,8 @@ def GetRankedStreamShouts(stream):
 # todo: reduce queries by supplying the trade objects with necessary tags, images, etc
 # todo: use country, city, etc
 def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_expired=False, country=None, city=None):
-    post_ids = [post['id'] for post in stream.Posts.filter(Type__in=[POST_TYPE_BUY, POST_TYPE_SELL]).values('id')[start_index:end_index]]
-    trades = Trade.objects.filter(pk__in=post_ids)
+    post_pks = [post['pk'] for post in stream.Posts.filter(Type__in=[POST_TYPE_BUY, POST_TYPE_SELL]).values('pk')[start_index:end_index]]
+    trades = Trade.objects.filter(pk__in=post_pks)
     return trades
 
 
@@ -587,14 +587,14 @@ def get_user_listening(user, stream_type=None, count_only=False):
         return qs.count()
     else:
         listens = qs.all()
-        stream_ids = [listen.stream_id for listen in listens]
-        streams = Stream2.objects.filter(id__in=stream_ids)
-        object_ids = [stream.object_id for stream in streams]
+        stream_pks = [listen.stream_id for listen in listens]
+        streams = Stream2.objects.filter(pk__in=stream_pks)
+        object_pks = [stream.object_uuid for stream in streams]
 
         if stream_type == STREAM2_TYPE_PROFILE:
-            return list(Profile.objects.filter(id__in=object_ids))
+            return list(Profile.objects.filter(pk__in=object_pks))
         elif stream_type == STREAM2_TYPE_TAG:
-            return list(Tag.objects.filter(id__in=object_ids))
+            return list(Tag.objects.filter(pk__in=object_pks))
         else:
             return listens
 

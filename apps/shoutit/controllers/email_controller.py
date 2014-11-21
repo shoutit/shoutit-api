@@ -121,7 +121,7 @@ def SendExpiryNotificationEmail(user, shout):
     subject = _('[ShoutIt] your shout is about to expire! reshout it now.')
     title = shout.Item.Name
     link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % int_to_base62(shout.id))
+        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % int_to_base62(shout.pk))
     from_email = settings.DEFAULT_FROM_EMAIL
     to = user.email
 

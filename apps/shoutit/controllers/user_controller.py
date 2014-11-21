@@ -12,7 +12,7 @@ from apps.shoutit.models import Event, Profile, ConfirmToken, Stream, LinkedFace
 
 from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
 
-from apps.ActivityLogger.logger import Logger
+from apps.activity_logger.logger import Logger
 from apps.shoutit.constants import *
 
 from apps.shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image, get_size_url
@@ -417,7 +417,7 @@ def auth_with_facebook(request, fb_user, auth_response):
         GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
-        la = LinkedFacebookAccount(user=user, Uid=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
+        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
         la.save()
     except BaseException, e:
         print e.message
@@ -488,7 +488,7 @@ def FollowStream(request, follower, followed):
         followShip.save()
         follower.save()
         Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_CREATED,
-                   data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.id})
+                   data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
         if followed.Type == STREAM_TYPE_USER:
             followedUser = Profile.objects.get(Stream=followed)
             email_controller.SendFollowshipEmail(follower.user, followedUser.user)
@@ -511,7 +511,7 @@ def UnfollowStream(request, follower, followed):
         followShip.delete()
         follower.save()
         Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_REMOVED,
-                   data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.id})
+                   data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
 
 
 def UserFollowing(username, type='all', period='recent'):
@@ -643,7 +643,7 @@ def activities_stream(profile, start_index=None, end_index=None):
 
     post_count = stream_posts_query_set.count()
 
-    post_ids = [post['id'] for post in stream_posts_query_set[start_index:end_index].values('id')]
+    post_ids = [post['pk'] for post in stream_posts_query_set[start_index:end_index].values('pk')]
     #	trades = Trade.objects.GetValidTrades().filter(pk__in = post_ids).select_related('Item','Item__Currency','OwnerUser','OwnerUser__Profile','OwnerUser__Business')
     #	trades = shout_controller.get_trade_images(trades)
 

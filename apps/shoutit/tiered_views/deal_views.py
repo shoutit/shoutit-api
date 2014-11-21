@@ -77,7 +77,7 @@ CONCURRENT_DEALS_SERVICE = 'CONCURRENT_DEALS'
 def shout_deal_validator(request):
     result = form_validator(request, DealForm)
     if result.valid:
-        bp = Business.objects.get(user_id=request.user.pk)
+        bp = Business.objects.get(user__pk=request.user.pk)
         concurrent_deals = deal_controller.GetConcurrentDeals(bp)
         if False:  # concurrent_deals:
             service_buy = ServiceBuy.objects.GetUserServiceBuyRemaining(request.user, CONCURRENT_DEALS_SERVICE)

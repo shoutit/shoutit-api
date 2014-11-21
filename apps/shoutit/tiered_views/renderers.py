@@ -886,7 +886,7 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
 def comment_on_post_json_renderer(request, result, message=_('Your comment was post successfully.')):
     if not result.errors:
         data = {
-            'id': int_to_base62(result.data['comment'].id),
+            'id': int_to_base62(result.data['comment'].pk),
             'text': result.data['comment'].Text,
             'date': result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
         }
@@ -955,7 +955,7 @@ def post_comments_json_renderer(request, result):
         data = {
             'comments': [
                 {
-                    'id': int_to_base62(comment.id),
+                    'id': int_to_base62(comment.pk),
                     'isOwner': comment.isOwner,
                     'text': comment.Text,
                     'date': comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
@@ -990,7 +990,7 @@ def live_events_json_renderer(request, result):
                 'event_types': constants.event_types
             }
             variables = RequestContext(request, variables)
-            events_arr.append({'id': event.id, 'html': render_to_string("event.html", variables)})
+            events_arr.append({'id': event.pk, 'html': render_to_string("event.html", variables)})
         data = {
             'events': events_arr,
             'count': result.data['count'],

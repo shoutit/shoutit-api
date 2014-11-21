@@ -172,17 +172,17 @@ def reply_to_shout_validator(request, shout_id):
     return result
 
 
-def modify_shout_validator(request, id=None):
-    if not id:
-        id = request.GET[u'id']
-        id = base62_to_int(id)
+def modify_shout_validator(request, pk=None):
+    if not pk:
+        pk = request.GET[u'id']
+        pk = base62_to_int(pk)
     else:
-        id = base62_to_int(id)
+        pk = base62_to_int(pk)
 
-    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), id, True, True)
+    result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), pk, True, True)
     if result.valid:
         if request.user.is_authenticated():
-            shout = shout_controller.GetPost(id, True, True)
+            shout = shout_controller.GetPost(pk, True, True)
             if request.user.is_staff or shout.OwnerUser.pk == request.user.pk:
                 return result
             else:
@@ -192,8 +192,8 @@ def modify_shout_validator(request, id=None):
         return result
 
 
-def edit_shout_validator(request, id=None):
-    result = modify_shout_validator(request, id)
+def edit_shout_validator(request, pk=None):
+    result = modify_shout_validator(request, pk)
     if result.valid:
         result = form_validator(request, ShoutForm)
         return result
@@ -202,10 +202,10 @@ def edit_shout_validator(request, id=None):
 
 
 def delete_message_validator(request):
-    id = request.GET[u'id']
-    id = base62_to_int(id)
+    pk = request.GET[u'id']
+    pk = base62_to_int(pk)
 
-    result = object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), id)
+    result = object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), pk)
     if result.valid:
         if request.user.is_authenticated():
             return result

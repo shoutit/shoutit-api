@@ -90,7 +90,7 @@ def hovercard(request):
                 data.isFollowing = -1
 
     if data:
-        data = {'type': type, 'name': data.Name, 'id': data.id, 'image': str(data.Image),
+        data = {'type': type, 'name': data.Name, 'id': data.pk, 'image': str(data.Image),
                 'listeners': data.Stream.userprofile_set.count(), 'shouts': data.Stream.Shouts.count(),
                 'isFollowing': data.isFollowing}
     else:
@@ -312,7 +312,7 @@ def admin_stats(request):
             result.data['users_e'] = len(users_e)
 
             result.data['sss'] = Profile.objects.filter(user__is_active=True, isSSS=True).count()
-            result.data['fb'] = LinkedFacebookAccount.objects.all().values('Uid').distinct().count()
+            result.data['fb'] = LinkedFacebookAccount.objects.all().values('facebook_id').distinct().count()
             result.data['users_s'] = result.data['users_e'] - result.data['sss'] - result.data['fb']
 
             result.data['shouts_req'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).count()
@@ -320,10 +320,10 @@ def admin_stats(request):
             result.data['shouts_exp'] = Post.objects.GetValidPosts().filter(Type=POST_TYPE_EXPERIENCE).count()
             result.data['shouts'] = result.data['shouts_req'] + result.data['shouts_ofr'] + result.data['shouts_exp']
             result.data['shouts_a'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(
-                OwnerUser__id__in=users_a).count()
+                OwnerUser__pk__in=users_a).count()
             result.data['shouts_e'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(
-                OwnerUser__id__in=users_e).count()
-            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(OwnerUser__id__in=users_e,
+                OwnerUser__pk__in=users_e).count()
+            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(OwnerUser__pk__in=users_e,
                                                                                                            IsSSS=False).count()
 
             result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
@@ -424,7 +424,7 @@ def upload_file(request):
         ret_json = {'success': True, 'url': cloud_file.public_uri()}
     else:
         ret_json = {'success': False}
-    return HttpResponse(json.dumps(ret_json))
+    return JsonResponse(data=ret_json)
 
 
 @non_cached_view(methods=['GET'], json_renderer=lambda request, result: live_events_json_renderer(request, result))
