@@ -249,7 +249,7 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', 
     # executing query SQL & fetching shout IDs
     cursor = connection.cursor()
     cursor.execute(' '' ' + query_string + ' '' ')
-    return [(row[1], row[0]) for row in cursor.fetchall() if row and len(row)]
+    return [(str(row[1]), row[0]) for row in cursor.fetchall() if row and len(row)]
 
 
 def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index=None, exclude_shouter=True):
