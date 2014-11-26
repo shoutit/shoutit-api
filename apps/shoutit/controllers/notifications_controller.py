@@ -3,7 +3,7 @@ from apps.shoutit.models import Notification
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-from apps.shoutit.api.renderers import render_notification
+from apps.shoutit.api.renderers import render_notification, render_user, render_message
 from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
 from apps.shoutit.controllers import realtime_controller
 
@@ -25,22 +25,25 @@ def NotifyUser(user, notification_type, from_user=None, attached_object=None):
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:
         message = _("You got a new lister")
+        attached_object_dict = render_user(attached_object, 2)
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")
+        attached_object_dict = render_message(attached_object)
     else:
         message = None
+        attached_object_dict = {}
 
     # new apns / gcm
     if user.apns_device:
         user.apns_device.send_message(message, extra={
             'notification_type': notification_type,
-            'object': attached_object
+            'object': attached_object_dict
         })
 
     if user.gcm_device:
         user.gcm_device.send_message(message, extra={
             'notification_type': notification_type,
-            'object': attached_object
+            'object': attached_object_dict
         })
 
 

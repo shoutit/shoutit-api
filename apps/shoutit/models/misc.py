@@ -13,6 +13,11 @@ class UUIDModel(models.Model):
 
     uuid = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
 
+    @property
+    def pk(self):
+        return str(self.uuid)
+
+
 
 class PredefinedCity(UUIDModel):
     class Meta:
