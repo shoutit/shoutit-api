@@ -13,11 +13,6 @@ def MarkAllAsRead(user):
 
 
 def NotifyUser(user, notification_type, from_user=None, attached_object=None):
-    print user
-    print notification_type
-    print from_user
-    print attached_object
-
     notification = Notification(ToUser=user, Type=notification_type, FromUser=from_user, attached_object=attached_object)
     notification.save()
 

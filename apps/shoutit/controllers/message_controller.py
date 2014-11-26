@@ -75,14 +75,14 @@ def getFullConversationDetails(conversations, user):
     empty_conversations_to = []
     empty_conversations_from = []
     for conversation in conversations:
-        conversation.messages = [message for message in conversations_messages if message.Conversation_id == conversation.pk]
+        conversation.messages = [message for message in conversations_messages if message.Conversation.pk == conversation.pk]
         if not len(conversation.messages):
             if conversation.FromUser == user:
                 empty_conversations_from.append(conversation.pk)
             else:
                 empty_conversations_to.append(conversation.pk)
             continue
-        conversation.AboutPost.SetImages([image for image in images if image.Item_id == conversation.AboutPost.Item_id])
+        conversation.AboutPost.SetImages([image for image in images if image.Item.pk == conversation.AboutPost.Item.pk])
         conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__pk'] == conversation.AboutPost.pk])
         last_message = list(conversation.messages)[-1]
         conversation.Text = last_message.Text[0:256] if last_message.Text else "attachment"
