@@ -17,7 +17,7 @@ from apps.shoutit.constants import *
                                                                             success_message='Your report was sent successfully'),
                  permissions_required=[PERMISSION_REPORT]
 )
-def report(request, type, object_id):
+def report(request, type, object_pk):
     result = ResponseResult()
     form = ReportForm(request.POST)
     form.is_valid()
@@ -26,15 +26,15 @@ def report(request, type, object_id):
 
     attached_object = None
     if type == REPORT_TYPE_USER or type == REPORT_TYPE_BUSINESS:
-        attached_object = user_controller.get_profile(object_id)
+        attached_object = user_controller.get_profile(object_pk)
     else:
-        object_id = object_id
+        object_pk = object_pk
         if type == REPORT_TYPE_TRADE or type == REPORT_TYPE_EXPERIENCE:
-            attached_object = shout_controller.GetPost(object_id)
+            attached_object = shout_controller.GetPost(object_pk)
         elif type == REPORT_TYPE_ITEM:
-            attached_object = item_controller.get_item(object_id)
+            attached_object = item_controller.get_item(object_pk)
         elif type == REPORT_TYPE_COMMENT:
-            attached_object = comment_controller.GetCommentByID(object_id)
+            attached_object = comment_controller.GetCommentByID(object_pk)
 
     report_controller.CreateReport(request.user, text, attached_object)
     return result

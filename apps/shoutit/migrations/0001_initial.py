@@ -12,7 +12,7 @@ class Migration(SchemaMigration):
         db.create_table(u'shoutit_predefinedcity', (
             ('uuid', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
             ('City', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200, db_index=True)),
-            ('EncodedCity', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200, db_index=True)),
+            ('city_encoded', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200, db_index=True)),
             ('Country', self.gf('django.db.models.fields.CharField')(default='', max_length=2, db_index=True)),
             ('Latitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
             ('Longitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
@@ -84,12 +84,12 @@ class Migration(SchemaMigration):
             ('uuid', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
             ('type', self.gf('django.db.models.fields.SmallIntegerField')(db_index=True)),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
-            ('object_uuid', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, blank=True)),
+            ('object_pk', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, blank=True)),
         ))
         db.send_create_signal('shoutit', ['Stream2'])
 
-        # Adding unique constraint on 'Stream2', fields ['content_type', 'object_uuid', 'type']
-        db.create_unique(u'shoutit_stream2', ['content_type_id', 'object_uuid', 'type'])
+        # Adding unique constraint on 'Stream2', fields ['content_type', 'object_pk', 'type']
+        db.create_unique(u'shoutit_stream2', ['content_type_id', 'object_pk', 'type'])
 
         # Adding M2M table for field posts on 'Stream2'
         m2m_table_name = db.shorten_name(u'shoutit_stream2_posts')
@@ -459,7 +459,7 @@ class Migration(SchemaMigration):
             (u'post_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Post'], unique=True, primary_key=True)),
             ('EventType', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_pk', self.gf('django.db.models.fields.TextField')(null=True)),
+            ('object_pk', self.gf('uuidfield.fields.UUIDField')(max_length=36, unique=True, null=True, blank=True)),
         ))
         db.send_create_signal('shoutit', ['Event'])
 
@@ -494,7 +494,7 @@ class Migration(SchemaMigration):
             ('uuid', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
             ('message', self.gf('django.db.models.fields.related.ForeignKey')(related_name='attachments', to=orm['shoutit.Message'])),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
-            ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('object_pk', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, blank=True)),
         ))
         db.send_create_signal('shoutit', ['MessageAttachment'])
 
@@ -507,7 +507,7 @@ class Migration(SchemaMigration):
             ('Type', self.gf('django.db.models.fields.IntegerField')(default=0)),
             ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_pk', self.gf('django.db.models.fields.TextField')(null=True)),
+            ('object_pk', self.gf('uuidfield.fields.UUIDField')(max_length=36, unique=True, null=True, blank=True)),
         ))
         db.send_create_signal('shoutit', ['Notification'])
 
@@ -520,7 +520,7 @@ class Migration(SchemaMigration):
             ('IsDisabled', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_pk', self.gf('django.db.models.fields.TextField')(null=True)),
+            ('object_pk', self.gf('uuidfield.fields.UUIDField')(max_length=36, unique=True, null=True, blank=True)),
         ))
         db.send_create_signal('shoutit', ['Report'])
 
@@ -535,7 +535,7 @@ class Migration(SchemaMigration):
             ('Status', self.gf('django.db.models.fields.IntegerField')()),
             ('Transaction', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Payment', to=orm['shoutit.Transaction'])),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_pk', self.gf('django.db.models.fields.TextField')(null=True)),
+            ('object_pk', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, blank=True)),
         ))
         db.send_create_signal('shoutit', ['Payment'])
 
@@ -623,8 +623,8 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'Listen', fields ['listener', 'stream']
         db.delete_unique(u'shoutit_listen', ['listener_id', 'stream_id'])
 
-        # Removing unique constraint on 'Stream2', fields ['content_type', 'object_uuid', 'type']
-        db.delete_unique(u'shoutit_stream2', ['content_type_id', 'object_uuid', 'type'])
+        # Removing unique constraint on 'Stream2', fields ['content_type', 'object_pk', 'type']
+        db.delete_unique(u'shoutit_stream2', ['content_type_id', 'object_pk', 'type'])
 
         # Deleting model 'PredefinedCity'
         db.delete_table(u'shoutit_predefinedcity')
@@ -954,7 +954,7 @@ class Migration(SchemaMigration):
             'EventType': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'Meta': {'object_name': 'Event', '_ormbases': ['shoutit.Post']},
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'object_pk': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'object_pk': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             u'post_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Post']", 'unique': 'True', 'primary_key': 'True'})
         },
         'shoutit.experience': {
@@ -1043,7 +1043,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'MessageAttachment'},
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             'message': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'attachments'", 'to': "orm['shoutit.Message']"}),
-            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'object_pk': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
         },
         'shoutit.notification': {
@@ -1054,7 +1054,7 @@ class Migration(SchemaMigration):
             'ToUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Notifications'", 'to': u"orm['auth.User']"}),
             'Type': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'object_pk': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'object_pk': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
         },
         'shoutit.payment': {
@@ -1066,7 +1066,7 @@ class Migration(SchemaMigration):
             'Status': ('django.db.models.fields.IntegerField', [], {}),
             'Transaction': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Payment'", 'to': "orm['shoutit.Transaction']"}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'object_pk': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'object_pk': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Payments'", 'to': u"orm['auth.User']"}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
         },
@@ -1096,10 +1096,10 @@ class Migration(SchemaMigration):
             'Approved': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'City': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200', 'db_index': 'True'}),
             'Country': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '2', 'db_index': 'True'}),
-            'EncodedCity': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200', 'db_index': 'True'}),
             'Latitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
             'Longitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
             'Meta': {'object_name': 'PredefinedCity'},
+            'city_encoded': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200', 'db_index': 'True'}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
         },
         'shoutit.profile': {
@@ -1129,7 +1129,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Report'},
             'Text': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '300'}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'object_pk': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'object_pk': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Reports'", 'to': u"orm['auth.User']"}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
         },
@@ -1197,10 +1197,10 @@ class Migration(SchemaMigration):
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
         },
         'shoutit.stream2': {
-            'Meta': {'unique_together': "(('content_type', 'object_uuid', 'type'),)", 'object_name': 'Stream2'},
+            'Meta': {'unique_together': "(('content_type', 'object_pk', 'type'),)", 'object_name': 'Stream2'},
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
             'listeners': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'listening'", 'symmetrical': 'False', 'through': "orm['shoutit.Listen']", 'to': u"orm['auth.User']"}),
-            'object_uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
+            'object_pk': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'blank': 'True'}),
             'posts': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'streams'", 'symmetrical': 'False', 'to': "orm['shoutit.Post']"}),
             'type': ('django.db.models.fields.SmallIntegerField', [], {'db_index': 'True'}),
             'uuid': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})

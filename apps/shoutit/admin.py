@@ -185,10 +185,10 @@ class RequestAdmin(admin.ModelAdmin):
 
 # Report
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('user', 'AttachedObject', 'content_type', 'Text', 'IsSolved', 'IsDisabled')
+    list_display = ('user', 'attached_object', 'content_type', 'Text', 'IsSolved', 'IsDisabled')
     list_filter = ('IsSolved', 'IsDisabled')
     actions = ['mark_as_solved', 'mark_as_disabled']
-    readonly_fields = ('user', 'AttachedObject', 'content_type')
+    readonly_fields = ('user', 'attached_object', 'content_type')
 
     def mark_as_solved(self, request, queryset):
         queryset.update(IsSolved=True)

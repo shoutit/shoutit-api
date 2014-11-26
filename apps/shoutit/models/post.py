@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import Q, Sum
 from django.contrib.auth.models import User
 from django.conf import settings
+from uuidfield import UUIDField
 
 from apps.shoutit.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
 from apps.shoutit.models.item import Item
@@ -348,6 +349,6 @@ class Event(Post):
     objects = EventManager()
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = models.TextField(null=True)
-    AttachedObject = generic.GenericForeignKey(fk_field='object_pk')
+    object_pk = UUIDField(auto=True, hyphenate=True, version=4, null=True)
+    attached_object = generic.GenericForeignKey(fk_field='object_pk')
 

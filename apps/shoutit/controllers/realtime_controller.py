@@ -2,15 +2,8 @@ import datetime
 import pika
 from apps.shoutit.utils import asynchronous_task, UUIDJSONEncoder
 from django.conf import settings
-import os
-from apns import Payload, APNs
-from apps.shoutit import utils
 from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE
 from apps.shoutit.api.renderers import render_notification
-
-PROJECT_PATH = os.path.abspath(os.path.dirname(__name__))
-apns_instance = APNs(use_sandbox=False, cert_file=PROJECT_PATH+'/apps/shoutit/static/Certificates/iphone/ShoutitPushCer.pem', key_file=PROJECT_PATH+'/apps/shoutit/static/Certificates/iphone/ShoutitKey.pem')
-
 import json
 import socket
 
@@ -70,13 +63,7 @@ def SendNotification(notification, username, count=0):
                     customMessage = {'URCnv':unread_conversations_num}
                 elif notification.Type == NOTIFICATION_TYPE_MESSAGE:
                     message += " " + _("sent you a message")
-                    customMessage = {'UC': unread_conversations_num, 'CID': notification.AttachedObject.Conversation_id}
-                payload = Payload(alert=message, sound="default", badge=notifications_count, custom=customMessage)
-                try:
-                    apns_instance.gateway_server.send_notification(token, payload)
-                except:
-                    apns_instance = APNs(use_sandbox=False, cert_file=PROJECT_PATH + '/ShoutWebsite/static/Certificates/iphone/ShoutitPushCer.pem', key_file=PROJECT_PATH+'/ShoutWebsite/static/Certificates/iphone/ShoutitKey.pem')
-                    apns_instance.gateway_server.send_notification(token, payload)
+                    customMessage = {'UC': unread_conversations_num, 'CID': notification.attached_object.Conversation_id}
 
             if count and count == len(apns_tokens):
                 return

@@ -157,29 +157,18 @@ def GetStreamAffectedByShout(shout):
     return []
 
 
-def TagsAffinity(user_interests, shout, tags):
-    shout_tags = [tag for tag in tags if tag in shout.GetTags()]
-    if shout_tags:
-        return float(len(set(user_interests) & set(shout_tags))) / float(len(shout.GetTags()))
-    else:
-        return 0
-
-
 @asynchronous_task()
 def SaveRecolatedShouts(trade, stream_type):
-    type = POST_TYPE_BUY
+    posts_type = POST_TYPE_BUY
     if stream_type == STREAM_TYPE_RECOMMENDED:
         if trade.Type == POST_TYPE_BUY:
-            type = POST_TYPE_SELL
+            posts_type = POST_TYPE_SELL
         elif trade.Type == POST_TYPE_SELL:
-            type = POST_TYPE_BUY
+            posts_type = POST_TYPE_BUY
     elif stream_type == STREAM_TYPE_RELATED:
-        if trade.Type == POST_TYPE_BUY:
-            type = POST_TYPE_BUY
-        if trade.Type == POST_TYPE_SELL:
-            type = POST_TYPE_SELL
+        posts_type = trade.Type
 
-    shouts = stream_controller.GetShoutRecommendedShoutStream(trade, type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
+    shouts = stream_controller.GetShoutRecommendedShoutStream(trade, posts_type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
     stream = Stream(Type=stream_type)
     stream.save()
     if stream_type == STREAM_TYPE_RECOMMENDED:

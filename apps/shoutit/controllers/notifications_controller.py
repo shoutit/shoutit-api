@@ -1,3 +1,4 @@
+from django.utils.translation import ugettext as _
 from apps.shoutit.models import Notification
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
@@ -11,10 +12,9 @@ def MarkAllAsRead(user):
     Notification.objects.filter(IsRead=False, ToUser=user).update(IsRead=True)
 
 
-def NotifyUser(user, type, from_user=None, attached_object=None):
-    pk = attached_object and attached_object.pk or None
-    ct = attached_object and ContentType.objects.db_manager(attached_object._state.db).get_for_model(attached_object) or None
-    notification, created = Notification.objects.get_or_create(ToUser = user, Type=type, FromUser=from_user, object_pk = pk, content_type=ct)
+def NotifyUser(user, notification_type, from_user=None, attached_object=None):
+    notification, created = Notification.objects.get_or_create(ToUser=user, Type=notification_type, FromUser=from_user,
+                                                               attached_object=attached_object)
     if not created:
         notification.DateCreated = datetime.now()
         notification.IsRead = False
@@ -24,12 +24,32 @@ def NotifyUser(user, type, from_user=None, attached_object=None):
     if count:
         # todo: add the new push (apns/gcm)
         realtime_controller.SendNotification(notification, user.username, count)
-        realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification),RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
+        realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification), RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
         realtime_controller.SendRealtimeMessage(realtime_message, user.username)
 
+    if notification_type == NOTIFICATION_TYPE_LISTEN:
+        message = _("You got a new lister")
+    elif notification_type == NOTIFICATION_TYPE_MESSAGE:
+        message = _("You got a new message")
+    else:
+        message = None
 
-def NotifyUserOfListen(user, follower):
-    NotifyUser(user, NOTIFICATION_TYPE_LISTEN, follower, follower)
+    # new apns / gcm
+    if user.apns_device:
+        user.apns_device.send_message(message, extra={
+            'notification_type': notification_type,
+            'object': attached_object
+        })
+
+    if user.gcm_device:
+        user.gcm_device.send_message(message, extra={
+            'notification_type': notification_type,
+            'object': attached_object
+        })
+
+
+def NotifyUserOfListen(user, listener):
+    NotifyUser(user, NOTIFICATION_TYPE_LISTEN, listener, listener)
 
 
 def NotifyUserOfMessage(user, message):

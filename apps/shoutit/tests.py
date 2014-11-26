@@ -120,7 +120,6 @@ import datetime
 #
 #
 #     #TODO: make a test function for ShoutController.GetStreamAffectedByShout
-#     #TODO: make a test function for ShoutController.TagsAffinity
 #     #TODO: make a test function for ShoutController.SaveRecolatedShouts
 #
 # class TagTestCase(TestCase):
@@ -152,21 +151,6 @@ import datetime
 #         created_tags = TagController.GetOrCreateTags(None, tags, self.user.user)
 #         self.assertEqual(len(tags), len(created_tags), "Not All tags created or found")
 #
-#     def test_AddToUserInterests(self):
-#         user = UserController.GetUserByEmail('user_1@hotmail.com')
-#         tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.user, None)
-#         TagController.AddToUserInterests(None, tag, user.user)
-#         self.assertEqual(tag in list(user.Interests.all()), True, 'Tag_0 was not followed by User_1')
-#
-#     def test_RemoveFromUserInterests(self):
-#         user = UserController.GetUserByEmail('user_2@hotmail.com')
-#         tag = TagController.GetOrCreateTag(None, 'Tag_1', self.user.user, None)
-#
-#         TagController.AddToUserInterests(None, tag, user)
-#         self.assertEqual(tag in list(user.Interests.all()), True, 'Tag_1 was not followed by User_2')
-#
-#         TagController.RemoveFromUserInterests(None, tag, user)
-#         self.assertEqual(tag in list(user.Interests.all()), False, 'Tag_1 was not unfollowed by User_2')
 #
 #     def test_SearchTags(self):
 #         tags = TagController.SearchTags("Tag_",100)
@@ -175,7 +159,6 @@ import datetime
 #     def test_TagFollowers(self):
 #         user = UserController.GetUserByEmail('user_1@hotmail.com')
 #         tag = TagController.GetOrCreateTag(None, 'Tag_0', self.user.user, None)
-#         TagController.AddToUserInterests(None, tag, user.user)
 #
 #         tags = TagController.TagFollowers("Tag_0")
 #         self.assertEqual(len(tags),1 ,'Not All Followers retrieve')

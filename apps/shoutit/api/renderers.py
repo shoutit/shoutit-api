@@ -164,7 +164,7 @@ def render_message_attachment(message_attachment):
     content_object = render_shout(message_attachment.content_object, level=1)
     return {
         'content_type': content_type,
-        'object_id': message_attachment.object_id,
+        'object_id': message_attachment.object_pk,
         content_type: content_object
     }
 
@@ -308,17 +308,17 @@ def render_notification(notification):
         'id': notification.pk
     }
 
-    if notification.AttachedObject:
+    if notification.attached_object:
         if notification.Type == NOTIFICATION_TYPE_MESSAGE:
-            result['attached_object'] = render_message(notification.AttachedObject)
+            result['attached_object'] = render_message(notification.attached_object)
         elif notification.Type == NOTIFICATION_TYPE_LISTEN:
-            result['attached_object'] = render_user(notification.AttachedObject, level=2)
+            result['attached_object'] = render_user(notification.attached_object, level=2)
         elif notification.Type == NOTIFICATION_TYPE_EXP_POSTED:
-            result['attached_object'] = render_experience(notification.AttachedObject)
+            result['attached_object'] = render_experience(notification.attached_object)
         elif notification.Type == NOTIFICATION_TYPE_EXP_SHARED:
-            result['attached_object'] = render_shared_exp(notification.AttachedObject)
+            result['attached_object'] = render_shared_exp(notification.attached_object)
         elif notification.Type == NOTIFICATION_TYPE_COMMENT:
-            result['attached_object'] = render_comment(notification.AttachedObject)
+            result['attached_object'] = render_comment(notification.attached_object)
     return result
 
 
@@ -331,23 +331,23 @@ def render_event(event):
         'date_created': event.DatePublished.strftime('%s')
     }
 
-    if event.AttachedObject:
+    if event.attached_object:
         if event.EventType == EVENT_TYPE_FOLLOW_USER:
-            result['attached_object'] = render_user(event.AttachedObject, level=2)
+            result['attached_object'] = render_user(event.attached_object, level=2)
         elif event.EventType == EVENT_TYPE_FOLLOW_TAG:
-            result['attached_object'] = render_tag(event.AttachedObject)
+            result['attached_object'] = render_tag(event.attached_object)
         elif event.EventType == EVENT_TYPE_SHOUT_OFFER or event.EventType == EVENT_TYPE_SHOUT_REQUEST:
-            result['attached_object'] = render_shout(event.AttachedObject)
+            result['attached_object'] = render_shout(event.attached_object)
         elif event.EventType == EVENT_TYPE_EXPERIENCE:
-            result['attached_object'] = render_experience(event.AttachedObject)
+            result['attached_object'] = render_experience(event.attached_object)
         elif event.EventType == EVENT_TYPE_SHARE_EXPERIENCE:
-            result['attached_object'] = render_shared_exp(event.AttachedObject)
+            result['attached_object'] = render_shared_exp(event.attached_object)
         elif event.EventType == EVENT_TYPE_COMMENT:
-            result['attached_object'] = render_comment(event.AttachedObject)
+            result['attached_object'] = render_comment(event.attached_object)
         #		elif event.EventType == EVENT_TYPE_GALLERY_ITEM :
-        #			result['attached_object'] = render_gallery_item(event.AttachedObject)
+        #			result['attached_object'] = render_gallery_item(event.attached_object)
         #		elif event.EventType == EVENT_TYPE_POST_DEAL or event.EventType == EVENT_TYPE_BUY_DEAL :
-        #			result['attached_object'] = render_deal(event.AttachedObject)
+        #			result['attached_object'] = render_deal(event.attached_object)
         return result
 
 

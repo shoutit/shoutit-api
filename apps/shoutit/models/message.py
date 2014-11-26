@@ -1,6 +1,8 @@
+from django.contrib.contenttypes.generic import GenericForeignKey
 from django.db import models
 from django.contrib.auth.models import User
-from apps.shoutit.constants import ReportType, NotificationType
+from uuidfield import UUIDField
+from apps.shoutit.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from apps.shoutit.models.misc import UUIDModel
@@ -51,8 +53,8 @@ class MessageAttachment(UUIDModel):
     message = models.ForeignKey(Message, related_name='attachments')
 
     content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    object_pk = UUIDField(auto=True, hyphenate=True, version=4)
+    content_object = generic.GenericForeignKey('content_type', 'object_pk')
 
     def __unicode__(self):
         return ''
@@ -68,12 +70,13 @@ class Notification(UUIDModel):
     ToUser = models.ForeignKey(User, related_name='Notifications')
     FromUser = models.ForeignKey(User, related_name='+', null=True, default=None)
     IsRead = models.BooleanField(default=False)
-    Type = models.IntegerField(default=0)
+    Type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = models.TextField(null=True)
-    AttachedObject = generic.GenericForeignKey(fk_field='object_pk')
+    object_pk = UUIDField(auto=True, hyphenate=True, version=4, null=True)
+
+    attached_object = GenericForeignKey('content_type', 'object_pk')
 
     @property
     def Text(self):
@@ -99,8 +102,8 @@ class Report(UUIDModel):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = models.TextField(null=True)
-    AttachedObject = generic.GenericForeignKey(fk_field='object_pk')
+    object_pk = UUIDField(auto=True, hyphenate=True, version=4, null=True)
+    attached_object = generic.GenericForeignKey(fk_field='object_pk')
 
     @property
     def Type(self):

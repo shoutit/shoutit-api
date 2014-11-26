@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import Sum
+from uuidfield import UUIDField
 from apps.shoutit.models.misc import UUIDModel
 
 from apps.shoutit.models.user import Profile
@@ -32,7 +33,7 @@ class Payment(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user =  models.ForeignKey(User, related_name='Payments')
+    user = models.ForeignKey(User, related_name='Payments')
     DateCreated = models.DateTimeField(auto_now_add=True)
     DateUpdated = models.DateTimeField(auto_now=True)
     Amount = models.FloatField()
@@ -41,7 +42,7 @@ class Payment(UUIDModel):
     Transaction = models.ForeignKey('Transaction', related_name='Payment')
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = models.TextField(null=True)
+    object_pk = UUIDField(auto=True, hyphenate=True, version=4)
     Object = generic.GenericForeignKey(fk_field='object_pk')
 
     objects = PaymentsManager()

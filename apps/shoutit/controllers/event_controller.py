@@ -49,15 +49,15 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
     #	extra_events += events
     if date:
         events = events.filter(DatePublished__gte=date).order_by('-DatePublished').select_related('OwnerUser', 'OwnerUser__Profile',
-                                                                                                  'OwnerUser__Business', 'AttachedObject')
+                                                                                                  'OwnerUser__Business', 'attached_object')
     else:
         events = events.order_by('-DatePublished')[0:DEFAULT_PAGE_SIZE].select_related('OwnerUser', 'OwnerUser__Profile',
-                                                                                       'OwnerUser__Business', 'AttachedObject')
+                                                                                       'OwnerUser__Business', 'attached_object')
     return events
 
 
-def DeleteEventAboutObj(AttachedObject):
-    event = Event.objects.get(content_type__name=AttachedObject._meta.module_name, object_pk=AttachedObject.pk)
+def DeleteEventAboutObj(attached_object):
+    event = Event.objects.get(content_type__name=attached_object._meta.module_name, object_pk=attached_object.pk)
     if event:
         event.IsDisabled = True
         event.save()
@@ -138,49 +138,49 @@ def GetDetailedEvents(events):
         if event.EventType == EVENT_TYPE_FOLLOW_USER:
             for user in related['users']:
                 if user.pk == event.object_pk:
-                    event.AttachedObject = user
+                    event.attached_object = user
                     #					related['users'].remove(user)
                     break
         elif event.EventType == EVENT_TYPE_FOLLOW_BUSINESS:
             for business in related['businesses']:
                 if business.pk == event.object_pk:
-                    event.AttachedObject = business
+                    event.attached_object = business
                     #					related['users'].remove(user)
                     break
         elif event.EventType == EVENT_TYPE_FOLLOW_TAG:
             for tag in related['tags']:
                 if tag.pk == event.object_pk:
-                    event.AttachedObject = tag
+                    event.attached_object = tag
                     #					related['tags'].remove(tag)
                     break
         elif event.EventType == EVENT_TYPE_SHOUT_OFFER or event.EventType == EVENT_TYPE_SHOUT_REQUEST:
             for trade in related['trades']:
                 if trade.pk == event.object_pk:
-                    event.AttachedObject = trade
+                    event.attached_object = trade
                     #					related['trades'].remove(trade)
                     break
         elif event.EventType == EVENT_TYPE_EXPERIENCE:
             for experience in related['experiences']:
                 if experience.pk == event.object_pk:
-                    event.AttachedObject = experience
+                    event.attached_object = experience
                     #					related['experiences'].remove(experience)
                     break
         elif event.EventType == EVENT_TYPE_SHARE_EXPERIENCE:
             for shared in related['shared_exps']:
                 if shared.pk == event.object_pk:
-                    event.AttachedObject = shared
+                    event.attached_object = shared
                     #					related['experiences'].remove(experience)
                     break
         elif event.EventType == EVENT_TYPE_COMMENT:
             for comment in related['comments']:
                 if comment.pk == event.object_pk:
-                    event.AttachedObject = comment
+                    event.attached_object = comment
                     #					related['comments'].remove(comment)
                     break
         elif event.EventType == EVENT_TYPE_POST_DEAL or event.EventType == EVENT_TYPE_BUY_DEAL:
             for deal in related['deals']:
                 if deal.pk == event.object_pk:
-                    event.AttachedObject = deal
+                    event.attached_object = deal
                     #					related['deals'].remove(deal)
                     break
     return events

@@ -417,7 +417,7 @@ def get_user_listening(user, stream_type=None, count_only=False):
         listens = qs.all()
         stream_pks = [listen.stream_id for listen in listens]
         streams = Stream2.objects.filter(pk__in=stream_pks)
-        object_pks = [stream.object_uuid for stream in streams]
+        object_pks = [stream.object_pk for stream in streams]
 
         if stream_type == STREAM2_TYPE_PROFILE:
             return list(Profile.objects.filter(pk__in=object_pks))

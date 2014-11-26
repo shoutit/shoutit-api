@@ -179,6 +179,6 @@ def send_fake_notification(request, username):
     notification.Type = NOTIFICATION_TYPE_LISTEN
     notification.DateCreated = datetime.now()
     notification.IsRead = False
-    notification.AttachedObject = notification.FromUser
+    notification.attached_object = notification.FromUser
     realtime_controller.SendNotification(notification, username)
     return HttpResponse(content='Num: %d' % (num - 1,))

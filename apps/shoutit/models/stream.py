@@ -68,7 +68,7 @@ class Stream2(UUIDModel):
 
     class Meta:
         app_label = 'shoutit'
-        unique_together = ('content_type', 'object_uuid', 'type')  # so each model can have only one stream
+        unique_together = ('content_type', 'object_pk', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
         return unicode(self.pk) + ':' + StreamType2.values[self.type] + ' (' + unicode(self.owner) + ')'
@@ -82,9 +82,9 @@ class Stream2(UUIDModel):
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType2.choices)
     # owner
     content_type = models.ForeignKey(ContentType)
-    object_uuid = UUIDField(auto=True, hyphenate=True, version=4)
+    object_pk = UUIDField(auto=True, hyphenate=True, version=4)
 
-    owner = GenericForeignKey('content_type', 'object_uuid')
+    owner = GenericForeignKey('content_type', 'object_pk')
 
     posts = models.ManyToManyField('Post', related_name='streams')
     listeners = models.ManyToManyField(User, through='Listen', related_name='listening')
@@ -96,7 +96,7 @@ class Stream2Mixin(object):
         if not hasattr(self, '_stream2'):
             ct = ContentType.objects.get_for_model(self.__class__)
             try:
-                self._stream2 = Stream2.objects.get(content_type__pk=ct.pk, object_uuid=self.pk)
+                self._stream2 = Stream2.objects.get(content_type__pk=ct.pk, object_pk=self.pk)
             except Stream2.DoesNotExist:
                 return None
         return self._stream2

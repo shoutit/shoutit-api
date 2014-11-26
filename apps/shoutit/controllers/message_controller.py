@@ -42,9 +42,9 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         attachments = []
 
     for attachment in attachments:
-        object_id = attachment['object_id']
+        object_pk = attachment['object_id']
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
+        MessageAttachment(message=message, content_type=content_type, object_pk=object_pk).save()
 
     # todo: push notification test
     notifications_controller.NotifyUserOfMessage(to_user, message)
