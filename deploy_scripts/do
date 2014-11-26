@@ -1,6 +1,8 @@
 createdb shoutdb
 createuser syron -P
 psql -h localhost
-GRANT ALL PRIVILEGES ON DATABASE shoutdb TO syron;
 psql -h localhost -d shoutdb -a -f deploy_scripts/deploy.sql
-ALTER DATABASE name OWNER TO syron;
+
+DROP DATABASE shoutdb;
+CREATE DATABASE shoutdb;
+ALTER DATABASE shoutdb OWNER TO syron;
