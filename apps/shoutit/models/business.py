@@ -1,6 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from uuidfield import UUIDField
 from apps.shoutit.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from django.contrib.auth.models import User
 

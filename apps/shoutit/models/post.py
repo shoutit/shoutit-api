@@ -349,6 +349,6 @@ class Event(Post):
     objects = EventManager()
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = UUIDField(auto=True, hyphenate=True, version=4, null=True)
+    object_pk = UUIDField(hyphenate=True, version=4, null=True)
     attached_object = generic.GenericForeignKey(fk_field='object_pk')
 

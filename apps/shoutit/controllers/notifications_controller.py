@@ -13,12 +13,8 @@ def MarkAllAsRead(user):
 
 
 def NotifyUser(user, notification_type, from_user=None, attached_object=None):
-    notification, created = Notification.objects.get_or_create(ToUser=user, Type=notification_type, FromUser=from_user,
-                                                               attached_object=attached_object)
-    if not created:
-        notification.DateCreated = datetime.now()
-        notification.IsRead = False
-        notification.save()
+    notification = Notification(ToUser=user, Type=notification_type, FromUser=from_user, attached_object=attached_object)
+    notification.save()
 
     count = realtime_controller.GetUserConnectedClientsCount(user.username)
     if count:

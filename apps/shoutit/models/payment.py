@@ -42,7 +42,7 @@ class Payment(UUIDModel):
     Transaction = models.ForeignKey('Transaction', related_name='Payment')
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = UUIDField(auto=True, hyphenate=True, version=4)
+    object_pk = UUIDField(hyphenate=True, version=4, null=True)
     Object = generic.GenericForeignKey(fk_field='object_pk')
 
     objects = PaymentsManager()

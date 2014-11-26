@@ -82,7 +82,7 @@ class Stream2(UUIDModel):
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType2.choices)
     # owner
     content_type = models.ForeignKey(ContentType)
-    object_pk = UUIDField(auto=True, hyphenate=True, version=4)
+    object_pk = UUIDField(hyphenate=True, version=4)
 
     owner = GenericForeignKey('content_type', 'object_pk')
 

@@ -53,7 +53,7 @@ class MessageAttachment(UUIDModel):
     message = models.ForeignKey(Message, related_name='attachments')
 
     content_type = models.ForeignKey(ContentType)
-    object_pk = UUIDField(auto=True, hyphenate=True, version=4)
+    object_pk = UUIDField(hyphenate=True, version=4)
     content_object = generic.GenericForeignKey('content_type', 'object_pk')
 
     def __unicode__(self):
@@ -74,7 +74,7 @@ class Notification(UUIDModel):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = UUIDField(auto=True, hyphenate=True, version=4, null=True)
+    object_pk = models.CharField(null=True, max_length=36)
 
     attached_object = GenericForeignKey('content_type', 'object_pk')
 
@@ -102,7 +102,7 @@ class Report(UUIDModel):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = UUIDField(auto=True, hyphenate=True, version=4, null=True)
+    object_pk = UUIDField(hyphenate=True, version=4, null=True)
     attached_object = generic.GenericForeignKey(fk_field='object_pk')
 
     @property
