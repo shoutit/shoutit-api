@@ -36,13 +36,13 @@ def NotifyUser(user, notification_type, from_user=None, attached_object=None):
     # new apns / gcm
     if user.apns_device:
         user.apns_device.send_message(message, extra={
-            'notification_type': notification_type,
+            'notification_type': int(notification_type),
             'object': attached_object_dict
         })
 
     if user.gcm_device:
         user.gcm_device.send_message(message, extra={
-            'notification_type': notification_type,
+            'notification_type': int(notification_type),
             'object': attached_object_dict
         })
 
