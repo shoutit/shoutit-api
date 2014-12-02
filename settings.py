@@ -270,9 +270,13 @@ DEFAULT_LANGUAGE_CODE = 'en'
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/opt/myenv/shoutit/static/'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/opt/myenv/shoutit/media/'
+if DEV:
+    STATIC_ROOT = '/opt/myenv/shoutit/static_dev/'
+    MEDIA_ROOT = '/opt/myenv/shoutit/media_dev/'
+else:
+    STATIC_ROOT = '/opt/myenv/shoutit/static_prod/'
+    MEDIA_ROOT = '/opt/myenv/shoutit/media_prod/'
 
 
 # Templates
