@@ -35,8 +35,7 @@ print "================= Shoutit Server ================="
 print "=================================================="
 print 'ENV:', 'DEV' if DEV else 'ON_SERVER' if ON_SERVER else ''
 if ON_SERVER:
-    print 'DEV_ON_SERVER:', DEV_ON_SERVER
-    print 'PROD_ON_SERVER:', PROD_ON_SERVER
+    print 'SERVER STATUS:', 'DEV' if DEV_ON_SERVER else 'PROD' if PROD_ON_SERVER else ''
 
 
 def check_runserver_address_port():
