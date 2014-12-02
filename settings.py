@@ -25,8 +25,9 @@ sys.modules['Image'] = PIL.Image
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
-# Prod or Dev
+# Prod or Dev or Dev on Server
 DEV = False if os.environ.get('HOME') == '/root' else True
+DEV_ON_SERVER = False
 OFFLINE_MODE = False
 
 
@@ -53,6 +54,7 @@ if ADDRESS == 'shoutit.com' and PORT == '8000':
     DEBUG = True
     SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
     SHOUT_IT_HOST = 'shoutit.com'
+    DEV_ON_SERVER = True
 elif DEV:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.syrex:8000'
@@ -131,7 +133,7 @@ REDIS_CACHES = {
         'TIMEOUT': 12 * 60 * 60
     }
 }
-if DEV:
+if DEV or DEV_ON_SERVER:
     redis = ''
     SESSION_ENGINE = DEV_SESSION_ENGINE
     CACHES = DEV_CACHES
@@ -180,7 +182,7 @@ INSTALLED_APPS = (
     'south'
 )
 # apps only on development
-if DEV:
+if DEV or DEV_ON_SERVER:
     INSTALLED_APPS += (
     )
 # apps only on production
@@ -190,7 +192,7 @@ else:
 
 PUSH_NOTIFICATIONS_SETTINGS = {
     "GCM_API_KEY": "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-dev.pem'),
+    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-prod.pem'),
 }
 
 STATICFILES_FINDERS = (
@@ -237,7 +239,7 @@ WSGI_APPLICATION = 'wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'shoutit_dev' if DEV else 'shoutit_prod',  # Or path to database file if using sqlite3.
+        'NAME': 'shoutit_dev' if DEV or DEV_ON_SERVER else 'shoutit_prod',  # Or path to database file if using sqlite3.
         'USER': 'syron',  # Not used with sqlite3.
         'PASSWORD': '123',  # Not used with sqlite3.
         'HOST': 'localhost',
@@ -271,7 +273,7 @@ DEFAULT_LANGUAGE_CODE = 'en'
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-if DEV:
+if DEV or DEV_ON_SERVER:
     STATIC_ROOT = '/opt/myenv/shoutit/static_dev/'
     MEDIA_ROOT = '/opt/myenv/shoutit/media_dev/'
 else:
@@ -355,7 +357,7 @@ LOGGING = {
 }
 
 # Mail Settings
-if DEV:
+if DEV or DEV_ON_SERVER:
     DEFAULT_FROM_EMAIL = 'ShoutIt <info@shoutit.com>'
     EMAIL_HOST = SHOUT_IT_HOST
     EMAIL_PORT = '25'
