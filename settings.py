@@ -57,7 +57,7 @@ def check_runserver_address_port():
 
 ADDRESS, PORT = check_runserver_address_port()
 
-if ADDRESS == 'shoutit.com' and PORT == '8000':
+if ADDRESS == 'www.shoutit.com' and PORT == '8000':
     DEBUG = True
     SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
     SHOUT_IT_HOST = 'shoutit.com'
