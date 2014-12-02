@@ -10,9 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-
 BASE_DIR = os.path.dirname(__file__)
-
 import sys
 import PIL.Image
 
@@ -27,8 +25,18 @@ SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
 # Prod or Dev or Dev on Server
 DEV = False if os.environ.get('HOME') == '/root' else True
-DEV_ON_SERVER = False
+ON_SERVER = not DEV
+DEV_ON_SERVER = ON_SERVER and BASE_DIR.split('/')[-1] == 'shoutit_backend_dev'
+PROD_ON_SERVER = ON_SERVER and BASE_DIR.split('/')[-1] == 'shoutit_backend_prod'
 OFFLINE_MODE = False
+
+print "=================================================="
+print "================= Shoutit Server ================="
+print "=================================================="
+print 'ENV:', 'DEV' if DEV else 'ON_SERVER' if ON_SERVER else ''
+if ON_SERVER:
+    print 'DEV_ON_SERVER:', DEV_ON_SERVER
+    print 'PROD_ON_SERVER:', PROD_ON_SERVER
 
 
 def check_runserver_address_port():
@@ -54,7 +62,6 @@ if ADDRESS == 'shoutit.com' and PORT == '8000':
     DEBUG = True
     SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
     SHOUT_IT_HOST = 'shoutit.com'
-    DEV_ON_SERVER = True
 elif DEV:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.syrex:8000'
