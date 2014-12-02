@@ -1,6 +1,6 @@
 import hashlib
 import re
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 from django.contrib.contenttypes.models import ContentType
 from paypal.standard.forms import PayPalEncryptedPaymentsForm
 import time
@@ -56,7 +56,7 @@ def PayForDeal(user, deal, amount, remote_transaction_data, remote_transaction_i
 			Currency = deal.Item.Currency,
 			Status = 1,
 			Transaction = transaction,
-			object_pk = deal_buy.pk,
+			object_id = deal_buy.pk,
 			content_type = ContentType.objects.get_for_model(DealBuy),
 		)
 		return payment
@@ -88,7 +88,7 @@ def PayForService(user, service_code, amount, remote_transaction_data, remote_tr
 			Currency = Currency.objects.get(Code = 'USD'),
 			Status = 1,
 			Transaction = transaction,
-			object_pk = service_buy.pk,
+			object_id = service_buy.pk,
 			content_type = ContentType.objects.get_for_model(ServiceBuy),
 		)
 		return payment
@@ -117,9 +117,9 @@ def GetPaypalFormForDeal(deal, user, amount = 1):
 		'cancel_return' : settings.PAYPAL_CANCEL_URL,
 		'amount' : '%.2f' % ConvertCurrency(deal.Item.Price * amount, deal.Item.Currency.Code, 'USD'),
 		'item_name' : '%s by Shoutit' % deal.Item.Name,
-		'item_number' : 'Deal_%d' % deal.pk,
+		'item_number' : 'Deal_%s' % deal.pk,
 		'currency_code' : 'USD',
-		'invoice' : 'Deal_%d_User_%d_x_%d' % (deal.pk, user.pk, amount),
+		'invoice' : 'Deal_%s_User_%s_x_%s' % (deal.pk, user.pk, amount),
 		'business' : settings.PAYPAL_BUSINESS, #8FXFX2NN9E83L
 	})
 
@@ -167,7 +167,7 @@ def GetPaypalFormForSubscription(user):
 		#'amount' : '%.2f' % ConvertCurrency(deal.Item.Price * amount, deal.Item.Currency.Code, 'USD'),
 		'item_name' : 'Subscription by Shoutit',
 		'item_number' : '1',
-		'custom' : '%d' % user.pk,
+		'custom' : '%s' % user.pk,
 		'currency_code' : 'USD',
 		'amount' : '9.99',
 		"a3": "9.99",                      # monthly price
@@ -178,7 +178,7 @@ def GetPaypalFormForSubscription(user):
 		"a1": "0",
 		"p1": "6",
 		"t1": "M",
-		'invoice' : 'Subscription_1_User_%d_%s' % (user.pk, utils.generate_password()[:5]),
+		'invoice' : 'Subscription_1_User_%s_%s' % (user.pk, utils.generate_password()[:5]),
 		"cmd": "_xclick-subscriptions",
 		'business' : settings.PAYPAL_BUSINESS, #8FXFX2NN9E83L
 	}, button_type="subscribe")
@@ -186,7 +186,7 @@ def GetPaypalFormForSubscription(user):
 def GetCPSPFormForDeal(deal, user, amount = 1):
 	cpsp_dict = {
 		'PSPID' : settings.CPSP_ID,
-		'ORDERID' : 'D_%d_U_%d_x_%d_%s' % (deal.pk, user.pk, amount, str(time.time())),  # todo: check
+		'ORDERID' : 'D_%s_U_%s_x_%d_%s' % (deal.pk, user.pk, amount, str(time.time())),  # todo: check
 		'AMOUNT' : str(int(deal.Item.Price * amount * 100)),
 		'CURRENCY' : deal.Item.Currency.Code,
 		'LANGUAGE' : 'en_US',
@@ -216,7 +216,7 @@ def CheckTransaction(pdt):
 		deal = deal[0]
 		gross = '%.2f' % ConvertCurrency(deal.Item.Price * int(amount), deal.Item.Currency.Code, 'USD')
 		name = '%s by Shoutit' % deal.Item.Name
-		number = 'Deal_%d' % deal.pk
+		number = 'Deal_%s' % deal.pk
 	elif item_type == 'Service':
 		pass
 	elif item_type == 'Subscription':

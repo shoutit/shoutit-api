@@ -372,7 +372,7 @@ def currencies(request):
 @csrf_exempt
 def set_perma(request):
     if request.user.is_authenticated():
-        TaggedCache.set('perma|%s|%d' % (request.POST['perma'], request.user.pk), request.POST['value'],
+        TaggedCache.set('perma|%s|%s' % (request.POST['perma'], request.user.pk), request.POST['value'],
                         timeout=10 * 356 * 24 * 60 * 60)
     elif hasattr(request, 'session'):
         TaggedCache.set('perma|%s|%s' % (request.POST['perma'], request.session.session_key), request.POST['value'],

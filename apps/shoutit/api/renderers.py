@@ -161,11 +161,11 @@ def render_message_attachment(message_attachment):
     if not message_attachment:
         return {}
     content_type = 'shout'  # todo: possible other content types, therefore other content object
-    content_object = render_shout(message_attachment.content_object, level=1)
+    attached_object = render_shout(message_attachment.attached_object, level=1)
     return {
         'content_type': content_type,
-        'object_id': message_attachment.object_pk,
-        content_type: content_object
+        'object_id': message_attachment.object_id,
+        content_type: attached_object
     }
 
 

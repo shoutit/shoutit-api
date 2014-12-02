@@ -42,9 +42,9 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         attachments = []
 
     for attachment in attachments:
-        object_pk = attachment['object_id']
+        object_id = attachment['object_id']
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        MessageAttachment(message=message, content_type=content_type, object_pk=object_pk).save()
+        MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
 
     # todo: push notification test
     notifications_controller.NotifyUserOfMessage(to_user, message)
@@ -83,7 +83,7 @@ def getFullConversationDetails(conversations, user):
                 empty_conversations_to.append(conversation.pk)
             continue
         conversation.AboutPost.SetImages([image for image in images if image.Item.pk == conversation.AboutPost.Item.pk])
-        conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__pk'] == conversation.AboutPost.pk])
+        conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == conversation.AboutPost.pk])
         last_message = list(conversation.messages)[-1]
         conversation.Text = last_message.Text[0:256] if last_message.Text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
@@ -136,9 +136,12 @@ def get_conversation(conversation_id, user=None):
         else:
             return None
     else:
-        conversations = getFullConversationDetails([conversation], user)
-        conversation = conversations[0] if len(conversations) else None
-        return conversation
+        if conversation:
+            conversations = getFullConversationDetails([conversation], user)
+            conversation = conversations[0] if len(conversations) else None
+            return conversation
+        else:
+            return None
 
 
 def get_shout_conversations(shout_id, user):

@@ -339,12 +339,12 @@ def attach_related_to_shouts(shouts, rank_count=None):
             if rank_count:
                 shout.rank = ((shout.rank ** 2) * rank_count - shout.time_rank) / (rank_count - 1)
 
-            shout.SetTags([tag for tag in tags_with_shout_id if tag['Shouts__pk'] == shout.pk])
-            tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['Shouts__pk'] != shout.pk]
+            shout.SetTags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == shout.pk])
+            tags_with_shout_id = [tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) != shout.pk]
 
-            shout.Item.SetImages([image for image in images if image.Item_id == shout.Item.pk])
+            shout.Item.SetImages([image for image in images if image.Item.pk == shout.Item.pk])
             # reducing the images main array
-            images = [image for image in images if image.Item_id != shout.Item.pk]
+            images = [image for image in images if image.Item.pk != shout.Item.pk]
 
     return list(shouts)
 
@@ -417,12 +417,12 @@ def get_user_listening(user, stream_type=None, count_only=False):
         listens = qs.all()
         stream_pks = [listen.stream_id for listen in listens]
         streams = Stream2.objects.filter(pk__in=stream_pks)
-        object_pks = [stream.object_pk for stream in streams]
+        object_ids = [stream.object_id for stream in streams]
 
         if stream_type == STREAM2_TYPE_PROFILE:
-            return list(Profile.objects.filter(pk__in=object_pks))
+            return list(Profile.objects.filter(pk__in=object_ids))
         elif stream_type == STREAM2_TYPE_TAG:
-            return list(Tag.objects.filter(pk__in=object_pks))
+            return list(Tag.objects.filter(pk__in=object_ids))
         else:
             return listens
 

@@ -1,12 +1,14 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from apps.shoutit.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
-from django.contrib.auth.models import User
+from django.conf import settings
 
+from apps.shoutit.models.base import UUIDModel
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.tag import Category
-from apps.shoutit.models.misc import ConfirmToken, StoredFile, UUIDModel
+from apps.shoutit.models.misc import ConfirmToken, StoredFile
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class BusinessCategoryManager(models.Manager):
@@ -42,7 +44,7 @@ class Business(UUIDModel):
     def __unicode__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.Name), unicode(self.user))
 
-    user = models.OneToOneField(User, related_name='business', db_index=True)
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='business', db_index=True)
 
     Name = models.CharField(max_length=1024, db_index=True, null=False)
     Category = models.ForeignKey('BusinessCategory', null=True, on_delete=models.SET_NULL)
@@ -110,7 +112,7 @@ class BusinessCreateApplication(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user = models.ForeignKey(User, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
     business = models.ForeignKey('Business', related_name='UserApplications', null=True, on_delete=models.SET_NULL)
 
     Name = models.CharField(max_length=1024, db_index=True, null=True)
@@ -146,7 +148,7 @@ class BusinessConfirmation(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user = models.ForeignKey(User, related_name='BusinessConfirmations')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessConfirmations')
     Files = models.ManyToManyField(StoredFile, related_name='Confirmation')
     DateSent = models.DateTimeField(auto_now_add=True)
 

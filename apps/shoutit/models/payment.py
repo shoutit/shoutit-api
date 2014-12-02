@@ -1,20 +1,18 @@
-from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.contrib.auth.models import User
 from django.db.models import Sum
-from uuidfield import UUIDField
-from apps.shoutit.models.misc import UUIDModel
-
+from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 from apps.shoutit.models.user import Profile
 from apps.shoutit.models.business import Business
 from apps.shoutit.models.item import Currency
 from apps.shoutit.models.post import Deal
+from django.conf import settings
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PaymentsManager(models.Manager):
     def GetUserPayments(self, user):
-        if isinstance(user, User):
+        if isinstance(user, AUTH_USER_MODEL):
             return self.filter(user=user)
         elif isinstance(user, basestring):
             return self.filter(user__username__iexact=user)
@@ -26,24 +24,20 @@ class PaymentsManager(models.Manager):
             return self.filter(user__pk=user)
 
     def GetObjectPayments(self, object):
-        return self.filter(content_type=ContentType.objects.get_for_model(object.__class__), object_pk=object.pk)
+        return self.filter(content_type=ContentType.objects.get_for_model(object.__class__), object_id=object.pk)
 
 
-class Payment(UUIDModel):
+class Payment(UUIDModel, AttachedObjectMixin):
     class Meta:
         app_label = 'shoutit'
 
-    user = models.ForeignKey(User, related_name='Payments')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Payments')
     DateCreated = models.DateTimeField(auto_now_add=True)
     DateUpdated = models.DateTimeField(auto_now=True)
     Amount = models.FloatField()
     Currency = models.ForeignKey(Currency, related_name='+')
     Status = models.IntegerField()
     Transaction = models.ForeignKey('Transaction', related_name='Payment')
-
-    content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = UUIDField(hyphenate=True, version=4, null=True)
-    Object = generic.GenericForeignKey(fk_field='object_pk')
 
     objects = PaymentsManager()
 
@@ -75,7 +69,7 @@ class DealBuy(UUIDModel):
         app_label = 'shoutit'
 
     Deal = models.ForeignKey(Deal, related_name='Buys', on_delete=models.SET_NULL, null=True)
-    user =  models.ForeignKey(User, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
+    user =  models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
 
@@ -113,7 +107,7 @@ class ServiceBuy(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user =  models.ForeignKey(User, related_name='Services')
+    user =  models.ForeignKey(AUTH_USER_MODEL, related_name='Services')
     Service = models.ForeignKey('Service', related_name='Buyers')
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
@@ -125,7 +119,7 @@ class ServiceUsage(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user =  models.ForeignKey(User, related_name='ServicesUsages')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='ServicesUsages')
     Service = models.ForeignKey('Service', related_name='BuyersUsages')
     Amount = models.IntegerField(default=1)
     DateUsed = models.DateTimeField(auto_now_add=True)

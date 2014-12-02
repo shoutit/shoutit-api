@@ -1,22 +1,8 @@
 from datetime import timedelta, datetime
-
 from django.db import models
-from django.contrib.auth.models import User
-from uuidfield import UUIDField
-
+from apps.shoutit.models.base import UUIDModel
 from django.conf import settings
-
-
-class UUIDModel(models.Model):
-    class Meta:
-        abstract = True
-
-    uuid = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
-
-    @property
-    def pk(self):
-        return str(self.uuid)
-
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel):
@@ -41,7 +27,7 @@ class StoredFile(UUIDModel):
     def __unicode__(self):
         return "(" + unicode(self.pk) + ") " + unicode(self.File)
 
-    user =  models.ForeignKey(User, related_name='Documents', null=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
 
@@ -54,7 +40,7 @@ class ConfirmToken(UUIDModel):
         return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
 
     Token = models.CharField(max_length=24, db_index=True, unique=True)
-    user =  models.ForeignKey(User, related_name="Tokens")
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name="Tokens")
     Type = models.IntegerField(default=0)
     DateCreated = models.DateField(auto_now_add=True)
     Email = models.CharField(max_length=128, blank=True)
@@ -87,6 +73,6 @@ class FbContest(UUIDModel):
         app_label = 'shoutit'
 
     ContestId = models.IntegerField(db_index=True)
-    user = models.ForeignKey(User, related_name='Contest_1')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)
     ShareId = models.CharField(max_length=50, null=True, default=None)

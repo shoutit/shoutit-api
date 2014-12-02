@@ -1,17 +1,14 @@
 from importlib import import_module
-import json
 from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponse
-from django.contrib.auth.models import User
 
 from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN
-
 from apps.shoutit.utils import JsonResponse
+from apps.shoutit.models import User, Notification
 
-from apps.shoutit.models import Notification
 from apps.shoutit.controllers import realtime_controller, user_controller, notifications_controller, message_controller
 from apps.shoutit.tiers import non_cached_view, ResponseResult, refresh_cache, CACHE_TAG_NOTIFICATIONS, cached_view
 from apps.shoutit.tiered_views.renderers import operation_api, json_renderer, notifications_html, notifications_json, notifications_api, \
@@ -68,7 +65,7 @@ def get_session_data(request, session_key=None):
             r = redis.Redis(host=settings.SESSION_REDIS_HOST, port=settings.SESSION_REDIS_PORT,
                             socket_timeout=settings.REDIS_SOCKET_TIMEOUT)
             if request.user.is_authenticated():
-                old_session = r.get('usersession:%d' % request.user.pk)
+                old_session = r.get('usersession:%s' % request.user.pk)
         except ImportError:
             pass
         if old_session:
@@ -76,14 +73,14 @@ def get_session_data(request, session_key=None):
             if not session._session:
                 session[SESSION_KEY] = request.user.pk
                 session.save()
-                r.setnx('usersession:%d' % request.user.pk, session._get_session_key())
+                r.setnx('usersession:%s' % request.user.pk, session._get_session_key())
         else:
             session = engine.SessionStore()
             if request.user.is_authenticated():
                 session[SESSION_KEY] = request.user.pk
             session.save()
             if is_radis and request.user.is_authenticated():
-                r.setnx('usersession:%d' % request.user.pk, session._get_session_key())
+                r.setnx('usersession:%s' % request.user.pk, session._get_session_key())
     try:
         result = {}
         if SESSION_KEY in session:

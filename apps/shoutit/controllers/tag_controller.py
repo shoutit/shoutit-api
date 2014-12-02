@@ -1,10 +1,9 @@
 import difflib
-from django.contrib.auth.models import User
 from django.db.models.aggregates import Count
 from apps.activity_logger.logger import Logger
 from apps.shoutit.constants import STREAM_TYPE_TAG, ACTIVITY_TYPE_TAG_CREATED, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, \
     ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG
-from apps.shoutit.models import Tag, Stream
+from apps.shoutit.models import User, Tag, Stream
 from apps.shoutit.controllers import user_controller, event_controller
 
 

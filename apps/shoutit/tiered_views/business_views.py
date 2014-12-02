@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 from django.forms.util import ErrorDict, ErrorList
 from django.utils.translation import ugettext as _
 from django.conf import settings
@@ -342,10 +342,6 @@ def business_edit_profile(request, username):
             profile.City = city
             profile.Country = country
             profile.Address = address
-
-        # if profile.Image.endswith('user_female.png') or profile.Image.endswith('user_male.png'):
-        #			profile.Image = '/static/img/_user_' + (
-        #			user_profile.Sex and 'male.png' or 'female.png')
 
         profile.Bio = form.cleaned_data['bio']
         if form.cleaned_data.has_key('password') and form.cleaned_data['password']:

@@ -1,7 +1,6 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from apps.shoutit.models import Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
+from apps.shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
 # from apps.activity_logger.models import Activity, ActivityData, Request
@@ -54,9 +53,6 @@ class ExperienceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Experience, ExperienceAdmin)
-
-# User
-admin.site.unregister(User)
 
 
 class CustomUserAdmin(UserAdmin):

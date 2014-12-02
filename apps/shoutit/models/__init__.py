@@ -1,5 +1,10 @@
-from django.contrib.auth.models import User
-User = User
+from apps.shoutit.models.base import UUIDModel, AbstractUser
+
+
+class User(AbstractUser):
+    pass
+
+
 from apps.shoutit.models.item import Currency, Item
 from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin, Listen
 from apps.shoutit.models.tag import Tag, Category

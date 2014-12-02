@@ -67,8 +67,8 @@
 
 
   {
-    "pk": 1,
-    "model": "auth.user",
+    "pk": "5a767f4e-20b0-4685-8e03-94e00ad00650",
+    "model": "shoutit.user",
     "fields": {
       "username": "syron",
       "first_name": "Mo",
@@ -110,7 +110,7 @@
       "Sex": true,
       "isSMS": false,
       "birthday": null,
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "Latitude": 25.1993957,
       "Interests": [],
       "LastToken": null
@@ -223,7 +223,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.882",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 1
     }
   },
@@ -232,7 +232,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.886",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 2
     }
   },
@@ -241,7 +241,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.890",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 3
     }
   },
@@ -250,7 +250,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.895",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 4
     }
   },
@@ -259,7 +259,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.899",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 5
     }
   },
@@ -268,7 +268,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.902",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 7
     }
   },
@@ -277,7 +277,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.906",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 6
     }
   },
@@ -286,7 +286,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.908",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 8
     }
   },
@@ -295,7 +295,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.911",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 10
     }
   },
@@ -304,7 +304,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.914",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 11
     }
   },
@@ -313,7 +313,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.916",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 12
     }
   },
@@ -322,7 +322,7 @@
     "model": "shoutit.userpermission",
     "fields": {
       "date_given": "2014-11-17T23:21:48.918",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "permission": 14
     }
   },
@@ -335,7 +335,7 @@
       "status": "accepted",
       "name": "test consumer",
       "secret": "123456",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "123",
       "description": "test consumer"
     }
@@ -347,7 +347,7 @@
       "status": "accepted",
       "name": "Android",
       "secret": "1546cf51-6ec7-4f0c-a75a-2bdfc0e",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "shoutit-android",
       "description": "The Consumer for our first tier Android Application"
     }
@@ -359,7 +359,7 @@
       "status": "accepted",
       "name": "iOS",
       "secret": "2a108cb4-4789-46f2-8f21-74d9111",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "shoutit-ios",
       "description": "The consumer for our first tier ios application."
     }
@@ -374,7 +374,7 @@
       "token_type": 1,
       "callback": "",
       "secret": "spggySeZkTMJQhJUEq73GSJe2NH7vPpn",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "yZ4GtEqVKzPFyEUUzn",
       "consumer": 1,
       "callback_confirmed": false
@@ -390,7 +390,7 @@
       "token_type": 2,
       "callback": "",
       "secret": "9QygNQnG7yFeLney6qQszGAXng9g9RTL",
-      "user": 1,
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "M7UWMcfnVVQ6DkzujU",
       "consumer": 1,
       "callback_confirmed": false

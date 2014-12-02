@@ -24,7 +24,7 @@ class SetLanguageMiddleware(object):
         if 'lang' in request.GET:
             lang = request.GET['lang']
         elif request.user.is_authenticated():
-            lang = TaggedCache.get('perma|language|%d' % request.user.pk)
+            lang = TaggedCache.get('perma|language|%s' % request.user.pk)
         else:
             lang = TaggedCache.get('perma|language|%s' % request.session.session_key)
         if lang:

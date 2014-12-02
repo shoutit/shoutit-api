@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 from django.db import models
 from apps.shoutit import constants
 from piston3.models import Token

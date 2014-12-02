@@ -1,19 +1,17 @@
+from django.conf import settings
 from django.utils.translation import check_for_language
-from apps.shoutit.controllers import shout_controller
+from apps.shoutit.controllers.shout_controller import GetLandingShouts
 from common.tagged_cache import TaggedCache
-from apps.shoutit.utils import *
-from apps.shoutit.constants import *
-
 
 def get_shouts_PointId_inViewPort(downLeftLat, downLeftLng, upRightLat, upRightLng):
     if downLeftLng > upRightLng:
-        right_shouts = shout_controller.GetLandingShouts(downLeftLat, -180.0, upRightLat, upRightLng)
-        left_shouts = shout_controller.GetLandingShouts(downLeftLat, downLeftLng, upRightLat, 180.0)
+        right_shouts = GetLandingShouts(downLeftLat, -180.0, upRightLat, upRightLng)
+        left_shouts = GetLandingShouts(downLeftLat, downLeftLng, upRightLat, 180.0)
         from itertools import chain
 
         shouts = list(chain(right_shouts, left_shouts))
     else:
-        shouts = shout_controller.GetLandingShouts(downLeftLat, downLeftLng, upRightLat, upRightLng)
+        shouts = GetLandingShouts(downLeftLat, downLeftLng, upRightLat, upRightLng)
     return shouts, [[shout['Latitude'], shout['Longitude']] for shout in shouts]
 
 
@@ -39,7 +37,7 @@ def set_request_language(request, lang_code):
         if hasattr(request, 'session'):
             request.session['django_language'] = lang_code
         if request.user.is_authenticated():
-            TaggedCache.set('perma|language|%d' % request.user.pk, lang_code, timeout=10 * 356 * 24 * 60 * 60)
+            TaggedCache.set('perma|language|%s' % request.user.pk, lang_code, timeout=10 * 356 * 24 * 60 * 60)
         elif hasattr(request, 'session'):
             TaggedCache.set('perma|language|%s' % request.session.session_key, lang_code, timeout=10 * 356 * 24 * 60 * 60)
     else:

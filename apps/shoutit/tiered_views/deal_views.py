@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import re
 
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _

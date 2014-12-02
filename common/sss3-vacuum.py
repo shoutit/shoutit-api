@@ -13,7 +13,7 @@ from django.core.management import setup_environ
 
 setup_environ(settings)
 
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 import datetime
 from django.db.models.query_utils import Q
 

@@ -1,5 +1,5 @@
 from django.db import models
-from apps.shoutit.models.misc import UUIDModel
+from apps.shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):

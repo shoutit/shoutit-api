@@ -1,22 +1,25 @@
 from itertools import chain
 import random
 from django.db import models
-from django.contrib.auth.models import User
 from django.db.models import Min
 from django.db.models.signals import post_delete, pre_delete, post_save
 from django.dispatch import receiver
-from push_notifications.models import APNSDevice, GCMDevice
 
 from apps.shoutit.constants import DEFAULT_LOCATION
 # from apps.activity_logger.models import Request
-from apps.shoutit.models.stream import Stream, Stream2, Stream2Mixin
+from apps.shoutit.models.base import UUIDModel
+from apps.shoutit.models.stream import Stream, Stream2Mixin
 from apps.shoutit.models.tag import Tag
-from apps.shoutit.models.misc import ConfirmToken, UUIDModel
+from apps.shoutit.models.misc import ConfirmToken
+from django.conf import settings
+
+
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class AbstractProfile(UUIDModel, Stream2Mixin):
 
-    user = models.OneToOneField(User, related_name='%(class)s', unique=True, db_index=True, null=True)
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True)
 
     Image = models.URLField(max_length=1024, null=True)
 
@@ -137,88 +140,11 @@ def delete_attached_user(sender, instance, using, **kwargs):
     instance.user2.delete()
 
 
-class UserFunctions(object):
-    @property
-    def abstract_profile(self):
-        try:
-            return self.profile
-        except AttributeError:
-            return self.business
-
-    @property
-    def name(self):
-        if hasattr(self, 'Business') and self.Business:
-            return self.Business.Name
-        else:
-            return self.get_full_name()
-
-    def Image(self):
-        if hasattr(self, 'business'):
-            return self.business.Image
-        elif hasattr(self, 'profile'):
-            return self.profile.Image
-        else:
-            return ''
-
-    def Sex(self):
-        profile = Profile.objects.filter(user__pk=self.pk).values('Sex')
-        if profile:
-            return profile[0]['Sex']
-        else:
-            return 'No Profile'
-
-    # def request_count(self):
-    #     return Request.objects.filter(user__pk=self.pk).count()
-
-    def Latitude(self):
-        if hasattr(self, 'business'):
-            return self.business.Latitude
-        elif hasattr(self, 'profile'):
-            return self.profile.Latitude
-        else:
-            return ''
-
-    def Longitude(self):
-        if hasattr(self, 'business'):
-            return self.business.Longitude
-        elif hasattr(self, 'profile'):
-            return self.profile.Longitude
-        else:
-            return ''
-
-    @property
-    def apns_device(self):
-        if hasattr(self, '_apns_device') and self._apns_device:
-            return self._apns_device
-
-        try:
-            self._apns_device = APNSDevice.objects.get(user=self)
-        except APNSDevice.DoesNotExist:
-            self._apns_device = None
-
-        return self._apns_device
-
-    @property
-    def gcm_device(self):
-        if hasattr(self, '_gcm_device') and self._gcm_device:
-            return self._gcm_device
-
-        try:
-            self._gcm_device = GCMDevice.objects.get(user=self)
-        except GCMDevice.DoesNotExist:
-            self._gcm_device = None
-
-        return self._gcm_device
-
-
-User.__bases__ += (UserFunctions,)
-
-
 class LinkedFacebookAccount(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user = models.OneToOneField(User, related_name='linked_facebook')  # todo: one to one
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')  # todo: one to one
     facebook_id = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
@@ -226,7 +152,7 @@ class LinkedFacebookAccount(UUIDModel):
 
 class LinkedGoogleAccount(UUIDModel):
 
-    user = models.OneToOneField(User, related_name='linked_gplus')  # todo: one to one
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')  # todo: one to one
     credentials_json = models.CharField(max_length=2048)
     gplus_id = models.CharField(max_length=64, db_index=True)
 
@@ -248,14 +174,14 @@ class Permission(models.Model):
         return self.name
 
     name = models.CharField(max_length=512, unique=True, db_index=True)
-    users = models.ManyToManyField(User, through='UserPermission', related_name='permissions')
+    users = models.ManyToManyField(AUTH_USER_MODEL, through='UserPermission', related_name='permissions')
 
 
 class UserPermission(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     permission = models.ForeignKey('Permission', on_delete=models.CASCADE)
     date_given = models.DateTimeField(auto_now_add=True)
     objects = PermissionsManager()

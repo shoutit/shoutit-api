@@ -2,7 +2,7 @@
 Django==1.6
 # PIL==1.1.7
 oauth2==1.5.211
-https://bitbucket.org/userzimmermann/django-piston3/get/tip.tar.gz
+http://cl.ly/2g0x0w3S102I/download/django-piston3.zip
 httplib2==0.8
 Celery==3.1.5
 django-celery==3.1.1
@@ -25,3 +25,4 @@ django-paypal==0.1.2
 geraldo==0.4.17
 google-api-python-client
 pyrax
+http://cl.ly/1w3v1B2i1P1A/download/django-push-notifications.zip

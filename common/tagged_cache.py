@@ -90,6 +90,6 @@ class TaggedCache(object):
     @staticmethod
     def get_perma(request, key):
         if request.user.is_authenticated():
-            return TaggedCache.get('perma|%s|%d' % (key, request.user.pk))
+            return TaggedCache.get('perma|%s|%s' % (key, request.user.pk))
         elif hasattr(request, 'session'):
             return TaggedCache.get('perma|%s|%s' % (key, request.session.session_key))

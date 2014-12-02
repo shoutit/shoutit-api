@@ -1,13 +1,12 @@
 from itertools import chain
 import os
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
-from django.db.models.aggregates import Count, Min
+from django.db.models.aggregates import Min
 from django.db.models.query_utils import Q
 
-from apps.shoutit.models import Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, Business, PredefinedCity, LinkedGoogleAccount, \
+from apps.shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, Business, PredefinedCity, LinkedGoogleAccount, \
     Listen
 
 from apps.shoutit.controllers import email_controller, notifications_controller, event_controller

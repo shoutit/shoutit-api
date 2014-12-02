@@ -146,13 +146,16 @@ else:
         SESSION_ENGINE = DEV_SESSION_ENGINE
         CACHES = DEV_CACHES
 
+
+AUTH_USER_MODEL = 'shoutit.User'
+
 # Application definition
 
 INSTALLED_APPS = (
     'django.contrib.sites',
     'grappelli',
-    'django.contrib.admin',
     'django.contrib.auth',
+    'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -234,7 +237,7 @@ WSGI_APPLICATION = 'wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'shoutdb',  # Or path to database file if using sqlite3.
+        'NAME': 'shoutit_dev' if DEV else 'shoutit_prod',  # Or path to database file if using sqlite3.
         'USER': 'syron',  # Not used with sqlite3.
         'PASSWORD': '123',  # Not used with sqlite3.
         'HOST': 'localhost',

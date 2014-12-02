@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models.query_utils import Q
 from django.http import HttpResponseBadRequest

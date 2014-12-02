@@ -1,7 +1,10 @@
+import uuid
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
-from apps.shoutit import utils
-from apps.shoutit.constants import TOKEN_TYPE_API_EMAIL, POST_TYPE_SELL, POST_TYPE_BUY
+
+from apps.shoutit.constants import *
+from apps.shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
+
 from apps.shoutit.controllers import shout_controller, business_controller, experience_controller, comment_controller, gallery_controller, \
     event_controller
 from apps.shoutit.controllers import tag_controller
@@ -9,10 +12,8 @@ from apps.shoutit.controllers import user_controller
 from apps.shoutit.controllers import message_controller
 from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, \
     BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
-from apps.shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
 from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, \
     RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
-from apps.shoutit.constants import *
 from django.conf import settings
 
 
@@ -105,12 +106,22 @@ def user_edit_profile_validator(request, username, email):
     return result
 
 
+def uuid_validator(uuid_string, name=''):
+    try:
+        uuid.UUID(uuid_string)
+        return ValidationResult(True)
+    except ValueError:
+        return ValidationResult(False, messages=[('error', _("Invalid %(name)s id") % {'name': name})])
+
+
 def read_conversation_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id,
-                                     request.user)
+    uuid_validation = uuid_validator(conversation_id, 'conversation')
+    if not uuid_validation.valid:
+        return uuid_validation
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id, request.user)
     if result.valid:
         conversation = result.data
-        if request.user.pk != conversation.FromUser_id and request.user.pk != conversation.ToUser_id:
+        if request.user.pk != conversation.FromUser.pk and request.user.pk != conversation.ToUser.pk:
             return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
     return result
 
@@ -148,7 +159,7 @@ def reply_in_conversation_validator(request, conversation_id):
                                      request.user)
     if result.valid:
         conversation = result.data
-        if request.user.pk != conversation.FromUser_id and request.user.pk != conversation.ToUser_id:
+        if request.user.pk != conversation.FromUser.pk and request.user.pk != conversation.ToUser.pk:
             return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
         result.data = {
             'conversation': conversation,

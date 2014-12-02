@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from apps.shoutit.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from apps.shoutit.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE, POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_EVENT, EVENT_TYPE_GALLERY_ITEM
 from apps.shoutit.models import Stream, Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, BusinessCreateApplication, PredefinedCity

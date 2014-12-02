@@ -1,19 +1,14 @@
 from datetime import timedelta, datetime
-
-from django.contrib.contenttypes import generic
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q, Sum
-from django.contrib.auth.models import User
 from django.conf import settings
-from uuidfield import UUIDField
-
 from apps.shoutit.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
+from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 from apps.shoutit.models.item import Item
-from apps.shoutit.models.misc import UUIDModel
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.tag import Tag
 from apps.shoutit.models.business import Business
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PostManager(models.Manager):
@@ -114,7 +109,7 @@ class Post(UUIDModel):
 
     objects = PostManager()
 
-    OwnerUser = models.ForeignKey(User, related_name='Posts')
+    OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
     Streams = models.ManyToManyField(Stream, related_name='Posts')  # todo: move to stream as posts
 
     Text = models.TextField(max_length=2000, default='', db_index=True)
@@ -291,7 +286,7 @@ class SharedExperience(UUIDModel):
         unique_together = ('Experience', 'OwnerUser',)
 
     Experience = models.ForeignKey(Experience, related_name='SharedExperiences')
-    OwnerUser = models.ForeignKey(User, related_name='SharedExperiences')
+    OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='SharedExperiences')
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
@@ -332,13 +327,13 @@ class Comment(UUIDModel):
         return unicode(self.pk) + ": " + unicode(self.Text)
 
     AboutPost = models.ForeignKey(Post, related_name='Comments', null=True)
-    OwnerUser = models.ForeignKey(User, related_name='+')
+    OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     IsDisabled = models.BooleanField(default=False)
     Text = models.TextField(max_length=300)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
-class Event(Post):
+class Event(Post, AttachedObjectMixin):
     class Meta:
         app_label = 'shoutit'
 
@@ -347,8 +342,4 @@ class Event(Post):
 
     EventType = models.IntegerField(default=0)
     objects = EventManager()
-
-    content_type = models.ForeignKey(ContentType, null=True)
-    object_pk = UUIDField(hyphenate=True, version=4, null=True)
-    attached_object = generic.GenericForeignKey(fk_field='object_pk')
 

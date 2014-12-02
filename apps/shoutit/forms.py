@@ -4,12 +4,11 @@ from django import forms
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.extras.widgets import SelectDateWidget
 
 from apps.shoutit.constants import ExperienceState, TOKEN_TYPE_HTML_NUM
-from apps.shoutit.models import Currency, Business, BusinessCategory, BusinessCreateApplication
+from apps.shoutit.models import User, Currency, Business, BusinessCategory, BusinessCreateApplication
 from apps.shoutit.controllers import user_controller
 from apps.shoutit.utils import safe_string
 from common.tagged_cache import TaggedCache
