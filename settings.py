@@ -201,10 +201,15 @@ if PROD_ON_SERVER:
     INSTALLED_APPS += (
     )
 
+APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
-    "GCM_API_KEY": "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-prod.pem'),
+    'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
+    'APNS_CERTIFICATE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-%s.pem' %
+                                                                                                      'dev' if APNS_SANDBOX else 'prod'),
+    'APNS_HOST': "gateway.%spush.apple.com" % 'sandbox.' if APNS_SANDBOX else '',
+    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % 'sandbox.' if APNS_SANDBOX else ''
 }
+
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
