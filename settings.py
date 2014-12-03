@@ -190,7 +190,7 @@ INSTALLED_APPS = (
 # apps only on local development
 if DEV:
     INSTALLED_APPS += (
-        'django_extensions'
+        'django_extensions',
     )
 # apps only on server development
 if DEV_ON_SERVER:
@@ -204,12 +204,12 @@ if PROD_ON_SERVER:
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-%s.pem' %
-                                                                                                      'dev' if APNS_SANDBOX else 'prod'),
-    'APNS_HOST': "gateway.%spush.apple.com" % 'sandbox.' if APNS_SANDBOX else '',
-    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % 'sandbox.' if APNS_SANDBOX else ''
+    'APNS_CERTIFICATE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-%s.pem'
+                                     % ('dev' if APNS_SANDBOX else 'prod')),
+    'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
+    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
-
+print 'APNS_SANDBOX:', APNS_SANDBOX
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
