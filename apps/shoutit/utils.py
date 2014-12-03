@@ -367,7 +367,6 @@ class UUIDJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-
 def get_cloud_connection():
     pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
     pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
