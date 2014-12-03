@@ -185,14 +185,19 @@ INSTALLED_APPS = (
     #'l10n',,
     #'payment',
     #'subscription',
-    'south'
+    'south',
 )
-# apps only on development
-if DEV or DEV_ON_SERVER:
+# apps only on local development
+if DEV:
+    INSTALLED_APPS += (
+        'django_extensions'
+    )
+# apps only on server development
+if DEV_ON_SERVER:
     INSTALLED_APPS += (
     )
 # apps only on production
-else:
+if PROD_ON_SERVER:
     INSTALLED_APPS += (
     )
 
@@ -241,7 +246,6 @@ WSGI_APPLICATION = 'wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
@@ -279,10 +283,10 @@ DEFAULT_LANGUAGE_CODE = 'en'
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-if DEV or DEV_ON_SERVER:
+if DEV_ON_SERVER:
     STATIC_ROOT = '/opt/myenv/shoutit/static_dev/'
     MEDIA_ROOT = '/opt/myenv/shoutit/media_dev/'
-else:
+elif PROD_ON_SERVER:
     STATIC_ROOT = '/opt/myenv/shoutit/static_prod/'
     MEDIA_ROOT = '/opt/myenv/shoutit/media_prod/'
 
@@ -510,10 +514,8 @@ SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  #'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal',
-                                   'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal',
-                                  'paypal-public-key.pem')
+PAYPAL_PRIVATE_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-public-key.pem')
 PAYPAL_CERT = os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'paypal', 'paypal-cert.pem')
 PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
 PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
