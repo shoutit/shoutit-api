@@ -203,7 +203,7 @@ if PROD_ON_SERVER:
 
 PUSH_NOTIFICATIONS_SETTINGS = {
     "GCM_API_KEY": "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-dev.pem'),
+    "APNS_CERTIFICATE": os.path.join(BASE_DIR, 'apps', 'shoutit', 'static', 'certificates', 'iphone', 'push-prod.pem'),
 }
 
 STATICFILES_FINDERS = (
