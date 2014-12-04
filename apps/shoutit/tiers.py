@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 
 from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
 from apps.shoutit.constants import Constant
-from apps.shoutit.utils import asynchronous_task, UUIDJSONEncoder
+from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.middleware import JsonPostMiddleware
 from common.tagged_cache import TaggedCache
 
@@ -232,7 +232,7 @@ def tiered_view(
 
             elif api_renderer and getattr(request, 'is_api', False):
                 response, pre_json_result = api_renderer(request, result, *args, **kwargs)
-                response.content = json.dumps(pre_json_result, cls=UUIDJSONEncoder)
+                response.content = json.dumps(pre_json_result)
                 output = response
 
             elif mobile_renderer and getattr(request, 'flavour', '') == 'mobile':

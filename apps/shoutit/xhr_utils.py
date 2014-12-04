@@ -6,7 +6,6 @@ from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
 from apps.shoutit.constants import *
-from apps.shoutit.utils import UUIDJSONEncoder
 
 
 class XHRResult(object):
@@ -28,7 +27,7 @@ class XHRResult(object):
             "message_type": self.message_type
         }
 
-        self.json = json.dumps(self.response, cls=UUIDJSONEncoder)
+        self.json = json.dumps(self.response)
 
     def __str__(self):
         return self.json

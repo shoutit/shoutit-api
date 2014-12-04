@@ -4,7 +4,6 @@ import json
 import os
 import re
 import urlparse
-import time
 import uuid
 import math
 import base64
@@ -17,14 +16,14 @@ import mimetypes
 import pyrax
 
 from django.http import HttpResponse, Http404
-from django.core.exceptions import ObjectDoesNotExist
-from numpy import array, argmax, sqrt, sum
+from numpy import array, argmax, sum
+from math import sqrt
 from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
 from django.conf import settings
 
 from apps.shoutit.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL
-from apps.shoutit.models import Post, Experience, PredefinedCity
+from apps.shoutit.models import Post, Experience
 
 
 def generate_password():
@@ -343,8 +342,6 @@ def full_image_path(image_url):
     return image_url
 
 
-
-
 class JsonResponse(HttpResponse):
     """
     An HTTP response class that consumes data to be serialized to JSON.
@@ -352,19 +349,12 @@ class JsonResponse(HttpResponse):
 
     def __init__(self, data, **kwargs):
         kwargs.setdefault('content_type', 'application/json')
-        data = json.dumps(data, cls=UUIDJSONEncoder)
+        data = json.dumps(data)
         super(JsonResponse, self).__init__(content=data, **kwargs)
 
 
 class JsonResponseBadRequest(JsonResponse):
     status_code = 400
-
-
-class UUIDJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, uuid.UUID):
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
 
 
 def get_cloud_connection():

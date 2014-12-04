@@ -230,7 +230,6 @@ MIDDLEWARE_CLASSES = (
     'apps.shoutit.middleware.JsonPostMiddleware',
     'apps.shoutit.middleware.SetLanguageMiddleware',
     'apps.shoutit.middleware.UserPermissionsMiddleware',
-    # 'apps.shoutit.middleware.UserLocationMiddleware',
     'apps.shoutit.middleware.FBMiddleware',
     #'apps.activity_logger.middleware.activity_logger',
     #'common.middleware.ProfilerMiddleware.ProfileMiddleware',
@@ -545,3 +544,6 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
+
+# some monkey patching for global imports
+from common import monkey_patches
