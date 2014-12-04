@@ -16,8 +16,7 @@ import mimetypes
 import pyrax
 
 from django.http import HttpResponse, Http404
-from numpy import array, argmax, sum
-from math import sqrt
+from numpy import array, argmax, sum, sqrt
 from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
 from django.conf import settings
