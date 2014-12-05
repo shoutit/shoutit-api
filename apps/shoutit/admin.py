@@ -1,10 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserChangeForm
+from django import forms
 from apps.shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, BusinessCreateApplication, PredefinedCity
 # from apps.activity_logger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 
 # Shout
@@ -55,11 +58,21 @@ class ExperienceAdmin(admin.ModelAdmin):
 admin.site.register(Experience, ExperienceAdmin)
 
 
+class CustomUserChangeForm(UserChangeForm):
+    username = forms.RegexField(
+        label=_("Username"), min_length=2, max_length=30, regex=r"^[\w.]+$",
+        help_text=_("Required. 2 to 30 characters. Letters, digits and ./_ only."),
+        error_messages={
+            'invalid': _("This value may contain only letters, numbers and ./_ characters.")})
+
+
 class CustomUserAdmin(UserAdmin):
     save_on_top = True
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
     # list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login', 'request_count')
     list_per_page = 50
+
+    form = CustomUserChangeForm
 
 
 admin.site.register(User, CustomUserAdmin)
