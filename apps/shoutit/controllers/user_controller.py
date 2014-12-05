@@ -1,21 +1,19 @@
 from itertools import chain
 import os
+
 from django.contrib.auth import login, authenticate, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 from django.db.models.aggregates import Min
 from django.db.models.query_utils import Q
-
-from apps.shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Trade, Business, PredefinedCity, LinkedGoogleAccount, \
-    Listen
-
-from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
-
-from apps.activity_logger.logger import Logger
-from apps.shoutit.constants import *
-
-from apps.shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image, get_size_url
 from django.conf import settings
+
+from apps.shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
+    Listen
+from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
+from apps.activity_logger.logger import Logger
+from common.constants import *
+from apps.shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image
 from apps.shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 
 

@@ -49,6 +49,7 @@ class MethodDependentAuthentication(object):
         else:
             return None
 
+
 oauth = OAuthAuthentication()
 no_oauth = NoAuthentication()
 
@@ -71,7 +72,7 @@ urlpatterns = patterns('',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.user_profile_brief
                            })
-                       ),
+                        ),
 
                        url(r'^user/(@me|\w+)/listen/$',
                            TieredResource(TieredHandler, oauth, {
@@ -351,7 +352,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       #TODO: deprecate?
+                       # TODO: deprecate?
                        url(r'^gplus_auth/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'POST': user_views.gplus_auth

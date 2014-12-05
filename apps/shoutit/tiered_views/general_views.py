@@ -1,20 +1,17 @@
+import time
+
 from django.db.models.aggregates import Count
 from django.db.models.query_utils import Q
-from django.http import HttpResponseRedirect, Http404, HttpResponseServerError, HttpResponseBadRequest
-from django.template import RequestContext
-from django.shortcuts import render_to_response
+from django.http import HttpResponseServerError, HttpResponseBadRequest
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
-import time
 from django.views.decorators.http import require_POST
-from apps.shoutit.controllers import stream_controller, tag_controller, shout_controller, event_controller, experience_controller, \
-    gallery_controller, item_controller
-from apps.shoutit.controllers import user_controller
 
+from apps.shoutit.controllers import item_controller
 from apps.shoutit.forms import *
-from apps.shoutit.models import Category, StoredImage, Profile, LinkedFacebookAccount, Message, Conversation, FollowShip, Trade
-from apps.shoutit.utils import cloud_upload_file
+from apps.shoutit.models import Category, StoredImage, LinkedFacebookAccount, Message, Conversation, FollowShip, Post
+from apps.shoutit.utils import cloud_upload_file, get_size_url, generate_password, JsonResponse
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiered_views.renderers import *
 from apps.shoutit.tiered_views.views_utils import *
@@ -120,7 +117,7 @@ def profile_picture(request, profile_type, name, size=''):
 
     result = ResponseResult()
     if size:
-        path = utils.get_size_url(path, size)
+        path = get_size_url(path, size)
     result.data['url'] = path
 
     return result
@@ -417,8 +414,6 @@ def upload_file(request):
 
     filename = generate_password() + os.path.splitext(filename)[1]
     cloud_file = cloud_upload_file(upload, 'files', filename, is_raw)
-
-    import json
 
     if cloud_file:
         ret_json = {'success': True, 'url': cloud_file.public_uri()}

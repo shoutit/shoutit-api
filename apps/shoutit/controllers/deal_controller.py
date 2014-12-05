@@ -1,18 +1,14 @@
 import StringIO
-import cgi
 from datetime import datetime
+
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
-from django.template.context import Context
-from django.template.loader import get_template
+
 # from xhtml2pdf import pisa
-from apps.shoutit import utils
-import apps.shoutit.controllers.shout_controller as shout_controller
-from apps.shoutit.models import DealBuy, Payment, Transaction, Voucher, Shout
-from apps.shoutit.utils import generate_password, asynchronous_task
+from apps.shoutit.models import DealBuy, Voucher, Shout
+from apps.shoutit.utils import asynchronous_task
 from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
 from reportlab.lib.colors import orange
-from geraldo.utils import cm, BAND_WIDTH, TA_CENTER, TA_RIGHT
+from geraldo.utils import cm, BAND_WIDTH, TA_RIGHT
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from geraldo.generators import PDFGenerator
 from apps.shoutit.templatetags.template_filters import price
@@ -327,5 +323,5 @@ import apps.shoutit.controllers.tag_controller
 import apps.shoutit.controllers.email_controller, event_controller, item_controller
 import apps.shoutit.controllers.payment_controller
 import apps.shoutit.controllers.shout_controller
-from apps.shoutit.models import StoredImage, Deal, Currency, Item, Post
-from apps.shoutit.constants import POST_TYPE_DEAL, EVENT_TYPE_POST_DEAL, EVENT_TYPE_BUY_DEAL
+from apps.shoutit.models import Deal
+from common.constants import POST_TYPE_DEAL, EVENT_TYPE_POST_DEAL, EVENT_TYPE_BUY_DEAL

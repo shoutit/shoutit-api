@@ -1,8 +1,9 @@
 from django.db.utils import DatabaseError
 import django.dispatch
-from apps.shoutit.constants import Constant
-from apps.shoutit.models import Permission
 from django.utils.translation import ugettext_lazy as _
+
+from common.constants import Constant
+from apps.shoutit.models import Permission
 
 
 class ConstantPermission(Constant):

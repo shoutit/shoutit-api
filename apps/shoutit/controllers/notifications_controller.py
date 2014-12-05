@@ -1,10 +1,9 @@
 from django.utils.translation import ugettext as _
-from apps.shoutit.models import Notification
-from datetime import datetime
-from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
+
+from apps.shoutit.models import Notification
 from apps.shoutit.api.renderers import render_notification, render_user, render_message
-from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
+from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
 from apps.shoutit.controllers import realtime_controller
 
 

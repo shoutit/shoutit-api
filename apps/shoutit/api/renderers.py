@@ -1,5 +1,5 @@
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
-from apps.shoutit.constants import *
+from common.constants import *
 from apps.shoutit.models import User, Profile, Business, Tag
 
 

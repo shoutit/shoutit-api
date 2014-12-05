@@ -1,20 +1,22 @@
 import os
+
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from apps.shoutit.constants import LOCATION_ATTRIBUTES, POST_TYPE_EXPERIENCE
+
+from common.constants import LOCATION_ATTRIBUTES, POST_TYPE_EXPERIENCE
 from apps.shoutit.models import Shout
 from apps.shoutit.controllers import shout_controller, stream_controller, user_controller, message_controller
 from apps.shoutit.forms import ShoutForm, ReportForm, MessageForm
 from apps.shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER
-from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_brief_api, page_html, shout_form_renderer_api, \
+from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_brief_api, shout_form_renderer_api, \
     shout_api, object_page_html, operation_api
 from apps.shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, \
     edit_shout_validator
 from apps.shoutit.tiers import non_cached_view, cached_view, refresh_cache, CACHE_TAG_STREAMS, ResponseResult, \
-    RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES, get_data
+    RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES
 from apps.shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
 
 

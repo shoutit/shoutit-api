@@ -1,11 +1,12 @@
 from itertools import chain
-import random
+
 from django.db import models
 from django.db.models import Min
-from django.db.models.signals import post_delete, pre_delete, post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from apps.shoutit.constants import DEFAULT_LOCATION
+from common.constants import DEFAULT_LOCATION
+
 # from apps.activity_logger.models import Request
 from apps.shoutit.models.base import UUIDModel
 from apps.shoutit.models.stream import Stream, Stream2Mixin

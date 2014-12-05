@@ -24,7 +24,6 @@ class UUIDModel(models.Model):
 
 
 class AttachedObjectMixin(models.Model):
-
     class Meta:
         abstract = True
 
@@ -43,9 +42,9 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin, UUIDModel):
 
     username = models.CharField(_('username'), max_length=30, unique=True,
                                 help_text=_('Required. 30 characters or fewer. Letters, numbers and '
-                                            '@/./+/-/_ characters'),
+                                            './-/_ characters'),
                                 validators=[
-                                    validators.RegexValidator(re.compile('^[\w.@+-]+$'), _('Enter a valid username.'), 'invalid')
+                                    validators.RegexValidator(re.compile('^[\w.-]+$'), _('Enter a valid username.'), 'invalid'),
                                 ])
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
@@ -115,7 +114,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin, UUIDModel):
             return ''
 
     # def request_count(self):
-    #     return Request.objects.filter(user__pk=self.pk).count()
+    # return Request.objects.filter(user__pk=self.pk).count()
 
     def Latitude(self):
         if hasattr(self, 'business'):

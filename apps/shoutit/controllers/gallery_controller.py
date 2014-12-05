@@ -1,4 +1,4 @@
-from apps.shoutit.constants import *
+from common.constants import *
 from apps.shoutit.controllers.tag_controller import GetOrCreateTags
 
 
@@ -78,4 +78,4 @@ def ShoutItem(request, business, item, text, longitude, latitude, country_code, 
 
 
 from apps.shoutit.controllers import event_controller, shout_controller, item_controller
-from apps.shoutit.models import GalleryItem, Item, Post, Trade, StoredImage
+from apps.shoutit.models import GalleryItem, Post, Trade, StoredImage

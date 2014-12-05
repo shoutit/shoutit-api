@@ -1,12 +1,9 @@
-import re
-from apps.shoutit.models import User
 from django.http import HttpResponseRedirect
-from django.template import RequestContext
-from django.shortcuts import render_to_response
 from paypal.standard.pdt.models import PayPalPDT
 from paypal.standard.pdt.forms import PayPalPDTForm
-from apps.shoutit.constants import BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION
+
 import apps.shoutit.controllers.payment_controller
+
 
 def pdt(request,):
 	"""Payment data transfer implementation: http://tinyurl.com/c9jjmw"""

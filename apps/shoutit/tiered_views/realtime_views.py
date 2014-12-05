@@ -5,10 +5,9 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404, HttpResponse
 
-from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN
+from common.constants import NOTIFICATION_TYPE_LISTEN
 from apps.shoutit.utils import JsonResponse
 from apps.shoutit.models import User, Notification
-
 from apps.shoutit.controllers import realtime_controller, user_controller, notifications_controller, message_controller
 from apps.shoutit.tiers import non_cached_view, ResponseResult, refresh_cache, CACHE_TAG_NOTIFICATIONS, cached_view
 from apps.shoutit.tiered_views.renderers import operation_api, json_renderer, notifications_html, notifications_json, notifications_api, \

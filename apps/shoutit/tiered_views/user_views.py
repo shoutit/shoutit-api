@@ -1,42 +1,32 @@
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
-from django.views.decorators.csrf import csrf_exempt
 import math
 import json
+import urllib2
+
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+from push_notifications.models import GCMDevice, APNSDevice
 
-from apps.shoutit.models import FollowShip, LinkedFacebookAccount, ConfirmToken, Business, Profile, Trade, PredefinedCity
-
+from apps.shoutit.models import ConfirmToken, Business, Profile, Trade
 from apps.shoutit.controllers import user_controller, stream_controller, experience_controller, email_controller, realtime_controller
 from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
-
 from apps.shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, UserEditProfileForm, ExtenedSignUp
-
 from apps.shoutit.tiers import cached_view, non_cached_view, refresh_cache, ResponseResult, CACHE_REFRESH_LEVEL_ALL, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
-from apps.shoutit.tiers import CACHE_TAG_USERS, CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_NOTIFICATIONS
+from apps.shoutit.tiers import CACHE_TAG_USERS, CACHE_TAG_STREAMS, CACHE_TAG_NOTIFICATIONS
 from apps.shoutit.tiers import CACHE_LEVEL_GLOBAL, CACHE_LEVEL_USER
-
 from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api
 from renderers import user_api, operation_api, profiles_api, shouts_api, stats_api, activities_api
 from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
 from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator, \
     push_validator
-
-from apps.shoutit.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE, \
-    DEFAULT_LOCATION
-
+from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
-
 from apps.shoutit.utils import to_seo_friendly
-
-from django.conf import settings
-import urllib2
-
 from apps.shoutit.templatetags.template_filters import thumbnail
-from push_notifications.models import GCMDevice, APNSDevice
 
 
 def urlencode(s):

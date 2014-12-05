@@ -1,13 +1,15 @@
+from math import ceil
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
-from math import ceil
-from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
+
+from common.constants import POST_TYPE_SELL, POST_TYPE_BUY, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
     RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
 from apps.shoutit.models import Category, PredefinedCity, Tag, Shout
 from apps.shoutit.controllers import stream_controller, experience_controller
-from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CACHE_TAG_STREAMS, CACHE_LEVEL_SESSION, CACHE_LEVEL_GLOBAL
+from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CACHE_TAG_STREAMS, CACHE_LEVEL_GLOBAL
 from apps.shoutit.tiered_views.renderers import browse_html, shouts_api, user_stream_json, shout_xhr, shouts_location_api, \
     json_data_renderer, shouts_clusters_api
 from apps.shoutit.tiered_views.views_utils import get_nearest_points_to_clusters, get_shouts_PointId_inViewPort
@@ -16,7 +18,7 @@ from common.tagged_cache import TaggedCache
 
 
 @non_cached_view(html_renderer=browse_html, methods=['GET'])
-def browse(request, browse_type, url_encoded_city, browse_category=None):
+def browse(request, url_encoded_city, browse_category=None, browse_type=None):
     result = ResponseResult()
     result.data['notifications'] = []
 

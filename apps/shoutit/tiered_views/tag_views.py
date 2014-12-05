@@ -1,14 +1,13 @@
 import math
+
 from django.utils.translation import ugettext_lazy as _
+
 from apps.shoutit.controllers import stream_controller
-from apps.shoutit.controllers import tag_controller
-from apps.shoutit.forms import *
-from apps.shoutit.models import *
 from apps.shoutit.permissions import PERMISSION_FOLLOW_TAG
 from apps.shoutit.tiered_views.renderers import *
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
-from apps.shoutit.constants import *
+from common.constants import *
 from apps.shoutit.templatetags.template_filters import thumbnail
 
 

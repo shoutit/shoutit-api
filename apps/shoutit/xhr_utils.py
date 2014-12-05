@@ -1,11 +1,13 @@
 import urlparse
 import json
+
 from django.conf import settings
 from django.http import QueryDict, HttpResponse
 from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
-from apps.shoutit.constants import *
+
+from common.constants import *
 
 
 class XHRResult(object):

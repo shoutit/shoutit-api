@@ -4,17 +4,6 @@ when you run "manage.py test".
 
 Replace this with more appropriate tests for your application.
 """
-import glob
-import os
-from symbol import decorator
-from django.test import TestCase
-from apps.shoutit.constants import *
-from apps.shoutit.controllers.message_controller import MessageController
-import apps.shoutit.controllers.shout_controller as ShoutController
-from apps.shoutit.controllers.tag_controller import TagController
-from apps.shoutit.controllers.user_controller import UserController
-import subprocess
-import datetime
 #
 # def create_users():
 #     UserController.SignUpUser(None, 'User_%d' % 0, 'last', '123','user_%d@hotmail.com' %0 ,u'971551987671')

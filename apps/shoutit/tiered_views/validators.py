@@ -1,12 +1,12 @@
 import uuid
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
-from apps.shoutit.constants import *
+from common.constants import *
 from apps.shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
-
-from apps.shoutit.controllers import shout_controller, business_controller, experience_controller, comment_controller, gallery_controller, \
-    event_controller
+from apps.shoutit.controllers import shout_controller, business_controller, experience_controller, comment_controller, event_controller
 from apps.shoutit.controllers import tag_controller
 from apps.shoutit.controllers import user_controller
 from apps.shoutit.controllers import message_controller
@@ -14,7 +14,6 @@ from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, Exte
     BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
 from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, \
     RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
-from django.conf import settings
 
 
 def object_exists_validator(function, message='', *args, **kwargs):

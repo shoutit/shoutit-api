@@ -1,8 +1,10 @@
 from django.db import models
-from apps.shoutit.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN
+from django.conf import settings
+
+from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 from apps.shoutit.models.post import Trade
-from django.conf import settings
+
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 

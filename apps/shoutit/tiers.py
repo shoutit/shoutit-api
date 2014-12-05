@@ -2,6 +2,7 @@
 
 import urlparse
 import inspect
+import json
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,13 +11,11 @@ from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
 
+from common.constants import Constant
+from common.tagged_cache import TaggedCache
 from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
-from apps.shoutit.constants import Constant
 from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.middleware import JsonPostMiddleware
-from common.tagged_cache import TaggedCache
-
-import json
 
 
 class ResponseResultError(Constant):

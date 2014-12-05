@@ -6,8 +6,8 @@ from django.core.mail import get_connection
 from django.conf import settings
 
 from apps.shoutit.utils import asynchronous_task, get_shout_name_preview, remove_non_ascii
-from apps.shoutit import constants
 from apps.shoutit.controllers import sms_controller
+from common import constants
 
 
 @asynchronous_task()

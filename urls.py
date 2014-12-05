@@ -7,22 +7,28 @@ admin.autodiscover()
 
 
 # import apps.shoutit.controllers.payment_controller
-#handler500 = 'apps.shoutit.tiered_views.general_views.handler500'
+# handler500 = 'apps.shoutit.tiered_views.general_views.handler500'
 
 # TODO: general reg ex for all user names, tag names, etc
-# todo: change the id system!
+uuid_re = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+
 urlpatterns = patterns('',
-                       ### Admin ###
+                       # ## Admin ## #
                        url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
-
-                       ### Shout Website ###
+                       # ##  Shout Website ## #
                        url(r'^$', 'apps.shoutit.tiered_views.general_views.index'),
-                       url(r'^(requests|offers|experiences)/$', 'apps.shoutit.tiered_views.general_views.index'),
-                       #	[setOfCities]/[setOfTypes]/[optional categories]
-                       url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse'),
+                       url(r'^requests/$', 'apps.shoutit.tiered_views.general_views.index', {'browse_type': 'requests'}),
+                       url(r'^offers/$', 'apps.shoutit.tiered_views.general_views.index', {'browse_type': 'offers'}),
+                       url(r'^experiences/$', 'apps.shoutit.tiered_views.general_views.index', {'browse_type': 'experiences'}),
+
+                       # [setOfCities]/[setOfTypes]/[optional categories]
+                       url(r'^requests/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse', {'browse_type': 'requests'}),
+                       url(r'^offers/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse', {'browse_type': 'offers'}),
+                       url(r'^experiences/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse', {'browse_type': 'experiences'}),
+
                        url(r'^tos/$', 'apps.shoutit.tiered_views.general_views.tos'),
                        url(r'^tos/$', 'apps.shoutit.tiered_views.general_views.tos'),
                        url(r'^privacy/$', 'apps.shoutit.tiered_views.general_views.privacy'),
@@ -40,7 +46,7 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?recover_business_activation/$', 'apps.shoutit.tiered_views.business_views.recover_activation'),
 
 
-                       #	url(r'^^(?:xhr/)?bsignup/', 'apps.shoutit.tiered_views.business_views.signup'),
+                       # url(r'^^(?:xhr/)?bsignup/', 'apps.shoutit.tiered_views.business_views.signup'),
                        url(r'^^(?:xhr/)?bsignup/(?:([-\w]+)/)?$', 'apps.shoutit.tiered_views.business_views.signup'),
                        url(r'^^(?:xhr/)?subscribe/$', 'apps.shoutit.tiered_views.business_views.subscribe'),
                        url(r'^^(?:xhr/)?btempsignup/(?:([-\w]+)/)?$', 'apps.shoutit.tiered_views.business_views.signup_temp'),
@@ -82,7 +88,7 @@ urlpatterns = patterns('',
 
                        #	url(r'pub_realtime/$', 'apps.shoutit.views.redirect_to_node'),
 
-                       ### API ###
+                       # ## API ## #
 
                        url(r'^api/', include('apps.shoutit.api.urls')),
 
@@ -90,11 +96,12 @@ urlpatterns = patterns('',
                        url(r'^oauth/access_token/(\w+)/$', 'apps.shoutit.api.authentication.get_access_token_using_social_channel'),
                        # url(r'^oauth/access_token/$', 'apps.shoutit.api.authentication.get_basic_access_token'),
 
-                       ### XHR ###
+                       # ## XHR ## #
                        url(r'^xhr/user/$', 'apps.shoutit.tiered_views.user_views.search_user'),
                        url(r'^xhr/user/(\w+)/start_listening/$', 'apps.shoutit.tiered_views.user_views.start_listening_to_user'),
                        url(r'^xhr/user/(\w+)/stop_listening/$', 'apps.shoutit.tiered_views.user_views.stop_listening_to_user'),
-                       url(r'^xhr/user/(\w+)/(listeners|listening)/(?:(\w+)/)?(?:(\w+)/)?$', 'apps.shoutit.tiered_views.user_views.user_stats'),
+                       url(r'^xhr/user/(\w+)/(listeners|listening)/(?:(\w+)/)?(?:(\w+)/)?$',
+                           'apps.shoutit.tiered_views.user_views.user_stats'),
 
                        url(r'^xhr/tag/$', 'apps.shoutit.tiered_views.tag_views.search_tag'),
                        url(r'^xhr/tag/([^/]+)/start_listening/$', 'apps.shoutit.tiered_views.tag_views.start_listening_to_tag'),
@@ -189,8 +196,13 @@ urlpatterns = patterns('',
 
                        url(r'^contact-import/$', 'apps.shoutit.tiered_views.user_views.import_contacts', name='import_contacts'),
                        url(r'^(?:xhr/)?send_invitations/$', 'apps.shoutit.tiered_views.user_views.send_invitations'),
-                       url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$',
-                           'apps.shoutit.tiered_views.user_views.activate_modal')
+
+                       # user
+                       url(r'^([\w.]+)$', 'apps.shoutit.tiered_views.user_views.user_profile'),
+
+                       # url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$',
+                       #     'apps.shoutit.tiered_views.user_views.activate_modal'),
+
 )
 
 #urlpatterns += patterns('',

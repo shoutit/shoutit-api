@@ -3,13 +3,13 @@
 from datetime import datetime, timedelta
 import re
 
-from apps.shoutit.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 
-from apps.shoutit.constants import ENUM_XHR_RESULT, DEFAULT_PAGE_SIZE
+from common.constants import ENUM_XHR_RESULT, DEFAULT_PAGE_SIZE
+from apps.shoutit.models import User
 from apps.shoutit.models import Business, Deal, ServiceBuy
 from apps.shoutit.controllers import deal_controller, user_controller
 from apps.shoutit.forms import DealForm

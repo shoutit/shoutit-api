@@ -1,8 +1,10 @@
 from django.db import models
 from django.conf import settings
+
+from common.constants import StreamType2
+from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_BUSINESS, STREAM_TYPE_TAG, STREAM_TYPE_USER, STREAM_TYPE_RELATED
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
-from apps.shoutit.constants import StreamType2
-from apps.shoutit.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_BUSINESS, STREAM_TYPE_TAG, STREAM_TYPE_USER, STREAM_TYPE_RELATED
+
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
@@ -57,7 +59,6 @@ class Stream(UUIDModel):
 
 
 ######### experiment new stream
-from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver

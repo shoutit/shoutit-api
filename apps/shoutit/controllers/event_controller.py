@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
-from apps.shoutit.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG, \
+
+from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG, \
     EVENT_TYPE_SHOUT_REQUEST, EVENT_TYPE_EXPERIENCE, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_POST_DEAL, \
     EVENT_TYPE_BUY_DEAL, EVENT_TYPE_COMMENT, EVENT_TYPE_FOLLOW_BUSINESS
 from apps.shoutit.models import Event, Tag, Trade, Experience, Deal, Comment, Profile, Business, SharedExperience

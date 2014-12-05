@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 import time
+
 from django.db import connection
 from django.db.models.expressions import F
-
 from django.db.models.query_utils import Q
-from apps.shoutit.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, \
-    POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
-
 from django.conf import settings
+
+from common.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, \
+    POST_TYPE_BUY, POST_TYPE_SELL, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
 from apps.shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile
 from apps.shoutit import utils
 

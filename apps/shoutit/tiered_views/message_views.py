@@ -1,8 +1,10 @@
 import math
+
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
+
 from apps.shoutit.api.api_utils import get_object_url
 from apps.shoutit.models import Message
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE
@@ -10,7 +12,7 @@ from apps.shoutit.tiered_views.renderers import operation_api, json_data_rendere
     page_html, conversation_api, json_send_message, reply_message_api_render, read_conversations_stream_json
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
-from apps.shoutit.constants import *
+from common.constants import *
 from apps.shoutit.controllers import message_controller, shout_controller
 from apps.shoutit.xhr_utils import xhr_respond
 

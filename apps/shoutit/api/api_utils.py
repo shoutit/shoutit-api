@@ -1,4 +1,4 @@
-from apps.shoutit.constants import Constant
+from common.constants import Constant
 
 
 class JSONUrl(Constant):

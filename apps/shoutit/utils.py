@@ -9,19 +9,18 @@ import math
 import base64
 import hashlib
 import hmac
-import Image
 import StringIO
-
 import mimetypes
-import pyrax
 
+import Image
+import pyrax
 from django.http import HttpResponse, Http404
 from numpy import array, argmax, sum, sqrt
 from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
 from django.conf import settings
 
-from apps.shoutit.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL
+from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL
 from apps.shoutit.models import Post, Experience
 
 
@@ -418,3 +417,4 @@ def cloud_upload_file(uploaded, container, filename, is_raw):
     except Exception, e:
         pass
     return None
+

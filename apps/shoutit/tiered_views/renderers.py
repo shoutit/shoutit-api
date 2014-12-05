@@ -1,4 +1,5 @@
 import os
+
 from django.contrib import messages
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render_to_response
@@ -6,11 +7,11 @@ from django.template.context import RequestContext
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from piston3.utils import rc
-from apps.shoutit import constants
+from django.conf import settings
 
-from apps.shoutit.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_BUY, POST_TYPE_SELL, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
+from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
 from apps.shoutit.controllers import user_controller
-from apps.shoutit.models import Shout, ConfirmToken, Post, Profile, Business, Trade, PredefinedCity
+from apps.shoutit.models import Shout, ConfirmToken, Profile, Business, Trade, PredefinedCity
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
 from apps.shoutit.templatetags import template_filters
 from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
@@ -18,7 +19,7 @@ from apps.shoutit.utils import shout_link
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from apps.shoutit.api.api_utils import get_object_url
 from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment
-from django.conf import settings
+from common import constants
 
 
 def render_in_master_page(request, template, variables, page_title='', page_desc=''):
@@ -162,7 +163,7 @@ def activate_modal_mobile(request, result, token):
     return page_html(request, result, 'mobile_activation.html')
 
 
-def browse_html(request, result, browse_type, url_encoded_city, browse_category=None):
+def browse_html(request, result, url_encoded_city, browse_category=None, browse_type= None):
     if 'redirect_category' in result.data:
         return HttpResponseRedirect('/%s/%s/' % (browse_type, url_encoded_city))
     if 'redirect_city' in result.data:

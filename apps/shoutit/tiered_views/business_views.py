@@ -1,9 +1,9 @@
-from apps.shoutit.models import User
 from django.forms.util import ErrorDict, ErrorList
 from django.utils.translation import ugettext as _
 from django.conf import settings
 
-from apps.shoutit.constants import TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, BUSINESS_CONFIRMATION_STATUS_WAITING, \
+from apps.shoutit.models import User
+from common.constants import TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, BUSINESS_CONFIRMATION_STATUS_WAITING, \
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT, BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION, \
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION
 from apps.shoutit.controllers import user_controller, business_controller, email_controller, payment_controller

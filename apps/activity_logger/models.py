@@ -1,8 +1,9 @@
-from apps.shoutit.models import User
 from django.db import models
-from apps.shoutit import constants
 from piston3.models import Token
+
+from apps.shoutit.models import User
 from apps.shoutit.models.misc import UUIDModel
+from common import constants
 
 
 class Request(UUIDModel):

@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 # from django.core.files.base import ContentFile
 #from django.db.models.query_utils import Q
 #from apps.activity_logger.logger import Logger
-from apps.shoutit.constants import *
+from common.constants import *
 
 
 def PostExperience(user, state, text, businessProfile):
@@ -113,8 +113,6 @@ def getDetailedExperience(user, experience, sharedExperiences, comments):
     experience.isOwner = True if experience.OwnerUser == user else False
 
 
-from apps.shoutit import constants, utils
-from apps.shoutit.controllers import business_controller, user_controller, event_controller, shout_controller, notifications_controller, \
+from apps.shoutit.controllers import event_controller, shout_controller, notifications_controller, \
     realtime_controller
-from apps.shoutit.models import GalleryItem
-from apps.shoutit.models import Shout, Stream, Item, Trade, Experience, Post, Business, SharedExperience, Comment, GalleryItem, Profile
+from apps.shoutit.models import Experience, Post, Business, SharedExperience, Comment, Profile

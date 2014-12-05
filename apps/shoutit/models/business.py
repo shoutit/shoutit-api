@@ -1,13 +1,14 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from apps.shoutit.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from django.conf import settings
 
+from common.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from apps.shoutit.models.base import UUIDModel
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.tag import Category
 from apps.shoutit.models.misc import ConfirmToken, StoredFile
+
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 

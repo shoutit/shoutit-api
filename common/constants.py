@@ -128,6 +128,7 @@ TOKEN_SHORT_LOWER = ('abcdefghkmnopqrstuvwxyz23456789', 6)
 class TokenType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
+
 TOKEN_TYPE_HTML_EMAIL = TokenType("Html Email")
 TOKEN_TYPE_API_EMAIL = TokenType("Api Email")
 TOKEN_TYPE_HTML_NUM = TokenType("Html Num")
@@ -147,6 +148,7 @@ FILE_TYPE_BUSINESS_DOCUMENT = FileType("Business Document")
 
 class BusinessConfirmationState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 BUSINESS_CONFIRMATION_STATUS_WAITING = BusinessConfirmationState("Waiting")
 BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT = BusinessConfirmationState("Waiting Payment")
@@ -173,10 +175,10 @@ BUSINESS_SOURCE_TYPE_FOURSQUARE = BusinessSourceType('Foursquare')
 class UserState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-#USER_STATE_INACTIVE = UserState("Inactive")
+# USER_STATE_INACTIVE = UserState("Inactive")
 USER_STATE_ACTIVE = UserState("Active")
 USER_STATE_VALID = UserState("Valid")
-#USER_STATE_VERIFIED = UserState("Verified")
+# USER_STATE_VERIFIED = UserState("Verified")
 
 user_type_flags = {}
 
@@ -660,3 +662,89 @@ COUNTRY_ISO = {
     "": "None"
 }
 
+NOT_ALLOWED_USERNAMES = [
+    'activate',
+    'admin',
+    'admins',
+    'api',
+    'bad-experience',
+    'bad-experiences',
+    'bsignup',
+    'btempsignup',
+    'buy',
+    'buys',
+    'close_deal',
+    'comment',
+    'comments',
+    'confirm_business',
+    'contact-import',
+    'cpsp_',
+    'create_tiny_business',
+    'deal',
+    'deals',
+    'deleteConversation',
+    'deleteMessage',
+    'experience',
+    'experiences',
+    'fb_auth',
+    'fb',
+    'gallery',
+    'galleries',
+    'good-experience',
+    'good-experiences',
+    'googlebc700f17ba42dd9f.html',
+    'gplus_auth',
+    'grappelli',
+    'image',
+    'images',
+    'invalidate_voucher',
+    'item',
+    'items',
+    'jsi18n',
+    'learnmore',
+    'messages',
+    'message',
+    'modal',
+    'notifications',
+    'notification',
+    'oauth',
+    'offer',
+    'offers',
+    'paypal_return',
+    'paypal',
+    'privacy',
+    'reactivate',
+    'recover_business_activation',
+    'recover',
+    'reply',
+    'replies',
+    'report',
+    'reports',
+    'request',
+    'requests',
+    'robots.txt',
+    'rule',
+    'rules',
+    'sell',
+    'sells',
+    'send_invitations',
+    'set_language',
+    'set_perma',
+    'shout_deal',
+    'shout',
+    'shouts',
+    'signin',
+    'signout',
+    'signup',
+    'sts',
+    'subscribe',
+    'tag',
+    'tags',
+    'tos',
+    'top_tags',
+    'upload',
+    'user',
+    'users',
+    'valid_voucher',
+    'xhr',
+]

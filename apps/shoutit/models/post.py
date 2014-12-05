@@ -1,13 +1,16 @@
 from datetime import timedelta, datetime
+
 from django.db import models
 from django.db.models import Q, Sum
 from django.conf import settings
-from apps.shoutit.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
+
+from common.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.stream import Stream
 from apps.shoutit.models.tag import Tag
 from apps.shoutit.models.business import Business
+
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 

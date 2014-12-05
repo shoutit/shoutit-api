@@ -1,13 +1,14 @@
 import datetime
-import pika
-from apps.shoutit.utils import asynchronous_task
-from django.conf import settings
-from apps.shoutit.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE
-from apps.shoutit.api.renderers import render_notification
 import json
 import socket
 
+import pika
+from django.conf import settings
 from django.utils.translation import ugettext as _
+
+from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE
+from apps.shoutit.utils import asynchronous_task
+from apps.shoutit.api.renderers import render_notification
 
 
 GET_USER_CONNECTED_CLIENTS_COUNT = 1

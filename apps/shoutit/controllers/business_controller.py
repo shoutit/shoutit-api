@@ -1,14 +1,15 @@
-from apps.shoutit.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from apps.shoutit.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE, POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_EVENT, EVENT_TYPE_GALLERY_ITEM
+from django.conf import settings
+
+from apps.shoutit.models import User
+from common.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE
 from apps.shoutit.models import Stream, Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, BusinessCreateApplication, PredefinedCity
 from apps.shoutit.controllers.user_controller import GetProfile, SetRegisterToken, GiveUserPermissions
 from apps.shoutit.controllers import email_controller
 from apps.shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
-from django.conf import settings
 from apps.shoutit import utils
-
 from apps.shoutit.utils import to_seo_friendly
+
 
 def GetBusiness(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):

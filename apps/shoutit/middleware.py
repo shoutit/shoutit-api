@@ -1,14 +1,16 @@
+import json
+
 from django.dispatch.dispatcher import receiver
-from apps.shoutit.constants import DEFAULT_LOCATION
+from django.conf import settings
+from django.utils import datastructures
+
+from common.constants import DEFAULT_LOCATION
+from common.tagged_cache import TaggedCache
 from apps.shoutit.permissions import permissions_changed, ConstantPermission, ANONYMOUS_USER_PERMISSIONS
 from apps.shoutit.models import UserPermission
 from apps.shoutit.tiered_views.views_utils import set_request_language
-from common.tagged_cache import TaggedCache
 from apps.shoutit.utils import JsonResponseBadRequest
 from apps.shoutit.controllers import facebook_controller
-from django.conf import settings
-import json
-from django.utils import datastructures
 
 
 class APIDetectionMiddleware(object):

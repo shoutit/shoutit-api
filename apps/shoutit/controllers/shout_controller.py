@@ -1,20 +1,18 @@
 from datetime import datetime, timedelta
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
-
-from apps.shoutit.constants import POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE
-from apps.shoutit.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
-from apps.shoutit.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
-from apps.shoutit.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
-
-from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Currency, Post, PredefinedCity
-
-from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
-
-from apps.activity_logger.logger import Logger
-from apps.shoutit.utils import asynchronous_task, to_seo_friendly, make_image_thumbnail
 from django.conf import settings
+
+from common.constants import POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE
+from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
+from common.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
+from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
+from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Post, PredefinedCity
+from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
+from apps.activity_logger.logger import Logger
+from apps.shoutit.utils import asynchronous_task, to_seo_friendly
 
 
 def GetPost(post_id, find_muted=False, find_expired=False):

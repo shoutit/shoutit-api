@@ -1,5 +1,6 @@
 from django.views.decorators.csrf import csrf_exempt
-from apps.shoutit.constants import REPORT_TYPE_BUSINESS, REPORT_TYPE_USER, REPORT_TYPE_TRADE, REPORT_TYPE_EXPERIENCE, REPORT_TYPE_ITEM, \
+
+from common.constants import REPORT_TYPE_BUSINESS, REPORT_TYPE_USER, REPORT_TYPE_TRADE, REPORT_TYPE_EXPERIENCE, REPORT_TYPE_ITEM, \
     REPORT_TYPE_COMMENT
 from apps.shoutit.controllers.comment_controller import GetCommentByID
 from apps.shoutit.controllers.item_controller import get_item
