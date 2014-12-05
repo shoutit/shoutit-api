@@ -1524,7 +1524,8 @@ div.modal-footer div.form_error{border:0;-moz-border-radius:0;-webkit-border-rad
 div.modal-footer.modal-error{padding:6px 15px 6px;background-color:#fde2e2;border-top:1px solid #b94a48}
 .modal#signin_modal{z-index:1070}
 .modal#shout_modal{height: 348px;margin-left: -287px;margin-top: -174px;max-height: 348px;text-align: center;width: 640px;}
-.modal#signin_modal{width:340px;max-width:340px;height:434px;max-height:434px;margin-left:-160px;margin-top:-217px}
+/*.modal#signin_modal{width:340px;max-width:340px;height:434px;max-height:434px;margin-left:-160px;margin-top:-217px}*/
+.modal#signin_modal{width:340px;max-width:340px;height:280px;max-height:280px;margin-left:-160px;margin-top:-217px}
 .modal#signup_modal{width:340px;max-width:340px;height:564px;max-height:564px;margin-left:-160px;margin-top:-282px}
 .modal#recover_modal{width:340px;max-width:340px;height:328px;max-height:328px;margin-left:-160px;margin-top:-164px}
 .modal#resend_activation_modal{width:320px;max-width:320px;height:300px;max-height:300px;margin-left:-160px;margin-top:-150px}
@@ -1629,6 +1630,7 @@ div.with-facebook{text-align:center}
 .hr-with-title{height:1px;background-color:#bababa;text-align:center;margin-bottom:1em;margin-top:1em}
 .hr-with-title .hr-title{background-color:white;position:relative;top:-0.7em;width:160px;display:block;margin-left:auto;margin-right:auto;font-weight:bold;color:#8a8a8a}
 button.facebook-button{background-image:url(http://static.ak.fbcdn.net/rsrc.php/v1/yv/r/T9SYP2crSuG.png);background-repeat:no-repeat;background-position:0 -49px;background-color:#5b74a8;border:1px solid #999;border-color:#29447e #29447e #1a356e;font-family:'Lucida Grande',Tahoma,Verdana,Arial,sans-serif;font-size:13px;line-height:16px;cursor:pointer;padding:2px 6px;color:white;font-weight:bold}
+button.gplus-button{background-image:url(http://static.ak.fbcdn.net/rsrc.php/v1/yv/r/T9SYP2crSuG.png);background-repeat:no-repeat;background-position:0 -49px;background-color:#5b74a8;border:1px solid #999;border-color:#29447e #29447e #1a356e;font-family:'Lucida Grande',Tahoma,Verdana,Arial,sans-serif;font-size:13px;line-height:16px;cursor:pointer;padding:2px 6px;color:white;font-weight:bold}
 span.qtip-error{position:relative;margin-left:310px;top:-24px;display:block}
 .notification-icon{border:0;display:inline-block;position:relative;text-decoration:none}
 .notification-count{position:absolute;top:-3px;right:16px;background-color:red;color:white;font-size:10px;font-weight:bold;padding-top:1px;padding-right:1px;padding-left:1px}

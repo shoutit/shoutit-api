@@ -438,9 +438,10 @@
 
     });
     {% if not request.user.is_authenticated %}
-      setup_modal('#signup_modal', '/modal/signup/', '#signup', function () {
-        //Setup
-      });
+{#todo: remove old sign in and sign up modals#}
+{#      setup_modal('#signup_modal', '/modal/signup/', '#signup', function () {#}
+{#        //Setup#}
+{#      });#}
       setup_modal('#signin_modal', '/modal/signin/', '#signin', function () {
         //Setup
       });
