@@ -163,7 +163,7 @@ def activate_modal_mobile(request, result, token):
     return page_html(request, result, 'mobile_activation.html')
 
 
-def browse_html(request, result, url_encoded_city, browse_category=None, browse_type= None):
+def browse_html(request, result, browse_type, url_encoded_city, browse_category=None):
     if 'redirect_category' in result.data:
         return HttpResponseRedirect('/%s/%s/' % (browse_type, url_encoded_city))
     if 'redirect_city' in result.data:

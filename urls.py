@@ -20,14 +20,8 @@ urlpatterns = patterns('',
 
                        # ##  Shout Website ## #
                        url(r'^$', 'apps.shoutit.tiered_views.general_views.index'),
-                       url(r'^requests/$', 'apps.shoutit.tiered_views.general_views.index', {'browse_type': 'requests'}),
-                       url(r'^offers/$', 'apps.shoutit.tiered_views.general_views.index', {'browse_type': 'offers'}),
-                       url(r'^experiences/$', 'apps.shoutit.tiered_views.general_views.index', {'browse_type': 'experiences'}),
-
-                       # [setOfCities]/[setOfTypes]/[optional categories]
-                       url(r'^requests/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse', {'browse_type': 'requests'}),
-                       url(r'^offers/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse', {'browse_type': 'offers'}),
-                       url(r'^experiences/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse', {'browse_type': 'experiences'}),
+                       url(r'^(requests|offers|experiences)/$', 'apps.shoutit.tiered_views.general_views.index',),
+                       url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse'),
 
                        url(r'^tos/$', 'apps.shoutit.tiered_views.general_views.tos'),
                        url(r'^tos/$', 'apps.shoutit.tiered_views.general_views.tos'),

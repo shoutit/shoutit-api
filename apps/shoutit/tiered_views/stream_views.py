@@ -18,7 +18,7 @@ from common.tagged_cache import TaggedCache
 
 
 @non_cached_view(html_renderer=browse_html, methods=['GET'])
-def browse(request, url_encoded_city, browse_category=None, browse_type=None):
+def browse(request, browse_type, url_encoded_city, browse_category=None):
     result = ResponseResult()
     result.data['notifications'] = []
 
