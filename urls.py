@@ -1,8 +1,7 @@
 from django.conf.urls import patterns, include, url, handler500
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 
 from django.contrib import admin
-
 admin.autodiscover()
 
 
@@ -121,7 +120,7 @@ urlpatterns = patterns('',
 
                        url(r'^reactivate/$', 'apps.shoutit.tiered_views.user_views.resend_activation'),
                        url(r'^xhr/reactivate/$', 'apps.shoutit.tiered_views.user_views.resend_activation'),
-
+                       url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png')),
                        url(r'^robots\.txt/$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
                        url(r'^googlebc700f17ba42dd9f\.html/$',
                            TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),
