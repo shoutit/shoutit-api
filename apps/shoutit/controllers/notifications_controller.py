@@ -1,17 +1,20 @@
 from django.utils.translation import ugettext as _
 from django.db.models.query_utils import Q
+from push_notifications.apns import APNSError
+from push_notifications.gcm import GCMError
 
 from apps.shoutit.models import Notification
 from apps.shoutit.api.renderers import render_notification, render_user, render_message
-from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
+from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
+    NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
 from apps.shoutit.controllers import realtime_controller
 
 
-def MarkAllAsRead(user):
+def mark_all_as_read(user):
     Notification.objects.filter(IsRead=False, ToUser=user).update(IsRead=True)
 
 
-def NotifyUser(user, notification_type, from_user=None, attached_object=None):
+def notify_user(user, notification_type, from_user=None, attached_object=None):
     notification = Notification(ToUser=user, Type=notification_type, FromUser=from_user, attached_object=attached_object)
     notification.save()
 
@@ -19,7 +22,8 @@ def NotifyUser(user, notification_type, from_user=None, attached_object=None):
     if count:
         # todo: add the new push (apns/gcm)
         realtime_controller.SendNotification(notification, user.username, count)
-        realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification), RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
+        realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification),
+                                                                   RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
         realtime_controller.SendRealtimeMessage(realtime_message, user.username)
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:
@@ -34,42 +38,50 @@ def NotifyUser(user, notification_type, from_user=None, attached_object=None):
 
     # new apns / gcm
     if user.apns_device:
-        user.apns_device.send_message(message, extra={
-            'notification_type': int(notification_type),
-            'object': attached_object_dict
-        })
+        try:
+            user.apns_device.send_message(message, extra={
+                'notification_type': int(notification_type),
+                'object': attached_object_dict
+            })
+        except APNSError, e:
+            print "Error: Could not send apns push to user %s." % user.username
+            print "APNSError:", e
 
     if user.gcm_device:
-        user.gcm_device.send_message(message, extra={
-            'notification_type': int(notification_type),
-            'object': attached_object_dict
-        })
+        try:
+            user.gcm_device.send_message(message, extra={
+                'notification_type': int(notification_type),
+                'object': attached_object_dict
+            })
+        except GCMError, e:
+            print "Error: Could not send gcm push to user %s." % user.username
+            print "GCMError:", e
 
 
-def NotifyUserOfListen(user, listener):
-    NotifyUser(user, NOTIFICATION_TYPE_LISTEN, listener, listener)
+def notify_user_of_listen(user, listener):
+    notify_user(user, NOTIFICATION_TYPE_LISTEN, listener, listener)
 
 
-def NotifyUserOfMessage(user, message):
-    NotifyUser(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
+def notify_user_of_message(user, message):
+    notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
 
 
-def NotifyBusinessOfExpPosted(business, exp):
-    NotifyUser(business, NOTIFICATION_TYPE_EXP_POSTED, from_user = exp.OwnerUser, attached_object = exp)
+def notify_business_of_exp_posted(business, exp):
+    notify_user(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.OwnerUser, attached_object=exp)
 
 
-def NotifyUserOfExpShared(user, shared_exp):
-    NotifyUser(user, NOTIFICATION_TYPE_EXP_SHARED ,from_user=shared_exp.OwnerUser ,attached_object = shared_exp)
+def notify_user_of_exp_shared(user, shared_exp):
+    notify_user(user, NOTIFICATION_TYPE_EXP_SHARED, from_user=shared_exp.OwnerUser, attached_object=shared_exp)
 
 
-def NotifyUsersOfComment(users,comment):
+def notify_users_of_comment(users, comment):
     for user in users:
-        NotifyUser(user, NOTIFICATION_TYPE_COMMENT,from_user=comment.OwnerUser, attached_object=comment)
+        notify_user(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.OwnerUser, attached_object=comment)
 
 
-def GetUserNotifications(user):
+def get_user_notifications(user):
     return Notification.objects.filter(IsRead=False, ToUser=user)
 
 
-def GetUserNotificationsWithoutMessagesCount(user):
-    return Notification.objects.filter( Q(IsRead=False) & Q(ToUser=user) & ~Q(Type = NOTIFICATION_TYPE_MESSAGE)).count()
+def get_user_notifications_without_messages_count(user):
+    return Notification.objects.filter(Q(IsRead=False) & Q(ToUser=user) & ~Q(Type=NOTIFICATION_TYPE_MESSAGE)).count()

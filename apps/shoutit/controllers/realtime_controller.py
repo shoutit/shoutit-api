@@ -47,7 +47,7 @@ def GetUserConnectedClientsCount(username):
 def SendNotification(notification, username, count=0):
     from apps.shoutit.controllers.user_controller import get_profile
     from apps.shoutit.controllers.message_controller import UnReadConversationsCount
-    from apps.shoutit.controllers.notifications_controller import GetUserNotificationsWithoutMessagesCount
+    from apps.shoutit.controllers.notifications_controller import get_user_notifications_without_messages_count
     try:
         from common.tagged_cache import TaggedCache
         apns_tokens = TaggedCache.get('apns|%s' % username)
@@ -57,7 +57,7 @@ def SendNotification(notification, username, count=0):
                 message = notification.FromUser.username + " has"
                 userProfile = get_profile(username)
                 unread_conversations_num = UnReadConversationsCount(userProfile.user)
-                notifications_count = GetUserNotificationsWithoutMessagesCount(userProfile.user)
+                notifications_count = get_user_notifications_without_messages_count(userProfile.user)
                 customMessage = {}
                 if notification.Type == NOTIFICATION_TYPE_LISTEN:
                     message += " " + _("started listening to your shouts")

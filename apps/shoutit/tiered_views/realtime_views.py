@@ -136,7 +136,7 @@ def notifications(request):
     else:
         result.data['notifications'] = user_controller.GetAllNotifications(profile)
 
-    notifications_controller.MarkAllAsRead(request.user)
+    notifications_controller.mark_all_as_read(request.user)
     return result
 
 
@@ -147,7 +147,7 @@ def notifications(request):
 def unread_notifications_count(request):
     result = ResponseResult()
     result.data['count'] = user_controller.get_unread_notifications_count(user_controller.GetProfile(request.user))
-    result.data['notificationsWithouMessages'] = notifications_controller.GetUserNotificationsWithoutMessagesCount(
+    result.data['notificationsWithouMessages'] = notifications_controller.get_user_notifications_without_messages_count(
         request.user)
     result.data['unread_conversations'] = message_controller.UnReadConversationsCount(request.user)
     return result
@@ -161,7 +161,7 @@ def unread_notifications_count(request):
 def notifications_all(request):
     result = ResponseResult()
     result.data['notifications'] = user_controller.GetAllNotifications(request.user.profile)
-    notifications_controller.MarkAllAsRead(request.user)
+    notifications_controller.mark_all_as_read(request.user)
     return result
 
 

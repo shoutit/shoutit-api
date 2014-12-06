@@ -16,7 +16,7 @@ def CommentOnPost(user, post_id, text):
 		if post.OwnerUser not in seen and not seen_add(post.OwnerUser):
 			users.append(post.OwnerUser)
 		users.remove(user)
-		notifications_controller.NotifyUsersOfComment(users,comment)
+		notifications_controller.notify_users_of_comment(users,comment)
 		realtime_controller.BindUserToPost(user,post)
 		return comment
 	else:

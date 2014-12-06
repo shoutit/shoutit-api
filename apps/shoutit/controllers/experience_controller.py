@@ -11,7 +11,7 @@ def PostExperience(user, state, text, businessProfile):
     businessProfile.Stream.PublishShout(exp)
     user.profile.Stream.PublishShout(exp)
     event_controller.RegisterEvent(user, EVENT_TYPE_EXPERIENCE, exp)
-    notifications_controller.NotifyBusinessOfExpPosted(businessProfile.user, exp)
+    notifications_controller.notify_business_of_exp_posted(businessProfile.user, exp)
     realtime_controller.BindUserToPost(user, exp)
     return exp
 
@@ -22,7 +22,7 @@ def ShareExperience(user, exp_id):
         shared = SharedExperience(Experience=experience, OwnerUser=user)
         shared.save()
         event_controller.RegisterEvent(user, EVENT_TYPE_SHARE_EXPERIENCE, shared)
-        notifications_controller.NotifyUserOfExpShared(experience.OwnerUser, shared)
+        notifications_controller.notify_user_of_exp_shared(experience.OwnerUser, shared)
         return shared
     else:
         raise ObjectDoesNotExist()

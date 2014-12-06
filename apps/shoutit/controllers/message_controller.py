@@ -47,7 +47,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
 
     # todo: push notification test
-    notifications_controller.NotifyUserOfMessage(to_user, message)
+    notifications_controller.notify_user_of_message(to_user, message)
     email_controller.SendMessageEmail(message)
 
     return message
