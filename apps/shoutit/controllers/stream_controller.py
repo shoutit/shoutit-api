@@ -379,7 +379,7 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     """
     return the shouts (offers/requests) in a stream
     """
-    post_pks = [post['pk'] for post in stream.Posts.filter(Type__in=[POST_TYPE_BUY, POST_TYPE_SELL]).values('pk')[start_index:end_index]]
+    post_pks = [post['pk'] for post in stream.Posts.filter(Type__in=[POST_TYPE_BUY, POST_TYPE_SELL]).order_by('-DatePublished').values('pk')[start_index:end_index]]
     trades = Trade.objects.filter(pk__in=post_pks)
     return attach_related_to_shouts(trades)
 
