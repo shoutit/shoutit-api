@@ -637,33 +637,47 @@ def push(request, push_type):
     if request.method == 'POST':
         token = request.validation_result.data['token']
         if push_type == 'apns':
-            apns_device = request.user.apns_device
-            if apns_device:
-                apns_device.registration_id = token
-                apns_device.save()
+            try:
+                existing_apns_device = APNSDevice.objects.get(registration_id=token)
+            except APNSDevice.DoesNotExist:
+                existing_apns_device = None
+            user_apns_device = request.user.apns_device
+            if existing_apns_device:
+                existing_apns_device.user = request.user
+                existing_apns_device.save()
+            elif user_apns_device:
+                user_apns_device.registration_id = token
+                user_apns_device.save()
             else:
-                apns_device = APNSDevice(registration_id=token, user=request.user)
-                apns_device.save()
+                user_apns_device = APNSDevice(registration_id=token, user=request.user)
+                user_apns_device.save()
 
         elif push_type == 'gcm':
-            gcm_device = request.user.gcm_device
-            if gcm_device:
-                gcm_device.registration_id = token
-                gcm_device.save()
+            try:
+                existing_gcm_device = APNSDevice.objects.get(registration_id=token)
+            except APNSDevice.DoesNotExist:
+                existing_gcm_device = None
+            user_gcm_device = request.user.gcm_device
+            if existing_gcm_device:
+                existing_gcm_device.user = request.user
+                existing_gcm_device.save()
+            if user_gcm_device:
+                user_gcm_device.registration_id = token
+                user_gcm_device.save()
             else:
-                gcm_device = GCMDevice(registration_id=token, user=request.user)
-                gcm_device.save()
+                user_gcm_device = GCMDevice(registration_id=token, user=request.user)
+                user_gcm_device.save()
 
     elif request.method == 'DELETE':
         if push_type == 'apns':
-            apns_device = request.user.apns_device
-            if apns_device:
-                apns_device.delete()
+            user_apns_device = request.user.apns_device
+            if user_apns_device:
+                user_apns_device.delete()
 
         elif push_type == 'gcm':
-            gcm_device = request.user.gcm_device
-            if gcm_device:
-                gcm_device.delete()
+            user_gcm_device = request.user.gcm_device
+            if user_gcm_device:
+                user_gcm_device.delete()
 
     return result
 
