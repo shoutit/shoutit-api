@@ -1,4 +1,4 @@
-# Created by SYRON at 12.12.14
+# Created by muaazo at 12.12.14
 Feature: #Enter feature name here
   # Enter feature description here
 

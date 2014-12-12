@@ -125,13 +125,14 @@ def attach_user(sender, instance, created, raw, using, update_fields, **kwargs):
 
     # on new profile create stream and attach it
     if created:
-        print 'post save on first time'
+        # print 'post save on first time'
         # creating the user and attaching it to profile
         # todo: activate it
         # user = User(username=str(random.randint(1000000000, 1999999999)))
         # user.save()
         # instance.user = user
         # instance.save()
+        pass
 
 
 @receiver(post_delete, sender=Profile)

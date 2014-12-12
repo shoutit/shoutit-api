@@ -21,7 +21,7 @@ import numpy as np
 from django.conf import settings
 
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL
-from apps.shoutit.models import Post, Experience
+from apps.shoutit.models import Experience
 
 
 def generate_password():
@@ -314,7 +314,8 @@ def shout_link(post):
     post_id = post.pk
 
     if post.Type == POST_TYPE_EXPERIENCE:
-        if post._meta.module_name == Post._meta.module_name:
+        # todo: make sure the actual exp is passed so no need for using the model here
+        if post.__class__.__name__ == 'Post':
             post = Experience.objects.get(pk=post.pk)
         experience = post
         about = to_seo_friendly(experience.AboutBusiness.name)
@@ -389,7 +390,7 @@ def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
             image.thumbnail((800, 600), Image.ANTIALIAS)
         
         buff = StringIO.StringIO()
-        image.save(buff, format="JPEG", quality=60)
+        image.save(buff, format="JPEG", quality=80)
         buff.seek(0)
         obj = container.store_object(obj_name=filename, data=buff.buf, content_type=mimetypes.guess_type(filename))
 

@@ -1,56 +1,41 @@
 from django.test import TestCase
 from django.test.client import Client
-from django.db import connection
-from apps.shoutit.models import PredefinedCity, Currency
+from apps.shoutit.models import Profile
 import json
 import string
 
+GET_EXTRA = {
 
-def patchDatabase():
-    with open("deploy_scripts/deploy.sql", "r") as myfile:
-        data = myfile.read()
-        cursor = connection.cursor()
-        cursor.execute(data)
-    myfile.close()
-
-
-def createCities():
-    dubai = PredefinedCity(City='Dubai', city_encoded='dubai', Country='AE', Approved=True, Latitude=25.2644,
-                           Longitude=55.3117)
-    dubai.save()
-
-
-def createCurrency():
-    euro = Currency(Name='Euro', Code='EUR', Country='Germany')
-    euro.save()
+}
 
 
 class APITestCase(TestCase):
+    fixtures = ['initial_data']
+
     def setUp(self):
-        patchDatabase()
-        createCities()
-        createCurrency()
         self.testClient = Client()
-        response = self.testClient.post('/api/signup/', {
-            'firstname': 'philip',
-            'lastname': 'dizzl',
-            'email': 'philip@bitstars.com',
-            'password': 'yolo',
-            'confirm_password': 'yolo'
-        })
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response['Content-Type'], 'application/json; charset=utf-8')
+
+        # response = self.testClient.post('/api/signup/', {
+        #     'firstname': 'philip',
+        #     'lastname': 'dizzl',
+        #     'email': 'philip@bitstars.com',
+        #     'password': 'yolo',
+        #     'confirm_password': 'yolo'
+        # })
+        # self.assertEqual(response.status_code, 201)
+        # self.assertEqual(response['Content-Type'], 'application/json; charset=utf-8')
 
     def test_api(self):
         self.get_request_token()
-        self.shout_stream()
+        print Profile.objects.all()
+        # self.shout_stream()
         #self.nearby_shouts()
         #self.shout_clusters()
         #self.get_currencies()
         #self.shout_buy()
 
     def get_request_token(self):
-        response = self.testClient.get('/oauth/request_token')
+        response = self.testClient.get('/oauth/request_token/',)
         print response
 
     def shout_stream(self):
@@ -60,7 +45,6 @@ class APITestCase(TestCase):
         self.assertEqual(parsed['shouts'], [])
         self.assertEqual(parsed['count'], 0)
         self.assertEqual(parsed['messages'], [])
-
 
     def nearby_shouts(self):
         response = self.client.get('/api/shouts/nearby', {

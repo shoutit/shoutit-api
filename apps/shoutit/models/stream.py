@@ -103,7 +103,7 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
         return
     # on new instance create stream and attach it
     if created:
-        print 'post save on first time'
+        print 'creating Stream2 for: <%s: %s>' % (sender.__name__, instance)
 
         # creating the stream
         stream2 = Stream2(attached_object=instance)
