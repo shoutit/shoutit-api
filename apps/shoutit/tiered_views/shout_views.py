@@ -357,15 +357,17 @@ def shout_view(request, shout_id):
 def nearby_shouts(request):
     result = ResponseResult()
 
+    print 'a'
     # todo: validation
     down_left_lat = float(request.GET.get('down_left_lat'))
     down_left_lng = float(request.GET.get('down_left_lng'))
     up_right_lat = float(request.GET.get('up_right_lat'))
     up_right_lng = float(request.GET.get('up_right_lng'))
     zoom = int(request.GET.get('zoom'))
-    
-    shouts, shout_points = get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
+    print 'b'
 
+    shouts, shout_points = get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
+    print 'c'
     # todo: refactor
     if len(shout_points) <= 1:
         if len(shout_points) == 1:
@@ -379,9 +381,10 @@ def nearby_shouts(request):
             result.data['shout_types'] = []
             result.data['shout_names'] = []
         return result
-
+    print 'd'
     # todo: what is this?
     k = number_of_clusters_based_on_zoom(zoom)
+    print 'e'
     if k:
         cluster_ids, centroids = kmeans(shout_points, min(k, len(shout_points)), 100)
         shout_points, shout_pks, shout_types, shout_names = get_nearest_points_to_clusters(list(centroids), shout_points, shouts)
@@ -390,7 +393,7 @@ def nearby_shouts(request):
         shout_pks = [shout['pk'] for shout in shouts]
         shout_types = [shout['Type'] for shout in shouts]
         shout_names = [shout['Item__Name'] for shout in shouts]
-
+    print 'f'
     result.data['locations'] = shout_points
     result.data['shout_pks'] = shout_pks
     result.data['shout_types'] = shout_types
