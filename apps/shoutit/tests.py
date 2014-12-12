@@ -109,7 +109,7 @@ Replace this with more appropriate tests for your application.
 #
 #
 #     #TODO: make a test function for ShoutController.GetStreamAffectedByShout
-#     #TODO: make a test function for ShoutController.SaveRecolatedShouts
+#     #TODO: make a test function for ShoutController.save_relocated_shouts
 #
 # class TagTestCase(TestCase):
 #     def setUp(self):

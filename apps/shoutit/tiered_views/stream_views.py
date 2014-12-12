@@ -3,17 +3,14 @@ from math import ceil
 from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.views.decorators.csrf import csrf_exempt
+from apps.shoutit.controllers.experience_controller import GetExperiences
+from apps.shoutit.controllers.stream_controller import get_trades_by_pks, get_ranked_shouts_ids, GetShoutTimeOrder
 
 from common.constants import POST_TYPE_SELL, POST_TYPE_BUY, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
     RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
-from apps.shoutit.models import Category, PredefinedCity, Tag, Shout
-from apps.shoutit.controllers import stream_controller, experience_controller
+from apps.shoutit.models import Category, PredefinedCity, Tag
 from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CACHE_TAG_STREAMS, CACHE_LEVEL_GLOBAL
-from apps.shoutit.tiered_views.renderers import browse_html, shouts_api, user_stream_json, shout_xhr, shouts_location_api, \
-    json_data_renderer, shouts_clusters_api
-from apps.shoutit.tiered_views.views_utils import get_nearest_points_to_clusters, get_shouts_PointId_inViewPort
-from apps.shoutit.utils import kmeans, number_of_clusters_based_on_zoom
+from apps.shoutit.tiered_views.renderers import browse_html, shouts_api, user_stream_json, shout_xhr
 from common.tagged_cache import TaggedCache
 
 
@@ -66,7 +63,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     category = browse_category
 
     if browse_type == 'experiences':
-        experiences = experience_controller.GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
+        experiences = GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
                                                            end_index=DEFAULT_PAGE_SIZE * page_num, detailed=False, city=user_city)
         result.data['count'] = len(experiences)
         result.data['experiences'] = experiences
@@ -90,7 +87,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
-    all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
+    all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
                                                          DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
     if request.session.session_key:
         TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
@@ -100,7 +97,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
                  k in all_shout_ids[DEFAULT_PAGE_SIZE * (page_num - 1): DEFAULT_PAGE_SIZE * page_num]]
 
     if len(shout_ids):
-        shouts = stream_controller.GetTradesByIDs(shout_ids)
+        shouts = get_trades_by_pks(shout_ids)
         for shout in shouts:
             shout.rank = dict_shout_ids[shout.pk]
         shouts.sort(key=lambda _shout: _shout.rank)
@@ -158,7 +155,7 @@ def index_stream(request):
         order_by = flag
 
     if POST_TYPE_EXPERIENCE in shout_types and len(shout_types) == 1:
-        experiences = experience_controller.GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
+        experiences = GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
                                                            end_index=DEFAULT_PAGE_SIZE * page_num, city=user_city)
         result.data['count'] = len(experiences)
         result.data['experiences'] = experiences
@@ -176,7 +173,7 @@ def index_stream(request):
     if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
         all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
     else:
-        all_shout_ids = stream_controller.GetRankedShoutsIDs(user, order_by, user_country, user_city, user_lat, user_lng, 0,
+        all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
                                                              DEFAULT_HOME_SHOUT_COUNT, shout_types, query, tag_ids)
         result.data['browse_in'] = user_city
         if request.session.session_key:
@@ -186,7 +183,7 @@ def index_stream(request):
     shout_ids = [k[0] for k in all_shout_ids if k in all_shout_ids[DEFAULT_PAGE_SIZE * (page_num - 1): DEFAULT_PAGE_SIZE * page_num]]
 
     if len(shout_ids):
-        shouts = stream_controller.GetTradesByIDs(shout_ids)
+        shouts = get_trades_by_pks(shout_ids)
         for shout in shouts:
             shout.rank = dict_shout_ids[shout.pk]
         shouts.sort(key=lambda x: x.rank)
@@ -199,116 +196,6 @@ def index_stream(request):
 
     result.data['pages_count'] = int(ceil(len(all_shout_ids) / float(DEFAULT_PAGE_SIZE)))
     result.data['is_last_page'] = page_num >= result.data['pages_count']
-
-    return result
-
-
-@cached_view(level=CACHE_LEVEL_GLOBAL, tags=[CACHE_TAG_STREAMS], methods=['GET'], api_renderer=shouts_clusters_api)
-def load_clusters(request):
-    result = ResponseResult()
-
-    topLeftLongitude = float(request.REQUEST['topLeftLongitude'])
-    topLeftLatitude = float(request.REQUEST['topLeftLatitude'])
-    bottomRightLongitude = float(request.REQUEST['bottomRightLongitude'])
-    bottomRightLatitude = float(request.REQUEST['bottomRightLatitude'])
-
-    thirdLongitude = (bottomRightLongitude - topLeftLongitude) / 3.0
-    sixthLongitude = (bottomRightLongitude - topLeftLongitude) / 6.0
-    thirdLatitude = (bottomRightLatitude - topLeftLatitude) / 3.0
-    sixthLatitude = (bottomRightLatitude - topLeftLatitude) / 6.0
-
-    result.data['nw'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude,
-        Longitude__lte=topLeftLongitude + thirdLongitude,
-
-        Latitude__gte=topLeftLatitude,
-        Latitude__lte=topLeftLatitude + thirdLatitude
-    ).count()
-    result.data['n'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude + thirdLongitude,
-        Longitude__lte=topLeftLongitude + 2 * thirdLongitude,
-
-        Latitude__lte=topLeftLatitude,
-        Latitude__gte=topLeftLatitude + thirdLatitude
-    ).count()
-    result.data['ne'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude + 2 * thirdLongitude,
-        Longitude__lte=topLeftLongitude + 3 * thirdLongitude,
-
-        Latitude__lte=topLeftLatitude,
-        Latitude__gte=topLeftLatitude + thirdLatitude
-    ).count()
-
-    result.data['w'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude,
-        Longitude__lte=topLeftLongitude + thirdLongitude,
-
-        Latitude__lte=topLeftLatitude + thirdLatitude,
-        Latitude__gte=topLeftLatitude + 2 * thirdLatitude
-    ).count()
-    result.data['c'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude + thirdLongitude,
-        Longitude__lte=topLeftLongitude + 2 * thirdLongitude,
-
-        Latitude__lte=topLeftLatitude + thirdLatitude,
-        Latitude__gte=topLeftLatitude + 2 * thirdLatitude
-    ).count()
-    result.data['e'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude + 2 * thirdLongitude,
-        Longitude__lte=topLeftLongitude + 3 * thirdLongitude,
-
-        Latitude__lte=topLeftLatitude + thirdLatitude,
-        Latitude__gte=topLeftLatitude + 2 * thirdLatitude
-    ).count()
-
-    result.data['sw'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude,
-        Longitude__lte=topLeftLongitude + thirdLongitude,
-
-        Latitude__lte=topLeftLatitude + 2 * thirdLatitude,
-        Latitude__gte=topLeftLatitude + 3 * thirdLatitude
-    ).count()
-    result.data['s'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude + thirdLongitude,
-        Longitude__lte=topLeftLongitude + 2 * thirdLongitude,
-
-        Latitude__lte=topLeftLatitude + 2 * thirdLatitude,
-        Latitude__gte=topLeftLatitude + 3 * thirdLatitude
-    ).count()
-    result.data['se'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
-        Longitude__gte=topLeftLongitude + 2 * thirdLongitude,
-        Longitude__lte=topLeftLongitude + 3 * thirdLongitude,
-
-        Latitude__lte=topLeftLatitude + 2 * thirdLatitude,
-        Latitude__gte=topLeftLatitude + 3 * thirdLatitude
-    ).count()
-
-    result.data['nw_longitude'] = topLeftLongitude + sixthLongitude
-    result.data['nw_latitude'] = topLeftLatitude + sixthLatitude
-
-    result.data['n_longitude'] = topLeftLongitude + sixthLongitude + thirdLongitude
-    result.data['n_latitude'] = topLeftLatitude + sixthLatitude
-
-    result.data['ne_longitude'] = topLeftLongitude + sixthLongitude + 2 * thirdLongitude
-    result.data['ne_latitude'] = topLeftLatitude + sixthLatitude
-
-    result.data['w_longitude'] = topLeftLongitude + sixthLongitude
-    result.data['w_latitude'] = topLeftLatitude + sixthLatitude + thirdLatitude
-
-    result.data['c_longitude'] = topLeftLongitude + sixthLongitude + thirdLongitude
-    result.data['c_latitude'] = topLeftLatitude + sixthLatitude + thirdLatitude
-
-    result.data['e_longitude'] = topLeftLongitude + sixthLongitude + 2 * thirdLongitude
-    result.data['e_latitude'] = topLeftLatitude + sixthLatitude + thirdLatitude
-
-    result.data['sw_longitude'] = topLeftLongitude + sixthLongitude
-    result.data['sw_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
-
-    result.data['s_longitude'] = topLeftLongitude + sixthLongitude + thirdLongitude
-    result.data['s_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
-
-    result.data['se_longitude'] = topLeftLongitude + sixthLongitude + 2 * thirdLongitude
-    result.data['se_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
 
     return result
 
@@ -326,18 +213,18 @@ def livetimeline(request, pk=None):
     user_lng = pre_city.Longitude
 
     if pk is not None:
-        index = stream_controller.GetShoutTimeOrder(pk, user_country, user_city)
+        index = GetShoutTimeOrder(pk, user_country, user_city)
     else:
         index = DEFAULT_PAGE_SIZE
     order_by = TIME_RANK_TYPE
 
     shouts = []
     if index:
-        shout_ids = stream_controller.GetRankedShoutsIDs(None, order_by, user_country, user_city, user_lat, user_lng, 0, index)
+        shout_ids = get_ranked_shouts_ids(None, order_by, user_country, user_city, user_lat, user_lng, 0, index)
         if len(shout_ids):
             shout_ranks = dict(shout_ids)
             shout_ids = [k[0] for k in shout_ids]
-            shouts = stream_controller.GetTradesByIDs(shout_ids)
+            shouts = get_trades_by_pks(shout_ids)
             for shout in shouts:
                 shout.rank = shout_ranks[shout.pk]
             shouts.sort(key=lambda _shout: _shout.rank)
@@ -353,37 +240,4 @@ def livetimeline(request, pk=None):
         shouts_arr.append({'id': shout.pk, 'html': render_to_string("shout_brief.html", variables)})
     result.data['shouts'] = shouts_arr
     result.data['count'] = len(shouts_arr)
-    return result
-
-
-@csrf_exempt
-@cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, api_renderer=shouts_location_api, json_renderer=json_data_renderer)
-def load_shouts(request):
-    result = ResponseResult()
-    shouts, shout_points = get_shouts_PointId_inViewPort(float(request.REQUEST[u'DownLeftLat']), float(request.REQUEST[u'DownLeftLng']),
-                                                         float(request.REQUEST[u'UpRightLat']), float(request.REQUEST[u'UpRightLng']))
-
-    if len(shout_points) <= 1:
-        if len(shout_points) == 1:
-            result.data['locations'] = [(str(shout_points[0][0]) + ' ' + str(shout_points[0][1]))]
-            result.data['shoutsId'] = [shouts[0]['pk']]
-            result.data['shoutsTypes'] = [shouts[0]['Type']]
-        else:
-            result.data['locations'] = []
-            result.data['shoutsId'] = []
-            result.data['shoutsTypes'] = []
-        return result
-
-    k = number_of_clusters_based_on_zoom(int(request.REQUEST[u'Zoom']))
-    if k:
-        cluster_ids, centroids = kmeans(shout_points, min(k, len(shout_points)), 100)
-        shout_points, shout_ids, shout_types = get_nearest_points_to_clusters(list(centroids), shout_points, shouts)
-    else:
-        shout_points = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
-        shout_ids = [shout['pk'] for shout in shouts]
-        shout_types = [shout['Type'] for shout in shouts]
-
-    result.data['locations'] = shout_points
-    result.data['shoutsId'] = shout_ids
-    result.data['shoutsTypes'] = shout_types
     return result

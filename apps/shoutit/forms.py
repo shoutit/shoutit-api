@@ -372,7 +372,6 @@ class UserEditProfileForm(forms.Form):
                 raise forms.ValidationError(_('Username is already taken.'))
         except ObjectDoesNotExist:
             return username
-            #		raise forms.ValidationError('Username is already taken.')
 
     def clean_email(self):
         email = self.data['email'].strip()
@@ -423,7 +422,7 @@ class UserEditProfileForm(forms.Form):
 
     def clean_birthday(self):
         try:
-            birthday = datetime.strptime(self.data['birthday_year'] + '-' + self.data['birthday_month'] + '-' + self.data['birthday_day'],
+            birthday = datetime.strptime("%s-%s-%s" % (self.data['birthday_year'], self.data['birthday_month'], self.data['birthday_day']),
                                          '%Y-%m-%d')
         except ValueError, e:
             return None

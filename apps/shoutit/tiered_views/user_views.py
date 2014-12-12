@@ -523,19 +523,22 @@ def user_edit_profile(request, username):
 
     result.data['user_profile'] = profile
     if request.method == 'POST':
-        form = UserEditProfileForm(request.POST, request.FILES,
-                                   initial={'username': username, 'email': profile.user.email})
+        form = UserEditProfileForm(request.POST, request.FILES, initial={'username': username, 'email': profile.user.email})
         form.is_valid()
 
         if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
             profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
+
         if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
             profile.user.email = form.cleaned_data['email']
+
         if form.cleaned_data.has_key('firstname') and form.cleaned_data['firstname']:
             profile.user.first_name = form.cleaned_data['firstname']
+
         if form.cleaned_data.has_key('lastname') and form.cleaned_data['lastname']:
             profile.user.last_name = form.cleaned_data['lastname']
+
         if form.cleaned_data.has_key('mobile') and form.cleaned_data['mobile']:
             profile.Mobile = form.cleaned_data['mobile']
 
@@ -546,6 +549,7 @@ def user_edit_profile(request, username):
                 profile.Sex and 'male.png' or 'female.png')
 
         profile.Bio = form.cleaned_data['bio']
+
         if form.cleaned_data.has_key('password') and form.cleaned_data['password']:
             profile.user.set_password(form.cleaned_data['password'])
 

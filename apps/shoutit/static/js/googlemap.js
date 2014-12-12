@@ -192,18 +192,18 @@ function BoundChanged(googleMap) {
     return;
   UpRight = MapBounds.getNorthEast();
   DownLeft = MapBounds.getSouthWest();
-  post_data = {DownLeftLat: DownLeft.lat(), DownLeftLng: DownLeft.lng(),
-    UpRightLat: UpRight.lat(), UpRightLng: UpRight.lng(), Zoom: googleMap.Map.getZoom()
+  post_data = {down_left_lat: DownLeft.lat(), down_left_lng: DownLeft.lng(),
+    up_right_lat: UpRight.lat(), up_right_lng: UpRight.lng(), zoom: googleMap.Map.getZoom()
   };
 
   requestAjaxily({
-    url: '/xhr/loadShouts/',
+    url: '/xhr/shout/nearby/',
     data: post_data,
     type: 'GET',
     successCallback: function (data) {
       var locations = data.data.locations;
-      var shoutsId = data.data.shoutsId;
-      var shoutsTypes = data.data.shoutsTypes;
+      var shoutsIds = data.data.shout_pks;
+      var shoutsTypes = data.data.shout_types;
 
       for (var i = 0; i < googleMap.markers.length; i++)
         googleMap.markers[i].setMap(null);
@@ -214,13 +214,13 @@ function BoundChanged(googleMap) {
         lat = googleMap.lat_lon[0];
         lon = googleMap.lat_lon[1];
         point = new google.maps.LatLng(lat = parseFloat(lat), lon = parseFloat(lon));
-        addMarker(point, shoutsId[i], googleMap, shoutsTypes[i])
+        addMarker(point, shoutsIds[i], googleMap, shoutsTypes[i])
       }
     }
   });
 }
 
-function addMarker(point, shoutsId, googleMap, shoutType) {
+function addMarker(point, shoutId, googleMap, shoutType) {
   Marker = new google.maps.Marker({
     map: googleMap.Map,
     position: point
@@ -238,7 +238,7 @@ function addMarker(point, shoutsId, googleMap, shoutType) {
 
   var infowindow = new google.maps.InfoWindow({
     position: point,
-    title: "" + shoutsId
+    title: "" + shoutId
   });
 
   google.maps.event.addListener(Marker, 'click', function () {

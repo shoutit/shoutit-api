@@ -123,13 +123,13 @@ urlpatterns = patterns('',
 
                        url(r'^shout/nearby/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': stream_views.load_shouts
+                               'GET': shout_views.nearby_shouts
                            })
                        ),
 
                        url(r'^shout/nearby/clusters/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': stream_views.load_clusters
+                               'GET': shout_views.load_clusters
                            })
                        ),
 

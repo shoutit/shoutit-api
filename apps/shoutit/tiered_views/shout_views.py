@@ -5,6 +5,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from numpy import argmin, sqrt, sum
+
+from apps.shoutit.controllers.shout_controller import get_shouts_and_points_in_view_port
 
 from common.constants import LOCATION_ATTRIBUTES, POST_TYPE_EXPERIENCE
 from apps.shoutit.models import Shout
@@ -12,12 +15,13 @@ from apps.shoutit.controllers import shout_controller, stream_controller, user_c
 from apps.shoutit.forms import ShoutForm, ReportForm, MessageForm
 from apps.shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER
 from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_brief_api, shout_form_renderer_api, \
-    shout_api, object_page_html, operation_api
+    shout_api, object_page_html, operation_api, json_data_renderer, shouts_location_api, shouts_clusters_api
 from apps.shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, \
     edit_shout_validator
 from apps.shoutit.tiers import non_cached_view, cached_view, refresh_cache, CACHE_TAG_STREAMS, ResponseResult, \
-    RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES
-from apps.shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
+    RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES, CACHE_LEVEL_GLOBAL
+from apps.shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str, \
+    number_of_clusters_based_on_zoom, kmeans
 
 
 @require_POST
@@ -313,10 +317,10 @@ def shout_view(request, shout_id):
     result.data['owner'] = (shout.OwnerUser == request.user or request.user.is_staff)
 
     if request.user == shout.OwnerUser:
-        shouts = stream_controller.GetRankedStreamShouts(shout.RecommendedStream)
+        shouts = stream_controller.get_ranked_stream_shouts(shout.RecommendedStream)
         result.data['shouts_type'] = 'Recommended'
     else:
-        shouts = stream_controller.GetRankedStreamShouts(shout.RelatedStream)
+        shouts = stream_controller.get_ranked_stream_shouts(shout.RelatedStream)
         result.data['shouts_type'] = 'Related'
 
     result.data['shouts'] = shouts
@@ -345,4 +349,178 @@ def shout_view(request, shout_id):
     result.data['form'] = MessageForm()
     result.data['report_form'] = ReportForm()
     result.data['is_fb_og'] = True
+    return result
+
+
+@csrf_exempt
+@cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, api_renderer=shouts_location_api, json_renderer=json_data_renderer)
+def nearby_shouts(request):
+    result = ResponseResult()
+
+    # todo: validation
+    down_left_lat = float(request.GET.get('down_left_lat'))
+    down_left_lng = float(request.GET.get('down_left_lng'))
+    up_right_lat = float(request.GET.get('up_right_lat'))
+    up_right_lng = float(request.GET.get('up_right_lng'))
+    zoom = int(request.GET.get('zoom'))
+    
+    shouts, shout_points = get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
+
+    # todo: refactor
+    if len(shout_points) <= 1:
+        if len(shout_points) == 1:
+            result.data['locations'] = [(str(shout_points[0][0]) + ' ' + str(shout_points[0][1]))]
+            result.data['shout_pks'] = [shouts[0]['pk']]
+            result.data['shout_types'] = [shouts[0]['Type']]
+            result.data['shout_names'] = [shouts[0]['Item__Name']]
+        else:
+            result.data['locations'] = []
+            result.data['shout_pks'] = []
+            result.data['shout_types'] = []
+            result.data['shout_names'] = []
+        return result
+
+    # todo: what is this?
+    k = number_of_clusters_based_on_zoom(zoom)
+    if k:
+        cluster_ids, centroids = kmeans(shout_points, min(k, len(shout_points)), 100)
+        shout_points, shout_pks, shout_types, shout_names = get_nearest_points_to_clusters(list(centroids), shout_points, shouts)
+    else:
+        shout_points = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
+        shout_pks = [shout['pk'] for shout in shouts]
+        shout_types = [shout['Type'] for shout in shouts]
+        shout_names = [shout['Item__Name'] for shout in shouts]
+
+    result.data['locations'] = shout_points
+    result.data['shout_pks'] = shout_pks
+    result.data['shout_types'] = shout_types
+    result.data['shout_names'] = shout_names
+    return result
+
+
+def get_nearest_points_to_clusters(centroids, shout_points, shouts):
+    nearest_points = []
+    nearest_points_pks = []
+    nearest_points_types = []
+    nearest_points_names = []
+
+    for clusterPos in centroids:
+        diff = shout_points - clusterPos
+        dist = sqrt(sum(diff ** 2, axis=-1))
+        nearest_index = int(argmin(dist))
+
+        nearest_points.append(str(shout_points[nearest_index][0]) + ' ' + str(shout_points[nearest_index][1]))
+        nearest_points_pks.append(shouts[nearest_index]['pk'])
+        nearest_points_types.append(shouts[nearest_index]['Type'])
+        nearest_points_names.append(shouts[nearest_index]['Item__Name'])
+    return nearest_points, nearest_points_pks, nearest_points_types, nearest_points_names
+
+
+@cached_view(level=CACHE_LEVEL_GLOBAL, tags=[CACHE_TAG_STREAMS], methods=['GET'], api_renderer=shouts_clusters_api)
+def load_clusters(request):
+    result = ResponseResult()
+
+    topLeftLongitude = float(request.REQUEST['topLeftLongitude'])
+    topLeftLatitude = float(request.REQUEST['topLeftLatitude'])
+    bottomRightLongitude = float(request.REQUEST['bottomRightLongitude'])
+    bottomRightLatitude = float(request.REQUEST['bottomRightLatitude'])
+
+    thirdLongitude = (bottomRightLongitude - topLeftLongitude) / 3.0
+    sixthLongitude = (bottomRightLongitude - topLeftLongitude) / 6.0
+    thirdLatitude = (bottomRightLatitude - topLeftLatitude) / 3.0
+    sixthLatitude = (bottomRightLatitude - topLeftLatitude) / 6.0
+
+    result.data['nw'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude,
+        Longitude__lte=topLeftLongitude + thirdLongitude,
+
+        Latitude__gte=topLeftLatitude,
+        Latitude__lte=topLeftLatitude + thirdLatitude
+    ).count()
+    result.data['n'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude + thirdLongitude,
+        Longitude__lte=topLeftLongitude + 2 * thirdLongitude,
+
+        Latitude__lte=topLeftLatitude,
+        Latitude__gte=topLeftLatitude + thirdLatitude
+    ).count()
+    result.data['ne'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude + 2 * thirdLongitude,
+        Longitude__lte=topLeftLongitude + 3 * thirdLongitude,
+
+        Latitude__lte=topLeftLatitude,
+        Latitude__gte=topLeftLatitude + thirdLatitude
+    ).count()
+
+    result.data['w'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude,
+        Longitude__lte=topLeftLongitude + thirdLongitude,
+
+        Latitude__lte=topLeftLatitude + thirdLatitude,
+        Latitude__gte=topLeftLatitude + 2 * thirdLatitude
+    ).count()
+    result.data['c'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude + thirdLongitude,
+        Longitude__lte=topLeftLongitude + 2 * thirdLongitude,
+
+        Latitude__lte=topLeftLatitude + thirdLatitude,
+        Latitude__gte=topLeftLatitude + 2 * thirdLatitude
+    ).count()
+    result.data['e'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude + 2 * thirdLongitude,
+        Longitude__lte=topLeftLongitude + 3 * thirdLongitude,
+
+        Latitude__lte=topLeftLatitude + thirdLatitude,
+        Latitude__gte=topLeftLatitude + 2 * thirdLatitude
+    ).count()
+
+    result.data['sw'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude,
+        Longitude__lte=topLeftLongitude + thirdLongitude,
+
+        Latitude__lte=topLeftLatitude + 2 * thirdLatitude,
+        Latitude__gte=topLeftLatitude + 3 * thirdLatitude
+    ).count()
+    result.data['s'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude + thirdLongitude,
+        Longitude__lte=topLeftLongitude + 2 * thirdLongitude,
+
+        Latitude__lte=topLeftLatitude + 2 * thirdLatitude,
+        Latitude__gte=topLeftLatitude + 3 * thirdLatitude
+    ).count()
+    result.data['se'] = Shout.objects.filter(IsMuted=False, IsDisabled=False,
+        Longitude__gte=topLeftLongitude + 2 * thirdLongitude,
+        Longitude__lte=topLeftLongitude + 3 * thirdLongitude,
+
+        Latitude__lte=topLeftLatitude + 2 * thirdLatitude,
+        Latitude__gte=topLeftLatitude + 3 * thirdLatitude
+    ).count()
+
+    result.data['nw_longitude'] = topLeftLongitude + sixthLongitude
+    result.data['nw_latitude'] = topLeftLatitude + sixthLatitude
+
+    result.data['n_longitude'] = topLeftLongitude + sixthLongitude + thirdLongitude
+    result.data['n_latitude'] = topLeftLatitude + sixthLatitude
+
+    result.data['ne_longitude'] = topLeftLongitude + sixthLongitude + 2 * thirdLongitude
+    result.data['ne_latitude'] = topLeftLatitude + sixthLatitude
+
+    result.data['w_longitude'] = topLeftLongitude + sixthLongitude
+    result.data['w_latitude'] = topLeftLatitude + sixthLatitude + thirdLatitude
+
+    result.data['c_longitude'] = topLeftLongitude + sixthLongitude + thirdLongitude
+    result.data['c_latitude'] = topLeftLatitude + sixthLatitude + thirdLatitude
+
+    result.data['e_longitude'] = topLeftLongitude + sixthLongitude + 2 * thirdLongitude
+    result.data['e_latitude'] = topLeftLatitude + sixthLatitude + thirdLatitude
+
+    result.data['sw_longitude'] = topLeftLongitude + sixthLongitude
+    result.data['sw_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
+
+    result.data['s_longitude'] = topLeftLongitude + sixthLongitude + thirdLongitude
+    result.data['s_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
+
+    result.data['se_longitude'] = topLeftLongitude + sixthLongitude + 2 * thirdLongitude
+    result.data['se_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
+
     return result

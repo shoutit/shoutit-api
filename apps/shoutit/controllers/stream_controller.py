@@ -78,8 +78,8 @@ def GetShoutTimeOrder(pk, country_code, province_code, limit=0):
         return 0
 
 
-def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', lat=0.0, lng=0.0, start_index=None, end_index=None,
-                       filter_types=[], filter_query=None, filter_tags=[]):
+def get_ranked_shouts_ids(user, rank_type_flag, country_code='', province_code='', lat=0.0, lng=0.0, start_index=None, end_index=None,
+                          filter_types=[], filter_query=None, filter_tags=[]):
     # Selects shout IDs from database in the right order.
     # ---------------------------------------------------
     #		user: the User displaying shouts.
@@ -252,7 +252,7 @@ def GetRankedShoutsIDs(user, rank_type_flag, country_code='', province_code='', 
     return [(str(row[1]), row[0]) for row in cursor.fetchall() if row and len(row)]
 
 
-def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index=None, exclude_shouter=True):
+def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_index=None, exclude_shouter=True):
     filters = {}
 
     today = datetime.today()
@@ -307,7 +307,7 @@ def GetShoutRecommendedShoutStream(base_shout, type, start_index=None, end_index
     return attach_related_to_shouts(shout_qs, rank_count)
 
 
-def GetTradesByIDs(pks):
+def get_trades_by_pks(pks):
     """
     Select shouts from database according to their IDs, including other objects related to every shout.
     pks: array of shout IDs
@@ -349,29 +349,26 @@ def attach_related_to_shouts(shouts, rank_count=None):
     return list(shouts)
 
 
-def GetRankedStreamShouts(stream):
-    if stream:
-        today = datetime.today()
-        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        begin = today - days
-        base_timestamp = int(time.mktime(begin.utctimetuple()))
-        now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
-        now_timestamp_string = str(datetime.now())
+def get_ranked_stream_shouts(stream):
+    today = datetime.today()
+    days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+    begin = today - days
+    base_timestamp = int(time.mktime(begin.utctimetuple()))
+    now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
+    now_timestamp_string = str(datetime.now())
 
-        time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' % (
-            now_timestamp_string, now_timestamp - base_timestamp)
+    time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' % (
+        now_timestamp_string, now_timestamp - base_timestamp)
 
-        shouts = stream.ShoutWraps.select_related('Shout', 'Trade').filter(
-            Q(Shout__ExpiryDate__isnull=True, Shout__DatePublished__range=(begin, today)) | Q(Shout__ExpiryDate__isnull=False,
-                                                                                              Shout__DatePublished__lte=F(
-                                                                                                  'Shout__ExpiryDate')),
-            Shout__IsMuted=False, Shout__IsDisabled=False).extra(select={'overall_rank': '(("Rank" * 2) + %s) / 3' % time_axis}).extra(
-            order_by=['overall_rank'])
-        if not shouts:
-            return []
-        return [shout.Shout.trade for shout in shouts]
-    else:
+    shouts = stream.ShoutWraps.select_related('Shout', 'Trade').filter(
+        Q(Shout__ExpiryDate__isnull=True, Shout__DatePublished__range=(begin, today)) | Q(Shout__ExpiryDate__isnull=False,
+                                                                                          Shout__DatePublished__lte=F(
+                                                                                              'Shout__ExpiryDate')),
+        Shout__IsMuted=False, Shout__IsDisabled=False).extra(select={'overall_rank': '(("Rank" * 2) + %s) / 3' % time_axis}).extra(
+        order_by=['overall_rank'])
+    if not shouts:
         return []
+    return [shout.Shout.trade for shout in shouts]
 
 
 # todo: use country, city, etc

@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from piston3.utils import rc
 from django.conf import settings
 
-from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
+from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION, PostType
 from apps.shoutit.controllers import user_controller
 from apps.shoutit.models import Shout, ConfirmToken, Profile, Business, Trade, PredefinedCity
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
@@ -423,12 +423,15 @@ def shouts_location_api(request, result, *args, **kwargs):
 
     if not result.errors:
         pre_json_result['shouts'] = []
-        for i in range(len(result.data['shoutsId'])):
+        for i in range(len(result.data['shout_pks'])):
             pre_json_result['shouts'].append({
-                'url': get_object_url(Shout(pk=result.data['shoutsId'][i])),
-                'longitude': result.data['locations'][i].split(' ')[1],
-                'latitude': result.data['locations'][i].split(' ')[0],
-                'type': result.data['shoutsTypes'][i]
+                'id': result.data['shout_pks'][i],
+                'location': {
+                    'latitude': result.data['locations'][i].split(' ')[0],
+                    'longitude': result.data['locations'][i].split(' ')[1],
+                },
+                'type': PostType.values[result.data['shout_types'][i]],
+                'name': result.data['shout_names'][i]
             })
         pre_json_result['count'] = len(pre_json_result['shouts'])
 

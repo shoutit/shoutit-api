@@ -49,10 +49,10 @@ class APITestCase(TestCase):
     def nearby_shouts(self):
         response = self.client.get('/api/shouts/nearby', {
             # Aachen BB "((50.75315090356295, 6.008417663574164), (50.79537870169773, 6.171753463745063))"
-            'DownLeftLat': '50.75315090356295',
-            'DownLeftLng': '6.008417663574164',
-            'UpRightLat': '50.79537870169773',
-            'UpRightLng': '6.171753463745063'
+            'down_left_lat': '50.75315090356295',
+            'down_left_lng': '6.008417663574164',
+            'up_right_lat': '50.79537870169773',
+            'up_right_lng': '6.171753463745063'
         }, follow=True)
         print(response)
         self.assertEqual(response.status_code, 200)

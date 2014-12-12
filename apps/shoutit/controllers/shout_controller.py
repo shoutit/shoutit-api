@@ -131,20 +131,32 @@ def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None
             trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
             trade.save()
 
-            SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
+            save_relocated_shouts(trade, STREAM_TYPE_RELATED)
             return trade
     return None
 
 
-def GetLandingShouts(DownLeftLat, DownLeftLng, UpRightLat, UpRightLng):
+def get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng):
     filters = {
-        'Latitude__gte': DownLeftLat,
-        'Latitude__lte': UpRightLat,
-        'Longitude__gte': DownLeftLng,
-        'Longitude__lte': UpRightLng,
+        'Latitude__gte': down_left_lat,
+        'Latitude__lte': up_right_lat,
+        'Longitude__gte': down_left_lng,
+        'Longitude__lte': up_right_lng,
     }
-    shouts = Trade.objects.GetValidTrades().filter(**filters).values('pk', 'Type', 'Longitude', 'Latitude')[:10000]
+    shouts = Trade.objects.GetValidTrades().filter(**filters).values('pk', 'Type', 'Longitude', 'Latitude', 'Item__Name')[:10000]
     return shouts
+
+
+def get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng):
+    if down_left_lng > up_right_lng:
+        right_shouts = get_shouts_in_view_port(down_left_lat, -180.0, up_right_lat, up_right_lng)
+        left_shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, 180.0)
+        from itertools import chain
+
+        shouts = list(chain(right_shouts, left_shouts))
+    else:
+        shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
+    return shouts, [[shout['Latitude'], shout['Longitude']] for shout in shouts]
 
 
 def GetStreamAffectedByShout(shout):
@@ -156,7 +168,7 @@ def GetStreamAffectedByShout(shout):
 
 
 @asynchronous_task()
-def SaveRecolatedShouts(trade, stream_type):
+def save_relocated_shouts(trade, stream_type):
     posts_type = POST_TYPE_BUY
     if stream_type == STREAM_TYPE_RECOMMENDED:
         if trade.Type == POST_TYPE_BUY:
@@ -166,7 +178,7 @@ def SaveRecolatedShouts(trade, stream_type):
     elif stream_type == STREAM_TYPE_RELATED:
         posts_type = trade.Type
 
-    shouts = stream_controller.GetShoutRecommendedShoutStream(trade, posts_type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
+    shouts = stream_controller.get_shout_recommended_shout_stream(trade, posts_type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
     stream = Stream(Type=stream_type)
     stream.save()
     if stream_type == STREAM_TYPE_RECOMMENDED:
@@ -224,8 +236,8 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
         trade.save()
 
-    SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
-    SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
+    save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
+    save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
     Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
@@ -265,8 +277,8 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
         trade.save()
 
-    SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
-    SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
+    save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
+    save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter.user, EVENT_TYPE_SHOUT_OFFER, trade)
     Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})

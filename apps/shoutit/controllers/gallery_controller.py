@@ -70,12 +70,13 @@ def ShoutItem(request, business, item, text, longitude, latitude, country_code, 
         trade.StreamsCode = str([f.pk for f in trade.Streams.all()])[1:-1]
         trade.save()
 
-    shout_controller.SaveRecolatedShouts(trade, STREAM_TYPE_RECOMMENDED)
-    shout_controller.SaveRecolatedShouts(trade, STREAM_TYPE_RELATED)
+    save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
+    save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(request.user, EVENT_TYPE_SHOUT_OFFER, trade)
     return trade
 
 
-from apps.shoutit.controllers import event_controller, shout_controller, item_controller
+from apps.shoutit.controllers import event_controller, item_controller
 from apps.shoutit.models import GalleryItem, Post, Trade, StoredImage
+from apps.shoutit.controllers.shout_controller import save_relocated_shouts
