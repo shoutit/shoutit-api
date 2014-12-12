@@ -49,7 +49,7 @@ def upload_image(request, method=None):
     if cloud_image:
         ret_json = {'success': True}
         if method == 'user_image':
-            profile = user_controller.GetProfile(request.user)
+            profile = request.user.abstract_profile
             profile.Image = cloud_image.container.cdn_uri + '/' + cloud_image.name
             profile.save()
         ret_json['url'] = cloud_image.container.cdn_uri + '/' + cloud_image.name

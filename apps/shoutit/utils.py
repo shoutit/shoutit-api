@@ -244,14 +244,15 @@ def asynchronous_task():
             @wraps(f, assigned=available_attrs(f))
             def _wrapper(*args, **kwargs):
                 try:
-                    #					from celery.task.control import inspect
-                    #					insp = inspect()
-                    #					d = insp.active()
-                    #					if not d:
+                    # from celery.task.control import inspect
+                    # insp = inspect()
+                    # d = insp.active()
+                    # if not d:
                     from libs.celery.celery_tasks_____asdasd import execute
 
                     execute.delay('', f.__module__, '', f.func_name, *args, **kwargs)
-                except Exception as e:
+                except Exception, e:
+                    print e
                     f(*args, **kwargs)
 
             _wrapper.func = f
@@ -294,6 +295,10 @@ def make_image_thumbnail(url, size, container_name):
 def make_cloud_thumbnails_for_image(image_url):
     make_image_thumbnail(image_url, 145, 'shout_image')
     make_image_thumbnail(image_url, 85, 'shout_image')
+
+def make_cloud_thumbnails_for_user_image(image_url):
+    make_image_thumbnail(image_url, 95, 'user_image')
+    make_image_thumbnail(image_url, 32, 'user_image')
 
 
 def to_seo_friendly(s, max_len=50):
@@ -395,8 +400,7 @@ def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
         obj = container.store_object(obj_name=filename, data=buff.buf, content_type=mimetypes.guess_type(filename))
 
         if container.name == 'user_image':
-            make_image_thumbnail(obj.container.cdn_uri + '/' + obj.name, 95, 'user_image')
-            make_image_thumbnail(obj.container.cdn_uri + '/' + obj.name, 32, 'user_image')
+            make_cloud_thumbnails_for_user_image(obj.container.cdn_uri + '/' + obj.name)
 
         return obj
     except Exception, e:
@@ -416,6 +420,6 @@ def cloud_upload_file(uploaded, container, filename, is_raw):
         obj = container.store_object(obj_name=filename, data=data, content_type=mimetypes.guess_type(filename))
         return obj
     except Exception, e:
-        pass
+        print e
     return None
 

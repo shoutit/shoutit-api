@@ -58,7 +58,8 @@ urlpatterns = patterns('',
 
                        url(r'^user/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.search_user
+                               'GET': user_views.search_user,
+                               'PUT': user_views.user_edit_profile
                            })
                        ),
 
@@ -280,8 +281,8 @@ urlpatterns = patterns('',
 
                        # Misc
 
-                       url(r'^upload/([-_\w]+)/$',
-                           TieredResource(TieredHandler, no_oauth, {
+                       url(r'^upload/([\w]+)/$',
+                           TieredResource(TieredHandler, oauth, {
                                'POST': shout_views.upload_image
                            })
                        ),
