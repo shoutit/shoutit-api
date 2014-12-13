@@ -78,13 +78,13 @@ def GetShoutTimeOrder(pk, country_code, province_code, limit=0):
         return 0
 
 
-def get_ranked_shouts_ids(user, rank_type_flag, country_code='', province_code='', lat=0.0, lng=0.0, start_index=None, end_index=None,
-                          filter_types=[], filter_query=None, filter_tags=[]):
+def get_ranked_shouts_ids(user, rank_type_flag, country_code='', city='', lat=0.0, lng=0.0, start_index=None, end_index=None,
+                          filter_types=[], filter_query=None, filter_tags=[], nearby_cities=None):
     # Selects shout IDs from database in the right order.
     # ---------------------------------------------------
     #		user: the User displaying shouts.
     #		rank_type_flag: determines the combination of the types of ranking you like to do.. (see constants.py).
-    #		country_code, province_code: filtering criteria.
+    #		country_code, city: filtering criteria.
     #		lat, lng: current location.
     #		start_index, end index: filtering criteria.
     #		filter_types: array of types you like to filter on(see constants.py for types).
@@ -140,7 +140,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country_code='', province_code='
     # Calculating the stream following rank attribute
     if int(rank_type_flag & FOLLOW_RANK_TYPE):
         if user is not None:
-            max_followings = MaxFollowings(user_followings_pks, country_code, province_code, filters)
+            max_followings = MaxFollowings(user_followings_pks, country_code, city, filters)
             #todo: find way to join tables
             #_connection = (None, Shout._meta.db_table, None)
             #shout_qs.query.join(connection=_connection)
@@ -215,10 +215,15 @@ def get_ranked_shouts_ids(user, rank_type_flag, country_code='', province_code='
     where_custom_clause.append(
         '(("shoutit_shout"."ExpiryDate" IS NULL AND "shoutit_post"."DatePublished" BETWEEN \'%s\' AND \'%s\') OR ("shoutit_shout"."ExpiryDate" IS NOT NULL AND now() < "shoutit_shout"."ExpiryDate"))' % (
             str(begin), str(today)))
-    if country_code and country_code <> '':
+    if country_code:
         where_custom_clause.append('"shoutit_post"."CountryCode" = \'%s\'' % country_code)
-    if province_code and province_code <> '':
-        where_custom_clause.append('LOWER("shoutit_post"."ProvinceCode") = \'%s\'' % unicode.lower(u'' + province_code))
+    if city:
+        if nearby_cities:
+            quoted_cities = ["'%s'" % c.lower() for c in nearby_cities]
+            where_custom_clause.append(u'LOWER("shoutit_post"."ProvinceCode") in (%s)' % ','.join(quoted_cities))
+        else:
+            where_custom_clause.append(u'LOWER("shoutit_post"."ProvinceCode") = \'%s\'' % city.lower())
+
     shout_qs = shout_qs.extra(where=where_custom_clause)
 
     if extra_order_bys != '':

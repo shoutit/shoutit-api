@@ -129,6 +129,9 @@ def index_stream(request):
     # todo: more cases of default location
     user_country = pre_city.Country
     user_city = pre_city.City
+    # todo: better nearby cities based on radius from main city
+    user_nearby_cities = PredefinedCity.objects.filter(Country=pre_city.Country)
+    user_nearby_cities = [nearby_city.City for nearby_city in user_nearby_cities]
     user_lat = user.profile.Latitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Latitude
     user_lng = user.profile.Longitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Longitude
 
@@ -173,8 +176,8 @@ def index_stream(request):
     if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
         all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
     else:
-        all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
-                                                             DEFAULT_HOME_SHOUT_COUNT, shout_types, query, tag_ids)
+        all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0, DEFAULT_HOME_SHOUT_COUNT,
+                                              shout_types, query, tag_ids, nearby_cities=user_nearby_cities)
         result.data['browse_in'] = user_city
         if request.session.session_key:
             TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
