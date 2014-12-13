@@ -34,9 +34,15 @@ def upload_image(request, method=None):
             filename = request.GET['qqfile']
         except KeyError:
             return HttpResponseBadRequest("AJAX request not valid")
+
+    elif request.is_api:
+        upload = request
+        is_raw = True
+        filename = 'WHATEVER.jpg'
+
     else:
         is_raw = False
-        if len(request.FILES) == 1:
+        if len(request.FILES) >= 1:
             upload = request.FILES.values()[0]
         else:
             return HttpResponseBadRequest("Bad Upload")

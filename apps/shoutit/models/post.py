@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import Q, Sum
 from django.conf import settings
 
-from common.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT
+from common.constants import POST_TYPE_DEAL, POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.stream import Stream
@@ -116,14 +116,14 @@ class Post(UUIDModel):
     Streams = models.ManyToManyField(Stream, related_name='Posts')  # todo: move to stream as posts
 
     Text = models.TextField(max_length=2000, default='', db_index=True)
-    Type = models.IntegerField(default=0, db_index=True)
+    Type = models.IntegerField(default=POST_TYPE_BUY.value, db_index=True, choices=PostType.choices)
     DatePublished = models.DateTimeField(auto_now_add=True, db_index=True)
 
     IsMuted = models.BooleanField(default=False, db_index=True)
     IsDisabled = models.BooleanField(default=False, db_index=True)
 
-    Longitude = models.FloatField(default=0.0)
     Latitude = models.FloatField(default=0.0)
+    Longitude = models.FloatField(default=0.0)
     CountryCode = models.CharField(max_length=2, db_index=True, null=True)
     ProvinceCode = models.CharField(max_length=200, db_index=True, null=True)
     Address = models.CharField(max_length=200, db_index=True, null=True)
