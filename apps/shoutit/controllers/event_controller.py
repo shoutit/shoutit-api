@@ -17,6 +17,7 @@ def RegisterEvent(user, type, attached_object=None):
 
     profile = get_profile(user.username)
     profile.Stream.PublishShout(event)
+    profile.stream2.add_post(event)
 
 
 # realtime_message = realtime_controller.WrapRealtimeMessage(render_event(event),RealtimeType.values[REALTIME_TYPE_EVENT])

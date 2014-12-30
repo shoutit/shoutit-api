@@ -1,7 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
-from django.core.exceptions import ObjectDoesNotExist
 
 from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade
 from apps.shoutit.controllers import email_controller, notifications_controller, shout_controller
@@ -17,7 +16,7 @@ def conversation_exist(conversation_id=None, user1=None, user2=None, about=None)
             )
         else:
             return False
-    except ObjectDoesNotExist:
+    except Conversation.DoesNotExist:
         return False
 
 
@@ -82,8 +81,8 @@ def getFullConversationDetails(conversations, user):
             else:
                 empty_conversations_to.append(conversation.pk)
             continue
-        conversation.AboutPost.SetImages([image for image in images if image.Item.pk == conversation.AboutPost.Item.pk])
-        conversation.AboutPost.SetTags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == conversation.AboutPost.pk])
+        conversation.AboutPost.set_images([image for image in images if image.Item.pk == conversation.AboutPost.Item.pk])
+        conversation.AboutPost.set_tags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == conversation.AboutPost.pk])
         last_message = list(conversation.messages)[-1]
         conversation.Text = last_message.Text[0:256] if last_message.Text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
@@ -127,7 +126,7 @@ def ReadConversation(user, conversation_id):
 def get_conversation(conversation_id, user=None):
     try:
         conversation = Conversation.objects.get(pk=conversation_id)
-    except ObjectDoesNotExist:
+    except Conversation.DoesNotExist:
         conversation = None
 
     if user is None:
@@ -145,7 +144,7 @@ def get_conversation(conversation_id, user=None):
 
 
 def get_shout_conversations(shout_id, user):
-    #todo: simplify
+    # todo: simplify
     shout = shout_controller.GetPost(shout_id, True, True)
     if user.is_authenticated() and user.pk == shout.OwnerUser.pk:
         conversations = Conversation.objects.filter(AboutPost=shout, ToUser=user, VisibleToRecivier=True).annotate(

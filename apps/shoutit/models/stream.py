@@ -58,7 +58,7 @@ class Stream(UUIDModel):
         self.save()
 
 
-######### experiment new stream
+# ######## experiment new stream ######### #
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -74,15 +74,23 @@ class Stream2(UUIDModel, AttachedObjectMixin):
         return unicode(self.pk) + ':' + StreamType2.values[self.type] + ' (' + unicode(self.attached_object) + ')'
 
     def __init__(self, *args, **kwargs):
-    # attached_object is the owner
+        # attached_object is the owner
         if 'attached_object' in kwargs and 'type' not in kwargs:
             attached_object = kwargs['attached_object']
             kwargs['type'] = StreamType2.texts[attached_object.__class__.__name__]
         super(Stream2, self).__init__(*args, **kwargs)
 
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType2.choices)
-    posts = models.ManyToManyField('Post', related_name='streams')
+    posts = models.ManyToManyField('Post', related_name='streams2')
     listeners = models.ManyToManyField(AUTH_USER_MODEL, through='Listen', related_name='listening')
+
+    def add_post(self, post):
+        self.posts.add(post)
+        self.save()
+
+    def remove_post(self, post):
+        self.posts.remove(post)
+        self.save()
 
 
 class Stream2Mixin(object):

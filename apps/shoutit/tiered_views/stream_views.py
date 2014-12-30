@@ -1,12 +1,11 @@
 from math import ceil
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from apps.shoutit.controllers.experience_controller import GetExperiences
 from apps.shoutit.controllers.stream_controller import get_trades_by_pks, get_ranked_shouts_ids, GetShoutTimeOrder
 
-from common.constants import POST_TYPE_SELL, POST_TYPE_BUY, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
+from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, DEFAULT_PAGE_SIZE, TIME_RANK_TYPE, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, \
     RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
 from apps.shoutit.models import Category, PredefinedCity, Tag
 from apps.shoutit.tiers import non_cached_view, ResponseResult, cached_view, CACHE_TAG_STREAMS, CACHE_LEVEL_GLOBAL
@@ -23,7 +22,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     result.data['predefined_cities'] = PredefinedCity.objects.all()
     try:
         pre_city = PredefinedCity.objects.get(city_encoded=url_encoded_city)
-    except ObjectDoesNotExist:
+    except PredefinedCity.DoesNotExist:
         pre_city = PredefinedCity.objects.get(city_encoded=DEFAULT_LOCATION['city_encoded'])
 
     result.data['browse_country'] = pre_city.Country
@@ -58,7 +57,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
     page_num = 1
     tag_ids = []
-    types = [POST_TYPE_SELL] if browse_type == 'offers' else [POST_TYPE_BUY] if browse_type == 'requests' else []
+    types = [POST_TYPE_OFFER] if browse_type == 'offers' else [POST_TYPE_REQUEST] if browse_type == 'requests' else []
     query = None
     category = browse_category
 
@@ -123,7 +122,7 @@ def index_stream(request):
     city = request.GET.get('city', user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city'])
     try:
         pre_city = PredefinedCity.objects.get(City=city)
-    except ObjectDoesNotExist:
+    except PredefinedCity.DoesNotExist:
         pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
 
     # todo: more cases of default location

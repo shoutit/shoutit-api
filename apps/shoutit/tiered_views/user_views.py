@@ -23,7 +23,7 @@ from renderers import activate_renderer_json, signin_renderer_json, json_rendere
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
 from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator, \
     push_validator
-from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_BUY, POST_TYPE_SELL, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
+from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, POST_TYPE_OFFER, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 from apps.shoutit.utils import to_seo_friendly
 from apps.shoutit.templatetags.template_filters import thumbnail
@@ -66,7 +66,7 @@ def activate_api(request, token):
     user_controller.CompleteSignUp(request, request.user, token, t.Type, form.cleaned_data['username'], email,
                                    form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthday'])
     result.messages.append(('success', _('You are now activated.')))
-    user_controller.GiveUserPermissions(request, ACTIVATED_USER_PERMISSIONS)
+    user_controller.give_user_permissions(request, ACTIVATED_USER_PERMISSIONS)
     return result
 
 
@@ -153,7 +153,7 @@ def activate_user(request):
                 email = source_email
             user_controller.CompleteSignUp(request, user, token, type, form.cleaned_data['username'], email,
                                            form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthday'])
-            user_controller.GiveUserPermissions(request, ACTIVATED_USER_PERMISSIONS)
+            user_controller.give_user_permissions(request, ACTIVATED_USER_PERMISSIONS)
     else:
         if request.user.profile.isSSS:
             init = {'tokentype': type, 'mobile': request.user.profile.Mobile, 'username': request.user.username}
@@ -186,7 +186,7 @@ def api_signup(request):
                                              password=form.cleaned_data['password'])
     result = ResponseResult()
     result.messages.append(('success', _('Congratulations! You are now a member of the Shout community.')))
-    user_controller.GiveUserPermissions(None, INITIAL_USER_PERMISSIONS, user)
+    user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
     return result
 
 
@@ -405,7 +405,7 @@ def signup(request):
         form.is_valid()
         user = user_controller.SignUpUser(request, form.cleaned_data['firstname'], form.cleaned_data['lastname'],
                                           form.cleaned_data['password'], form.cleaned_data['email'])
-        user_controller.GiveUserPermissions(None, INITIAL_USER_PERMISSIONS, user)
+        user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
     else:
         form = SignUpForm()
     result = ResponseResult()
@@ -435,7 +435,7 @@ def sss(request):
             if user is None:
                 user = user_controller.SignUpSSS(None, mobile=shout['mobile'], location=shout['location'],
                                                  country=shout['country'], city=shout['city'])
-                user_controller.GiveUserPermissions(None, INITIAL_USER_PERMISSIONS, user)
+                user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
             else:
                 user = user.user
         except BaseException, e:
@@ -453,8 +453,8 @@ def sss(request):
                     None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user,
-                    country_code=shout['country'],
-                    province_code=shout['city'], address='', images=shout['images'], issss=True,
+                    country=shout['country'],
+                    city=shout['city'], address='', images=shout['images'], issss=True,
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
             else:
@@ -462,8 +462,8 @@ def sss(request):
                     None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.get_profile(user.username),
-                    country_code=shout['country'],
-                    province_code=shout['city'], address='', images=shout['images'], issss=True,
+                    country=shout['country'],
+                    city=shout['city'], address='', images=shout['images'], issss=True,
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
 
@@ -581,14 +581,14 @@ def user_profile(request, username):
     result.data['profile'] = profile
     result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
 
-    result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).filter(OwnerUser=profile.user).count()
+    result.data['offers_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_OFFER]).filter(OwnerUser=profile.user).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
 
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, profile.stream2)
 
     if isinstance(profile, Profile):
-        result.data['requests_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).filter(OwnerUser=profile.user).count()
+        result.data['requests_count'] = Trade.objects.GetValidTrades(types=[POST_TYPE_REQUEST]).filter(OwnerUser=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
         result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
         fb_la = hasattr(profile.user, 'linked_facebook') and profile.user.linked_facebook or None
@@ -771,7 +771,7 @@ def user_stream(request, username):
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num
 
-    # result.data['shouts_count2'] = profile.Stream.Posts.filter(Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)).count()
+    # result.data['shouts_count2'] = profile.Stream.Posts.filter(Q(Type=POST_TYPE_REQUEST) | Q(Type=POST_TYPE_OFFER)).count()
     # result.data['shouts2'] = stream_controller.GetStreamShouts(profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num)
 
     result.data['shouts_count'] = stream_controller.get_stream_shouts_count(profile.Stream)

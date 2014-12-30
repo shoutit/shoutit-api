@@ -1,4 +1,3 @@
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from apps.shoutit.models import Item, StoredImage, Video, Currency
 from apps.shoutit.utils import make_cloud_thumbnails_for_image
 
@@ -24,7 +23,7 @@ def create_item(name, price, currency, images=None, videos=None, description='')
         try:
             make_cloud_thumbnails_for_image(images[0])
         except BaseException, e:
-            pass
+            print e
 
     if videos:
         for v in videos:
@@ -51,7 +50,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
 
     if images:
         images.sort()
-        old_images = item.GetImages()
+        old_images = item.get_images()
         if len(old_images):
             for old_img in old_images:
                 old_img.delete()
@@ -59,13 +58,13 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
     for image in images:
         try:
             existed = StoredImage.objects.get(Image__exact=image)
-        except ObjectDoesNotExist, e:
+        except StoredImage.DoesNotExist:
             stored_image = StoredImage()
             stored_image.Item = item
             stored_image.Image = image
             stored_image.save()
-        except MultipleObjectsReturned, e:
-            pass
+        except StoredImage.MultipleObjectsReturned, e:
+            print e
 
     if images:
         make_cloud_thumbnails_for_image(images[0])

@@ -131,13 +131,13 @@ def SetRecoveryToken(user):
     return token
 
 
-def SetRegisterToken(user, email, tokenLength, tokenType):
-    token = generate_confirm_token(tokenLength)
+def SetRegisterToken(user, email, token_length, token_type):
+    token = generate_confirm_token(token_length)
     db_token = ConfirmToken.getToken(token)
     while db_token is not None:
-        token = generate_confirm_token(tokenLength)
+        token = generate_confirm_token(token_length)
         db_token = ConfirmToken.getToken(token)
-    tok = ConfirmToken(Token=token, user=user, Email=email, Type=tokenType)
+    tok = ConfirmToken(Token=token, user=user, Email=email, Type=token_type)
     tok.save()
     profile = GetProfile(user)
     profile.LastToken = tok
@@ -257,6 +257,40 @@ def SignUpSSS(request, mobile, location, country, city):
     return django_user
 
 
+def sign_up_sss4(email, lat, lng, city, country):
+    token_type = TOKEN_TYPE_HTML_NUM
+    token_length = TOKEN_SHORT_UPPER
+
+    username = generate_username()
+    while len(User.objects.filter(username=username)):
+        username = generate_username()
+
+    password = generate_password()
+
+    django_user = User.objects.create_user(username, email, password)
+    django_user.is_active = False
+    django_user.save()
+
+    stream = Stream(Type=STREAM_TYPE_USER)
+    stream.save()
+
+    up = Profile(
+        user=django_user, Stream=stream, isSSS=True,
+        Latitude=lat, Longitude=lng, City=city, Country=country,
+        Image='/static/img/_user_male.png'
+    )
+    up.save()
+
+    if not PredefinedCity.objects.filter(City=up.City):
+        encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
+        PredefinedCity(City=up.City, city_encoded=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
+
+    token = SetRegisterToken(django_user, email, token_length, token_type)
+    django_user.token = token
+
+    return django_user
+
+
 def CompleteSignUpSSS(request, firstname, lastname, password, user, username, token, tokenType, email, sex, birthday):
     if tokenType == TOKEN_TYPE_HTML_NUM:
         user.email = email
@@ -365,10 +399,10 @@ def auth_with_gplus(request, gplus_user, credentials):
                           email=gplus_user['emails'][0]['value'], send_activation=False)
         CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender,
                        email=gplus_user['emails'][0]['value'], username=user.username, mobile='')
-        GiveUserPermissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
+        give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
     elif not user.is_active:
         complete_signup(request, user, gender)
-        GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
+        give_user_permissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_user['id'])
@@ -408,10 +442,10 @@ def auth_with_facebook(request, fb_user, auth_response):
                           send_activation=False)
         CompleteSignUp(request, user=user, token=user.token, tokenType=TOKEN_TYPE_HTML_EMAIL, sex=gender,
                        email=fb_user['email'], username=user.username, mobile='')
-        GiveUserPermissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
+        give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
     elif not user.is_active:
         complete_signup(request, user, gender)
-        GiveUserPermissions(None, ACTIVATED_USER_PERMISSIONS, user)
+        give_user_permissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
         la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
@@ -484,7 +518,7 @@ def FollowStream(request, follower, followed):
         followShip = FollowShip(follower=follower, stream=followed)
         followShip.save()
         follower.save()
-        Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_CREATED,
+        Logger.log(request, type=ACTIVITY_TYPE_LISTEN_CREATED,
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
         if followed.Type == STREAM_TYPE_USER:
             followedUser = Profile.objects.get(Stream=followed)
@@ -507,7 +541,7 @@ def UnfollowStream(request, follower, followed):
         followShip = FollowShip.objects.get(follower=follower, stream=followed)
         followShip.delete()
         follower.save()
-        Logger.log(request, type=ACTIVITY_TYPE_FOLLOWSHIP_REMOVED,
+        Logger.log(request, type=ACTIVITY_TYPE_LISTEN_REMOVED,
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
 
 
@@ -552,7 +586,7 @@ def update_profile_location(profile, location):
 
     try:
         PredefinedCity.objects.get(City=location['city'])
-    except PredefinedCity.DoesNotExist :
+    except PredefinedCity.DoesNotExist:
         encoded_city = to_seo_friendly(unicode.lower(unicode(location['city'])))
         PredefinedCity(City=location['city'], city_encoded=encoded_city, Country=location['country'], Latitude=location['latitude'],
                        Longitude=location['longitude']).save()
@@ -560,8 +594,8 @@ def update_profile_location(profile, location):
     return profile
 
 
-# todo: use the GiveUserPermission
-def GiveUserPermissions(request, permissions, user=None):
+# todo: use the give_user_permission
+def give_user_permissions(request, permissions, user=None):
     if request and not user:
         user = request.user
     for permission in permissions:
@@ -572,7 +606,7 @@ def GiveUserPermissions(request, permissions, user=None):
         permissions_changed.send(sender=None, request=request, permissions=permissions)
 
 
-def TakePermissionsFromUser(request, permissions):
+def take_permissions_from_user(request, permissions):
     for permission in permissions:
         if isinstance(permission, ConstantPermission):
             permission = permission.permission
@@ -580,21 +614,21 @@ def TakePermissionsFromUser(request, permissions):
     permissions_changed.send(sender=None, request=request, permissions=permissions)
 
 
-def GiveUserPermission(request, permission):
+def give_user_permission(request, permission):
     if isinstance(permission, ConstantPermission):
         permission = permission.permission
     UserPermission.objects.get_or_create(user=request.user, permission=permission)
     permissions_changed.send(sender=None, request=request, permissions=[permission])
 
 
-def TakePermissionFromUser(request, permission):
+def take_permission_from_user(request, permission):
     if isinstance(permission, ConstantPermission):
         permission = permission.permission
     UserPermission.objects.filter(user=request.user, permission=permission).delete()
     permissions_changed.send(sender=None, request=request, permissions=[permission])
 
 
-def GetNotifications(profile):
+def get_notifications(profile):
     if not hasattr(profile, 'notifications'):
         min_date = profile.user.Notifications.filter(ToUser=profile.user, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
         if min_date:
@@ -612,7 +646,7 @@ def GetNotifications(profile):
     return profile.notifications
 
 
-def GetAllNotifications(profile):
+def get_all_notifications(profile):
     if not hasattr(profile, 'all_notifications'):
         profile.all_notifications = list(profile.user.Notifications.order_by('-DateCreated'))
     return profile.all_notifications
@@ -623,7 +657,7 @@ def get_unread_notifications_count(profile):
     if not notifications:
         notifications = hasattr(profile, 'all_notifications') and profile.all_notifications
     if not notifications:
-        notifications = GetNotifications(profile)
+        notifications = get_notifications(profile)
     return len(filter(lambda n: not n.IsRead, notifications))
 
 

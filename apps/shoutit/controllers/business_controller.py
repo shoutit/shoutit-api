@@ -4,7 +4,7 @@ from django.conf import settings
 from apps.shoutit.models import User
 from common.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE
 from apps.shoutit.models import Stream, Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, BusinessCreateApplication, PredefinedCity
-from apps.shoutit.controllers.user_controller import GetProfile, SetRegisterToken, GiveUserPermissions
+from apps.shoutit.controllers.user_controller import GetProfile, SetRegisterToken, give_user_permissions
 from apps.shoutit.controllers import email_controller
 from apps.shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
 from apps.shoutit import utils
@@ -23,7 +23,7 @@ def GetBusiness(username):
 	except ValueError, e:
 		return None
 
-def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, country_code = None, province_code = None, address = None, source_type = BUSINESS_SOURCE_TYPE_NONE, source_id = None):
+def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, country = None, city = None, address = None, source_type = BUSINESS_SOURCE_TYPE_NONE, source_id = None):
 	username = utils.generate_username()
 	while len(User.objects.filter(username = username).select_related()):
 		username = utils.generate_username()
@@ -47,13 +47,13 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 			cat = None
 
 	bp = Business(user =  django_user, Category = cat, Stream = stream, Name = name,
-						 Latitude = latitude, Longitude = longitude, Country = country_code, City = province_code, Address = address)
+						 Latitude = latitude, Longitude = longitude, Country = country, City = city, Address = address)
 	bp.Image = '/static/img/_user_male.png'
 	bp.save()
 
-	if not PredefinedCity.objects.filter(City = province_code):
-		encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-		PredefinedCity(City = province_code, city_encoded = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
+	if not PredefinedCity.objects.filter(City = city):
+		encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
+		PredefinedCity(City = city, city_encoded = encoded_city, Country = country, Latitude = latitude, Longitude = longitude).save()
 
 	if source_id is not None:
 		source = BusinessSource(business = bp, Source = source_type, SourceID = source_id)
@@ -128,7 +128,7 @@ def SetTempRegisterToken(user, email, tokenLength, tokenType):
 	return token
 
 def SignUpBusiness(request, user, name, phone, website, category, about = None,
-				   latitude = 0.0, longitude = 0.0, country_code = None, province_code = None, address = None, documents = []):
+				   latitude = 0.0, longitude = 0.0, country = None, city = None, address = None, documents = []):
 
 	try:
 		cat = BusinessCategory.objects.get(pk = category)
@@ -150,8 +150,8 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 			ba.Category = cat
 			ba.Latitude = latitude
 			ba.Longitude = longitude
-			ba.Country = country_code
-			ba.City = province_code
+			ba.Country = country
+			ba.City = city
 			ba.Address = address
 
 		ba.Phone = phone
@@ -160,12 +160,12 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 
 	else:
 		ba = BusinessCreateApplication(user =  user, Category = cat, Name = name, Phone = phone, About = about, Website = website,
-					 Latitude = latitude, Longitude = longitude, Country = country_code, City = province_code, Address = address)
+					 Latitude = latitude, Longitude = longitude, Country = country, City = city, Address = address)
 	ba.save()
 
-	if not PredefinedCity.objects.filter(City = province_code):
-		encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-		PredefinedCity(City = province_code, city_encoded = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
+	if not PredefinedCity.objects.filter(City = city):
+		encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
+		PredefinedCity(City = city, city_encoded = encoded_city, Country = country, Latitude = latitude, Longitude = longitude).save()
 
 
 	if len(documents):
@@ -190,7 +190,7 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 	return ba
 
 def EditBusiness(request, username = None, name = None, password = None, email = None, phone=None, image = None,
-				 about = None, website = None, latitude = 0.0, longitude = 0.0, country_code = None, province_code = None, address = None):
+				 about = None, website = None, latitude = 0.0, longitude = 0.0, country = None, city = None, address = None):
 	if username:
 		business = GetBusiness(username)
 
@@ -212,19 +212,19 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 			business.Latitude = latitude
 		if longitude != 0.0:
 			business.Longitude = longitude
-		if country_code:
-			business.CountryCode = country_code
-		if province_code:
-			business.ProvinceCode = province_code
+		if country:
+			business.CountryCode = country
+		if city:
+			business.ProvinceCode = city
 		if address:
 			business.Address = address
 
 		business.user.save()
 		business.save()
 
-		if not PredefinedCity.objects.filter(City = province_code):
-			encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-			PredefinedCity(City = province_code, city_encoded = encoded_city, Country = country_code, Latitude = latitude, Longitude = longitude).save()
+		if not PredefinedCity.objects.filter(City = city):
+			encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
+			PredefinedCity(City = city, city_encoded = encoded_city, Country = country, Latitude = latitude, Longitude = longitude).save()
 
 
 		# TODO log editing activity
@@ -289,7 +289,7 @@ def AcceptBusiness(request, username):
 	ba.Status = BUSINESS_CONFIRMATION_STATUS_ACCEPTED
 	ba.save()
 
-	GiveUserPermissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
+	give_user_permissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
 
 	token = SetRegisterToken(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
 	email_controller.SendBusinessAcceptanceEmail(user.Business, user.email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'))

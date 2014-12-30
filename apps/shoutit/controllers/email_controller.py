@@ -514,7 +514,5 @@ def SendInvitationEmail(from_user, names_emails_dict):
         msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, ['%s <%s>' % (name, email)])
         msg.attach_alternative(html_message, "text/html")
         messages.append(msg)
-    connection = get_connection(backend='django.core.mail.backends.smtp.EmailBackend', fail_silently=True,
-                                host=settings.SEND_GRID_SMTP_HOST, username=settings.SEND_GRID_SMTP_USERNAME,
-                                password=settings.SEND_GRID_SMTP_PASSWORD)
+    connection = get_connection()
     connection.send_messages(messages)

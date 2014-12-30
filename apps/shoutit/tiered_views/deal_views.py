@@ -219,9 +219,9 @@ def close_deal(request, deal_id):
 def view_deals(request):
     result = ResponseResult()
     result.data['deals'] = deal_controller.GetOpenDeals(request.user.is_authenticated() and request.user or None,
-                                                        country_code=request.session.has_key('user_country') and request.session[
+                                                        country=request.session.has_key('user_country') and request.session[
                                                             'user_country'] or '',
-                                                        province_code=request.session.has_key('user_city') and request.session[
+                                                        city=request.session.has_key('user_city') and request.session[
                                                             'user_city'] or '')
     return result
 

@@ -4,7 +4,7 @@ from django.conf import settings
 
 from common.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from apps.shoutit.models.base import UUIDModel
-from apps.shoutit.models.stream import Stream
+from apps.shoutit.models.stream import Stream, Stream2Mixin
 from apps.shoutit.models.item import Item
 from apps.shoutit.models.tag import Category
 from apps.shoutit.models.misc import ConfirmToken, StoredFile
@@ -38,7 +38,7 @@ class BusinessCategory(UUIDModel):
         return unicode('%s > %s' % (self.Parent.PrintHierarchy(), self.Name)) if self.Parent else unicode(self.Name)
 
 
-class Business(UUIDModel):
+class Business(UUIDModel, Stream2Mixin):
     class Meta:
         app_label = 'shoutit'
 

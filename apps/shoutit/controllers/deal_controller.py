@@ -17,7 +17,7 @@ import urllib2
 
 
 def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min_buyers, max_buyers, original_price, business_profile,
-              country_code, province_code, valid_from=None, valid_to=None):
+              country, city, valid_from=None, valid_to=None):
     #currency = Currency.objects.get(Code__iexact = currency)
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images)
 
@@ -26,8 +26,8 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
         MaxBuyers=max_buyers,
         OriginalPrice=original_price,
         Item=item,
-        CountryCode=country_code,
-        ProvinceCode=province_code
+        CountryCode=country,
+        ProvinceCode=city
     )
     deal.Text = description
     deal.Type = POST_TYPE_DEAL
@@ -38,10 +38,15 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
     deal.save()
 
     stream = business_profile.Stream
+    stream2 = business_profile.stream2
+
     stream.PublishShout(deal)
+    stream2.add_post(deal)
+
     for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(None, tags, deal.OwnerUser):
         deal.Tags.add(tag)
         tag.Stream.PublishShout(deal)
+        tag.stream2.add_post(deal)
 
     event_controller.RegisterEvent(business_profile.user, EVENT_TYPE_POST_DEAL, deal)
     return deal
@@ -54,7 +59,7 @@ def GetConcurrentDeals(business_profile):
 def get_image_for_voucher(voucher_band):
     import Image
 
-    image_url = voucher_band.instance.DealBuy.Deal.Item.GetFirstImage()
+    image_url = voucher_band.instance.DealBuy.Deal.Item.get_first_image()
     if image_url:
         img_file = urllib2.urlopen(image_url)
         return Image.open(StringIO.StringIO(img_file.read()))
@@ -285,16 +290,16 @@ def GetDeal(deal_id):
     raise ObjectDoesNotExist
 
 
-def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, country_code='', province_code=''):
+def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, country='', city=''):
     now = datetime.now()
     qs = Deal.objects.filter(ExpiryDate__gt=now, IsDisabled=False, IsMuted=False, IsClosed=False).select_related('shout', 'post',
                                                                                                                  'OwnerUser',
                                                                                                                  'OwnerUser__Profile',
                                                                                                                  'Item', 'Item__Currency')
-    if country_code:
-        qs = qs.filter(CountryCode=country_code)
-    if province_code:
-        qs = qs.filter(ProvinceCode=province_code)
+    if country:
+        qs = qs.filter(CountryCode=country)
+    if city:
+        qs = qs.filter(ProvinceCode=city)
     if business:
         qs = qs.filter(OwnerUser=business.user)
     qs = qs.extra(select={

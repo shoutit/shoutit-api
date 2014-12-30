@@ -60,9 +60,9 @@ class Profile(AbstractProfile):
     isSSS = models.BooleanField(default=False, db_index=True)
     isSMS = models.BooleanField(default=False, db_index=True)
 
-    #	State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
+    # State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
 
-    def GetNotifications(self):
+    def get_notifications(self):
         if not hasattr(self, 'notifications'):
             min_date = self.user.Notifications.filter(ToUser=self.user, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
             if min_date:
@@ -79,7 +79,7 @@ class Profile(AbstractProfile):
             self.notifications = notifications
         return self.notifications
 
-    def GetAllNotifications(self):
+    def get_all_notifications(self):
         if not hasattr(self, 'all_notifications'):
             self.all_notifications = list(self.user.Notifications.order_by('-DateCreated'))
         return self.all_notifications
@@ -89,7 +89,7 @@ class Profile(AbstractProfile):
         if not notifications:
             notifications = hasattr(self, 'all_notifications') and self.all_notifications
         if not notifications:
-            notifications = self.GetNotifications()
+            notifications = self.get_notifications()
         return len(filter(lambda n: not n.IsRead, notifications))
 
     def GetTagsCreated(self):

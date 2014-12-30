@@ -16,33 +16,30 @@ class Item(UUIDModel):
     State = models.IntegerField(default=0, db_index=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
-    def GetImages(self):
-        if hasattr(self, 'images'):
-            return self.images
-        else:
-            self.images = list(self.Images.all().order_by('Image'))
-            return self.images
+    def get_images(self):
+        if not hasattr(self, '_images'):
+            self._images = list(self.Images.all().order_by('Image'))
+        return self._images
 
-    def SetImages(self, images):
+    def set_images(self, images):
         images = sorted(images, key=lambda img: img.Image)
-        self.images = images
+        self._images = images
 
-    def GetFirstImage(self):
-        return self.GetImages() and self.GetImages()[0] or None
+    def get_first_image(self):
+        images = self.get_images()
+        return images and images[0] or None
 
     def get_videos(self):
-        if hasattr(self, '_videos'):
-            return self._videos
-        else:
+        if not hasattr(self, '_videos'):
             self._videos = list(self.videos.all())
-            return self._videos
+        return self._videos
 
     def set_videos(self, videos):
         self._videos = videos
 
-    #TODO
     def get_first_video(self):
-        pass
+        videos = self.get_videos()
+        return videos and videos[0] or None
 
 
 class Currency(UUIDModel):

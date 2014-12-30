@@ -95,7 +95,7 @@ Replace this with more appropriate tests for your application.
 #         shout = ShoutController.GetPost(self.ids[0])
 #         self.assertNotEqual(shout, None, 'Could not retrieve shout_buy_0')
 #         if shout:
-#             self.assertEqual(shout.Type, POST_TYPE_BUY, "Could not retrieve the correct shout: shout_buy_0")
+#             self.assertEqual(shout.Type, POST_TYPE_REQUEST, "Could not retrieve the correct shout: shout_buy_0")
 #             self.assertEqual(shout.Text, 'this is shout__buy_0', "Could not retrieve the correct shout: shout_buy_0")
 #
 #         ShoutController.DeletePost(self.ids[1])

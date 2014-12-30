@@ -947,7 +947,7 @@ def gallery_item_json_renderer(request, result, message=_('Your item was added s
             'description': result.data['item'].Description,
             'price': result.data['item'].Price,
             'currency': result.data['item'].Currency.Code,
-            'images': [image.Image for image in result.data['item'].GetImages()]
+            'images': [image.Image for image in result.data['item'].get_images()]
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:

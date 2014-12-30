@@ -262,8 +262,8 @@ class PostType(Constant):
         post_types[text] = self.value
 
 
-POST_TYPE_BUY = PostType('Request')
-POST_TYPE_SELL = PostType('Offer')
+POST_TYPE_REQUEST = PostType('Request')
+POST_TYPE_OFFER = PostType('Offer')
 POST_TYPE_EXPERIENCE = PostType('Experience')
 POST_TYPE_DEAL = PostType('Deal')
 POST_TYPE_EVENT = PostType('Event')
@@ -277,8 +277,8 @@ ACTIVITY_TYPE_SIGN_IN_SUCCESS = ActivityType('Sign In Success')
 ACTIVITY_TYPE_SIGN_IN_FAILED = ActivityType('Sign In Failed')
 ACTIVITY_TYPE_SIGN_OUT = ActivityType('Sign Out')
 ACTIVITY_TYPE_SIGN_UP = ActivityType('Sign Up')
-ACTIVITY_TYPE_FOLLOWSHIP_CREATED = ActivityType('Listen Created')
-ACTIVITY_TYPE_FOLLOWSHIP_REMOVED = ActivityType('Listen Removed')
+ACTIVITY_TYPE_LISTEN_CREATED = ActivityType('Listen Created')
+ACTIVITY_TYPE_LISTEN_REMOVED = ActivityType('Listen Removed')
 ACTIVITY_TYPE_TAG_CREATED = ActivityType('Tag Created')
 ACTIVITY_TYPE_SHOUT_BUY_CREATED = ActivityType('Shout Buy Created')
 ACTIVITY_TYPE_SHOUT_SELL_CREATED = ActivityType('Shout Sell Created')
@@ -380,6 +380,8 @@ DEFAULT_LOCATION = {
     'latitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][0],
     'longitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][1]
 }
+
+DEFAULT_CURRENCY_CODE = 'USD'
 
 
 class PaymentStatus(Constant):

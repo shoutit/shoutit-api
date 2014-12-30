@@ -8,9 +8,9 @@ from apps.shoutit.utils import full_image_path
 
 
 def render_shout(shout, level=5):
-    images = [image.Image for image in shout.GetImages()]
+    images = [image.Image for image in shout.get_images()]
     videos = [render_video(video) for video in shout.get_videos()]
-    tags = [render_tag(tag) for tag in shout.GetTags()]
+    tags = [render_tag(tag) for tag in shout.get_tags()]
 
     shout_json = {
         'id': shout.pk,
@@ -19,7 +19,7 @@ def render_shout(shout, level=5):
         'description': shout.Text,
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
-        'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.GetFirstImage().Image if images else '',
+        'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().Image if images else '',
         'date_created': shout.DatePublished.strftime('%s'),
         'url': get_object_url(shout),
         'user': render_user(shout.OwnerUser, level=2),
@@ -360,7 +360,7 @@ def render_currency(currency):
 
 
 def render_post(post):
-    if post.Type == POST_TYPE_BUY or post.Type == POST_TYPE_SELL:
+    if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
         return render_shout(post)
     #	elif post.Type == POST_TYPE_DEAL:
     #		return render_deal(post)

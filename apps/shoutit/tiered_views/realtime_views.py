@@ -132,9 +132,9 @@ def notifications(request):
     result = ResponseResult()
     profile = user_controller.GetProfile(request.user)
     if request.is_ajax() or (hasattr(request, 'is_api') and request.is_api):
-        result.data['notifications'] = user_controller.GetNotifications(profile)
+        result.data['notifications'] = user_controller.get_notifications(profile)
     else:
-        result.data['notifications'] = user_controller.GetAllNotifications(profile)
+        result.data['notifications'] = user_controller.get_all_notifications(profile)
 
     notifications_controller.mark_all_as_read(request.user)
     return result
@@ -160,7 +160,7 @@ def unread_notifications_count(request):
              login_required=True)
 def notifications_all(request):
     result = ResponseResult()
-    result.data['notifications'] = user_controller.GetAllNotifications(request.user.profile)
+    result.data['notifications'] = user_controller.get_all_notifications(request.user.profile)
     notifications_controller.mark_all_as_read(request.user)
     return result
 

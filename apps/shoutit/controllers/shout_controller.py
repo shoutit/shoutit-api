@@ -5,7 +5,7 @@ from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
 
-from common.constants import POST_TYPE_SELL, POST_TYPE_BUY, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE
+from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
 from common.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
@@ -26,17 +26,17 @@ def GetPost(post_id, find_muted=False, find_expired=False):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         begin = today - days
         post = post.filter(
-            (~Q(Type=POST_TYPE_BUY) & ~Q(Type=POST_TYPE_SELL))
+            (~Q(Type=POST_TYPE_REQUEST) & ~Q(Type=POST_TYPE_OFFER))
             |
             ((Q(shout__ExpiryDate__isnull=True, DatePublished__range=(begin, today))
 
               | Q(shout__ExpiryDate__isnull=False, DatePublished__lte=F('shout__ExpiryDate'))
              )
-             & (Q(Type=POST_TYPE_BUY) | Q(Type=POST_TYPE_SELL)))
+             & (Q(Type=POST_TYPE_REQUEST) | Q(Type=POST_TYPE_OFFER)))
         ).select_related(depth=2)
     if post:
         post = post[0]
-        if post.Type == POST_TYPE_SELL or post.Type == POST_TYPE_BUY:
+        if post.Type == POST_TYPE_OFFER or post.Type == POST_TYPE_REQUEST:
             return post.shout.trade
         elif post.Type == POST_TYPE_EXPERIENCE:
             return post.experience
@@ -52,7 +52,7 @@ def DeletePost(post_id):
         post.IsDisabled = True
         post.save()
         try:
-            if post.Type == POST_TYPE_BUY or post.Type == POST_TYPE_SELL:
+            if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
                 event_controller.DeleteEventAboutObj(post.shout.trade)
             elif post.Type == POST_TYPE_DEAL:
                 event_controller.DeleteEventAboutObj(post.shout.deal)
@@ -89,14 +89,14 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country_code=None,
-              province_code=None, address=None, currency=None, images=[], date_published=None, stream=None):
+def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
+              city=None, address=None, currency=None, images=[], date_published=None):
     trade = Trade.objects.get(pk=shout_id)
 
     if not trade:
         raise ObjectDoesNotExist()
     else:
-        if trade.Type == POST_TYPE_BUY or trade.Type == POST_TYPE_SELL:
+        if trade.Type == POST_TYPE_REQUEST or trade.Type == POST_TYPE_OFFER:
 
             if text:
                 trade.Text = text
@@ -106,10 +106,10 @@ def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None
                 trade.Latitude = latitude
             if shouter:
                 trade.shouter = shouter
-            if province_code:
-                trade.ProvinceCode = province_code
-            if country_code:
-                trade.CountryCode = country_code
+            if city:
+                trade.ProvinceCode = city
+            if country:
+                trade.CountryCode = country
             if address:
                 trade.Address = address
             if date_published:
@@ -117,17 +117,13 @@ def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None
 
             item_controller.edit_item(trade.trade.Item, name, price, images, currency)
 
-            if stream and trade.Stream != stream:
-                trade.Stream.UnPublishShout(trade)
-                trade.Stream = stream
-                stream.PublishShout(trade)
-
             if len(tags) and shouter:
                 trade.OwnerUser = shouter
                 trade.Tags.clear()
                 for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
                     trade.Tags.add(tag)
                     tag.Stream.PublishShout(trade)
+                    tag.stream2.add_post(trade)
             trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
             trade.save()
 
@@ -169,12 +165,12 @@ def GetStreamAffectedByShout(shout):
 
 @asynchronous_task()
 def save_relocated_shouts(trade, stream_type):
-    posts_type = POST_TYPE_BUY
+    posts_type = POST_TYPE_REQUEST
     if stream_type == STREAM_TYPE_RECOMMENDED:
-        if trade.Type == POST_TYPE_BUY:
-            posts_type = POST_TYPE_SELL
-        elif trade.Type == POST_TYPE_SELL:
-            posts_type = POST_TYPE_BUY
+        if trade.Type == POST_TYPE_REQUEST:
+            posts_type = POST_TYPE_OFFER
+        elif trade.Type == POST_TYPE_OFFER:
+            posts_type = POST_TYPE_REQUEST
     elif stream_type == STREAM_TYPE_RELATED:
         posts_type = trade.Type
 
@@ -201,23 +197,23 @@ def save_relocated_shouts(trade, stream_type):
     trade.save()
 
 
-def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, country_code, province_code, address,
-              currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
-    if stream is None:
-        stream = shouter.profile.Stream
+def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+              currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
+    stream = shouter.Stream
+    stream2 = shouter.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
-    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_BUY, Item=item,
-                  CountryCode=country_code, ProvinceCode=province_code, Address=address, IsSSS=issss)
+    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_REQUEST, Item=item,
+                  CountryCode=country, ProvinceCode=city, Address=address, IsSSS=is_sss)
     trade.save()
 
-    #todo: check which to save encoded city or just normal. expectations are to get normal city from user
-    encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-    predefined_city = PredefinedCity.objects.filter(City=province_code)
+    # todo: check which to save encoded city or just normal. expectations are to get normal city from user
+    encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
+    predefined_city = PredefinedCity.objects.filter(City=city)
     if not predefined_city:
             predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(City=province_code, city_encoded=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
+        PredefinedCity(City=city, city_encoded=encoded_city, Country=country, Latitude=latitude, Longitude=longitude).save()
 
     if date_published:
         trade.DatePublished = date_published
@@ -228,9 +224,12 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
         trade.save()
 
     stream.PublishShout(trade)
+    stream2.add_post(trade)
+
     for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
+        tag.stream2.add_post(trade)
 
     if trade:
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
@@ -245,14 +244,14 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
     return trade
 
 
-def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, country_code, province_code, address,
-               currency, images=None, videos=None, date_published=None, stream=None, issss=False, exp_days=None):
-    if stream is None:
-        stream = shouter.Stream
+def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
+    stream = shouter.Stream
+    stream2 = shouter.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
-    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter.user, Type=POST_TYPE_SELL,
-                  Item=item, CountryCode=country_code, ProvinceCode=province_code, Address=address, IsSSS=issss)
+    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter.user, Type=POST_TYPE_OFFER,
+                  Item=item, CountryCode=country, ProvinceCode=city, Address=address, IsSSS=is_sss)
 
     if date_published:
         trade.DatePublished = date_published
@@ -261,17 +260,20 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
         trade.ExpiryDate = exp_days and datetime.today() + timedelta(days=exp_days) or None
     trade.save()
 
-    encoded_city = to_seo_friendly(unicode.lower(unicode(province_code)))
-    predefined_city = PredefinedCity.objects.filter(City=province_code)
+    encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
+    predefined_city = PredefinedCity.objects.filter(City=city)
     if not predefined_city:
             predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(City=province_code, city_encoded=encoded_city, Country=country_code, Latitude=latitude, Longitude=longitude).save()
+        PredefinedCity(City=city, city_encoded=encoded_city, Country=country, Latitude=latitude, Longitude=longitude).save()
 
     stream.PublishShout(trade)
+    stream2.add_post(trade)
+
     for tag in tag_controller.GetOrCreateTags(request, tags, shouter.user):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
+        tag.stream2.add_post(trade)
 
     if trade:
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
@@ -289,7 +291,7 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
 def get_trade_images(trades):
     images = StoredImage.objects.filter(Shout__pk__in=[trade.pk for trade in trades]).order_by('Image').select_related('Item')
     for i in range(len(trades)):
-        trades[i].Item.SetImages([image for image in images if image.Item_id == trades[i].Item.pk])
+        trades[i].Item.set_images([image for image in images if image.Item_id == trades[i].Item.pk])
         images = [image for image in images if image.Item_id != trades[i].Item.pk]
     return trades
 

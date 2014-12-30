@@ -20,7 +20,7 @@ from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
 from django.conf import settings
 
-from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_BUY, POST_TYPE_SELL
+from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
 from apps.shoutit.models import Experience
 
 
@@ -331,7 +331,7 @@ def shout_link(post):
             's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, experience_type, post_id, about, city)
     else:
         shout = post
-        shout_type = 'request' if shout.Type == POST_TYPE_BUY else 'offer' if shout.Type == POST_TYPE_SELL else 'shout'
+        shout_type = 'request' if shout.Type == POST_TYPE_REQUEST else 'offer' if shout.Type == POST_TYPE_OFFER else 'shout'
         etc = to_seo_friendly(shout.Item.Name if hasattr(shout, 'Item') else shout.trade.Item.Name)
         city = to_seo_friendly(unicode.lower(shout.ProvinceCode))
         link = 'http%s://%s/%s/%s/%s-%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, shout_type, post_id, etc, city)

@@ -144,7 +144,7 @@ def shout_item(request, item_id):
         result.messages.append(('success', _('Your shout was shouted!')))
 
         if not request.user.is_active and Shout.objects.filter(OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
-            user_controller.TakePermissionFromUser(request, PERMISSION_SHOUT_MORE)
+            user_controller.take_permission_from_user(request, PERMISSION_SHOUT_MORE)
 
     else:
         form = ShoutForm()

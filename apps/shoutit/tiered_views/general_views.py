@@ -236,7 +236,7 @@ def modal(request, template=None):
                 'form': ShoutForm(initial={
                     'price': shout.Item.Price,
                     'name': shout.Item.Name,
-                    'tags': ' '.join([tag.Name for tag in shout.GetTags()]),
+                    'tags': ' '.join([tag.Name for tag in shout.get_tags()]),
                     'location': '%f,%f' % (shout.Latitude, shout.Longitude),
                     'description': shout.Text,
                     'currency': shout.Item.Currency.Code
@@ -250,7 +250,7 @@ def modal(request, template=None):
         if item:
             variables = RequestContext(request, {
                 'item_id': request.GET['id'],
-                'images': [image.Image for image in item.GetImages()],
+                'images': [image.Image for image in item.get_images()],
                 'form': ShoutForm(initial={
                     'price': item.Price,
                     'name': item.Name,
@@ -312,15 +312,15 @@ def admin_stats(request):
             result.data['fb'] = LinkedFacebookAccount.objects.all().values('facebook_id').distinct().count()
             result.data['users_s'] = result.data['users_e'] - result.data['sss'] - result.data['fb']
 
-            result.data['shouts_req'] = Trade.objects.GetValidTrades(types=[POST_TYPE_BUY]).count()
-            result.data['shouts_ofr'] = Trade.objects.GetValidTrades(types=[POST_TYPE_SELL]).count()
+            result.data['shouts_req'] = Trade.objects.GetValidTrades(types=[POST_TYPE_REQUEST]).count()
+            result.data['shouts_ofr'] = Trade.objects.GetValidTrades(types=[POST_TYPE_OFFER]).count()
             result.data['shouts_exp'] = Post.objects.GetValidPosts().filter(Type=POST_TYPE_EXPERIENCE).count()
             result.data['shouts'] = result.data['shouts_req'] + result.data['shouts_ofr'] + result.data['shouts_exp']
-            result.data['shouts_a'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(
+            result.data['shouts_a'] = Trade.objects.GetValidTrades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
                 OwnerUser__pk__in=users_a).count()
-            result.data['shouts_e'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(
+            result.data['shouts_e'] = Trade.objects.GetValidTrades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
                 OwnerUser__pk__in=users_e).count()
-            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_BUY, POST_TYPE_SELL]).filter(OwnerUser__pk__in=users_e,
+            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(OwnerUser__pk__in=users_e,
                                                                                                            IsSSS=False).count()
 
             result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()

@@ -54,17 +54,20 @@ def DeleteItemFromGallery(item_id):
 #		gallery_item.IsMuted = True
 #		gallery_item.save()
 
-def ShoutItem(request, business, item, text, longitude, latitude, country_code, province_code, address, tags):
+def ShoutItem(request, business, item, text, longitude, latitude, country, city, address, tags):
     stream = business.Business.Stream
+    stream2 = business.Business.stream2
     trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=business,
-                  Type=POST_TYPE_SELL, Item=item, CountryCode=country_code, ProvinceCode=province_code, Address=address)
+                  Type=POST_TYPE_OFFER, Item=item, CountryCode=country, ProvinceCode=city, Address=address)
 
     trade.save()
 
     stream.PublishShout(trade)
+    stream2.add_post(trade)
     for tag in GetOrCreateTags(request, tags, business):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
+        tag.stream2.add_post(trade)
 
     if trade:
         trade.StreamsCode = str([f.pk for f in trade.Streams.all()])[1:-1]

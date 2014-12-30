@@ -42,7 +42,7 @@ def signup_temp(request, tiny_username=None):
         form.is_valid()
 
         user = business_controller.SignUpTempBusiness(request, form.cleaned_data['email'], form.cleaned_data['password'], True, business)
-        user_controller.GiveUserPermissions(None, ANONYMOUS_USER_PERMISSIONS, user)
+        user_controller.give_user_permissions(None, ANONYMOUS_USER_PERMISSIONS, user)
     else:
         form = BusinessTempSignUpForm(initial=init)
 
@@ -145,8 +145,8 @@ def signup(request, token=None):
                 application = business_controller.SignUpBusiness(request, user, tiny_business_form.cleaned_data['name'],
                                                                  form.cleaned_data['phone'], form.cleaned_data['website'],
                                                                  category, form.cleaned_data['description'],
-                                                                 latitude=lat, longitude=lng, country_code=country,
-                                                                 province_code=city, address=address,
+                                                                 latitude=lat, longitude=lng, country=country,
+                                                                 city=city, address=address,
                                                                  documents=files)
                 application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION
                 application.save()

@@ -324,6 +324,12 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                       url(r'^sss4/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'POST': shout_views.shout_sss4
+                           })
+                       ),
+
                        # TODO: deprecate?
                        url(r'^session/$',
                            TieredResource(TieredHandler, no_oauth, {
@@ -399,4 +405,13 @@ urlpatterns = patterns('',
                                'POST': comment_views.comment_on_post
                            })
                        ),
+
+                       # inbound
+                       url(r'^in/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'GET': shout_views.inbound_email,
+                               'POST': shout_views.inbound_email
+                           })
+                       ),
+
 )

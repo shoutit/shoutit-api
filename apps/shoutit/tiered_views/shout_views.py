@@ -7,13 +7,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from numpy import argmin, sqrt, sum
 
-from apps.shoutit.controllers.shout_controller import get_shouts_and_points_in_view_port
-
 from common.constants import LOCATION_ATTRIBUTES, POST_TYPE_EXPERIENCE
 from apps.shoutit.models import Shout
-from apps.shoutit.controllers import shout_controller, stream_controller, user_controller, message_controller
+
+from apps.shoutit.controllers.message_controller import get_shout_conversations, ReadConversation
+from apps.shoutit.controllers.stream_controller import get_ranked_stream_shouts
+from apps.shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, get_profile, take_permission_from_user
+from apps.shoutit.controllers import shout_controller
+
 from apps.shoutit.forms import ShoutForm, ReportForm, MessageForm
-from apps.shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER
+from apps.shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER, INITIAL_USER_PERMISSIONS
 from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_brief_api, shout_form_renderer_api, \
     shout_api, object_page_html, operation_api, json_data_renderer, shouts_location_api, shouts_clusters_api
 from apps.shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, \
@@ -172,8 +175,8 @@ def shout_buy(request):
                                                           longitude=longitude,
                                                           tags=form.cleaned_data['tags'].split(' '),
                                                           shouter=request.user,
-                                                          country_code=country,
-                                                          province_code=city,
+                                                          country=country,
+                                                          city=city,
                                                           address=address,
                                                           currency=form.cleaned_data['currency'],
                                                           images=images, videos=videos)
@@ -181,7 +184,7 @@ def shout_buy(request):
         result.messages.append(('success', _('Your shout was shouted!')))
 
         if not request.user.is_active and Shout.objects.filter(OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
-            user_controller.TakePermissionFromUser(request, PERMISSION_SHOUT_MORE)
+            take_permission_from_user(request, PERMISSION_SHOUT_MORE)
 
     else:
         form = ShoutForm()
@@ -256,9 +259,9 @@ def shout_sell(request):
                                                            latitude=latitude,
                                                            longitude=longitude,
                                                            tags=form.cleaned_data['tags'].split(' '),
-                                                           shouter=user_controller.get_profile(request.user.username),
-                                                           country_code=country,
-                                                           province_code=city,
+                                                           shouter=get_profile(request.user.username),
+                                                           country=country,
+                                                           city=city,
                                                            address=address,
                                                            currency=form.cleaned_data['currency'],
                                                            images=images, videos=videos)
@@ -266,7 +269,7 @@ def shout_sell(request):
         result.messages.append(('success', _('Your shout was shouted!')))
 
         if not request.user.is_active and Shout.objects.filter(OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
-            user_controller.TakePermissionFromUser(request, PERMISSION_SHOUT_MORE)
+            take_permission_from_user(request, PERMISSION_SHOUT_MORE)
 
     else:
         form = ShoutForm()
@@ -298,7 +301,7 @@ def shout_edit(request, shout_id):
     shout = shout_controller.EditShout(request=request, shout_id=shout_id, name=form.cleaned_data['name'],
                                        text=form.cleaned_data['description'], price=form.cleaned_data['price'],
                                        latitude=latitude, longitude=longitude, tags=form.cleaned_data['tags'].split(' '),
-                                       shouter=shouter, country_code=form.cleaned_data['country'], province_code=form.cleaned_data['city'],
+                                       shouter=shouter, country=form.cleaned_data['country'], city=form.cleaned_data['city'],
                                        address=form.cleaned_data['address'], currency=form.cleaned_data['currency'], images=images)
     result.data['next'] = shout_link(shout)
     return result
@@ -323,10 +326,10 @@ def shout_view(request, shout_id):
     result.data['owner'] = (shout.OwnerUser == request.user or request.user.is_staff)
 
     if request.user == shout.OwnerUser:
-        shouts = stream_controller.get_ranked_stream_shouts(shout.RecommendedStream)
+        shouts = get_ranked_stream_shouts(shout.RecommendedStream)
         result.data['shouts_type'] = 'Recommended'
     else:
-        shouts = stream_controller.get_ranked_stream_shouts(shout.RelatedStream)
+        shouts = get_ranked_stream_shouts(shout.RelatedStream)
         result.data['shouts_type'] = 'Related'
 
     result.data['shouts'] = shouts
@@ -339,12 +342,12 @@ def shout_view(request, shout_id):
     result.data['desc'] = shout.Text
 
     if request.user.is_authenticated():
-        conversations = message_controller.get_shout_conversations(shout_id, request.user)
+        conversations = get_shout_conversations(shout_id, request.user)
         if not conversations:
             result.data['new_message'] = True
         elif len(conversations) == 1:
             result.data['conversation'] = conversations[0]
-            conversations[0].messages = message_controller.ReadConversation(request.user, conversations[0].pk)
+            conversations[0].messages = ReadConversation(request.user, conversations[0].pk)
             result.data['conversation_messages'] = conversations[0].messages
             if not result.data['conversation_messages']:
                 result.data['new_message'] = True
@@ -370,7 +373,7 @@ def nearby_shouts(request):
     up_right_lng = float(request.GET.get('up_right_lng'))
     zoom = int(request.GET.get('zoom'))
 
-    shouts, shout_points = get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
+    shouts, shout_points = shout_controller.get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
     # todo: refactor
     if len(shout_points) <= 1:
         if len(shout_points) == 1:
@@ -529,3 +532,39 @@ def load_clusters(request):
     result.data['se_latitude'] = topLeftLatitude + sixthLatitude + 2 * thirdLatitude
 
     return result
+
+
+@csrf_exempt
+def inbound_email(request, method=None):
+    data = request.POST or request.GET or {}
+    print data
+    return JsonResponse(data)
+
+
+def shout_sss4(request):
+    data = request.json_data
+    shout = data['shout']
+    try:
+        user = sign_up_sss4(email=shout['cl_email'], lat=shout['lat'], lng=shout['lng'], city=shout['city'], country=shout['country'])
+        give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
+    except BaseException, e:
+        return JsonResponseBadRequest({'error': "User Creation Error: " + str(e)})
+
+    try:
+        if shout['type'] == 'request':
+            shout = shout_controller.shout_buy(
+                None, name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
+                latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
+                tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
+            )
+        elif shout['type'] == 'offer':
+            shout = shout_controller.shout_sell(
+                None, name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
+                latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
+                tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
+            )
+
+    except BaseException, e:
+        return JsonResponseBadRequest({'error': "Shout Creation Error: " + str(e)})
+
+    return JsonResponse({'success': True})
