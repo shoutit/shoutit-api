@@ -63,8 +63,8 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?reply/([-\w]+)/(?:([-\w]+)/)?$', 'apps.shoutit.tiered_views.message_views.send_message'),
 
 
-                       url(r'^(?:xhr/)?deleteMessage/$', 'apps.shoutit.tiered_views.message_views.delete_message'),
-                       url(r'^(?:xhr/)?deleteConversation/$', 'apps.shoutit.tiered_views.message_views.delete_conversation'),
+                       url(r'^xhr/delete_conversation/([-\w]+)/$', 'apps.shoutit.tiered_views.message_views.delete_conversation'),
+                       url(r'^xhr/delete_message/([-\w]+)/([-\w]+)/$', 'apps.shoutit.tiered_views.message_views.delete_message'),
                        url(r'^xhr/getHtmlMessage/$', 'apps.shoutit.tiered_views.message_views.get_html_message'),
 
                        url(r'^messages/$', 'apps.shoutit.tiered_views.message_views.read_conversations'),

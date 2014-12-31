@@ -175,6 +175,7 @@ function requestAjaxily(config) {
         contentType: config.contentType || 'application/x-www-form-urlencoded; charset=UTF-8',
         cache: false,
         key: key,
+        beforeSend: config.beforeSend,
         success: function (data, textStatus, jqXHR) {
             hide_loading();
             is_loading[this.key] = false;

@@ -17,29 +17,27 @@ from apps.shoutit.controllers import message_controller, shout_controller
 from apps.shoutit.xhr_utils import xhr_respond
 
 
-@non_cached_view(methods=['GET', 'DELETE'],
+@non_cached_view(methods=['GET', 'DELETE'], login_required=True,
                  validator=delete_conversation_validator,
                  api_renderer=operation_api,
                  json_renderer=json_data_renderer)
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
-def delete_conversation(request):
+def delete_conversation(request, conversation_id):
     result = ResponseResult()
-    pk = request.GET[u'id']
-    pk = pk
-    message_controller.DeleteConversation(request.user, pk)
+    conversation = request.validation_result.data
+    message_controller.hide_conversation_from_user(conversation, request.user)
     return result
 
 
-@non_cached_view(methods=['GET', 'DELETE'],
+@non_cached_view(methods=['GET', 'DELETE'], login_required=True,
                  validator=delete_message_validator,
                  api_renderer=operation_api,
                  json_renderer=json_data_renderer)
 @refresh_cache(tags=[CACHE_TAG_MESSAGES])
-def delete_message(request):
-    pk = request.GET[u'id']
-    pk = pk
-    message_controller.DeleteMessage(request.user, pk)
+def delete_message(request, conversation_id, message_id):
     result = ResponseResult()
+    message = request.validation_result.data
+    message_controller.hide_message_from_user(message, request.user)
     return result
 
 

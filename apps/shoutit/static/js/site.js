@@ -282,26 +282,28 @@ function delete_gallery_item(id, clickedObject) {
   });
 }
 
-function deleteMessage(id, domObj) {
-  post_data = {id: id}
+function deleteMessage(conversationId, messageId, domObj) {
   requestAjaxily({
-    url: '/xhr/deleteMessage/',
-    data: post_data,
-    type: 'GET',
+    url: '/xhr/delete_message/' + conversationId + '/' + messageId + '/',
+    type: 'DELETE',
     div: $(domObj).parents('div.message'),
+    beforeSend: function(xhr) {
+        xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+    },
     successCallback: function (data) {
       this.div.remove();
     }
   });
 }
 
-function deleteConversation(id, domObj) {
-  post_data = {id: id}
+function deleteConversation(conversationId, domObj) {
   requestAjaxily({
-    url: '/xhr/deleteConversation/',
-    data: post_data,
-    type: 'GET',
+    url: '/xhr/delete_conversation/' + conversationId + '/',
+    type: 'DELETE',
     div: $(domObj).parents('div.message'),
+    beforeSend: function(xhr) {
+        xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+    },
     successCallback: function (data) {
       this.div.remove();
     }

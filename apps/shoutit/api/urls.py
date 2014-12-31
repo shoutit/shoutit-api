@@ -183,7 +183,8 @@ urlpatterns = patterns('',
                        url(r'^messages/([-\w]+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': message_views.read_conversation,
-                               'POST': message_views.reply_in_conversation
+                               'POST': message_views.reply_in_conversation,
+                               'DELETE': message_views.delete_conversation
                            })
                        ),
 
@@ -193,6 +194,11 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                       url(r'^messages/([-\w]+)/([-\w]+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'DELETE': message_views.delete_message
+                           })
+                       ),
 
                        # Tags
 

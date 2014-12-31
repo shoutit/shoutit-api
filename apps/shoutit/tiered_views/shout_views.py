@@ -79,9 +79,6 @@ def upload_image(request, method=None):
 def delete_shout(request, pk=None):
     if not pk:
         pk = request.GET[u'id']
-        pk = pk
-    else:
-        pk = pk
     result = ResponseResult()
     shout_controller.DeletePost(pk)
     return result

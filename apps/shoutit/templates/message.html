@@ -18,7 +18,7 @@
         <br>
         {{ message.Text|linebreaksbr }}
         <div class="controls">
-            <a class="shout_message_delete" onclick="deleteMessage('{{message.pk}}',this)"><i class="icon-trash" title="delete message"></i></a>
+            <a class="shout_message_delete" onclick="deleteMessage('{{ message.Conversation.pk }}', '{{message.pk}}', this)"><i class="icon-trash" title="delete message"></i></a>
         </div>
     </div>
     <div style="clear: both;"></div>

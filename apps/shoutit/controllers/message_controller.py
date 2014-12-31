@@ -129,18 +129,15 @@ def get_conversation(conversation_id, user=None):
     except Conversation.DoesNotExist:
         conversation = None
 
-    if user is None:
-        if conversation:
-            return conversation
-        else:
-            return None
+    if not conversation:
+        return None
+
+    if not user:
+        return conversation
     else:
-        if conversation:
-            conversations = getFullConversationDetails([conversation], user)
-            conversation = conversations[0] if len(conversations) else None
-            return conversation
-        else:
-            return None
+        conversations = getFullConversationDetails([conversation], user)
+        conversation = conversations[0] if len(conversations) else None
+        return conversation
 
 
 def get_shout_conversations(shout_id, user):
@@ -168,11 +165,9 @@ def get_shout_conversations(shout_id, user):
     return conversations
 
 
-def DeleteMessage(user, pk):
-    message = Message.objects.get(pk=pk)
-    if user.username == message.FromUser.username:
+def hide_message_from_user(message, user):
+    if user == message.FromUser:
         message.VisibleToSender = False
-
     else:
         message.VisibleToRecivier = False
     message.save()
@@ -186,9 +181,8 @@ def GetMessage(pk):
         return None
 
 
-def DeleteConversation(user, pk):
-    conversation = Conversation.objects.get(pk=pk)
-    if user.username == conversation.FromUser.username:
+def hide_conversation_from_user(conversation, user):
+    if user == conversation.FromUser:
         conversation.VisibleToSender = False
     else:
         conversation.VisibleToRecivier = False

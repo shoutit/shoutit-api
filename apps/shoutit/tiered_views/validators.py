@@ -217,29 +217,28 @@ def edit_shout_validator(request, pk=None):
         return result
 
 
-def delete_message_validator(request):
-    pk = request.GET[u'id']
-    pk = pk
+def delete_message_validator(request, conversation_id, message_id):
+    uuid_validation = uuid_validator(conversation_id, 'conversation')
+    if not uuid_validation.valid:
+        return uuid_validation
 
-    result = object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), pk)
-    if result.valid:
-        if request.user.is_authenticated():
-            return result
-        return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN], messages=[('error', _('You are not signed in.'))])
-    else:
-        return result
-
-
-def delete_conversation_validator(request):
-    conversation_id = request.GET.get('id', '0')
+    uuid_validation = uuid_validator(message_id, 'message')
+    if not uuid_validation.valid:
+        return uuid_validation
 
     result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
-    if result.valid:
-        if request.user.is_authenticated():
-            return result
-        return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN], messages=[('error', _('You are not signed in.'))])
-    else:
+    if not result.valid:
         return result
+
+    return object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), message_id)
+
+
+def delete_conversation_validator(request, conversation_id):
+    uuid_validation = uuid_validator(conversation_id, 'conversation')
+    if not uuid_validation.valid:
+        return uuid_validation
+
+    return object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
 
 
 def user_profile_validator(request, username, *args, **kwargs):
