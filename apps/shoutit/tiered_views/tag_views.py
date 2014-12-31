@@ -89,15 +89,17 @@ def set_tag_parent(request):
 def top_tags(request):
     result = ResponseResult()
 
-    city = request.GET.get('city', DEFAULT_LOCATION['city'])
+    city = request.GET.get('city', '')
+    # todo: use country only filter too
 
     try:
         pre_city = PredefinedCity.objects.get(City=city)
+        user_country = pre_city.Country
+        user_city = pre_city.City
     except PredefinedCity.DoesNotExist:
-        pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
+        user_country = None
+        user_city = None
 
-    user_country = pre_city.Country
-    user_city = pre_city.City
     profile = user_controller.GetProfile(request.user)
     result.data['tags'] = tag_controller.get_top_tags(10, user_country, user_city)
     if request.user.is_authenticated() and isinstance(profile, Profile):

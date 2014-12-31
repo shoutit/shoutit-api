@@ -68,6 +68,9 @@ def render_tag_dict(tag_dict):
     if 'is_listening' in tag_dict:
         tag['is_listening'] = tag_dict['is_listening']
 
+    if 'listeners_count' in tag_dict:
+        tag['listeners_count'] = tag_dict['listeners_count']
+
     return tag
 
 

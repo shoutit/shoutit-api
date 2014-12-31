@@ -25,8 +25,8 @@ def get_top_tags(limit=10, country=None, city=None):
         filters['Followers__City'] = city
 
     top_tags = Tag.objects.filter(**filters).values('pk').annotate(
-        listen_count=Count('Followers')
-    ).values('Name', 'listen_count', 'Image').order_by('-listen_count')[:limit]
+        listeners_count=Count('Followers')
+    ).filter(listeners_count__gte=1).values('Name', 'listeners_count', 'Image').order_by('-listeners_count')[:limit]
     return list(top_tags)
 
 
