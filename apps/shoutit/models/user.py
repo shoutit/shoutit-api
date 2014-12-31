@@ -92,11 +92,6 @@ class Profile(AbstractProfile):
             notifications = self.get_notifications()
         return len(filter(lambda n: not n.IsRead, notifications))
 
-    def GetTagsCreated(self):
-        if not hasattr(self, 'tags_created'):
-            self.tags_created = self.TagsCreated.select_related('Creator')
-        return self.tags_created
-
     @property
     def name(self):
         return self.user.get_full_name()

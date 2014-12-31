@@ -17,7 +17,7 @@ class Tag(UUIDModel, Stream2Mixin):
     DateCreated = models.DateTimeField(auto_now_add=True)
     Parent = models.ForeignKey('Tag', related_name='ChildTags', blank=True, null=True, db_index=True)
 
-    #	Category = models.ForeignKey(Category, related_name='Tags', null= True, default=None, db_index=True)
+    # Category = models.ForeignKey(Category, related_name='Tags', null= True, default=None, db_index=True)
     Stream = models.OneToOneField(Stream, related_name='OwnerTag', null=True, db_index=True)
     Definition = models.TextField(null=True, max_length=512, default='New Tag!')
 

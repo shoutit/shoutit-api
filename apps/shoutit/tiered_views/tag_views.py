@@ -61,11 +61,14 @@ def stop_listening_to_tag(request, tag_name):
              json_renderer=json_data_renderer,
              methods=['GET'])
 def search_tag(request):
-    limit = 6
-    query = request.GET.get('query', '')
-    tags = list(tag_controller.SearchTags(query, limit))
     result = ResponseResult()
-    result.data = tags
+
+    query = request.GET.get('query', '')
+    limit = request.GET.get('limit', 10)
+    if limit > 10:
+        limit = 10
+    tags = tag_controller.search_tags(query, limit)
+    result.data['tags'] = tags
     return result
 
 
@@ -80,6 +83,7 @@ def set_tag_parent(request):
 
 @cached_view(level=CACHE_LEVEL_SESSION,
              tags=[CACHE_TAG_TAGS],
+             api_renderer=tags_api,
              json_renderer=json_data_renderer,
              methods=['GET'])
 def top_tags(request):
@@ -95,13 +99,13 @@ def top_tags(request):
     user_country = pre_city.Country
     user_city = pre_city.City
     profile = user_controller.GetProfile(request.user)
-    result.data['top_tags'] = tag_controller.GetTopTags(10, user_country, user_city)
+    result.data['tags'] = tag_controller.get_top_tags(10, user_country, user_city)
     if request.user.is_authenticated() and isinstance(profile, Profile):
         user_interests = profile.Interests.all().values_list('Name')
-        for tag in result.data['top_tags']:
+        for tag in result.data['tags']:
             tag['is_listening'] = (tag['Name'], ) in user_interests
     else:
-        for tag in result.data['top_tags']:
+        for tag in result.data['tags']:
             tag['is_listening'] = False
     return result
 

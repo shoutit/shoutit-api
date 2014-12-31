@@ -245,6 +245,12 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                       url(r'^top_tags/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': tag_views.top_tags
+                           })
+                       ),
+
 
                        # Notifications
 

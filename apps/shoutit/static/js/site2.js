@@ -442,8 +442,8 @@ function getTopTags(city){
 	requestAjaxily({
 		url: '/xhr/top_tags/?city='+city,
 		successCallback: function (data) {
-			for(var i in data.data.top_tags){
-				var tag = data.data.top_tags[i];
+			for(var i in data.data.tags){
+				var tag = data.data.tags[i];
 				var tag_bool = tag.is_listening;
 				if(tag_bool==true){
 					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Stop listening')+'"  class="tag_listening"></span></div></li>';

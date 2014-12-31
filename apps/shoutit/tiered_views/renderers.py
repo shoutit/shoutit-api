@@ -18,7 +18,8 @@ from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RES
 from apps.shoutit.utils import shout_link
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from apps.shoutit.api.api_utils import get_object_url
-from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment
+from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, \
+    render_tag_dict
 from common import constants
 
 
@@ -336,7 +337,7 @@ def tags_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        tags = [render_tag(tag) for tag in result.data]
+        tags = [render_tag_dict(tag) for tag in result.data['tags']]
         pre_json_result.update({
             'count': len(tags),
             'tags': tags

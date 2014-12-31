@@ -38,3 +38,5 @@ pyrax
 
 # modified django-push-notifications
 https://cl.ly/1w3v1B2i1P1A/django-push-notifications.zip
+
+schema==0.3.1

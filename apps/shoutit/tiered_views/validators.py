@@ -120,7 +120,7 @@ def read_conversation_validator(request, conversation_id):
     result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id, request.user)
     if result.valid:
         conversation = result.data
-        if request.user.pk != conversation.FromUser.pk and request.user.pk != conversation.ToUser.pk:
+        if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
             return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
     return result
 
@@ -190,9 +190,6 @@ def reply_to_shout_validator(request, shout_id):
 def modify_shout_validator(request, pk=None):
     if not pk:
         pk = request.GET[u'id']
-        pk = pk
-    else:
-        pk = pk
 
     result = object_exists_validator(shout_controller.GetPost, _('Shout does not exist.'), pk, True, True)
     if result.valid:
@@ -230,6 +227,10 @@ def delete_message_validator(request, conversation_id, message_id):
     if not result.valid:
         return result
 
+    conversation = result.data
+    if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
+        return ValidationResult(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
+
     return object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), message_id)
 
 
@@ -238,7 +239,12 @@ def delete_conversation_validator(request, conversation_id):
     if not uuid_validation.valid:
         return uuid_validation
 
-    return object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
+    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
+    conversation = result.data
+    if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
+        return ValidationResult(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
+
+    return result
 
 
 def user_profile_validator(request, username, *args, **kwargs):

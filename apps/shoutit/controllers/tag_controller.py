@@ -16,36 +16,22 @@ def get_tag(name):
         return None
 
 
-def GetTags(type):
-    if type == "Parents":
-        return Tag.objects.filter(Parent__isnull=True)
-    elif type == "Childs":
-        return Tag.objects.filter(Parent__isnull=False)
-    elif type == "All":
-        return Tag.objects.all().order_by("Name")
-
-
-def GetTopTags(limit=10, country='', city=''):
-    if not limit:
-        limit = 10
-    if not country:
-        country = ''
-    if not city:
-        city = ''
-
+def get_top_tags(limit=10, country=None, city=None):
     filters = {}
-    if len(country.strip()):
+    if country:
         filters['Followers__Country'] = country
 
-    if len(city.strip()):
+    if city:
         filters['Followers__City'] = city
 
-    top_tags = Tag.objects.filter(**filters).values('pk').annotate(listen_count=Count('Followers')).values('Name', 'listen_count').order_by('-listen_count')[:limit]
+    top_tags = Tag.objects.filter(**filters).values('pk').annotate(
+        listen_count=Count('Followers')
+    ).values('Name', 'listen_count', 'Image').order_by('-listen_count')[:limit]
     return list(top_tags)
 
 
-def setTagParent(child_id,parent_name):
-    tag = Tag.objects.get(pk = child_id)
+def setTagParent(child_id, parent_name):
+    tag = Tag.objects.get(pk=child_id)
     parent = get_tag(parent_name)
     if len(tag.ChildTags.all()):
         tag.Parent = None
@@ -55,7 +41,7 @@ def setTagParent(child_id,parent_name):
 
 
 def GetSynonymParent(name):
-    parentsTag = Tag.objects.filter(Parent__isnull = True)
+    parentsTag = Tag.objects.filter(Parent__isnull=True)
     max = 0
     max_index = 0
     ite = 0
@@ -64,7 +50,7 @@ def GetSynonymParent(name):
         if ratio > max:
             max = ratio
             max_index = ite
-        ite+=1
+        ite += 1
 
     if len(parentsTag) != 0 and max > 0.4:
         return parentsTag[max_index]
@@ -74,17 +60,18 @@ def GetSynonymParent(name):
 
 def GetOrCreateTag(request, name, creator, isParent):
     import re
+
     name = re.sub('[\s,/,&]', '-', name)
     name = re.sub('[-]+', '-', name)
 
-    tag = Tag.objects.filter(Name__iexact = name)
+    tag = Tag.objects.filter(Name__iexact=name)
     if tag:
         return tag[0]
     else:
-        stream = Stream(Type = STREAM_TYPE_TAG)
+        stream = Stream(Type=STREAM_TYPE_TAG)
         stream.save()
-        tag = Tag.objects.create(Name = name, Creator = creator, Stream = stream, Parent = None)
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_CREATED, data={ACTIVITY_DATA_TAG : tag.pk})
+        tag = Tag.objects.create(Name=name, Creator=creator, Stream=stream, Parent=None)
+        Logger.log(request, type=ACTIVITY_TYPE_TAG_CREATED, data={ACTIVITY_DATA_TAG: tag.pk})
         return tag
 
 
@@ -101,17 +88,17 @@ def AddToUserInterests(request, tag, user):
     if isinstance(user, User):
         user = user.profile
     if isinstance(tag, unicode):
-        tag = Tag.objects.filter(Name__iexact = tag)
+        tag = Tag.objects.filter(Name__iexact=tag)
         if not tag:
             raise Tag.DoesNotExist()
         else:
             tag = tag[0]
     if tag not in user.Interests.all():
         user.Interests.add(tag)
-        user_controller.FollowStream(request, user,tag.Stream)
+        user_controller.FollowStream(request, user, tag.Stream)
         user.save()
         event_controller.RegisterEvent(user.user, EVENT_TYPE_FOLLOW_TAG, tag)
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG : tag.pk, ACTIVITY_DATA_USERNAME : user.username})
+        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG: tag.pk, ACTIVITY_DATA_USERNAME: user.username})
 
 
 # todo: remove
@@ -119,7 +106,7 @@ def RemoveFromUserInterests(request, tag, user):
     if isinstance(user, User):
         user = user.profile
     if isinstance(tag, unicode):
-        tag = Tag.objects.filter(Name__iexact = tag)[:]
+        tag = Tag.objects.filter(Name__iexact=tag)[:]
         if not tag:
             raise Tag.DoesNotExist()
         else:
@@ -129,9 +116,10 @@ def RemoveFromUserInterests(request, tag, user):
         user.Interests.remove(tag)
         user.save()
 
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_REMOVED, data={ACTIVITY_DATA_TAG : tag.pk, ACTIVITY_DATA_USERNAME : user.username})
+        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_REMOVED,
+                   data={ACTIVITY_DATA_TAG: tag.pk, ACTIVITY_DATA_USERNAME: user.username})
 
 
-def SearchTags(keyword, limit):
-    tags = Tag.objects.filter(Name__icontains = keyword).values_list('Name', flat=True)[:limit]
-    return tags
+def search_tags(query='', limit=10):
+    tags = Tag.objects.filter(Name__icontains=query).values('Name', 'Image')[:limit]
+    return list(tags)

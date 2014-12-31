@@ -4,7 +4,7 @@ from apps.shoutit.models import User, Profile, Business, Tag
 
 
 # todo: better levels
-from apps.shoutit.utils import full_image_path
+from apps.shoutit.utils import full_url_path
 
 
 def render_shout(shout, level=5):
@@ -48,14 +48,27 @@ def render_tag(tag):
         return {}
     if isinstance(tag, basestring):
         tag = Tag(Name=tag)
-    #TODO: find what is the case when tag is a dict not instance of Tag class
+    # TODO: find what is the case when tag is a dict not instance of Tag class
     elif isinstance(tag, dict):
         tag = Tag(Name=tag['Name'])
-    return {
+    base = {
         'name': tag.Name,
         'url': get_object_url(tag),
-        'image': full_image_path(tag.Image)
+        'image': full_url_path(tag.Image)
     }
+    return base
+
+
+def render_tag_dict(tag_dict):
+    tag = {
+        'name': tag_dict['Name'],
+        'url': full_url_path('/tag/%s/' % tag_dict['Name']),
+        'image': full_url_path(tag_dict['Image'])
+    }
+    if 'is_listening' in tag_dict:
+        tag['is_listening'] = tag_dict['is_listening']
+
+    return tag
 
 
 #TODO: rendering levels in better way.
@@ -96,7 +109,7 @@ def render_user(user, level=1, owner=False):
         if level >= 2:
             result.update({
                 'url': get_object_url(user),
-                'image': full_image_path(profile.Image),
+                'image': full_url_path(profile.Image),
                 'sex': profile.Sex,
                 'is_active': user.is_active
             })

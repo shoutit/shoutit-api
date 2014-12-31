@@ -75,11 +75,11 @@
               query: request.term
             },
             success: function (data) {
-              data = data.data;
-              response($.map(data, function (item) {
+              var tags = data.data.tags;
+              response($.map(tags, function (item) {
                 return {
-                  label: item,
-                  value: item
+                  label: item.Name,
+                  value: item.Name
                 }
               }));
             }
