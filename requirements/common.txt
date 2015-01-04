@@ -1,6 +1,6 @@
 # common requirements
-numpy==1.8.0
-milk==0.4.2
+numpy>=1.8.0
+milk>=0.4.2
 
 Django==1.6
 django-uuidfield
@@ -40,3 +40,4 @@ pyrax
 https://cl.ly/1w3v1B2i1P1A/django-push-notifications.zip
 
 schema==0.3.1
+behave
