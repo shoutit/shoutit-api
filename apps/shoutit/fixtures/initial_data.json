@@ -365,6 +365,18 @@
     }
   },
   {
+    "pk": 4,
+    "model": "piston3.consumer",
+    "fields": {
+      "status": "accepted",
+      "name": "WebApp",
+      "secret": "64a542b1-1b2d-8503-6cbb-4cf8cea",
+      "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
+      "key": "shoutit-web",
+      "description": "The consumer for our first tier web application."
+    }
+  },
+  {
     "pk": 1,
     "model": "piston3.token",
     "fields": {
