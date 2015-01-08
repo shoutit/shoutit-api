@@ -155,4 +155,3 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin, UUIDModel):
             self._gcm_device = None
 
         return self._gcm_device
-

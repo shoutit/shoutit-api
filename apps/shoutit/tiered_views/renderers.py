@@ -210,7 +210,7 @@ def thumbnail_response(request, result, *args, **kwargs):
     if RESPONSE_RESULT_ERROR_BAD_REQUEST in result.errors:
         raise Http404()
 
-    import Image
+    from PIL.Image import open as image_open, ANTIALIAS
 
     if result.data['size']:
         path = '%s_%dx%d.png' % (
@@ -218,11 +218,11 @@ def thumbnail_response(request, result, *args, **kwargs):
     else:
         path = result.data['picture']
     if os.path.exists(path):
-        im = Image.open(path)
+        im = image_open(path)
     else:
-        im = Image.open(result.data['picture'])
+        im = image_open(result.data['picture'])
         if result.data['size']:
-            im.thumbnail(result.data['size'], Image.ANTIALIAS)
+            im.thumbnail(result.data['size'], ANTIALIAS)
             im.save(path, "PNG")
         else:
             raise Http404()

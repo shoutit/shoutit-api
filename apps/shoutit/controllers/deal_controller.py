@@ -3,7 +3,6 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 
-# from xhtml2pdf import pisa
 from apps.shoutit.models import DealBuy, Voucher, Shout
 from apps.shoutit.utils import asynchronous_task
 from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
@@ -14,6 +13,7 @@ from geraldo.generators import PDFGenerator
 from apps.shoutit.templatetags.template_filters import price
 import reportlab.graphics.barcode
 import urllib2
+from PIL.Image import open as image_open
 
 
 def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min_buyers, max_buyers, original_price, business_profile,
@@ -57,18 +57,17 @@ def GetConcurrentDeals(business_profile):
 
 
 def get_image_for_voucher(voucher_band):
-    import Image
 
     image_url = voucher_band.instance.DealBuy.Deal.Item.get_first_image()
     if image_url:
         img_file = urllib2.urlopen(image_url)
-        return Image.open(StringIO.StringIO(img_file.read()))
+        return image_open(StringIO.StringIO(img_file.read()))
     return None
 
 
 def get_qr_for_voucher(voucher_band):
-    from PyQRNative import QRCode
-    from PyQRNative import QRErrorCorrectLevel
+    from common.PyQRNative import QRCode
+    from common.PyQRNative import QRErrorCorrectLevel
 
     qr = QRCode(3, QRErrorCorrectLevel.L)
     qr.addData(voucher_band.instance.Code)
@@ -77,14 +76,13 @@ def get_qr_for_voucher(voucher_band):
 
 
 def get_barcode_for_voucher(voucher_band):
-    import Image
 
     buffer = StringIO.StringIO()
     buffer.write(
         reportlab.graphics.barcode.createBarcodeImageInMemory('Code128', value=voucher_band.instance.Code, format='png', height=6 * cm,
                                                               width=24 * cm))
     buffer.seek(0)
-    return Image.open(buffer)
+    return image_open(buffer)
 
 
 def get_id_for_voucher(widget, voucher_band):
