@@ -549,7 +549,7 @@ def unread_notifications_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        pre_json_result['notificationsWithouMessages'] = result.data['notificationsWithouMessages']
+        pre_json_result['notifications_count_wo_messages'] = result.data['notifications_count_wo_messages']
         pre_json_result['unread_conversations'] = result.data['unread_conversations']
 
     return response, pre_json_result

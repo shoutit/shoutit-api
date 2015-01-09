@@ -188,6 +188,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                       # todo: read conversation, read message
                        url(r'^messages/([-\w]+)/read/$',
                            TieredResource(TieredHandler, oauth, {
                                'POST': message_views.mark_message_as_read
@@ -199,6 +200,7 @@ urlpatterns = patterns('',
                                'DELETE': message_views.delete_message
                            })
                        ),
+
 
                        # Tags
 
@@ -254,33 +256,33 @@ urlpatterns = patterns('',
 
                        # Notifications
 
+                       url(r'^notifications/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': realtime_views.notifications_all
+                           })
+                       ),
+
+                       url(r'^notifications/count/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': realtime_views.notifications_count
+                           })
+                       ),
+
                        url(r'^notifications/brief/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': realtime_views.notifications
                            })
                        ),
 
-                       url(r'^notifications/all/$',
+                       url(r'^notifications/([-\w]+)/read/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': realtime_views.notifications_all
+                               'PUT': realtime_views.mark_notification_as_read
                            })
                        ),
 
-                       url(r'^unread_notifications_count/$',
+                       url(r'^notifications/([-\w]+)/unread/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': realtime_views.unread_notifications_count
-                           })
-                       ),
-
-                       url(r'^notification/(\w+)/read/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': realtime_views.mark_notification_as_read
-                           })
-                       ),
-
-                       url(r'^notification/(\w+)/unread/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': realtime_views.mark_notification_as_unread
+                               'PUT': realtime_views.mark_notification_as_unread
                            })
                        ),
 

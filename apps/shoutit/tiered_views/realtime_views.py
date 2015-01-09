@@ -92,7 +92,7 @@ def get_session_data(request, session_key=None):
 
 @non_cached_view(json_renderer=json_renderer,
                  api_renderer=operation_api,
-                 methods=['POST'],
+                 methods=['PUT'],
                  login_required=True)
 @refresh_cache(tags=[CACHE_TAG_NOTIFICATIONS])
 def mark_notification_as_read(request, notification_id):
@@ -108,7 +108,7 @@ def mark_notification_as_read(request, notification_id):
 
 @non_cached_view(json_renderer=json_renderer,
                  api_renderer=operation_api,
-                 methods=['POST'],
+                 methods=['PUT'],
                  login_required=True)
 @refresh_cache(tags=[CACHE_TAG_NOTIFICATIONS])
 def mark_notification_as_unread(request, notification_id):
@@ -122,6 +122,7 @@ def mark_notification_as_unread(request, notification_id):
     return result
 
 
+# todo: refactor notification views: notifications, notifications_al
 @cached_view(tags=[CACHE_TAG_NOTIFICATIONS],
              html_renderer=notifications_html,
              json_renderer=notifications_json,
@@ -144,11 +145,10 @@ def notifications(request):
              json_renderer=lambda request, result: json_renderer(request, result, success_message='', data=result.data),
              api_renderer=unread_notifications_api,
              methods=['GET'], login_required=True)
-def unread_notifications_count(request):
+def notifications_count(request):
     result = ResponseResult()
-    result.data['count'] = user_controller.get_unread_notifications_count(user_controller.GetProfile(request.user))
-    result.data['notificationsWithouMessages'] = notifications_controller.get_user_notifications_without_messages_count(
-        request.user)
+    result.data['notifications_count'] = user_controller.get_unread_notifications_count(user_controller.GetProfile(request.user))
+    result.data['notifications_count_wo_messages'] = notifications_controller.get_user_notifications_without_messages_count(request.user)
     result.data['unread_conversations'] = message_controller.UnReadConversationsCount(request.user)
     return result
 
