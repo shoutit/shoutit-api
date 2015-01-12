@@ -37,30 +37,29 @@ def get_profile(username):
         return None
 
 
-def SearchUsers(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), start_index=0, end_index=30, email_search=False):
-    users = []
-    if not isinstance(query, str) and not isinstance(query, unicode) and len(query.strip()):
-        return users
+# todo: start index, limit, user/profile mix
+def search_users(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), start_index=0, end_index=30, email_search=False):
+
+    related = ['profile', 'business']
 
     is_email = query.count('@') > 0
     if is_email and email_search:
-        users = User.objects.filter(email__iexact=query).select_related('Profile', 'Business')[start_index:end_index]
+        users = User.objects.filter(email__iexact=query).select_related(*related)[start_index:end_index]
     else:
         queries = query.split()
         users = User.objects
-        related = ['profile', 'business']
-        criterions = Q()
+        filters = Q()
         for q in queries:
-            criterions |= Q(first_name__icontains=q)
-            criterions |= Q(last_name__icontains=q)
-            criterions |= Q(business__isnull=False, business__Name__icontains=q)
+            filters |= Q(first_name__icontains=q)
+            filters |= Q(last_name__icontains=q)
+            filters |= Q(business__isnull=False, business__Name__icontains=q)
             if flag:
                 if not (flag & int(USER_TYPE_INDIVIDUAL)):
-                    criterions &= Q(Profile__isnull=True)
+                    filters &= Q(Profile__isnull=True)
                 if not (flag & int(USER_TYPE_BUSINESS)):
-                    criterions &= Q(business__isnull=True)
+                    filters &= Q(business__isnull=True)
 
-        users = users.select_related(*related).filter(criterions)[start_index:end_index]
+        users = users.select_related(*related).filter(filters)[start_index:end_index]
 
     user_profiles = []
     for user in users:

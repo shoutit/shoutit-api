@@ -112,6 +112,14 @@ urlpatterns = patterns('',
                            })
                        ),
 
+                       url(r'^user/(@me|\w+)/video/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': user_views.user_video,
+                               'POST': user_views.user_video,
+                               'DELETE': user_views.user_video,
+                           })
+                       ),
+
 
                        # Shouts
 

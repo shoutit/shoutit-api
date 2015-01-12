@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.generic import GenericRelation
 from django.db import models
 from django.conf import settings
 
@@ -93,9 +94,10 @@ class Stream2(UUIDModel, AttachedObjectMixin):
         self.save()
 
 
-class Stream2Mixin(object):
+class Stream2Mixin(models.Model):
+    # todo: remove?
     @property
-    def stream2(self):
+    def stream2_old(self):
         if not hasattr(self, '_stream2'):
             ct = ContentType.objects.get_for_model(self.__class__)
             try:
@@ -104,27 +106,46 @@ class Stream2Mixin(object):
                 return None
         return self._stream2
 
+    @property
+    def stream2(self):
+        try:
+            return self._stream2.get()
+        except Stream2.DoesNotExist:
+            return None
+
+    # todo: after updating to django 1.7 'related_query_name' can be used to filter on owner (attached_object) attributes
+    _stream2 = GenericRelation(Stream2)
+
+    class Meta:
+        abstract = True
+
 
 @receiver(post_save)
 def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs):
+    """
+    create stream and attach it to newly created instance
+    """
+
     if not issubclass(sender, Stream2Mixin):
         return
-    # on new instance create stream and attach it
     if created:
-        print 'creating Stream2 for: <%s: %s>' % (sender.__name__, instance)
-
-        # creating the stream
+        print 'Creating Stream2 for: <%s: %s>' % (sender.__name__, instance)
         stream2 = Stream2(attached_object=instance)
         stream2.save()
 
 
 @receiver(pre_delete)
 def delete_attached_stream(sender, instance, using, **kwargs):
+    """
+    remove the stream before deleting the instance
+    """
     if not issubclass(sender, Stream2Mixin):
         return
-    # before deleting remove the stream
-    print 'pre_delete'
-    instance.stream2.delete()
+
+    print 'Deleting Stream2 for: <%s: %s>' % (sender.__name__, instance)
+    # GenericRelation in Stream2Mixin makes sure that Stream2 is being deleted when deleting the instance itself
+    # so no need for us to explicitly do that
+    # instance.stream2.delete()
 
 
 class Listen(UUIDModel):

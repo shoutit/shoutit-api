@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from push_notifications.models import GCMDevice, APNSDevice
 
-from apps.shoutit.models import ConfirmToken, Business, Profile, Trade
+from apps.shoutit.models import ConfirmToken, Business, Profile, Trade, Video
 from apps.shoutit.controllers import user_controller, stream_controller, experience_controller, email_controller, realtime_controller
 from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
@@ -17,7 +17,7 @@ from apps.shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, Sign
 from apps.shoutit.tiers import cached_view, non_cached_view, refresh_cache, ResponseResult, CACHE_REFRESH_LEVEL_ALL, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
 from apps.shoutit.tiers import CACHE_TAG_USERS, CACHE_TAG_STREAMS, CACHE_TAG_NOTIFICATIONS
 from apps.shoutit.tiers import CACHE_LEVEL_GLOBAL, CACHE_LEVEL_USER
-from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api
+from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api, user_video_renderer
 from renderers import user_api, operation_api, profiles_api, shouts_api, stats_api, activities_api
 from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
@@ -183,7 +183,7 @@ def api_signup(request):
     form = APISignUpForm(request.POST, request.FILES)
     form.is_valid()
     user = user_controller.SignUpUserFromAPI(request, username=form.cleaned_data['username'], email=form.cleaned_data['email'],
-                                             password=form.cleaned_data['password'])
+                                             password=form.cleaned_data['password'], first_name='', last_name='', birthday=None, sex=True)
     result = ResponseResult()
     result.messages.append(('success', _('Congratulations! You are now a member of the Shout community.')))
     user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
@@ -338,24 +338,15 @@ def stop_listening_to_user(request, username):
     api_renderer=profiles_api,
     methods=['GET'])
 def search_user(request):
-    limit = 6
-    query = request.GET.get('query', '')
-    flag = int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS)
-    email_search = False
-
-    if request.GET.has_key('type'):
-        flag = int(request.GET['type'])
-    if request.GET.has_key('email_search'):
-        email_search = request.GET['email_search']
-
-    try:
-        email_search = int(email_search) and True or False
-    except ValueError, e:
-        email_search = False
-
-    users = list(user_controller.SearchUsers(query, flag, 0, limit, email_search))
     result = ResponseResult()
-    result.data['users'] = users
+    limit = 6
+
+    query = unicode(request.GET.get('query', ''))
+    flag = int(request.GET.get('type', USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS))
+    email_search = bool(request.GET.get('email_search', False))
+
+    result.data['users'] = list(user_controller.search_users(query, flag, 0, limit, email_search))
+
     return result
 
 
@@ -454,7 +445,7 @@ def sss(request):
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user,
                     country=shout['country'],
-                    city=shout['city'], address='', images=shout['images'], issss=True,
+                    city=shout['city'], address='', images=shout['images'], is_sss=True,
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
             else:
@@ -463,7 +454,7 @@ def sss(request):
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.get_profile(user.username),
                     country=shout['country'],
-                    city=shout['city'], address='', images=shout['images'], issss=True,
+                    city=shout['city'], address='', images=shout['images'], is_sss=True,
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
 
@@ -508,6 +499,33 @@ def update_user_location(request):
         realtime_controller.UnbindUserFromCity(request.user.username, old_city)
         realtime_controller.BindUserToCity(request.user.username, city)
 
+    return result
+
+
+@csrf_exempt
+@non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True,
+                 json_renderer=json_data_renderer, api_renderer=user_video_renderer,
+                 validator=user_profile_validator)
+def user_video(request, username):
+    result = ResponseResult()
+    profile = request.validation_result.data['profile']
+
+    if request.method == 'POST':
+        v = request.json_data
+
+        video = Video(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'], id_on_provider=v['id_on_provider'],
+                      duration=v['duration'])
+        video.save()
+        if profile.video:
+            profile.video.delete()
+        profile.video = video
+        profile.save()
+
+    if request.method == 'DELETE':
+        if profile.video:
+            profile.video.delete()
+
+    result.data['video'] = profile.video
     return result
 
 
@@ -703,7 +721,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
                 {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.Image, 32)}
                 for user in listeners]
 
-    if stats_type == 'listening':
+    elif stats_type == 'listening':
         result.data['listening'] = {}
         listening_tags = listening_type == 'all' or listening_type == 'tags'
         listening_profiles = listening_type == 'all' or listening_type == 'users'

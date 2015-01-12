@@ -23,6 +23,7 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True)
 
     Image = models.URLField(max_length=1024, null=True)
+    video = models.OneToOneField('Video', null=True, on_delete=models.SET_NULL)
 
     # Location attributes
     Country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
@@ -50,7 +51,7 @@ class Profile(AbstractProfile):
 
     # todo: remove
     Stream = models.OneToOneField(Stream, related_name='OwnerUser', db_index=True)
-    #	isBlocked = models.BooleanField(default=False)
+    # isBlocked = models.BooleanField(default=False)
 
     birthday = models.DateField(null=True)
     Sex = models.NullBooleanField(default=True, null=True)
@@ -115,9 +116,10 @@ class Profile(AbstractProfile):
         super(Profile, self).save(*args, **kwargs)
 
 
-@receiver(post_save, sender=Profile)
+@receiver(post_save)
 def attach_user(sender, instance, created, raw, using, update_fields, **kwargs):
-
+    if not issubclass(sender, AbstractProfile):
+        return
     # on new profile create stream and attach it
     if created:
         # print 'post save on first time'
@@ -130,11 +132,13 @@ def attach_user(sender, instance, created, raw, using, update_fields, **kwargs):
         pass
 
 
-@receiver(post_delete, sender=Profile)
+@receiver(post_delete)
 def delete_attached_user(sender, instance, using, **kwargs):
-    # after deleting remove the user
-    print 'post_delete'
-    instance.user2.delete()
+    if not issubclass(sender, AbstractProfile):
+        return
+
+    print 'Deleting User for: <%s: %s>' % (sender.__name__, instance)
+    instance.user.delete()
 
 
 class LinkedFacebookAccount(UUIDModel):
