@@ -2,7 +2,7 @@ from behave import *
 
 use_step_matcher("re")
 
-@given("user has no shoutit account")
+@given("user is logged in with shoutit account")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -10,7 +10,7 @@ def step_impl(context):
     pass
 
 
-@step("user has a valid email address")
+@step("user is not connected to facebook")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -18,7 +18,7 @@ def step_impl(context):
     pass
 
 
-@step("user wants to sign up with his email address")
+@step("user is not connected to g\+")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -26,7 +26,7 @@ def step_impl(context):
     pass
 
 
-@when("user enters a user name")
+@step("user choose offer")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -34,7 +34,7 @@ def step_impl(context):
     pass
 
 
-@step("user enters a first name")
+@when("user click on new shout")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -42,7 +42,7 @@ def step_impl(context):
     pass
 
 
-@step("user enters a last name")
+@step("enters a shout title")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -50,7 +50,7 @@ def step_impl(context):
     pass
 
 
-@step("user enters a valid email address")
+@step("enters a shout description")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -58,7 +58,7 @@ def step_impl(context):
     pass
 
 
-@step("user repeats email address")
+@step("enters at least one tag")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -66,7 +66,7 @@ def step_impl(context):
     pass
 
 
-@step("user enters a valid password")
+@step("enters a price")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -74,7 +74,7 @@ def step_impl(context):
     pass
 
 
-@step("user repeats a matching password")
+@step("choose a currency")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -82,7 +82,7 @@ def step_impl(context):
     pass
 
 
-@then("new account is created for the user")
+@step("uploads at least one image")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -90,7 +90,7 @@ def step_impl(context):
     pass
 
 
-@step("user is granted access")
+@step("clicks shoutit")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -98,7 +98,7 @@ def step_impl(context):
     pass
 
 
-@given("user has a google account")
+@then("shout is created as an offer")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -106,7 +106,7 @@ def step_impl(context):
     pass
 
 
-@step("user agrees to let shoutit use it's basic info")
+@step("user choose request")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -114,7 +114,7 @@ def step_impl(context):
     pass
 
 
-@step("user lets shoutit use his/her G\+ for sign in")
+@then("shout is created as a request")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -122,7 +122,7 @@ def step_impl(context):
     pass
 
 
-@step("user agrees to let shoutit upload videos to his YouTube account")
+@given("user is logged in with g\+")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -130,7 +130,7 @@ def step_impl(context):
     pass
 
 
-@given("user has a Facebook account")
+@step("user uploads at least one image if video is not uploaded")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -138,7 +138,7 @@ def step_impl(context):
     pass
 
 
-@step("user agrees that shoutit view his/her email address")
+@step("user uploads a video")
 def step_impl(context):
     """
     :type context behave.runner.Context
@@ -146,23 +146,7 @@ def step_impl(context):
     pass
 
 
-@step("user agrees that shoutit view his/her birthday")
-def step_impl(context):
-    """
-    :type context behave.runner.Context
-    """
-    pass
-
-
-@step("user allows shoutit to publish on his behalf")
-def step_impl(context):
-    """
-    :type context behave.runner.Context
-    """
-    pass
-
-
-@given("user has a shoutit account")
+@given("user is logged in with facebook")
 def step_impl(context):
     """
     :type context behave.runner.Context
