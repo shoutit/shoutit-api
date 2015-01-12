@@ -13,7 +13,7 @@ from apps.shoutit.controllers import message_controller
 from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, \
     BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
 from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, \
-    RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST
+    RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN
 
 
 def object_exists_validator(function, message='', *args, **kwargs):
@@ -261,6 +261,8 @@ def user_profile_validator(request, username, *args, **kwargs):
         if not profile.user.is_active and profile.user != request.user and not request.user.is_staff:
             return ValidationResult(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})],
                                     errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+        if request.method in ['POST', 'PUT', 'DELETE'] and request.user != profile.user:
+            return ValidationResult(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
 
         return ValidationResult(True, data={'profile': profile})
 
