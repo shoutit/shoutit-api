@@ -77,7 +77,7 @@ urlpatterns = patterns('',
                        url(r'^upload/([\w_-]+)/$', 'apps.shoutit.tiered_views.shout_views.upload_image'),
 
                        url(r'notifications/$', 'apps.shoutit.tiered_views.realtime_views.notifications'),
-                       url(r'^xhr/unReadNotificationsCount/$', 'apps.shoutit.tiered_views.realtime_views.unread_notifications_count'),
+                       url(r'^xhr/notifications/count/$', 'apps.shoutit.tiered_views.realtime_views.notifications_count'),
 
                        #	url(r'pub_realtime/$', 'apps.shoutit.views.redirect_to_node'),
 

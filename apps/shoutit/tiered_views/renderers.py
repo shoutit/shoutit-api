@@ -11,15 +11,13 @@ from django.conf import settings
 
 from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION, PostType
 from apps.shoutit.controllers import user_controller
-from apps.shoutit.models import Shout, ConfirmToken, Profile, Business, Trade, PredefinedCity
+from apps.shoutit.models import ConfirmToken, Profile, Business, Trade, PredefinedCity
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
 from apps.shoutit.templatetags import template_filters
 from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
 from apps.shoutit.utils import shout_link
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
-from apps.shoutit.api.api_utils import get_object_url
-from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, \
-    render_tag_dict
+from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, render_tag_dict, render_video
 from common import constants
 
 
@@ -210,7 +208,7 @@ def thumbnail_response(request, result, *args, **kwargs):
     if RESPONSE_RESULT_ERROR_BAD_REQUEST in result.errors:
         raise Http404()
 
-    import Image
+    from PIL.Image import open as image_open, ANTIALIAS
 
     if result.data['size']:
         path = '%s_%dx%d.png' % (
@@ -218,11 +216,11 @@ def thumbnail_response(request, result, *args, **kwargs):
     else:
         path = result.data['picture']
     if os.path.exists(path):
-        im = Image.open(path)
+        im = image_open(path)
     else:
-        im = Image.open(result.data['picture'])
+        im = image_open(result.data['picture'])
         if result.data['size']:
-            im.thumbnail(result.data['size'], Image.ANTIALIAS)
+            im.thumbnail(result.data['size'], ANTIALIAS)
             im.save(path, "PNG")
         else:
             raise Http404()
@@ -535,6 +533,15 @@ def user_location(request, result, *args, **kwargs):
     return response, pre_json_result
 
 
+def user_video_renderer(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        pre_json_result['video'] = render_video(result.data['video'])
+
+    return response, pre_json_result
+
+
 def notifications_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
@@ -549,7 +556,7 @@ def unread_notifications_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        pre_json_result['notificationsWithouMessages'] = result.data['notificationsWithouMessages']
+        pre_json_result['notifications_count_wo_messages'] = result.data['notifications_count_wo_messages']
         pre_json_result['unread_conversations'] = result.data['unread_conversations']
 
     return response, pre_json_result

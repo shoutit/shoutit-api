@@ -283,6 +283,7 @@ class SharedExperience(UUIDModel):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
+# todo: use attached object mixin
 class Video(UUIDModel):
     class Meta:
         app_label = 'shoutit'
@@ -300,6 +301,7 @@ class Video(UUIDModel):
     duration = models.IntegerField(default=0)
 
 
+# todo: use attached object mixin
 class StoredImage(UUIDModel):
     class Meta:
         app_label = 'shoutit'

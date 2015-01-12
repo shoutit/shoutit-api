@@ -619,12 +619,12 @@
     {% endif %}
     {% if request.user.is_authenticated %}
       requestAjaxily({
-        url: '/xhr/unReadNotificationsCount/',
+        url: '/xhr/notifications/count/',
         data: {},
         type: 'GET',
         successCallback: function (data) {
-          if (data.data.count != 0)
-            $('.notification-count').text(data.data.count);
+          if (data.data.notifications_count != 0)
+            $('.notification-count').text(data.data.notifications_count);
         }
       });
       {% if settings.REALTIME_SERVER_ON %}

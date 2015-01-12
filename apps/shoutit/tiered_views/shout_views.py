@@ -256,7 +256,7 @@ def shout_sell(request):
                                                            latitude=latitude,
                                                            longitude=longitude,
                                                            tags=form.cleaned_data['tags'].split(' '),
-                                                           shouter=get_profile(request.user.username),
+                                                           shouter=request.user,
                                                            country=country,
                                                            city=city,
                                                            address=address,

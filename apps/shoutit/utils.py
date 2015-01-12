@@ -12,7 +12,7 @@ import hmac
 import StringIO
 import mimetypes
 
-import Image
+from PIL import Image
 import pyrax
 from django.http import HttpResponse, Http404
 from numpy import array, argmax, sum, sqrt
@@ -265,7 +265,7 @@ def asynchronous_task():
 
 @asynchronous_task()
 def make_image_thumbnail(url, size, container_name):
-    from Image import open as image_open, ANTIALIAS
+    from PIL.Image import open as image_open, ANTIALIAS
     from mimetypes import guess_type
     import StringIO
     import pyrax

@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
+from apps.shoutit.controllers.user_controller import get_profile
 
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
@@ -199,8 +200,10 @@ def save_relocated_shouts(trade, stream_type):
 
 def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-    stream = shouter.Stream
-    stream2 = shouter.stream2
+
+    shouter_profile = get_profile(shouter.username)
+    stream = shouter_profile.Stream
+    stream2 = shouter_profile.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
     trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_REQUEST, Item=item,
@@ -246,11 +249,13 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
 
 def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-    stream = shouter.Stream
-    stream2 = shouter.stream2
+
+    shouter_profile = get_profile(shouter.username)
+    stream = shouter_profile.Stream
+    stream2 = shouter_profile.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
-    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter.user, Type=POST_TYPE_OFFER,
+    trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_OFFER,
                   Item=item, CountryCode=country, ProvinceCode=city, Address=address, IsSSS=is_sss)
 
     if date_published:
@@ -270,7 +275,7 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
-    for tag in tag_controller.GetOrCreateTags(request, tags, shouter.user):
+    for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
         tag.stream2.add_post(trade)
@@ -282,9 +287,9 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(shouter.user, EVENT_TYPE_SHOUT_OFFER, trade)
+    event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
     Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
-    realtime_controller.BindUserToPost(shouter.user, trade)
+    realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 

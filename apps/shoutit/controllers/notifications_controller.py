@@ -20,7 +20,6 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
 
     count = realtime_controller.GetUserConnectedClientsCount(user.username)
     if count:
-        # todo: add the new push (apns/gcm)
         realtime_controller.SendNotification(notification, user.username, count)
         realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification),
                                                                    RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
@@ -39,7 +38,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     # new apns / gcm
     if user.apns_device:
         try:
-            user.apns_device.send_message(message, extra={
+            user.apns_device.send_message(message, badge=get_user_notifications_count(user), extra={
                 'notification_type': int(notification_type),
                 'object': attached_object_dict
             })
@@ -81,6 +80,10 @@ def notify_users_of_comment(users, comment):
 
 def get_user_notifications(user):
     return Notification.objects.filter(IsRead=False, ToUser=user)
+
+
+def get_user_notifications_count(user):
+    return Notification.objects.filter(IsRead=False, ToUser=user).count()
 
 
 def get_user_notifications_without_messages_count(user):

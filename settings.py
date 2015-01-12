@@ -12,9 +12,6 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 import os
 BASE_DIR = os.path.dirname(__file__)
 import sys
-from PIL import Image
-
-sys.modules['Image'] = Image
 
 
 # Quick-start development settings - unsuitable for production
@@ -63,7 +60,7 @@ if ADDRESS == 'www.shoutit.com' and PORT == '8000':
     SHOUT_IT_HOST = 'shoutit.com'
 elif DEV:
     DEBUG = True
-    SHOUT_IT_DOMAIN = 'shoutit.syrex:8000'
+    SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = '127.0.0.1'
 else:
     DEBUG = True
@@ -73,8 +70,8 @@ else:
 USE_X_FORWARDED_HOST = True
 
 TEMPLATE_DEBUG = DEBUG
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.syrex', 'shoutit.com']
-INTERNAL_IPS = ('127.0.0.1', 'shoutit.syrex')
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', 'shoutit.com']
+INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 ADMINS = (
     ('Your Name', 'your_email@example.com'),
 )

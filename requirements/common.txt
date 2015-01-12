@@ -8,7 +8,9 @@ psycopg2
 south
 
 # PIL 1.1.7
-http://effbot.org/media/downloads/Imaging-1.1.7.tar.gz
+#http://effbot.org/media/downloads/Imaging-1.1.7.tar.gz
+# Pillow instead
+Pillow
 
 oauth2==1.5.211
 
@@ -28,7 +30,6 @@ django-redis-sessions==0.4.0
 suds==0.4
 pika==0.9.13
 apns==1.1.2
-# psycopg2==2.4.3
 twisted==11
 python-cloudfiles==1.7.10
 django-paypal==0.1.2

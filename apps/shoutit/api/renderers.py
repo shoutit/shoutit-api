@@ -76,7 +76,7 @@ def render_tag_dict(tag_dict):
 
 #TODO: rendering levels in better way.
 # 1: username and name
-# 2: url, image, sex, is_active
+# 2: url, image, video, sex, is_active
 # 3: date_joined, bio, location
 # 4: email, social_channels
 # 5: push tokens
@@ -113,6 +113,7 @@ def render_user(user, level=1, owner=False):
             result.update({
                 'url': get_object_url(user),
                 'image': full_url_path(profile.Image),
+                'video': render_video(profile.video),
                 'sex': profile.Sex,
                 'is_active': user.is_active
             })
