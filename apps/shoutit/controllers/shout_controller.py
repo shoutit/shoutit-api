@@ -141,7 +141,7 @@ def get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right
         'Longitude__lte': up_right_lng,
     }
     if trade_objects:
-        return Trade.objects.get_valid_trades().filter(**filters).select_related('Item__Currency')[:100]
+        return Trade.objects.get_valid_trades().filter(**filters).select_related('Item__Currency', 'OwnerUser__profile')[:100]
     else:
         return Trade.objects.get_valid_trades().filter(**filters).values('pk', 'Type', 'Longitude', 'Latitude', 'Item__Name')[:10000]
 
