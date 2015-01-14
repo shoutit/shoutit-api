@@ -364,11 +364,17 @@ def nearby_shouts(request):
     result = ResponseResult()
 
     # todo: validation
-    down_left_lat = float(request.GET.get('down_left_lat'))
-    down_left_lng = float(request.GET.get('down_left_lng'))
-    up_right_lat = float(request.GET.get('up_right_lat'))
-    up_right_lng = float(request.GET.get('up_right_lng'))
-    zoom = int(request.GET.get('zoom'))
+    down_left_lat = float(request.GET.get('down_left_lat', -90))
+    down_left_lng = float(request.GET.get('down_left_lng', -180))
+    up_right_lat = float(request.GET.get('up_right_lat', 90))
+    up_right_lng = float(request.GET.get('up_right_lng', 180))
+    zoom = int(request.GET.get('zoom', 1))
+
+    if request.is_api:
+        shouts = shout_controller.get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, True)
+        result.data['shouts'] = shouts
+        # todo: clustering for api
+        return result
 
     shouts, shout_points = shout_controller.get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
     # todo: refactor

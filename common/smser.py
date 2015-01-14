@@ -69,7 +69,7 @@ print 'Going to send %d SMS\'s' % (len(users))
 for user in users:
 	print str(list(users).index(user) + 1)+ ' : ',
 	try:
-		shout = Trade.objects.GetValidTrades().filter(OwnerUser = user.user).select_related('Item')
+		shout = Trade.objects.get_valid_trades().filter(OwnerUser = user.user).select_related('Item')
 		content = 'an advertisement'
 		if len(shout):
 			content = utils.remove_non_ascii(shout[0].Item.Name)

@@ -661,7 +661,7 @@ def get_unread_notifications_count(profile):
 
 
 def activities_stream(profile, start_index=None, end_index=None):
-    stream_posts_query_set = profile.Stream.Posts.GetValidPosts([POST_TYPE_EVENT]).filter(
+    stream_posts_query_set = profile.Stream.Posts.get_valid_posts([POST_TYPE_EVENT]).filter(
         ~Q(Type=POST_TYPE_EVENT) |
         (Q(Type=POST_TYPE_EVENT)
          & Q(event__IsDisabled=False)
@@ -674,10 +674,10 @@ def activities_stream(profile, start_index=None, end_index=None):
     post_count = stream_posts_query_set.count()
 
     post_ids = [post['pk'] for post in stream_posts_query_set[start_index:end_index].values('pk')]
-    #	trades = Trade.objects.GetValidTrades().filter(pk__in = post_ids).select_related('Item','Item__Currency','OwnerUser','OwnerUser__Profile','OwnerUser__Business')
+    #	trades = Trade.objects.get_valid_trades().filter(pk__in = post_ids).select_related('Item','Item__Currency','OwnerUser','OwnerUser__Profile','OwnerUser__Business')
     #	trades = shout_controller.get_trade_images(trades)
 
-    events = Event.objects.GetValidEvents().filter(pk__in=post_ids).select_related('OwnerUser', 'OwnerUser__Profile').order_by(
+    events = Event.objects.get_valid_events().filter(pk__in=post_ids).select_related('OwnerUser', 'OwnerUser__Profile').order_by(
         '-DatePublished')
     events = event_controller.GetDetailedEvents(events)
     #	stream_posts = sorted(chain( trades, events),key=lambda instance: instance.DatePublished,reverse = True)

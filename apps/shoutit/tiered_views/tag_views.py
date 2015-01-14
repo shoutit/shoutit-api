@@ -185,7 +185,7 @@ def tag_profile_brief(request, tag_name):
     result = ResponseResult()
     result.data['tag'] = tag
 
-    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags=tag).count()
+    result.data['shouts_count'] = Trade.objects.get_valid_trades().filter(Tags=tag).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)

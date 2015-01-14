@@ -47,7 +47,7 @@ def PublishShoutToShout(shout, other):
 
 
 def MaxFollowings(pks, country, city, filters):
-    shouts = Trade.objects.GetValidTrades(country=country, city=city).filter(**filters)
+    shouts = Trade.objects.get_valid_trades(country=country, city=city).filter(**filters)
     shouts = shouts.select_related('Streams').filter(Streams__pk__in=pks).values('StreamsCode')
     mutuals = [len(set(f for f in shout['StreamsCode'].split(',') if len(shout['StreamsCode'].strip()) > 0) & set(pks))
                for shout in shouts]
@@ -67,7 +67,7 @@ def MaxDistance(points, lat, lng):
 
 
 def GetShoutTimeOrder(pk, country, city, limit=0):
-    shout_qs = Trade.objects.GetValidTrades(country=country, city=city).order_by('-DatePublished')
+    shout_qs = Trade.objects.get_valid_trades(country=country, city=city).order_by('-DatePublished')
     shout_qs = shout_qs.values('pk')
     shouts = list(shout_qs)
     shouts = [shout['pk'] for shout in shouts]
@@ -272,7 +272,7 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
 
     extra_order_bys = ''
     points = list(
-        Trade.objects.GetValidTrades(country=base_shout.CountryCode, city=base_shout.ProvinceCode).filter(**filters).values(
+        Trade.objects.get_valid_trades(country=base_shout.CountryCode, city=base_shout.ProvinceCode).filter(**filters).values(
             'Latitude', 'Longitude'))
     max_distance = MaxDistance(points, float(base_shout.Latitude), float(base_shout.Longitude))
     pks = [x for x in base_shout.StreamsCode.split(',')]
@@ -301,7 +301,7 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
 
     extra_order_bys = '(|/(' + extra_order_bys.strip()[:-1] + ')) / |/(%d)' % rank_count
 
-    shout_qs = Trade.objects.GetValidTrades(country=base_shout.CountryCode, city=base_shout.ProvinceCode).select_related(
+    shout_qs = Trade.objects.get_valid_trades(country=base_shout.CountryCode, city=base_shout.ProvinceCode).select_related(
         'Item', 'Item__Currency', 'OwnerUser__Profile', 'Tags').filter(**filters).filter(~Q(pk=base_shout.pk))
     if exclude_shouter:
         shout_qs = shout_qs.filter(~Q(OwnerUser=base_shout.OwnerUser))
@@ -321,9 +321,9 @@ def get_trades_by_pks(pks):
     if not pks:
         return []
     #todo: choose which statement with less queries and enough data
-    #shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = pks)
-    #shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = pks)
-    shout_qs = Trade.objects.GetValidTrades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(pk__in=pks)
+    #shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = pks)
+    #shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = pks)
+    shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(pk__in=pks)
 
     return attach_related_to_shouts(shout_qs)
 

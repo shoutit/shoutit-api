@@ -154,7 +154,7 @@ def index_mobile(request, result, *args, **kwargs):
 
 def activate_modal_mobile(request, result, token):
     result.data['link'] = "shoutit.com%s" % '/' + token + '/'
-    shout = Trade.objects.GetValidTrades().filter(OwnerUser=request.user).select_related('Item')
+    shout = Trade.objects.get_valid_trades().filter(OwnerUser=request.user).select_related('Item')
     content = ''
     if len(shout):
         content = shout[0].Item.Name
@@ -421,17 +421,19 @@ def shouts_location_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
-        pre_json_result['shouts'] = []
-        for i in range(len(result.data['shout_pks'])):
-            pre_json_result['shouts'].append({
-                'id': result.data['shout_pks'][i],
-                'location': {
-                    'latitude': result.data['locations'][i].split(' ')[0],
-                    'longitude': result.data['locations'][i].split(' ')[1],
-                },
-                'type': PostType.values[result.data['shout_types'][i]],
-                'name': result.data['shout_names'][i]
-            })
+        pre_json_result['shouts'] = [render_shout(shout, 1) for shout in result.data['shouts']]
+
+        # for i in range(len(result.data['shout_pks'])):
+        #     pre_json_result['shouts'].append({
+        #         'id': result.data['shout_pks'][i],
+        #         'location': {
+        #             'latitude': result.data['locations'][i].split(' ')[0],
+        #             'longitude': result.data['locations'][i].split(' ')[1],
+        #         },
+        #         'type': PostType.values[result.data['shout_types'][i]],
+        #         'name': result.data['shout_names'][i]
+        #     })
+
         pre_json_result['count'] = len(pre_json_result['shouts'])
 
     return response, pre_json_result
@@ -700,7 +702,7 @@ def activate_modal_html(request, result, token):
             response.set_cookie('bc_t_' + request.session.session_key, token)
             return response
 
-        shout = Trade.objects.GetValidTrades().filter(OwnerUser=t.user)
+        shout = Trade.objects.get_valid_trades().filter(OwnerUser=t.user)
         if len(shout):
             url = shout_link(shout[0])
         else:

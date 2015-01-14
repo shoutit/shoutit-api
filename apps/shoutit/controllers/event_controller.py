@@ -24,7 +24,7 @@ def RegisterEvent(user, type, attached_object=None):
 #	realtime_controller.BroadcastRealtimeMessage(realtime_message,user_controller.GetProfile(user).City)
 
 def GetUserEvents(user, start_index=None, end_index=None):
-    return Event.objects.GetValidEvents().filter(OwnerUser=user)
+    return Event.objects.get_valid_events().filter(OwnerUser=user)
 
 
 def GetPublicEventsByLocation(country=None, city=None, date=None):
