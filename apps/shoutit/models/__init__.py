@@ -15,4 +15,3 @@ from apps.shoutit.models.user import Profile, FollowShip, LinkedFacebookAccount,
 from apps.shoutit.models.post import Comment, Deal, Event, Experience, Post, SharedExperience, Shout, ShoutWrap, StoredImage, Trade, Video
 from apps.shoutit.models.message import Conversation, Message, MessageAttachment, Report, Notification
 from apps.shoutit.models.payment import Payment, Transaction, Voucher, DealBuy, Service, ServiceBuy, ServiceUsage, Subscription
-# from apps.shoutit.models.message import Conversation2, Message2, Message2Read, Message2Deleted

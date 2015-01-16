@@ -17,6 +17,8 @@ class UUIDModel(models.Model):
         abstract = True
 
     id = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
+    created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True)
+    modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True, null=True)
 
     @property
     def pk(self):
