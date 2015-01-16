@@ -8,48 +8,31 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-BASE_DIR = os.path.dirname(__file__)
 import sys
-
+from common.utils import check_runserver_address_port, check_offline_mood
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
+BASE_DIR = os.path.dirname(__file__)
+OFFLINE_MODE = check_offline_mood()
 
 # Prod or Dev or Dev on Server
 DEV = False if os.environ.get('HOME') == '/root' else True
 ON_SERVER = not DEV
 DEV_ON_SERVER = ON_SERVER and BASE_DIR.split('/')[-1] == 'shoutit_backend_dev'
 PROD_ON_SERVER = ON_SERVER and BASE_DIR.split('/')[-1] == 'shoutit_backend_prod'
-OFFLINE_MODE = False
 
 print "=================================================="
 print "================= Shoutit Server ================="
 print "=================================================="
-print 'ENV:', 'DEV' if DEV else 'ON_SERVER' if ON_SERVER else ''
+if OFFLINE_MODE:
+    print "OFFLINE MODE: ON"
+print "ENV:", "DEV" if DEV else "ON_SERVER" if ON_SERVER else ""
 if ON_SERVER:
-    print 'SERVER STATUS:', 'DEV' if DEV_ON_SERVER else 'PROD' if PROD_ON_SERVER else ''
-
-
-def check_runserver_address_port():
-    if len(sys.argv) > 1 and sys.argv[1] == "runserver":
-        address_port = sys.argv[-1] if len(sys.argv) > 2 else "127.0.0.1:8000"
-        if address_port.startswith("-"):
-            return
-        else:
-            try:
-                address, port = address_port.split(':')
-            except ValueError:
-                address, port = '', address_port
-        if not address:
-            address = '127.0.0.1'
-        return address, port
-    else:
-        return '127.0.0.1', '8000'
+    print "SERVER STATUS:", "DEV" if DEV_ON_SERVER else "PROD" if PROD_ON_SERVER else ""
 
 
 ADDRESS, PORT = check_runserver_address_port()

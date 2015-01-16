@@ -65,10 +65,23 @@ def search_tag(request):
 
     query = request.GET.get('query', '')
     limit = request.GET.get('limit', 10)
+    show_is_listening = bool(request.GET.get('show_is_listening', False))
+
     if limit > 10:
         limit = 10
     tags = tag_controller.search_tags(query, limit)
     result.data['tags'] = tags
+
+    if show_is_listening:
+        profile = user_controller.GetProfile(request.user)
+        if request.user.is_authenticated() and isinstance(profile, Profile):
+            user_interests = profile.Interests.all().values_list('Name')
+            for tag in result.data['tags']:
+                tag['is_listening'] = (tag['Name'], ) in user_interests
+        else:
+            for tag in result.data['tags']:
+                tag['is_listening'] = False
+
     return result
 
 

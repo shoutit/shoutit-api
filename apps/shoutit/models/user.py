@@ -167,6 +167,7 @@ class PermissionsManager(models.Manager):
         return Permission.objects.filter(users=user)
 
 
+# todo: why not using uuid too?
 class Permission(models.Model):
     class Meta:
         app_label = 'shoutit'
