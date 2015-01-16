@@ -43,8 +43,54 @@ class Message(UUIDModel):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
 
-class MessageAttachment(UUIDModel, AttachedObjectMixin):
+class Conversation2(UUIDModel):
+    """
+    Conversation2 will introduce group chat where a conversation can have many users, each will contribute by creating Message2
+    """
+    class Meta:
+        app_label = 'shoutit'
 
+    users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations2')
+
+
+class Message2(UUIDModel):
+    """
+    Message2 is a message from user into a Conversation2
+    """
+    class Meta:
+        app_label = 'shoutit'
+
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
+    conversation = models.ForeignKey(Conversation2, related_name='messages2')
+    read_by = models.ManyToManyField(AUTH_USER_MODEL, through='Message2Read', related_name='read_messages2')
+    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='Message2Deleted', related_name='deleted_messages2')
+
+
+class Message2Read(UUIDModel):
+    """
+    Message2Read is to record a user reading a Message2
+    """
+    class Meta:
+        app_label = 'shoutit'
+
+    user = models.ForeignKey(AUTH_USER_MODEL)
+    message = models.ForeignKey(Message2, related_name='read_by_set')
+    conversation = models.ForeignKey(Conversation2, related_name='read_by_set')
+
+
+class Message2Deleted(UUIDModel):
+    """
+    Message2Read is to record a user deleting a Message2
+    """
+    class Meta:
+        app_label = 'shoutit'
+
+    user = models.ForeignKey(AUTH_USER_MODEL)
+    message = models.ForeignKey(Message2, related_name='deleted_by_set')
+    conversation = models.ForeignKey(Conversation2, related_name='deleted_by_set')
+
+
+class MessageAttachment(UUIDModel, AttachedObjectMixin):
     class Meta:
         app_label = 'shoutit'
 
