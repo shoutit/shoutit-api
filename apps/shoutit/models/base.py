@@ -34,7 +34,7 @@ class AttachedObjectMixin(models.Model):
     attached_object = GenericForeignKey('content_type', 'object_id')
 
 
-class AbstractUser(AbstractBaseUser, PermissionsMixin, UUIDModel):
+class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
     """
     An abstract base class implementing a fully featured User model with
     admin-compliant permissions and uuid field.
@@ -67,7 +67,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin, UUIDModel):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
-        abstract = True
+        app_label = 'shoutit'
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)
