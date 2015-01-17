@@ -82,4 +82,6 @@ class Location(UUIDModel):
     class Meta:
         app_label = 'shoutit'
 
+    city = models.CharField(max_length=200, db_index=True, unique=True)
+    country_code = models.CharField(max_length=200, db_index=True, unique=True)
 
