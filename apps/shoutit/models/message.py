@@ -64,6 +64,7 @@ class Message2(UUIDModel):
     conversation = models.ForeignKey(Conversation2, related_name='messages2')
     read_by = models.ManyToManyField(AUTH_USER_MODEL, through='Message2Read', related_name='read_messages2')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='Message2Deleted', related_name='deleted_messages2')
+    message = models.CharField(null=True, blank=False, max_length=2000)
 
 
 class Message2Read(UUIDModel):
