@@ -4,10 +4,10 @@ from settings import AUTH_USER_MODEL
 
 
 class DBCLUser(UUIDModel):
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True)
+
     class Meta(UUIDModel.Meta):
         abstract = True
-
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True)
 
 
 class CLUser(DBCLUser):
@@ -26,6 +26,7 @@ def cl_user(self):
     return self._cl_user
 User.add_to_class('cl_user', cl_user)
 
+
 @property
 def cl_ad_id(self):
     if hasattr(self, '_cl_ad_id') and self._cl_ad_id:
@@ -43,5 +44,5 @@ class DBCLConversation(UUIDModel):
     in_email = models.EmailField(max_length=254, null=True)
     from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
-    shout = models.ForeignKey('Trade')
+    shout = models.ForeignKey('shoutit.Trade')
     ref = models.CharField(max_length=100, null=True)

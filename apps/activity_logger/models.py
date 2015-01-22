@@ -1,14 +1,12 @@
 from django.db import models
-from piston3.models import Token
 
-from apps.shoutit.models import User
 from apps.shoutit.models.misc import UUIDModel
 from common import constants
 
 
 class Request(UUIDModel):
     ip_address = models.IPAddressField(default='0.0.0.0', db_index=True)
-    user = models.ForeignKey(User, null=True, related_name='requests', db_index=True)
+    user = models.ForeignKey('shoutit.User', null=True, related_name='requests', db_index=True)
     session_id = models.TextField(default='', db_index=True)
     url = models.URLField(default='', max_length=8192)
     plain_url = models.URLField(default='', db_index=True, max_length=8192)
@@ -18,7 +16,7 @@ class Request(UUIDModel):
     user_agent = models.TextField(default='')
     referer = models.URLField(max_length=8192, default='')
     date_visited = models.DateTimeField(auto_now_add=True)
-    token = models.ForeignKey(Token, null=True, related_name='+')
+    token = models.ForeignKey('piston3.Token', null=True, related_name='+')
 
     def __unicode__(self):
         return '%s %s from %s @ %s by %s' % (self.method, self.plain_url, self.ip_address, self.date_visited.strftime('%Y/%m/%d %H:%M:%S'), 'anonymous' if self.user is None else self.user.username)

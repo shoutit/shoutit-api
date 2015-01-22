@@ -3,15 +3,15 @@ from apps.shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + self.Name
-
     Name = models.CharField(max_length=512, default='')
     Description = models.CharField(max_length=1000, default='')
     Price = models.FloatField(default=0.0)
-    Currency = models.ForeignKey('Currency', related_name='Items')
+    Currency = models.ForeignKey('shoutit.Currency', related_name='Items')
     State = models.IntegerField(default=0, db_index=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + self.Name
 
     def get_images(self):
         if not hasattr(self, '_images'):
@@ -40,9 +40,9 @@ class Item(UUIDModel):
 
 
 class Currency(UUIDModel):
-    def __unicode__(self):
-        return '[' + self.Code + '] '
-
     Code = models.CharField(max_length=10)
     Country = models.CharField(max_length=10, blank=True)
     Name = models.CharField(max_length=64, null=True)
+
+    def __unicode__(self):
+        return '[' + self.Code + '] '

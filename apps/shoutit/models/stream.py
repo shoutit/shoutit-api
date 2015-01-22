@@ -10,11 +10,10 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Stream(UUIDModel):
+    Type = models.IntegerField(default=0, db_index=True)
 
     def __unicode__(self):
         return unicode(self.pk) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
-
-    Type = models.IntegerField(default=0, db_index=True)
 
     def GetOwner(self):
         owner = None
@@ -56,6 +55,15 @@ class Stream(UUIDModel):
         self.Posts.remove(shout)
         self.save()
 
+# todo: remove in favor of Listen
+class FollowShip(UUIDModel):
+    follower = models.ForeignKey('shoutit.Profile')
+    stream = models.ForeignKey('shoutit.Stream')
+    date_followed = models.DateTimeField(auto_now_add=True)
+    state = models.IntegerField(default=0, db_index=True)
+
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
 
 # ######## experiment new stream ######### #
 from django.contrib.contenttypes.models import ContentType
@@ -64,6 +72,9 @@ from django.dispatch import receiver
 
 
 class Stream2(UUIDModel, AttachedObjectMixin):
+    type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType2.choices)
+    posts = models.ManyToManyField('shoutit.Post', related_name='streams2')
+    listeners = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Listen', related_name='listening')
 
     class Meta(UUIDModel.Meta):
         unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
@@ -78,10 +89,6 @@ class Stream2(UUIDModel, AttachedObjectMixin):
             kwargs['type'] = StreamType2.texts[attached_object.__class__.__name__]
         super(Stream2, self).__init__(*args, **kwargs)
 
-    type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType2.choices)
-    posts = models.ManyToManyField('Post', related_name='streams2')
-    listeners = models.ManyToManyField(AUTH_USER_MODEL, through='Listen', related_name='listening')
-
     def add_post(self, post):
         self.posts.add(post)
         self.save()
@@ -92,6 +99,19 @@ class Stream2(UUIDModel, AttachedObjectMixin):
 
 
 class Stream2Mixin(models.Model):
+    # todo: after updating to django 1.7 'related_query_name' can be used to filter on owner (attached_object) attributes
+    _stream2 = GenericRelation(Stream2)
+
+    class Meta:
+        abstract = True
+
+    @property
+    def stream2(self):
+        try:
+            return self._stream2.get()
+        except Stream2.DoesNotExist:
+            return None
+
     # todo: remove?
     @property
     def stream2_old(self):
@@ -102,19 +122,6 @@ class Stream2Mixin(models.Model):
             except Stream2.DoesNotExist:
                 return None
         return self._stream2
-
-    @property
-    def stream2(self):
-        try:
-            return self._stream2.get()
-        except Stream2.DoesNotExist:
-            return None
-
-    # todo: after updating to django 1.7 'related_query_name' can be used to filter on owner (attached_object) attributes
-    _stream2 = GenericRelation(Stream2)
-
-    class Meta:
-        abstract = True
 
 
 @receiver(post_save)
@@ -145,10 +152,10 @@ def delete_attached_stream(sender, instance, using, **kwargs):
 
 
 class Listen(UUIDModel):
+    listener = models.ForeignKey(AUTH_USER_MODEL)
+    stream = models.ForeignKey('shoutit.Stream2')
+    date_listened = models.DateTimeField(auto_now_add=True)
+
     class Meta(UUIDModel.Meta):
         unique_together = ('listener', 'stream')  # so the user can follow the stream only once
-
-    listener = models.ForeignKey(AUTH_USER_MODEL)
-    stream = models.ForeignKey(Stream2)
-    date_listened = models.DateTimeField(auto_now_add=True)
 

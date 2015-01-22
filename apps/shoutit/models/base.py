@@ -13,13 +13,13 @@ from uuidfield import UUIDField
 
 
 class UUIDModel(models.Model):
-    class Meta:
-        abstract = True
-        app_label = 'shoutit'
-
     id = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
     created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True)
     modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True, null=True)
+
+    class Meta:
+        abstract = True
+        app_label = 'shoutit'
 
     @property
     def pk(self):
@@ -27,12 +27,12 @@ class UUIDModel(models.Model):
 
 
 class AttachedObjectMixin(models.Model):
-    class Meta:
-        abstract = True
-
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = UUIDField(hyphenate=True, version=4, null=True)
     attached_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        abstract = True
 
 
 class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
@@ -42,7 +42,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
 
     Username, password and email are required. Other fields are optional.
     """
-
     username = models.CharField(_('username'), max_length=30, unique=True,
                                 help_text=_('Required. 30 characters or fewer. Letters, numbers and '
                                             './-/_ characters'),
