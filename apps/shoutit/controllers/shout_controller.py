@@ -133,27 +133,34 @@ def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None
     return None
 
 
-def get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng):
+def get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, trade_objects=False):
     filters = {
         'Latitude__gte': down_left_lat,
         'Latitude__lte': up_right_lat,
         'Longitude__gte': down_left_lng,
         'Longitude__lte': up_right_lng,
     }
-    shouts = Trade.objects.GetValidTrades().filter(**filters).values('pk', 'Type', 'Longitude', 'Latitude', 'Item__Name')[:10000]
-    return shouts
+    if trade_objects:
+        return Trade.objects.get_valid_trades().filter(**filters).select_related('Item__Currency', 'OwnerUser__profile')[:100]
+    else:
+        return Trade.objects.get_valid_trades().filter(**filters).values('pk', 'Type', 'Longitude', 'Latitude', 'Item__Name')[:10000]
 
 
-def get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng):
+def get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, shouts_only=False):
     if down_left_lng > up_right_lng:
-        right_shouts = get_shouts_in_view_port(down_left_lat, -180.0, up_right_lat, up_right_lng)
-        left_shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, 180.0)
+        right_shouts = get_shouts_in_view_port(down_left_lat, -180.0, up_right_lat, up_right_lng, shouts_only)
+        left_shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, 180.0, shouts_only)
         from itertools import chain
 
-        shouts = list(chain(right_shouts, left_shouts))
+        # todo: check!
+        shouts = chain(right_shouts, left_shouts) if shouts_only else list(chain(right_shouts, left_shouts))
     else:
-        shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng)
-    return shouts, [[shout['Latitude'], shout['Longitude']] for shout in shouts]
+        shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, shouts_only)
+
+    if shouts_only:
+        return shouts
+    else:
+        return shouts, [[shout['Latitude'], shout['Longitude']] for shout in shouts]
 
 
 def GetStreamAffectedByShout(shout):

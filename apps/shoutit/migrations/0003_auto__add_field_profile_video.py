@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'Profile.video'
         db.add_column(u'shoutit_profile', 'video',
-                      self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Video'], unique=True, null=True),
+                      self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Video'], unique=True, null=True, on_delete=models.SET_NULL),
                       keep_default=False)
 
 
@@ -335,7 +335,7 @@ class Migration(SchemaMigration):
             'isSMS': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
             'isSSS': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
             'user': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'profile'", 'unique': 'True', 'null': 'True', 'to': u"orm['shoutit.User']"}),
-            'video': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Video']", 'unique': 'True', 'null': 'True'})
+            'video': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Video']", 'unique': 'True', 'null': 'True', 'on_delete': 'models.SET_NULL'})
         },
         'shoutit.report': {
             'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),

@@ -45,7 +45,7 @@ def GetUsersSharedExperience(exp_id):
 
 
 def GetExperience(user, exp_id, detailed=False):
-    experience = Experience.objects.GetValidExperiences().filter(pk=exp_id).select_related('AboutBusiness', 'AboutBusiness__Profile',
+    experience = Experience.objects.get_valid_experiences().filter(pk=exp_id).select_related('AboutBusiness', 'AboutBusiness__Profile',
                                                                                            'OwnerUser', 'OwnerUser__Profile').order_by(
         '-DatePublished')
     if experience:
@@ -71,7 +71,7 @@ def GetExperiences(user, owner_user=None, about_business=None, start_index=None,
         experiences_posts = experiences_posts.filter(experience__AboutBusiness__City=city)
     experiences_post_ids = experiences_posts.values('pk')
 
-    experiences = Experience.objects.GetValidExperiences().filter(pk__in=experiences_post_ids).select_related('AboutBusiness',
+    experiences = Experience.objects.get_valid_experiences().filter(pk__in=experiences_post_ids).select_related('AboutBusiness',
                                                                                                               'AboutBusiness__Profile',
                                                                                                               'OwnerUser',
                                                                                                               'OwnerUser__Profile').order_by(

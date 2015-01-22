@@ -39,7 +39,7 @@ def form_validator(request, form_class, message='You have entered some invalid i
 def shout_form_validator(request, form_class, message='You have entered some invalid input.', initial={}):
     validation_result = form_validator(request, form_class, _(message), initial)
     if validation_result.valid:
-        if not request.user.is_active and Trade.objects.GetValidTrades().filter(
+        if not request.user.is_active and Trade.objects.get_valid_trades().filter(
                 OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             return ValidationResult(False, messages=[
                 ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],

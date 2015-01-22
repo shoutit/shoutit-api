@@ -111,7 +111,7 @@ urlpatterns = patterns('',
 
                        url(r'^xhr/hovercard/$', 'apps.shoutit.tiered_views.general_views.hovercard'),
                        url(r'^xhr/shout/nearby/$', 'apps.shoutit.tiered_views.shout_views.nearby_shouts'),
-                       url(r'^xhr/loadShout/([a-zA-z0-9]+)/$', 'apps.shoutit.tiered_views.shout_views.load_shout'),
+                       url(r'^xhr/loadShout/([-\w]+)/$', 'apps.shoutit.tiered_views.shout_views.load_shout'),
                        url(r'^xhr/deleteShout/$', 'apps.shoutit.tiered_views.shout_views.delete_shout'),
                        url(r'^xhr/update_location/$', 'apps.shoutit.tiered_views.user_views.update_user_location'),
                        url(r'^xhr/setTagParent/$', 'apps.shoutit.tiered_views.tag_views.set_tag_parent'),

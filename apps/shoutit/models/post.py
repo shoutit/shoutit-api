@@ -15,95 +15,88 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PostManager(models.Manager):
-    def GetValidPosts(self, types=[], country=None, city=None, get_muted=False, get_expired=False):
-        q = None
-        for i in range(len(types)):
-            q = q | Q(Type=types[i]) if i != 0 else Q(Type=types[i])
+    def get_valid_posts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
 
-        post_qs = self.filter(q) if q else self
+        qs = self
+        qs = qs.distinct().filter(IsDisabled=False)
+
+        if types:
+            qs = qs.filter(Type__in=types)
+
         if country:
-            post_qs = post_qs.filter(CountryCode__iexact=country)
+            qs = qs.filter(CountryCode__iexact=country)
+
         if city:
-            post_qs = post_qs.filter(ProvinceCode__iexact=city)
-        post_qs = post_qs.distinct().filter(IsDisabled=False)  #.order_by("-DatePublished")
+            qs = qs.filter(ProvinceCode__iexact=city)
+
         if not get_muted:
-            post_qs = post_qs.filter(IsMuted=False)
+            qs = qs.filter(IsMuted=False)
 
         if not get_expired:
-            post_qs = self.filter_shout_expired(post_qs)
-        return post_qs
+            qs = self.filter_expired_out(qs)
 
-    def filter_shout_expired(self, query_set):
+        return qs
+
+    def filter_expired_out(self, qs):
         today = datetime.today()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        begin = today - days
-        query_set = query_set.filter(
-            (~Q(Type=POST_TYPE_REQUEST) & ~Q(Type=POST_TYPE_OFFER))
+        day = today - days
+        return qs.filter(
+            Q(Type=POST_TYPE_EXPERIENCE) | Q(Type=POST_TYPE_EVENT)
             | (
                 (Q(Type=POST_TYPE_REQUEST) | Q(Type=POST_TYPE_OFFER))
                 & (
-                    Q(shout__ExpiryDate__isnull=True, DatePublished__range=(begin, today))
+                    Q(shout__ExpiryDate__isnull=True, DatePublished__range=(day, today))
                     |
                     Q(shout__ExpiryDate__isnull=False, shout__ExpiryDate__gte=today)
                 )
             )
         )
-        return query_set
 
 
 class ShoutManager(PostManager):
-    def filter_shout_expired(self, query_set):
-        today = datetime.today()
-        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        begin = today - days
-        query_set = query_set.filter(
-            Q(ExpiryDate__isnull=True, DatePublished__range=(begin, today)) | Q(ExpiryDate__isnull=False, ExpiryDate__gte=today))
-        return query_set
-
-    def GetValidShouts(self, types=[], country=None, city=None, get_expired=False, get_muted=False):
+    def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
         if not types:
             types = [POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]
-        types = [shout_type for shout_type in types if shout_type in [POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]]
-        shout_qs = PostManager.GetValidPosts(self, types, country=country, city=city, get_muted=get_muted,
-                                             get_expired=get_expired)
-        if not get_expired:
-            shout_qs = self.filter_shout_expired(shout_qs)
-        return shout_qs
+        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]))
+        return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+
+    def filter_expired_out(self, qs):
+        today = datetime.today()
+        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+        day = today - days
+        return qs.filter(Q(ExpiryDate__isnull=True, DatePublished__range=(day, today)) | Q(ExpiryDate__isnull=False, ExpiryDate__gte=today))
 
 
 class TradeManager(ShoutManager):
-    def GetValidTrades(self, types=[], country=None, city=None, get_expired=False, get_muted=False):
+    def get_valid_trades(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
         if not types:
             types = [POST_TYPE_OFFER, POST_TYPE_REQUEST]
-        types = [trade_type for trade_type in types if trade_type in [POST_TYPE_OFFER, POST_TYPE_REQUEST]]
-        trade_qs = ShoutManager.GetValidShouts(self, types=types, country=country, city=city,
-                                               get_expired=get_expired, get_muted=get_muted)
+        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST]))
+        return ShoutManager.get_valid_shouts(self, types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
 
-        return trade_qs
+    def get_valid_requests(self, country=None, city=None, get_expired=False, get_muted=False):
+        types = [POST_TYPE_REQUEST]
+        return self.get_valid_trades(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+
+    def get_valid_offers(self, country=None, city=None, get_expired=False, get_muted=False):
+        types = [POST_TYPE_OFFER]
+        return self.get_valid_trades(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
 
 
 class DealManager(ShoutManager):
-    def GetValidDeals(self, country=None, city=None, get_expired=False, get_muted=False):
-        deal_qs = ShoutManager.GetValidShouts(self, [POST_TYPE_DEAL], country=country, city=city,
-                                              get_expired=get_expired, get_muted=get_muted)
-
-        return deal_qs
+    def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
+        return ShoutManager.get_valid_shouts(self, [POST_TYPE_DEAL], country=country, city=city, get_expired=get_expired, get_muted=get_muted)
 
 
 class ExperienceManager(PostManager):
-    def GetValidExperiences(self, country=None, city=None, get_muted=False):
-        experience_qs = PostManager.GetValidPosts(self, types=[POST_TYPE_EXPERIENCE], country=country,
-                                                  city=city, get_muted=get_muted, get_expired=True)
-
-        return experience_qs
+    def get_valid_experiences(self, country=None, city=None, get_muted=False):
+        return PostManager.get_valid_posts(self, types=[POST_TYPE_EXPERIENCE], country=country, city=city, get_expired=True, get_muted=get_muted)
 
 
 class EventManager(PostManager):
-    def GetValidEvents(self, country=None, city=None, get_muted=False):
-        event_qs = PostManager.GetValidPosts(self, types=[POST_TYPE_EVENT], country=country, city=city,
-                                             get_muted=get_muted, get_expired=True)
-
-        return event_qs
+    def get_valid_events(self, country=None, city=None, get_muted=False):
+        return PostManager.get_valid_posts(self, types=[POST_TYPE_EVENT], country=country, city=city, get_expired=True, get_muted=get_muted)
 
 
 class Post(UUIDModel):

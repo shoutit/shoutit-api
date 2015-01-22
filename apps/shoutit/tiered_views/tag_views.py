@@ -65,10 +65,23 @@ def search_tag(request):
 
     query = request.GET.get('query', '')
     limit = request.GET.get('limit', 10)
+    show_is_listening = bool(request.GET.get('show_is_listening', False))
+
     if limit > 10:
         limit = 10
     tags = tag_controller.search_tags(query, limit)
     result.data['tags'] = tags
+
+    if show_is_listening:
+        profile = user_controller.GetProfile(request.user)
+        if request.user.is_authenticated() and isinstance(profile, Profile):
+            user_interests = profile.Interests.all().values_list('Name')
+            for tag in result.data['tags']:
+                tag['is_listening'] = (tag['Name'], ) in user_interests
+        else:
+            for tag in result.data['tags']:
+                tag['is_listening'] = False
+
     return result
 
 
@@ -185,7 +198,7 @@ def tag_profile_brief(request, tag_name):
     result = ResponseResult()
     result.data['tag'] = tag
 
-    result.data['shouts_count'] = Trade.objects.GetValidTrades().filter(Tags=tag).count()
+    result.data['shouts_count'] = Trade.objects.get_valid_trades().filter(Tags=tag).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)

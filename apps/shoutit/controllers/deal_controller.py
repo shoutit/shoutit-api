@@ -53,7 +53,7 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
 
 
 def GetConcurrentDeals(business_profile):
-    return Deal.objects.GetValidDeals().filter(OwnerUser=business_profile.user, IsClosed=False)
+    return Deal.objects.get_valid_deals().filter(OwnerUser=business_profile.user, IsClosed=False)
 
 
 def get_image_for_voucher(voucher_band):

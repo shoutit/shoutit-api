@@ -22,6 +22,7 @@ from django.conf import settings
 
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
 from apps.shoutit.models import Experience
+from settings import SITE_LINK
 
 
 def generate_password():
@@ -327,22 +328,25 @@ def shout_link(post):
 
         city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.City))) if experience.AboutBusiness.City else ''
         experience_type = 'bad' if experience.State == 0 else 'good'
-        link = 'http%s://%s/%s-experience/%s/%s%s/' % (
-            's' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, experience_type, post_id, about, city)
+        link = '%s%s-experience/%s/%s%s/' % (SITE_LINK, experience_type, post_id, about, city)
     else:
         shout = post
         shout_type = 'request' if shout.Type == POST_TYPE_REQUEST else 'offer' if shout.Type == POST_TYPE_OFFER else 'shout'
         etc = to_seo_friendly(shout.Item.Name if hasattr(shout, 'Item') else shout.trade.Item.Name)
         city = to_seo_friendly(unicode.lower(shout.ProvinceCode))
-        link = 'http%s://%s/%s/%s/%s-%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, shout_type, post_id, etc, city)
+        link = '%s%s/%s/%s-%s/' % (SITE_LINK, shout_type, post_id, etc, city)
 
     return link
+
+
+def user_link(user):
+    return SITE_LINK + user.username
 
 
 def full_url_path(url):
     if isinstance(url, basestring):
         if url.startswith('/'):
-            return 'http%s://%s%s' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN, url)
+            return SITE_LINK + url[1:]
     return url
 
 
@@ -350,6 +354,7 @@ class JsonResponse(HttpResponse):
     """
     An HTTP response class that consumes data to be serialized to JSON.
     """
+    status_code = 200
 
     def __init__(self, data, **kwargs):
         kwargs.setdefault('content_type', 'application/json')

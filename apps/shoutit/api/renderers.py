@@ -23,6 +23,13 @@ def render_shout(shout, level=5):
         'date_created': shout.DatePublished.strftime('%s'),
         'url': get_object_url(shout),
         'user': render_user(shout.OwnerUser, level=2),
+        'location': {
+            'country': shout.CountryCode,
+            'city': shout.ProvinceCode,
+            'latitude': shout.Latitude,
+            'longitude': shout.Longitude,
+            'address': shout.Address
+        }
     }
 
     if level >= 2:
@@ -30,14 +37,6 @@ def render_shout(shout, level=5):
             'images': images,
             'videos': videos,
             'tags': tags,
-            'location': {
-                'country': shout.CountryCode,
-                'city': shout.ProvinceCode,
-                'latitude': shout.Latitude,
-                'longitude': shout.Longitude,
-                'address': shout.Address
-            }
-
         })
 
     return shout_json

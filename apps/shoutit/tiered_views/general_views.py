@@ -312,15 +312,15 @@ def admin_stats(request):
             result.data['fb'] = LinkedFacebookAccount.objects.all().values('facebook_id').distinct().count()
             result.data['users_s'] = result.data['users_e'] - result.data['sss'] - result.data['fb']
 
-            result.data['shouts_req'] = Trade.objects.GetValidTrades(types=[POST_TYPE_REQUEST]).count()
-            result.data['shouts_ofr'] = Trade.objects.GetValidTrades(types=[POST_TYPE_OFFER]).count()
-            result.data['shouts_exp'] = Post.objects.GetValidPosts().filter(Type=POST_TYPE_EXPERIENCE).count()
+            result.data['shouts_req'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).count()
+            result.data['shouts_ofr'] = Trade.objects.get_valid_trades(types=[POST_TYPE_OFFER]).count()
+            result.data['shouts_exp'] = Post.objects.get_valid_posts().filter(Type=POST_TYPE_EXPERIENCE).count()
             result.data['shouts'] = result.data['shouts_req'] + result.data['shouts_ofr'] + result.data['shouts_exp']
-            result.data['shouts_a'] = Trade.objects.GetValidTrades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
+            result.data['shouts_a'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
                 OwnerUser__pk__in=users_a).count()
-            result.data['shouts_e'] = Trade.objects.GetValidTrades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
+            result.data['shouts_e'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
                 OwnerUser__pk__in=users_e).count()
-            result.data['shouts_r'] = Trade.objects.GetValidTrades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(OwnerUser__pk__in=users_e,
+            result.data['shouts_r'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(OwnerUser__pk__in=users_e,
                                                                                                            IsSSS=False).count()
 
             result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
