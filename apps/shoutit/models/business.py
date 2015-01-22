@@ -21,8 +21,6 @@ class BusinessCategoryManager(models.Manager):
 
 
 class BusinessCategory(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return self.PrintHierarchy()
@@ -39,8 +37,6 @@ class BusinessCategory(UUIDModel):
 
 
 class Business(UUIDModel, Stream2Mixin):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.Name), unicode(self.user))
@@ -110,8 +106,6 @@ class Business(UUIDModel, Stream2Mixin):
 
 
 class BusinessCreateApplication(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
     business = models.ForeignKey('Business', related_name='UserApplications', null=True, on_delete=models.SET_NULL)
@@ -137,8 +131,6 @@ class BusinessCreateApplication(UUIDModel):
 
 
 class BusinessSource(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     business = models.OneToOneField('Business', related_name="Source")
     Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE.value)
@@ -146,8 +138,6 @@ class BusinessSource(UUIDModel):
 
 
 class BusinessConfirmation(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessConfirmations')
     Files = models.ManyToManyField(StoredFile, related_name='Confirmation')
@@ -155,8 +145,7 @@ class BusinessConfirmation(UUIDModel):
 
 
 class GalleryItem(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
+    class Meta(UUIDModel.Meta):
         unique_together = ('Item', 'Gallery',)
 
     Item = models.ForeignKey(Item, related_name='+')
@@ -167,8 +156,6 @@ class GalleryItem(UUIDModel):
 
 
 class Gallery(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.Description)

@@ -100,8 +100,6 @@ class EventManager(PostManager):
 
 
 class Post(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     objects = PostManager()
 
@@ -127,8 +125,6 @@ class Post(UUIDModel):
 
 
 class Shout(Post):
-    class Meta:
-        app_label = 'shoutit'
 
     Tags = models.ManyToManyField(Tag, related_name='Shouts')
     ExpiryDate = models.DateTimeField(null=True, default=None, db_index=True)
@@ -201,8 +197,6 @@ class Shout(Post):
 
 
 class ShoutWrap(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.Shout) + " # " + unicode(self.Rank)
@@ -213,8 +207,6 @@ class ShoutWrap(UUIDModel):
 
 
 class Trade(Shout):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.Item)
@@ -235,8 +227,6 @@ class Trade(Shout):
 
 
 class Deal(Shout):
-    class Meta:
-        app_label = 'shoutit'
 
     MinBuyers = models.IntegerField(default=0)
     MaxBuyers = models.IntegerField(null=True)
@@ -255,8 +245,6 @@ class Deal(Shout):
 
 
 class Experience(Post):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk)
@@ -267,8 +255,7 @@ class Experience(Post):
 
 
 class SharedExperience(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
+    class Meta(UUIDModel.Meta):
         unique_together = ('Experience', 'OwnerUser',)
 
     Experience = models.ForeignKey(Experience, related_name='SharedExperiences')
@@ -278,8 +265,6 @@ class SharedExperience(UUIDModel):
 
 # todo: use attached object mixin
 class Video(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
@@ -296,8 +281,6 @@ class Video(UUIDModel):
 
 # todo: use attached object mixin
 class StoredImage(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.Image + " @ " + unicode(self.Item)
@@ -308,8 +291,6 @@ class StoredImage(UUIDModel):
 
 
 class Comment(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.Text)
@@ -322,8 +303,6 @@ class Comment(UUIDModel):
 
 
 class Event(Post, AttachedObjectMixin):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk)

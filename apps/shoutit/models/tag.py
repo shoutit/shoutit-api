@@ -6,8 +6,6 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Tag(UUIDModel, Stream2Mixin):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.Name
@@ -27,8 +25,6 @@ class Tag(UUIDModel, Stream2Mixin):
 
 
 class Category(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return self.Name

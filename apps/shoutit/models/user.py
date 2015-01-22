@@ -31,13 +31,11 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     Latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
     Longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
 
-    class Meta:
+    class Meta(UUIDModel.Meta):
         abstract = True
 
 
 class Profile(AbstractProfile):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())
@@ -142,8 +140,6 @@ def delete_attached_user(sender, instance, using, **kwargs):
 
 
 class LinkedFacebookAccount(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')  # todo: one to one
     facebook_id = models.CharField(max_length=24, db_index=True)
@@ -156,9 +152,6 @@ class LinkedGoogleAccount(UUIDModel):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')  # todo: one to one
     credentials_json = models.CharField(max_length=2048)
     gplus_id = models.CharField(max_length=64, db_index=True)
-
-    class Meta:
-        app_label = 'shoutit'
 
 
 class PermissionsManager(models.Manager):
@@ -180,8 +173,6 @@ class Permission(models.Model):
 
 
 class UserPermission(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     permission = models.ForeignKey('Permission', on_delete=models.CASCADE)
@@ -193,8 +184,6 @@ class UserPermission(UUIDModel):
 # todo: move to stream
 # todo: reference the user not profile
 class FollowShip(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)

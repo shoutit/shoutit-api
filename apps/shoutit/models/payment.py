@@ -28,9 +28,6 @@ class PaymentsManager(models.Manager):
 
 
 class Payment(UUIDModel, AttachedObjectMixin):
-    class Meta:
-        app_label = 'shoutit'
-
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Payments')
     DateCreated = models.DateTimeField(auto_now_add=True)
     DateUpdated = models.DateTimeField(auto_now=True)
@@ -43,9 +40,6 @@ class Payment(UUIDModel, AttachedObjectMixin):
 
 
 class Transaction(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     RemoteIdentifier = models.CharField(max_length=1024)
     RemoteData = models.CharField(max_length=1024)
     RemoteStatus = models.CharField(max_length=1024)
@@ -54,9 +48,6 @@ class Transaction(UUIDModel):
 
 
 class Voucher(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     DealBuy = models.ForeignKey('DealBuy', related_name='Vouchers')
     Code = models.CharField(max_length=22)
     DateGenerated = models.DateTimeField(auto_now_add=True)
@@ -65,9 +56,6 @@ class Voucher(UUIDModel):
 
 
 class DealBuy(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     Deal = models.ForeignKey(Deal, related_name='Buys', on_delete=models.SET_NULL, null=True)
     user =  models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
     Amount = models.IntegerField(default=1)
@@ -75,9 +63,6 @@ class DealBuy(UUIDModel):
 
 
 class Service(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     Code = models.CharField(max_length=256)
     Name = models.CharField(max_length=1024)
     Price = models.FloatField()
@@ -104,10 +89,8 @@ class ServiceManager(models.Manager):
 
 
 class ServiceBuy(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
-    user =  models.ForeignKey(AUTH_USER_MODEL, related_name='Services')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Services')
     Service = models.ForeignKey('Service', related_name='Buyers')
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)

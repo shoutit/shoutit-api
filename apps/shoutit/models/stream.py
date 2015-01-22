@@ -10,8 +10,6 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Stream(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return unicode(self.pk) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
@@ -67,8 +65,7 @@ from django.dispatch import receiver
 
 class Stream2(UUIDModel, AttachedObjectMixin):
 
-    class Meta:
-        app_label = 'shoutit'
+    class Meta(UUIDModel.Meta):
         unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
@@ -125,7 +122,6 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
     """
     create stream and attach it to newly created instance
     """
-
     if not issubclass(sender, Stream2Mixin):
         return
     if created:
@@ -149,8 +145,7 @@ def delete_attached_stream(sender, instance, using, **kwargs):
 
 
 class Listen(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
+    class Meta(UUIDModel.Meta):
         unique_together = ('listener', 'stream')  # so the user can follow the stream only once
 
     listener = models.ForeignKey(AUTH_USER_MODEL)

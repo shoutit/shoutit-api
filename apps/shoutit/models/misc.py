@@ -6,9 +6,6 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return unicode(self.Country + ':' + self.City)
 
@@ -21,9 +18,6 @@ class PredefinedCity(UUIDModel):
 
 
 class StoredFile(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return "(" + unicode(self.pk) + ") " + unicode(self.File)
 
@@ -33,9 +27,6 @@ class StoredFile(UUIDModel):
 
 
 class ConfirmToken(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
 
@@ -69,9 +60,6 @@ class ConfirmToken(UUIDModel):
 
 
 class FbContest(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     ContestId = models.IntegerField(db_index=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)

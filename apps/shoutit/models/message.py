@@ -9,9 +9,6 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Conversation(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return unicode(self.pk)
 
@@ -24,9 +21,6 @@ class Conversation(UUIDModel):
 
 
 class Message(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         try:
             return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
@@ -45,18 +39,13 @@ class Message(UUIDModel):
 
 class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
-    class Meta:
-        app_label = 'shoutit'
-
-    message = models.ForeignKey(Message, related_name='attachments')
-
     def __unicode__(self):
         return self.pk + "for message: " + self.message.pk
 
+    message = models.ForeignKey(Message, related_name='attachments')
+
 
 class Notification(UUIDModel, AttachedObjectMixin):
-    class Meta:
-        app_label = 'shoutit'
 
     def __unicode__(self):
         return self.pk + ": " + self.Text
@@ -77,9 +66,6 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
 
 class Report(UUIDModel, AttachedObjectMixin):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return "From user:%s about: %s:%s" % (self.user.pk, self.Type(), self.attached_object.pk)
 

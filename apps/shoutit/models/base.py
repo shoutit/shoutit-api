@@ -15,6 +15,7 @@ from uuidfield import UUIDField
 class UUIDModel(models.Model):
     class Meta:
         abstract = True
+        app_label = 'shoutit'
 
     id = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
     created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True)
@@ -64,10 +65,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
-    class Meta:
+    class Meta(UUIDModel.Meta):
         verbose_name = _('user')
         verbose_name_plural = _('users')
-        app_label = 'shoutit'
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)

@@ -4,8 +4,7 @@ from settings import AUTH_USER_MODEL
 
 
 class DBCLUser(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
+    class Meta(UUIDModel.Meta):
         abstract = True
 
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True)
@@ -41,9 +40,6 @@ User.add_to_class('cl_ad_id', cl_ad_id)
 
 
 class DBCLConversation(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     in_email = models.EmailField(max_length=254, null=True)
     from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')

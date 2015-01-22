@@ -3,9 +3,6 @@ from apps.shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.Name
 
@@ -43,9 +40,6 @@ class Item(UUIDModel):
 
 
 class Currency(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     def __unicode__(self):
         return '[' + self.Code + '] '
 
