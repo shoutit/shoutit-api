@@ -50,13 +50,25 @@ else:
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
     SHOUT_IT_HOST = 'shoutit.com'
 
+print "DEBUG", DEBUG
+
+# URLs
+SITE_ID = 1
+ROOT_URLCONF = 'urls'
+APPEND_SLASH = False
+IS_SITE_SECURE = False  # True
+SITE_LINK = 'http%s://%s/' % ('s' if IS_SITE_SECURE else '', SHOUT_IT_DOMAIN)
+WSGI_APPLICATION = 'wsgi.application'
+
+print "SITE_LINK:", SITE_LINK
+
 USE_X_FORWARDED_HOST = True
 
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', 'shoutit.com']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 ADMINS = (
-    ('Your Name', 'your_email@example.com'),
+    ('Mo Chawich', 'mo.chawich@gmail.com'),
 )
 MANAGERS = ADMINS
 
@@ -218,16 +230,6 @@ MIDDLEWARE_CLASSES = (
     'django_mobile.middleware.SetFlavourMiddleware',
 )
 
-# URLs
-SITE_ID = 1
-
-ROOT_URLCONF = 'urls'
-APPEND_SLASH = False
-IS_SITE_SECURE = False  # True
-
-WSGI_APPLICATION = 'wsgi.application'
-
-
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 DATABASES = {
@@ -315,10 +317,20 @@ LOGGING = {
             'format': '%(message)s'
         }
     },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
+            'include_html': False,
         },
         'sql_file': {
             'class': 'logging.FileHandler',
@@ -335,7 +347,12 @@ LOGGING = {
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
-            'propagate': True
+            'propagate': True,
+        },
+        'django.security': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
         },
         'SqlLogMiddleware': {
             'handlers': ['sql_file'],
@@ -351,8 +368,35 @@ LOGGING = {
 }
 
 # Mail Settings
-if DEV or DEV_ON_SERVER:
-    DEFAULT_FROM_EMAIL = 'ShoutIt <info@shoutit.com>'
+SERVER_EMAIL = 'Shoutit <info@shoutit.com>'
+USE_GOOGLE = True
+USE_MANDRILL = False
+
+if USE_GOOGLE:
+    print "USE_GOOGLE:", USE_GOOGLE
+    DEFAULT_FROM_EMAIL = 'Nour <nour@syrex.me>'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = '587'
+    EMAIL_HOST_USER = 'nour@syrex.me'
+    EMAIL_HOST_PASSWORD = 'Sni4hot*'
+    EMAIL_USE_TLS = True
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+elif USE_MANDRILL:
+    print "USE_MANDRILL:", USE_MANDRILL
+    DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
+    EMAIL_HOST = 'smtp.mandrillapp.com'
+    EMAIL_PORT = '587'
+    # EMAIL_HOST_USER = 'noor.syron@gmail.com'
+    # EMAIL_HOST_PASSWORD = 'xb-lOrXsVGILf91XsS0hgw'
+    EMAIL_HOST_USER = 'nour@syrex.com'
+    EMAIL_HOST_PASSWORD = 'bneGVmK5BHC5B9pyLUEj_w'
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = True
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    #EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+else:
+    DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = SHOUT_IT_HOST
     EMAIL_PORT = '25'
     EMAIL_HOST_USER = 'admin'
@@ -360,16 +404,6 @@ if DEV or DEV_ON_SERVER:
     EMAIL_USE_TLS = False
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'messages')
-else:
-    DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
-    EMAIL_HOST = 'smtp.mandrillapp.com'
-    EMAIL_PORT = '587'
-    EMAIL_HOST_USER = 'nour@syrex.me'
-    EMAIL_HOST_PASSWORD = 'bneGVmK5BHC5B9pyLUEj_w'
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = True
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    #EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
 # Auth Settings
 LOGIN_URL = '/signin/'

@@ -9,7 +9,7 @@ from django.db.models.query_utils import Q
 from django.conf import settings
 
 from apps.shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
-    Listen
+    Listen, CLUser, DBCLUser
 from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
 from apps.activity_logger.logger import Logger
 from common.constants import *
@@ -256,7 +256,7 @@ def SignUpSSS(request, mobile, location, country, city):
     return django_user
 
 
-def sign_up_sss4(email, lat, lng, city, country):
+def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
     token_type = TOKEN_TYPE_HTML_NUM
     token_length = TOKEN_SHORT_UPPER
 
@@ -269,6 +269,14 @@ def sign_up_sss4(email, lat, lng, city, country):
     django_user = User.objects.create_user(username, email, password)
     django_user.is_active = False
     django_user.save()
+
+    if dbcl_type == 'cl':
+        dbcl_model = CLUser
+    else:
+        dbcl_model = DBCLUser
+
+    dbcl_user = dbcl_model(user=django_user)
+    dbcl_user.save()
 
     stream = Stream(Type=STREAM_TYPE_USER)
     stream.save()

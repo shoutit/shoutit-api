@@ -47,7 +47,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
 
     # todo: push notification test
     notifications_controller.notify_user_of_message(to_user, message)
-    email_controller.SendMessageEmail(message)
+    email_controller.send_message_email(message)
 
     return message
 
