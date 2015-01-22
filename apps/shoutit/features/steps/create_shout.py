@@ -152,3 +152,19 @@ def step_impl(context):
     :type context behave.runner.Context
     """
     pass
+
+
+@given("user is logged in")
+def step_impl(context):
+    """
+    :type context behave.runner.Context
+    """
+    pass
+
+
+@step("user is connected to the internet")
+def step_impl(context):
+    """
+    :type context behave.runner.Context
+    """
+    pass
