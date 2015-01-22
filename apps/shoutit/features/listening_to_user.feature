@@ -1,4 +1,5 @@
 # Created by Muaaz at 1/22/2015
+  @users
 Feature: listening to a user
   user listens to others to get latest updates
 

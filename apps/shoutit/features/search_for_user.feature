@@ -1,4 +1,5 @@
 # Created by Muaaz at 1/22/2015
+  @users
 Feature: search for user
   user searching for another user's profile
 
