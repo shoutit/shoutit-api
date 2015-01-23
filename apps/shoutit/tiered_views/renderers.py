@@ -922,7 +922,7 @@ def profile_json_renderer(request, result):
                     'lng': user.Longitude,
                     'city': user.City,
                     'country': user.Country,
-                    'image': user.Image,
+                    'image': user.abstract_profile.image,
                     'source': user.has_source() and user.Source.Source or int(constants.BUSINESS_SOURCE_TYPE_NONE),
                     'source_id': user.has_source() and user.Source.SourceID or None
                 } for user in result.data['users']
@@ -940,7 +940,7 @@ def user_json_renderer(request, result):
                 {
                     'username': user.username,
                     'name': user.name,
-                    'image': template_filters.thumbnail(user_controller.GetProfile(user).Image, 32)
+                    'image': template_filters.thumbnail(user_controller.GetProfile(user).image, 32)
                 } for user in result.data['users']
             ]
         }
@@ -957,7 +957,7 @@ def gallery_item_json_renderer(request, result, message=_('Your item was added s
             'description': result.data['item'].Description,
             'price': result.data['item'].Price,
             'currency': result.data['item'].Currency.Code,
-            'images': [image.Image for image in result.data['item'].get_images()]
+            'images': [image.image for image in result.data['item'].get_images()]
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:

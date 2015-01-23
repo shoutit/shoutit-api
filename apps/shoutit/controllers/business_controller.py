@@ -48,7 +48,7 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 
 	bp = Business(user =  django_user, Category = cat, Stream = stream, Name = name,
 						 Latitude = latitude, Longitude = longitude, Country = country, City = city, Address = address)
-	bp.Image = '/static/img/_user_male.png'
+	bp.image = '/static/img/_user_male.png'
 	bp.save()
 
 	if not PredefinedCity.objects.filter(City = city):
@@ -178,7 +178,7 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 		confirmation.save()
 	user.save()
 
-#	bp.Image = '/static/img/_user_male.png'
+#	bp.image = '/static/img/_user_male.png'
 #	bp.save()
 #	business_gallery = Gallery(Description = '', OwnerBusiness = bp)
 #	business_gallery.save()
@@ -203,7 +203,7 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 		if phone:
 			business.Phone = phone
 		if image:
-			business.Image = image
+			business.image = image
 		if about:
 			business.About = about
 		if website:
@@ -279,7 +279,7 @@ def AcceptBusiness(request, username):
 	elif not ba.Business and not profile:
 		stream = Stream(Type = STREAM_TYPE_BUSINESS)
 		stream.save()
-		bp = Business(user =  user, Name = ba.Name, Category = ba.Category, Image = "/static/img/_user_male.png",
+		bp = Business(user =  user, Name = ba.Name, Category = ba.Category, image = "/static/img/_user_male.png",
 							About = ba.About, Phone = ba.Phone, Website = ba.Website, Latitude = ba.Latitude, Longitude = ba.Longitude,
 							Country = ba.Country, City = ba.City, Address = ba.Address, Stream = stream, Confirmed = True)
 		bp.save()

@@ -26,7 +26,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
         realtime_controller.SendRealtimeMessage(realtime_message, user.username)
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:
-        message = _("You got a new lister")
+        message = _("You got a new listen")
         attached_object_dict = render_user(attached_object, 2)
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")

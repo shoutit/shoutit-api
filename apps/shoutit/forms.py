@@ -25,7 +25,7 @@ def _get_currencies():
 
 
 class LoginForm(forms.Form):
-    username_or_email = forms.CharField(label=_('Username or Email'), max_length=75, min_length=3)
+    username_or_email = forms.CharField(label=_('Username or Email'), max_length=254, min_length=2)
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput())
 
     def clean(self):
@@ -39,7 +39,7 @@ class LoginForm(forms.Form):
 
 
 class RecoverForm(forms.Form):
-    username_or_email = forms.CharField(label=_('Username or Email'), max_length=75, min_length=3)
+    username_or_email = forms.CharField(label=_('Username or Email'), max_length=254, min_length=2)
 
     def clean(self):
         if not user_controller.get_profile(self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(
@@ -54,7 +54,7 @@ class ShoutForm(forms.Form):
     name = forms.CharField(label=_('Name'), max_length=120)
     description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=200)
     tags = forms.CharField(label=_('Tags'))
-    image = forms.ImageField(label=_('Image'), required=False)
+    image = forms.ImageField(label=_('image'), required=False)
     location = forms.CharField(label=_('Location'), required=False)
     country = forms.CharField(label=_('Country'), required=False)
     city = forms.CharField(label=_('City'), required=False)
@@ -64,7 +64,7 @@ class ShoutForm(forms.Form):
 class ExperienceForm(forms.Form):
     text = forms.CharField(label=_('Text'), widget=forms.Textarea(), max_length=200)
     state = forms.TypedChoiceField(choices=ExperienceState.values.items(), widget=forms.RadioSelect, coerce=int)
-    username = forms.CharField(label='Business', max_length=20, min_length=3, widget=forms.HiddenInput, required=False)
+    username = forms.CharField(label='Business', max_length=30, min_length=2, widget=forms.HiddenInput, required=False)
 
 
 class CommentForm(forms.Form):
@@ -80,15 +80,15 @@ class ItemForm(forms.Form):
     currency = forms.ChoiceField(label=_('Currency'), choices=_get_currencies(), required=True)
     name = forms.CharField(label=_('Name'), max_length=120)
     description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=512)
-    image = forms.ImageField(label=_('Image'), required=False)
+    image = forms.ImageField(label=_('image'), required=False)
 
 
 class SignUpForm(forms.Form):
-    # username = forms.CharField(label='Username', max_length=20, min_length=3)
-    email = forms.EmailField(label=_('Email'))
-    firstname = forms.CharField(label=_('First Name'), max_length=20, min_length=3)
-    lastname = forms.CharField(label=_('Last Name'), max_length=20, min_length=3)
-    #	mobile = forms.CharField(label='Phone', max_length=20, min_length=3, required= False)
+    # username = forms.CharField(label='Username', max_length=30, min_length=2)
+    email = forms.EmailField(label=_('Email'), max_length=254)
+    firstname = forms.CharField(label=_('First Name'), max_length=30, min_length=2)
+    lastname = forms.CharField(label=_('Last Name'), max_length=30, min_length=2)
+    # mobile = forms.CharField(label='Phone', max_length=20, min_length=3, required= False)
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput())
     confirm_password = forms.CharField(label=_('Confirm Password'), widget=forms.PasswordInput())
 
@@ -120,7 +120,7 @@ class SignUpForm(forms.Form):
         return confirm_password
 
 # def clean_mobile(self):
-#		mobile = self.data['mobile']
+# mobile = self.data['mobile']
 #		if mobile is None or mobile == '':
 #			return mobile
 #		try:
@@ -142,10 +142,10 @@ class ExtenedSignUpSSS(forms.Form):
             if self.initial.has_key('mobile'):
                 self.fields['mobile'].widget.attrs['disabled'] = True
 
-    username = forms.CharField(label=_('Username'), max_length=20, min_length=3, required=True)
-    firstname = forms.CharField(label=_('First Name'), max_length=20, min_length=3, required=True)
-    lastname = forms.CharField(label=_('Last Name'), max_length=20, min_length=3, required=True)
-    email = forms.EmailField(label=_('Email'), required=True)
+    username = forms.CharField(label=_('Username'), max_length=30, min_length=2, required=True)
+    firstname = forms.CharField(label=_('First Name'), max_length=30, min_length=2, required=True)
+    lastname = forms.CharField(label=_('Last Name'), max_length=30, min_length=2, required=True)
+    email = forms.EmailField(label=_('Email'), max_length=254, required=True)
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
     birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), required=True)
     sex = forms.ChoiceField(label=_('Sex'), choices=sex_choices, required=True)
@@ -216,8 +216,8 @@ class ExtenedSignUp(forms.Form):
             elif self.initial.has_key('email'):
                 self.fields['email'].widget.attrs['disabled'] = True
 
-    username = forms.CharField(label=_('Username'), max_length=20, min_length=3, required=False)
-    email = forms.EmailField(label=_('Email'), required=False)
+    username = forms.CharField(label=_('Username'), max_length=30, min_length=2, required=False)
+    email = forms.EmailField(label=_('Email'), max_length=254, required=False)
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
     birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), required=True)
     sex = forms.ChoiceField(label=_('Sex'), choices=sex_choices, required=True)
@@ -256,13 +256,13 @@ class ExtenedSignUp(forms.Form):
 
 
 class APISignUpForm(forms.Form):
-    username = forms.CharField(label=_('Username'), max_length=20, min_length=3)
-    email = forms.EmailField(label=_('Email'))
+    username = forms.CharField(label=_('Username'), max_length=30, min_length=2)
+    email = forms.EmailField(label=_('Email'), max_length=254)
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput, max_length=64)
     confirm_password = forms.CharField(label=_('Confirm Password'), widget=forms.PasswordInput, max_length=64)
     mobile = forms.CharField(label=_('Mobile'), max_length=64, required=False)
-    firstname = forms.CharField(label=_('First Name'), max_length=20, min_length=3, required=True)
-    lastname = forms.CharField(label=_('Last Name'), max_length=20, min_length=3, required=True)
+    firstname = forms.CharField(label=_('First Name'), max_length=30, min_length=2, required=True)
+    lastname = forms.CharField(label=_('Last Name'), max_length=30, min_length=2, required=True)
     birthday = forms.DateField(label=_('Birth Date'), widget=SelectDateWidget(years=range(datetime.now().year, 1920, -1)), required=True)
     sex = forms.ChoiceField(label=_('Sex'), choices=sex_choices, required=True)
 
@@ -298,8 +298,8 @@ class MessageForm(forms.Form):
 
 class BusinessEditProfileForm(forms.Form):
     username = forms.CharField(label=_('Username'), required=False)
-    name = forms.CharField(label=_('First Name'), max_length=20, min_length=3, required=False)
-    email = forms.EmailField(label=_('Email'), required=False)
+    name = forms.CharField(label=_('First Name'), max_length=30, min_length=2, required=False)
+    email = forms.EmailField(label=_('Email'), max_length=254, required=False)
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
     website = forms.CharField(label=_('Website'), required=False)
 
@@ -315,10 +315,10 @@ class BusinessEditProfileForm(forms.Form):
 
 
 class UserEditProfileForm(forms.Form):
-    username = forms.CharField(label=_('Username'), required=False, min_length=2)
-    firstname = forms.CharField(label=_('First Name'), max_length=20, min_length=2, required=False)
-    lastname = forms.CharField(label=_('Last Name'), max_length=20, min_length=2, required=False)
-    email = forms.EmailField(label=_('Email'), required=False)
+    username = forms.CharField(label=_('Username'), required=False, max_length=30, min_length=2)
+    firstname = forms.CharField(label=_('First Name'), max_length=30, min_length=2, required=False)
+    lastname = forms.CharField(label=_('Last Name'), max_length=30, min_length=2, required=False)
+    email = forms.EmailField(label=_('Email'), required=False, max_length=254)
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
 
     password = forms.CharField(label=_('New Password'), widget=forms.PasswordInput(), required=False)
@@ -545,8 +545,8 @@ class StartBusinessForm(forms.Form):
         self.fields['phone'].widget.attrs['disabled'] = True
 
     name = forms.CharField(label=_('Name'), max_length=120, required=False)
-    username = forms.CharField(label=_('Username'))
-    email = forms.EmailField(label=_('Email'), required=False)
+    username = forms.CharField(label=_('Username'), max_length=30)
+    email = forms.EmailField(label=_('Email'), required=False, max_length=254)
     phone = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
 
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput())

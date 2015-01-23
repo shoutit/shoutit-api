@@ -4,26 +4,20 @@ from django.db import models
 from django.db.models import Min
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-
-from common.constants import DEFAULT_LOCATION
-
-# from apps.activity_logger.models import Request
-from apps.shoutit.models.base import UUIDModel
-from apps.shoutit.models.stream import Stream, Stream2Mixin
-from apps.shoutit.models.tag import Tag
-from apps.shoutit.models.misc import ConfirmToken
 from django.conf import settings
 
+from common.constants import DEFAULT_LOCATION
+# from apps.activity_logger.models import Request
+from apps.shoutit.models.base import UUIDModel
+from apps.shoutit.models.stream import Stream2Mixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class AbstractProfile(UUIDModel, Stream2Mixin):
-
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True)
-
-    Image = models.URLField(max_length=1024, null=True)
-    video = models.OneToOneField('Video', null=True, on_delete=models.SET_NULL)
+    image = models.URLField(max_length=1024, null=True)
+    video = models.OneToOneField('shoutit.Video', null=True, on_delete=models.SET_NULL)
 
     # Location attributes
     Country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
@@ -31,37 +25,34 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     Latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
     Longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
 
-    class Meta:
+    class Meta(UUIDModel.Meta):
         abstract = True
 
 
 class Profile(AbstractProfile):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())
-
     Bio = models.TextField(null=True, max_length=512, default='New Shouter!')
     Mobile = models.CharField(unique=True, null=True, max_length=20)
 
     # todo: [listen] remove
-    Following = models.ManyToManyField(Stream, through='FollowShip')
-    Interests = models.ManyToManyField(Tag, related_name='Followers')
+    Following = models.ManyToManyField('shoutit.Stream', through='shoutit.FollowShip')
+    Interests = models.ManyToManyField('shoutit.Tag', related_name='Followers')
 
     # todo: remove
-    Stream = models.OneToOneField(Stream, related_name='OwnerUser', db_index=True)
+    Stream = models.OneToOneField('shoutit.Stream', related_name='OwnerUser', db_index=True)
     # isBlocked = models.BooleanField(default=False)
 
     birthday = models.DateField(null=True)
     Sex = models.NullBooleanField(default=True, null=True)
 
-    LastToken = models.ForeignKey(ConfirmToken, null=True, default=None, on_delete=models.SET_NULL)
+    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, default=None, on_delete=models.SET_NULL)
 
     isSSS = models.BooleanField(default=False, db_index=True)
     isSMS = models.BooleanField(default=False, db_index=True)
 
     # State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
+
+    def __unicode__(self):
+        return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())
 
     def get_notifications(self):
         if not hasattr(self, 'notifications'):
@@ -142,23 +133,16 @@ def delete_attached_user(sender, instance, using, **kwargs):
 
 
 class LinkedFacebookAccount(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')  # todo: one to one
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')
     facebook_id = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
 
 
 class LinkedGoogleAccount(UUIDModel):
-
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')  # todo: one to one
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')
     credentials_json = models.CharField(max_length=2048)
     gplus_id = models.CharField(max_length=64, db_index=True)
-
-    class Meta:
-        app_label = 'shoutit'
 
 
 class PermissionsManager(models.Manager):
@@ -169,38 +153,19 @@ class PermissionsManager(models.Manager):
 
 # todo: why not using uuid too?
 class Permission(models.Model):
+    name = models.CharField(max_length=512, unique=True, db_index=True)
+    users = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.UserPermission', related_name='permissions')
+
     class Meta:
         app_label = 'shoutit'
 
     def __unicode__(self):
         return self.name
 
-    name = models.CharField(max_length=512, unique=True, db_index=True)
-    users = models.ManyToManyField(AUTH_USER_MODEL, through='UserPermission', related_name='permissions')
-
 
 class UserPermission(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
-    permission = models.ForeignKey('Permission', on_delete=models.CASCADE)
+    permission = models.ForeignKey('shoutit.Permission', on_delete=models.CASCADE)
     date_given = models.DateTimeField(auto_now_add=True)
+
     objects = PermissionsManager()
-
-
-# todo: naming: Listen
-# todo: move to stream
-# todo: reference the user not profile
-class FollowShip(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
-
-    follower = models.ForeignKey('Profile')
-    stream = models.ForeignKey('Stream')
-    date_followed = models.DateTimeField(auto_now_add=True)
-    state = models.IntegerField(default=0, db_index=True)
-

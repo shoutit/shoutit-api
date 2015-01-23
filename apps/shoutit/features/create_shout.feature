@@ -1,4 +1,5 @@
 # Created by Muaaz at 1/12/2015
+  @shouts
 Feature: create new shout
   user creates a new shout to post to shoutit
 

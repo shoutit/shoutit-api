@@ -1,4 +1,5 @@
 # Created by Muaaz at 1/12/2015
+  @Authentication
 Feature: user sign in
 
   Scenario: shoutit sign in

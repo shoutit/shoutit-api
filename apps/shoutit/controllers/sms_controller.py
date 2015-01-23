@@ -37,7 +37,7 @@ def SendSMS2(from_num='Shoutit.com', to_num='', text='', schedule = None):
 			return True
 		else:
 			return False
-	except BaseException,e:
+	except Exception,e:
 		return False
 
 @asynchronous_task()

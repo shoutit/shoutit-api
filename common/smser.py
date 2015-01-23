@@ -114,7 +114,7 @@ for user in users:
 				errors += 1
 
 
-	except BaseException, e:
+	except Exception, e:
 		errors += 1
 		cur.execute("UPDATE ads SET fetched=3 WHERE fetched=4 and mobile ='%s'" % user.Mobile)
 		print 'sms to: %s mobile: %s error: %s' % (user.user.pk,  user.Mobile, e.message)

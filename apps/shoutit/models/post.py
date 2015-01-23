@@ -6,10 +6,6 @@ from django.conf import settings
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
-from apps.shoutit.models.item import Item
-from apps.shoutit.models.stream import Stream
-from apps.shoutit.models.tag import Tag
-from apps.shoutit.models.business import Business
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -100,13 +96,8 @@ class EventManager(PostManager):
 
 
 class Post(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    objects = PostManager()
-
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
-    Streams = models.ManyToManyField(Stream, related_name='Posts')  # todo: move to stream as posts
+    Streams = models.ManyToManyField('shoutit.Stream', related_name='Posts')  # todo: move to stream as posts
 
     Text = models.TextField(max_length=2000, default='', db_index=True)
     Type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True, choices=PostType.choices)
@@ -121,19 +112,22 @@ class Post(UUIDModel):
     ProvinceCode = models.CharField(max_length=200, db_index=True, null=True)
     Address = models.CharField(max_length=200, db_index=True, null=True)
 
+    objects = PostManager()
+
     def Mute(self):
         self.IsMuted = True
         self.save()
 
 
 class Shout(Post):
-    class Meta:
-        app_label = 'shoutit'
-
-    Tags = models.ManyToManyField(Tag, related_name='Shouts')
+    Tags = models.ManyToManyField('shoutit.Tag', related_name='Shouts')
     ExpiryDate = models.DateTimeField(null=True, default=None, db_index=True)
     ExpiryNotified = models.BooleanField(default=False)
+
     objects = ShoutManager()
+
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + self.get_text()
 
     def set_tags(self, tags):
         self.tags = tags
@@ -148,7 +142,7 @@ class Shout(Post):
     def get_images(self):
         if not hasattr(self, '_images'):
             if self.Type == POST_TYPE_EXPERIENCE:
-                self._images = list(self.Images.all().order_by('Image'))
+                self._images = list(self.Images.all().order_by('image'))
             else:
                 self._images = self.Item.get_images()
         return self._images
@@ -157,7 +151,7 @@ class Shout(Post):
         return self.Item.get_first_image()
 
     def set_images(self, images):
-        images = sorted(images, key=lambda img: img.Image)
+        images = sorted(images, key=lambda img: img.image)
         self._images = images
         if hasattr(self, 'Item'):
             self.Item.set_images(images)
@@ -196,32 +190,20 @@ class Shout(Post):
             self.ExpiryDate and now > self.ExpiryDate):
             return True
 
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + self.get_text()
-
 
 class ShoutWrap(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
+    Shout = models.ForeignKey('shoutit.Shout', related_name='ShoutWraps')
+    Stream = models.ForeignKey('shoutit.Stream', related_name='ShoutWraps')
+    Rank = models.FloatField(default=1.0)
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.Shout) + " # " + unicode(self.Rank)
 
-    Shout = models.ForeignKey('Shout', related_name='ShoutWraps')
-    Stream = models.ForeignKey(Stream, related_name='ShoutWraps')
-    Rank = models.FloatField(default=1.0)
-
 
 class Trade(Shout):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.Item)
-
-    Item = models.OneToOneField('Item', related_name='Shout', db_index=True, null=True)
-    RelatedStream = models.OneToOneField(Stream, related_name='InitShoutRelated', null=True)
-    RecommendedStream = models.OneToOneField(Stream, related_name='InitShoutRecommended', null=True)
+    Item = models.OneToOneField('shoutit.Item', related_name='Shout', db_index=True, null=True)
+    RelatedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRelated', null=True)
+    RecommendedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRecommended', null=True)
 
     StreamsCode = models.CharField(max_length=2000, default='')
     MaxFollowings = models.IntegerField(default=6)
@@ -231,20 +213,22 @@ class Trade(Shout):
     IsSSS = models.BooleanField(default=False)
     BaseDatePublished = models.DateTimeField(auto_now_add=True)
     RenewalCount = models.IntegerField(default=0)
+
     objects = TradeManager()
+
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + unicode(self.Item)
 
 
 class Deal(Shout):
-    class Meta:
-        app_label = 'shoutit'
-
     MinBuyers = models.IntegerField(default=0)
     MaxBuyers = models.IntegerField(null=True)
     OriginalPrice = models.FloatField()
     IsClosed = models.BooleanField(default=False)
-    Item = models.ForeignKey(Item, related_name='Deals', on_delete=models.SET_NULL, null=True)
+    Item = models.ForeignKey('shoutit.Item', related_name='Deals', on_delete=models.SET_NULL, null=True)
     ValidFrom = models.DateTimeField(null=True)
     ValidTo = models.DateTimeField(null=True)
+
     objects = DealManager()
 
     def BuyersCount(self):
@@ -255,37 +239,28 @@ class Deal(Shout):
 
 
 class Experience(Post):
-    class Meta:
-        app_label = 'shoutit'
+    AboutBusiness = models.ForeignKey('shoutit.Business', related_name='Experiences')
+    State = models.IntegerField(null=False)
+
+    objects = ExperienceManager()
 
     def __unicode__(self):
         return unicode(self.pk)
 
-    AboutBusiness = models.ForeignKey(Business, related_name='Experiences')
-    State = models.IntegerField(null=False)
-    objects = ExperienceManager()
-
 
 class SharedExperience(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-        unique_together = ('Experience', 'OwnerUser',)
-
-    Experience = models.ForeignKey(Experience, related_name='SharedExperiences')
+    Experience = models.ForeignKey('shoutit.Experience', related_name='SharedExperiences')
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='SharedExperiences')
     DateCreated = models.DateTimeField(auto_now_add=True)
+
+    class Meta(UUIDModel.Meta):
+        unique_together = ('Experience', 'OwnerUser',)
 
 
 # todo: use attached object mixin
 class Video(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
-
-    shout = models.ForeignKey(Shout, related_name='videos', null=True)
-    item = models.ForeignKey(Item, related_name='videos', null=True)
+    shout = models.ForeignKey('shoutit.Shout', related_name='videos', null=True)
+    item = models.ForeignKey('shoutit.Item', related_name='videos', null=True)
 
     url = models.URLField(max_length=1024)
     thumbnail_url = models.URLField(max_length=1024)
@@ -293,41 +268,35 @@ class Video(UUIDModel):
     id_on_provider = models.CharField(max_length=256)
     duration = models.IntegerField(default=0)
 
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
+
 
 # todo: use attached object mixin
 class StoredImage(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
+    Shout = models.ForeignKey('shoutit.Shout', related_name='Images', null=True)
+    Item = models.ForeignKey('shoutit.Item', related_name='Images', null=True)
+    image = models.URLField(max_length=1024)
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.Image + " @ " + unicode(self.Item)
-
-    Shout = models.ForeignKey('Shout', related_name='Images', null=True)
-    Item = models.ForeignKey('Item', related_name='Images', null=True)
-    Image = models.URLField(max_length=1024)
+        return unicode(self.pk) + ": " + self.image + " @ " + unicode(self.Item)
 
 
 class Comment(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.Text)
-
-    AboutPost = models.ForeignKey(Post, related_name='Comments', null=True)
+    AboutPost = models.ForeignKey('shoutit.Post', related_name='Comments', null=True)
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     IsDisabled = models.BooleanField(default=False)
     Text = models.TextField(max_length=300)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + unicode(self.Text)
+
 
 class Event(Post, AttachedObjectMixin):
-    class Meta:
-        app_label = 'shoutit'
+    EventType = models.IntegerField(default=0)
+
+    objects = EventManager()
 
     def __unicode__(self):
         return unicode(self.pk)
-
-    EventType = models.IntegerField(default=0)
-    objects = EventManager()
-

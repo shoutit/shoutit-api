@@ -9,7 +9,7 @@ from django.db.models.query_utils import Q
 from django.conf import settings
 
 from apps.shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
-    Listen
+    Listen, CLUser, DBCLUser
 from apps.shoutit.controllers import email_controller, notifications_controller, event_controller
 from apps.activity_logger.logger import Logger
 from common.constants import *
@@ -89,7 +89,7 @@ def GetProfile(user):
                     return None
         except ValueError, e:
             return None
-    except BaseException, e:
+    except Exception, e:
         return None
 
 
@@ -199,7 +199,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
 
     up = Profile(user=django_user, Stream=stream, Mobile=mobile)
 
-    up.Image = '/static/img/_user_male.png'
+    up.image = '/static/img/_user_male.png'
     up.save()
 
     encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
@@ -242,7 +242,7 @@ def SignUpSSS(request, mobile, location, country, city):
     up.Longitude = location[1]
     up.Country = country
     up.City = city
-    up.Image = '/static/img/_user_male.png'
+    up.image = '/static/img/_user_male.png'
     up.save()
 
     if not PredefinedCity.objects.filter(City=up.City):
@@ -256,7 +256,7 @@ def SignUpSSS(request, mobile, location, country, city):
     return django_user
 
 
-def sign_up_sss4(email, lat, lng, city, country):
+def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
     token_type = TOKEN_TYPE_HTML_NUM
     token_length = TOKEN_SHORT_UPPER
 
@@ -270,13 +270,21 @@ def sign_up_sss4(email, lat, lng, city, country):
     django_user.is_active = False
     django_user.save()
 
+    if dbcl_type == 'cl':
+        dbcl_model = CLUser
+    else:
+        dbcl_model = DBCLUser
+
+    dbcl_user = dbcl_model(user=django_user)
+    dbcl_user.save()
+
     stream = Stream(Type=STREAM_TYPE_USER)
     stream.save()
 
     up = Profile(
         user=django_user, Stream=stream, isSSS=True,
         Latitude=lat, Longitude=lng, City=city, Country=country,
-        Image='/static/img/_user_male.png'
+        image='/static/img/_user_male.png'
     )
     up.save()
 
@@ -302,7 +310,7 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
     user.save()
     user.profile.Sex = sex
     if not sex:
-        user.profile.Image = '/static/img/_user_female.png'
+        user.profile.image = '/static/img/_user_female.png'
     user.profile.birthday = birthday
     user.profile.save()
 
@@ -328,7 +336,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     user.profile.Sex = sex
     user.profile.birthday = birthday
     if not sex:
-        user.profile.Image = '/static/img/_user_female.png'
+        user.profile.image = '/static/img/_user_female.png'
     user.profile.save()
     import realtime_controller as realtime_controller
 
@@ -340,7 +348,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
 def complete_signup(request, user, sex, birthday=None):
     user.profile.Sex = sex
     if not sex:
-        user.profile.Image = '/static/img/_user_female.png'
+        user.profile.image = '/static/img/_user_female.png'
     user.profile.birthday = birthday or None
     if user.profile.LastToken:
         user.profile.LastToken.delete()
@@ -362,9 +370,9 @@ def SignUpUserFromAPI(request, first_name, last_name, username, email, password,
     up.birthday = birthday
     up.Sex = sex
     if not sex:
-        up.Image = '/static/img/_user_female.png'
+        up.image = '/static/img/_user_female.png'
     else:
-        up.Image = '/static/img/_user_male.png'
+        up.image = '/static/img/_user_male.png'
     up.save()
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     return django_user
@@ -406,21 +414,21 @@ def auth_with_gplus(request, gplus_user, credentials):
     try:
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_user['id'])
         la.save()
-    except BaseException, e:
+    except Exception, e:
         print e.message
         return None
 
-    if user.profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
+    if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
             response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
             data = response.read()
             filename = generate_password()
             obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-            user.profile.Image = obj.container.cdn_uri + '/' + obj.name
+            user.profile.image = obj.container.cdn_uri + '/' + obj.name
             user.profile.save()
 
-        except BaseException, e:
+        except Exception, e:
             print e.message
             pass
     return user
@@ -433,7 +441,7 @@ def auth_with_facebook(request, fb_user, auth_response):
     gender = False if 'gender' in fb_user and fb_user['gender'] == 'female' else True
 
     if not user:
-        #todo: better email validation
+        # todo: better email validation
         if len(fb_user['email']) > 75:
             return None
         password = generate_password()
@@ -449,11 +457,11 @@ def auth_with_facebook(request, fb_user, auth_response):
     try:
         la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
         la.save()
-    except BaseException, e:
+    except Exception, e:
         print e.message
         return None
 
-    if user.profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
+    if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
             response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + auth_response['accessToken'],
@@ -465,10 +473,10 @@ def auth_with_facebook(request, fb_user, auth_response):
                 data = response.read()
                 filename = generate_password()
                 obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-                user.profile.Image = obj.container.cdn_uri + '/' + obj.name
+                user.profile.image = obj.container.cdn_uri + '/' + obj.name
                 user.profile.save()
 
-        except BaseException, e:
+        except Exception, e:
             print e.message
             pass
 

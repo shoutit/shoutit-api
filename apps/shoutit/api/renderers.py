@@ -8,7 +8,7 @@ from apps.shoutit.utils import full_url_path
 
 
 def render_shout(shout, level=5):
-    images = [image.Image for image in shout.get_images()]
+    images = [image.image for image in shout.get_images()]
     videos = [render_video(video) for video in shout.get_videos()]
     tags = [render_tag(tag) for tag in shout.get_tags()]
 
@@ -19,7 +19,7 @@ def render_shout(shout, level=5):
         'description': shout.Text,
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
-        'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().Image if images else '',
+        'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
         'date_created': shout.DatePublished.strftime('%s'),
         'url': get_object_url(shout),
         'user': render_user(shout.OwnerUser, level=2),
@@ -53,7 +53,7 @@ def render_tag(tag):
     base = {
         'name': tag.Name,
         'url': get_object_url(tag),
-        'image': full_url_path(tag.Image)
+        'image': full_url_path(tag.image)
     }
     return base
 
@@ -62,7 +62,7 @@ def render_tag_dict(tag_dict):
     tag = {
         'name': tag_dict['Name'],
         'url': full_url_path('/tag/%s/' % tag_dict['Name']),
-        'image': full_url_path(tag_dict['Image'])
+        'image': full_url_path(tag_dict['image'])
     }
     if 'is_listening' in tag_dict:
         tag['is_listening'] = tag_dict['is_listening']
@@ -111,7 +111,7 @@ def render_user(user, level=1, owner=False):
         if level >= 2:
             result.update({
                 'url': get_object_url(user),
-                'image': full_url_path(profile.Image),
+                'image': full_url_path(profile.image),
                 'video': render_video(profile.video),
                 'sex': profile.Sex,
                 'is_active': user.is_active
