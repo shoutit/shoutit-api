@@ -77,7 +77,7 @@ msgid "Phone"
 msgstr "رقم الهاتف"
 
 #: ShoutWebsite/forms.py:48 ShoutWebsite/forms.py:57 ShoutWebsite/forms.py:79
-msgid "Image"
+msgid "image"
 msgstr "الصورة"
 
 #: ShoutWebsite/forms.py:49 ShoutWebsite/forms.py:58 ShoutWebsite/forms.py:302
@@ -759,7 +759,7 @@ msgid "Learn More"
 msgstr "تعلم المزيد"
 
 #: ShoutWebsite/tiered_views/general_views.py:158
-msgid "Image does not exist."
+msgid "image does not exist."
 msgstr "الصورة غير موجودة."
 
 #: ShoutWebsite/tiered_views/message_views.py:97

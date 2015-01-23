@@ -8,7 +8,7 @@
 	<meta property="og:url"         content="{{ fb_og_url }}" />
 	<meta property="og:title"       content="{{ page_title }}" />
 	<meta property="og:description" content="{{ page_desc }}" />
-	<meta property="og:image"       content="{{ profile.Image|secure_url }}" />
+	<meta property="og:image"       content="{{ profile.image|secure_url }}" />
 {% endblock %}
 {% block content %}
 {#	Modals#}
@@ -44,7 +44,7 @@
 	<div class="user-wrapper business-wrapper">
 		<div class="box-container white-container round shadow user-details">
 			<div class="user-image pull-left">
-				<img class="round" src="{{ profile.Image|secure_url }}" alt="{{ profile.name }}'s profile picture">
+				<img class="round" src="{{ profile.image|secure_url }}" alt="{{ profile.name }}'s profile picture">
 			</div>
             <div class="pull-left">
                 <div class="user-name">{{ profile.name }}</div>

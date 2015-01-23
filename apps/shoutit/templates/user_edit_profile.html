@@ -5,7 +5,7 @@
     {% csrf_token %}
 {#    <div class="clearfix {% if form.image.errors %}error{% endif %}">#}
 {#        <div class="input">#}
-{#            <img width="160" height="160" id='user_image' src="{{ user_profile.Image }}" alt="{{ user_profile.get_full_name }}">#}
+{#            <img width="160" height="160" id='user_image' src="{{ user_profile.image }}" alt="{{ user_profile.get_full_name }}">#}
 {#        <div id="file-uploader">#}
 {#            <noscript>#}
 {#                <p>Please enable JavaScript to use file uploader.</p>#}
@@ -21,7 +21,7 @@
 {#        </div>#}
 {#    </div>#}
     <div class="input-field">
-        <div class='user-image'><img src="{{ user_profile.Image|thumbnail:95|secure_url }}"></div>
+        <div class='user-image'><img src="{{ user_profile.image|thumbnail:95|secure_url }}"></div>
         <div id="file-uploader">
             <noscript>
                 <p>{% trans "Please enable JavaScript to use file uploader." %}</p>

@@ -87,7 +87,7 @@ def hovercard(request):
                 data.isFollowing = -1
 
     if data:
-        data = {'type': type, 'name': data.Name, 'id': data.pk, 'image': str(data.Image),
+        data = {'type': type, 'name': data.Name, 'id': data.pk, 'image': str(data.image),
                 'listeners': data.Stream.userprofile_set.count(), 'shouts': data.Stream.Shouts.count(),
                 'isFollowing': data.isFollowing}
     else:
@@ -97,21 +97,22 @@ def hovercard(request):
     return result
 
 
+# todo: better validation and sizing options
 @cache_control(public=True, must_revalidate=False)
 @non_cached_view(methods=['GET'], login_required=False, validator=profile_picture_validator,
                  api_renderer=operation_api,
                  html_renderer=thumbnail_response)
-def profile_picture(request, profile_type, name, size=''):
-    if name == '@me':
-        name = request.user.username
+def profile_picture(request, username, profile_type='', size=''):
+    if username == '@me':
+        username = request.user.username
 
     path = ''
     if profile_type == 'user':
-        d = user_controller.get_profile(name)
+        d = user_controller.get_profile(username)
     elif profile_type == 'tag':
-        d = tag_controller.get_tag(name)
-    if d.Image:
-        path = d.Image
+        d = tag_controller.get_tag(username)
+    if d.image:
+        path = d.image
     else:
         path = ''
 
@@ -127,7 +128,7 @@ def profile_picture(request, profile_type, name, size=''):
 @non_cached_view(methods=['GET'],
                  login_required=False,
                  validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get,
-                                                                                   _('Image does not exist.'), pk=image_id),
+                                                                                   _('image does not exist.'), pk=image_id),
                  api_renderer=thumbnail_response,
                  json_renderer=thumbnail_response,
                  html_renderer=thumbnail_response)
@@ -136,7 +137,7 @@ def stored_image(request, image_id, size=32):
     image = StoredImage.objects.get(pk=image_id)
 
     result = ResponseResult()
-    path = image.Image
+    path = image.image
 
     import urlparse
 
@@ -250,7 +251,7 @@ def modal(request, template=None):
         if item:
             variables = RequestContext(request, {
                 'item_id': request.GET['id'],
-                'images': [image.Image for image in item.get_images()],
+                'images': [image.image for image in item.get_images()],
                 'form': ShoutForm(initial={
                     'price': item.Price,
                     'name': item.Name,

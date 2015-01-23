@@ -80,7 +80,7 @@ admin.site.register(User, CustomUserAdmin)
 
 # Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'Country', 'City', 'Sex', 'Image', 'Stream')
+    list_display = ('name', 'user', 'Country', 'City', 'Sex', 'image', 'Stream')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
     list_filter = ('Country', 'City', 'Sex')

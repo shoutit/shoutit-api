@@ -193,8 +193,8 @@ def tag_profile(request, tag_name):
                                                                          _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_profile_brief(request, tag_name):
     tag = tag_controller.get_tag(tag_name)
-    if not tag.Image:
-        tag.Image = '/static/img/shout_tag.png'
+    if not tag.image:
+        tag.image = '/static/img/shout_tag.png'
     result = ResponseResult()
     result.data['tag'] = tag
 
@@ -220,6 +220,6 @@ def tag_stats(request, tag_name):
         result.data['listeners'] = listeners
     else:
         result.data['listeners'] = [
-            {'username': listener.username, 'name': listener.name, 'image': thumbnail(listener.profile.Image, 32)}
+            {'username': listener.username, 'name': listener.name, 'image': thumbnail(listener.profile.image, 32)}
             for listener in listeners]
     return result

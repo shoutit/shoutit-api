@@ -6,12 +6,6 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.Country + ':' + self.City)
-
     City = models.CharField(max_length=200, default='', db_index=True, unique=True)
     city_encoded = models.CharField(max_length=200, default='', db_index=True, unique=True)
     Country = models.CharField(max_length=2, default='', db_index=True)
@@ -19,32 +13,29 @@ class PredefinedCity(UUIDModel):
     Longitude = models.FloatField(default=0.0)
     Approved = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return unicode(self.Country + ':' + self.City)
+
 
 class StoredFile(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return "(" + unicode(self.pk) + ") " + unicode(self.File)
-
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
 
+    def __unicode__(self):
+        return "(" + unicode(self.pk) + ") " + unicode(self.File)
+
 
 class ConfirmToken(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
-
     Token = models.CharField(max_length=24, db_index=True, unique=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name="Tokens")
     Type = models.IntegerField(default=0)
     DateCreated = models.DateField(auto_now_add=True)
     Email = models.CharField(max_length=128, blank=True)
     IsDisabled = models.BooleanField(default=False, null=False)
+
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
 
     def disable(self):
         self.IsDisabled = True
@@ -69,9 +60,6 @@ class ConfirmToken(UUIDModel):
 
 
 class FbContest(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     ContestId = models.IntegerField(db_index=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)

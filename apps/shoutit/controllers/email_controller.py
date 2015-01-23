@@ -4,6 +4,8 @@ from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from django.conf import settings
+from apps.shoutit import utils
+from apps.shoutit.models import DBCLConversation
 
 from apps.shoutit.utils import asynchronous_task, get_shout_name_preview, remove_non_ascii
 from apps.shoutit.controllers import sms_controller
@@ -227,17 +229,20 @@ def SendSellOfferEmail(shout, seller):
 
 
 @asynchronous_task()
-def SendMessageEmail(message):
+def send_message_email(message):
 
-    user = message.ToUser
-    profile = user.profile
+    to_user = message.ToUser
+    from_user = message.FromUser
+    shout = message.Conversation.AboutPost
+    message_text = message.Text
 
-    if not user.is_active and profile.Mobile:
-        shout = message.Conversation.AboutPost
+    # old sms case
+    profile = to_user.profile
+    if not to_user.is_active and profile.Mobile:
         content = remove_non_ascii(shout.Item.Name)
         title = get_shout_name_preview(content, 25)
         link = 'shoutit.com/' + profile.LastToken.Token
-        msg = get_shout_name_preview(remove_non_ascii(message.Text), 30)
+        msg = get_shout_name_preview(remove_non_ascii(message_text), 30)
 
         text = _(
             'A Shouter has replied to your ad \'%(shout_title)s\' on Shoutit, visit %(link)s to make your deal happen.\n-\n"%(message)s"') % {
@@ -246,43 +251,59 @@ def SendMessageEmail(message):
         sms_controller.SendSMS2('ShoutIt.com', mobile, text)
         return
 
-    subject = _('[ShoutIt] %(name)s has sent you a message') % {'name': message.FromUser.get_full_name()}
-    to_name = message.ToUser.name
-    from_name = message.FromUser.name
-    from_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % message.FromUser.username)
-    shout_link = 'http%s://%s%s' % (
-        settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN,
-        constants.SHOUT_URL % message.Conversation.AboutPost.pk)
-    shout_name = message.Conversation.AboutPost.Item.Name
-    message_text = message.Text
+    to_name = to_user.name
+    to_email = to_user.email
 
-    html_template = get_template('message_email.html')
-    html_context = Context({
-        'to': to_name,
-        'from': from_name,
-        'from_link': from_link,
-        'shout_link': shout_link,
-        'shout_name': shout_name,
-        'message': message_text
-    })
-    html_message = html_template.render(html_context)
+    from_name = from_user.name
+    from_email = settings.DEFAULT_FROM_EMAIL
+    from_link = utils.user_link(from_user)
 
-    text_template = get_template('message_email.txt')
-    text_context = Context({
-        'to': to_name,
-        'from': from_name,
-        'from_link': from_link,
-        'shout_link': shout_link,
-        'shout_name': shout_name,
-        'message': message_text
-    })
-    text_message = text_template.render(text_context)
+    shout_name = shout.Item.Name
+    shout_link = utils.shout_link(shout)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [message.ToUser.email],
-                                 headers={'Reply-To': message.FromUser.email})
-    msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    subject = _('[Shoutit] %(name)s sent you a message regarding: %(about)s') % {'name': from_user.first_name, 'about': shout_name}
+
+    reply_to_email = from_user.email
+
+    if to_user.cl_user:
+        subject = shout_name
+        ref = "%s-%s" % (to_user.cl_ad_id, from_user.pk)
+        try:
+            DBCLConversation.objects.get(ref=ref)
+        except DBCLConversation.DoesNotExist:
+            dbcl_conversation = DBCLConversation(ref=ref, from_user=from_user, to_user=to_user, shout=shout)
+            dbcl_conversation.save()
+
+        msg = EmailMultiAlternatives(subject, "", "%s <%s>" % (from_name, settings.EMAIL_HOST_USER), [to_email])
+        html_message = """
+        <p>%s</p>
+        <br>
+        <br>
+        <p style="max-height:1px;min-height:1px;font-size:0;display:none;color:#fffffe">{ref:%s}</p>
+        """ % (message_text, ref)
+        msg.attach_alternative(html_message, "text/html")
+        msg.send()
+
+    else:
+        context = {
+            'to': to_name,
+            'from': from_name,
+            'from_link': from_link,
+            'shout_link': shout_link,
+            'shout_name': shout_name,
+            'message': message_text
+        }
+        html_template = get_template('message_email.html')
+        html_context = Context(context)
+        html_message = html_template.render(html_context)
+
+        text_template = get_template('message_email.txt')
+        text_context = Context(context)
+        text_message = text_template.render(text_context)
+
+        msg = EmailMultiAlternatives(subject, text_message, from_email, [to_email], headers={'Reply-To': reply_to_email})
+        msg.attach_alternative(html_message, "text/html")
+        msg.send()
 
 
 @asynchronous_task()

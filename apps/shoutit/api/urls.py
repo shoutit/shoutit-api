@@ -1,9 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import include, patterns, url
 from piston3.resource import Resource
 from piston3.authentication import OAuthAuthentication, NoAuthentication
+from apps.shoutit.api.authentication import relink_social_channel
 from apps.shoutit.tiered_views import user_views, realtime_views, tag_views, stream_views, shout_views, message_views
 from apps.shoutit.tiered_views import general_views, experience_views, comment_views, business_views
-
 from apps.shoutit.api.handlers import TieredHandler
 
 
@@ -53,6 +53,79 @@ class MethodDependentAuthentication(object):
 oauth = OAuthAuthentication()
 no_oauth = NoAuthentication()
 
+user_api = patterns('',
+                    url(r'^$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_profile
+                        })
+                    ),
+
+                    url(r'^brief/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_profile_brief
+                        })
+                    ),
+
+                    url(r'^listen/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'POST': user_views.start_listening_to_user,
+                            'DELETE': user_views.stop_listening_to_user
+                        })
+                    ),
+
+                    url(r'^(?P<stats_type>listening|listeners)/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_stats
+                        })
+                    ),
+
+                    url(r'^(?P<stats_type>listening)/(?P<listening_type>users|tags|all)/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_stats
+                        })
+                    ),
+
+                    url(r'^(?P<stats_type>listening)/(?P<listening_type>users|tags|all)/(?P<period>recent|all)/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_stats
+                        })
+                    ),
+
+                    url(r'^stream/?$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_stream
+                        })
+                    ),
+
+                    url(r'^picture/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': general_views.profile_picture
+                        }), {'profile_type': 'user'}
+                    ),
+
+                    url(r'^video/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.user_video,
+                            'POST': user_views.user_video,
+                            'DELETE': user_views.user_video,
+                        })
+                    ),
+
+
+                    # TODO: to look at: shoutit2
+                    url(r'^experiences_stream/(?:(\d+)/)?$',
+                        TieredResource(TieredHandler, no_oauth, {
+                            'GET': experience_views.experiences_stream
+                        })
+                    ),
+
+                    url(r'^activities_stream/(?:(\d+)/)?$',
+                        TieredResource(TieredHandler, no_oauth, {
+                            'GET': user_views.activities_stream
+                        })
+                    ),
+)
+
 urlpatterns = patterns('',
                        # Users
 
@@ -63,62 +136,14 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/$',
+                       url(r'^user/link_(facebook|gplus)/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_profile
+                               'POST': relink_social_channel,
+                               'DELETE': relink_social_channel
                            })
                        ),
 
-                       url(r'^user/(@me|\w+)/brief/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_profile_brief
-                           })
-                        ),
-
-                       url(r'^user/(@me|\w+)/listen/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': user_views.start_listening_to_user,
-                               'DELETE': user_views.stop_listening_to_user
-                           })
-                       ),
-
-                       url(r'^user/(@me|\w+)/(listening|listeners)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_stats
-                           })
-                       ),
-
-                       url(r'^user/(@me|\w+)/(listening)/(users|tags|all)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_stats
-                           })
-                       ),
-
-                       url(r'^user/(@me|\w+)/(listening)/(users|tags|all)/(recent|all)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_stats
-                           })
-                       ),
-
-                       url(r'^user/(@me|\w+)/stream/?$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_stream
-                           })
-                       ),
-
-                       url(r'^(user)/(@me|\w+)/picture(?:/(\d+))?/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': general_views.profile_picture
-                           })
-                       ),
-
-                       url(r'^user/(@me|\w+)/video/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.user_video,
-                               'POST': user_views.user_video,
-                               'DELETE': user_views.user_video,
-                           })
-                       ),
+                       url(r'^user/(?P<username>@me|[\w.]+)/', include(user_api)),
 
 
                        # Shouts
@@ -388,27 +413,13 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       #TODO: deprecate?
+                       # TODO: deprecate?
                        url(r'^activate/([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]*)/$',
                            TieredResource(TieredHandler, oauth, {
                                'POST': user_views.activate_api
                            })
                        ),
 
-
-                       # TODO: to look at: shoutit2
-
-                       url(r'^user/(@me|\w+)/experiences_stream/(?:(\d+)/)?$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': experience_views.experiences_stream
-                           })
-                       ),
-
-                       url(r'^user/(@me|\w+)/activities_stream/(?:(\d+)/)?$',
-                           TieredResource(TieredHandler, no_oauth, {
-                               'GET': user_views.activities_stream
-                           })
-                       ),
 
                        url(r'^experience/([-\w]+)/$',
                            TieredResource(TieredHandler, no_oauth, {

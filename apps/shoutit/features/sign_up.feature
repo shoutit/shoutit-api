@@ -1,4 +1,5 @@
 # Created by Muaaz at 1/12/2015
+  @Authentication
 Feature: new user sign up
   user signs up to create a new shoutit account
 

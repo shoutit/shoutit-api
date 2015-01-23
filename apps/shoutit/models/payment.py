@@ -4,9 +4,8 @@ from django.db.models import Sum
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 from apps.shoutit.models.user import Profile
 from apps.shoutit.models.business import Business
-from apps.shoutit.models.item import Currency
-from apps.shoutit.models.post import Deal
 from django.conf import settings
+
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
@@ -28,24 +27,18 @@ class PaymentsManager(models.Manager):
 
 
 class Payment(UUIDModel, AttachedObjectMixin):
-    class Meta:
-        app_label = 'shoutit'
-
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Payments')
     DateCreated = models.DateTimeField(auto_now_add=True)
     DateUpdated = models.DateTimeField(auto_now=True)
     Amount = models.FloatField()
-    Currency = models.ForeignKey(Currency, related_name='+')
+    Currency = models.ForeignKey('shoutit.Currency', related_name='+')
     Status = models.IntegerField()
-    Transaction = models.ForeignKey('Transaction', related_name='Payment')
+    Transaction = models.ForeignKey('shoutit.Transaction', related_name='Payment')
 
     objects = PaymentsManager()
 
 
 class Transaction(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     RemoteIdentifier = models.CharField(max_length=1024)
     RemoteData = models.CharField(max_length=1024)
     RemoteStatus = models.CharField(max_length=1024)
@@ -54,10 +47,7 @@ class Transaction(UUIDModel):
 
 
 class Voucher(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    DealBuy = models.ForeignKey('DealBuy', related_name='Vouchers')
+    DealBuy = models.ForeignKey('shoutit.DealBuy', related_name='Vouchers')
     Code = models.CharField(max_length=22)
     DateGenerated = models.DateTimeField(auto_now_add=True)
     IsValidated = models.BooleanField(default=False)
@@ -65,19 +55,13 @@ class Voucher(UUIDModel):
 
 
 class DealBuy(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    Deal = models.ForeignKey(Deal, related_name='Buys', on_delete=models.SET_NULL, null=True)
-    user =  models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
+    Deal = models.ForeignKey('shoutit.Deal', related_name='Buys', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
 
 
 class Service(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     Code = models.CharField(max_length=256)
     Name = models.CharField(max_length=1024)
     Price = models.FloatField()
@@ -104,11 +88,8 @@ class ServiceManager(models.Manager):
 
 
 class ServiceBuy(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    user =  models.ForeignKey(AUTH_USER_MODEL, related_name='Services')
-    Service = models.ForeignKey('Service', related_name='Buyers')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Services')
+    Service = models.ForeignKey('shoutit.Service', related_name='Buyers')
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
 
@@ -116,19 +97,13 @@ class ServiceBuy(UUIDModel):
 
 
 class ServiceUsage(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='ServicesUsages')
-    Service = models.ForeignKey('Service', related_name='BuyersUsages')
+    Service = models.ForeignKey('shoutit.Service', related_name='BuyersUsages')
     Amount = models.IntegerField(default=1)
     DateUsed = models.DateTimeField(auto_now_add=True)
 
 
 class Subscription(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
     Type = models.IntegerField(default=0)
     State = models.IntegerField(default=0)
     SignUpDate = models.DateTimeField(null=True)
@@ -137,9 +112,7 @@ class Subscription(UUIDModel):
     Password = models.CharField(max_length=24)
 
 
-
-
-#PAUSE: PAYPAL
+# PAUSE: PAYPAL
 # PAUSE: Payment
 
 #from subscription.signals import subscribed, unsubscribed

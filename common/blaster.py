@@ -59,7 +59,7 @@ for m in mobiles:
 			message = client.sms.messages.create(to="+"+mobile, from_="+16479315866",body=text)
 			print 'sms via Twilio CA to mobile: %s sent' %  mobile
 
-	except BaseException, e:
+	except Exception, e:
 		errors += 1
 		cur.execute("UPDATE ads SET fetched=2, note='Error Blasting' WHERE fetched=4 and mobile ='%s'" % mobile)
 		print 'sms to mobile: %s error: %s' % ( mobile, e.message)

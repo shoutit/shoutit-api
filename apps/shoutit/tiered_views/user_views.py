@@ -288,6 +288,7 @@ def resend_activation(request):
     return result
 
 
+# todo: validator for @me and not to listen to your self
 @non_cached_view(methods=['GET', 'POST'], login_required=True, api_renderer=operation_api,
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
@@ -308,6 +309,7 @@ def start_listening_to_user(request, username):
     return ResponseResult()
 
 
+# todo: validator for @me and not to listen to your self
 @non_cached_view(methods=['GET', 'DELETE'],
                  login_required=True,
                  api_renderer=operation_api,
@@ -429,7 +431,7 @@ def sss(request):
                 user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
             else:
                 user = user.user
-        except BaseException, e:
+        except Exception, e:
             return HttpResponseBadRequest("User Creation Error: " + str(e))
 
         try:
@@ -458,7 +460,7 @@ def sss(request):
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
 
-        except BaseException, e:
+        except Exception, e:
             return HttpResponseBadRequest("Shout Creation Error: " + str(e))
 
         return HttpResponse('Done')
@@ -562,8 +564,8 @@ def user_edit_profile(request, username):
 
         profile.birthday = form.cleaned_data['birthday']
         profile.Sex = bool(int(form.cleaned_data['sex']))
-        if profile.Image.endswith('user_female.png') or profile.Image.endswith('user_male.png'):
-            profile.Image = '/static/img/_user_' + (
+        if profile.image.endswith('user_female.png') or profile.image.endswith('user_male.png'):
+            profile.image = '/static/img/_user_' + (
                 profile.Sex and 'male.png' or 'female.png')
 
         profile.Bio = form.cleaned_data['bio']
@@ -608,9 +610,13 @@ def user_profile(request, username):
     if isinstance(profile, Profile):
         result.data['requests_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).filter(OwnerUser=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
-        result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
+        result.data['listening_count'] = {
+            'users': stream_controller.get_user_listening(user=profile.user, stream_type=STREAM2_TYPE_PROFILE, count_only=True),
+            'tags': stream_controller.get_user_listening(user=profile.user, stream_type=STREAM2_TYPE_TAG, count_only=True),
+        }
+        result.data['listening_count']['all'] = result.data['listening_count']['users'] + result.data['listening_count']['tags']
         fb_la = hasattr(profile.user, 'linked_facebook') and profile.user.linked_facebook or None
-        result.data['user_profile_fb'] = 'https://www.facebook.com/profile.php?id=' + str(fb_la.facebook_id) if fb_la else None
+        result.data['user_profile_fb'] = ('https://www.facebook.com/profile.php?id=' + str(fb_la.facebook_id)) if fb_la else None
         result.data['fb_og_type'] = 'user'
 
     if isinstance(profile, Business):
@@ -718,7 +724,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
         else:
             # todo: minimize the db queries
             result.data['listeners'] = [
-                {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.Image, 32)}
+                {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.image, 32)}
                 for user in listeners]
 
     elif stats_type == 'listening':
@@ -743,7 +749,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
                 result.data['listening']['tags'] = [tag.Name for tag in listening_tags]
             if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = [
-                    {'username': p.username, 'name': p.name, 'image': thumbnail(p.Image, 32)}
+                    {'username': p.username, 'name': p.name, 'image': thumbnail(p.image, 32)}
                     for p in listening_profiles]
     return result
 

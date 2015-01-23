@@ -12,7 +12,7 @@ def GetBusinessGalleryItems(business, start_index=None, end_index=None):
         stored_images = StoredImage.objects.filter(Item__pk__in=items_pk).select_related('Item')
         items = []
         for gallery_item in galleryItems:
-            gallery_item.Item.images = [stored_image.Image for stored_image in stored_images if
+            gallery_item.Item.images = [stored_image.image for stored_image in stored_images if
                                         stored_image.Item.pk == gallery_item.Item.pk]
             items.append(gallery_item.Item)
         return items
