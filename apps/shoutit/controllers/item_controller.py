@@ -22,7 +22,7 @@ def create_item(name, price, currency, images=None, videos=None, description='')
 
         try:
             make_cloud_thumbnails_for_image(images[0])
-        except BaseException, e:
+        except Exception, e:
             print e
 
     if videos:

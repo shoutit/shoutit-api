@@ -88,7 +88,7 @@ class SignUpForm(forms.Form):
     email = forms.EmailField(label=_('Email'), max_length=254)
     firstname = forms.CharField(label=_('First Name'), max_length=30, min_length=2)
     lastname = forms.CharField(label=_('Last Name'), max_length=30, min_length=2)
-    #	mobile = forms.CharField(label='Phone', max_length=20, min_length=3, required= False)
+    # mobile = forms.CharField(label='Phone', max_length=20, min_length=3, required= False)
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput())
     confirm_password = forms.CharField(label=_('Confirm Password'), widget=forms.PasswordInput())
 
@@ -120,7 +120,7 @@ class SignUpForm(forms.Form):
         return confirm_password
 
 # def clean_mobile(self):
-#		mobile = self.data['mobile']
+# mobile = self.data['mobile']
 #		if mobile is None or mobile == '':
 #			return mobile
 #		try:

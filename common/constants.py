@@ -704,6 +704,8 @@ NOT_ALLOWED_USERNAMES = [
     'items',
     'jsi18n',
     'learnmore',
+    'link',
+    'links',
     'messages',
     'message',
     'modal',

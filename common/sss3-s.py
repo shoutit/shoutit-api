@@ -75,7 +75,7 @@ for shout in shouts:
 				errors += 1
 				continue
 
-		except BaseException,e:
+		except Exception,e:
 			cur.execute("UPDATE ads SET fetched=-4, fetch_date=NOW(), note=%s WHERE id=%s", ('Sending Error', shout['id']))
 			print 'Shout id: %s Sending Error! | %s' % (shout['id'], e)
 			errors += 1

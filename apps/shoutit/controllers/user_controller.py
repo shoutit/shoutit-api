@@ -89,7 +89,7 @@ def GetProfile(user):
                     return None
         except ValueError, e:
             return None
-    except BaseException, e:
+    except Exception, e:
         return None
 
 
@@ -414,7 +414,7 @@ def auth_with_gplus(request, gplus_user, credentials):
     try:
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_user['id'])
         la.save()
-    except BaseException, e:
+    except Exception, e:
         print e.message
         return None
 
@@ -428,7 +428,7 @@ def auth_with_gplus(request, gplus_user, credentials):
             user.profile.image = obj.container.cdn_uri + '/' + obj.name
             user.profile.save()
 
-        except BaseException, e:
+        except Exception, e:
             print e.message
             pass
     return user
@@ -441,7 +441,7 @@ def auth_with_facebook(request, fb_user, auth_response):
     gender = False if 'gender' in fb_user and fb_user['gender'] == 'female' else True
 
     if not user:
-        #todo: better email validation
+        # todo: better email validation
         if len(fb_user['email']) > 75:
             return None
         password = generate_password()
@@ -457,7 +457,7 @@ def auth_with_facebook(request, fb_user, auth_response):
     try:
         la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
         la.save()
-    except BaseException, e:
+    except Exception, e:
         print e.message
         return None
 
@@ -476,7 +476,7 @@ def auth_with_facebook(request, fb_user, auth_response):
                 user.profile.image = obj.container.cdn_uri + '/' + obj.name
                 user.profile.save()
 
-        except BaseException, e:
+        except Exception, e:
             print e.message
             pass
 

@@ -1,6 +1,7 @@
 from django.conf.urls import include, patterns, url
 from piston3.resource import Resource
 from piston3.authentication import OAuthAuthentication, NoAuthentication
+from apps.shoutit.api.authentication import relink_social_channel
 from apps.shoutit.tiered_views import user_views, realtime_views, tag_views, stream_views, shout_views, message_views
 from apps.shoutit.tiered_views import general_views, experience_views, comment_views, business_views
 from apps.shoutit.api.handlers import TieredHandler
@@ -132,6 +133,13 @@ urlpatterns = patterns('',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.search_user,
                                'PUT': user_views.user_edit_profile
+                           })
+                       ),
+
+                       url(r'^user/link_(facebook|gplus)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': relink_social_channel,
+                               'DELETE': relink_social_channel
                            })
                        ),
 

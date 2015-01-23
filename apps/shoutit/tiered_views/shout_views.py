@@ -588,7 +588,7 @@ def shout_sss4(request):
     try:
         user = sign_up_sss4(email=shout['cl_email'], lat=shout['lat'], lng=shout['lng'], city=shout['city'], country=shout['country'])
         give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
-    except BaseException, e:
+    except Exception, e:
         return JsonResponseBadRequest({'error': "User Creation Error: " + str(e)})
 
     try:
@@ -605,7 +605,7 @@ def shout_sss4(request):
                 tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
             )
 
-    except BaseException, e:
+    except Exception, e:
         return JsonResponseBadRequest({'error': "Shout Creation Error: " + str(e)})
 
     return JsonResponse({'success': True})

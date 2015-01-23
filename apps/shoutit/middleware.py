@@ -54,7 +54,7 @@ class UserPermissionsMiddleware(object):
 class FBMiddleware(object):
     @staticmethod
     def process_request(request):
-    # Check the requests coming from Facebook
+        # Check the requests coming from Facebook
         if 'code' in request.GET and 'fb_source' in request.GET:
             auth_response = facebook_controller.exchange_code(request, request.GET['code'])
             if auth_response:
@@ -72,7 +72,7 @@ class JsonPostMiddleware(object):
                 request.json_to_post_filled = False
             except ValueError, e:
                 return JsonResponseBadRequest({'error': 'invalid json format: ' + e.message})
-            except BaseException, e:
+            except Exception, e:
                 return JsonResponseBadRequest({'error': e.message})
 
         elif request.method == 'POST':

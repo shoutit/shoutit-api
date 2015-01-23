@@ -133,14 +133,14 @@ def delete_attached_user(sender, instance, using, **kwargs):
 
 
 class LinkedFacebookAccount(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')  # todo: one to one
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')
     facebook_id = models.CharField(max_length=24, db_index=True)
     AccessToken = models.CharField(max_length=512)
     ExpiresIn = models.BigIntegerField(default=0)
 
 
 class LinkedGoogleAccount(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')  # todo: one to one
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')
     credentials_json = models.CharField(max_length=2048)
     gplus_id = models.CharField(max_length=64, db_index=True)
 

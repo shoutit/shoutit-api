@@ -431,7 +431,7 @@ def sss(request):
                 user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
             else:
                 user = user.user
-        except BaseException, e:
+        except Exception, e:
             return HttpResponseBadRequest("User Creation Error: " + str(e))
 
         try:
@@ -460,7 +460,7 @@ def sss(request):
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
 
-        except BaseException, e:
+        except Exception, e:
             return HttpResponseBadRequest("Shout Creation Error: " + str(e))
 
         return HttpResponse('Done')

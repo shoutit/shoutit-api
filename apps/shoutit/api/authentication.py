@@ -1,15 +1,17 @@
-from apps.shoutit.models import User
+from piston3 import oauth
+from piston3.authentication import initialize_server_request, INVALID_PARAMS_RESPONSE, send_oauth_error
+
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models.query_utils import Q
 from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
-from piston3 import oauth
-from piston3.authentication import initialize_server_request, INVALID_PARAMS_RESPONSE, send_oauth_error
-from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
-from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
-from apps.shoutit.api.renderers import render_user
+
 from apps.shoutit.utils import JsonResponse, JsonResponseBadRequest
+from apps.shoutit.models import User
+from apps.shoutit.controllers.gplus_controller import user_from_gplus_code, unlink_gplus_user, link_gplus_user
+from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response, unlink_facebook_user, link_facebook_user
+from apps.shoutit.api.renderers import render_user
 
 
 @require_GET
@@ -60,12 +62,12 @@ def get_access_token_using_social_channel(request, social_channel=None):
             error, user = user_from_facebook_auth_response(request, auth_data, initial_user)
 
         else:
-            error, user = BaseException("unsupported social channel: " + social_channel), None
+            error, user = Exception("unsupported social channel: " + social_channel), None
 
     except KeyError, k:
                 return JsonResponseBadRequest({'error': "missing " + k.message})
 
-    except BaseException, e:
+    except Exception, e:
         return JsonResponseBadRequest({'error': e.message})
 
     if not user:
@@ -88,7 +90,8 @@ def get_access_token_using_social_channel(request, social_channel=None):
         request_token = oauth_server.authorize_token(request_token, request.user)
         # after authorization we need to set the verifier and therefore new signature for oauth_request
         oauth_request.set_parameter('oauth_verifier', request_token.verifier)
-        oauth_request.sign_request(oauth_server.signature_methods[oauth_request.get_parameter('oauth_signature_method')], request_token.consumer, request_token)
+        oauth_request.sign_request(oauth_server.signature_methods[oauth_request.get_parameter('oauth_signature_method')],
+                                   request_token.consumer, request_token)
     except oauth.OAuthError as err:
         return send_oauth_error(err)
 
@@ -106,22 +109,76 @@ def get_access_token_using_social_channel(request, social_channel=None):
     return JsonResponse(token)
 
 
-#todo: not used
+@csrf_exempt
+def relink_social_channel(request, social_channel=None):
+
+    if request.method == 'DELETE':
+        if social_channel == 'gplus':
+            if not hasattr(request.user, 'linked_facebook'):
+                return JsonResponseBadRequest({'error': "at least one social account should be linked"})
+            unlink_gplus_user(request)
+
+        elif social_channel == 'facebook':
+            if not hasattr(request.user, 'linked_gplus'):
+                return JsonResponseBadRequest({'error': "at least one social account should be linked"})
+            unlink_facebook_user(request)
+
+    elif request.method == 'POST':
+
+        try:
+            if not (hasattr(request, 'json_data') and isinstance(request.json_data['social_channel_response'], dict)):
+                raise KeyError("valid json object with social_channel_response")
+
+            auth_data = request.json_data['social_channel_response']
+            request.is_api = True
+
+            if social_channel == 'gplus':
+                if not ('code' in auth_data and auth_data['code']):
+                    raise KeyError("valid google one time 'code'.")
+
+                error, success = link_gplus_user(request, auth_data['code'])
+
+            elif social_channel == 'facebook':
+                if not ('accessToken' in auth_data and auth_data['accessToken']):
+                    raise KeyError("valid facebook 'accessToken'")
+
+                error, success = link_facebook_user(request, auth_data)
+
+            else:
+                error, success = Exception("unsupported social channel: " + social_channel), False
+
+        except KeyError, k:
+            return JsonResponseBadRequest({'error': "missing " + k.message})
+
+        except Exception, e:
+            return JsonResponseBadRequest({'error': e.message})
+
+        if not success:
+            return JsonResponseBadRequest({'error': error.message})
+
+    return JsonResponse({
+        'success': True,
+        'message': "%s %slinked successfully" % (social_channel, 'un' if request.method == 'DELETE' else '')
+    })
+
+
+# todo: not used
 @csrf_exempt
 @require_POST
 def get_basic_access_token(request):
 
     # step 1: fill request.user
-    if not 'credential' in request.REQUEST or not request.REQUEST['credential']:
+    if 'credential' not in request.REQUEST or not request.REQUEST['credential']:
         return HttpResponseBadRequest('username or email or mobile should be specified.')
     credential = request.REQUEST['credential']
 
-    if not 'password' in request.REQUEST or not request.REQUEST['password']:
+    if 'password' not in request.REQUEST or not request.REQUEST['password']:
         return HttpResponseBadRequest('no password specified.')
     password = request.REQUEST['password']
 
     try:
-        user = User.objects.get(Q(username__iexact=credential.strip()) | Q(email__iexact=credential.strip()) | Q(Profile__Mobile__iexact=credential.strip()))
+        user = User.objects.get(Q(username__iexact=credential.strip())
+                                | Q(email__iexact=credential.strip()) | Q(Profile__Mobile__iexact=credential.strip()))
     except ObjectDoesNotExist:
         return HttpResponseBadRequest('Invalid username or password.')
     except MultipleObjectsReturned:
@@ -147,7 +204,8 @@ def get_basic_access_token(request):
         request_token = oauth_server.authorize_token(request_token, request.user)
         # after authorization we need to set the verifier and therefore new signature for oauth_request
         oauth_request.set_parameter('oauth_verifier', request_token.verifier)
-        oauth_request.sign_request(oauth_server.signature_methods[oauth_request.get_parameter('oauth_signature_method')], request_token.consumer, request_token)
+        oauth_request.sign_request(oauth_server.signature_methods[oauth_request.get_parameter('oauth_signature_method')],
+                                   request_token.consumer, request_token)
     except oauth.OAuthError as err:
         return send_oauth_error(err)
 

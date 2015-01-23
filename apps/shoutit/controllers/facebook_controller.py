@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from apps.shoutit.models import LinkedFacebookAccount
 from apps.shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_profile_location
+from settings import SITE_LINK
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
@@ -13,7 +14,7 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
     try:
         response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
         fb_user = json.loads(response.read())
-        if not 'email' in fb_user:
+        if 'email' not in fb_user:
             return KeyError("couldn't access user email"), None
     except urllib2.HTTPError, e:
         return e, None
@@ -48,8 +49,7 @@ def exchange_code(request, code):
     # Get Access Token using the Code then make an authResponse
     try:
         qs = request.META['QUERY_STRING'].split('&code')[0]
-        redirect_uri = urllib.quote('http%s://%s%s?%s' % ('s' if settings.IS_SITE_SECURE else '',
-                                                          settings.SHOUT_IT_DOMAIN, request.path, qs))
+        redirect_uri = urllib.quote('%s%s?%s' % (SITE_LINK, request.path[1:], qs))
         exchange_url = 'https://graph.facebook.com/oauth/access_token?client_id=%s&redirect_uri=%s&client_secret=%s&code=%s' % (
             settings.FACEBOOK_APP_ID,
             redirect_uri,
@@ -59,7 +59,8 @@ def exchange_code(request, code):
 
         response = urllib2.urlopen(exchange_url, timeout=20)
         params = dict(urlparse.parse_qsl(response.read()))
-    except Exception,e:
+    except Exception, e:
+        print e.message
         return None
 
     auth_response = {
@@ -87,3 +88,38 @@ def extend_token(short_lived_token):
         'expires': params['expires']
     }
     return long_lived_token
+
+
+def link_facebook_user(request, auth_response):
+
+    long_lived_token = extend_token(auth_response['accessToken'])
+    if not long_lived_token:
+        return Exception("could not extend the facebook short lived access_token with long lived one"), False
+
+    auth_response['accessToken'] = long_lived_token['access_token']
+    auth_response['expiresIn'] = long_lived_token['expires']
+
+    # unlink first
+    unlink_facebook_user(request)
+
+    # link
+    try:
+        la = LinkedFacebookAccount(user=request.user, facebook_id=auth_response['userID'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
+        la.save()
+        return None, True
+    except Exception, e:
+        return e, False
+
+
+def unlink_facebook_user(request):
+    """
+    Deleted the user's LinkedFacebookAccount
+    :param request:
+    :return:
+    """
+    try:
+        linked_account = LinkedFacebookAccount.objects.get(user=request.user)
+    except LinkedFacebookAccount.DoesNotExist:
+        pass
+    else:
+        linked_account.delete()
