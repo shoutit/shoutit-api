@@ -288,6 +288,7 @@ def resend_activation(request):
     return result
 
 
+# todo: validator for @me and not to listen to your self
 @non_cached_view(methods=['GET', 'POST'], login_required=True, api_renderer=operation_api,
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
@@ -308,6 +309,7 @@ def start_listening_to_user(request, username):
     return ResponseResult()
 
 
+# todo: validator for @me and not to listen to your self
 @non_cached_view(methods=['GET', 'DELETE'],
                  login_required=True,
                  api_renderer=operation_api,
@@ -608,9 +610,13 @@ def user_profile(request, username):
     if isinstance(profile, Profile):
         result.data['requests_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).filter(OwnerUser=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
-        result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
+        result.data['listening_count'] = {
+            'users': stream_controller.get_user_listening(user=profile.user, stream_type=STREAM2_TYPE_PROFILE, count_only=True),
+            'tags': stream_controller.get_user_listening(user=profile.user, stream_type=STREAM2_TYPE_TAG, count_only=True),
+        }
+        result.data['listening_count']['all'] = result.data['listening_count']['users'] + result.data['listening_count']['tags']
         fb_la = hasattr(profile.user, 'linked_facebook') and profile.user.linked_facebook or None
-        result.data['user_profile_fb'] = 'https://www.facebook.com/profile.php?id=' + str(fb_la.facebook_id) if fb_la else None
+        result.data['user_profile_fb'] = ('https://www.facebook.com/profile.php?id=' + str(fb_la.facebook_id)) if fb_la else None
         result.data['fb_og_type'] = 'user'
 
     if isinstance(profile, Business):

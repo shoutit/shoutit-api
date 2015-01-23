@@ -101,15 +101,15 @@ def hovercard(request):
 @non_cached_view(methods=['GET'], login_required=False, validator=profile_picture_validator,
                  api_renderer=operation_api,
                  html_renderer=thumbnail_response)
-def profile_picture(request, profile_type, name, size=''):
-    if name == '@me':
-        name = request.user.username
+def profile_picture(request, username, profile_type='', size=''):
+    if username == '@me':
+        username = request.user.username
 
     path = ''
     if profile_type == 'user':
-        d = user_controller.get_profile(name)
+        d = user_controller.get_profile(username)
     elif profile_type == 'tag':
-        d = tag_controller.get_tag(name)
+        d = tag_controller.get_tag(username)
     if d.Image:
         path = d.Image
     else:
