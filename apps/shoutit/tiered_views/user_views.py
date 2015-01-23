@@ -564,8 +564,8 @@ def user_edit_profile(request, username):
 
         profile.birthday = form.cleaned_data['birthday']
         profile.Sex = bool(int(form.cleaned_data['sex']))
-        if profile.Image.endswith('user_female.png') or profile.Image.endswith('user_male.png'):
-            profile.Image = '/static/img/_user_' + (
+        if profile.image.endswith('user_female.png') or profile.image.endswith('user_male.png'):
+            profile.image = '/static/img/_user_' + (
                 profile.Sex and 'male.png' or 'female.png')
 
         profile.Bio = form.cleaned_data['bio']
@@ -724,7 +724,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
         else:
             # todo: minimize the db queries
             result.data['listeners'] = [
-                {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.Image, 32)}
+                {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.image, 32)}
                 for user in listeners]
 
     elif stats_type == 'listening':
@@ -749,7 +749,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
                 result.data['listening']['tags'] = [tag.Name for tag in listening_tags]
             if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = [
-                    {'username': p.username, 'name': p.name, 'image': thumbnail(p.Image, 32)}
+                    {'username': p.username, 'name': p.name, 'image': thumbnail(p.image, 32)}
                     for p in listening_profiles]
     return result
 

@@ -199,7 +199,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
 
     up = Profile(user=django_user, Stream=stream, Mobile=mobile)
 
-    up.Image = '/static/img/_user_male.png'
+    up.image = '/static/img/_user_male.png'
     up.save()
 
     encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
@@ -242,7 +242,7 @@ def SignUpSSS(request, mobile, location, country, city):
     up.Longitude = location[1]
     up.Country = country
     up.City = city
-    up.Image = '/static/img/_user_male.png'
+    up.image = '/static/img/_user_male.png'
     up.save()
 
     if not PredefinedCity.objects.filter(City=up.City):
@@ -284,7 +284,7 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
     up = Profile(
         user=django_user, Stream=stream, isSSS=True,
         Latitude=lat, Longitude=lng, City=city, Country=country,
-        Image='/static/img/_user_male.png'
+        image='/static/img/_user_male.png'
     )
     up.save()
 
@@ -310,7 +310,7 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
     user.save()
     user.profile.Sex = sex
     if not sex:
-        user.profile.Image = '/static/img/_user_female.png'
+        user.profile.image = '/static/img/_user_female.png'
     user.profile.birthday = birthday
     user.profile.save()
 
@@ -336,7 +336,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     user.profile.Sex = sex
     user.profile.birthday = birthday
     if not sex:
-        user.profile.Image = '/static/img/_user_female.png'
+        user.profile.image = '/static/img/_user_female.png'
     user.profile.save()
     import realtime_controller as realtime_controller
 
@@ -348,7 +348,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
 def complete_signup(request, user, sex, birthday=None):
     user.profile.Sex = sex
     if not sex:
-        user.profile.Image = '/static/img/_user_female.png'
+        user.profile.image = '/static/img/_user_female.png'
     user.profile.birthday = birthday or None
     if user.profile.LastToken:
         user.profile.LastToken.delete()
@@ -370,9 +370,9 @@ def SignUpUserFromAPI(request, first_name, last_name, username, email, password,
     up.birthday = birthday
     up.Sex = sex
     if not sex:
-        up.Image = '/static/img/_user_female.png'
+        up.image = '/static/img/_user_female.png'
     else:
-        up.Image = '/static/img/_user_male.png'
+        up.image = '/static/img/_user_male.png'
     up.save()
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     return django_user
@@ -418,14 +418,14 @@ def auth_with_gplus(request, gplus_user, credentials):
         print e.message
         return None
 
-    if user.profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
+    if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
             response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
             data = response.read()
             filename = generate_password()
             obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-            user.profile.Image = obj.container.cdn_uri + '/' + obj.name
+            user.profile.image = obj.container.cdn_uri + '/' + obj.name
             user.profile.save()
 
         except BaseException, e:
@@ -461,7 +461,7 @@ def auth_with_facebook(request, fb_user, auth_response):
         print e.message
         return None
 
-    if user.profile.Image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
+    if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
             response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + auth_response['accessToken'],
@@ -473,7 +473,7 @@ def auth_with_facebook(request, fb_user, auth_response):
                 data = response.read()
                 filename = generate_password()
                 obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-                user.profile.Image = obj.container.cdn_uri + '/' + obj.name
+                user.profile.image = obj.container.cdn_uri + '/' + obj.name
                 user.profile.save()
 
         except BaseException, e:

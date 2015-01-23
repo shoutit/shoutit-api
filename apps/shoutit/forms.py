@@ -54,7 +54,7 @@ class ShoutForm(forms.Form):
     name = forms.CharField(label=_('Name'), max_length=120)
     description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=200)
     tags = forms.CharField(label=_('Tags'))
-    image = forms.ImageField(label=_('Image'), required=False)
+    image = forms.ImageField(label=_('image'), required=False)
     location = forms.CharField(label=_('Location'), required=False)
     country = forms.CharField(label=_('Country'), required=False)
     city = forms.CharField(label=_('City'), required=False)
@@ -80,7 +80,7 @@ class ItemForm(forms.Form):
     currency = forms.ChoiceField(label=_('Currency'), choices=_get_currencies(), required=True)
     name = forms.CharField(label=_('Name'), max_length=120)
     description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=512)
-    image = forms.ImageField(label=_('Image'), required=False)
+    image = forms.ImageField(label=_('image'), required=False)
 
 
 class SignUpForm(forms.Form):

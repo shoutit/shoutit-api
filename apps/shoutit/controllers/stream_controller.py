@@ -335,10 +335,10 @@ def attach_related_to_shouts(shouts, rank_count=None):
     if len(shouts):
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout.pk) for shout in shouts])])
-        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__pk'))
+        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__pk'))
 
         images = StoredImage.objects.filter(Q(Shout__pk__in=[shout.pk for shout in shouts if shout.Type == POST_TYPE_EXPERIENCE]) | Q(
-            Item__pk__in=[shout.Item.pk for shout in shouts if shout.Type != POST_TYPE_EXPERIENCE])).order_by('Image')
+            Item__pk__in=[shout.Item.pk for shout in shouts if shout.Type != POST_TYPE_EXPERIENCE])).order_by('image')
 
         for shout in shouts:
             if rank_count:

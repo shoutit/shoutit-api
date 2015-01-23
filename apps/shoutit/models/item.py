@@ -15,11 +15,11 @@ class Item(UUIDModel):
 
     def get_images(self):
         if not hasattr(self, '_images'):
-            self._images = list(self.Images.all().order_by('Image'))
+            self._images = list(self.Images.all().order_by('image'))
         return self._images
 
     def set_images(self, images):
-        images = sorted(images, key=lambda img: img.Image)
+        images = sorted(images, key=lambda img: img.image)
         self._images = images
 
     def get_first_image(self):

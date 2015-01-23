@@ -17,7 +17,7 @@ def create_item(name, price, currency, images=None, videos=None, description='')
         for image in images:
             stored_image = StoredImage()
             stored_image.Item = item
-            stored_image.Image = image
+            stored_image.image = image
             stored_image.save()
 
         try:
@@ -61,7 +61,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
         except StoredImage.DoesNotExist:
             stored_image = StoredImage()
             stored_image.Item = item
-            stored_image.Image = image
+            stored_image.image = image
             stored_image.save()
         except StoredImage.MultipleObjectsReturned, e:
             print e

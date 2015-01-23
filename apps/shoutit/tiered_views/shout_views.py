@@ -58,14 +58,14 @@ def upload_image(request, method=None):
     if method.startswith('shout_'):
         cloud_image = cloud_upload_image(upload, 'shout_image', filename, is_raw)
     else:
-        # TODO: DELETE request.user.profile.Image
+        # TODO: DELETE request.user.profile.image
         cloud_image = cloud_upload_image(upload, method, filename, is_raw)
 
     if cloud_image:
         ret_json = {'success': True}
         if method == 'user_image':
             profile = request.user.abstract_profile
-            profile.Image = cloud_image.container.cdn_uri + '/' + cloud_image.name
+            profile.image = cloud_image.container.cdn_uri + '/' + cloud_image.name
             profile.save()
         ret_json['url'] = cloud_image.container.cdn_uri + '/' + cloud_image.name
         return JsonResponse(ret_json)

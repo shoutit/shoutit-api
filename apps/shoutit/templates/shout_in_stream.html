@@ -2,7 +2,7 @@
 <div class="shout{% if right %} shout-right{% endif %} {% if shout.featured %}featured{% endif %}">
 	<div class="shout-picture-contain pull-{% if right %}right{% else %}left{% endif %}">
 	<span class="user-icon-{% if shout.Type == 0 %}requests{% else %}offers{% endif %}"><a {% if shout.OwnerUser.is_active or shout.OwnerUser == request.user %}href="/user/{{ shout.OwnerUser.username }}/"{% endif %} title="{{ shout.OwnerUser.name }}"></a></span>
-{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.OwnerUser.profile.Image|secure_url }}{% else %}{{ shout.OwnerUser.profile.Image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.OwnerUser.name }}'s profile picture">#}
+{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.OwnerUser.profile.image|secure_url }}{% else %}{{ shout.OwnerUser.profile.image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.OwnerUser.name }}'s profile picture">#}
 {#        </a>#}
         <!--<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />-->
 {#		<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.Type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
@@ -41,9 +41,9 @@
 			{% if shout.GetImages %}
 				{% for image in shout.GetImages %}
 					{% if forloop.counter0 == 0 %}
-						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.Image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.Image|thumbnail:85|secure_url }}{% else %}{{ image.Image|thumbnail:145|secure_url }}{% endif %}');">
+						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|thumbnail:85|secure_url }}{% else %}{{ image.image|thumbnail:145|secure_url }}{% endif %}');">
 					{% else %}
-						<a href="{{ image.Image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
+						<a href="{{ image.image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 					{% endif %}
 				{% endfor %}
 			</div>
@@ -56,9 +56,9 @@
 	{% if shout.GetImages %}
 		{% for image in shout.GetImages %}
 			{% if forloop.counter0 == 0 %}
-				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.Image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.Image|thumbnail:85|secure_url }}{% else %}{{ image.Image|thumbnail:145|secure_url }}{% endif %}');">
+				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|thumbnail:85|secure_url }}{% else %}{{ image.image|thumbnail:145|secure_url }}{% endif %}');">
 			{% else %}
-				<a href="{{ image.Image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
+				<a href="{{ image.image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 			{% endif %}
 		{% endfor %}
 	</div>

@@ -110,8 +110,8 @@ user_api = patterns('',
                         })
                     ),
 
-                    # TODO: to look at: shoutit2
 
+                    # TODO: to look at: shoutit2
                     url(r'^experiences_stream/(?:(\d+)/)?$',
                         TieredResource(TieredHandler, no_oauth, {
                             'GET': experience_views.experiences_stream

@@ -301,7 +301,7 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
 
 
 def get_trade_images(trades):
-    images = StoredImage.objects.filter(Shout__pk__in=[trade.pk for trade in trades]).order_by('Image').select_related('Item')
+    images = StoredImage.objects.filter(Shout__pk__in=[trade.pk for trade in trades]).order_by('image').select_related('Item')
     for i in range(len(trades)):
         trades[i].Item.set_images([image for image in images if image.Item_id == trades[i].Item.pk])
         images = [image for image in images if image.Item_id != trades[i].Item.pk]

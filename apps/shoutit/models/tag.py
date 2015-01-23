@@ -8,7 +8,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 class Tag(UUIDModel, Stream2Mixin):
     Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
     Creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, on_delete=models.SET_NULL)
-    Image = models.URLField(max_length=1024, null=True, default='/static/img/shout_tag.png')
+    image = models.URLField(max_length=1024, null=True, default='/static/img/shout_tag.png')
     DateCreated = models.DateTimeField(auto_now_add=True)
     Parent = models.ForeignKey('shoutit.Tag', related_name='ChildTags', blank=True, null=True, db_index=True)
 

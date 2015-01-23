@@ -26,7 +26,7 @@ def get_top_tags(limit=10, country=None, city=None):
 
     top_tags = Tag.objects.filter(**filters).values('pk').annotate(
         listeners_count=Count('Followers')
-    ).filter(listeners_count__gte=1).values('Name', 'listeners_count', 'Image').order_by('-listeners_count')[:limit]
+    ).filter(listeners_count__gte=1).values('Name', 'listeners_count', 'image').order_by('-listeners_count')[:limit]
     return list(top_tags)
 
 
@@ -121,5 +121,5 @@ def RemoveFromUserInterests(request, tag, user):
 
 
 def search_tags(query='', limit=10):
-    tags = Tag.objects.filter(Name__icontains=query).values('Name', 'Image')[:limit]
+    tags = Tag.objects.filter(Name__icontains=query).values('Name', 'image')[:limit]
     return list(tags)

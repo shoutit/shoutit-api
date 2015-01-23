@@ -38,7 +38,7 @@ class Business(UUIDModel, Stream2Mixin):
     Name = models.CharField(max_length=1024, db_index=True, null=False)
     Category = models.ForeignKey('shoutit.BusinessCategory', null=True, on_delete=models.SET_NULL)
 
-    Image = models.URLField(max_length=1024, null=True)
+    image = models.URLField(max_length=1024, null=True)
     About = models.TextField(null=True, max_length=512, default='')
     Phone = models.CharField(unique=True, null=True, max_length=20)
     Website = models.URLField(max_length=1024, null=True)
@@ -106,7 +106,7 @@ class BusinessCreateApplication(UUIDModel):
     Name = models.CharField(max_length=1024, db_index=True, null=True)
     Category = models.ForeignKey('shoutit.BusinessCategory', null=True, on_delete=models.SET_NULL)
 
-    Image = models.URLField(max_length=1024, null=True)
+    image = models.URLField(max_length=1024, null=True)
     About = models.TextField(null=True, max_length=512, default='')
     Phone = models.CharField(null=True, max_length=20)
     Website = models.URLField(max_length=1024, null=True)

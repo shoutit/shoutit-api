@@ -101,9 +101,9 @@
 
     var img = null;
     {% for image in shout.GetImages %}
-      img = $('<img id=img_' + id + ' src="{{ image.Image }}" />');
+      img = $('<img id=img_' + id + ' src="{{ image.image }}" />');
       $('form#shout_{{ method }}_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-      $('form#shout_{{ method }}_form').append('<input id=input_' + id + ' type="hidden" value="{{ image.Image }}" name="images"/>');
+      $('form#shout_{{ method }}_form').append('<input id=input_' + id + ' type="hidden" value="{{ image.image }}" name="images"/>');
       $(img).after('<a id=href_' + id + ' onclick="delete_image(\'' + id + '\')">x</a>');
       id++;
     {% endfor %}

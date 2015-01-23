@@ -10,7 +10,7 @@
 	<meta property="shoutitcom:price"  content="{{ shout.Item.Price|price:shout.Item.Currency.Code }}" />
 	{% if shout.GetImages %}
 		{% with myimg=shout.GetImages|key:0  %}
-			<meta property="og:image"  content="{{ myimg.Image|secure_url }}" />
+			<meta property="og:image"  content="{{ myimg.image|secure_url }}" />
 		{% endwith %}
 	{% else %}
 		<meta property="og:image"  content="{% if shout.Type == 0 %}{% static "img/fb_og_request.png" %}{% else %}{% static "img/fb_og_offer.png" %}{% endif %}" />

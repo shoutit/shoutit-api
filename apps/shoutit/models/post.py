@@ -142,7 +142,7 @@ class Shout(Post):
     def get_images(self):
         if not hasattr(self, '_images'):
             if self.Type == POST_TYPE_EXPERIENCE:
-                self._images = list(self.Images.all().order_by('Image'))
+                self._images = list(self.Images.all().order_by('image'))
             else:
                 self._images = self.Item.get_images()
         return self._images
@@ -151,7 +151,7 @@ class Shout(Post):
         return self.Item.get_first_image()
 
     def set_images(self, images):
-        images = sorted(images, key=lambda img: img.Image)
+        images = sorted(images, key=lambda img: img.image)
         self._images = images
         if hasattr(self, 'Item'):
             self.Item.set_images(images)
@@ -276,10 +276,10 @@ class Video(UUIDModel):
 class StoredImage(UUIDModel):
     Shout = models.ForeignKey('shoutit.Shout', related_name='Images', null=True)
     Item = models.ForeignKey('shoutit.Item', related_name='Images', null=True)
-    Image = models.URLField(max_length=1024)
+    image = models.URLField(max_length=1024)
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.Image + " @ " + unicode(self.Item)
+        return unicode(self.pk) + ": " + self.image + " @ " + unicode(self.Item)
 
 
 class Comment(UUIDModel):

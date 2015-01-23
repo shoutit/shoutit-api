@@ -64,12 +64,12 @@ def getFullConversationDetails(conversations, user):
     if shout_pks:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout_pk) for shout_pk in shout_pks])])
-        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'Image', 'DateCreated', 'Definition', 'Shouts__pk'))
+        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__pk'))
 
     else:
         tags_with_shout_id = []
 
-    images = StoredImage.objects.filter(Item__pk__in=[conversation.AboutPost.Item.pk for conversation in conversations]).order_by('Image')
+    images = StoredImage.objects.filter(Item__pk__in=[conversation.AboutPost.Item.pk for conversation in conversations]).order_by('image')
 
     empty_conversations_to = []
     empty_conversations_from = []
