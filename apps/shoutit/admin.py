@@ -90,7 +90,7 @@ admin.site.register(Profile, ProfileAdmin)
 
 
 class LinkedFacebookAccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'user__name', 'facebook_id', 'AccessToken', 'ExpiresIn')
+    list_display = ('user', 'facebook_id', 'AccessToken', 'ExpiresIn')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
 
 
@@ -98,7 +98,7 @@ admin.site.register(LinkedFacebookAccount, LinkedFacebookAccountAdmin)
 
 
 class LinkedGoogleAccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'user__name', 'gplus_id')
+    list_display = ('user', 'gplus_id')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
 
 
