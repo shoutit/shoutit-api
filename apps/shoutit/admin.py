@@ -22,13 +22,13 @@ admin.site.register(Shout, ShoutAdmin)
 # Trade
 class TradeAdmin(admin.ModelAdmin):
     list_display = (
-    'pk', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
+        'pk', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
     list_filter = ('Type', 'IsSSS', 'IsDisabled')
     readonly_fields = ('OwnerUser', 'Streams', 'Tags', 'RelatedStream', 'RecommendedStream', 'StreamsCode', 'Item')
 
     def Owner(self, obj):
         return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
-        '/admin/auth/user/', obj.OwnerUser.username, obj.OwnerUser, obj.OwnerUser.username)
+            '/admin/auth/user/', obj.OwnerUser.username, obj.OwnerUser, obj.OwnerUser.username)
 
     Owner.allow_tags = True
     Owner.short_description = 'Owner User'
@@ -89,6 +89,22 @@ class ProfileAdmin(admin.ModelAdmin):
 admin.site.register(Profile, ProfileAdmin)
 
 
+class LinkedFacebookAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user__name', 'facebook_id', 'AccessToken', 'ExpiresIn')
+    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
+
+
+admin.site.register(LinkedFacebookAccount, LinkedFacebookAccountAdmin)
+
+
+class LinkedGoogleAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'user__name', 'gplus_id')
+    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
+
+
+admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
+
+
 # Business
 class BusinessProfileAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
@@ -102,8 +118,8 @@ admin.site.register(Business, BusinessProfileAdmin)
 # BusinessCreateApplication
 # class BusinessCreateApplicationAdmin(admin.ModelAdmin):
 # list_display = ('Name', 'user', 'Business','confirmation_url','Country', 'City', 'Status')
-#     search_fields = ['Name', 'user__email','Website', 'Phone']
-#     readonly_fields = ('user','Business','LastToken')
+# search_fields = ['Name', 'user__email','Website', 'Phone']
+# readonly_fields = ('user','Business','LastToken')
 #     list_filter = ('Status',)
 #     actions = ['accept_business', 'reject_business']
 #
@@ -221,7 +237,5 @@ admin.site.register(Notification)
 admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
-admin.site.register(LinkedFacebookAccount)
-admin.site.register(LinkedGoogleAccount)
 # admin.site.register(Activity)
 # admin.site.register(ActivityData)
