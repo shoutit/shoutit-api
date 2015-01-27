@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from apps.shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, BusinessCreateApplication, PredefinedCity
+    StoredFile, Report, BusinessCreateApplication, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount
 # from apps.activity_logger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -221,5 +221,7 @@ admin.site.register(Notification)
 admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
+admin.site.register(LinkedFacebookAccount)
+admin.site.register(LinkedGoogleAccount)
 # admin.site.register(Activity)
 # admin.site.register(ActivityData)
