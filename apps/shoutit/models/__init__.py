@@ -10,3 +10,4 @@ from apps.shoutit.models.post import Comment, Deal, Event, Experience, Post, Sha
 from apps.shoutit.models.message import Conversation, Message, MessageAttachment, Report, Notification
 from apps.shoutit.models.payment import Payment, Transaction, Voucher, DealBuy, Service, ServiceBuy, ServiceUsage, Subscription
 from apps.shoutit.models.dbcl import DBCLUser, CLUser, DBCLConversation
+from apps.shoutit.models.message import Conversation2, Conversation2Delete, Message2, Message2Delete, Message2Read, Message2Attachment2

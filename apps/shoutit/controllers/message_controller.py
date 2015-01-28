@@ -1,8 +1,11 @@
+from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
+from django.db import IntegrityError
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
 
-from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade
+from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade, Conversation2, Message2, \
+    Message2Attachment2, Conversation2Delete, Message2Delete, Message2Read
 from apps.shoutit.controllers import email_controller, notifications_controller, shout_controller
 
 
@@ -45,7 +48,6 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
         MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
 
-    # todo: push notification test
     notifications_controller.notify_user_of_message(to_user, message)
     email_controller.send_message_email(message)
 
@@ -198,3 +200,117 @@ def UnReadConversationsCount(user):
     return Conversation.objects.filter(Q(Messages__ToUser=user) & Q(Messages__IsRead=False) & (
     (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).values(
         "pk").distinct().count()
+
+
+# ######################################## #
+# ############### M2 ##################### #
+
+
+def get_conversation2(conversation_id):
+    try:
+        return Conversation2.objects.get(pk=conversation_id)
+    except Conversation2.DoesNotExist:
+        return None
+
+
+def get_message2(message_id):
+    try:
+        return Message2.objects.get(pk=message_id)
+    except Message2.DoesNotExist:
+        return None
+
+
+def conversation2_exist(conversation_id=None, users=None, about=None):
+    if conversation_id:
+        return get_conversation2(conversation_id) or False
+    elif users:
+        conversations = Conversation2.objects.with_attached_object(about) if about else Conversation2.objects.filter(object_id=None)
+        for user in users:
+            conversations = conversations.filter(users=user)
+        return conversations[0] if len(conversations) else False
+    else:
+        return False
+
+
+def hide_conversation2_from_user(conversation, user):
+    try:
+        conversation_delete = Conversation2Delete.objects.get(user=user, conversation=conversation)
+    except Conversation2Delete.DoesNotExist:
+        conversation_delete = Conversation2Delete(user=user, conversation=conversation)
+
+    conversation_delete.save()
+
+
+def hide_message2_from_user(conversation, message, user):
+    try:
+        Message2Delete(user=user, message=message, conversation=conversation).save()
+    except IntegrityError:
+        pass
+
+
+def mark_message2_as_read(conversation, message, user):
+    try:
+        read = Message2Read(user=user, message=message, conversation=conversation)
+        read.save()
+    except IntegrityError:
+        pass
+
+
+def mark_message2_as_unread(conversation, message, user):
+    try:
+        read = Message2Read.objects.filter(user=user, message=message, conversation=conversation)
+        read.delete()
+    except Message2Read.DoesNotExist:
+        pass
+
+
+def get_user_conversations(user, before=None, after=None, limit=25):
+    """
+    Return list of user Conversations
+    :type user: User
+    :type before: int unix
+    :type after: int unix
+    :type limit: int
+    """
+    conversations = user.conversations2.order_by('-modified_at')
+    if before:
+        conversations = conversations.filter(modified_at__lt=datetime.fromtimestamp(before))
+    if after:
+        conversations = conversations.filter(modified_at__gt=datetime.fromtimestamp(after))
+
+    return conversations.select_related('last_message')[:limit]
+
+
+def send_message2(conversation, user, to_users=None, about=None, text=None, attachments=None):
+    if not (conversation or to_users):
+        raise Exception('Either an existing conversation or a list of to_users should be provided to create a message.')
+
+    if not conversation:
+        to_users.append(user)
+        conversation = conversation2_exist(users=to_users, about=about)
+
+    if not conversation:
+        conversation = Conversation2(attached_object=about) if about else Conversation2()
+        conversation.save()
+        conversation.users = to_users
+
+    message = Message2(conversation=conversation, user=user, message=text)
+    message.save()
+
+    conversation.last_message = message
+    conversation.save()
+
+    if not attachments:
+        attachments = []
+
+    for attachment in attachments:
+        object_id = attachment['object_id']
+        content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
+        Message2Attachment2(message=message, content_type=content_type, object_id=object_id).save()
+
+    # notifications_controller.notify_user_of_message(to_user, message)
+    # email_controller.send_message_email(message)
+
+    return message
+
+

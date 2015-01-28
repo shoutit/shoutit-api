@@ -85,9 +85,36 @@
     }
   },
 
+  {
+    "pk": "D7A555BA-8618-4962-A46B-E342AFF21AFA",
+    "model": "shoutit.user",
+    "fields": {
+      "username": "mo",
+      "first_name": "Mohamad Nour",
+      "last_name": "Chawich",
+      "is_active": true,
+      "is_superuser": true,
+      "is_staff": true,
+      "last_login": "2014-11-17T15:38:19.602",
+      "groups": [],
+      "user_permissions": [],
+      "password": "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg=",
+      "email": "noor.syron@gmail.com",
+      "date_joined": "2014-09-03T00:46:18"
+    }
+  },
+
 
   {
     "pk": "19f6e681-f738-4c90-a1dd-9101da41a455",
+    "model": "shoutit.stream",
+    "fields": {
+      "Type": 0
+    }
+  },
+
+  {
+    "pk": "4938A8F7-79A1-43AC-BD99-849E59D32E04",
     "model": "shoutit.stream",
     "fields": {
       "Type": 0
@@ -111,6 +138,28 @@
       "isSMS": false,
       "birthday": null,
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
+      "Latitude": 25.1993957,
+      "Interests": [],
+      "LastToken": null
+    }
+  },
+
+  {
+    "pk": "445CF86A-CC68-440E-91BC-9F7A1F734081",
+    "model": "shoutit.profile",
+    "fields": {
+      "isSSS": false,
+      "City": "Dubai",
+      "Stream": "4938A8F7-79A1-43AC-BD99-849E59D32E04",
+      "Bio": "Shoutit Master 2!",
+      "Mobile": null,
+      "Country": "AE",
+      "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/2a41e1c0ff0b.jpg",
+      "Longitude": 55.2738326,
+      "Sex": true,
+      "isSMS": false,
+      "birthday": null,
+      "user": "D7A555BA-8618-4962-A46B-E342AFF21AFA",
       "Latitude": 25.1993957,
       "Interests": [],
       "LastToken": null

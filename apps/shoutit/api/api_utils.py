@@ -1,4 +1,5 @@
 from common.constants import Constant
+from settings import SITE_LINK
 
 
 class JSONUrl(Constant):
@@ -13,16 +14,17 @@ JSON_URL_MARK_NOTIFICATION_AS_READ = JSONUrl()
 JSON_URL_MARK_NOTIFICATION_AS_UNREAD = JSONUrl()
 
 api_urls = {
-    'User': ('/user/%s/', 'username'),
-    'Profile': ('/user/%s/', 'username'),
-    'Business': ('/user/%s/', 'username'),
-    'Shout': ('/shout/%s/', 'pk'),
-    'Trade': ('/shout/%s/', 'pk'),
-    'StoredImage': ('/image/%s/', 'pk'),
-    'Item': ('/item/%s/', 'pk'),
-    'Tag': ('/tag/%s/', 'Name'),
-    'Conversation': ('/message/%s/', 'pk'),
-    'Experience': ('/experience/%s/', 'pk'),
+    'User': ('user/%s/', 'username'),
+    'Profile': ('user/%s/', 'username'),
+    'Business': ('user/%s/', 'username'),
+    'Shout': ('shout/%s/', 'pk'),
+    'Trade': ('shout/%s/', 'pk'),
+    'StoredImage': ('image/%s/', 'pk'),
+    'Item': ('item/%s/', 'pk'),
+    'Tag': ('tag/%s/', 'Name'),
+    'Conversation': ('messages/%s/', 'pk'),
+    'Conversation2': ('messages/%s/', 'pk'),
+    'Experience': ('experience/%s/', 'pk'),
 
     JSON_URL_USER_IMAGE_THUMBNAIL: '/xhr/user/%s/picture/50/',
     JSON_URL_TAG_IMAGE_THUMBNAIL: '/xhr/tag/%s/picture/50/',
@@ -42,7 +44,7 @@ def get_object_url(obj, extra_params=None):
         if extra_params:
             params.extend(extra_params)
         url = url % tuple(params)
-        return url
+        return SITE_LINK + url
     else:
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
 

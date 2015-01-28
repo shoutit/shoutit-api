@@ -113,6 +113,16 @@ def uuid_validator(uuid_string, name=''):
         return ValidationResult(False, messages=[('error', _("Invalid %(name)s id") % {'name': name})])
 
 
+def access_validator(request, obj, owner, extras=None):
+    if request.method in ['POST', 'PUT', 'DELETE'] and request.user != owner:
+        return ValidationResult(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
+    else:
+        data = {obj.__class__.__name__: obj}
+        if isinstance(extras, dict):
+            data.update(extras)
+        return ValidationResult(True, data=data)
+
+
 def read_conversation_validator(request, conversation_id):
     uuid_validation = uuid_validator(conversation_id, 'conversation')
     if not uuid_validation.valid:
@@ -121,6 +131,18 @@ def read_conversation_validator(request, conversation_id):
     if result.valid:
         conversation = result.data
         if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
+            return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
+    return result
+
+
+def read_conversation2_validator(request, conversation_id):
+    uuid_validation = uuid_validator(conversation_id, 'conversation2')
+    if not uuid_validation.valid:
+        return uuid_validation
+    result = object_exists_validator(message_controller.get_conversation2, _('Conversation does not exist.'), conversation_id)
+    if result.valid:
+        conversation = result.data
+        if request.user not in conversation.users.all():
             return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
     return result
 
@@ -165,6 +187,25 @@ def reply_in_conversation_validator(request, conversation_id):
             'text': 'text' in message and unicode(message['text']).strip() or None,
             'attachments': 'attachments' in message and message['attachments'] or None
         }
+    return result
+
+
+def reply_in_conversation2_validator(request, conversation_id):
+    message = request.json_data
+    result = message_validator(message)
+    if not result.valid:
+        return result
+
+    conversation2_validation = conversation2_validator(request, conversation_id)
+    if not conversation2_validation.valid:
+        return conversation2_validation
+    conversation = conversation2_validation.data['conversation']
+
+    result.data = {
+        'conversation': conversation,
+        'text': 'text' in message and unicode(message['text']).strip() or None,
+        'attachments': 'attachments' in message and message['attachments'] or None
+    }
     return result
 
 
@@ -232,6 +273,41 @@ def delete_message_validator(request, conversation_id, message_id):
         return ValidationResult(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
 
     return object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), message_id)
+
+
+def message2_validator(request, conversation_id, message_id):
+    conversation2_validation = conversation2_validator(request, conversation_id)
+    if not conversation2_validation.valid:
+        return conversation2_validation
+    conversation = conversation2_validation.data['conversation']
+
+    uuid_validation = uuid_validator(message_id, 'message')
+    if not uuid_validation.valid:
+        return uuid_validation
+
+    result = object_exists_validator(message_controller.get_message2, _('Message does not exist.'), message_id)
+    if not result.valid:
+        return result
+    message = result.data
+    if message.conversation != conversation:
+        return ValidationResult(False, messages=[('error', _("the message doesn't belong to the conversation."))])
+
+    return ValidationResult(True, data={'conversation': conversation, 'message': message})
+
+
+def conversation2_validator(request, conversation_id):
+    uuid_validation = uuid_validator(conversation_id, 'conversation')
+    if not uuid_validation.valid:
+        return uuid_validation
+
+    result = object_exists_validator(message_controller.get_conversation2, _('Conversation does not exist.'), conversation_id)
+    if not result.valid:
+        return result
+    conversation = result.data
+    if request.user not in conversation.users.all():
+        return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
+
+    return ValidationResult(True, data={'conversation': conversation})
 
 
 def delete_conversation_validator(request, conversation_id):

@@ -188,7 +188,7 @@ urlpatterns = patterns('',
                            TieredResource(TieredHandler, oauth, {
                                'GET': shout_views.shout_view,
                                'DELETE': shout_views.delete_shout,
-                               'POST': message_views.reply_to_shout
+                               'POST': message_views.reply_to_shout2
                            })
                        ),
 
@@ -209,28 +209,29 @@ urlpatterns = patterns('',
 
                        url(r'^messages/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': message_views.read_conversations_stream
+                               'GET': message_views.user_conversations
                            })
                        ),
 
                        url(r'^messages/([-\w]+)/$',
                            TieredResource(TieredHandler, oauth, {
-                               'GET': message_views.read_conversation,
-                               'POST': message_views.reply_in_conversation,
-                               'DELETE': message_views.delete_conversation
+                               'GET': message_views.read_conversation2,
+                               'POST': message_views.reply_in_conversation2,
+                               'DELETE': message_views.delete_conversation2
                            })
                        ),
 
-                       # todo: read conversation, read message
-                       url(r'^messages/([-\w]+)/read/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': message_views.mark_message_as_read
-                           })
-                       ),
 
                        url(r'^messages/([-\w]+)/([-\w]+)/$',
                            TieredResource(TieredHandler, oauth, {
-                               'DELETE': message_views.delete_message
+                               'DELETE': message_views.delete_message2
+                           })
+                       ),
+
+                       url(r'^messages/([-\w]+)/([-\w]+)/read/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': message_views.read_message2,
+                               'DELETE': message_views.unread_message2
                            })
                        ),
 

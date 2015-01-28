@@ -1,15 +1,16 @@
 import math
-
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
+import time
 
 from apps.shoutit.api.api_utils import get_object_url
 from apps.shoutit.models import Message
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE
 from apps.shoutit.tiered_views.renderers import operation_api, json_data_renderer, conversations_api, json_renderer, conversation_json, \
-    page_html, conversation_api, json_send_message, reply_message_api_render, read_conversations_stream_json
+    page_html, conversation_api, json_send_message, reply_message_api_render, read_conversations_stream_json, conversations2_api, \
+    conversation2_api, reply_message2_api_render
 from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
 from common.constants import *
@@ -209,4 +210,98 @@ def read_conversations_stream(request):
 def read_conversations(request):
     result = ResponseResult()
     result.data['conversations'] = message_controller.ReadConversations(request.user, 0, DEFAULT_PAGE_SIZE)
+    return result
+
+
+# ######################################## #
+# ############### M2 ##################### #
+
+
+# todo: before validator
+@non_cached_view(methods=['GET'], login_required=True, api_renderer=conversations2_api)
+def user_conversations(request):
+    result = ResponseResult()
+
+    before = int(request.GET.get('before', time.time()))
+    after = int(request.GET.get('after', 0))
+
+    result.data['conversations'] = message_controller.get_user_conversations(request.user, before, after)
+    return result
+
+
+@non_cached_view(methods=['GET'], login_required=True, api_renderer=conversation2_api, validator=read_conversation2_validator)
+def read_conversation2(request, conversation_id):
+    result = ResponseResult()
+    conversation = request.validation_result.data
+
+    before = int(request.GET.get('before', 0)) or None
+    after = int(request.GET.get('after', 0)) or None
+
+    result.data['conversation'] = conversation
+    result.data['conversation_messages'] = conversation.get_messages(before, after)
+    return result
+
+
+@non_cached_view(methods=['DELETE'], login_required=True, validator=conversation2_validator, api_renderer=operation_api)
+def delete_conversation2(request, conversation_id):
+    result = ResponseResult()
+    conversation = request.validation_result.data
+    message_controller.hide_conversation2_from_user(conversation, request.user)
+    return result
+
+
+@non_cached_view(methods=['POST'], login_required=True, validator=message2_validator, api_renderer=operation_api)
+@csrf_exempt
+def read_message2(request, conversation_id, message_id):
+    result = ResponseResult()
+    message = request.validation_result.data['message']
+    conversation = request.validation_result.data['conversation']
+    message_controller.mark_message2_as_read(conversation, message, request.user)
+    return result
+
+
+@non_cached_view(methods=['DELETE'], login_required=True, validator=message2_validator, api_renderer=operation_api)
+def unread_message2(request, conversation_id, message_id):
+    result = ResponseResult()
+    message = request.validation_result.data['message']
+    conversation = request.validation_result.data['conversation']
+    message_controller.mark_message2_as_unread(conversation, message, request.user)
+    return result
+
+
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation2_validator, api_renderer=reply_message2_api_render)
+def reply_in_conversation2(request, conversation_id):
+    result = ResponseResult()
+    validation_result = request.validation_result
+
+    conversation = validation_result.data['conversation']
+    message_text = validation_result.data['text']
+    attachments = validation_result.data['attachments']
+
+    result.data['message'] = message_controller.send_message2(conversation, request.user,  text=message_text, attachments=attachments)
+    result.messages.append(('success', _('Your message was sent successfully.')))
+    return result
+
+
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_to_shout_validator, api_renderer=reply_message2_api_render)
+def reply_to_shout2(request, shout_id):
+    result = ResponseResult()
+    validation_result = request.validation_result
+
+    shout = validation_result.data['shout']
+    message_text = validation_result.data['text']
+    attachments = validation_result.data['attachments']
+
+    result.data['message'] = message_controller.send_message2(None, request.user, to_users=[shout.OwnerUser], about=shout, text=message_text
+                                                              , attachments=attachments)
+    result.messages.append(('success', _('Your message was sent successfully.')))
+    return result
+
+
+@non_cached_view(methods=['DELETE'], login_required=True, validator=message2_validator, api_renderer=operation_api)
+def delete_message2(request, conversation_id, message_id):
+    result = ResponseResult()
+    conversation = request.validation_result.data['conversation']
+    message = request.validation_result.data['message']
+    message_controller.hide_message2_from_user(conversation, message, request.user)
     return result

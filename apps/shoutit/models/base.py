@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core import validators
@@ -23,13 +24,29 @@ class UUIDModel(models.Model):
 
     @property
     def pk(self):
-        return str(self.id)
+        return str(self.id).lower()
+
+    @property
+    def created_at_unix(self):
+        return int((self.created_at - datetime(1970, 1, 1)).total_seconds())
+
+    @property
+    def modified_at_unix(self):
+        return int((self.modified_at - datetime(1970, 1, 1)).total_seconds())
+
+
+class AttachedObjectMixinManager(models.Manager):
+    def with_attached_object(self, attached_object):
+        ct = ContentType.objects.get_for_model(attached_object)
+        return super(AttachedObjectMixinManager, self).get_query_set().filter(content_type=ct, object_id=attached_object.id)
 
 
 class AttachedObjectMixin(models.Model):
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = UUIDField(hyphenate=True, version=4, null=True)
     attached_object = GenericForeignKey('content_type', 'object_id')
+
+    objects = AttachedObjectMixinManager()
 
     class Meta:
         abstract = True

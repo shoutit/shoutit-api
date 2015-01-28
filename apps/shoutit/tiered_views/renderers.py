@@ -17,7 +17,8 @@ from apps.shoutit.templatetags import template_filters
 from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
 from apps.shoutit.utils import shout_link
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
-from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, render_tag_dict, render_video
+from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, render_tag_dict, render_video, \
+    render_conversation2, render_message2
 from common import constants
 
 
@@ -308,6 +309,17 @@ def reply_message_api_render(request, result, *args, **kwargs):
     return response, pre_json_result
 
 
+def reply_message2_api_render(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        pre_json_result.update({
+            'message': render_message2(result.data['message'])
+        })
+
+    return response, pre_json_result
+
+
 def shouts_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
@@ -579,12 +591,31 @@ def conversations_api(request, result, *args, **kwargs):
     return response, pre_json_result
 
 
+def conversations2_api(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        pre_json_result['conversations'] = [render_conversation2(conversation) for conversation in result.data['conversations']]
+
+    return response, pre_json_result
+
+
 def conversation_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
     if not result.errors:
         pre_json_result['conversation'] = render_conversation(result.data['conversation'])
         pre_json_result['conversation_messages'] = [render_message(message) for message in result.data['conversation_messages']]
+
+    return response, pre_json_result
+
+
+def conversation2_api(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        pre_json_result['conversation'] = render_conversation2(result.data['conversation'])
+        pre_json_result['conversation_messages'] = [render_message2(message) for message in result.data['conversation_messages']]
 
     return response, pre_json_result
 

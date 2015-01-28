@@ -1,6 +1,6 @@
 from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
 from common.constants import *
-from apps.shoutit.models import User, Profile, Business, Tag
+from apps.shoutit.models import User, Profile, Business, Tag, Conversation2, Message2, Message2Attachment2, Trade
 
 
 # todo: better levels
@@ -8,6 +8,12 @@ from apps.shoutit.utils import full_url_path
 
 
 def render_shout(shout, level=5):
+    """
+    :type shout: Trade
+    """
+    if not isinstance(shout, Trade):
+        return {}
+
     images = [image.image for image in shout.get_images()]
     videos = [render_video(video) for video in shout.get_videos()]
     tags = [render_tag(tag) for tag in shout.get_tags()]
@@ -104,19 +110,22 @@ def render_user(user, level=1, owner=False):
     if isinstance(profile, Profile):
 
         result = {
+            'id': user.pk,
             'name': user.name,
-            'username': user.username
+            'username': user.username,
         }
 
         if level >= 2:
             result.update({
                 'url': get_object_url(user),
+                'is_active': user.is_active,
                 'image': full_url_path(profile.image),
-                'video': render_video(profile.video),
                 'sex': profile.Sex,
-                'is_active': user.is_active
             })
-
+            if profile.video:
+                result.update({
+                    'video': render_video(profile.video),
+                })
         if level >= 3:
             result.update({
                 'date_joined': user.date_joined.strftime('%s'),
@@ -173,8 +182,30 @@ def render_message(message):
     }
 
 
+def render_message2(message):
+    """
+    :type message: Message2
+    """
+    if not isinstance(message, Message2):
+        return {}
+
+    return {
+        'id': message.pk,
+        'conversation': {
+            'id': message.conversation.pk
+        },
+        'user': render_user(message.user, level=1),
+        'message': message.message,
+        'created_at': message.created_at_unix,
+        'attachments': [render_message_attachment(attachment) for attachment in message.attachments2.all()],
+    }
+
+
 def render_message_attachment(message_attachment):
-    if not message_attachment:
+    """
+    :type message_attachment: Message2Attachment2
+    """
+    if not isinstance(message_attachment, Message2Attachment2):
         return {}
     content_type = 'shout'  # todo: possible other content types, therefore other content object
     attached_object = render_shout(message_attachment.attached_object, level=1)
@@ -198,6 +229,22 @@ def render_conversation(conversation):
         'text': conversation.Text if hasattr(conversation, 'Text') else '',
         'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
     }
+
+
+def render_conversation2(conversation):
+    """
+    :type conversation: Conversation2
+    """
+    obj = {
+        'id': conversation.pk,
+        'url': get_object_url(conversation),
+        'users': [render_user(user, level=2) for user in conversation.users.all()],
+        'last_message': render_message2(conversation.last_message),
+        'modified_at': conversation.modified_at_unix,
+    }
+    if conversation.object_id:
+        obj['attached_object'] = render_shout(conversation.attached_object, level=1),
+    return obj
 
 
 def render_conversation_full(conversation):
