@@ -1,4 +1,5 @@
-from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls
+from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls, JSON_URL_MARK_NOTIFICATION_AS_READ, \
+    JSON_URL_MARK_NOTIFICATION_AS_UNREAD
 from common.constants import *
 from apps.shoutit.models import User, Profile, Business, Tag
 
@@ -319,8 +320,8 @@ def render_notification(notification):
         'is_read': notification.IsRead,
         'type': NotificationType.values[notification.Type],
         'date_created': notification.DateCreated.strftime('%s'),
-        'mark_as_read_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_READ'], notification.pk),
-        'mark_as_unread_url': get_custom_url(api_urls['JSON_URL_MARK_NOTIFICATION_AS_UNREAD'], notification.pk),
+        'mark_as_read_url': get_custom_url(api_urls[JSON_URL_MARK_NOTIFICATION_AS_READ], notification.pk),
+        'mark_as_unread_url': get_custom_url(api_urls[JSON_URL_MARK_NOTIFICATION_AS_UNREAD], notification.pk),
         'id': notification.pk
     }
 

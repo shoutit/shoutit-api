@@ -6,11 +6,11 @@ class JSONUrl(Constant):
     counter = 0
 
 
-JSON_URL_USER_IMAGE_THUMBNAIL = JSONUrl()
-JSON_URL_SHOUT_IMAGE_THUMBNAIL = JSONUrl()
-JSON_URL_TAG_IMAGE_THUMBNAIL = JSONUrl()
-JSON_URL_MARK_NOTIFICATION_AS_READ = JSONUrl()
-JSON_URL_MARK_NOTIFICATION_AS_UNREAD = JSONUrl()
+JSON_URL_USER_IMAGE_THUMBNAIL = JSONUrl('/xhr/user/%s/picture/50/')
+JSON_URL_SHOUT_IMAGE_THUMBNAIL = JSONUrl('/xhr/tag/%s/picture/50/')
+JSON_URL_TAG_IMAGE_THUMBNAIL = JSONUrl('/image/%s/100/')
+JSON_URL_MARK_NOTIFICATION_AS_READ = JSONUrl('/notification/%s/read/')
+JSON_URL_MARK_NOTIFICATION_AS_UNREAD = JSONUrl('/notification/%s/unread/')
 
 api_urls = {
     'User': ('/user/%s/', 'username'),
@@ -24,11 +24,11 @@ api_urls = {
     'Conversation': ('/message/%s/', 'pk'),
     'Experience': ('/experience/%s/', 'pk'),
 
-    JSON_URL_USER_IMAGE_THUMBNAIL: '/xhr/user/%s/picture/50/',
-    JSON_URL_TAG_IMAGE_THUMBNAIL: '/xhr/tag/%s/picture/50/',
-    JSON_URL_SHOUT_IMAGE_THUMBNAIL: '/image/%s/100/',
-    JSON_URL_MARK_NOTIFICATION_AS_READ: '/notification/%s/read/',
-    JSON_URL_MARK_NOTIFICATION_AS_UNREAD: '/notification/%s/unread/',
+    JSON_URL_USER_IMAGE_THUMBNAIL: JSON_URL_USER_IMAGE_THUMBNAIL,
+    JSON_URL_TAG_IMAGE_THUMBNAIL: JSON_URL_TAG_IMAGE_THUMBNAIL,
+    JSON_URL_SHOUT_IMAGE_THUMBNAIL: JSON_URL_SHOUT_IMAGE_THUMBNAIL,
+    JSON_URL_MARK_NOTIFICATION_AS_READ: JSON_URL_MARK_NOTIFICATION_AS_READ,
+    JSON_URL_MARK_NOTIFICATION_AS_UNREAD: JSON_URL_MARK_NOTIFICATION_AS_UNREAD,
 }
 
 
@@ -49,6 +49,6 @@ def get_object_url(obj, extra_params=None):
 
 def get_custom_url(json_url, *params):
     if json_url in api_urls:
-        return api_urls[json_url] % tuple(params)
+        return str(api_urls[json_url]) % tuple(params)
     else:
         raise Exception('URL for %s was not found.' % str(json_url))
