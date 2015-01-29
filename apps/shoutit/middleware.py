@@ -16,7 +16,9 @@ from apps.shoutit.controllers import facebook_controller
 class APIDetectionMiddleware(object):
     @staticmethod
     def process_request(request):
-        request.is_api = "/api/" in request.META.get('PATH_INFO')
+        request.is_api = "/api/" in request.META.get('PATH_INFO') or "/oauth/" in request.META.get('PATH_INFO')
+        request.api_client = request.META.get('HTTP_SHOUTIT_CLIENT', 'other')
+        pass
 
 
 class SetLanguageMiddleware(object):

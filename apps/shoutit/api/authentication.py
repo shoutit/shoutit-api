@@ -45,7 +45,6 @@ def get_access_token_using_social_channel(request, social_channel=None):
 
         auth_data = request.json_data['social_channel_response']
         initial_user = 'user' in request.json_data and request.json_data['user'] or None
-        request.is_api = True
 
         if social_channel == 'gplus':
             # get or create shoutit user using the one time google plus code
@@ -130,7 +129,6 @@ def relink_social_channel(request, social_channel=None):
                 raise KeyError("valid json object with social_channel_response")
 
             auth_data = request.json_data['social_channel_response']
-            request.is_api = True
 
             if social_channel == 'gplus':
                 if not ('code' in auth_data and auth_data['code']):

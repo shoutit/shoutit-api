@@ -17,7 +17,6 @@ class TieredResource(Resource):
         self.handler.allowed_methods = methods_map.keys()
 
     def __call__(self, request, *args, **kwargs):
-        request.is_api = True
         return Resource.__call__(self, request, *args, **kwargs)
 
 

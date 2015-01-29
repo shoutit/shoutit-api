@@ -8,7 +8,7 @@ from apps.shoutit.controllers.user_controller import auth_with_gplus, login_with
 
 def user_from_gplus_code(request, code, initial_user=None):
     redirect_uri = 'postmessage'
-    if hasattr(request, 'is_api') and request.is_api:
+    if request.is_api and request.api_client != 'web':
         redirect_uri = OOB_CALLBACK_URN
 
     try:
@@ -51,7 +51,7 @@ def user_from_gplus_code(request, code, initial_user=None):
 
 def link_gplus_user(request, code):
     redirect_uri = 'postmessage'
-    if hasattr(request, 'is_api') and request.is_api:
+    if request.is_api and request.api_client != 'web':
         redirect_uri = OOB_CALLBACK_URN
 
     try:
