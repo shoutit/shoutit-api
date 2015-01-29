@@ -27,6 +27,7 @@ from apps.shoutit.tiers import non_cached_view, cached_view, refresh_cache, CACH
     RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES, CACHE_LEVEL_GLOBAL
 from apps.shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str, \
     number_of_clusters_based_on_zoom, kmeans
+from common.utils import process_tags
 
 
 @require_POST
@@ -166,13 +167,22 @@ def shout_buy(request):
             except AttributeError:
                 videos = request.POST.get('videos', [])
 
-        result.data['shout'] = shout_controller.shout_buy(request,
-                                                          name=form.cleaned_data['name'],
+        tags = form.cleaned_data['tags']
+        if isinstance(tags, basestring):
+            tags = tags.split(' ')
+
+        tags = process_tags(tags)
+        if not tags:
+            result.messages.append(('error', _("tags are invalid")))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
+        result.data['shout'] = shout_controller.shout_buy(name=form.cleaned_data['name'],
                                                           text=form.cleaned_data['description'],
                                                           price=form.cleaned_data['price'],
                                                           latitude=latitude,
                                                           longitude=longitude,
-                                                          tags=form.cleaned_data['tags'].split(' '),
+                                                          tags=tags,
                                                           shouter=request.user,
                                                           country=country,
                                                           city=city,
@@ -251,13 +261,22 @@ def shout_sell(request):
             except AttributeError:
                 videos = request.POST.get('videos', [])
 
-        result.data['shout'] = shout_controller.shout_sell(request,
-                                                           name=form.cleaned_data['name'],
+        tags = form.cleaned_data['tags']
+        if isinstance(tags, basestring):
+            tags = tags.split(' ')
+
+        tags = process_tags(tags)
+        if not tags:
+            result.messages.append(('error', _("tags are invalid")))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
+        result.data['shout'] = shout_controller.shout_sell(name=form.cleaned_data['name'],
                                                            text=form.cleaned_data['description'],
                                                            price=form.cleaned_data['price'],
                                                            latitude=latitude,
                                                            longitude=longitude,
-                                                           tags=form.cleaned_data['tags'].split(' '),
+                                                           tags=tags,
                                                            shouter=request.user,
                                                            country=country,
                                                            city=city,
@@ -297,9 +316,19 @@ def shout_edit(request, shout_id):
     elif request.POST.has_key('images'):
         images = request.POST.getlist('images')
 
+        tags = form.cleaned_data['tags']
+        if isinstance(tags, basestring):
+            tags = tags.split(' ')
+
+        tags = process_tags(tags)
+        if not tags:
+            result.messages.append(('error', _("tags are invalid")))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
     shout = shout_controller.EditShout(request=request, shout_id=shout_id, name=form.cleaned_data['name'],
                                        text=form.cleaned_data['description'], price=form.cleaned_data['price'],
-                                       latitude=latitude, longitude=longitude, tags=form.cleaned_data['tags'].split(' '),
+                                       latitude=latitude, longitude=longitude, tags=tags,
                                        shouter=shouter, country=form.cleaned_data['country'], city=form.cleaned_data['city'],
                                        address=form.cleaned_data['address'], currency=form.cleaned_data['currency'], images=images)
     result.data['next'] = shout_link(shout)
@@ -591,18 +620,26 @@ def shout_sss4(request):
     except Exception, e:
         return JsonResponseBadRequest({'error': "User Creation Error: " + str(e)})
 
+    tags = shout['tags']
+    if isinstance(tags, basestring):
+        tags = tags.split(' ')
+
+    tags = process_tags(tags)
+    if not tags:
+        return JsonResponseBadRequest({'error': "Invalid Tags"})
+
     try:
         if shout['type'] == 'request':
             shout = shout_controller.shout_buy(
-                None, name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
+                name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
                 latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
-                tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
+                tags=tags, images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
             )
         elif shout['type'] == 'offer':
             shout = shout_controller.shout_sell(
-                None, name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
+                name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
                 latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
-                tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
+                tags=tags, images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
             )
 
     except Exception, e:

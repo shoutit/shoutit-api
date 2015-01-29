@@ -159,7 +159,7 @@ def stored_image(request, image_id, size=32):
 def modal(request, template=None):
     if not template:
         template = ''
-    categories = [category.TopTag and category.TopTag.Name or tag_controller.GetOrCreateTag(request, category.Name, None, False).Name for
+    categories = [category.TopTag and category.TopTag.Name or tag_controller.get_or_create_tag(request, category.Name, None, False).Name for
                   category in Category.objects.all().order_by('Name').select_related('TopTag')]
     fb_la = LinkedFacebookAccount.objects.filter(user=request.user).order_by('-pk')[
             :1] if request.user.is_authenticated() else None  # todo onetone

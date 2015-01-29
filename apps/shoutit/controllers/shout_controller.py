@@ -121,7 +121,7 @@ def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None
             if len(tags) and shouter:
                 trade.OwnerUser = shouter
                 trade.Tags.clear()
-                for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
+                for tag in tag_controller.get_or_create_tags(tags, shouter):
                     trade.Tags.add(tag)
                     tag.Stream.PublishShout(trade)
                     tag.stream2.add_post(trade)
@@ -205,7 +205,7 @@ def save_relocated_shouts(trade, stream_type):
     trade.save()
 
 
-def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def shout_buy(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
     shouter_profile = get_profile(shouter.username)
@@ -236,7 +236,7 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
-    for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
+    for tag in tag_controller.get_or_create_tags(tags, shouter):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
         tag.stream2.add_post(trade)
@@ -249,12 +249,11 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 
-def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def shout_sell(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
     shouter_profile = get_profile(shouter.username)
@@ -282,7 +281,7 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
-    for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
+    for tag in tag_controller.get_or_create_tags(tags, shouter):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
         tag.stream2.add_post(trade)
@@ -295,7 +294,6 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 

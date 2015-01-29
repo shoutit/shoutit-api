@@ -443,7 +443,7 @@ def sss(request):
 
             if shout['type'] == 'buy':
                 shout = shout_controller.shout_buy(
-                    None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
+                    name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user,
                     country=shout['country'],
@@ -452,7 +452,7 @@ def sss(request):
                 )
             else:
                 shout = shout_controller.shout_sell(
-                    None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
+                    name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.get_profile(user.username),
                     country=shout['country'],

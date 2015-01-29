@@ -58,29 +58,19 @@ def GetSynonymParent(name):
         return None
 
 
-def GetOrCreateTag(request, name, creator, isParent):
-    import re
-
-    name = re.sub('[\s,/,&]', '-', name)
-    name = re.sub('[-]+', '-', name)
-
-    tag = Tag.objects.filter(Name__iexact=name)
-    if tag:
-        return tag[0]
-    else:
+def get_or_create_tag(name, creator, is_parent):
+    tag, created = Tag.objects.get_or_create(Name=name)
+    if created:
         stream = Stream(Type=STREAM_TYPE_TAG)
         stream.save()
-        tag = Tag.objects.create(Name=name, Creator=creator, Stream=stream, Parent=None)
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_CREATED, data={ACTIVITY_DATA_TAG: tag.pk})
-        return tag
+        tag.Stream = stream
+        tag.Creator = creator
+        tag.save(update_fields=['Stream', 'Creator'])
+    return tag
 
 
-def GetOrCreateTags(request, names, creator):
-    result = []
-    for name in names:
-        if name and name.strip() != '':
-            result.append(GetOrCreateTag(request, name.strip(), creator, False))
-    return result
+def get_or_create_tags(tags, creator):
+    return [get_or_create_tag(tag, creator, False) for tag in tags]
 
 
 # todo: remove
