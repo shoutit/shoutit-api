@@ -238,7 +238,7 @@ DATABASES = {
         'NAME': 'shoutit_dev' if DEV or DEV_ON_SERVER else 'shoutit_prod',  # Or path to database file if using sqlite3.
         'USER': 'syron',  # Not used with sqlite3.
         'PASSWORD': '123',  # Not used with sqlite3.
-        'HOST': 'localhost',
+        'HOST': 'db.shoutit.com',
         'PORT': '5432'  # Set to empty string for default. Not used with sqlite3.
     }
 }
