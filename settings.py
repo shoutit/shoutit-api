@@ -44,7 +44,7 @@ if ON_SERVER:
 
 if ON_SERVER:
     if GUNICORN:
-        DEBUG = True
+        DEBUG = False
         SHOUT_IT_DOMAIN = 'www.shoutit.com'
         SHOUT_IT_HOST = 'shoutit.com'
 
