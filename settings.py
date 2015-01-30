@@ -212,12 +212,13 @@ if PROD_ON_SERVER:
     )
 # apps when gunicorn is on
 if GUNICORN:
-    INSTALLED_APPS += (
-        'raven.contrib.django.raven_compat',
-    )
     RAVEN_CONFIG = {
         'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
     }
+
+    INSTALLED_APPS += (
+        'raven.contrib.django.raven_compat',
+    )
 
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
