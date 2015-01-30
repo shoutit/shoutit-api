@@ -27,9 +27,10 @@ def create_item(name, price, currency, images=None, videos=None, description='')
 
     if videos:
         for v in videos:
-            video = Video(item=item, url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
-                          id_on_provider=v['id_on_provider'], duration=v['duration'])
-            video.save()
+            if v:
+                video = Video(item=item, url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
+                              id_on_provider=v['id_on_provider'], duration=v['duration'])
+                video.save()
 
     return item
 
