@@ -39,8 +39,11 @@ class TieredResource(Resource):
             raise Http404
 
         request = self.cleanup_request(request)
-
-        return method(request, *args, **kwargs)
+        try:
+            res = method(request, *args, **kwargs)
+        except Exception as e:
+            print str(e)
+        return
 
 
 class MethodDependentAuthentication(object):
