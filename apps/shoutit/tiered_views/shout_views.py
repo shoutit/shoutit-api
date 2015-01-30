@@ -148,21 +148,15 @@ def post_request(request):
 
         images = []
         if 'images[]' in request.POST:
-            images = request.POST.getlist('images[]')
+            images = request.POST.getlist('images[]', [])
         elif 'images' in request.POST:
-            try:
-                images = request.POST.getlist('images')
-            except AttributeError:
-                images = request.POST.get('images', [])
+            images = request.POST.get('images', [])
 
         videos = []
         if 'videos[]' in request.POST:
-            videos = request.POST.getlist('videos[]')
+            videos = request.POST.getlist('videos[]', [])
         elif 'videos' in request.POST:
-            try:
-                videos = request.POST.getlist('videos')
-            except AttributeError:
-                videos = request.POST.get('videos', [])
+            videos = request.POST.get('videos', [])
 
         tags = form.cleaned_data['tags']
         if isinstance(tags, basestring):
@@ -242,21 +236,15 @@ def post_offer(request):
 
         images = []
         if 'images[]' in request.POST:
-            images = request.POST.getlist('images[]')
+            images = request.POST.getlist('images[]', [])
         elif 'images' in request.POST:
-            try:
-                images = request.POST.getlist('images')
-            except AttributeError:
-                images = request.POST.get('images', [])
+            images = request.POST.get('images', [])
 
         videos = []
         if 'videos[]' in request.POST:
-            videos = request.POST.getlist('videos[]')
+            videos = request.POST.getlist('videos[]', [])
         elif 'videos' in request.POST:
-            try:
-                videos = request.POST.getlist('videos')
-            except AttributeError:
-                videos = request.POST.get('videos', [])
+            videos = request.POST.get('videos', [])
 
         tags = form.cleaned_data['tags']
         if isinstance(tags, basestring):
