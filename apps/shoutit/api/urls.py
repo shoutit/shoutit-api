@@ -431,4 +431,13 @@ urlpatterns = patterns('',
                            })
                        ),
 
+
+                       # error
+                       url(r'^error/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'GET': general_views.fake_error,
+                           })
+                       ),
+
+
 )

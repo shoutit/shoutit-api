@@ -375,6 +375,11 @@ def categories(request):
     return result
 
 
+@non_cached_view(methods=['GET'])
+def fake_error(request):
+    raise Exception('FAKE ERROR')
+
+
 @non_cached_view(methods=['POST'], json_renderer=json_renderer)
 @csrf_exempt
 def set_perma(request):

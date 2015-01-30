@@ -42,7 +42,6 @@ print "ENV:", "DEV" if DEV else "ON_SERVER" if ON_SERVER else ""
 if ON_SERVER:
     print "SERVER STATUS:", "DEV" if DEV_ON_SERVER else "PROD" if PROD_ON_SERVER else ""
 
-
 if ON_SERVER:
     if GUNICORN:
         DEBUG = True
@@ -83,7 +82,7 @@ print "SITE_LINK:", SITE_LINK
 USE_X_FORWARDED_HOST = True
 
 TEMPLATE_DEBUG = DEBUG
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', 'shoutit.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 ADMINS = (
     ('Mo Chawich', 'mo.chawich@gmail.com'),
@@ -107,7 +106,7 @@ RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 BROKER_HOST = 'localhost'
 BROKER_PORT = 5672
 # BROKER_USER = "celery"
-#BROKER_PASSWORD = "celery"
+# BROKER_PASSWORD = "celery"
 #BROKER_VHOST = "celery_host"
 CELERY_RESULT_BACKEND = "amqp"
 #CELERY_TASK_SERIALIZER = "json"
@@ -164,7 +163,6 @@ else:
         SESSION_ENGINE = DEV_SESSION_ENGINE
         CACHES = DEV_CACHES
 
-
 AUTH_USER_MODEL = 'shoutit.User'
 
 # Application definition
@@ -196,7 +194,6 @@ INSTALLED_APPS = (
     #'payment',
     #'subscription',
     'south',
-    'raven.contrib.django.raven_compat',
 )
 # apps only on local development
 if DEV:
@@ -212,6 +209,10 @@ if PROD_ON_SERVER:
     INSTALLED_APPS += (
     )
 # apps when gunicorn is on
+if GUNICORN:
+    INSTALLED_APPS += (
+        'raven.contrib.django.raven_compat',
+    )
 
 RAVEN_CONFIG = {
     'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
