@@ -243,7 +243,11 @@ def create_tiny_business(request):
                  methods=['GET', 'POST'])
 def confirm_business(request):
     result = ResponseResult()
-    token = request.COOKIES.get('bc_t_' + request.session.session_key, None)
+    if hasattr(request, 'session') and hasattr(request.session, 'session_key'):
+        token = request.COOKIES.get('bc_t_' + request.session.session_key, None)
+    else:
+        token = None
+
     if token is None:
         result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
         result.data['next'] = '/'
