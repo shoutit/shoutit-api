@@ -7,5 +7,6 @@ Disallow: /new_design/
 Disallow: /shout/buy/
 Disallow: /shout/sell/
 Disallow: /shout/
+Disallow: /confirm_business/
 Allow: /
 
