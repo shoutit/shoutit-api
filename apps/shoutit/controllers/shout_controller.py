@@ -8,11 +8,9 @@ from apps.shoutit.controllers.user_controller import get_profile
 
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
-from common.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Post, PredefinedCity
 from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
-from apps.activity_logger.logger import Logger
 from apps.shoutit.utils import asynchronous_task, to_seo_friendly
 
 
@@ -90,7 +88,8 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
+# todo: check!
+def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
               city=None, address=None, currency=None, images=[], date_published=None):
     trade = Trade.objects.get(pk=shout_id)
 
@@ -205,7 +204,7 @@ def save_relocated_shouts(trade, stream_type):
     trade.save()
 
 
-def shout_buy(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def post_request(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
     shouter_profile = get_profile(shouter.username)
@@ -253,7 +252,7 @@ def shout_buy(name, text, price, latitude, longitude, tags, shouter, country, ci
     return trade
 
 
-def shout_sell(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def post_offer(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
     shouter_profile = get_profile(shouter.username)

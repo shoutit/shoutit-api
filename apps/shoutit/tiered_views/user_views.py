@@ -442,7 +442,7 @@ def sss(request):
                         shout['tags'].remove(tag)
 
             if shout['type'] == 'buy':
-                shout = shout_controller.shout_buy(
+                shout = shout_controller.post_request(
                     name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user,
@@ -451,7 +451,7 @@ def sss(request):
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
             else:
-                shout = shout_controller.shout_sell(
+                shout = shout_controller.post_offer(
                     name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.get_profile(user.username),

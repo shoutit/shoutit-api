@@ -1,4 +1,4 @@
-from apps.shoutit.api.api_utils import get_custom_url, get_object_url, api_urls, JSON_URL_MARK_NOTIFICATION_AS_READ, \
+from apps.shoutit.api.api_utils import get_custom_url, get_object_api_url, api_urls, JSON_URL_MARK_NOTIFICATION_AS_READ, \
     JSON_URL_MARK_NOTIFICATION_AS_UNREAD
 from common.constants import *
 from apps.shoutit.models import User, Profile, Business, Tag
@@ -22,7 +22,7 @@ def render_shout(shout, level=5):
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
         'date_created': shout.DatePublished.strftime('%s'),
-        'url': get_object_url(shout),
+        'url': get_object_api_url(shout),
         'user': render_user(shout.OwnerUser, level=2),
         'location': {
             'country': shout.CountryCode,
@@ -53,7 +53,7 @@ def render_tag(tag):
         tag = Tag(Name=tag['Name'])
     base = {
         'name': tag.Name,
-        'url': get_object_url(tag),
+        'url': get_object_api_url(tag),
         'image': full_url_path(tag.image)
     }
     return base
@@ -111,7 +111,7 @@ def render_user(user, level=1, owner=False):
 
         if level >= 2:
             result.update({
-                'url': get_object_url(user),
+                'url': get_object_api_url(user),
                 'image': full_url_path(profile.image),
                 'video': render_video(profile.video),
                 'sex': profile.Sex,
@@ -191,7 +191,7 @@ def render_conversation(conversation):
         return {}
     return {
         'conversation_id': conversation.pk,
-        'url': get_object_url(conversation),
+        'url': get_object_api_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost, level=1),
@@ -205,7 +205,7 @@ def render_conversation_full(conversation):
     if conversation is None:
         return {}
     return {
-        'url': get_object_url(conversation),
+        'url': get_object_api_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost),
@@ -222,7 +222,7 @@ def render_experience(experience):
     else:
         rendered_experience = {
             'id': experience.pk,
-            'url': get_object_url(experience),
+            'url': get_object_api_url(experience),
             'user': render_user(experience.OwnerUser),
             'business': render_user(experience.AboutBusiness),
             'state': experience.State,
@@ -250,7 +250,7 @@ def render_shared_exp(shared):
     if shared is None:
         return {}
     return {
-        'url': get_object_url(shared.Experience),
+        'url': get_object_api_url(shared.Experience),
         'user': render_user(shared.OwnerUser),
         'experience': render_experience(shared.Experience),
         'date_created': shared.DateCreated.strftime('%s')
@@ -261,7 +261,7 @@ def render_comment(comment):
     if comment is None:
         return {}
     return {
-        'url': get_object_url(comment.AboutPost.experience),
+        'url': get_object_api_url(comment.AboutPost.experience),
         'user': render_user(comment.OwnerUser),
         'post': render_experience(comment.AboutPost.experience),
         'text': comment.Text,
@@ -296,7 +296,7 @@ def render_gallery(gallery):
     if gallery is None:
         return {}
     return {
-        #		'url' : get_object_url(gallery),
+        #		'url' : get_object_api_url(gallery),
         #		'business' : render_business(gallery.OwnerBusiness),
     }
 

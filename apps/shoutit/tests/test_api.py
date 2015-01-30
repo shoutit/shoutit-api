@@ -32,7 +32,7 @@ class APITestCase(TestCase):
         #self.nearby_shouts()
         #self.shout_clusters()
         #self.get_currencies()
-        #self.shout_buy()
+        #self.post_request()
 
     def get_request_token(self):
         response = self.testClient.get('/oauth/request_token/',)

@@ -409,6 +409,95 @@
     }
   }
 
+
+,  {
+    "pk": "00d779fb-c4f6-4058-bd69-ca66ce1f2fd3",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:01:59.319",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:01:59.320",
+      "Name": "Autos",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "02286a95-36c8-4661-9b67-a5921ba757da",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:01:05.156",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:01:05.156",
+      "Name": "Electronics",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "1805e6da-62ac-48c6-a123-2f7f23ae5ba3",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:02:20.755",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:02:20.755",
+      "Name": "Fashion",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "4bce5210-fdbb-4e33-a26f-3ea7ae826c4a",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:03:10.394",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:03:10.394",
+      "Name": "Household",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "50f8f392-e6c8-4b3a-9f91-96dc850b413e",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:03:39.616",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:03:39.616",
+      "Name": "Pets",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "61434aeb-ee8d-4f9d-9638-578f6fd8991c",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:03:30.166",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:03:30.167",
+      "Name": "Services",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "7b479d9d-fba0-4f23-9a2f-f7d5a31acf6e",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:04:40.137",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:04:40.137",
+      "Name": "Jobs",
+      "TopTag": null
+    }
+  },
+  {
+    "pk": "c7517823-2d8e-4f8b-b453-2d732aabb62e",
+    "model": "shoutit.category",
+    "fields": {
+      "created_at": "2015-01-30T01:01:24.907",
+      "Tags": [],
+      "modified_at": "2015-01-30T01:01:24.907",
+      "Name": "Properties",
+      "TopTag": null
+    }
+  }
 ]
 
 

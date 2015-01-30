@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
 
-from apps.shoutit.api.api_utils import get_object_url
+from apps.shoutit.api.api_utils import get_object_api_url
 from apps.shoutit.models import Message
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE
 from apps.shoutit.tiered_views.renderers import operation_api, json_data_renderer, conversations_api, json_renderer, conversation_json, \
@@ -60,7 +60,6 @@ def get_html_message(request):
              api_renderer=conversations_api)
 def get_shout_conversations(request, shout_id):
     result = ResponseResult()
-    shout_id = shout_id
     shout = shout_controller.GetPost(shout_id, True, True)
     result.data['conversations'] = message_controller.get_shout_conversations(shout_id, request.user)
     result.data['is_owner'] = (request.user.pk == shout.OwnerUser.pk)
@@ -176,7 +175,7 @@ def reply_to_shout(request, shout_id):
     message = message_controller.send_message(request.user, shout.OwnerUser, shout, text, attachments=attachments)
 
     result.messages.append(('success', _('Your message was sent successfully.')))
-    result.data['url'] = get_object_url(message.Conversation)
+    result.data['url'] = get_object_api_url(message.Conversation)
     result.data['message'] = message
     return result
 

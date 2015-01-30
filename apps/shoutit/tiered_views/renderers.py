@@ -14,10 +14,13 @@ from apps.shoutit.controllers import user_controller
 from apps.shoutit.models import ConfirmToken, Profile, Business, Trade, PredefinedCity
 from apps.shoutit.permissions import PERMISSION_ACTIVATED
 from apps.shoutit.templatetags import template_filters
-from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
+from apps.shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, \
+    RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
 from apps.shoutit.utils import shout_link
 from apps.shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
-from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, render_tag_dict, render_video
+from apps.shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, \
+    render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, render_tag_dict, \
+    render_video
 from common import constants
 
 
@@ -54,14 +57,20 @@ def render_in_master_page(request, template, variables, page_title='', page_desc
 def get_initial_json_response(request, result, bad_request_message=''):
     if RESPONSE_RESULT_ERROR_NOT_LOGGED_IN in result.errors:
         return redirect_to_modal_xhr(request, '/signin/', _("You are not signed in."), 'signin')
-    elif RESPONSE_RESULT_ERROR_NOT_ACTIVATED in result.errors or (RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors and PERMISSION_ACTIVATED in result.missing_permissions):
+    elif RESPONSE_RESULT_ERROR_NOT_ACTIVATED in result.errors or (
+            RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors and PERMISSION_ACTIVATED in result.missing_permissions):
         return redirect_to_modal_xhr(request, '/reactivate/', _("You are not activated yet"), 'reactivate')
     elif RESPONSE_RESULT_ERROR_REDIRECT in result.errors:
-        return xhr_respond(code=ENUM_XHR_RESULT.REDIRECT, message=result.messages and result.messages[0][1] or '', data={'link': (result.data and 'next' in result.data and result.data['next']) or (result.data and 'link' in result.data and result.data['link']) or '/'})
+        return xhr_respond(code=ENUM_XHR_RESULT.REDIRECT, message=result.messages and result.messages[0][1] or '', data={
+        'link': (result.data and 'next' in result.data and result.data['next']) or (
+        result.data and 'link' in result.data and result.data['link']) or '/'})
     elif RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors or RESPONSE_RESULT_ERROR_FORBIDDEN in result.errors:
-        return xhr_respond(ENUM_XHR_RESULT.FORBIDDEN, result.messages and '\n'.join(unicode(message[1]) for message in result.messages) or '', message_type='error')
+        return xhr_respond(ENUM_XHR_RESULT.FORBIDDEN,
+                           result.messages and '\n'.join(unicode(message[1]) for message in result.messages) or '', message_type='error')
     elif RESPONSE_RESULT_ERROR_BAD_REQUEST in result.errors:
-        return xhr_respond(ENUM_XHR_RESULT.BAD_REQUEST, result.messages and '\n'.join(unicode(message[1]) for message in result.messages) or bad_request_message, errors=result.form_errors, message_type='error')
+        return xhr_respond(ENUM_XHR_RESULT.BAD_REQUEST,
+                           result.messages and '\n'.join(unicode(message[1]) for message in result.messages) or bad_request_message,
+                           errors=result.form_errors, message_type='error')
     return None
 
 
@@ -112,7 +121,7 @@ def conversation_json(request, result):
             'conversation_messages': result.data['conversation_messages'],
             'conversation_id': result.data['conversation_id'],
             'title': result.data['title'],
-            }
+        }
         variables = RequestContext(request, variables)
         data = {'conversation_messages_html': render_to_string("conversation_messages.html", variables),
                 'conversation_shout_html': render_to_string("shout_detailed.html", variables)
@@ -126,7 +135,7 @@ def json_send_message(request, result):
     if not result.errors:
         variables = {
             'message': result.data['message'],
-            }
+        }
         variables = RequestContext(request, variables)
         data = {'html': render_to_string("message.html", variables),
                 'conversation_id': result.data['message'].Conversation_id}
@@ -171,11 +180,15 @@ def browse_html(request, result, browse_type, url_encoded_city, browse_category=
             redirect_city += '%s/' % browse_category
         return HttpResponseRedirect(redirect_city)
     profile = None
-    page_title = unicode.title(u"%s%s %s" % (result.data['browse_city'], (" %s" % browse_category) if browse_category else '',browse_type))
+    page_title = unicode.title(u"%s%s %s" % (result.data['browse_city'], (" %s" % browse_category) if browse_category else '', browse_type))
     if not browse_category:
-        page_desc = _('Shoutit is a social marketplace where buyers and sellers from %(city)s meet. Post or ask for Cars, Electronics, Properties, Food, or Jobs in %(city)s ')%{'city':result.data['browse_city']}
+        page_desc = _(
+            'Shoutit is a social marketplace where buyers and sellers from %(city)s meet. Post or ask for Cars, Electronics, Properties, Food, or Jobs in %(city)s ') % {
+                    'city': result.data['browse_city']}
     else:
-        page_desc = _('Shoutit is a social marketplace where buyers and sellers from %(city)s meet. Post or ask about %(category)s in %(city)s.')%{'city':result.data['browse_city'],'category':unicode.title(browse_category)}
+        page_desc = _(
+            'Shoutit is a social marketplace where buyers and sellers from %(city)s meet. Post or ask about %(category)s in %(city)s.') % {
+                    'city': result.data['browse_city'], 'category': unicode.title(browse_category)}
 
     if request.user.is_authenticated():
         profile = user_controller.GetProfile(request.user)
@@ -357,6 +370,18 @@ def currencies_api(request, result, *args, **kwargs):
     return response, pre_json_result
 
 
+def categories_list_api(request, result, *args, **kwargs):
+    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
+
+    if not result.errors:
+        categories = result.data['categories']
+        pre_json_result.update({
+            'categories': categories,
+        })
+
+    return response, pre_json_result
+
+
 def shout_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
 
@@ -374,16 +399,6 @@ def shout_api(request, result, *args, **kwargs):
             'shout': shout,
             'shouts': shouts
         })
-
-    return response, pre_json_result
-
-
-def shout_brief_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        shout = render_shout(result.data['shout'])
-        pre_json_result.update({'shout': shout})
 
     return response, pre_json_result
 
@@ -424,7 +439,7 @@ def shouts_location_api(request, result, *args, **kwargs):
         pre_json_result['shouts'] = [render_shout(shout, 1) for shout in result.data['shouts']]
 
         # for i in range(len(result.data['shout_pks'])):
-        #     pre_json_result['shouts'].append({
+        # pre_json_result['shouts'].append({
         #         'id': result.data['shout_pks'][i],
         #         'location': {
         #             'latitude': result.data['locations'][i].split(' ')[0],
@@ -685,7 +700,8 @@ def activate_modal_html(request, result, token):
         user = t.user
         profile = user_controller.GetProfile(user)
 
-        if t and (isinstance(profile, Profile) and not request.user.profile.isSSS) or (isinstance(profile, Business)) or (user.BusinessCreateApplication.count()):
+        if t and (isinstance(profile, Profile) and not request.user.profile.isSSS) or (isinstance(profile, Business)) or (
+        user.BusinessCreateApplication.count()):
             t.disable()
 
         link = 'http://' + settings.SHOUT_IT_DOMAIN
@@ -711,7 +727,6 @@ def activate_modal_html(request, result, token):
         if t.Type == int(constants.TOKEN_TYPE_RECOVER_PASSWORD) and request.user.is_authenticated():
             response = HttpResponseRedirect(link + '/user/' + request.user.username + '/#edit')
             return response
-
 
         response = HttpResponseRedirect(url + '#activate')
         response.set_cookie('a_t_' + str(t.user.username), token)
@@ -742,7 +757,7 @@ def read_conversations_stream_json(request, result):
     if not result.errors:
         variables = {
             'conversations': result.data['conversations'],
-            }
+        }
         variables = RequestContext(request, variables)
         data = {'html': render_to_string('conversations_stream.html', variables)}
         for k, v in result.data.iteritems():
@@ -779,7 +794,7 @@ def experiences_stream_json(request, result):
         }
         variables = RequestContext(request, variables)
         data = {
-            'html': render_to_string('experiences_stream.html', variables) ,
+            'html': render_to_string('experiences_stream.html', variables),
             'count': len(result.data['experiences'])
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
@@ -892,7 +907,7 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
             'date': result.data['experience'].DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
             'next': shout_link(result.data['experience'])
         }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message , data=data)
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:
         return get_initial_json_response(request, result)
 
@@ -904,7 +919,7 @@ def comment_on_post_json_renderer(request, result, message=_('Your comment was p
             'text': result.data['comment'].Text,
             'date': result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
         }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message = message , data=data)
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:
         return get_initial_json_response(request, result)
 
@@ -1023,6 +1038,7 @@ def categories_api(request, result):
         if children:
             d['children'] = [_get_category_dict(child) for child in children]
         return d
+
     response, pre_json_result = get_initial_api_result(request, result)
     if not result.errors:
         if 'categories' in result.data:

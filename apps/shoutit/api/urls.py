@@ -111,97 +111,198 @@ user_api = patterns('',
                     ),
 
 
+                    url(r'^activities_stream/(?:(\d+)/)?$',
+                        TieredResource(TieredHandler, no_oauth, {
+                            'GET': user_views.activities_stream
+                        })
+                    ),
+
                     # TODO: to look at: shoutit2
                     url(r'^experiences_stream/(?:(\d+)/)?$',
                         TieredResource(TieredHandler, no_oauth, {
                             'GET': experience_views.experiences_stream
                         })
                     ),
+)
 
-                    url(r'^activities_stream/(?:(\d+)/)?$',
-                        TieredResource(TieredHandler, no_oauth, {
-                            'GET': user_views.activities_stream
-                        })
-                    ),
+shout_api = patterns('',
+                     url(r'^stream/',
+                         TieredResource(TieredHandler, oauth, {
+                             'GET': stream_views.index_stream,
+                         })
+                     ),
+
+                     url(r'^nearby/$',
+                         TieredResource(TieredHandler, oauth, {
+                             'GET': shout_views.nearby_shouts
+                         })
+                     ),
+
+                     url(r'^nearby/clusters/$',
+                         TieredResource(TieredHandler, oauth, {
+                             'GET': shout_views.load_clusters
+                         })
+                     ),
+
+                     url(r'^buy/$',
+                         TieredResource(TieredHandler, oauth, {
+                             'POST': shout_views.post_request
+                         })
+                     ),
+
+                     url(r'^sell/$',
+                         TieredResource(TieredHandler, oauth, {
+                             'POST': shout_views.post_offer
+                         })
+                     ),
+
+                     url(r'^(?P<shout_id>[-\w]+)/', include(
+                         patterns('',
+
+                                  url(r'^$',
+                                      TieredResource(TieredHandler, oauth, {
+                                          'GET': shout_views.shout_view,
+                                          'DELETE': shout_views.delete_shout,
+                                          'POST': message_views.reply_to_shout
+                                      })
+                                  ),
+
+                                  url(r'^messages/$',
+                                      TieredResource(TieredHandler, oauth, {
+                                          'GET': message_views.get_shout_conversations
+                                      })
+                                  ),
+
+                         )
+                     )),
+
+                     # TODO: to look at: shoutit2
+                     url(r'^experience/(?:(\w+)/)?$',
+                         TieredResource(TieredHandler, oauth, {
+                             'POST': experience_views.post_exp
+                         })
+                     ),
+)
+
+message_api = patterns('',
+                       url(r'^$',
+                           TieredResource(TieredHandler, oauth, {
+                               'GET': message_views.read_conversation,
+                               'POST': message_views.reply_in_conversation,
+                               'DELETE': message_views.delete_conversation
+                           })
+                       ),
+
+                       # todo: read conversation, read message
+                       url(r'^read/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'POST': message_views.mark_message_as_read
+                           })
+                       ),
+
+                       url(r'^(?P<message_id>[-\w]+)/$',
+                           TieredResource(TieredHandler, oauth, {
+                               'DELETE': message_views.delete_message
+                           })
+                       ),
+)
+
+tag_api = patterns('',
+                   url(r'^$',
+                       TieredResource(TieredHandler, oauth, {
+                           'GET': tag_views.tag_profile
+                       })
+                   ),
+
+                   url(r'^stream/$',
+                       TieredResource(TieredHandler, oauth, {
+                           'GET': tag_views.tag_stream
+                       })
+                   ),
+
+                   url(r'^listeners/$',
+                       TieredResource(TieredHandler, oauth, {
+                           'GET': tag_views.tag_stats
+                       })
+                   ),
+
+                   url(r'^listen/$',
+                       TieredResource(TieredHandler, oauth, {
+                           'POST': tag_views.start_listening_to_tag,
+                           'DELETE': tag_views.stop_listening_to_tag
+                       })
+                   ),
+
+                   url(r'^picture/$',
+                       TieredResource(TieredHandler, oauth, {
+                           'GET': general_views.profile_picture
+                       }), {'profile_type': 'tag'}
+                   ),
+)
+
+notification_api = patterns('',
+                            url(r'^$',
+                                TieredResource(TieredHandler, oauth, {
+                                    'GET': realtime_views.notifications_all
+                                })
+                            ),
+
+                            url(r'^count/$',
+                                TieredResource(TieredHandler, oauth, {
+                                    'GET': realtime_views.notifications_count
+                                })
+                            ),
+
+                            url(r'^brief/$',
+                                TieredResource(TieredHandler, oauth, {
+                                    'GET': realtime_views.notifications
+                                })
+                            ),
+
+                            # todo: check!
+                            url(r'^(?P<notification_id>[-\w]+)/', include(
+                                patterns('',
+                                         url(r'^read/$',
+                                             TieredResource(TieredHandler, oauth, {
+                                                 'PUT': realtime_views.mark_notification_as_read
+                                             })
+                                         ),
+
+                                         url(r'^unread/$',
+                                             TieredResource(TieredHandler, oauth, {
+                                                 'PUT': realtime_views.mark_notification_as_unread
+                                             })
+                                         ),
+
+                                )
+                            )),
+
+
 )
 
 urlpatterns = patterns('',
                        # Users
 
-                       url(r'^user/$',
+                       url(r'^users/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.search_user,
                                'PUT': user_views.user_edit_profile
                            })
                        ),
 
-                       url(r'^user/link_(facebook|gplus)/$',
+                       url(r'^users/link_(facebook|gplus)/$',
                            TieredResource(TieredHandler, oauth, {
                                'POST': relink_social_channel,
                                'DELETE': relink_social_channel
                            })
                        ),
 
-                       url(r'^user/(?P<username>@me|[\w.]+)/', include(user_api)),
+                       url(r'^users/(?P<username>@me|[\w.]+)/', include(user_api)),
 
 
                        # Shouts
 
-                       url(r'^shout/stream/',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': stream_views.index_stream,
-                           })
-                       ),
-
-                       url(r'^shout/nearby/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': shout_views.nearby_shouts
-                           })
-                       ),
-
-                       url(r'^shout/nearby/clusters/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': shout_views.load_clusters
-                           })
-                       ),
-
-                       url(r'^shout/buy/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': shout_views.shout_buy
-                           })
-                       ),
-
-                       url(r'^shout/sell/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': shout_views.shout_sell
-                           })
-                       ),
-
-                       url(r'^shout/experience/(?:(\w+)/)?$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': experience_views.post_exp
-                           })
-                       ),
-
-                       url(r'^shout/([-\w]+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': shout_views.shout_view,
-                               'DELETE': shout_views.delete_shout,
-                               'POST': message_views.reply_to_shout
-                           })
-                       ),
-
-                       url(r'^shout/([-\w]+)/brief/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': shout_views.load_shout
-                           })
-                       ),
-
-                       url(r'^shout/([-\w]+)/messages/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': message_views.get_shout_conversations
-                           })
-                       ),
+                       url(r'^shouts/', include(shout_api)),
 
 
                        # Messages
@@ -212,72 +313,19 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^messages/([-\w]+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': message_views.read_conversation,
-                               'POST': message_views.reply_in_conversation,
-                               'DELETE': message_views.delete_conversation
-                           })
-                       ),
-
-                       # todo: read conversation, read message
-                       url(r'^messages/([-\w]+)/read/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': message_views.mark_message_as_read
-                           })
-                       ),
-
-                       url(r'^messages/([-\w]+)/([-\w]+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'DELETE': message_views.delete_message
-                           })
-                       ),
+                       url(r'^messages/(?P<conversation_id>[-\w]+)/', include(message_api)),
 
 
                        # Tags
 
-                       url(r'^tag/$',
+                       url(r'^tags/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': tag_views.search_tag
                            })
                        ),
 
-                       url(r'^tag/([^/]+)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': tag_views.tag_profile
-                           })
-                       ),
+                       url(r'^tags/(?P<tag_name>[a-z0-9-]+)/', include(tag_api)),
 
-                       url(r'^tag/([^/]+)/brief/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': tag_views.tag_profile_brief
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/listeners/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': tag_views.tag_stats
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/listen/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': tag_views.start_listening_to_tag,
-                               'DELETE': tag_views.stop_listening_to_tag
-                           })
-                       ),
-
-                       url(r'^tag/([^/]+)/stream/?$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': tag_views.tag_stream
-                           })
-                       ),
-
-                       url(r'^(tag)/([^/]+)/picture(?:/(\d+))?/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': general_views.profile_picture
-                           })
-                       ),
 
                        url(r'^top_tags/$',
                            TieredResource(TieredHandler, oauth, {
@@ -288,35 +336,7 @@ urlpatterns = patterns('',
 
                        # Notifications
 
-                       url(r'^notifications/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': realtime_views.notifications_all
-                           })
-                       ),
-
-                       url(r'^notifications/count/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': realtime_views.notifications_count
-                           })
-                       ),
-
-                       url(r'^notifications/brief/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': realtime_views.notifications
-                           })
-                       ),
-
-                       url(r'^notifications/([-\w]+)/read/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'PUT': realtime_views.mark_notification_as_read
-                           })
-                       ),
-
-                       url(r'^notifications/([-\w]+)/unread/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'PUT': realtime_views.mark_notification_as_unread
-                           })
-                       ),
+                       url(r'^notifications/', include(notification_api)),
 
                        url(r'^notify/([^/]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
@@ -336,6 +356,12 @@ urlpatterns = patterns('',
                        url(r'^currencies/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'GET': general_views.currencies
+                           })
+                       ),
+
+                       url(r'^categories/$',
+                           TieredResource(TieredHandler, no_oauth, {
+                               'GET': general_views.categories
                            })
                        ),
 
@@ -420,7 +446,7 @@ urlpatterns = patterns('',
                        ),
 
 
-                       url(r'^experience/([-\w]+)/$',
+                       url(r'^experiences/([-\w]+)/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'GET': experience_views.view_experience
                            })

@@ -74,14 +74,14 @@ def send_message_validator(request, shout_id, conversation_id):
     return result
 
 
-def profile_picture_validator(request, username, profile_type='', size=''):
+def profile_picture_validator(request, profile_type='', size='', tag_name='', username=''):
     result = ValidationResult(valid=False)
 
     if profile_type == 'user':
         result = user_profile_validator(request, username)
 
     elif profile_type == 'tag':
-        result = object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': username}, username)
+        result = object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name)
 
     return result
 

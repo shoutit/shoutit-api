@@ -14,12 +14,12 @@ from apps.shoutit.models import Shout, User, DBCLConversation
 
 from apps.shoutit.controllers.message_controller import get_shout_conversations, ReadConversation, send_message
 from apps.shoutit.controllers.stream_controller import get_ranked_stream_shouts
-from apps.shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, get_profile, take_permission_from_user
+from apps.shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, take_permission_from_user
 from apps.shoutit.controllers import shout_controller
 
 from apps.shoutit.forms import ShoutForm, ReportForm, MessageForm
 from apps.shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER, INITIAL_USER_PERMISSIONS
-from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_brief_api, shout_form_renderer_api, \
+from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_form_renderer_api, \
     shout_api, object_page_html, operation_api, json_data_renderer, shouts_location_api, shouts_clusters_api
 from apps.shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, \
     edit_shout_validator
@@ -79,18 +79,15 @@ def upload_image(request, method=None):
                  api_renderer=operation_api,
                  json_renderer=lambda request, result: json_renderer(request, result, _('This shout was deleted.')))
 @refresh_cache(tags=[CACHE_TAG_STREAMS])
-def delete_shout(request, pk=None):
-    if not pk:
-        pk = request.GET[u'id']
+def delete_shout(request, shout_id=None):
+    if not shout_id:
+        shout_id = request.GET[u'id']
     result = ResponseResult()
-    shout_controller.DeletePost(pk)
+    shout_controller.DeletePost(shout_id)
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS],
-             methods=['GET'],
-             json_renderer=shout_brief_json,
-             api_renderer=shout_brief_api)
+@cached_view(tags=[CACHE_TAG_STREAMS], methods=['GET'], json_renderer=shout_brief_json,)
 def load_shout(request, shout_id):
     result = ResponseResult()
     result.data['shout'] = shout_controller.GetPost(shout_id)
@@ -117,7 +114,7 @@ def renew_shout(request, shout_id):
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST])
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
-def shout_buy(request):
+def post_request(request):
     result = ResponseResult()
     if request.method == 'POST':
         form = ShoutForm(request.POST, request.FILES)
@@ -177,7 +174,7 @@ def shout_buy(request):
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
             return result
 
-        result.data['shout'] = shout_controller.shout_buy(name=form.cleaned_data['name'],
+        result.data['shout'] = shout_controller.post_request(name=form.cleaned_data['name'],
                                                           text=form.cleaned_data['description'],
                                                           price=form.cleaned_data['price'],
                                                           latitude=latitude,
@@ -210,7 +207,7 @@ def shout_buy(request):
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
-def shout_sell(request):
+def post_offer(request):
     result = ResponseResult()
 
     if request.method == 'POST':
@@ -271,7 +268,7 @@ def shout_sell(request):
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
             return result
 
-        result.data['shout'] = shout_controller.shout_sell(name=form.cleaned_data['name'],
+        result.data['shout'] = shout_controller.post_offer(name=form.cleaned_data['name'],
                                                            text=form.cleaned_data['description'],
                                                            price=form.cleaned_data['price'],
                                                            latitude=latitude,
@@ -316,17 +313,17 @@ def shout_edit(request, shout_id):
     elif request.POST.has_key('images'):
         images = request.POST.getlist('images')
 
-        tags = form.cleaned_data['tags']
-        if isinstance(tags, basestring):
-            tags = tags.split(' ')
+    tags = form.cleaned_data['tags']
+    if isinstance(tags, basestring):
+        tags = tags.split(' ')
 
-        tags = process_tags(tags)
-        if not tags:
-            result.messages.append(('error', _("tags are invalid")))
-            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-            return result
+    tags = process_tags(tags)
+    if not tags:
+        result.messages.append(('error', _("tags are invalid")))
+        result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+        return result
 
-    shout = shout_controller.EditShout(request=request, shout_id=shout_id, name=form.cleaned_data['name'],
+    shout = shout_controller.EditShout(shout_id=shout_id, name=form.cleaned_data['name'],
                                        text=form.cleaned_data['description'], price=form.cleaned_data['price'],
                                        latitude=latitude, longitude=longitude, tags=tags,
                                        shouter=shouter, country=form.cleaned_data['country'], city=form.cleaned_data['city'],
@@ -630,13 +627,13 @@ def shout_sss4(request):
 
     try:
         if shout['type'] == 'request':
-            shout = shout_controller.shout_buy(
+            shout = shout_controller.post_request(
                 name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
                 latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
                 tags=tags, images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
             )
         elif shout['type'] == 'offer':
-            shout = shout_controller.shout_sell(
+            shout = shout_controller.post_offer(
                 name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
                 latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
                 tags=tags, images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
