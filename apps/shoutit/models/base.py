@@ -76,6 +76,24 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
             return None
 
     @property
+    def latitude(self):
+        if hasattr(self, 'profile'):
+            return self.profile.Latitude
+        elif hasattr(self, 'business'):
+            return self.business.Latitude
+        else:
+            return None
+
+    @property
+    def longitude(self):
+        if hasattr(self, 'profile'):
+            return self.profile.Longitude
+        elif hasattr(self, 'business'):
+            return self.business.Longitude
+        else:
+            return None
+
+    @property
     def name(self):
         if hasattr(self, 'profile'):
             return self.get_full_name()
