@@ -1,4 +1,4 @@
-from django.http import Http404, HttpResponseNotAllowed
+from django.http import Http404, HttpResponseNotAllowed, HttpResponseBadRequest
 
 from django.views.decorators.vary import vary_on_headers
 
@@ -43,7 +43,8 @@ class TieredResource(Resource):
             res = method(request, *args, **kwargs)
         except Exception as e:
             print str(e)
-        return
+            res = HttpResponseBadRequest()
+        return res
 
 
 class MethodDependentAuthentication(object):
