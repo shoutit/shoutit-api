@@ -160,10 +160,10 @@ def stored_image(request, image_id, size=32):
 def modal(request, template=None):
     if not template:
         template = ''
-    categories = [category.TopTag and category.TopTag.Name or tag_controller.get_or_create_tag(category.Name, None, False).Name for
-                  category in Category.objects.all().order_by('Name').select_related('TopTag')]
-    fb_la = LinkedFacebookAccount.objects.filter(user=request.user).order_by('-pk')[
-            :1] if request.user.is_authenticated() else None  # todo onetone
+    user = request.user
+    fb_la = hasattr(user, 'linked_facebook') and user.linked_facebook or None
+    _categories = [category.TopTag and category.TopTag.Name or tag_controller.get_or_create_tag(category.Name.lower(), None, False).Name for
+                   category in Category.objects.all().order_by('Name').select_related('TopTag')]
     fb_access_token = fb_la[0].AccessToken if fb_la else None
 
     if template == 'signin':
@@ -184,7 +184,7 @@ def modal(request, template=None):
             'method': 'buy',
             'method_og_name': 'request',
             'form': ShoutForm(),
-            'categories': categories,
+            'categories': _categories,
             'fb_access_token': fb_access_token
         })
     elif template == 'shout_sell':
@@ -194,7 +194,7 @@ def modal(request, template=None):
             'method': 'sell',
             'method_og_name': 'offer',
             'form': ShoutForm(),
-            'categories': categories,
+            'categories': _categories,
             'fb_access_token': fb_access_token
         })
     elif template == 'shout_deal':
@@ -285,7 +285,6 @@ def modal(request, template=None):
     else:
         variables = RequestContext(request)
 
-
     return render_to_response('modals/' + template + '_modal.html', variables)
 
 
@@ -323,7 +322,7 @@ def admin_stats(request):
             result.data['shouts_e'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
                 OwnerUser__pk__in=users_e).count()
             result.data['shouts_r'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(OwnerUser__pk__in=users_e,
-                                                                                                           IsSSS=False).count()
+                                                                                                                  IsSSS=False).count()
 
             result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
             result.data['changed_pic'] = Profile.objects.filter(~Q(
@@ -343,15 +342,15 @@ def admin_stats(request):
             result.data['countries'] = sorted(result.data['countries'], key=lambda k: k['Country'])
 
             # result.data['cities'] = Profile.objects.filter(~Q(user__email__iexact='')).values('City',
-        #				'Country').annotate(count=Count('City'))
-        #			for c in result.data['cities']:
-        #				if c['City'] == '':
-        #					c['City'] = 'None'
-        #				c['Country'] = constants.COUNTRY_ISO[c['Country']]
-        #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
+            # 'Country').annotate(count=Count('City'))
+            #			for c in result.data['cities']:
+            #				if c['City'] == '':
+            #					c['City'] = 'None'
+            #				c['Country'] = constants.COUNTRY_ISO[c['Country']]
+            #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
 
-        #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
-        #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
+            #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
+            #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
 
     return result
 
