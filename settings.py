@@ -30,30 +30,40 @@ print "================= Shoutit Server ================="
 print "=================================================="
 if OFFLINE_MODE:
     print "OFFLINE MODE: ON"
+
 ADDRESS, PORT = check_runserver_address_port()
-print 'ADDRESS', ADDRESS
-print 'PORT', PORT
+GUNICORN = ADDRESS == '0.0.0.0'
+
+print 'ADDRESS:', ADDRESS
+print 'PORT:', PORT
+print 'GUNICORN:', GUNICORN
 
 print "ENV:", "DEV" if DEV else "ON_SERVER" if ON_SERVER else ""
 if ON_SERVER:
     print "SERVER STATUS:", "DEV" if DEV_ON_SERVER else "PROD" if PROD_ON_SERVER else ""
 
 
+if ON_SERVER:
+    if DEV_ON_SERVER:
+        DEBUG = True
+        SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
+        SHOUT_IT_HOST = 'shoutit.com'
+    else:
+        DEBUG = False
+        SHOUT_IT_DOMAIN = 'www.shoutit.com'
+        SHOUT_IT_HOST = 'shoutit.com'
 
-if ADDRESS == 'www.shoutit.com' and PORT == '8000':
-    DEBUG = True
-    SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
-    SHOUT_IT_HOST = 'shoutit.com'
 elif DEV:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = '127.0.0.1'
+
 else:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
     SHOUT_IT_HOST = 'shoutit.com'
 
-print "DEBUG", DEBUG
+print "DEBUG:", DEBUG
 
 # PISTON
 PISTON_DISPLAY_ERRORS = False
@@ -63,7 +73,7 @@ PISTON_EMAIL_ERRORS = False
 SITE_ID = 1
 ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
-IS_SITE_SECURE = False  # True
+IS_SITE_SECURE = ON_SERVER and GUNICORN
 SITE_LINK = 'http%s://%s/' % ('s' if IS_SITE_SECURE else '', SHOUT_IT_DOMAIN)
 WSGI_APPLICATION = 'wsgi.application'
 
@@ -185,7 +195,6 @@ INSTALLED_APPS = (
     #'payment',
     #'subscription',
     'south',
-    'raven.contrib.django.raven_compat',
 )
 # apps only on local development
 if DEV:
@@ -200,10 +209,14 @@ if DEV_ON_SERVER:
 if PROD_ON_SERVER:
     INSTALLED_APPS += (
     )
-
-RAVEN_CONFIG = {
-    'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
-}
+# apps when gunicorn is on
+if GUNICORN:
+    INSTALLED_APPS += (
+        'raven.contrib.django.raven_compat',
+    )
+    RAVEN_CONFIG = {
+        'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+    }
 
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {

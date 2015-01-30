@@ -34,6 +34,11 @@ def check_runserver_address_port():
         if not address:
             address = '127.0.0.1'
         return address, port
+
+    elif 'wsgi' in sys.argv:
+        address_port = sys.argv[-1]
+        return address_port.split(':')
+
     else:
         return '127.0.0.1', '8000'
 

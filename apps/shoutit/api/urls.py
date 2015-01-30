@@ -1,52 +1,11 @@
 from django.conf.urls import include, patterns, url
-from piston3.resource import Resource
 from piston3.authentication import OAuthAuthentication, NoAuthentication
+
 from apps.shoutit.api.authentication import relink_social_channel
+from apps.shoutit.api.resource import TieredResource
+from apps.shoutit.api.handlers import TieredHandler
 from apps.shoutit.tiered_views import user_views, realtime_views, tag_views, stream_views, shout_views, message_views
 from apps.shoutit.tiered_views import general_views, experience_views, comment_views, business_views
-from apps.shoutit.api.handlers import TieredHandler
-
-
-class TieredResource(Resource):
-    def __init__(self, handler, authentication=None, methods_map=None):
-        if not methods_map:
-            methods_map = {}
-        super(TieredResource, self).__init__(handler, authentication)
-        self.csrf_exempt = getattr(self.handler, 'csrf_exempt', True)
-        self.handler.methods_map = methods_map
-        self.handler.allowed_methods = methods_map.keys()
-
-    def __call__(self, request, *args, **kwargs):
-        return Resource.__call__(self, request, *args, **kwargs)
-
-
-class MethodDependentAuthentication(object):
-    # Example
-    # MethodDependentAuthentication({'GET': no_oauth, 'POST': oauth, 'DELETE': oauth})
-
-    def __init__(self, methods_auth_map=None, default=None):
-        if not methods_auth_map:
-            methods_auth_map = {}
-        self.methods_auth_map = methods_auth_map
-        self.default = default
-        self.last_request = None
-
-    def is_authenticated(self, request):
-        self.last_request = request
-        if request.method in self.methods_auth_map.keys():
-            return self.methods_auth_map[request.method].is_authenticated(request)
-        elif self.default:
-            return self.default(request)
-        else:
-            return False
-
-    def challenge(self):
-        if self.last_request.method in self.methods_auth_map.keys():
-            return self.methods_auth_map[self.last_request.method].challenge()
-        elif self.default and hasattr(self.default, 'challenge'):
-            return self.default.challenge()
-        else:
-            return None
 
 
 oauth = OAuthAuthentication()
