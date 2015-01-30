@@ -417,7 +417,7 @@
       "created_at": "2015-01-30T01:01:59.319",
       "Tags": [],
       "modified_at": "2015-01-30T01:01:59.320",
-      "Name": "Autos",
+      "Name": "autos",
       "TopTag": null
     }
   },
@@ -428,7 +428,7 @@
       "created_at": "2015-01-30T01:01:05.156",
       "Tags": [],
       "modified_at": "2015-01-30T01:01:05.156",
-      "Name": "Electronics",
+      "Name": "electronics",
       "TopTag": null
     }
   },
@@ -439,7 +439,7 @@
       "created_at": "2015-01-30T01:02:20.755",
       "Tags": [],
       "modified_at": "2015-01-30T01:02:20.755",
-      "Name": "Fashion",
+      "Name": "fashion",
       "TopTag": null
     }
   },
@@ -450,7 +450,7 @@
       "created_at": "2015-01-30T01:03:10.394",
       "Tags": [],
       "modified_at": "2015-01-30T01:03:10.394",
-      "Name": "Household",
+      "Name": "household",
       "TopTag": null
     }
   },
@@ -461,7 +461,7 @@
       "created_at": "2015-01-30T01:03:39.616",
       "Tags": [],
       "modified_at": "2015-01-30T01:03:39.616",
-      "Name": "Pets",
+      "Name": "pets",
       "TopTag": null
     }
   },
@@ -472,7 +472,7 @@
       "created_at": "2015-01-30T01:03:30.166",
       "Tags": [],
       "modified_at": "2015-01-30T01:03:30.167",
-      "Name": "Services",
+      "Name": "services",
       "TopTag": null
     }
   },
@@ -483,7 +483,7 @@
       "created_at": "2015-01-30T01:04:40.137",
       "Tags": [],
       "modified_at": "2015-01-30T01:04:40.137",
-      "Name": "Jobs",
+      "Name": "jobs",
       "TopTag": null
     }
   },
@@ -494,7 +494,7 @@
       "created_at": "2015-01-30T01:01:24.907",
       "Tags": [],
       "modified_at": "2015-01-30T01:01:24.907",
-      "Name": "Properties",
+      "Name": "properties",
       "TopTag": null
     }
   }
