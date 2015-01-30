@@ -30,12 +30,15 @@ print "================= Shoutit Server ================="
 print "=================================================="
 if OFFLINE_MODE:
     print "OFFLINE MODE: ON"
+ADDRESS, PORT = check_runserver_address_port()
+print 'ADDRESS', ADDRESS
+print 'PORT', PORT
+
 print "ENV:", "DEV" if DEV else "ON_SERVER" if ON_SERVER else ""
 if ON_SERVER:
     print "SERVER STATUS:", "DEV" if DEV_ON_SERVER else "PROD" if PROD_ON_SERVER else ""
 
 
-ADDRESS, PORT = check_runserver_address_port()
 
 if ADDRESS == 'www.shoutit.com' and PORT == '8000':
     DEBUG = True
@@ -51,6 +54,10 @@ else:
     SHOUT_IT_HOST = 'shoutit.com'
 
 print "DEBUG", DEBUG
+
+# PISTON
+PISTON_DISPLAY_ERRORS = False
+PISTON_EMAIL_ERRORS = False
 
 # URLs
 SITE_ID = 1
@@ -178,6 +185,7 @@ INSTALLED_APPS = (
     #'payment',
     #'subscription',
     'south',
+    'raven.contrib.django.raven_compat',
 )
 # apps only on local development
 if DEV:
@@ -192,6 +200,10 @@ if DEV_ON_SERVER:
 if PROD_ON_SERVER:
     INSTALLED_APPS += (
     )
+
+RAVEN_CONFIG = {
+    'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+}
 
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
