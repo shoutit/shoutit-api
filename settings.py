@@ -44,13 +44,14 @@ if ON_SERVER:
 
 
 if ON_SERVER:
-    if DEV_ON_SERVER:
-        DEBUG = True
-        SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
-        SHOUT_IT_HOST = 'shoutit.com'
-    else:
+    if GUNICORN:
         DEBUG = False
         SHOUT_IT_DOMAIN = 'www.shoutit.com'
+        SHOUT_IT_HOST = 'shoutit.com'
+
+    else:
+        DEBUG = True
+        SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
         SHOUT_IT_HOST = 'shoutit.com'
 
 elif DEV:
