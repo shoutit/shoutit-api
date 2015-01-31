@@ -142,7 +142,7 @@ def get_conversation(conversation_id, user=None):
 
 def get_shout_conversations(shout_id, user):
     # todo: simplify
-    shout = shout_controller.GetPost(shout_id, True, True)
+    shout = shout_controller.get_post(shout_id, True, True)
     if user.is_authenticated() and user.pk == shout.OwnerUser.pk:
         conversations = Conversation.objects.filter(AboutPost=shout, ToUser=user, VisibleToRecivier=True).annotate(
             max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__Profile', 'FromUser',

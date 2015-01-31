@@ -74,23 +74,21 @@ def upload_image(request, method=None):
         return JsonResponseBadRequest({'success': False})
 
 
-@non_cached_view(methods=['GET', 'DELETE'],
-                 validator=modify_shout_validator,
-                 api_renderer=operation_api,
-                 json_renderer=lambda request, result: json_renderer(request, result, _('This shout was deleted.')))
+@non_cached_view(methods=['DELETE'], validator=modify_shout_validator, api_renderer=operation_api,
+                 json_renderer=lambda request, result, *args, **kwargs: json_renderer(request, result, _('This shout was deleted.')))
 @refresh_cache(tags=[CACHE_TAG_STREAMS])
-def delete_shout(request, shout_id=None):
-    if not shout_id:
-        shout_id = request.GET[u'id']
+@csrf_exempt
+def delete_shout(request, shout_id):
     result = ResponseResult()
-    shout_controller.DeletePost(shout_id)
+    shout = request.validation_result.data['shout']
+    shout_controller.delete_post(shout)
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS], methods=['GET'], json_renderer=shout_brief_json,)
+@cached_view(tags=[CACHE_TAG_STREAMS], methods=['GET'], json_renderer=shout_brief_json)
 def load_shout(request, shout_id):
     result = ResponseResult()
-    result.data['shout'] = shout_controller.GetPost(shout_id)
+    result.data['shout'] = shout_controller.get_post(shout_id)
     return result
 
 
@@ -109,7 +107,7 @@ def renew_shout(request, shout_id):
 
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  api_renderer=shout_form_renderer_api,
-                 json_renderer=lambda request, result, *args:
+                 json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST])
@@ -151,11 +149,12 @@ def post_request(request):
             images = request.POST.getlist('images[]', [])
         elif 'images' in request.POST:
             images = request.POST.get('images', [])
+        if isinstance(images, basestring):
+            images = [images]
 
+        # only from api
         videos = []
-        if 'videos[]' in request.POST:
-            videos = request.POST.getlist('videos[]', [])
-        elif 'videos' in request.POST:
+        if 'videos' in request.POST:
             videos = request.POST.get('videos', [])
 
         tags = form.cleaned_data['tags']
@@ -196,7 +195,7 @@ def post_request(request):
 # TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  api_renderer=shout_form_renderer_api,
-                 json_renderer=lambda request, result, *args:
+                 json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
@@ -239,11 +238,12 @@ def post_offer(request):
             images = request.POST.getlist('images[]', [])
         elif 'images' in request.POST:
             images = request.POST.get('images', [])
+        if isinstance(images, basestring):
+            images = [images]
 
+        # only from api
         videos = []
-        if 'videos[]' in request.POST:
-            videos = request.POST.getlist('videos[]', [])
-        elif 'videos' in request.POST:
+        if 'videos' in request.POST:
             videos = request.POST.get('videos', [])
 
         tags = form.cleaned_data['tags']
@@ -285,21 +285,28 @@ def post_offer(request):
                  json_renderer(request, result, _('This shout was edited successfully.'), data=result.data))
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS])
 def shout_edit(request, shout_id):
-    shout_id = shout_id
     result = ResponseResult()
-    form = ShoutForm(request.POST, request.FILES)
-    form.is_valid()
+
+    shout = request.validation_result.data['shout']
+    form = request.validation_result.data['form']
+    shouter = shout.OwnerUser
+
     latlng = form.cleaned_data['location']
     latitude = float(latlng.split(',')[0].strip())
     longitude = float(latlng.split(',')[1].strip())
 
-    shouter = Shout.objects.get(pk=shout_id).OwnerUser
-
     images = []
-    if request.POST.has_key('images[]'):
-        images = request.POST.getlist('images[]')
-    elif request.POST.has_key('images'):
-        images = request.POST.getlist('images')
+    if 'images[]' in request.POST:
+        images = request.POST.getlist('images[]', [])
+    elif 'images' in request.POST:
+        images = request.POST.get('images', [])
+    if isinstance(images, basestring):
+        images = [images]
+
+    # only from api
+    videos = []
+    if 'videos' in request.POST:
+        videos = request.POST.get('videos', [])
 
     tags = form.cleaned_data['tags']
     if isinstance(tags, basestring):
@@ -331,9 +338,9 @@ def shout_view(request, shout_id):
     result = ResponseResult()
     shout_id = shout_id
     if request.user.is_authenticated():
-        shout = shout_controller.GetPost(shout_id, True, True)
+        shout = shout_controller.get_post(shout_id, True, True)
     else:
-        shout = shout_controller.GetPost(shout_id)
+        shout = shout_controller.get_post(shout_id)
 
     result.data['shout'] = shout
     result.data['owner'] = (shout.OwnerUser == request.user or request.user.is_staff)

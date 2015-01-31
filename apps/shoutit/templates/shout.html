@@ -8,8 +8,8 @@
 	<meta property="og:url"    content="{% shout_link shout %}" />
 	<meta property="og:title"  content="{{ shout.Item.Name|title }}" />
 	<meta property="shoutitcom:price"  content="{{ shout.Item.Price|price:shout.Item.Currency.Code }}" />
-	{% if shout.GetImages %}
-		{% with myimg=shout.GetImages|key:0  %}
+	{% if shout.get_images %}
+		{% with myimg=shout.get_images|key:0  %}
 			<meta property="og:image"  content="{{ myimg.image|secure_url }}" />
 		{% endwith %}
 	{% else %}
@@ -166,10 +166,8 @@
                     confirm_modal.modal();
                     confirm_modal.find('.yes').click(function () {
                         requestAjaxily({
-                            url: '/xhr/deleteShout/',
-                            data: {
-                                id: shout_id
-                            },
+                            url: '/xhr/shout/{{ shout.pk }}/delete/',
+                            'type': 'DELETE',
                             successCallback: function (data) {
                                 redirect_by_response(data);
                             }

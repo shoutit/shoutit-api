@@ -16,7 +16,7 @@ from apps.shoutit.controllers import email_controller, stream_controller, event_
 from apps.shoutit.utils import asynchronous_task, to_seo_friendly
 
 
-def GetPost(post_id, find_muted=False, find_expired=False):
+def get_post(post_id, find_muted=False, find_expired=False):
     post = Post.objects.filter(pk__exact=post_id, IsDisabled=False).select_related('OwnerUser', 'OwnerUser__Business',
                                                                                    'OwnerBusiness__Profile')
     if not find_muted:
@@ -45,22 +45,19 @@ def GetPost(post_id, find_muted=False, find_expired=False):
         return None
 
 
-def DeletePost(post_id):
-    post = Post.objects.get(pk=post_id)
-    if not post:
-        raise ObjectDoesNotExist()
-    else:
-        post.IsDisabled = True
-        post.save()
-        try:
-            if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
-                event_controller.DeleteEventAboutObj(post.shout.trade)
-            elif post.Type == POST_TYPE_DEAL:
-                event_controller.DeleteEventAboutObj(post.shout.deal)
-            elif post.Type == POST_TYPE_EXPERIENCE:
-                event_controller.DeleteEventAboutObj(post.experience)
-        except:
-            pass
+def delete_post(post):
+    post.IsDisabled = True
+    post.save()
+    try:
+        if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
+            event_controller.delete_event_about_obj(post)
+        # todo: check!
+        # elif post.Type == POST_TYPE_DEAL:
+        #     event_controller.delete_event_about_obj(post.shout.deal)
+        # elif post.Type == POST_TYPE_EXPERIENCE:
+        #     event_controller.delete_event_about_obj(post.experience)
+    except:
+        pass
 
 
 def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
@@ -123,9 +120,12 @@ def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitu
                 trade.OwnerUser = shouter
                 trade.Tags.clear()
                 for tag in tag_controller.get_or_create_tags(tags, shouter):
-                    trade.Tags.add(tag)
-                    tag.Stream.PublishShout(trade)
-                    tag.stream2.add_post(trade)
+                    try:
+                        trade.Tags.add(tag)
+                        tag.Stream.PublishShout(trade)
+                        tag.stream2.add_post(trade)
+                    except IntegrityError:
+                        pass
             trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
             trade.save()
 

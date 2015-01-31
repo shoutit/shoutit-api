@@ -221,13 +221,16 @@ def tiered_view(
 
                 else:
                     result.errors.extend(validation_result.errors)
-                    if not RESPONSE_RESULT_ERROR_BAD_REQUEST in validation_result.errors:
+                    if RESPONSE_RESULT_ERROR_BAD_REQUEST not in validation_result.errors:
                         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
                     result.form_errors = validation_result.form_errors
                     result.messages.extend(validation_result.messages)
 
             if RESPONSE_RESULT_ERROR_REDIRECT in result.errors and not request.is_ajax():
                 return HttpResponseRedirect(result.data['next'])
+
+            elif RESPONSE_RESULT_ERROR_404 in result.errors:
+                raise Http404()
 
             elif api_renderer and getattr(request, 'is_api', False):
                 response, pre_json_result = api_renderer(request, result, *args, **kwargs)

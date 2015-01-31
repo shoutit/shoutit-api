@@ -452,12 +452,11 @@ $.fn.clickAjaxily = function (config) {
 
 function fix_stream() {
   $('.pd').prettyDate();
-  $('a[id*="deleteShout"]').click(function () {
-    var post_data = {id: this.id.toString().substr(6)};
+  $('a.shout_post_delete').click(function () {
+    var shout_id = $(this).attr('shout_id');
     requestAjaxily({
-      url: '/xhr/deleteShout/',
-      data: post_data,
-      type: 'GET',
+      url: '/xhr/shout/' + shout_id + '/delete/',
+      type: 'DELETE',
       div: $(this).parents('div.shout_post').filter(':first'),
       successCallback: function (data) {
         this.div.remove();

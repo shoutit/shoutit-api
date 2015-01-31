@@ -5,7 +5,7 @@ from common.constants import REPORT_TYPE_BUSINESS, REPORT_TYPE_USER, REPORT_TYPE
 from apps.shoutit.controllers.comment_controller import GetCommentByID
 from apps.shoutit.controllers.item_controller import get_item
 from apps.shoutit.controllers.report_controller import CreateReport
-from apps.shoutit.controllers.shout_controller import GetPost
+from apps.shoutit.controllers.shout_controller import get_post
 from apps.shoutit.controllers.user_controller import get_profile
 from apps.shoutit.forms import ReportForm
 from apps.shoutit.permissions import PERMISSION_REPORT
@@ -33,7 +33,7 @@ def report(request, type, object_id):
     else:
         object_id = object_id
         if type == REPORT_TYPE_TRADE or type == REPORT_TYPE_EXPERIENCE:
-            attached_object = GetPost(object_id)
+            attached_object = get_post(object_id)
         elif type == REPORT_TYPE_ITEM:
             attached_object = get_item(object_id)
         elif type == REPORT_TYPE_COMMENT:

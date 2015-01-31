@@ -184,6 +184,7 @@ class Shout(Post):
 
         return text
 
+    @property
     def is_expired(self):
         now = datetime.now()
         if (not self.ExpiryDate and now > self.DatePublished + timedelta(days=int(settings.MAX_EXPIRY_DAYS))) or (

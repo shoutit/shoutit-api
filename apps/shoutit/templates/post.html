@@ -32,8 +32,8 @@
 			</div>
 
 			<div class="clearfix">
-				{% if shout.Type < 2 and shout.GetImages %}
-					{% for image in shout.GetImages %}
+				{% if shout.Type < 2 and shout.get_images %}
+					{% for image in shout.get_images %}
 						{% if forloop.first %}
 							<div class="shout_post_image" style="cursor: pointer;" rel="shout_{{ shout.pk }}" href="/image/{{ image.pk }}/i.png"><img src="/xhr/image/{{ image.pk }}/100/"></div>
 						{% else %}
@@ -53,10 +53,10 @@
             <div class="shout_post_buttons">
 			{% if user.is_staff and  user.username != shout.OwnerUser.username%}
 				<a id="reply_to_{{shout.pk}}" class="btn" href="/shout/{{ shout.pk }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
-				<a class="shout_post_delete btn" id="deleteShout{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
+				<a class="shout_post_delete btn" shout_id="{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
             {%  else %}
 				{% if user.username == shout.OwnerUser.username %}
-                <a class="shout_post_delete btn" id="deleteShout{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
+                <a class="shout_post_delete btn" shout_id="{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
 				{% else %}
 					<a id="reply_to_{{shout.pk}}" class="btn" href="/shout/{{ shout.pk }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
 				{% endif %}

@@ -4,7 +4,7 @@ from common.constants import *
 
 
 def CommentOnPost(user, post_id, text):
-	post = shout_controller.GetPost(post_id)
+	post = shout_controller.get_post(post_id)
 	if post:
 		comment = Comment(AboutPost = post,OwnerUser = user,Text = text)
 		comment.save()
@@ -23,7 +23,7 @@ def CommentOnPost(user, post_id, text):
 		raise ObjectDoesNotExist()
 
 def GetPostComments(post_id, date = None, start_index = None, end_index = None):
-#	post = shout_controller.GetPost(post_id)
+#	post = shout_controller.get_post(post_id)
 #	if post:
 	comments = Comment.objects.filter(AboutPost__pk = post_id,IsDisabled = False).select_related('OwnerUser','OwnerUser__Profile','OwnerUser__Business').order_by('DateCreated')
 	if date:
@@ -48,7 +48,7 @@ def DeleteComment(comment_id):
 	if comment:
 		comment.IsDisabled = True
 		comment.save()
-		event_controller.DeleteEventAboutObj(comment)
+		event_controller.delete_event_about_obj(comment)
 
 
 from apps.shoutit.controllers import event_controller,shout_controller,notifications_controller,realtime_controller

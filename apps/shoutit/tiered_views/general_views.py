@@ -229,8 +229,9 @@ def modal(request, template=None):
         })
     elif template == 'shout_edit':
         shout_id = request.GET['id']
-        if modify_shout_validator(request, shout_id).valid:
-            shout = shout_controller.GetPost(shout_id, True, True)
+        modify_validation = modify_shout_validator(request, shout_id)
+        if modify_validation.valid:
+            shout = modify_validation.data['shout']
             variables = RequestContext(request, {
                 'method': 'edit',
                 'shout': shout,
@@ -470,5 +471,5 @@ def live_events(request):
                  validator=lambda request, event_id: delete_event_validator(request, event_id))
 def delete_event(request, event_id):
     result = ResponseResult()
-    event_controller.DeleteEvent(event_id)
+    event_controller.delete_event(event_id)
     return result

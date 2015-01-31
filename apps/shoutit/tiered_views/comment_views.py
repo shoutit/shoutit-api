@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from common.constants import DEFAULT_PAGE_SIZE
 from apps.shoutit.forms import CommentForm
 from apps.shoutit.controllers.comment_controller import CommentOnPost, GetPostComments, DeleteComment
-from apps.shoutit.controllers.shout_controller import GetPost
+from apps.shoutit.controllers.shout_controller import get_post
 from apps.shoutit.permissions import PERMISSION_COMMENT_ON_POST
 from apps.shoutit.tiered_views.renderers import comment_on_post_json_renderer, operation_api, api_post_comments, json_renderer, \
     post_comments_json_renderer
@@ -47,7 +47,7 @@ def delete_comment(request, comment_id):
 @non_cached_view(methods=['GET'],
                  json_renderer=lambda request, result, post_id: post_comments_json_renderer(request, result),
                  api_renderer=api_post_comments,
-                 validator=lambda request, post_id: object_exists_validator(GetPost, _('post dose not exist.'), post_id),
+                 validator=lambda request, post_id: object_exists_validator(get_post, _('post dose not exist.'), post_id),
 )
 def post_comments(request, post_id):
     result = ResponseResult()

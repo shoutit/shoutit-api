@@ -7,7 +7,7 @@
         <!--<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />-->
 {#		<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.Type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
 	</div>
-    <div class="pull-{% if right %}right{% else %}left{% endif %} shout-content {% if shout.GetImages %}with-image{% endif %}">
+    <div class="pull-{% if right %}right{% else %}left{% endif %} shout-content {% if shout.get_images %}with-image{% endif %}">
         <div class="shout-head">
             <div class="shout-title pull-{% if right %}right{% else %}left{% endif %}"><a href="{% shout_link shout %}" title="{{ shout.Item.Name|title }}">{% if shout.featured %}<i class="icon-star"></i>{% endif %}{{ shout.Item.Name|title }}</a></div>
             <div class="shout-price pull-{% if right %}left{% else %}right{% endif %}">{{ shout.Item.Price|price:shout.Item.Currency.Code }}</div>
@@ -38,8 +38,8 @@
 			<div class="shout-date pd pull-left" title="{{ shout.DatePublished|ISO8601 }}">{{ shout.DatePublished }}</div>
         </div>
 		{% if detailed %}
-			{% if shout.GetImages %}
-				{% for image in shout.GetImages %}
+			{% if shout.get_images %}
+				{% for image in shout.get_images %}
 					{% if forloop.counter0 == 0 %}
 						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|thumbnail:85|secure_url }}{% else %}{{ image.image|thumbnail:145|secure_url }}{% endif %}');">
 					{% else %}
@@ -53,8 +53,8 @@
 
 	</div>
 	{% if not detailed %}
-	{% if shout.GetImages %}
-		{% for image in shout.GetImages %}
+	{% if shout.get_images %}
+		{% for image in shout.get_images %}
 			{% if forloop.counter0 == 0 %}
 				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|thumbnail:85|secure_url }}{% else %}{{ image.image|thumbnail:145|secure_url }}{% endif %}');">
 			{% else %}

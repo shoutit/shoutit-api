@@ -60,7 +60,7 @@ def get_html_message(request):
              api_renderer=conversations_api)
 def get_shout_conversations(request, shout_id):
     result = ResponseResult()
-    shout = shout_controller.GetPost(shout_id, True, True)
+    shout = shout_controller.get_post(shout_id, True, True)
     result.data['conversations'] = message_controller.get_shout_conversations(shout_id, request.user)
     result.data['is_owner'] = (request.user.pk == shout.OwnerUser.pk)
     return result
