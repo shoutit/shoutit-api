@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -173,6 +174,9 @@ def GetStreamAffectedByShout(shout):
 
 @asynchronous_task()
 def save_relocated_shouts(trade, stream_type):
+    if not trade or stream_type not in [STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED]:
+        return
+
     posts_type = POST_TYPE_REQUEST
     if stream_type == STREAM_TYPE_RECOMMENDED:
         if trade.Type == POST_TYPE_REQUEST:
@@ -253,6 +257,7 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     return trade
 
 
+# todo: handle exception on each step and in case of errors, rollback!
 def post_offer(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
@@ -282,8 +287,6 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     stream2.add_post(trade)
 
     # remove duplicates in case any
-    from collections import OrderedDict
-
     tags = list(OrderedDict.fromkeys(tags))
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
@@ -293,7 +296,6 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
             tag.stream2.add_post(trade)
         except IntegrityError:
             pass
-
 
     if trade:
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
