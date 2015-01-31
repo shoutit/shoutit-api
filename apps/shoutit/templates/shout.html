@@ -13,7 +13,7 @@
 			<meta property="og:image"  content="{{ myimg.image|secure_url }}" />
 		{% endwith %}
 	{% else %}
-		<meta property="og:image"  content="{% if shout.Type == 0 %}{% static "img/fb_og_request.png" %}{% else %}{% static "img/fb_og_offer.png" %}{% endif %}" />
+		<meta property="og:image"  content="{{ settings.SITE_LINK }}static/{% if shout.Type == 0 %}fb_og_request.png{% else %}fb_og_offer.png{% endif %}" />
 	{% endif %}
 	<meta property="og:description" content="{{ shout.Text|striptags|truncatewords:30|safe }}"/>
 {% endblock %}
