@@ -25,7 +25,7 @@ from common import constants
 
 
 def render_in_master_page(request, template, variables, page_title='', page_desc=''):
-    variables['page_title'] = page_title
+    variables['page_title'] = page_title.strip()
     if page_desc is None or page_desc == '':
         page_desc = _(
             'Shoutit is the region\'s first social marketplace where buyers post requests for goods or services that they need '
