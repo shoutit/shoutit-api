@@ -30,7 +30,7 @@
                 {{ shout.Text|safe|linebreaksbr }}
                 {% for video in shout.get_videos %}
                   <br><br>
-                  <iframe id="player" type="text/html" width="555" height="400" src="http{{ settings.PROTO }}://www.youtube.com/embed/{{ video.id_on_provider }}?enablejsapi=1&origin=http://shoutit.syrex:8000" frameborder="0"></iframe>
+                  <iframe id="player" type="text/html" width="555" height="400" src="http{{ settings.PROTO }}www.youtube.com/embed/{{ video.id_on_provider }}?enablejsapi=1&origin=http://shoutit.syrex:8000" frameborder="0"></iframe>
                 {% endfor %}
 
             {% endif %}
