@@ -58,7 +58,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
 
     for image in images:
         try:
-            existed = StoredImage.objects.get(Image__exact=image)
+            existed = StoredImage.objects.get(image__exact=image)
         except StoredImage.DoesNotExist:
             stored_image = StoredImage()
             stored_image.Item = item
