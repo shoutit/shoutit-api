@@ -74,7 +74,8 @@ SITE_ID = 1
 ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
 IS_SITE_SECURE = ON_SERVER and GUNICORN
-SITE_LINK = 'http%s://%s/' % ('s' if IS_SITE_SECURE else '', SHOUT_IT_DOMAIN)
+PROTO = 'https://' if IS_SITE_SECURE else 'http://'
+SITE_LINK = '%s%s/' % (PROTO, SHOUT_IT_DOMAIN)
 WSGI_APPLICATION = 'wsgi.application'
 
 print "SITE_LINK:", SITE_LINK

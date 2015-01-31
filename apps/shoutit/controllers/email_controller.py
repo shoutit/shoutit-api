@@ -148,7 +148,7 @@ def SendExpiryNotificationEmail(user, shout):
 
     msg.send()
 
-
+# todo: links
 @asynchronous_task()
 def SendBuyOfferEmail(shout, buyer):
     subject = u'[ShoutIt] %s offered to buy your %s' % (buyer.username, shout.Name)

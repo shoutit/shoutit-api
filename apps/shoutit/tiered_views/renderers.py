@@ -704,7 +704,7 @@ def activate_modal_html(request, result, token):
         user.BusinessCreateApplication.count()):
             t.disable()
 
-        link = 'http://' + settings.SHOUT_IT_DOMAIN
+        link = settings.SITE_LINK
 
         if t.Type == int(constants.TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE):
             request.session['business_user_id'] = user.pk
@@ -713,8 +713,7 @@ def activate_modal_html(request, result, token):
             return response
 
         if t.Type == int(constants.TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM):
-            url = link + '/'
-            response = HttpResponseRedirect(url + '#confirm_business')
+            response = HttpResponseRedirect(link + '#confirm_business')
             response.set_cookie('bc_t_' + request.session.session_key, token)
             return response
 
@@ -722,10 +721,10 @@ def activate_modal_html(request, result, token):
         if len(shout):
             url = shout_link(shout[0])
         else:
-            url = link + '/'
+            url = link
 
         if t.Type == int(constants.TOKEN_TYPE_RECOVER_PASSWORD) and request.user.is_authenticated():
-            response = HttpResponseRedirect(link + '/user/' + request.user.username + '/#edit')
+            response = HttpResponseRedirect(link + 'user/' + request.user.username + '/#edit')
             return response
 
         response = HttpResponseRedirect(url + '#activate')
