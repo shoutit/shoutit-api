@@ -164,7 +164,7 @@ def modal(request, template=None):
     fb_la = hasattr(user, 'linked_facebook') and user.linked_facebook or None
     _categories = [category.TopTag and category.TopTag.Name or tag_controller.get_or_create_tag(category.Name.lower(), None, False).Name for
                    category in Category.objects.all().order_by('Name').select_related('TopTag')]
-    fb_access_token = fb_la[0].AccessToken if fb_la else None
+    fb_access_token = fb_la.AccessToken if fb_la else None
 
     if template == 'signin':
         variables = RequestContext(request, {
@@ -281,9 +281,10 @@ def modal(request, template=None):
                 'report_type': request.GET['report_type']
             })
         else:
-            variables = RequestContext(request)
+            raise Http404()
+
     else:
-        variables = RequestContext(request)
+        raise Http404()
 
     return render_to_response('modals/' + template + '_modal.html', variables)
 
