@@ -22,6 +22,7 @@ from apps.shoutit.tiers import cached_view, CACHE_TAG_COMMENTS, CACHE_TAG_EXPERI
     CACHE_TAG_USERS
 
 
+# todo: validator
 @cached_view(methods=['GET'],
              tags=[CACHE_TAG_EXPERIENCES, CACHE_TAG_COMMENTS],
              api_renderer=view_experience_api,

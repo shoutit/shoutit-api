@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
@@ -280,10 +281,19 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
+    # remove duplicates in case any
+    from collections import OrderedDict
+
+    tags = list(OrderedDict.fromkeys(tags))
     for tag in tag_controller.get_or_create_tags(tags, shouter):
-        trade.Tags.add(tag)
-        tag.Stream.PublishShout(trade)
-        tag.stream2.add_post(trade)
+        # prevent adding existing tags
+        try:
+            trade.Tags.add(tag)
+            tag.Stream.PublishShout(trade)
+            tag.stream2.add_post(trade)
+        except IntegrityError:
+            pass
+
 
     if trade:
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
