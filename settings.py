@@ -212,7 +212,6 @@ if PROD_ON_SERVER:
 # apps when gunicorn is on
 if GUNICORN:
     INSTALLED_APPS += (
-        'raven.contrib.django.raven_compat',
     )
 
 RAVEN_CONFIG = {
@@ -235,7 +234,6 @@ STATICFILES_FINDERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    #'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -254,6 +252,8 @@ MIDDLEWARE_CLASSES = (
 
     'django_mobile.middleware.MobileDetectionMiddleware',
     'django_mobile.middleware.SetFlavourMiddleware',
+
+    # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
 
 # Database
@@ -331,7 +331,7 @@ TEMPLATE_LOADERS = (
 # Logging
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
@@ -352,6 +352,20 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'level': 'DEBUG' if DEV else 'WARNING',
+            'class': 'logging.StreamHandler',
+        },
+        'console_debug': {
+            'level': 'DEBUG' if DEV else 'WARNING',
+            'class': 'logging.StreamHandler',
+            'filters': ['require_debug_true'],
+        },
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'filters': ['require_debug_false'],
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -370,26 +384,40 @@ LOGGING = {
         }
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'django': {
+            'handlers': ['console_debug', 'sentry'],
+            'level': 'DEBUG',
         },
-        'django.security': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'py.warnings': {
+            'handlers': ['console_debug', 'sentry'],
         },
-        'SqlLogMiddleware': {
-            'handlers': ['sql_file'],
-            'level': 'INFO',
-            'propagate': False
+
+        # 'django.security': {
+        #     'handlers': ['mail_admins'],
+        #     'level': 'ERROR',
+        #     'propagate': True,
+        # },
+        'raven': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
         },
-        'SqlLogMiddleware_console': {
-            'handlers': ['sql_console'],
-            'level': 'INFO',
-            'propagate': False
-        }
+        'sentry.errors': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+
+        # 'SqlLogMiddleware': {
+        #     'handlers': ['sql_file'],
+        #     'level': 'INFO',
+        #     'propagate': False
+        # },
+        # 'SqlLogMiddleware_console': {
+        #     'handlers': ['sql_console'],
+        #     'level': 'INFO',
+        #     'propagate': False
+        # }
     }
 }
 

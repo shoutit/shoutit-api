@@ -6,7 +6,7 @@ import json
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseNotFound
 from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
@@ -25,6 +25,7 @@ class ResponseResultError(Constant):
 RESPONSE_RESULT_ERROR_NOT_LOGGED_IN = ResponseResultError()
 RESPONSE_RESULT_ERROR_404 = ResponseResultError()
 RESPONSE_RESULT_ERROR_FORBIDDEN = ResponseResultError()
+RESPONSE_RESULT_ERROR_METHOD_NOT_ALLOWED = ResponseResultError()
 RESPONSE_RESULT_ERROR_BAD_REQUEST = ResponseResultError()
 RESPONSE_RESULT_ERROR_REDIRECT = ResponseResultError()
 RESPONSE_RESULT_ERROR_NOT_ACTIVATED = ResponseResultError()
@@ -107,7 +108,8 @@ def __validate_request(request, methods, validator, *args, **kwargs):
             return validator(request, *args, **kwargs)
         else:
             return ValidationResult(True)
-    return ValidationResult(False, messages=[('error', 'Unsupported request method for this url.')])
+    return ValidationResult(False, messages=[('error', 'Unsupported request method for this url.')],
+                            errors=[RESPONSE_RESULT_ERROR_METHOD_NOT_ALLOWED])
 
 
 def get_cache_key(request, level):
@@ -148,16 +150,21 @@ def tiered_view(
     json_renderer=None,
     api_renderer=None,
     mobile_renderer=None,
-    methods=['GET', 'POST'],
+    methods=None,
     validator=None,
     login_required=False,
     post_login_required=False,
     activation_required=False,
     post_activation_required=False,
     cache_settings=None,
-    permissions_required=[],
+    permissions_required=None,
     business_subscription_required=False
 ):
+    if not methods:
+        methods = ['GET', 'POST']
+    if not permissions_required:
+        permissions_required = []
+
     def wrapper(view=None):
         @wraps(view, assigned=available_attrs(view))
         def _wrapper(request, *args, **kwargs):
@@ -230,7 +237,10 @@ def tiered_view(
                 return HttpResponseRedirect(result.data['next'])
 
             elif RESPONSE_RESULT_ERROR_404 in result.errors:
-                raise Http404()
+                return HttpResponseNotFound()
+
+            elif RESPONSE_RESULT_ERROR_METHOD_NOT_ALLOWED in result.errors:
+                return HttpResponseNotAllowed(methods)
 
             elif api_renderer and getattr(request, 'is_api', False):
                 response, pre_json_result = api_renderer(request, result, *args, **kwargs)
@@ -246,16 +256,22 @@ def tiered_view(
             elif json_renderer and request.is_ajax():
                 output = json_renderer(request, result, *args, **kwargs)
             else:
-                raise Http404()
+                return HttpResponseNotFound()
 
             return output
         return _wrapper
     return wrapper
 
 
-def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None, html_renderer=None, json_renderer=None, api_renderer=None,
-                mobile_renderer=None, methods=['GET', 'POST'], validator=None, login_required=False, post_login_required=False,
-                activation_required=False, post_activation_required=False, permissions_required=[], business_subscription_required=False):
+def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=None, dynamic_tags=None, html_renderer=None, json_renderer=None, api_renderer=None,
+                mobile_renderer=None, methods=None, validator=None, login_required=False, post_login_required=False,
+                activation_required=False, post_activation_required=False, permissions_required=None, business_subscription_required=False):
+    if not methods:
+        methods = ['GET', 'POST']
+    if not permissions_required:
+        permissions_required = []
+    if not tags:
+        tags = []
     if not timeout:
         try:
             timeout = settings.CACHES['default']['TIMEOUT']
@@ -277,16 +293,18 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=[], dynamic_tags=None
                        business_subscription_required=business_subscription_required)
 
 
-def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=['GET', 'POST'],
+def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=None,
                     validator=None, login_required=False, post_login_required=False, activation_required=False,
-                    post_activation_required=False, permissions_required=[], business_subscription_required=False):
+                    post_activation_required=False, permissions_required=None, business_subscription_required=False):
     return tiered_view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,mobile_renderer=mobile_renderer,
                        methods=methods, validator=validator, login_required=login_required, post_login_required=post_login_required,
                        activation_required=activation_required, post_activation_required=post_activation_required,
                        permissions_required=permissions_required, business_subscription_required=business_subscription_required)
 
 
-def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=[], dynamic_tags=None):
+def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=None, dynamic_tags=None):
+    if not tags:
+        tags = []
     def wrapper(view=None):
         @wraps(view, assigned=available_attrs(view))
         def _wrapper(request, *args, **kwargs):
