@@ -62,8 +62,8 @@ def get_initial_json_response(request, result, bad_request_message=''):
         return redirect_to_modal_xhr(request, '/reactivate/', _("You are not activated yet"), 'reactivate')
     elif RESPONSE_RESULT_ERROR_REDIRECT in result.errors:
         return xhr_respond(code=ENUM_XHR_RESULT.REDIRECT, message=result.messages and result.messages[0][1] or '', data={
-        'link': (result.data and 'next' in result.data and result.data['next']) or (
-        result.data and 'link' in result.data and result.data['link']) or '/'})
+            'link': (result.data and 'next' in result.data and result.data['next']) or (
+                result.data and 'link' in result.data and result.data['link']) or '/'})
     elif RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors or RESPONSE_RESULT_ERROR_FORBIDDEN in result.errors:
         return xhr_respond(ENUM_XHR_RESULT.FORBIDDEN,
                            result.messages and '\n'.join(unicode(message[1]) for message in result.messages) or '', message_type='error')

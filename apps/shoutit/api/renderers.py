@@ -5,7 +5,7 @@ from apps.shoutit.models import User, Profile, Business, Tag
 
 
 # todo: better levels
-from apps.shoutit.utils import full_url_path
+from apps.shoutit.utils import full_url_path, shout_link, tag_link, user_link
 
 
 def render_shout(shout, level=5):
@@ -21,8 +21,9 @@ def render_shout(shout, level=5):
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
-        'date_created': shout.DatePublished.strftime('%s'),
-        'url': get_object_api_url(shout),
+        'date_created': shout.created_at_unix,
+        'api_url': get_object_api_url(shout),
+        'web_url': shout_link(shout),
         'user': render_user(shout.OwnerUser, level=2),
         'location': {
             'country': shout.CountryCode,
@@ -53,7 +54,8 @@ def render_tag(tag):
         tag = Tag(Name=tag['Name'])
     base = {
         'name': tag.Name,
-        'url': get_object_api_url(tag),
+        'api_url': get_object_api_url(tag),
+        'web_url': tag_link(tag),
         'image': full_url_path(tag.image)
     }
     return base
@@ -62,7 +64,8 @@ def render_tag(tag):
 def render_tag_dict(tag_dict):
     tag = {
         'name': tag_dict['Name'],
-        'url': full_url_path('/tag/%s/' % tag_dict['Name']),
+        'api_url': full_url_path('/tags/%s/' % tag_dict['Name']),
+        'web_url': tag_link(tag_dict),
         'image': full_url_path(tag_dict['image'])
     }
     if 'is_listening' in tag_dict:
@@ -111,7 +114,8 @@ def render_user(user, level=1, owner=False):
 
         if level >= 2:
             result.update({
-                'url': get_object_api_url(user),
+                'api_url': get_object_api_url(user),
+                'web_url': user_link(user),
                 'image': full_url_path(profile.image),
                 'video': render_video(profile.video),
                 'sex': profile.Sex,
@@ -191,7 +195,7 @@ def render_conversation(conversation):
         return {}
     return {
         'conversation_id': conversation.pk,
-        'url': get_object_api_url(conversation),
+        'api_url': get_object_api_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost, level=1),
@@ -205,7 +209,7 @@ def render_conversation_full(conversation):
     if conversation is None:
         return {}
     return {
-        'url': get_object_api_url(conversation),
+        'api_url': get_object_api_url(conversation),
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost),
@@ -222,7 +226,7 @@ def render_experience(experience):
     else:
         rendered_experience = {
             'id': experience.pk,
-            'url': get_object_api_url(experience),
+            'api_url': get_object_api_url(experience),
             'user': render_user(experience.OwnerUser),
             'business': render_user(experience.AboutBusiness),
             'state': experience.State,
@@ -250,7 +254,7 @@ def render_shared_exp(shared):
     if shared is None:
         return {}
     return {
-        'url': get_object_api_url(shared.Experience),
+        'api_url': get_object_api_url(shared.Experience),
         'user': render_user(shared.OwnerUser),
         'experience': render_experience(shared.Experience),
         'date_created': shared.DateCreated.strftime('%s')
@@ -261,7 +265,7 @@ def render_comment(comment):
     if comment is None:
         return {}
     return {
-        'url': get_object_api_url(comment.AboutPost.experience),
+        'api_url': get_object_api_url(comment.AboutPost.experience),
         'user': render_user(comment.OwnerUser),
         'post': render_experience(comment.AboutPost.experience),
         'text': comment.Text,

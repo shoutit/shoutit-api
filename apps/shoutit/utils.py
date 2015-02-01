@@ -21,7 +21,7 @@ import numpy as np
 from django.conf import settings
 
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
-from apps.shoutit.models import Experience
+from apps.shoutit.models import Experience, Tag, User
 from settings import SITE_LINK
 
 
@@ -340,7 +340,18 @@ def shout_link(post):
 
 
 def user_link(user):
-    return SITE_LINK + user.username
+    if not user or not isinstance(user, User):
+        return None
+    return "{0}{1}".format(SITE_LINK, user.username)
+
+
+def tag_link(tag):
+    if not isinstance(tag, (Tag, dict)):
+        return None
+    tag_name = tag.Name if hasattr(tag, 'Name') else tag['Name'] if 'Name' in tag else None
+    if not tag_name:
+        return None
+    return "{0}tag/{1}/".format(SITE_LINK, tag_name)
 
 
 def full_url_path(url):
