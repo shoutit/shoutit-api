@@ -21,7 +21,7 @@ def render_shout(shout, level=5):
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
         'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
-        'date_created': shout.created_at_unix,
+        'date_created': shout.DatePublished.strftime('%s'),
         'api_url': get_object_api_url(shout),
         'web_url': shout_link(shout),
         'user': render_user(shout.OwnerUser, level=2),
