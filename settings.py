@@ -233,6 +233,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
+print "loading mw..."
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -255,6 +256,8 @@ MIDDLEWARE_CLASSES = (
 
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
+
+print "mw loaded."
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
@@ -498,10 +501,10 @@ GOOGLE_APP = {
 GOOGLE_APP_CLIENT_ID = '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com'
 GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
 
-from apiclient.discovery import build
-
-if not OFFLINE_MODE:
-    GPLUS_SERVICE = build('plus', 'v1')
+# from apiclient.discovery import build
+#
+# if not OFFLINE_MODE:
+#     GPLUS_SERVICE = build('plus', 'v1')
 
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {
@@ -605,6 +608,6 @@ CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
 # some monkey patching for global imports
 from common import monkey_patches
-
+print 'patches loaded.'
 print "=================================================="
 print "\n"
