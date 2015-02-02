@@ -9,7 +9,7 @@ from common.constants import DEFAULT_PAGE_SIZE, EXPERIENCE_UP, EXPERIENCE_DOWN
 from apps.shoutit.controllers.business_controller import GetBusiness, CreateTinyBusinessProfile
 from apps.shoutit.controllers.experience_controller import GetExperience, GetBusinessThumbsCount, GetExperiences, GetExperiencesCount, \
     PostExperience, EditExperience, GetUsersSharedExperience, ShareExperience
-from apps.shoutit.controllers.shout_controller import GetPost
+from apps.shoutit.controllers.shout_controller import get_post
 from apps.shoutit.controllers.user_controller import get_profile
 from apps.shoutit.forms import ReportForm, CommentForm, CreateTinyBusinessForm, ExperienceForm
 from apps.shoutit.models import Profile, Business
@@ -17,12 +17,13 @@ from apps.shoutit.permissions import PERMISSION_POST_EXPERIENCE, PERMISSION_SHAR
 from apps.shoutit.tiered_views.renderers import view_experience_api, page_html, experiences_stream_json, experiences_api, \
     post_experience_json_renderer, json_renderer, operation_api, user_json_renderer
 from apps.shoutit.tiered_views.validators import experience_validator, share_experience_validator, edit_experience_validator, \
-    object_exists_validator
+    object_exists_validator, experience_view_validator
 from apps.shoutit.tiers import cached_view, CACHE_TAG_COMMENTS, CACHE_TAG_EXPERIENCES, ResponseResult, non_cached_view, refresh_cache, \
     CACHE_TAG_USERS
 
 
-@cached_view(methods=['GET'],
+# todo: validator
+@cached_view(methods=['GET'], validator=experience_view_validator,
              tags=[CACHE_TAG_EXPERIENCES, CACHE_TAG_COMMENTS],
              api_renderer=view_experience_api,
              html_renderer=lambda request, result, *args: page_html(request, result, 'experience.html',
@@ -179,7 +180,7 @@ def edit_experience(request, exp_id):
 
 @non_cached_view(methods=['GET'],
                  json_renderer=lambda request, result, exp_id: user_json_renderer(request, result),
-                 validator=lambda request, exp_id: object_exists_validator(GetPost, _('Experience dose not exist.'), exp_id),
+                 validator=lambda request, exp_id: object_exists_validator(get_post, _('Experience dose not exist.'), exp_id),
 )
 def users_shared_experience(request, exp_id):
     result = ResponseResult()

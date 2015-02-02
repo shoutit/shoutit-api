@@ -1,11 +1,13 @@
 User-agent: *
-Disallow: /api/
-Disallow: /xhr/
-Disallow: /modal/
+Disallow: /api/*
+Disallow: /xhr/*
+Disallow: /modal/*
 Disallow: /upload/
 Disallow: /new_design/
 Disallow: /shout/buy/
 Disallow: /shout/sell/
-Disallow: /shout/
+Disallow: /confirm_business/
+Disallow: /admin/
+
 Allow: /
 

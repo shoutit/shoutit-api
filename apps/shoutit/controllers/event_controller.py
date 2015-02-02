@@ -58,24 +58,30 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
     return events
 
 
-def DeleteEventAboutObj(attached_object):
-    event = Event.objects.get(content_type__name=attached_object._meta.module_name, object_id=attached_object.pk)
-    if event:
+def delete_event_about_obj(attached_object):
+    ct = ContentType.objects.get_for_model(attached_object)
+    try:
+        event = Event.objects.get(content_type=ct, object_id=attached_object.id)
         event.IsDisabled = True
         event.save()
+    except Event.DoesNotExist:
+        pass
 
 
-def DeleteEvent(event_id):
-    event = Event.objects.get(pk=event_id)
-    if event:
+def delete_event(event_id):
+    try:
+        event = Event.objects.get(pk=event_id)
         event.IsDisabled = True
         event.save()
+    except Event.DoesNotExist:
+        pass
 
 
-def GetEventByID(event_id):
-    event = Event.objects.get(pk=event_id)
-    return event if event else None
-
+def get_event(event_id):
+    try:
+        return Event.objects.get(pk=event_id)
+    except Event.DoesNotExist:
+        return None
 
 #def MuteEvent(event_id):
 #	event = Event.objects.get(pk = event_id)

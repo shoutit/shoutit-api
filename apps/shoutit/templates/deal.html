@@ -3,8 +3,8 @@
 <div class="deal">
 	<div class="businesse-icon-deal"></div>
 <div class="deal-image">
-	{% if deal.GetImages %}
-		{% for image in deal.GetImages %}
+	{% if deal.get_images %}
+		{% for image in deal.get_images %}
 			{% if forloop.counter0 == 0 %}
 				<div class="round shout-images shadow" rel="shout_{{ deal.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{{ image.image|thumbnail:145|secure_url }}');">
 			{% else %}

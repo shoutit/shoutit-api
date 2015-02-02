@@ -14,12 +14,12 @@ from apps.shoutit.models import Shout, User, DBCLConversation
 
 from apps.shoutit.controllers.message_controller import get_shout_conversations, ReadConversation, send_message
 from apps.shoutit.controllers.stream_controller import get_ranked_stream_shouts
-from apps.shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, get_profile, take_permission_from_user
+from apps.shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, take_permission_from_user
 from apps.shoutit.controllers import shout_controller
 
 from apps.shoutit.forms import ShoutForm, ReportForm, MessageForm
 from apps.shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER, INITIAL_USER_PERMISSIONS
-from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_brief_api, shout_form_renderer_api, \
+from apps.shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_form_renderer_api, \
     shout_api, object_page_html, operation_api, json_data_renderer, shouts_location_api, shouts_clusters_api
 from apps.shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, \
     edit_shout_validator
@@ -27,6 +27,7 @@ from apps.shoutit.tiers import non_cached_view, cached_view, refresh_cache, CACH
     RESPONSE_RESULT_ERROR_BAD_REQUEST, CACHE_TAG_TAGS, CACHE_TAG_USERS, CACHE_TAG_MESSAGES, CACHE_LEVEL_GLOBAL
 from apps.shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str, \
     number_of_clusters_based_on_zoom, kmeans
+from common.utils import process_tags
 
 
 @require_POST
@@ -73,26 +74,21 @@ def upload_image(request, method=None):
         return JsonResponseBadRequest({'success': False})
 
 
-@non_cached_view(methods=['GET', 'DELETE'],
-                 validator=modify_shout_validator,
-                 api_renderer=operation_api,
-                 json_renderer=lambda request, result: json_renderer(request, result, _('This shout was deleted.')))
+@non_cached_view(methods=['DELETE'], validator=modify_shout_validator, api_renderer=operation_api,
+                 json_renderer=lambda request, result, *args, **kwargs: json_renderer(request, result, _('This shout was deleted.')))
 @refresh_cache(tags=[CACHE_TAG_STREAMS])
-def delete_shout(request, pk=None):
-    if not pk:
-        pk = request.GET[u'id']
+@csrf_exempt
+def delete_shout(request, shout_id):
     result = ResponseResult()
-    shout_controller.DeletePost(pk)
+    shout = request.validation_result.data['shout']
+    shout_controller.delete_post(shout)
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS],
-             methods=['GET'],
-             json_renderer=shout_brief_json,
-             api_renderer=shout_brief_api)
+@cached_view(tags=[CACHE_TAG_STREAMS], methods=['GET'], json_renderer=shout_brief_json)
 def load_shout(request, shout_id):
     result = ResponseResult()
-    result.data['shout'] = shout_controller.GetPost(shout_id)
+    result.data['shout'] = shout_controller.get_post(shout_id)
     return result
 
 
@@ -111,12 +107,12 @@ def renew_shout(request, shout_id):
 
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  api_renderer=shout_form_renderer_api,
-                 json_renderer=lambda request, result, *args:
+                 json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST])
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
-def shout_buy(request):
+def post_request(request):
     result = ResponseResult()
     if request.method == 'POST':
         form = ShoutForm(request.POST, request.FILES)
@@ -150,29 +146,33 @@ def shout_buy(request):
 
         images = []
         if 'images[]' in request.POST:
-            images = request.POST.getlist('images[]')
+            images = request.POST.getlist('images[]', [])
         elif 'images' in request.POST:
-            try:
-                images = request.POST.getlist('images')
-            except AttributeError:
-                images = request.POST.get('images', [])
+            images = request.POST.get('images', [])
+        if isinstance(images, basestring):
+            images = [images]
 
+        # only from api
         videos = []
-        if 'videos[]' in request.POST:
-            videos = request.POST.getlist('videos[]')
-        elif 'videos' in request.POST:
-            try:
-                videos = request.POST.getlist('videos')
-            except AttributeError:
-                videos = request.POST.get('videos', [])
+        if 'videos' in request.POST:
+            videos = request.POST.get('videos', [])
 
-        result.data['shout'] = shout_controller.shout_buy(request,
-                                                          name=form.cleaned_data['name'],
+        tags = form.cleaned_data['tags']
+        if isinstance(tags, basestring):
+            tags = tags.split(' ')
+
+        tags = process_tags(tags)
+        if not tags:
+            result.messages.append(('error', _("tags are invalid")))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
+        result.data['shout'] = shout_controller.post_request(name=form.cleaned_data['name'],
                                                           text=form.cleaned_data['description'],
                                                           price=form.cleaned_data['price'],
                                                           latitude=latitude,
                                                           longitude=longitude,
-                                                          tags=form.cleaned_data['tags'].split(' '),
+                                                          tags=tags,
                                                           shouter=request.user,
                                                           country=country,
                                                           city=city,
@@ -195,12 +195,12 @@ def shout_buy(request):
 # TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  api_renderer=shout_form_renderer_api,
-                 json_renderer=lambda request, result, *args:
+                 json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
-def shout_sell(request):
+def post_offer(request):
     result = ResponseResult()
 
     if request.method == 'POST':
@@ -235,29 +235,33 @@ def shout_sell(request):
 
         images = []
         if 'images[]' in request.POST:
-            images = request.POST.getlist('images[]')
+            images = request.POST.getlist('images[]', [])
         elif 'images' in request.POST:
-            try:
-                images = request.POST.getlist('images')
-            except AttributeError:
-                images = request.POST.get('images', [])
+            images = request.POST.get('images', [])
+        if isinstance(images, basestring):
+            images = [images]
 
+        # only from api
         videos = []
-        if 'videos[]' in request.POST:
-            videos = request.POST.getlist('videos[]')
-        elif 'videos' in request.POST:
-            try:
-                videos = request.POST.getlist('videos')
-            except AttributeError:
-                videos = request.POST.get('videos', [])
+        if 'videos' in request.POST:
+            videos = request.POST.get('videos', [])
 
-        result.data['shout'] = shout_controller.shout_sell(request,
-                                                           name=form.cleaned_data['name'],
+        tags = form.cleaned_data['tags']
+        if isinstance(tags, basestring):
+            tags = tags.split(' ')
+
+        tags = process_tags(tags)
+        if not tags:
+            result.messages.append(('error', _("tags are invalid")))
+            result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+            return result
+
+        result.data['shout'] = shout_controller.post_offer(name=form.cleaned_data['name'],
                                                            text=form.cleaned_data['description'],
                                                            price=form.cleaned_data['price'],
                                                            latitude=latitude,
                                                            longitude=longitude,
-                                                           tags=form.cleaned_data['tags'].split(' '),
+                                                           tags=tags,
                                                            shouter=request.user,
                                                            country=country,
                                                            city=city,
@@ -281,25 +285,42 @@ def shout_sell(request):
                  json_renderer(request, result, _('This shout was edited successfully.'), data=result.data))
 @refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS])
 def shout_edit(request, shout_id):
-    shout_id = shout_id
     result = ResponseResult()
-    form = ShoutForm(request.POST, request.FILES)
-    form.is_valid()
+
+    shout = request.validation_result.data['shout']
+    form = request.validation_result.data['form']
+    shouter = shout.OwnerUser
+
     latlng = form.cleaned_data['location']
     latitude = float(latlng.split(',')[0].strip())
     longitude = float(latlng.split(',')[1].strip())
 
-    shouter = Shout.objects.get(pk=shout_id).OwnerUser
-
     images = []
-    if request.POST.has_key('images[]'):
-        images = request.POST.getlist('images[]')
-    elif request.POST.has_key('images'):
-        images = request.POST.getlist('images')
+    if 'images[]' in request.POST:
+        images = request.POST.getlist('images[]', [])
+    elif 'images' in request.POST:
+        images = request.POST.get('images', [])
+    if isinstance(images, basestring):
+        images = [images]
 
-    shout = shout_controller.EditShout(request=request, shout_id=shout_id, name=form.cleaned_data['name'],
+    # only from api
+    videos = []
+    if 'videos' in request.POST:
+        videos = request.POST.get('videos', [])
+
+    tags = form.cleaned_data['tags']
+    if isinstance(tags, basestring):
+        tags = tags.split(' ')
+
+    tags = process_tags(tags)
+    if not tags:
+        result.messages.append(('error', _("tags are invalid")))
+        result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
+        return result
+
+    shout = shout_controller.EditShout(shout_id=shout_id, name=form.cleaned_data['name'],
                                        text=form.cleaned_data['description'], price=form.cleaned_data['price'],
-                                       latitude=latitude, longitude=longitude, tags=form.cleaned_data['tags'].split(' '),
+                                       latitude=latitude, longitude=longitude, tags=tags,
                                        shouter=shouter, country=form.cleaned_data['country'], city=form.cleaned_data['city'],
                                        address=form.cleaned_data['address'], currency=form.cleaned_data['currency'], images=images)
     result.data['next'] = shout_link(shout)
@@ -317,9 +338,9 @@ def shout_view(request, shout_id):
     result = ResponseResult()
     shout_id = shout_id
     if request.user.is_authenticated():
-        shout = shout_controller.GetPost(shout_id, True, True)
+        shout = shout_controller.get_post(shout_id, True, True)
     else:
-        shout = shout_controller.GetPost(shout_id)
+        shout = shout_controller.get_post(shout_id)
 
     result.data['shout'] = shout
     result.data['owner'] = (shout.OwnerUser == request.user or request.user.is_staff)
@@ -591,18 +612,26 @@ def shout_sss4(request):
     except Exception, e:
         return JsonResponseBadRequest({'error': "User Creation Error: " + str(e)})
 
+    tags = shout['tags']
+    if isinstance(tags, basestring):
+        tags = tags.split(' ')
+
+    tags = process_tags(tags)
+    if not tags:
+        return JsonResponseBadRequest({'error': "Invalid Tags"})
+
     try:
         if shout['type'] == 'request':
-            shout = shout_controller.shout_buy(
-                None, name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
+            shout = shout_controller.post_request(
+                name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
                 latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
-                tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
+                tags=tags, images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
             )
         elif shout['type'] == 'offer':
-            shout = shout_controller.shout_sell(
-                None, name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
+            shout = shout_controller.post_offer(
+                name=shout['title'], text=shout['description'], price=float(shout['price']), currency=shout['currency'],
                 latitude=float(shout['lat']), longitude=float(shout['lng']), country=shout['country'], city=shout['city'],
-                tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
+                tags=tags, images=shout['images'], shouter=user, is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS
             )
 
     except Exception, e:

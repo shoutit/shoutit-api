@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from apps.shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, BusinessCreateApplication, PredefinedCity
+    StoredFile, Report, BusinessCreateApplication, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount
 # from apps.activity_logger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -22,13 +22,13 @@ admin.site.register(Shout, ShoutAdmin)
 # Trade
 class TradeAdmin(admin.ModelAdmin):
     list_display = (
-    'pk', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
+        'pk', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
     list_filter = ('Type', 'IsSSS', 'IsDisabled')
     readonly_fields = ('OwnerUser', 'Streams', 'Tags', 'RelatedStream', 'RecommendedStream', 'StreamsCode', 'Item')
 
     def Owner(self, obj):
         return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
-        '/admin/auth/user/', obj.OwnerUser.username, obj.OwnerUser, obj.OwnerUser.username)
+            '/admin/auth/user/', obj.OwnerUser.username, obj.OwnerUser, obj.OwnerUser.username)
 
     Owner.allow_tags = True
     Owner.short_description = 'Owner User'
@@ -89,6 +89,22 @@ class ProfileAdmin(admin.ModelAdmin):
 admin.site.register(Profile, ProfileAdmin)
 
 
+class LinkedFacebookAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'facebook_id', 'AccessToken', 'ExpiresIn')
+    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
+
+
+admin.site.register(LinkedFacebookAccount, LinkedFacebookAccountAdmin)
+
+
+class LinkedGoogleAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'gplus_id')
+    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
+
+
+admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
+
+
 # Business
 class BusinessProfileAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
@@ -102,8 +118,8 @@ admin.site.register(Business, BusinessProfileAdmin)
 # BusinessCreateApplication
 # class BusinessCreateApplicationAdmin(admin.ModelAdmin):
 # list_display = ('Name', 'user', 'Business','confirmation_url','Country', 'City', 'Status')
-#     search_fields = ['Name', 'user__email','Website', 'Phone']
-#     readonly_fields = ('user','Business','LastToken')
+# search_fields = ['Name', 'user__email','Website', 'Phone']
+# readonly_fields = ('user','Business','LastToken')
 #     list_filter = ('Status',)
 #     actions = ['accept_business', 'reject_business']
 #

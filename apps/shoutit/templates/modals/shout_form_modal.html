@@ -216,7 +216,7 @@
 
     var shout_map = new GoogleMap("#shout_map_{{ method }}", "{{ method }}_location input");
     {% if request.user.is_authenticated %}
-      shout_map.CreateShoutMap("input_search_{{ method }}", "{{ method }}_city input", "{{ method }}_country input", "{{ method }}_address input", {{ user.Latitude }}, {{ user.Longitude }}, "{{ method }}");
+      shout_map.CreateShoutMap("input_search_{{ method }}", "{{ method }}_city input", "{{ method }}_country input", "{{ method }}_address input", {{ user.latitude }}, {{ user.longitude }}, "{{ method }}");
     {% else %}
       shout_map.CreateShoutMap("input_search_{{ method }}", "{{ method }}_city input", "{{ method }}_country input", "{{ method }}_address input", {{ default_location.latitude }}, {{ default_location.longitude }}, "{{ method }}");
     {% endif %}

@@ -355,6 +355,9 @@ def attach_related_to_shouts(shouts, rank_count=None):
 
 
 def get_ranked_stream_shouts(stream):
+    if not stream:
+        return []
+
     today = datetime.today()
     days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
     begin = today - days

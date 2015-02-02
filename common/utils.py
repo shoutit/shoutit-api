@@ -1,12 +1,12 @@
 """
 Utils that are independent of Apps and their models
 """
-
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from common.constants import NOT_ALLOWED_USERNAMES
 import httplib2
 import sys
+import re
 
 
 class NotAllowedUsernamesValidator(object):
@@ -34,6 +34,11 @@ def check_runserver_address_port():
         if not address:
             address = '127.0.0.1'
         return address, port
+
+    elif 'wsgi' in sys.argv:
+        address_port = sys.argv[-1]
+        return address_port.split(':')
+
     else:
         return '127.0.0.1', '8000'
 
@@ -45,3 +50,21 @@ def check_offline_mood():
         return False
     except httplib2.ServerNotFoundError:
         return True
+
+
+def process_tags(tags):
+    if not isinstance(tags, list):
+        return []
+    processed_tags = []
+    for tag in tags:
+        if not isinstance(tag, basestring):
+            continue
+        tag = tag.lower()
+        tag = re.sub('[^a-z0-9-]', '', tag)
+        tag = re.sub('([-]){2,}', '-', tag)
+        tag = tag[1:] if tag.startswith('-') else tag
+        tag = tag[0:-1] if tag.endswith('-') else tag
+
+        if len(tag) >= 2:
+            processed_tags.append(tag)
+    return processed_tags

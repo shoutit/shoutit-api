@@ -19,7 +19,7 @@ def PostExperience(user, state, text, businessProfile):
 
 
 def ShareExperience(user, exp_id):
-    experience = shout_controller.GetPost(exp_id)
+    experience = shout_controller.get_post(exp_id)
     if experience:
         shared = SharedExperience(Experience=experience, OwnerUser=user)
         shared.save()
@@ -31,7 +31,7 @@ def ShareExperience(user, exp_id):
 
 
 def EditExperience(exp_id, state, text):
-    experience = shout_controller.GetPost(exp_id)
+    experience = shout_controller.get_post(exp_id)
     experience.State = state
     experience.Text = text
     experience.save()

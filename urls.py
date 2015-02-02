@@ -2,6 +2,7 @@ from django.conf.urls import patterns, include, url, handler500
 from django.views.generic import TemplateView, RedirectView
 
 from django.contrib import admin
+
 admin.autodiscover()
 
 
@@ -19,7 +20,7 @@ urlpatterns = patterns('',
 
                        # ##  Shout Website ## #
                        url(r'^$', 'apps.shoutit.tiered_views.general_views.index'),
-                       url(r'^(requests|offers|experiences)/$', 'apps.shoutit.tiered_views.general_views.index',),
+                       url(r'^(requests|offers|experiences)/$', 'apps.shoutit.tiered_views.general_views.index', ),
                        url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z]+)/)?$', 'apps.shoutit.tiered_views.stream_views.browse'),
 
                        url(r'^tos/$', 'apps.shoutit.tiered_views.general_views.tos'),
@@ -44,11 +45,12 @@ urlpatterns = patterns('',
                        url(r'^^(?:xhr/)?subscribe/$', 'apps.shoutit.tiered_views.business_views.subscribe'),
                        url(r'^^(?:xhr/)?btempsignup/(?:([-\w]+)/)?$', 'apps.shoutit.tiered_views.business_views.signup_temp'),
 
-                       url(r'^(?:xhr/)?shout/buy/$', 'apps.shoutit.tiered_views.shout_views.shout_buy'),
-                       url(r'^(?:xhr/)?shout/sell/$', 'apps.shoutit.tiered_views.shout_views.shout_sell'),
+                       url(r'^(?:xhr/)?shout/buy/$', 'apps.shoutit.tiered_views.shout_views.post_request'),
+                       url(r'^(?:xhr/)?shout/sell/$', 'apps.shoutit.tiered_views.shout_views.post_offer'),
                        url(r'^(?:shout|request|offer)/([-\w]+)/', 'apps.shoutit.tiered_views.shout_views.shout_view'),
                        url(r'^(?:xhr/)?shout/([-\w]+)/edit/$', 'apps.shoutit.tiered_views.shout_views.shout_edit'),
                        url(r'^(?:xhr/)?shout/([-\w]+)/renew/$', 'apps.shoutit.tiered_views.shout_views.renew_shout'),
+                       url(r'^(?:xhr/)?shout/([-\w]+)/delete/$', 'apps.shoutit.tiered_views.shout_views.delete_shout'),
 
                        url(r'^user/(\w+)/$', 'apps.shoutit.tiered_views.user_views.user_profile'),
                        url(r'^xhr/user/(\w+)/stream/?$', 'apps.shoutit.tiered_views.user_views.user_stream'),
@@ -76,10 +78,10 @@ urlpatterns = patterns('',
                        url(r'^upload/files/$', 'apps.shoutit.tiered_views.general_views.upload_file'),
                        url(r'^upload/([\w_-]+)/$', 'apps.shoutit.tiered_views.shout_views.upload_image'),
 
-                       url(r'notifications/$', 'apps.shoutit.tiered_views.realtime_views.notifications'),
+                       url(r'^notifications/$', 'apps.shoutit.tiered_views.realtime_views.notifications'),
                        url(r'^xhr/notifications/count/$', 'apps.shoutit.tiered_views.realtime_views.notifications_count'),
 
-                       #	url(r'pub_realtime/$', 'apps.shoutit.views.redirect_to_node'),
+                       # url(r'pub_realtime/$', 'apps.shoutit.views.redirect_to_node'),
 
                        # ## API ## #
 
@@ -101,7 +103,10 @@ urlpatterns = patterns('',
                        url(r'^xhr/tag/([^/]+)/stop_listening/$', 'apps.shoutit.tiered_views.tag_views.stop_listening_to_tag'),
                        url(r'^xhr/tag/([^/]+)/listeners/$', 'apps.shoutit.tiered_views.tag_views.tag_stats'),
 
-                       url(r'^xhr/(user|tag)/([\.\w-]+)/picture(?:/(\d+))?/$', 'apps.shoutit.tiered_views.general_views.profile_picture'),
+                       url(r'^xhr/user/(?P<username>[\.\w-]+)/picture/(?:(?P<size>\d+)/)?$', 'apps.shoutit.tiered_views.general_views.profile_picture'
+                           , {'profile_type': 'user'}),
+                       url(r'^xhr/tag/(?P<tag_name>[a-z0-9-]+)/picture/(?:(?P<size>\d+)/)?$', 'apps.shoutit.tiered_views.general_views.profile_picture'
+                           , {'profile_type': 'tag'}),
 
                        url(r'^(?:xhr/)?image/([-\w]+)(?:/(\d+))?/(?:i\.png)?$',
                            'apps.shoutit.tiered_views.general_views.stored_image'),
@@ -112,7 +117,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/hovercard/$', 'apps.shoutit.tiered_views.general_views.hovercard'),
                        url(r'^xhr/shout/nearby/$', 'apps.shoutit.tiered_views.shout_views.nearby_shouts'),
                        url(r'^xhr/loadShout/([-\w]+)/$', 'apps.shoutit.tiered_views.shout_views.load_shout'),
-                       url(r'^xhr/deleteShout/$', 'apps.shoutit.tiered_views.shout_views.delete_shout'),
                        url(r'^xhr/update_location/$', 'apps.shoutit.tiered_views.user_views.update_user_location'),
                        url(r'^xhr/setTagParent/$', 'apps.shoutit.tiered_views.tag_views.set_tag_parent'),
 
@@ -121,8 +125,8 @@ urlpatterns = patterns('',
                        url(r'^reactivate/$', 'apps.shoutit.tiered_views.user_views.resend_activation'),
                        url(r'^xhr/reactivate/$', 'apps.shoutit.tiered_views.user_views.resend_activation'),
                        url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png')),
-                       url(r'^robots\.txt/$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
-                       url(r'^googlebc700f17ba42dd9f\.html/$',
+                       url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
+                       url(r'^googlebc700f17ba42dd9f\.html$',
                            TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),
 
                        url(r'^activate/$', 'apps.shoutit.tiered_views.user_views.activate_user'),
@@ -198,7 +202,7 @@ urlpatterns = patterns('',
 
 )
 
-#urlpatterns += patterns('',
+# urlpatterns += patterns('',
 #	url(r'^admin/django-lean/', include('django_lean.experiments.admin_urls')),
 #	url(r'^django-lean/', include('django_lean.experiments.urls')),
 #)

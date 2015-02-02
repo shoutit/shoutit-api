@@ -188,7 +188,6 @@ def tag_profile(request, tag_name):
 @cached_view(level=CACHE_LEVEL_SESSION,
              tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS],
              methods=['GET'],
-             api_renderer=tag_api,
              validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag,
                                                                          _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_profile_brief(request, tag_name):

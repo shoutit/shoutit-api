@@ -43,7 +43,7 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
     stream.PublishShout(deal)
     stream2.add_post(deal)
 
-    for tag in apps.shoutit.controllers.tag_controller.GetOrCreateTags(None, tags, deal.OwnerUser):
+    for tag in apps.shoutit.controllers.tag_controller.get_or_create_tags(tags, deal.OwnerUser):
         deal.Tags.add(tag)
         tag.Stream.PublishShout(deal)
         tag.stream2.add_post(deal)

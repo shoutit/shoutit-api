@@ -4,16 +4,17 @@ from oauth2client.client import credentials_from_clientsecrets_and_code, OOB_CAL
 from django.conf import settings
 from apps.shoutit.models import LinkedGoogleAccount
 from apps.shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_profile_location
+from apiclient import discovery
 
 
 def user_from_gplus_code(request, code, initial_user=None):
     redirect_uri = 'postmessage'
-    if hasattr(request, 'is_api') and request.is_api:
+    if request.is_api and request.api_client != 'web':
         redirect_uri = OOB_CALLBACK_URN
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS'][settings.GOOGLE_APP_CLIENT_ID]['FILE']
+        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS']['web']['FILE']
                                                               , scope='', code=code, redirect_uri=redirect_uri)
     except FlowExchangeError as flowError:
         return flowError, None
@@ -32,9 +33,12 @@ def user_from_gplus_code(request, code, initial_user=None):
             http = httplib2.Http()
             http = credentials.authorize(http)
             # Get the logged gplus user.
-            google_request = settings.GPLUS_SERVICE.people().get(userId='me')
-            gplus_user = google_request.execute(http=http)
-        except AccessTokenRefreshError, e:
+            service = discovery.build("plus", "v1", http=http)
+            gplus_user = service.people().get(userId='me').execute()
+        except AccessTokenRefreshError as e:
+            return e, None
+        except Exception as e:
+            print e
             return e, None
 
         user = auth_with_gplus(request, gplus_user, credentials)
@@ -51,7 +55,7 @@ def user_from_gplus_code(request, code, initial_user=None):
 
 def link_gplus_user(request, code):
     redirect_uri = 'postmessage'
-    if hasattr(request, 'is_api') and request.is_api:
+    if request.is_api and request.api_client != 'web':
         redirect_uri = OOB_CALLBACK_URN
 
     try:

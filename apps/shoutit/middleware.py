@@ -16,7 +16,9 @@ from apps.shoutit.controllers import facebook_controller
 class APIDetectionMiddleware(object):
     @staticmethod
     def process_request(request):
-        request.is_api = "/api/" in request.META.get('PATH_INFO')
+        request.is_api = "/api/" in request.META.get('PATH_INFO') or "/oauth/" in request.META.get('PATH_INFO')
+        request.api_client = request.META.get('HTTP_SHOUTIT_CLIENT', 'other')
+        pass
 
 
 class SetLanguageMiddleware(object):
@@ -65,7 +67,7 @@ class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
         # add the json_data attribute to all POST requests.
-        if request.method == 'POST' and 'json' in request.META['CONTENT_TYPE']:
+        if request.method == 'POST' and 'CONTENT_TYPE' in request.META and 'json' in request.META['CONTENT_TYPE']:
             try:
                 request.json_data = json.loads(request.body)
                 request.json_to_post_fill = True

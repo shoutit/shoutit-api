@@ -1,6 +1,8 @@
+from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
@@ -8,15 +10,13 @@ from apps.shoutit.controllers.user_controller import get_profile
 
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
-from common.constants import ACTIVITY_TYPE_SHOUT_SELL_CREATED, ACTIVITY_DATA_SHOUT
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Post, PredefinedCity
 from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
-from apps.activity_logger.logger import Logger
 from apps.shoutit.utils import asynchronous_task, to_seo_friendly
 
 
-def GetPost(post_id, find_muted=False, find_expired=False):
+def get_post(post_id, find_muted=False, find_expired=False):
     post = Post.objects.filter(pk__exact=post_id, IsDisabled=False).select_related('OwnerUser', 'OwnerUser__Business',
                                                                                    'OwnerBusiness__Profile')
     if not find_muted:
@@ -45,22 +45,19 @@ def GetPost(post_id, find_muted=False, find_expired=False):
         return None
 
 
-def DeletePost(post_id):
-    post = Post.objects.get(pk=post_id)
-    if not post:
-        raise ObjectDoesNotExist()
-    else:
-        post.IsDisabled = True
-        post.save()
-        try:
-            if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
-                event_controller.DeleteEventAboutObj(post.shout.trade)
-            elif post.Type == POST_TYPE_DEAL:
-                event_controller.DeleteEventAboutObj(post.shout.deal)
-            elif post.Type == POST_TYPE_EXPERIENCE:
-                event_controller.DeleteEventAboutObj(post.experience)
-        except:
-            pass
+def delete_post(post):
+    post.IsDisabled = True
+    post.save()
+    try:
+        if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
+            event_controller.delete_event_about_obj(post)
+        # todo: check!
+        # elif post.Type == POST_TYPE_DEAL:
+        #     event_controller.delete_event_about_obj(post.shout.deal)
+        # elif post.Type == POST_TYPE_EXPERIENCE:
+        #     event_controller.delete_event_about_obj(post.experience)
+    except:
+        pass
 
 
 def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
@@ -90,7 +87,8 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
+# todo: check!
+def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
               city=None, address=None, currency=None, images=[], date_published=None):
     trade = Trade.objects.get(pk=shout_id)
 
@@ -121,10 +119,13 @@ def EditShout(request, shout_id, name=None, text=None, price=None, latitude=None
             if len(tags) and shouter:
                 trade.OwnerUser = shouter
                 trade.Tags.clear()
-                for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
-                    trade.Tags.add(tag)
-                    tag.Stream.PublishShout(trade)
-                    tag.stream2.add_post(trade)
+                for tag in tag_controller.get_or_create_tags(tags, shouter):
+                    try:
+                        trade.Tags.add(tag)
+                        tag.Stream.PublishShout(trade)
+                        tag.stream2.add_post(trade)
+                    except IntegrityError:
+                        pass
             trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
             trade.save()
 
@@ -173,6 +174,9 @@ def GetStreamAffectedByShout(shout):
 
 @asynchronous_task()
 def save_relocated_shouts(trade, stream_type):
+    if not trade or stream_type not in [STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED]:
+        return
+
     posts_type = POST_TYPE_REQUEST
     if stream_type == STREAM_TYPE_RECOMMENDED:
         if trade.Type == POST_TYPE_REQUEST:
@@ -205,7 +209,7 @@ def save_relocated_shouts(trade, stream_type):
     trade.save()
 
 
-def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def post_request(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
     shouter_profile = get_profile(shouter.username)
@@ -236,7 +240,7 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
-    for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
+    for tag in tag_controller.get_or_create_tags(tags, shouter):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
         tag.stream2.add_post(trade)
@@ -249,12 +253,12 @@ def shout_buy(request, name, text, price, latitude, longitude, tags, shouter, co
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 
-def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+# todo: handle exception on each step and in case of errors, rollback!
+def post_offer(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
 
     shouter_profile = get_profile(shouter.username)
@@ -282,10 +286,16 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
-    for tag in tag_controller.GetOrCreateTags(request, tags, shouter):
-        trade.Tags.add(tag)
-        tag.Stream.PublishShout(trade)
-        tag.stream2.add_post(trade)
+    # remove duplicates in case any
+    tags = list(OrderedDict.fromkeys(tags))
+    for tag in tag_controller.get_or_create_tags(tags, shouter):
+        # prevent adding existing tags
+        try:
+            trade.Tags.add(tag)
+            tag.Stream.PublishShout(trade)
+            tag.stream2.add_post(trade)
+        except IntegrityError:
+            pass
 
     if trade:
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
@@ -295,7 +305,6 @@ def shout_sell(request, name, text, price, latitude, longitude, tags, shouter, c
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
-    Logger.log(request, type=ACTIVITY_TYPE_SHOUT_SELL_CREATED, data={ACTIVITY_DATA_SHOUT: trade.pk})
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 

@@ -30,34 +30,52 @@ print "================= Shoutit Server ================="
 print "=================================================="
 if OFFLINE_MODE:
     print "OFFLINE MODE: ON"
+
+ADDRESS, PORT = check_runserver_address_port()
+GUNICORN = ADDRESS == '0.0.0.0'
+
+print 'ADDRESS:', ADDRESS
+print 'PORT:', PORT
+print 'GUNICORN:', GUNICORN
+
 print "ENV:", "DEV" if DEV else "ON_SERVER" if ON_SERVER else ""
 if ON_SERVER:
     print "SERVER STATUS:", "DEV" if DEV_ON_SERVER else "PROD" if PROD_ON_SERVER else ""
 
+if ON_SERVER:
+    if GUNICORN:
+        DEBUG = False
+        SHOUT_IT_DOMAIN = 'www.shoutit.com'
+        SHOUT_IT_HOST = 'shoutit.com'
 
-ADDRESS, PORT = check_runserver_address_port()
+    else:
+        DEBUG = True
+        SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
+        SHOUT_IT_HOST = 'shoutit.com'
 
-if ADDRESS == 'www.shoutit.com' and PORT == '8000':
-    DEBUG = True
-    SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
-    SHOUT_IT_HOST = 'shoutit.com'
 elif DEV:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = '127.0.0.1'
+
 else:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
     SHOUT_IT_HOST = 'shoutit.com'
 
-print "DEBUG", DEBUG
+print "DEBUG:", DEBUG
+
+# PISTON
+PISTON_DISPLAY_ERRORS = False
+PISTON_EMAIL_ERRORS = False
 
 # URLs
 SITE_ID = 1
 ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
-IS_SITE_SECURE = False  # True
-SITE_LINK = 'http%s://%s/' % ('s' if IS_SITE_SECURE else '', SHOUT_IT_DOMAIN)
+IS_SITE_SECURE = ON_SERVER and GUNICORN
+PROTO = 'https://' if IS_SITE_SECURE else 'http://'
+SITE_LINK = '%s%s/' % (PROTO, SHOUT_IT_DOMAIN)
 WSGI_APPLICATION = 'wsgi.application'
 
 print "SITE_LINK:", SITE_LINK
@@ -65,7 +83,7 @@ print "SITE_LINK:", SITE_LINK
 USE_X_FORWARDED_HOST = True
 
 TEMPLATE_DEBUG = DEBUG
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', 'shoutit.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 ADMINS = (
     ('Mo Chawich', 'mo.chawich@gmail.com'),
@@ -89,7 +107,7 @@ RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 BROKER_HOST = 'localhost'
 BROKER_PORT = 5672
 # BROKER_USER = "celery"
-#BROKER_PASSWORD = "celery"
+# BROKER_PASSWORD = "celery"
 #BROKER_VHOST = "celery_host"
 CELERY_RESULT_BACKEND = "amqp"
 #CELERY_TASK_SERIALIZER = "json"
@@ -146,7 +164,6 @@ else:
         SESSION_ENGINE = DEV_SESSION_ENGINE
         CACHES = DEV_CACHES
 
-
 AUTH_USER_MODEL = 'shoutit.User'
 
 # Application definition
@@ -192,6 +209,14 @@ if DEV_ON_SERVER:
 if PROD_ON_SERVER:
     INSTALLED_APPS += (
     )
+# apps when gunicorn is on
+if GUNICORN:
+    INSTALLED_APPS += (
+    )
+
+RAVEN_CONFIG = {
+    'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+}
 
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
@@ -209,7 +234,6 @@ STATICFILES_FINDERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    #'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -228,6 +252,8 @@ MIDDLEWARE_CLASSES = (
 
     'django_mobile.middleware.MobileDetectionMiddleware',
     'django_mobile.middleware.SetFlavourMiddleware',
+
+    # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
 
 # Database
@@ -238,8 +264,8 @@ DATABASES = {
         'NAME': 'shoutit_dev' if DEV or DEV_ON_SERVER else 'shoutit_prod',  # Or path to database file if using sqlite3.
         'USER': 'syron',  # Not used with sqlite3.
         'PASSWORD': '123',  # Not used with sqlite3.
-        'HOST': 'localhost',
-        'PORT': ''  # Set to empty string for default. Not used with sqlite3.
+        'HOST': 'db.shoutit.com',
+        'PORT': '5432'  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -305,7 +331,7 @@ TEMPLATE_LOADERS = (
 # Logging
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
@@ -326,6 +352,20 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'level': 'DEBUG' if DEV else 'WARNING',
+            'class': 'logging.StreamHandler',
+        },
+        'console_debug': {
+            'level': 'DEBUG' if DEV else 'WARNING',
+            'class': 'logging.StreamHandler',
+            'filters': ['require_debug_true'],
+        },
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'filters': ['require_debug_false'],
+        },
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -344,26 +384,40 @@ LOGGING = {
         }
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'django': {
+            'handlers': ['console_debug', 'sentry'],
+            'level': 'DEBUG',
         },
-        'django.security': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'py.warnings': {
+            'handlers': ['console_debug', 'sentry'],
         },
-        'SqlLogMiddleware': {
-            'handlers': ['sql_file'],
-            'level': 'INFO',
-            'propagate': False
+
+        # 'django.security': {
+        #     'handlers': ['mail_admins'],
+        #     'level': 'ERROR',
+        #     'propagate': True,
+        # },
+        'raven': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
         },
-        'SqlLogMiddleware_console': {
-            'handlers': ['sql_console'],
-            'level': 'INFO',
-            'propagate': False
-        }
+        'sentry.errors': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+
+        # 'SqlLogMiddleware': {
+        #     'handlers': ['sql_file'],
+        #     'level': 'INFO',
+        #     'propagate': False
+        # },
+        # 'SqlLogMiddleware_console': {
+        #     'handlers': ['sql_console'],
+        #     'level': 'INFO',
+        #     'propagate': False
+        # }
     }
 }
 
@@ -419,35 +473,26 @@ FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
 # Google App
 GOOGLE_APP = {
     'CLIENTS': {
-        '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com': {
+        'web': {
             'NAME': 'web',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com.json'
+            'FILE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'config', 'clients',
+                                 'client_secret_935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com.json')
         },
 
-        '935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com': {
-            'NAME': 'android',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com.json'
+        'android': {
+            'FILE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'config', 'clients',
+                                 'client_secret_935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com.json')
         },
 
-        '935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com': {
+        'ios': {
             'NAME': 'ios',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com.json'
+            'FILE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'config', 'clients',
+                                 'client_secret_935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com.json')
         },
 
-        '935842257865-vr43ma66p1euc6n599uml1ldvgfm27n7.apps.googleusercontent.com': {
-            'NAME': 'android2',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-vr43ma66p1euc6n599uml1ldvgfm27n7.apps.googleusercontent.com.json'
-        }
     }
 }
 
-GOOGLE_APP_CLIENT_ID = '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com'
-GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
-
-from apiclient.discovery import build
-
-if not OFFLINE_MODE:
-    GPLUS_SERVICE = build('plus', 'v1')
 
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {
@@ -551,6 +596,6 @@ CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
 # some monkey patching for global imports
 from common import monkey_patches
-
+print 'patches loaded.'
 print "=================================================="
 print "\n"

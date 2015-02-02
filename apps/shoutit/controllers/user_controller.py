@@ -316,7 +316,7 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
 
     ActivateUser(token, user)
 
-
+# todo: links
 def ChangeEmailAndSendActivation(request, user, email):
     token = SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
     email_controller.SendRegistrationActivationEmail(user, email,

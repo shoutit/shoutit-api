@@ -1,5 +1,5 @@
 from common.constants import *
-from apps.shoutit.controllers.tag_controller import GetOrCreateTags
+from apps.shoutit.controllers.tag_controller import get_or_create_tags
 
 
 def GetBusinessGalleryItems(business, start_index=None, end_index=None):
@@ -64,7 +64,7 @@ def ShoutItem(request, business, item, text, longitude, latitude, country, city,
 
     stream.PublishShout(trade)
     stream2.add_post(trade)
-    for tag in GetOrCreateTags(request, tags, business):
+    for tag in get_or_create_tags(tags, business):
         trade.Tags.add(tag)
         tag.Stream.PublishShout(trade)
         tag.stream2.add_post(trade)

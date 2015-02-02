@@ -26,9 +26,8 @@ class Tag(UUIDModel, Stream2Mixin):
 
 class Category(UUIDModel):
     Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
-    DateCreated = models.DateTimeField(auto_now_add=True)
     TopTag = models.OneToOneField('shoutit.Tag', related_name='OwnerCategory', null=True)
-    Tags = models.ManyToManyField('shoutit.Tag', related_name='Category')
+    Tags = models.ManyToManyField('shoutit.Tag', related_name='Category', null=True)
 
     def __unicode__(self):
         return self.Name

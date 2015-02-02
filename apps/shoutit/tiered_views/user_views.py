@@ -25,7 +25,7 @@ from validators import form_validator, object_exists_validator, user_edit_profil
     push_validator
 from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, POST_TYPE_OFFER, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
-from apps.shoutit.utils import to_seo_friendly
+from apps.shoutit.utils import to_seo_friendly, user_link
 from apps.shoutit.templatetags.template_filters import thumbnail
 
 
@@ -263,8 +263,7 @@ def recover(request):
     user = profile.user
     email = user.email
     token = user_controller.SetRecoveryToken(user)
-    email_controller.SendPasswordRecoveryEmail(user, email,
-                                               "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'))
+    email_controller.SendPasswordRecoveryEmail(user, email, "%s%s/" % (settings.SITE_LINK, token))
     return result
 
 
@@ -442,8 +441,8 @@ def sss(request):
                         shout['tags'].remove(tag)
 
             if shout['type'] == 'buy':
-                shout = shout_controller.shout_buy(
-                    None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
+                shout = shout_controller.post_request(
+                    name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user,
                     country=shout['country'],
@@ -451,8 +450,8 @@ def sss(request):
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS
                 )
             else:
-                shout = shout_controller.shout_sell(
-                    None, name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
+                shout = shout_controller.post_offer(
+                    name=shout['name'], text=shout['text'], price=shout['price'], currency=shout['currency'],
                     latitude=float(shout['location'][0]),
                     longitude=float(shout['location'][1]), tags=shout['tags'], shouter=user_controller.get_profile(user.username),
                     country=shout['country'],
@@ -634,8 +633,7 @@ def user_profile(request, username):
 
     result.data['report_form'] = ReportForm()
     result.data['is_fb_og'] = True
-    result.data['fb_og_url'] = 'http%s://%s/user/%s/' % ('s' if settings.IS_SITE_SECURE else '', settings.SHOUT_IT_DOMAIN,
-                                                         profile.user.username)
+    result.data['fb_og_url'] = user_link(profile.user)
     return result
 
 

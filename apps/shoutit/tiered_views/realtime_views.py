@@ -153,11 +153,7 @@ def notifications_count(request):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_NOTIFICATIONS],
-             json_renderer=notifications_json,
-             api_renderer=notifications_api,
-             methods=['GET'],
-             login_required=True)
+@non_cached_view(methods=['GET'], json_renderer=notifications_json, api_renderer=notifications_api, login_required=True)
 def notifications_all(request):
     result = ResponseResult()
     result.data['notifications'] = user_controller.get_all_notifications(request.user.profile)

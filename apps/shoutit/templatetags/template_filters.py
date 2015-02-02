@@ -68,7 +68,7 @@ def secure_url(url):
         return url
     if not url.startswith('https'):
         if url.startswith('/'):
-            url = 'http://' + settings.SHOUT_IT_DOMAIN + url
+            url = settings.SITE_LINK + url
         if cdn_re.match(url):
             return get_https_cdn(url)
         url = url.replace('http://', 'https://')

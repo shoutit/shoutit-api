@@ -27,9 +27,10 @@ def create_item(name, price, currency, images=None, videos=None, description='')
 
     if videos:
         for v in videos:
-            video = Video(item=item, url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
-                          id_on_provider=v['id_on_provider'], duration=v['duration'])
-            video.save()
+            if v:
+                video = Video(item=item, url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
+                              id_on_provider=v['id_on_provider'], duration=v['duration'])
+                video.save()
 
     return item
 
@@ -57,7 +58,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
 
     for image in images:
         try:
-            existed = StoredImage.objects.get(Image__exact=image)
+            existed = StoredImage.objects.get(image__exact=image)
         except StoredImage.DoesNotExist:
             stored_image = StoredImage()
             stored_image.Item = item

@@ -102,15 +102,16 @@ def hovercard(request):
 @non_cached_view(methods=['GET'], login_required=False, validator=profile_picture_validator,
                  api_renderer=operation_api,
                  html_renderer=thumbnail_response)
-def profile_picture(request, username, profile_type='', size=''):
-    if username == '@me':
+def profile_picture(request, profile_type='', size='', tag_name='', username=''):
+    if profile_type == 'user' and username == '@me':
         username = request.user.username
 
     path = ''
     if profile_type == 'user':
         d = user_controller.get_profile(username)
     elif profile_type == 'tag':
-        d = tag_controller.get_tag(username)
+        d = tag_controller.get_tag(tag_name)
+
     if d.image:
         path = d.image
     else:
@@ -159,11 +160,11 @@ def stored_image(request, image_id, size=32):
 def modal(request, template=None):
     if not template:
         template = ''
-    categories = [category.TopTag and category.TopTag.Name or tag_controller.GetOrCreateTag(request, category.Name, None, False).Name for
-                  category in Category.objects.all().order_by('Name').select_related('TopTag')]
-    fb_la = LinkedFacebookAccount.objects.filter(user=request.user).order_by('-pk')[
-            :1] if request.user.is_authenticated() else None  # todo onetone
-    fb_access_token = fb_la[0].AccessToken if fb_la else None
+    user = request.user
+    fb_la = hasattr(user, 'linked_facebook') and user.linked_facebook or None
+    _categories = [category.TopTag and category.TopTag.Name or tag_controller.get_or_create_tag(category.Name.lower(), None, False).Name for
+                   category in Category.objects.all().order_by('Name').select_related('TopTag')]
+    fb_access_token = fb_la.AccessToken if fb_la else None
 
     if template == 'signin':
         variables = RequestContext(request, {
@@ -183,7 +184,7 @@ def modal(request, template=None):
             'method': 'buy',
             'method_og_name': 'request',
             'form': ShoutForm(),
-            'categories': categories,
+            'categories': _categories,
             'fb_access_token': fb_access_token
         })
     elif template == 'shout_sell':
@@ -193,7 +194,7 @@ def modal(request, template=None):
             'method': 'sell',
             'method_og_name': 'offer',
             'form': ShoutForm(),
-            'categories': categories,
+            'categories': _categories,
             'fb_access_token': fb_access_token
         })
     elif template == 'shout_deal':
@@ -228,8 +229,9 @@ def modal(request, template=None):
         })
     elif template == 'shout_edit':
         shout_id = request.GET['id']
-        if modify_shout_validator(request, shout_id).valid:
-            shout = shout_controller.GetPost(shout_id, True, True)
+        modify_validation = modify_shout_validator(request, shout_id)
+        if modify_validation.valid:
+            shout = modify_validation.data['shout']
             variables = RequestContext(request, {
                 'method': 'edit',
                 'shout': shout,
@@ -280,10 +282,10 @@ def modal(request, template=None):
                 'report_type': request.GET['report_type']
             })
         else:
-            variables = RequestContext(request)
-    else:
-        variables = RequestContext(request)
+            raise Http404()
 
+    else:
+        raise Http404()
 
     return render_to_response('modals/' + template + '_modal.html', variables)
 
@@ -322,7 +324,7 @@ def admin_stats(request):
             result.data['shouts_e'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
                 OwnerUser__pk__in=users_e).count()
             result.data['shouts_r'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(OwnerUser__pk__in=users_e,
-                                                                                                           IsSSS=False).count()
+                                                                                                                  IsSSS=False).count()
 
             result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
             result.data['changed_pic'] = Profile.objects.filter(~Q(
@@ -342,15 +344,15 @@ def admin_stats(request):
             result.data['countries'] = sorted(result.data['countries'], key=lambda k: k['Country'])
 
             # result.data['cities'] = Profile.objects.filter(~Q(user__email__iexact='')).values('City',
-        #				'Country').annotate(count=Count('City'))
-        #			for c in result.data['cities']:
-        #				if c['City'] == '':
-        #					c['City'] = 'None'
-        #				c['Country'] = constants.COUNTRY_ISO[c['Country']]
-        #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
+            # 'Country').annotate(count=Count('City'))
+            #			for c in result.data['cities']:
+            #				if c['City'] == '':
+            #					c['City'] = 'None'
+            #				c['Country'] = constants.COUNTRY_ISO[c['Country']]
+            #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
 
-        #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
-        #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
+            #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
+            #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
 
     return result
 
@@ -364,6 +366,19 @@ def currencies(request):
     # todo: use the cache
     result.data['currencies'] = list(Currency.objects.all())
     return result
+
+
+@non_cached_view(methods=['GET'], api_renderer=categories_list_api)
+def categories(request):
+    result = ResponseResult()
+    # todo: use the cache
+    result.data['categories'] = list(Category.objects.all().values_list('Name', flat=True))
+    return result
+
+
+@non_cached_view(methods=['GET'])
+def fake_error(request):
+    raise Exception('FAKE ERROR')
 
 
 @non_cached_view(methods=['POST'], json_renderer=json_renderer)
@@ -456,5 +471,5 @@ def live_events(request):
                  validator=lambda request, event_id: delete_event_validator(request, event_id))
 def delete_event(request, event_id):
     result = ResponseResult()
-    event_controller.DeleteEvent(event_id)
+    event_controller.delete_event(event_id)
     return result

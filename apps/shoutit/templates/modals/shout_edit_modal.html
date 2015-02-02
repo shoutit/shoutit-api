@@ -100,7 +100,7 @@
     });
 
     var img = null;
-    {% for image in shout.GetImages %}
+    {% for image in shout.get_images %}
       img = $('<img id=img_' + id + ' src="{{ image.image }}" />');
       $('form#shout_{{ method }}_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
       $('form#shout_{{ method }}_form').append('<input id=input_' + id + ' type="hidden" value="{{ image.image }}" name="images"/>');
