@@ -167,6 +167,10 @@ function requestAjaxily(config) {
     clearMessages();
     show_loading();
 
+    $.ajaxSetup({
+        headers: { 'Shoutit-Client': 'web' }
+    });
+
     $.ajax({
         url: config.url,
         data: config.data,

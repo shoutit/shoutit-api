@@ -233,7 +233,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-print "loading mw..."
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -256,8 +255,6 @@ MIDDLEWARE_CLASSES = (
 
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
-
-print "mw loaded."
 
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
@@ -476,35 +473,26 @@ FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
 # Google App
 GOOGLE_APP = {
     'CLIENTS': {
-        '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com': {
+        'web': {
             'NAME': 'web',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com.json'
+            'FILE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'config', 'clients',
+                                 'client_secret_935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com.json')
         },
 
-        '935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com': {
-            'NAME': 'android',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com.json'
+        'android': {
+            'FILE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'config', 'clients',
+                                 'client_secret_935842257865-5nv3ii73vo74cvjmb8ifrgepd6evk57c.apps.googleusercontent.com.json')
         },
 
-        '935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com': {
+        'ios': {
             'NAME': 'ios',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com.json'
+            'FILE': os.path.join(BASE_DIR, 'apps', 'shoutit', 'config', 'clients',
+                                 'client_secret_935842257865-fn0drh3kq0880f97fdjd3iipb1fme4jp.apps.googleusercontent.com.json')
         },
 
-        '935842257865-vr43ma66p1euc6n599uml1ldvgfm27n7.apps.googleusercontent.com': {
-            'NAME': 'android2',
-            'FILE': BASE_DIR + '/apps/shoutit/config/clients/client_secret_935842257865-vr43ma66p1euc6n599uml1ldvgfm27n7.apps.googleusercontent.com.json'
-        }
     }
 }
 
-GOOGLE_APP_CLIENT_ID = '935842257865-s6069gqjq4bvpi4rcbjtdtn2kggrvi06.apps.googleusercontent.com'
-GOOGLE_APP_CLIENT_SECRET = 'VzqpJcFV8C3X18qMKF50ogup'
-
-# from apiclient.discovery import build
-#
-# if not OFFLINE_MODE:
-#     GPLUS_SERVICE = build('plus', 'v1')
 
 # Contact Import
 CONTACT_IMPORT_SETTINGS = {
