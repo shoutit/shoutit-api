@@ -10,7 +10,6 @@ DJANGO_SETTINGS_MODULE=settings             # which settings file should Django 
 DJANGO_WSGI_MODULE=wsgi                     # WSGI module name
  
 echo "Starting $NAME as `whoami`"
-echo $DJANGODIR
 
 # Activate the virtual environment
 cd $DJANGODIR
@@ -24,6 +23,11 @@ test -d $RUNDIR || mkdir -p $RUNDIR
  
 # Start your Django Unicorn
 # Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
-gunicorn ${DJANGO_WSGI_MODULE}:application --name $NAME --workers $NUM_WORKERS --log-level=warning --log-file=- --bind=0.0.0.0:8001
+exec gunicorn ${DJANGO_WSGI_MODULE} \
+  --name $NAME \
+  --workers $NUM_WORKERS \
+  --log-level warning \
+  --log-file -
+  --bind 0.0.0.0:8001
   # --user=$USER --group=$GROUP \
   # --bind=unix:$SOCKFILE \
