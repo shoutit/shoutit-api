@@ -22,6 +22,11 @@ class UUIDModel(models.Model):
         abstract = True
         app_label = 'shoutit'
 
+    def save(self, force_insert=False, force_update=False, **kwargs):
+        if not (force_insert or force_update):
+            self.full_clean()
+        super(UUIDModel, self).save(force_insert, force_update, **kwargs)
+
     @property
     def pk(self):
         return str(self.id).lower()
@@ -63,6 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
                                 help_text=_('Required. 30 characters or fewer. Letters, numbers and . / _ characters'),
                                 validators=[
                                     validators.RegexValidator(re.compile('^[\w.]+$'), _('Enter a valid username.'), 'invalid'),
+                                    validators.MinLengthValidator(2)
                                 ])
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
