@@ -1,5 +1,5 @@
 #!/bin/bash 
-NAME="shoutit_backend_dev"                                  # Name of the application
+NAME="shoutit_backend_prod"                                  # Name of the application
 ENVDIR=/opt/myenv
 DJANGODIR=$ENVDIR/shoutit/shoutit_backend_dev            # Django project directory
 SOCKFILE=$ENVDIR/shoutit/run/shoutit_backend_dev.sock  # we will communicte using this unix socket
