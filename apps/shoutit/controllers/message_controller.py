@@ -45,7 +45,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
     for attachment in attachments:
         object_id = attachment['object_id']
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
+        MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()
 
     notifications_controller.notify_user_of_message(to_user, message)
     email_controller.send_message_email(message)
@@ -311,7 +311,7 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
     for attachment in attachments:
         object_id = attachment['object_id']
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
+        MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()
 
     # notifications_controller.notify_user_of_message(to_user, message)
     # email_controller.send_message_email(message)
@@ -328,7 +328,9 @@ def message2_from_message(message):
     """
 
     # get or create Conversation2
-    conversation2, c2_created = Conversation2.objects.get_or_create(id=message.Conversation.id)
+    shout = message.Conversation.AboutPost
+    ct = ContentType.objects.get_for_model(shout)
+    conversation2, c2_created = Conversation2.objects.get_or_create(id=message.Conversation.id, content_type=ct, object_id=shout.id)
     if c2_created:
         conversation2.users = [message.FromUser, message.ToUser]
 
