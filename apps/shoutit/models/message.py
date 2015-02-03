@@ -32,13 +32,14 @@ class Message(UUIDModel):
 
     def __unicode__(self):
         try:
-            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text
+            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text[:50]
         except AttributeError:
             return unicode(self.pk)
 
 
 class MessageAttachment(UUIDModel, AttachedObjectMixin):
     message = models.ForeignKey('shoutit.Message', related_name='attachments')
+    conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
 
     def __unicode__(self):
         return self.pk + "for message: " + self.message.pk
@@ -100,12 +101,16 @@ class Conversation2(UUIDModel, AttachedObjectMixin):
             messages = messages.filter(created_at__gt=datetime.fromtimestamp(after))
         return messages[:limit][::-1]
 
+    @property
+    def messages_attachments(self):
+        return MessageAttachment.objects.filter(conversation_id=self.id)
+
 
 class Conversation2Delete(UUIDModel):
     """
     Conversation2Delete is to record a user deleting a Conversation2
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_conversations2_set')
     conversation = models.ForeignKey('shoutit.Conversation2', related_name='deleted_set')
 
     class Meta(UUIDModel.Meta):
@@ -125,12 +130,16 @@ class Message2(UUIDModel):
     def __unicode__(self):
         return "%s c at:%s" % (self.message[:30] + '...' if self.message else '<attachment>', self.created_at_unix)
 
+    @property
+    def attachments(self):
+        return MessageAttachment.objects.filter(message_id=self.id)
+
 
 class Message2Read(UUIDModel):
     """
     Message2Read is to record a user reading a Message2
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='read_messages2_set')
     message = models.ForeignKey('shoutit.Message2', related_name='read_set')
     conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages2_read_set')
 
@@ -142,17 +151,9 @@ class Message2Delete(UUIDModel):
     """
     Message2Read is to record a user deleting a Message2
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_messages2_set')
     message = models.ForeignKey(Message2, related_name='deleted_set')
     conversation = models.ForeignKey(Conversation2, related_name='messages2_deleted_set')
 
     class Meta(UUIDModel.Meta):
         unique_together = ('user', 'message', 'conversation')  # so the user can mark the message as 'deleted' only once
-
-
-class Message2Attachment2(UUIDModel, AttachedObjectMixin):
-    message = models.ForeignKey('shoutit.Message2', related_name='attachments2')
-    conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages2_attachments2')
-
-    def __unicode__(self):
-        return self.pk + " for message: " + self.message.pk

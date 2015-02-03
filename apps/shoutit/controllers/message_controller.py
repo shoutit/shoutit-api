@@ -5,7 +5,7 @@ from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
 
 from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade, Conversation2, Message2, \
-    Message2Attachment2, Conversation2Delete, Message2Delete, Message2Read
+    Conversation2Delete, Message2Delete, Message2Read
 from apps.shoutit.controllers import email_controller, notifications_controller, shout_controller
 
 
@@ -24,7 +24,6 @@ def conversation_exist(conversation_id=None, user1=None, user2=None, about=None)
 
 
 def send_message(from_user, to_user, about, text=None, attachments=None, conversation=None):
-
     if not conversation:
         conversation = conversation_exist(user1=from_user, user2=to_user, about=about)
 
@@ -51,15 +50,17 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
     notifications_controller.notify_user_of_message(to_user, message)
     email_controller.send_message_email(message)
 
+    # future compatibility
+    message2_from_message(message)
     return message
 
 
-# todo: simplify this SHIT!
+# todo: deprecate in favor of messaging 2
 def getFullConversationDetails(conversations, user):
     result_conversations = []
     conversation_ids = [conversation.pk for conversation in conversations]
     conversations_messages = Message.objects.filter(Q(Conversation__pk__in=conversation_ids) & (
-    (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
+        (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
         'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile')
     shout_pks = [conversation.AboutPost.pk for conversation in conversations]
 
@@ -122,6 +123,8 @@ def ReadConversation(user, conversation_id):
     messages = Message.objects.filter(
         Q(Conversation=conversation) & ((Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))
     ).order_by('DateCreated')
+    # future compatibility
+    read_conversation2(user, conversation)
     return messages
 
 
@@ -174,6 +177,9 @@ def hide_message_from_user(message, user):
         message.VisibleToRecivier = False
     message.save()
 
+    # future compatibility
+    hide_message2_from_user(message.Conversation, message, user)
+
 
 def GetMessage(pk):
     message = Message.objects.get(pk=pk)
@@ -190,6 +196,9 @@ def hide_conversation_from_user(conversation, user):
         conversation.VisibleToRecivier = False
     conversation.save()
 
+    # future compatibility
+    hide_conversation2_from_user(conversation, user)
+
 
 def ConversationsCount(user):
     return Conversation.objects.filter(
@@ -198,7 +207,7 @@ def ConversationsCount(user):
 
 def UnReadConversationsCount(user):
     return Conversation.objects.filter(Q(Messages__ToUser=user) & Q(Messages__IsRead=False) & (
-    (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).values(
+        (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).values(
         "pk").distinct().count()
 
 
@@ -234,32 +243,28 @@ def conversation2_exist(conversation_id=None, users=None, about=None):
 
 def hide_conversation2_from_user(conversation, user):
     try:
-        conversation_delete = Conversation2Delete.objects.get(user=user, conversation=conversation)
-    except Conversation2Delete.DoesNotExist:
-        conversation_delete = Conversation2Delete(user=user, conversation=conversation)
-
-    conversation_delete.save()
+        Conversation2Delete(user=user, conversation_id=conversation.id).save()
+    except IntegrityError:
+        pass
 
 
 def hide_message2_from_user(conversation, message, user):
     try:
-        Message2Delete(user=user, message=message, conversation=conversation).save()
-    except IntegrityError:
+        Message2Delete(user=user, message_id=message.id, conversation_id=conversation.id).save()
+    except IntegrityError as e:
         pass
 
 
 def mark_message2_as_read(conversation, message, user):
     try:
-        read = Message2Read(user=user, message=message, conversation=conversation)
-        read.save()
+        Message2Read(user=user, message=message, conversation=conversation).save()
     except IntegrityError:
         pass
 
 
 def mark_message2_as_unread(conversation, message, user):
     try:
-        read = Message2Read.objects.filter(user=user, message=message, conversation=conversation)
-        read.delete()
+        Message2Read.objects.get(user=user, message=message, conversation=conversation).delete()
     except Message2Read.DoesNotExist:
         pass
 
@@ -306,7 +311,7 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
     for attachment in attachments:
         object_id = attachment['object_id']
         content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        Message2Attachment2(message=message, content_type=content_type, object_id=object_id).save()
+        MessageAttachment(message=message, content_type=content_type, object_id=object_id).save()
 
     # notifications_controller.notify_user_of_message(to_user, message)
     # email_controller.send_message_email(message)
@@ -314,3 +319,35 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
     return message
 
 
+# backward compatibility functions
+def message2_from_message(message):
+    """
+    Make a Message2 copy of message
+    :type message: Message
+    :return: Message2
+    """
+
+    # get or create Conversation2
+    conversation2, c2_created = Conversation2.objects.get_or_create(id=message.Conversation.id)
+    if c2_created:
+        conversation2.users = [message.FromUser, message.ToUser]
+
+    # get or create Message2
+    message2, m2_created = Message2.objects.get_or_create(id=message.id, conversation=conversation2, user=message.FromUser)
+    if m2_created:
+        message2.message = message.Text
+        message2.save()
+
+    conversation2.last_message = message2
+    conversation2.save()
+
+
+# todo: update to take date range and add it to messaging2
+def read_conversation2(user, conversation):
+    read_messages2_pks = [str(pk) for pk in user.read_messages2_set.filter(conversation_id=conversation.id).values_list('message__pk', flat=True)]
+    other_messages2 = Message2.objects.filter(Q(conversation_id=conversation.id) & ~Q(pk__in=read_messages2_pks))
+    for message2 in other_messages2:
+        try:
+            Message2Read(user=user, message=message2, conversation_id=conversation.id).save()
+        except IntegrityError:
+            pass

@@ -150,33 +150,38 @@ message_api = patterns('',
                                'GET': message_views.read_conversation,
                                'POST': message_views.reply_in_conversation,
                                'DELETE': message_views.delete_conversation
-
-                               # 'GET': message_views.read_conversation2,
-                               # 'POST': message_views.reply_in_conversation2,
-                               # 'DELETE': message_views.delete_conversation2
                            })
                        ),
-
-                       # todo: read conversation, read message
-                       url(r'^read/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': message_views.mark_message_as_read
-                           })
-                       ),
-
-                       # url(r'^messages/([-\w]+)/([-\w]+)/read/$',
-                       #     TieredResource(TieredHandler, oauth, {
-                       #         'POST': message_views.read_message2,
-                       #         'DELETE': message_views.unread_message2
-                       #     })
-                       # ),
 
                        url(r'^(?P<message_id>[-\w]+)/$',
                            TieredResource(TieredHandler, oauth, {
                                'DELETE': message_views.delete_message
-                               # 'DELETE': message_views.delete_message2
                            })
                        ),
+
+)
+
+message2_api = patterns('',
+                        url(r'^$',
+                            TieredResource(TieredHandler, oauth, {
+                                'GET': message_views.read_conversation2,
+                                'POST': message_views.reply_in_conversation2,
+                                'DELETE': message_views.delete_conversation2
+                            })
+                        ),
+
+                        url(r'^(?P<message_id>[-\w]+)/$',
+                            TieredResource(TieredHandler, oauth, {
+                                'DELETE': message_views.delete_message2
+                            })
+                        ),
+
+                        url(r'^(?P<message_id>[-\w]+)/read/$',
+                            TieredResource(TieredHandler, oauth, {
+                                'POST': message_views.read_message2,
+                                'DELETE': message_views.unread_message2
+                            })
+                        ),
 )
 
 tag_api = patterns('',
@@ -282,12 +287,21 @@ urlpatterns = patterns('',
                        url(r'^messages/$',
                            TieredResource(TieredHandler, oauth, {
                                'GET': message_views.read_conversations_stream
-                               # 'GET': message_views.user_conversations
-                           
                            })
                        ),
 
                        url(r'^messages/(?P<conversation_id>[-\w]+)/', include(message_api)),
+
+
+                       # Messages2: not active for now, ready though :)
+
+                       # url(r'^messages2/$',
+                       #     TieredResource(TieredHandler, oauth, {
+                       #         'GET': message_views.user_conversations
+                       #     })
+                       # ),
+                       #
+                       # url(r'^messages2/(?P<conversation_id>[-\w]+)/', include(message2_api)),
 
 
                        # Tags

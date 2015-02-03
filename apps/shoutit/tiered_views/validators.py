@@ -138,16 +138,18 @@ def read_conversation_validator(request, conversation_id):
     return result
 
 
-def read_conversation2_validator(request, conversation_id):
-    uuid_validation = uuid_validator(conversation_id, 'conversation2')
+def conversation2_validator(request, conversation_id):
+    uuid_validation = uuid_validator(conversation_id, 'conversation')
     if not uuid_validation.valid:
         return uuid_validation
     result = object_exists_validator(message_controller.get_conversation2, _('Conversation does not exist.'), conversation_id)
-    if result.valid:
-        conversation = result.data
-        if request.user not in conversation.users.all():
-            return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
-    return result
+    if not result.valid:
+        return result
+    conversation = result.data
+    if request.user not in conversation.users.all():
+        return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
+
+    return ValidationResult(True, data={'conversation': conversation})
 
 
 def message_validator(message):
@@ -304,21 +306,6 @@ def message2_validator(request, conversation_id, message_id):
         return ValidationResult(False, messages=[('error', _("the message doesn't belong to the conversation."))])
 
     return ValidationResult(True, data={'conversation': conversation, 'message': message})
-
-
-def conversation2_validator(request, conversation_id):
-    uuid_validation = uuid_validator(conversation_id, 'conversation')
-    if not uuid_validation.valid:
-        return uuid_validation
-
-    result = object_exists_validator(message_controller.get_conversation2, _('Conversation does not exist.'), conversation_id)
-    if not result.valid:
-        return result
-    conversation = result.data
-    if request.user not in conversation.users.all():
-        return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
-
-    return ValidationResult(True, data={'conversation': conversation})
 
 
 def delete_conversation_validator(request, conversation_id):

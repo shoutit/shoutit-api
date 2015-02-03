@@ -20,7 +20,7 @@ api_urls = {
     'Item': ('/items/%s/', 'pk'),
     'Tag': ('/tags/%s/', 'Name'),
     'Conversation': ('/messages/%s/', 'pk'),
-    'Conversation2': ('messages/%s/', 'pk'),
+    'Conversation2': ('/messages2/%s/', 'pk'),
     'Experience': ('/experiences/%s/', 'pk'),
 
     JSON_URL_MARK_NOTIFICATION_AS_READ: JSON_URL_MARK_NOTIFICATION_AS_READ,

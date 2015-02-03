@@ -1,7 +1,7 @@
 from apps.shoutit.api.api_utils import get_custom_url, get_object_api_url, api_urls, JSON_URL_MARK_NOTIFICATION_AS_READ, \
     JSON_URL_MARK_NOTIFICATION_AS_UNREAD
 from common.constants import *
-from apps.shoutit.models import User, Profile, Business, Tag, Conversation2, Message2, Message2Attachment2, Trade
+from apps.shoutit.models import User, Profile, Business, Tag, Conversation2, Message2, Trade, MessageAttachment
 
 
 # todo: better levels
@@ -202,15 +202,15 @@ def render_message2(message):
         'user': render_user(message.user, level=1),
         'message': message.message,
         'created_at': message.created_at_unix,
-        'attachments': [render_message_attachment(attachment) for attachment in message.attachments2.all()],
+        'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
     }
 
 
 def render_message_attachment(message_attachment):
     """
-    :type message_attachment: Message2Attachment2
+    :type message_attachment: MessageAttachment
     """
-    if not isinstance(message_attachment, Message2Attachment2):
+    if not isinstance(message_attachment, MessageAttachment):
         return {}
     content_type = 'shout'  # todo: possible other content types, therefore other content object
     attached_object = render_shout(message_attachment.attached_object, level=1)
@@ -242,7 +242,7 @@ def render_conversation2(conversation):
     """
     obj = {
         'id': conversation.pk,
-        'url': get_object_url(conversation),
+        'api_url': get_object_api_url(conversation),
         'users': [render_user(user, level=2) for user in conversation.users.all()],
         'last_message': render_message2(conversation.last_message),
         'modified_at': conversation.modified_at_unix,

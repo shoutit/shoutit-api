@@ -1,4 +1,5 @@
 import math
+from django.http import Http404
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
@@ -228,10 +229,10 @@ def user_conversations(request):
     return result
 
 
-@non_cached_view(methods=['GET'], login_required=True, api_renderer=conversation2_api, validator=read_conversation2_validator)
+@non_cached_view(methods=['GET'], login_required=True, api_renderer=conversation2_api, validator=conversation2_validator)
 def read_conversation2(request, conversation_id):
     result = ResponseResult()
-    conversation = request.validation_result.data
+    conversation = request.validation_result.data['conversation']
 
     before = int(request.GET.get('before', 0)) or None
     after = int(request.GET.get('after', 0)) or None
@@ -244,7 +245,7 @@ def read_conversation2(request, conversation_id):
 @non_cached_view(methods=['DELETE'], login_required=True, validator=conversation2_validator, api_renderer=operation_api)
 def delete_conversation2(request, conversation_id):
     result = ResponseResult()
-    conversation = request.validation_result.data
+    conversation = request.validation_result.data['conversation']
     message_controller.hide_conversation2_from_user(conversation, request.user)
     return result
 
