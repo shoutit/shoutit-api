@@ -601,6 +601,39 @@ def update_profile_location(profile, location):
     return profile
 
 
+def update_profile_attributes(profile, new_attributes):
+    user = profile.user
+    updated_user_fields = []
+    updated_profile_fields = []
+
+    if 'username' in new_attributes:
+        user.username = new_attributes['username']
+        updated_user_fields.append('username')
+
+    if 'email' in new_attributes:
+        user.email = new_attributes['email']
+        updated_user_fields.append('email')
+
+    if 'name' in new_attributes:
+        user.first_name = new_attributes['name']['first']
+        user.last_name = new_attributes['name']['last']
+        updated_user_fields.append('first_name')
+        updated_user_fields.append('last_name')
+
+    if 'bio' in new_attributes:
+        profile.Bio = new_attributes['bio']
+        updated_profile_fields.append('Bio')
+
+    if 'sex' in new_attributes:
+        profile.Sex = new_attributes['sex']
+        updated_profile_fields.append('Sex')
+
+    user.save(update_fields=updated_user_fields)
+    profile.save(update_fields=updated_profile_fields)
+
+    return profile
+
+
 # todo: use the give_user_permission
 def give_user_permissions(request, permissions, user=None):
     if request and not user:

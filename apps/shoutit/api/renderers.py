@@ -165,7 +165,7 @@ def render_user(user, level=1, owner=False):
 
     elif isinstance(profile, Business):
         result = {
-            #todo: other business attributes
+            # todo: other business attributes
         }
     return result
 

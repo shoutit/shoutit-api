@@ -353,20 +353,21 @@ function showMessagesAjaxly(id) {
 
 
 function save_location(id_location, id_city, id_country) {
-  if ($('#' + id_location).val() == 'Error') {
+  var location = $('#' + id_location).val();
+  if (location == 'Error') {
     alert('Location Not Valid');
     return;
   }
   var post_data = {
     country: $('#' + id_country).val(),
     city: $('#' + id_city).val(),
-    latitude: $('#' + id_location).val().split(',')[0],
-    longitude: $('#' + id_location).val().split(',')[1]
+    latitude: location.split(',')[0],
+    longitude: location.split(',')[1]
   };
   requestAjaxily({
     url: '/xhr/update_location/',
     data: post_data,
-    type: 'POST',
+    type: 'PUT',
     successCallback: function (data) {
       var user_country = data.data.user_country;
       var user_city = data.data.user_city;

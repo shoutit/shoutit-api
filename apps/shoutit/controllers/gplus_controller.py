@@ -14,8 +14,8 @@ def user_from_gplus_code(request, code, initial_user=None):
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS']['web']['FILE']
-                                                              , scope='', code=code, redirect_uri=redirect_uri)
+        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS']['web']['FILE'], scope='', code=code,
+                                                              redirect_uri=redirect_uri)
     except FlowExchangeError as flowError:
         return flowError, None
 
@@ -60,8 +60,8 @@ def link_gplus_user(request, code):
 
     try:
         # Upgrade the authorization code into a credentials object
-        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS'][settings.GOOGLE_APP_CLIENT_ID]['FILE']
-                                                              , scope='', code=code, redirect_uri=redirect_uri)
+        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_APP['CLIENTS']['web']['FILE'], scope='', code=code,
+                                                              redirect_uri=redirect_uri)
     except FlowExchangeError as flowError:
         return flowError, False
     else:

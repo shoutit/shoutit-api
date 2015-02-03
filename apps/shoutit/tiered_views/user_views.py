@@ -13,17 +13,22 @@ from apps.shoutit.models import ConfirmToken, Business, Profile, Trade, Video
 from apps.shoutit.controllers import user_controller, stream_controller, experience_controller, email_controller, realtime_controller
 from apps.shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from apps.shoutit.controllers.gplus_controller import user_from_gplus_code
-from apps.shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, UserEditProfileForm, ExtenedSignUp
-from apps.shoutit.tiers import cached_view, non_cached_view, refresh_cache, ResponseResult, CACHE_REFRESH_LEVEL_ALL, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
+from apps.shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, \
+    UserEditProfileForm, ExtenedSignUp
+from apps.shoutit.tiers import cached_view, non_cached_view, refresh_cache, ResponseResult, CACHE_REFRESH_LEVEL_ALL, \
+    RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
 from apps.shoutit.tiers import CACHE_TAG_USERS, CACHE_TAG_STREAMS, CACHE_TAG_NOTIFICATIONS
 from apps.shoutit.tiers import CACHE_LEVEL_GLOBAL, CACHE_LEVEL_USER
-from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api, user_video_renderer
+from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api, \
+    user_video_renderer
 from renderers import user_api, operation_api, profiles_api, shouts_api, stats_api, activities_api
-from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
+from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, \
+    resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
 from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator, \
     push_validator
-from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, POST_TYPE_OFFER, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
+from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, \
+    POST_TYPE_OFFER, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 from apps.shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 from apps.shoutit.utils import to_seo_friendly, user_link
 from apps.shoutit.templatetags.template_filters import thumbnail
@@ -321,7 +326,7 @@ def start_listening_to_user(request, username):
                                                                                success_message_type='info'),
                  validator=lambda request, username: object_exists_validator(user_controller.get_profile,
                                                                              _('User %(username)s does not exist.') % {
-                                                                             'username': username}, username))
+                                                                                 'username': username}, username))
 @refresh_cache(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS])
 def stop_listening_to_user(request, username):
     profile = request.validation_result.data
@@ -419,6 +424,7 @@ def signout(request):
 
 def sss(request):
     from apps.shoutit.controllers import shout_controller
+
     if request.method == "POST":
         shout = json.loads(request.POST['json'])
         try:
@@ -466,7 +472,7 @@ def sss(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['POST'], login_required=True, json_renderer=json_data_renderer, api_renderer=user_location)
+@non_cached_view(methods=['PUT'], login_required=True, json_renderer=json_data_renderer, api_renderer=user_location)
 def update_user_location(request):
     result = ResponseResult()
     profile = request.user.profile
@@ -530,6 +536,17 @@ def user_video(request, username):
     return result
 
 
+@csrf_exempt
+@non_cached_view(methods=['PUT'], login_required=True, validator=user_profile_validator, api_renderer=user_api)
+def edit_profile(request, username):
+    result = ResponseResult()
+    profile = request.validation_result.data['profile']
+    new_attributes = request.json_data
+    updated_profile = user_controller.update_profile_attributes(profile, new_attributes)
+    result.data['profile'] = updated_profile
+
+    return result
+
 @non_cached_view(
     json_renderer=edit_profile_renderer_json,
     login_required=True,
@@ -584,15 +601,13 @@ def user_edit_profile(request, username):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_USER,
-             tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS],
-             methods=['GET'],
-             api_renderer=user_api,
-             html_renderer=lambda request, result, username, *args:
-             object_page_html(request, result, isinstance(user_controller.get_profile(username), Profile) and 'user_profile.html' or 'business_profile.html',
-                              'profile' in result.data and result.data['profile'].name or '',
-                              'profile' in result.data and result.data['profile'].Bio or ''),
-             validator=user_profile_validator)
+@non_cached_view(methods=['GET'], api_renderer=user_api, validator=user_profile_validator,
+                 html_renderer=lambda request, result, username, *args:
+                 object_page_html(request, result, isinstance(user_controller.get_profile(username),
+                                                              Profile) and 'user_profile.html' or 'business_profile.html',
+                                  'profile' in result.data and result.data['profile'].name or '',
+                                  'profile' in result.data and result.data['profile'].Bio or ''),
+)
 def user_profile(request, username):
     result = ResponseResult()
     profile = request.validation_result.data['profile']
@@ -657,7 +672,7 @@ def user_profile_brief(request, username):
 
 
 @non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True, api_renderer=push_user_api, validator=push_validator)
-def push(request, push_type):
+def push(request, username, push_type):
     result = ResponseResult()
 
     if request.method == 'POST':

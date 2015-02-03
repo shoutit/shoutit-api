@@ -341,7 +341,7 @@ def user_profile_validator(request, username, *args, **kwargs):
         return ValidationResult(True, data={'profile': profile})
 
 
-def push_validator(request, push_type, *args, **kwargs):
+def push_validator(request, username, push_type, *args, **kwargs):
     if request.method == 'POST':
         token = 'token' in request.json_data and request.json_data['token'] or None
         if not token:

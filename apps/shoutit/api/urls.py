@@ -14,7 +14,8 @@ no_oauth = NoAuthentication()
 user_api = patterns('',
                     url(r'^$',
                         TieredResource(TieredHandler, oauth, {
-                            'GET': user_views.user_profile
+                            'GET': user_views.user_profile,
+                            'PUT': user_views.edit_profile,
                         })
                     ),
 
@@ -69,6 +70,27 @@ user_api = patterns('',
                         })
                     ),
 
+                    url(r'^link/(?P<social_channel>facebook|gplus)/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'POST': relink_social_channel,
+                            'PUT': relink_social_channel,
+                            'DELETE': relink_social_channel
+                        })
+                    ),
+
+                    url(r'^push/(?P<push_type>apns|gcm)/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'GET': user_views.push,
+                            'POST': user_views.push,
+                            'DELETE': user_views.push
+                        })
+                    ),
+
+                    url(r'^location/$',
+                        TieredResource(TieredHandler, oauth, {
+                            'PUT': user_views.update_user_location
+                        })
+                    ),
 
                     url(r'^activities_stream/(?:(\d+)/)?$',
                         TieredResource(TieredHandler, no_oauth, {
@@ -84,6 +106,7 @@ user_api = patterns('',
                     ),
 )
 
+# <editor-fold desc="shout_api">
 shout_api = patterns('',
                      url(r'^stream/',
                          TieredResource(TieredHandler, oauth, {
@@ -143,7 +166,9 @@ shout_api = patterns('',
                          })
                      ),
 )
+# </editor-fold>
 
+# <editor-fold desc="message_api">
 message_api = patterns('',
                        url(r'^$',
                            TieredResource(TieredHandler, oauth, {
@@ -160,7 +185,9 @@ message_api = patterns('',
                        ),
 
 )
+# </editor-fold>
 
+# <editor-fold desc="message2_api">
 message2_api = patterns('',
                         url(r'^$',
                             TieredResource(TieredHandler, oauth, {
@@ -183,7 +210,9 @@ message2_api = patterns('',
                             })
                         ),
 )
+# </editor-fold>
 
+# <editor-fold desc="tag_api">
 tag_api = patterns('',
                    url(r'^$',
                        TieredResource(TieredHandler, oauth, {
@@ -216,7 +245,9 @@ tag_api = patterns('',
                        }), {'profile_type': 'tag'}
                    ),
 )
+# </editor-fold>
 
+# <editor-fold desc="notification_api">
 notification_api = patterns('',
                             url(r'^$',
                                 TieredResource(TieredHandler, oauth, {
@@ -256,6 +287,7 @@ notification_api = patterns('',
 
 
 )
+# </editor-fold>
 
 urlpatterns = patterns('',
                        # Users
@@ -264,13 +296,6 @@ urlpatterns = patterns('',
                            TieredResource(TieredHandler, oauth, {
                                'GET': user_views.search_user,
                                'PUT': user_views.user_edit_profile
-                           })
-                       ),
-
-                       url(r'^users/link_(facebook|gplus)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': relink_social_channel,
-                               'DELETE': relink_social_channel
                            })
                        ),
 
@@ -296,8 +321,8 @@ urlpatterns = patterns('',
                        # Messages2: not active for now, ready though :)
 
                        # url(r'^messages2/$',
-                       #     TieredResource(TieredHandler, oauth, {
-                       #         'GET': message_views.user_conversations
+                       # TieredResource(TieredHandler, oauth, {
+                       # 'GET': message_views.user_conversations
                        #     })
                        # ),
                        #
@@ -353,19 +378,6 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^push/(apns|gcm)/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'GET': user_views.push,
-                               'POST': user_views.push,
-                               'DELETE': user_views.push
-                           })
-                       ),
-
-                       url(r'^update_location/$',
-                           TieredResource(TieredHandler, oauth, {
-                               'POST': user_views.update_user_location
-                           })
-                       ),
                        url(r'^business_categories/$',
                            TieredResource(TieredHandler, no_oauth, {
                                'GET': business_views.business_categories

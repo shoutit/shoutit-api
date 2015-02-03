@@ -102,8 +102,9 @@ class Profile(AbstractProfile):
             object.__setattr__(self, name, value)
 
     def save(self, *args, **kwargs):
-        self.user.save(*args, **kwargs)
-        self.user = self.user
+        # todo: check! do we really need to save the user on profile save?
+        # self.user.save(*args, **kwargs)
+        # self.user = self.user
         super(Profile, self).save(*args, **kwargs)
 
 

@@ -109,7 +109,7 @@ def get_access_token_using_social_channel(request, social_channel=None):
 
 
 @csrf_exempt
-def relink_social_channel(request, social_channel=None):
+def relink_social_channel(request, username, social_channel=None):
 
     if request.method == 'DELETE':
         if social_channel == 'gplus':
@@ -122,7 +122,7 @@ def relink_social_channel(request, social_channel=None):
                 return JsonResponseBadRequest({'error': "at least one social account should be linked"})
             unlink_facebook_user(request)
 
-    elif request.method == 'POST':
+    elif request.method in ['POST', 'PUT']:
 
         try:
             if not (hasattr(request, 'json_data') and isinstance(request.json_data['social_channel_response'], dict)):
