@@ -1,2 +1,4 @@
 # production requirements
 -r common.txt
+
+setproctitle
