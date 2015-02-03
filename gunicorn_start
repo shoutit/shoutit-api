@@ -26,8 +26,8 @@ test -d $RUNDIR || mkdir -p $RUNDIR
 exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --name $NAME \
   --workers $NUM_WORKERS \
-  # --user=$USER --group=$GROUP \
-  # --bind=unix:$SOCKFILE \
-  --bind=0.0.0.0:8001 \
   --log-level=warning \
   --log-file=-
+  --bind=0.0.0.0:8001 \
+  # --user=$USER --group=$GROUP \
+  # --bind=unix:$SOCKFILE \
