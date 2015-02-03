@@ -5,7 +5,7 @@ DJANGODIR=$ENVDIR/shoutit/shoutit_backend_dev            # Django project direct
 SOCKFILE=$ENVDIR/shoutit/run/shoutit_backend_dev.sock  # we will communicte using this unix socket
 # USER=hello                                        # the user to run as
 # GROUP=webapps                                     # the group to run as
-NUM_WORKERS=3                                     # how many worker processes should Gunicorn spawn
+NUM_WORKERS=1                                     # how many worker processes should Gunicorn spawn
 DJANGO_SETTINGS_MODULE=settings             # which settings file should Django use
 DJANGO_WSGI_MODULE=wsgi                     # WSGI module name
  
@@ -28,5 +28,6 @@ exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --workers $NUM_WORKERS \
   # --user=$USER --group=$GROUP \
   # --bind=unix:$SOCKFILE \
-  --log-level=debug \
+  --bind=0.0.0.0:8001 \
+  --log-level=warning \
   --log-file=-
