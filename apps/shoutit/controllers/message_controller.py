@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
@@ -243,28 +244,28 @@ def conversation2_exist(conversation_id=None, users=None, about=None):
 
 def hide_conversation2_from_user(conversation, user):
     try:
-        Conversation2Delete(user=user, conversation_id=conversation.id).save()
+        Conversation2Delete(user=user, conversation_id=conversation.id).save(True)
     except IntegrityError:
         pass
 
 
 def hide_message2_from_user(conversation, message, user):
     try:
-        Message2Delete(user=user, message_id=message.id, conversation_id=conversation.id).save()
-    except IntegrityError as e:
+        Message2Delete(user=user, message_id=message.id, conversation_id=conversation.id).save(True)
+    except IntegrityError:
         pass
 
 
 def mark_message2_as_read(conversation, message, user):
     try:
-        Message2Read(user=user, message=message, conversation=conversation).save()
+        Message2Read(user=user, message_id=message.id, conversation_id=conversation.id).save(True)
     except IntegrityError:
         pass
 
 
 def mark_message2_as_unread(conversation, message, user):
     try:
-        Message2Read.objects.get(user=user, message=message, conversation=conversation).delete()
+        Message2Read.objects.get(user=user, message_id=message.id, conversation_id=conversation.id).delete()
     except Message2Read.DoesNotExist:
         pass
 
