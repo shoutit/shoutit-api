@@ -865,8 +865,8 @@ def activities_stream_json(request, result):
     if not result.errors:
         variables = {
             'posts': result.data['posts'],
-            'constants': constants.post_types,
-            'event_types': constants.event_types
+            'constants': constants.PostType.texts,
+            'event_types': constants.EventType.texts
         }
         variables = RequestContext(request, variables)
         data = {
@@ -1043,7 +1043,7 @@ def live_events_json_renderer(request, result):
         for event in result.data['events']:
             variables = {
                 'event': event,
-                'event_types': constants.event_types
+                'event_types': constants.EventType.texts
             }
             variables = RequestContext(request, variables)
             events_arr.append({'id': event.pk, 'html': render_to_string("event.html", variables)})

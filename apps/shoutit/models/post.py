@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import Q, Sum
 from django.conf import settings
 
-from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType
+from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
 from apps.shoutit.models.base import UUIDModel, AttachedObjectMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -99,7 +99,7 @@ class Post(UUIDModel):
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
     Streams = models.ManyToManyField('shoutit.Stream', related_name='Posts')  # todo: move to stream as posts
 
-    Text = models.TextField(max_length=2000, default='', db_index=True)
+    Text = models.TextField(max_length=2000, default='', db_index=True, blank=True)
     Type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True, choices=PostType.choices)
     DatePublished = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -108,8 +108,8 @@ class Post(UUIDModel):
 
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
-    CountryCode = models.CharField(max_length=2, db_index=True, null=True)
-    ProvinceCode = models.CharField(max_length=200, db_index=True, null=True)
+    CountryCode = models.CharField(max_length=2, db_index=True, null=True, blank=True)
+    ProvinceCode = models.CharField(max_length=200, db_index=True, null=True, blank=True)
     Address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
     objects = PostManager()
@@ -295,9 +295,9 @@ class Comment(UUIDModel):
 
 
 class Event(Post, AttachedObjectMixin):
-    EventType = models.IntegerField(default=0)
+    EventType = models.IntegerField(default=0, choices=EventType.choices)
 
     objects = EventManager()
 
     def __unicode__(self):
-        return unicode(self.pk)
+        return unicode(EventType.values[self.EventType])

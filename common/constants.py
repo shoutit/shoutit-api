@@ -251,15 +251,12 @@ class ExperienceState(Constant):
 EXPERIENCE_DOWN = ExperienceState('Thumbs down')
 EXPERIENCE_UP = ExperienceState('Thumbs up')
 
-post_types = {}
-
 
 class PostType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
-        post_types[text] = self.value
 
 
 POST_TYPE_REQUEST = PostType('Request')
@@ -323,15 +320,12 @@ class RealtimeType(Constant):
 REALTIME_TYPE_NOTIFICATION = RealtimeType('Notification')
 REALTIME_TYPE_EVENT = RealtimeType('Event')
 
-event_types = {}
-
 
 class EventType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
-        event_types[text] = self.value
 
 
 EVENT_TYPE_FOLLOW_USER = EventType('Follow User')
