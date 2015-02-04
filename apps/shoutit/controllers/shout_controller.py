@@ -216,7 +216,7 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     stream = shouter_profile.Stream
     stream2 = shouter_profile.stream2
 
-    item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
+    item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
     trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_REQUEST, Item=item,
                   CountryCode=country, ProvinceCode=city, Address=address, IsSSS=is_sss)
     trade.save()
@@ -265,7 +265,7 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     stream = shouter_profile.Stream
     stream2 = shouter_profile.stream2
 
-    item = item_controller.create_item(name=name, price=price, currency=currency, images=images, videos=videos)
+    item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
     trade = Trade(Text=text, Longitude=longitude, Latitude=latitude, OwnerUser=shouter, Type=POST_TYPE_OFFER,
                   Item=item, CountryCode=country, ProvinceCode=city, Address=address, IsSSS=is_sss)
 

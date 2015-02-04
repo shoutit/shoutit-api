@@ -19,7 +19,7 @@ from PIL.Image import open as image_open
 def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min_buyers, max_buyers, original_price, business_profile,
               country, city, valid_from=None, valid_to=None):
     #currency = Currency.objects.get(Code__iexact = currency)
-    item = item_controller.create_item(name=name, price=price, currency=currency, images=images)
+    item = item_controller.create_item(name=name, price=price, description=description, currency=currency, images=images)
 
     deal = Deal(
         MinBuyers=min_buyers,
