@@ -612,10 +612,12 @@ def update_profile_attributes(profile, new_attributes):
         user.email = new_attributes['email']
         updated_user_fields.append('email')
 
-    if 'name' in new_attributes:
-        user.first_name = new_attributes['name']['first']
-        user.last_name = new_attributes['name']['last']
+    if 'first_name' in new_attributes:
+        user.first_name = new_attributes['first_name']
         updated_user_fields.append('first_name')
+
+    if 'last_name' in new_attributes:
+        user.last_name = new_attributes['last_name']
         updated_user_fields.append('last_name')
 
     if 'bio' in new_attributes:
