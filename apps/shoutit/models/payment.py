@@ -55,8 +55,8 @@ class Voucher(UUIDModel):
 
 
 class DealBuy(UUIDModel):
-    Deal = models.ForeignKey('shoutit.Deal', related_name='Buys', on_delete=models.SET_NULL, null=True)
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True)
+    Deal = models.ForeignKey('shoutit.Deal', related_name='Buys', on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True, blank=True)
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
 
@@ -106,8 +106,8 @@ class ServiceUsage(UUIDModel):
 class Subscription(UUIDModel):
     Type = models.IntegerField(default=0)
     State = models.IntegerField(default=0)
-    SignUpDate = models.DateTimeField(null=True)
-    DeactivateDate = models.DateTimeField(null=True)
+    SignUpDate = models.DateTimeField(null=True, blank=True)
+    DeactivateDate = models.DateTimeField(null=True, blank=True)
     UserName = models.CharField(max_length=64)
     Password = models.CharField(max_length=24)
 

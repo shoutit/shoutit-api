@@ -18,7 +18,7 @@ class PredefinedCity(UUIDModel):
 
 
 class StoredFile(UUIDModel):
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True, blank=True)
     File = models.URLField(max_length=1024)
     Type = models.IntegerField()
 
@@ -63,4 +63,4 @@ class FbContest(UUIDModel):
     ContestId = models.IntegerField(db_index=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)
-    ShareId = models.CharField(max_length=50, null=True, default=None)
+    ShareId = models.CharField(max_length=50, null=True, blank=True, default=None)

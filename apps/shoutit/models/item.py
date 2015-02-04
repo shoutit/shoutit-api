@@ -42,7 +42,7 @@ class Item(UUIDModel):
 class Currency(UUIDModel):
     Code = models.CharField(max_length=10)
     Country = models.CharField(max_length=10, blank=True)
-    Name = models.CharField(max_length=64, null=True)
+    Name = models.CharField(max_length=64, null=True, blank=True)
 
     def __unicode__(self):
         return '[' + self.Code + '] '

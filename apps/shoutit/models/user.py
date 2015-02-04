@@ -15,9 +15,9 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class AbstractProfile(UUIDModel, Stream2Mixin):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True)
-    image = models.URLField(max_length=1024, null=True)
-    video = models.OneToOneField('shoutit.Video', null=True, on_delete=models.SET_NULL)
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True, blank=True)
+    image = models.URLField(max_length=1024, null=True, blank=True)
+    video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
 
     # Location attributes
     Country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
@@ -30,8 +30,8 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
 
 
 class Profile(AbstractProfile):
-    Bio = models.TextField(null=True, max_length=512, default='New Shouter!')
-    Mobile = models.CharField(unique=True, null=True, max_length=20)
+    Bio = models.TextField(null=True, blank=True, max_length=512, default='New Shouter!')
+    Mobile = models.CharField(unique=True, null=True, blank=True, max_length=20)
 
     # todo: [listen] remove
     Following = models.ManyToManyField('shoutit.Stream', through='shoutit.FollowShip')
@@ -41,10 +41,10 @@ class Profile(AbstractProfile):
     Stream = models.OneToOneField('shoutit.Stream', related_name='OwnerUser', db_index=True)
     # isBlocked = models.BooleanField(default=False)
 
-    birthday = models.DateField(null=True)
-    Sex = models.NullBooleanField(default=True, null=True)
+    birthday = models.DateField(null=True, blank=True)
+    Sex = models.NullBooleanField()
 
-    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, default=None, on_delete=models.SET_NULL)
+    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     isSSS = models.BooleanField(default=False, db_index=True)
     isSMS = models.BooleanField(default=False, db_index=True)

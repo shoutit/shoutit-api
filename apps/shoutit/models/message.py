@@ -47,7 +47,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
 class Notification(UUIDModel, AttachedObjectMixin):
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Notifications')
-    FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, default=None)
+    FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
     IsRead = models.BooleanField(default=False)
     Type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
     DateCreated = models.DateTimeField(auto_now_add=True)
@@ -88,7 +88,7 @@ class Conversation2(UUIDModel, AttachedObjectMixin):
     """
     users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations2')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Conversation2Delete', related_name='deleted_conversations2')
-    last_message = models.OneToOneField('shoutit.Message2', related_name='+', null=True)
+    last_message = models.OneToOneField('shoutit.Message2', related_name='+', null=True, blank=True)
 
     def __unicode__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)

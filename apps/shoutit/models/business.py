@@ -21,7 +21,7 @@ class BusinessCategory(UUIDModel):
     Name = models.CharField(max_length=1024, db_index=True, null=False)
     Source = models.IntegerField(default=BUSINESS_SOURCE_TYPE_NONE.value)
     SourceID = models.CharField(max_length=128, blank=True)
-    Parent = models.ForeignKey('self', null=True, default=None, related_name='children')
+    Parent = models.ForeignKey('self', null=True, blank=True, default=None, related_name='children')
 
     objects = BusinessCategoryManager()
 
@@ -36,21 +36,21 @@ class Business(UUIDModel, Stream2Mixin):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='business', db_index=True)
 
     Name = models.CharField(max_length=1024, db_index=True, null=False)
-    Category = models.ForeignKey('shoutit.BusinessCategory', null=True, on_delete=models.SET_NULL)
+    Category = models.ForeignKey('shoutit.BusinessCategory', null=True, blank=True, on_delete=models.SET_NULL)
 
-    image = models.URLField(max_length=1024, null=True)
-    About = models.TextField(null=True, max_length=512, default='')
-    Phone = models.CharField(unique=True, null=True, max_length=20)
-    Website = models.URLField(max_length=1024, null=True)
+    image = models.URLField(max_length=1024, null=True, blank=True)
+    About = models.TextField(null=True, blank=True, max_length=512, default='')
+    Phone = models.CharField(unique=True, null=True, blank=True, max_length=20)
+    Website = models.URLField(max_length=1024, null=True, blank=True)
 
-    Country = models.CharField(max_length=2, db_index=True, null=True)
-    City = models.CharField(max_length=200, db_index=True, null=True)
+    Country = models.CharField(max_length=2, db_index=True, null=True, blank=True)
+    City = models.CharField(max_length=200, db_index=True, null=True, blank=True)
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
-    Address = models.CharField(max_length=200, db_index=True, null=True)
+    Address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
-    Stream = models.OneToOneField('shoutit.Stream', related_name='OwnerBusiness', null=True, db_index=True)
-    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, default=None, on_delete=models.SET_NULL)
+    Stream = models.OneToOneField('shoutit.Stream', related_name='OwnerBusiness', null=True, blank=True, db_index=True)
+    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     Confirmed = models.BooleanField(default=False)
 
@@ -100,24 +100,24 @@ class Business(UUIDModel, Stream2Mixin):
 
 
 class BusinessCreateApplication(UUIDModel):
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL)
-    business = models.ForeignKey('shoutit.Business', related_name='UserApplications', null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessCreateApplication', null=True, blank=True, on_delete=models.SET_NULL)
+    business = models.ForeignKey('shoutit.Business', related_name='UserApplications', null=True, blank=True, on_delete=models.SET_NULL)
 
-    Name = models.CharField(max_length=1024, db_index=True, null=True)
-    Category = models.ForeignKey('shoutit.BusinessCategory', null=True, on_delete=models.SET_NULL)
+    Name = models.CharField(max_length=1024, db_index=True, null=True, blank=True)
+    Category = models.ForeignKey('shoutit.BusinessCategory', null=True, blank=True, on_delete=models.SET_NULL)
 
-    image = models.URLField(max_length=1024, null=True)
-    About = models.TextField(null=True, max_length=512, default='')
-    Phone = models.CharField(null=True, max_length=20)
-    Website = models.URLField(max_length=1024, null=True)
+    image = models.URLField(max_length=1024, null=True, blank=True)
+    About = models.TextField(null=True, blank=True, max_length=512, default='')
+    Phone = models.CharField(null=True, blank=True, max_length=20)
+    Website = models.URLField(max_length=1024, null=True, blank=True)
 
     Longitude = models.FloatField(default=0.0)
     Latitude = models.FloatField(default=0.0)
-    Country = models.CharField(max_length=2, db_index=True, null=True)
-    City = models.CharField(max_length=200, db_index=True, null=True)
-    Address = models.CharField(max_length=200, db_index=True, null=True)
+    Country = models.CharField(max_length=2, db_index=True, null=True, blank=True)
+    City = models.CharField(max_length=200, db_index=True, null=True, blank=True)
+    Address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
-    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, default=None, on_delete=models.SET_NULL)
+    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
     DateApplied = models.DateField(auto_now_add=True)
 
     Status = models.IntegerField(default=int(BUSINESS_CONFIRMATION_STATUS_WAITING), db_index=True)
@@ -149,7 +149,7 @@ class GalleryItem(UUIDModel):
 class Gallery(UUIDModel):
     Description = models.TextField(max_length=500, default='')
     OwnerBusiness = models.ForeignKey('shoutit.Business', related_name='Galleries')
-    Category = models.OneToOneField('shoutit.Category', related_name='+', null=True)
+    Category = models.OneToOneField('shoutit.Category', related_name='+', null=True, blank=True)
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.Description)

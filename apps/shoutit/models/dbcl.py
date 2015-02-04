@@ -41,8 +41,8 @@ User.add_to_class('cl_ad_id', cl_ad_id)
 
 
 class DBCLConversation(UUIDModel):
-    in_email = models.EmailField(max_length=254, null=True)
+    in_email = models.EmailField(max_length=254, null=True, blank=True)
     from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     shout = models.ForeignKey('shoutit.Trade')
-    ref = models.CharField(max_length=100, null=True)
+    ref = models.CharField(max_length=100, null=True, blank=True)

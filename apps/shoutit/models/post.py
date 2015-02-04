@@ -110,7 +110,7 @@ class Post(UUIDModel):
     Longitude = models.FloatField(default=0.0)
     CountryCode = models.CharField(max_length=2, db_index=True, null=True)
     ProvinceCode = models.CharField(max_length=200, db_index=True, null=True)
-    Address = models.CharField(max_length=200, db_index=True, null=True)
+    Address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
     objects = PostManager()
 
@@ -121,7 +121,7 @@ class Post(UUIDModel):
 
 class Shout(Post):
     Tags = models.ManyToManyField('shoutit.Tag', related_name='Shouts')
-    ExpiryDate = models.DateTimeField(null=True, default=None, db_index=True)
+    ExpiryDate = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
     ExpiryNotified = models.BooleanField(default=False)
 
     objects = ShoutManager()
@@ -202,9 +202,9 @@ class ShoutWrap(UUIDModel):
 
 
 class Trade(Shout):
-    Item = models.OneToOneField('shoutit.Item', related_name='Shout', db_index=True, null=True)
-    RelatedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRelated', null=True)
-    RecommendedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRecommended', null=True)
+    Item = models.OneToOneField('shoutit.Item', related_name='Shout', db_index=True, null=True, blank=True)
+    RelatedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRelated', null=True, blank=True)
+    RecommendedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRecommended', null=True, blank=True)
 
     StreamsCode = models.CharField(max_length=2000, default='')
     MaxFollowings = models.IntegerField(default=6)
@@ -223,12 +223,12 @@ class Trade(Shout):
 
 class Deal(Shout):
     MinBuyers = models.IntegerField(default=0)
-    MaxBuyers = models.IntegerField(null=True)
+    MaxBuyers = models.IntegerField(null=True, blank=True)
     OriginalPrice = models.FloatField()
     IsClosed = models.BooleanField(default=False)
-    Item = models.ForeignKey('shoutit.Item', related_name='Deals', on_delete=models.SET_NULL, null=True)
-    ValidFrom = models.DateTimeField(null=True)
-    ValidTo = models.DateTimeField(null=True)
+    Item = models.ForeignKey('shoutit.Item', related_name='Deals', on_delete=models.SET_NULL, null=True, blank=True)
+    ValidFrom = models.DateTimeField(null=True, blank=True)
+    ValidTo = models.DateTimeField(null=True, blank=True)
 
     objects = DealManager()
 
@@ -260,8 +260,8 @@ class SharedExperience(UUIDModel):
 
 # todo: use attached object mixin
 class Video(UUIDModel):
-    shout = models.ForeignKey('shoutit.Shout', related_name='videos', null=True)
-    item = models.ForeignKey('shoutit.Item', related_name='videos', null=True)
+    shout = models.ForeignKey('shoutit.Shout', related_name='videos', null=True, blank=True)
+    item = models.ForeignKey('shoutit.Item', related_name='videos', null=True, blank=True)
 
     url = models.URLField(max_length=1024)
     thumbnail_url = models.URLField(max_length=1024)
@@ -275,8 +275,8 @@ class Video(UUIDModel):
 
 # todo: use attached object mixin
 class StoredImage(UUIDModel):
-    Shout = models.ForeignKey('shoutit.Shout', related_name='Images', null=True)
-    Item = models.ForeignKey('shoutit.Item', related_name='Images', null=True)
+    Shout = models.ForeignKey('shoutit.Shout', related_name='Images', null=True, blank=True)
+    Item = models.ForeignKey('shoutit.Item', related_name='Images', null=True, blank=True)
     image = models.URLField(max_length=1024)
 
     def __unicode__(self):
@@ -284,7 +284,7 @@ class StoredImage(UUIDModel):
 
 
 class Comment(UUIDModel):
-    AboutPost = models.ForeignKey('shoutit.Post', related_name='Comments', null=True)
+    AboutPost = models.ForeignKey('shoutit.Post', related_name='Comments', null=True, blank=True)
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     IsDisabled = models.BooleanField(default=False)
     Text = models.TextField(max_length=300)

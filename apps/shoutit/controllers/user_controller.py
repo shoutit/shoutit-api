@@ -524,7 +524,6 @@ def FollowStream(request, follower, followed):
     if followed not in follower.Following.all():
         followShip = FollowShip(follower=follower, stream=followed)
         followShip.save()
-        follower.save()
         Logger.log(request, type=ACTIVITY_TYPE_LISTEN_CREATED,
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
         if followed.Type == STREAM_TYPE_USER:
@@ -547,7 +546,6 @@ def UnfollowStream(request, follower, followed):
     if followed in follower.Following.all():
         followShip = FollowShip.objects.get(follower=follower, stream=followed)
         followShip.delete()
-        follower.save()
         Logger.log(request, type=ACTIVITY_TYPE_LISTEN_REMOVED,
                    data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
 
