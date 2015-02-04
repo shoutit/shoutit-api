@@ -26,7 +26,7 @@ def render_shout(shout, level=5):
         'description': shout.Text,
         'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
         'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
-        'thumbnail':  videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
+        'thumbnail': videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
         'date_created': shout.DatePublished.strftime('%s'),
         'api_url': get_object_api_url(shout),
         'web_url': shout_link(shout),
@@ -83,7 +83,7 @@ def render_tag_dict(tag_dict):
     return tag
 
 
-#TODO: rendering levels in better way.
+# TODO: rendering levels in better way.
 # 1: username and name
 # 2: url, image, video, sex, is_active
 # 3: date_joined, bio, location
@@ -99,6 +99,7 @@ def render_user(user, level=1, owner=False):
     if isinstance(user, basestring):
         # todo: fix import
         from apps.shoutit.controllers.user_controller import get_profile
+
         profile = get_profile(user)
 
     elif isinstance(user, User):
@@ -117,6 +118,8 @@ def render_user(user, level=1, owner=False):
             'id': user.pk,
             'name': user.name,
             'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
         }
 
         if level >= 2:
@@ -133,7 +136,7 @@ def render_user(user, level=1, owner=False):
                 })
         if level >= 3:
             result.update({
-                'date_joined': user.date_joined.strftime('%s'),
+                'date_joined': user.created_at_unix,
                 'bio': profile.Bio,
                 'location': {
                     'country': profile.Country,
