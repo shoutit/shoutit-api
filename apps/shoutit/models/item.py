@@ -3,7 +3,7 @@ from apps.shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
-    Name = models.CharField(max_length=512, default='')
+    Name = models.CharField(max_length=512, default='', blank=True)
     Description = models.CharField(max_length=1000)
     Price = models.FloatField(default=0.0)
     Currency = models.ForeignKey('shoutit.Currency', related_name='Items')

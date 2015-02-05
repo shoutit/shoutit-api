@@ -6,7 +6,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Tag(UUIDModel, Stream2Mixin):
-    Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
+    Name = models.CharField(max_length=100, default='', blank=True, unique=True, db_index=True)
     Creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True, on_delete=models.SET_NULL)
     image = models.URLField(max_length=1024, null=True, blank=True, default='/static/img/shout_tag.png')
     DateCreated = models.DateTimeField(auto_now_add=True)
@@ -25,7 +25,7 @@ class Tag(UUIDModel, Stream2Mixin):
 
 
 class Category(UUIDModel):
-    Name = models.CharField(max_length=100, default='', unique=True, db_index=True)
+    Name = models.CharField(max_length=100, default='', blank=True, unique=True, db_index=True)
     TopTag = models.OneToOneField('shoutit.Tag', related_name='OwnerCategory', null=True, blank=True)
     Tags = models.ManyToManyField('shoutit.Tag', related_name='Category', null=True, blank=True)
 

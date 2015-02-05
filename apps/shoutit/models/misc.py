@@ -6,9 +6,9 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel):
-    City = models.CharField(max_length=200, default='', db_index=True, unique=True)
-    city_encoded = models.CharField(max_length=200, default='', db_index=True, unique=True)
-    Country = models.CharField(max_length=2, default='', db_index=True)
+    City = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
+    city_encoded = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
+    Country = models.CharField(max_length=2, default='', blank=True, db_index=True)
     Latitude = models.FloatField(default=0.0)
     Longitude = models.FloatField(default=0.0)
     Approved = models.BooleanField(default=False)

@@ -11,6 +11,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from uuidfield import UUIDField
+from common.utils import date_unix
 
 
 class UUIDModel(models.Model):
@@ -33,11 +34,11 @@ class UUIDModel(models.Model):
 
     @property
     def created_at_unix(self):
-        return int((self.created_at - datetime(1970, 1, 1)).total_seconds())
+        return date_unix(self.created_at)
 
     @property
     def modified_at_unix(self):
-        return int((self.modified_at - datetime(1970, 1, 1)).total_seconds())
+        return date_unix(self.modified_at)
 
 
 class AttachedObjectMixinManager(models.Manager):
@@ -65,7 +66,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
     Username, password and email are required. Other fields are optional.
     """
     username = models.CharField(_('username'), max_length=30, unique=True,
-                                help_text=_('Required. 30 characters or fewer. Letters, numbers and . / _ characters'),
+                                help_text=_('Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
                                 validators=[
                                     validators.RegexValidator(re.compile('^[\w.]+$'), _('Enter a valid username.'), 'invalid'),
                                     validators.MinLengthValidator(2)

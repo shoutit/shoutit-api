@@ -66,7 +66,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
 class Report(UUIDModel, AttachedObjectMixin):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Reports')
-    Text = models.TextField(default='', max_length=300)
+    Text = models.TextField(default='', blank=True, max_length=300)
     Type = models.IntegerField(default=0)
     IsSolved = models.BooleanField(default=False)
     IsDisabled = models.BooleanField(default=False)

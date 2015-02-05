@@ -99,7 +99,7 @@ class Post(UUIDModel):
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
     Streams = models.ManyToManyField('shoutit.Stream', related_name='Posts')  # todo: move to stream as posts
 
-    Text = models.TextField(max_length=2000, default='', db_index=True, blank=True)
+    Text = models.TextField(max_length=2000, default='', blank=True, db_index=True, blank=True)
     Type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True, choices=PostType.choices)
     DatePublished = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -206,7 +206,7 @@ class Trade(Shout):
     RelatedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRelated', null=True, blank=True)
     RecommendedStream = models.OneToOneField('shoutit.Stream', related_name='InitShoutRecommended', null=True, blank=True)
 
-    StreamsCode = models.CharField(max_length=2000, default='')
+    StreamsCode = models.CharField(max_length=2000, default='', blank=True)
     MaxFollowings = models.IntegerField(default=6)
     MaxDistance = models.FloatField(default=180.0)
     MaxPrice = models.FloatField(default=1.0)
