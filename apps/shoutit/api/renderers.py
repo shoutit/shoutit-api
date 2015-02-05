@@ -1,6 +1,7 @@
 from apps.shoutit.api.api_utils import get_custom_url, get_object_api_url, api_urls, JSON_URL_MARK_NOTIFICATION_AS_READ, \
     JSON_URL_MARK_NOTIFICATION_AS_UNREAD
 from common.constants import *
+from common.utils import date_unix
 from apps.shoutit.models import User, Profile, Business, Tag, Conversation2, Message2, Trade, MessageAttachment
 
 
@@ -136,7 +137,7 @@ def render_user(user, level=1, owner=False):
                 })
         if level >= 3:
             result.update({
-                'date_joined': user.created_at_unix,
+                'date_joined': date_unix(user.date_joined),
                 'bio': profile.Bio,
                 'location': {
                     'country': profile.Country,

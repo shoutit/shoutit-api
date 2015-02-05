@@ -81,7 +81,9 @@
       "user_permissions": [],
       "password": "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg=",
       "email": "mo.chawich@gmail.com",
-      "date_joined": "2014-09-03T00:46:18"
+      "date_joined": "2014-09-03T00:46:18",
+      "created_at": "2014-09-03T00:46:18",
+      "modified_at": "2014-09-03T00:46:18"
     }
   },
 
@@ -100,7 +102,9 @@
       "user_permissions": [],
       "password": "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg=",
       "email": "noor.syron@gmail.com",
-      "date_joined": "2014-09-03T00:46:18"
+      "date_joined": "2014-09-03T00:46:18",
+      "created_at": "2014-09-03T00:46:18",
+      "modified_at": "2014-09-03T00:46:18"
     }
   },
 
@@ -140,7 +144,9 @@
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "Latitude": 25.1993957,
       "Interests": [],
-      "LastToken": null
+      "LastToken": null,
+      "created_at": "2014-09-03T00:46:18",
+      "modified_at": "2014-09-03T00:46:18"
     }
   },
 
@@ -162,7 +168,10 @@
       "user": "D7A555BA-8618-4962-A46B-E342AFF21AFA",
       "Latitude": 25.1993957,
       "Interests": [],
-      "LastToken": null
+      "LastToken": null,
+      "created_at": "2014-09-03T00:46:18",
+      "modified_at": "2014-09-03T00:46:18"
+
     }
   },
 

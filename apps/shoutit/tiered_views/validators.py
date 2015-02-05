@@ -1,4 +1,5 @@
 import uuid
+from jsonschema import Draft4Validator, FormatChecker
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
@@ -8,7 +9,7 @@ from common.constants import *
 from apps.shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
 from apps.shoutit.controllers import shout_controller, business_controller, experience_controller, comment_controller, event_controller
 from apps.shoutit.controllers import tag_controller
-from apps.shoutit.controllers import user_controller
+from apps.shoutit.controllers.user_controller import get_profile, GetProfile
 from apps.shoutit.controllers import message_controller
 from apps.shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, \
     BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
@@ -16,14 +17,45 @@ from apps.shoutit.tiers import ValidationResult, RESPONSE_RESULT_ERROR_404, RESP
     RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN
 
 
-def object_exists_validator(function, message='', *args, **kwargs):
+def form_errors(schema_errors):
+    f_errors = []
+    for se in schema_errors:
+        f_errors.append(('.'.join(list(se.path)), se.message))
+    return f_errors
+
+
+def uuid_validator(uuid_string):
     try:
+        uuid.UUID(uuid_string)
+        return ValidationResult(True)
+    except (ValueError, TypeError):
+        return ValidationResult(False)
+
+
+def object_exists_validator(function, using_uuid, error_message='object does not exist', *args, **kwargs):
+    try:
+        if using_uuid:
+            if not uuid_validator(args[0]):
+                raise ValueError()
+
         result = function(*args, **kwargs)
         if not result:
             raise ObjectDoesNotExist()
-    except ObjectDoesNotExist:
-        return ValidationResult(False, messages=[('error', message)], errors=[RESPONSE_RESULT_ERROR_404])
-    return ValidationResult(True, data=result)
+
+        return ValidationResult(True, data=result)
+
+    except (ValueError, ObjectDoesNotExist):
+        return ValidationResult(False, messages=[('error', error_message)], errors=[RESPONSE_RESULT_ERROR_404])
+
+
+def access_validator(request, obj, owner, extras=None):
+    if request.method in ['POST', 'PUT', 'DELETE'] and request.user != owner:
+        return ValidationResult(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
+    else:
+        data = {obj.__class__.__name__: obj}
+        if isinstance(extras, dict):
+            data.update(extras)
+        return ValidationResult(True, data=data)
 
 
 # todo: default param
@@ -45,7 +77,7 @@ def shout_form_validator(request, form_class, message='You have entered some inv
                 OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             return ValidationResult(False, messages=[
                 ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],
-                errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+                                    errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
     return validation_result
 
 
@@ -55,7 +87,7 @@ def send_message_validator(request, shout_id, conversation_id):
     if result.valid:
 
         # 2 - validating the shout
-        result = object_exists_validator(shout_controller.get_post, _('Shout does not exist.'), shout_id, True, True)
+        result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, True, True)
         if result.valid:
             shout = result.data
             conversation = None
@@ -66,7 +98,7 @@ def send_message_validator(request, shout_id, conversation_id):
 
             # 4 - if there is conversation_id, make sure the conversation exists
             if conversation_id:
-                result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'),
+                result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'),
                                                  conversation_id, request.user)
                 if result.valid:
                     conversation = result.data
@@ -83,17 +115,18 @@ def profile_picture_validator(request, profile_type='', size='', tag_name='', us
         result = user_profile_validator(request, username)
 
     elif profile_type == 'tag':
-        result = object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name)
+        result = object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
+                                         tag_name)
 
     return result
 
 
 def user_edit_profile_validator(request, username, email):
-    result = object_exists_validator(user_controller.get_profile, _('User %(username)s does not exist.') % {'username': username}, username)
+    result = object_exists_validator(get_profile, False, _('User %(username)s does not exist.') % {'username': username}, username)
     if result.valid:
+        profile = result.data
         if username == request.user.username or request.user.is_staff:
             init = {'username': username, 'email': email}
-            profile = user_controller.GetProfile(request.user)
             if profile and isinstance(profile, Profile):
                 result = form_validator(request, UserEditProfileForm, initial=init)
             elif profile and isinstance(profile, Business):
@@ -107,30 +140,9 @@ def user_edit_profile_validator(request, username, email):
     return result
 
 
-def uuid_validator(uuid_string, name=''):
-    try:
-        uuid.UUID(uuid_string)
-        return ValidationResult(True)
-    except (ValueError, TypeError):
-        return ValidationResult(False, messages=[('error', _("Invalid %(name)s id") % {'name': name})],
-                                errors=[RESPONSE_RESULT_ERROR_404])
-
-
-def access_validator(request, obj, owner, extras=None):
-    if request.method in ['POST', 'PUT', 'DELETE'] and request.user != owner:
-        return ValidationResult(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
-    else:
-        data = {obj.__class__.__name__: obj}
-        if isinstance(extras, dict):
-            data.update(extras)
-        return ValidationResult(True, data=data)
-
-
 def read_conversation_validator(request, conversation_id):
-    uuid_validation = uuid_validator(conversation_id, 'conversation')
-    if not uuid_validation.valid:
-        return uuid_validation
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id, request.user)
+    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id,
+                                     request.user)
     if result.valid:
         conversation = result.data
         if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
@@ -139,10 +151,7 @@ def read_conversation_validator(request, conversation_id):
 
 
 def conversation2_validator(request, conversation_id):
-    uuid_validation = uuid_validator(conversation_id, 'conversation')
-    if not uuid_validation.valid:
-        return uuid_validation
-    result = object_exists_validator(message_controller.get_conversation2, _('Conversation does not exist.'), conversation_id)
+    result = object_exists_validator(message_controller.get_conversation2, True, _('Conversation does not exist.'), conversation_id)
     if not result.valid:
         return result
     conversation = result.data
@@ -181,7 +190,7 @@ def reply_in_conversation_validator(request, conversation_id):
     if not result.valid:
         return result
 
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id,
+    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id,
                                      request.user)
     if result.valid:
         conversation = result.data
@@ -220,7 +229,7 @@ def reply_to_shout_validator(request, shout_id):
     if not result.valid:
         return result
 
-    result = object_exists_validator(shout_controller.get_post, _('Shout does not exist.'), shout_id)
+    result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id)
     if result.valid:
         shout = result.data
         if request.user.pk == shout.OwnerUser.pk:
@@ -237,17 +246,14 @@ def modify_shout_validator(request, shout_id):
     if not request.user.is_authenticated():
         return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN], messages=[('error', _('You are not signed in.'))])
 
-    uuid_validation = uuid_validator(shout_id, 'shout')
-    if not uuid_validation.valid:
-        return uuid_validation
-
-    result = object_exists_validator(shout_controller.get_post, _('Shout does not exist.'), shout_id, True, True)
+    result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, True, True)
     if result.valid:
         shout = result.data
         if shout.OwnerUser == request.user or request.user.is_staff:
             return ValidationResult(True, data={'shout': shout})
         else:
-            return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_404], messages=[('error', _('You are not allowed to modify this shout.'))])
+            return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_404],
+                                    messages=[('error', _('You are not allowed to modify this shout.'))])
     else:
         return result
 
@@ -267,17 +273,8 @@ def edit_shout_validator(request, shout_id):
     return ValidationResult(True, data={'shout': shout, 'form': form})
 
 
-
 def delete_message_validator(request, conversation_id, message_id):
-    uuid_validation = uuid_validator(conversation_id, 'conversation')
-    if not uuid_validation.valid:
-        return uuid_validation
-
-    uuid_validation = uuid_validator(message_id, 'message')
-    if not uuid_validation.valid:
-        return uuid_validation
-
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
+    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id)
     if not result.valid:
         return result
 
@@ -285,7 +282,7 @@ def delete_message_validator(request, conversation_id, message_id):
     if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
         return ValidationResult(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
 
-    return object_exists_validator(message_controller.GetMessage, _('Message does not exist.'), message_id)
+    return object_exists_validator(message_controller.get_message, True, _('Message does not exist.'), message_id)
 
 
 def message2_validator(request, conversation_id, message_id):
@@ -294,11 +291,7 @@ def message2_validator(request, conversation_id, message_id):
         return conversation2_validation
     conversation = conversation2_validation.data['conversation']
 
-    uuid_validation = uuid_validator(message_id, 'message')
-    if not uuid_validation.valid:
-        return uuid_validation
-
-    result = object_exists_validator(message_controller.get_message2, _('Message does not exist.'), message_id)
+    result = object_exists_validator(message_controller.get_message2, True, _('Message does not exist.'), message_id)
     if not result.valid:
         return result
     message = result.data
@@ -309,11 +302,7 @@ def message2_validator(request, conversation_id, message_id):
 
 
 def delete_conversation_validator(request, conversation_id):
-    uuid_validation = uuid_validator(conversation_id, 'conversation')
-    if not uuid_validation.valid:
-        return uuid_validation
-
-    result = object_exists_validator(message_controller.get_conversation, _('Conversation does not exist.'), conversation_id)
+    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id)
     conversation = result.data
     if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
         return ValidationResult(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
@@ -327,7 +316,7 @@ def user_profile_validator(request, username, *args, **kwargs):
     elif username == '@me':
         return ValidationResult(False, messages=[('error', _('You are not signed in.'))], errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN])
 
-    result = object_exists_validator(user_controller.get_profile, _('User %(username)s does not exist.') % {'username': username}, username)
+    result = object_exists_validator(get_profile, False, _('User %(username)s does not exist.') % {'username': username}, username)
     if not result.valid:
         return result
     else:
@@ -339,6 +328,32 @@ def user_profile_validator(request, username, *args, **kwargs):
             return ValidationResult(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
 
         return ValidationResult(True, data={'profile': profile})
+
+
+def user_profile_edit_validator(request, username, *args, **kwargs):
+    profile_validation = user_profile_validator(request, username, *args, **kwargs)
+    if not profile_validation:
+        return profile_validation
+
+    instance = request.json_data
+    schema = {
+        'type': 'object',
+        'properties': {
+            'username': {'type': 'string', 'minLength': 2, 'maxLength': 30, 'pattern': '^[\w.]+$'},
+            'first_name': {"type": "string", "minLength": 2, "maxLength": 30},
+            'last_name': {'type': 'string', 'minLength': 2, 'maxLength': 30},
+            'email': {'type': 'string', 'minLength': 2, 'maxLength': 254, 'format': 'email'},
+            'bio': {'type': 'string', 'maxLength': 512},
+            'sex': {'type': 'boolean'},
+        },
+        'additionalProperties': False,
+        'minProperties': 1
+    }
+    v = Draft4Validator(schema, format_checker=FormatChecker())
+    errors = [e for e in v.iter_errors(instance)]
+    if not errors:
+        return ValidationResult(True, data={'profile': profile_validation.data['profile'], 'new_attributes': instance})
+    return ValidationResult(False, form_errors=form_errors(errors))
 
 
 def push_validator(request, username, push_type, *args, **kwargs):
@@ -363,12 +378,8 @@ def activate_api_validator(request, token, *args, **kwargs):
 
 
 def shout_owner_view_validator(request, shout_id):
-    uuid_validation = uuid_validator(shout_id, 'shout')
-    if not uuid_validation.valid:
-        return uuid_validation
-
     find_muted = find_expired = request.user.is_authenticated()
-    result = object_exists_validator(shout_controller.get_post, _('Shout does not exist.'), shout_id, find_muted, find_expired)
+    result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, find_muted, find_expired)
 
     if result.valid:
         shout = shout_controller.get_post(shout_id, True, True)
@@ -379,16 +390,16 @@ def shout_owner_view_validator(request, shout_id):
 
 
 # def post_experience_validator(request,business_name,*args,**kwargs):
-#	result = form_validator(request, ExperienceForm)
-#	if result.valid:
-#		business = business_controller.GetBusiness(business_name)
-#		if not business:
+# result = form_validator(request, ExperienceForm)
+# if result.valid:
+# business = business_controller.GetBusiness(business_name)
+# if not business:
 #			return ValidationResult(False, messages=[('error', _('Business dose not exist.'))],)
 #	return result
 
 
 def share_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.get_post, _('Experience dose not exist.'), exp_id)
+    result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), exp_id)
     if result.valid:
         experience = experience_controller.GetExperience(request.user, exp_id, detailed=True)
         if not experience.canShare:
@@ -407,14 +418,11 @@ def experience_validator(request, *args, **kwargs):
 
 
 def experience_view_validator(request, exp_id, *args, **kwargs):
-    uuid_validation = uuid_validator(exp_id, 'experience')
-    if not uuid_validation.valid:
-        return uuid_validation
-    return object_exists_validator(experience_controller.GetExperience, _('Experience does not exist.'), request.user, exp_id, True)
+    return object_exists_validator(experience_controller.GetExperience, True, _('Experience does not exist.'), request.user, exp_id, True)
 
 
 def edit_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.get_post, _('Experience dose not exist.'), exp_id)
+    result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), exp_id)
     if result.valid:
         experience = experience_controller.GetExperience(request.user, exp_id, detailed=True)
         if not experience.canEdit:
@@ -423,7 +431,7 @@ def edit_experience_validator(request, exp_id, *args, **kwargs):
 
 
 def delete_gallery_item_validator(request, item_id, *args, **kwargs):
-    result = object_exists_validator(GalleryItem.objects.filter, _('Gallery Item dose not exist.'), Item=Item.objects.get(pk=item_id),
+    result = object_exists_validator(GalleryItem.objects.filter, True, _('Gallery Item dose not exist.'), Item=Item.objects.get(pk=item_id),
                                      IsDisable=False)
     if result.valid:
         gallery_item = GalleryItem.objects.filter(Item=Item.objects.get(pk=item_id), IsDisable=False)[0]
@@ -458,12 +466,12 @@ def add_gallery_item_validator(request, business_name, *args, **kwargs):
 def comment_on_post_validator(request, post_id, form_class):
     result = form_validator(request, CommentForm)
     if result.valid:
-        result = object_exists_validator(shout_controller.get_post, _('Experience dose not exist.'), post_id)
+        result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), post_id)
     return result
 
 
 def delete_comment_validator(request, comment_id):
-    result = object_exists_validator(comment_controller.GetCommentByID, _('Comment dose not exist.'), comment_id)
+    result = object_exists_validator(comment_controller.GetCommentByID, True, _('Comment dose not exist.'), comment_id)
     if result.valid:
         comment = comment_controller.GetCommentByID(comment_id)
         if comment.OwnerUser != request.user:
@@ -472,7 +480,7 @@ def delete_comment_validator(request, comment_id):
 
 
 def delete_event_validator(request, event_id):
-    result = object_exists_validator(event_controller.get_event, _('Activity dose not exist.'), event_id)
+    result = object_exists_validator(event_controller.get_event, True, _('Activity dose not exist.'), event_id)
     if result.valid:
         event = event_controller.get_event(event_id)
         if event.OwnerUser != request.user:

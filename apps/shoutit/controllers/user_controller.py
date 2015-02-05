@@ -55,7 +55,7 @@ def search_users(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), sta
             filters |= Q(business__isnull=False, business__Name__icontains=q)
             if flag:
                 if not (flag & int(USER_TYPE_INDIVIDUAL)):
-                    filters &= Q(Profile__isnull=True)
+                    filters &= Q(profile__isnull=True)
                 if not (flag & int(USER_TYPE_BUSINESS)):
                     filters &= Q(business__isnull=True)
 

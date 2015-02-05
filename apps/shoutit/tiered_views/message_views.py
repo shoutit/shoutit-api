@@ -45,7 +45,7 @@ def delete_message(request, conversation_id, message_id):
 
 def get_html_message(request):
     if request.GET[u'type'] == "message":
-        variables = RequestContext(request, {'message': message_controller.GetMessage(request.GET[u'id'])})
+        variables = RequestContext(request, {'message': message_controller.get_message(request.GET[u'id'])})
         data = {'html': render_to_string("message.html", variables)}
     else:
         variables = RequestContext(request, {'conversation': message_controller.get_conversation(request.GET[u'id'],

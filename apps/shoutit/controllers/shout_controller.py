@@ -17,8 +17,7 @@ from apps.shoutit.utils import asynchronous_task, to_seo_friendly
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
-    post = Post.objects.filter(pk__exact=post_id, IsDisabled=False).select_related('OwnerUser', 'OwnerUser__Business',
-                                                                                   'OwnerBusiness__Profile')
+    post = Post.objects.filter(id=post_id, IsDisabled=False).select_related('OwnerUser', 'OwnerUser__Business', 'OwnerBusiness__Profile')
     if not find_muted:
         post = post.filter(IsMuted=False)
 
@@ -51,11 +50,11 @@ def delete_post(post):
     try:
         if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
             event_controller.delete_event_about_obj(post)
-        # todo: check!
-        # elif post.Type == POST_TYPE_DEAL:
-        #     event_controller.delete_event_about_obj(post.shout.deal)
-        # elif post.Type == POST_TYPE_EXPERIENCE:
-        #     event_controller.delete_event_about_obj(post.experience)
+            # todo: check!
+            # elif post.Type == POST_TYPE_DEAL:
+            # event_controller.delete_event_about_obj(post.shout.deal)
+            # elif post.Type == POST_TYPE_EXPERIENCE:
+            #     event_controller.delete_event_about_obj(post.experience)
     except:
         pass
 
@@ -210,8 +209,7 @@ def save_relocated_shouts(trade, stream_type):
 
 
 def post_request(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
-              currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-
+                 currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
     stream = shouter_profile.Stream
     stream2 = shouter_profile.stream2
@@ -225,7 +223,7 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
     predefined_city = PredefinedCity.objects.filter(City=city)
     if not predefined_city:
-            predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
+        predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
         PredefinedCity(City=city, city_encoded=encoded_city, Country=country, Latitude=latitude, Longitude=longitude).save()
 
@@ -260,7 +258,6 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
 # todo: handle exception on each step and in case of errors, rollback!
 def post_offer(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-
     shouter_profile = get_profile(shouter.username)
     stream = shouter_profile.Stream
     stream2 = shouter_profile.stream2
@@ -279,7 +276,7 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
     predefined_city = PredefinedCity.objects.filter(City=city)
     if not predefined_city:
-            predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
+        predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
         PredefinedCity(City=city, city_encoded=encoded_city, Country=country, Latitude=latitude, Longitude=longitude).save()
 
@@ -315,5 +312,6 @@ def get_trade_images(trades):
         trades[i].Item.set_images([image for image in images if image.Item_id == trades[i].Item.pk])
         images = [image for image in images if image.Item_id != trades[i].Item.pk]
     return trades
+
 
 from apps.shoutit.controllers import tag_controller

@@ -290,9 +290,10 @@ def get_initial_api_result(request, result, *args, **kwargs):
             response = rc.ALL_OK
 
     # needs to be dumped before returned with json.dumps in the called function
+    api_errors = result.form_errors.iteritems() if hasattr(result.form_errors, 'iteritems') else result.form_errors
     pre_json_result = {
         'api_messages': [{'type': error[0], 'message': unicode(error[1])} for error in result.messages],
-        'api_errors': [{'key': k, 'messages': v} for k, v in result.form_errors.iteritems()]
+        'api_errors': [{'key': k, 'messages': v} for k, v in api_errors]
     }
 
     response['content-type'] = 'application/json'

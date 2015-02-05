@@ -182,11 +182,10 @@ def hide_message_from_user(message, user):
     hide_message2_from_user(message.Conversation, message, user)
 
 
-def GetMessage(pk):
-    message = Message.objects.get(pk=pk)
-    if message:
-        return message
-    else:
+def get_message(message_id):
+    try:
+        return Message.objects.get(pk=message_id)
+    except Message.DoesNotExist:
         return None
 
 
