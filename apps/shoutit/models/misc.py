@@ -19,7 +19,7 @@ class PredefinedCity(UUIDModel):
 
 class StoredFile(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True, blank=True)
-    File = models.URLField(max_length=1024)
+    File = models.CharField(max_length=1024)
     Type = models.IntegerField()
 
     def __unicode__(self):

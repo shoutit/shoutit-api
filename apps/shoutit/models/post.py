@@ -277,7 +277,7 @@ class Video(UUIDModel):
 class StoredImage(UUIDModel):
     Shout = models.ForeignKey('shoutit.Shout', related_name='Images', null=True, blank=True)
     Item = models.ForeignKey('shoutit.Item', related_name='Images', null=True, blank=True)
-    image = models.URLField(max_length=1024)
+    image = models.CharField(max_length=1024)
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.image + " @ " + unicode(self.Item)
