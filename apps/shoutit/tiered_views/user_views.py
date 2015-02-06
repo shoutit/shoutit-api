@@ -180,10 +180,8 @@ def activate_user(request):
     return result
 
 
-@non_cached_view(api_renderer=operation_api,
-                 methods=['POST'],
+@non_cached_view(methods=['POST'], api_renderer=operation_api,
                  validator=lambda request, *args, **kwargs: form_validator(request, APISignUpForm))
-@refresh_cache(tags=[CACHE_TAG_USERS])
 def api_signup(request):
     form = APISignUpForm(request.POST, request.FILES)
     form.is_valid()
@@ -197,7 +195,6 @@ def api_signup(request):
 
 @csrf_exempt
 @non_cached_view(methods=['POST'], api_renderer=user_api, json_renderer=signin_renderer_json)
-@refresh_cache(tags=[CACHE_TAG_USERS])
 def fb_auth(request):
     result = ResponseResult()
 
@@ -220,7 +217,6 @@ def fb_auth(request):
 
 @csrf_exempt
 @non_cached_view(methods=['POST'], api_renderer=user_api, json_renderer=signin_renderer_json)
-@refresh_cache(tags=[CACHE_REFRESH_LEVEL_ALL])
 def gplus_auth(request):
     result = ResponseResult()
 
@@ -294,14 +290,13 @@ def resend_activation(request):
 
 # todo: validator for @me and not to listen to your self
 @non_cached_view(methods=['GET', 'POST'], login_required=True, api_renderer=operation_api,
+                 permissions_required=[PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER],
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
                      'name': user_controller.get_profile(username).name if user_controller.get_profile(username) else ''}),
                  validator=lambda request, username: object_exists_validator(user_controller.get_profile, False,
                                                                              _('User %(username)s does not exist.') %
-                                                                             {'username': username}, username),
-                 permissions_required=[PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER])
-@refresh_cache(level=CACHE_LEVEL_GLOBAL, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_NOTIFICATIONS])
+                                                                             {'username': username}, username))
 def start_listening_to_user(request, username):
     profile = request.validation_result.data
     stream_controller.listen_to_stream(request.user, profile.stream2)
@@ -314,8 +309,7 @@ def start_listening_to_user(request, username):
 
 
 # todo: validator for @me and not to listen to your self
-@non_cached_view(methods=['GET', 'DELETE'],
-                 login_required=True,
+@non_cached_view(methods=['GET', 'DELETE'], login_required=True,
                  api_renderer=operation_api,
                  json_renderer=lambda request, result, username: json_renderer(request,
                                                                                result,
@@ -327,7 +321,6 @@ def start_listening_to_user(request, username):
                  validator=lambda request, username: object_exists_validator(user_controller.get_profile, False,
                                                                              _('User %(username)s does not exist.') % {
                                                                                  'username': username}, username))
-@refresh_cache(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS])
 def stop_listening_to_user(request, username):
     profile = request.validation_result.data
     stream_controller.remove_listener_from_stream(request.user, profile.stream2)
@@ -339,10 +332,8 @@ def stop_listening_to_user(request, username):
     return ResponseResult()
 
 
-@non_cached_view(
-    json_renderer=lambda request, result, *args, **kwargs: profile_json_renderer(request, result),
-    api_renderer=profiles_api,
-    methods=['GET'])
+@non_cached_view(methods=['GET'], api_renderer=profiles_api,
+                 json_renderer=lambda request, result, *args, **kwargs: profile_json_renderer(request, result))
 def search_user(request):
     result = ResponseResult()
     limit = 6
@@ -387,15 +378,13 @@ def signin(request):
     return result
 
 
-@non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'signup.html', 'Sign Up'),
+@non_cached_view(methods=['GET', 'POST'], validator=lambda request, *args, **kwargs: form_validator(request, SignUpForm),
+                 html_renderer=lambda request, result: page_html(request, result, 'signup.html', 'Sign Up'),
                  json_renderer=lambda request, result: json_renderer(request,
                                                                      result,
                                                                      success_message=_(
                                                                          'Congratulations! You are now a member of the Shout community.')),
-                 api_renderer=operation_api,
-                 methods=['GET', 'POST'],
-                 validator=lambda request, *args, **kwargs: form_validator(request, SignUpForm))
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
+                 api_renderer=operation_api)
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -547,12 +536,12 @@ def edit_profile(request, username):
 
     return result
 
-@non_cached_view(
-    json_renderer=edit_profile_renderer_json,
-    login_required=True,
-    validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.get_profile(username).user.email),
-    permissions_required=[PERMISSION_ACTIVATED])
-@refresh_cache(tags=[CACHE_TAG_USERS])
+
+@non_cached_view(login_required=True, permissions_required=[PERMISSION_ACTIVATED],
+                 json_renderer=edit_profile_renderer_json,
+
+                 validator=lambda request, username: user_edit_profile_validator(request, username,
+                                                                                 user_controller.get_profile(username).user.email))
 def user_edit_profile(request, username):
     result = ResponseResult()
     profile = user_controller.get_profile(username)
@@ -652,11 +641,7 @@ def user_profile(request, username):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_USER,
-             tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS],
-             methods=['GET'],
-             api_renderer=user_api,
-             validator=user_profile_validator)
+@non_cached_view(methods=['GET'], validator=user_profile_validator, api_renderer=user_api)
 def user_profile_brief(request, username):
     result = ResponseResult()
     profile = request.validation_result.data['profile']

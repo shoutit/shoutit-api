@@ -90,11 +90,7 @@ def get_session_data(request, session_key=None):
     return JsonResponse(data=result)
 
 
-@non_cached_view(json_renderer=json_renderer,
-                 api_renderer=operation_api,
-                 methods=['PUT'],
-                 login_required=True)
-@refresh_cache(tags=[CACHE_TAG_NOTIFICATIONS])
+@non_cached_view(methods=['PUT'], login_required=True, json_renderer=json_renderer, api_renderer=operation_api)
 def mark_notification_as_read(request, notification_id):
     result = ResponseResult()
     try:
@@ -106,11 +102,7 @@ def mark_notification_as_read(request, notification_id):
     return result
 
 
-@non_cached_view(json_renderer=json_renderer,
-                 api_renderer=operation_api,
-                 methods=['PUT'],
-                 login_required=True)
-@refresh_cache(tags=[CACHE_TAG_NOTIFICATIONS])
+@non_cached_view(methods=['PUT'], login_required=True, json_renderer=json_renderer, api_renderer=operation_api)
 def mark_notification_as_unread(request, notification_id):
     result = ResponseResult()
     try:
@@ -123,12 +115,9 @@ def mark_notification_as_unread(request, notification_id):
 
 
 # todo: refactor notification views: notifications, notifications_al
-@cached_view(tags=[CACHE_TAG_NOTIFICATIONS],
-             html_renderer=notifications_html,
-             json_renderer=notifications_json,
-             api_renderer=notifications_api,
-             methods=['GET'],
-             login_required=True)
+@non_cached_view(methods=['GET'], login_required=True, html_renderer=notifications_html, json_renderer=notifications_json,
+                 api_renderer=notifications_api
+)
 def notifications(request):
     result = ResponseResult()
     profile = user_controller.GetProfile(request.user)
@@ -141,10 +130,9 @@ def notifications(request):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_NOTIFICATIONS],
-             json_renderer=lambda request, result: json_renderer(request, result, success_message='', data=result.data),
-             api_renderer=unread_notifications_api,
-             methods=['GET'], login_required=True)
+@non_cached_view(methods=['GET'], login_required=True, api_renderer=unread_notifications_api,
+                 json_renderer=lambda request, result: json_renderer(request, result, success_message='', data=result.data)
+)
 def notifications_count(request):
     result = ResponseResult()
     result.data['notifications_count'] = user_controller.get_unread_notifications_count(user_controller.GetProfile(request.user))

@@ -93,7 +93,6 @@ def shout_deal_validator(request):
     login_required=True,
     validator=shout_deal_validator,
 )
-@refresh_cache(tags=[CACHE_TAG_DEALS, CACHE_TAG_STREAMS])
 def shout_deal(request):
     result = ResponseResult()
     if request.method == 'POST':
@@ -128,9 +127,7 @@ def shout_deal(request):
     return result
 
 
-@cached_view(
-    level=CACHE_LEVEL_GLOBAL,
-    tags=[CACHE_TAG_VOUCHERS],
+@non_cached_view(
     json_renderer=json_data_renderer,
     html_renderer=lambda request, result: page_html(request, result, 'voucher_control.html', _('Shout a deal')),
     login_required=True,
@@ -156,13 +153,9 @@ def is_voucher_valid(request):
     return result
 
 
-@non_cached_view(
-    json_renderer=json_data_renderer,
-    html_renderer=lambda request, result: page_html(request, result, 'voucher_control.html', _('Shout a deal')),
-    methods=['GET'],
-    login_required=True,
+@non_cached_view(methods=['GET'], login_required=True, json_renderer=json_data_renderer,
+    html_renderer=lambda request, result: page_html(request, result, 'voucher_control.html', _('Shout a deal'))
 )
-@refresh_cache(tags=[CACHE_TAG_VOUCHERS])
 def invalidate_voucher(request):
     result = ResponseResult()
     if request.GET.has_key('code') and request.GET['code']:
@@ -184,8 +177,7 @@ def invalidate_voucher(request):
     return result
 
 
-@cached_view(
-    tags=[CACHE_TAG_DEALS],
+@non_cached_view(
     methods=['GET'],
     validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, True, _('Deal does not exist.'), deal_id),
     json_renderer=deal_renderer_json,

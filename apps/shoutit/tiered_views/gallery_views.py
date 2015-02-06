@@ -9,8 +9,7 @@ from apps.shoutit.tiered_views.validators import *
 from apps.shoutit.tiers import *
 
 
-@cached_view(methods=['GET'],
-             tags=[CACHE_TAG_GALLERY],
+@non_cached_view(methods=['GET'],
              json_renderer=lambda request, result, *args: gallery_items_stream_json(request, result))
 def galleryItems_stream(request, business_name, page_num=None):
     if not page_num:
@@ -36,7 +35,6 @@ def galleryItems_stream(request, business_name, page_num=None):
     validator=lambda request, business_name: add_gallery_item_validator(request, business_name),
     permissions_required=[PERMISSION_ADD_GALLERY_ITEM]
 )
-@refresh_cache(tags=[CACHE_TAG_GALLERY])
 def add_gallery_item(request, business_name, gallery_id=None):
     result = ResponseResult()
     form = ItemForm(request.POST, request.FILES)
@@ -69,7 +67,6 @@ def add_gallery_item(request, business_name, gallery_id=None):
                                                                               message=_('Your item was edited successfully.')),
     validator=lambda request, item_id: object_exists_validator(item_controller.get_item, True, _('Item does not exist.'), item_id)
 )
-@refresh_cache(tags=[CACHE_TAG_GALLERY])
 def edit_item(request, item_id):
     result = ResponseResult()
     form = ItemForm(request.POST, request.FILES)
@@ -96,7 +93,6 @@ def edit_item(request, item_id):
                                                                               success_message=_('You have deleted the item successfully.')),
                  validator=lambda request, item_id: delete_gallery_item_validator(request, item_id),
 )
-@refresh_cache(tags=[CACHE_TAG_GALLERY])
 def delete_gallery_item(request, item_id):
     gallery_controller.DeleteItemFromGallery(item_id)
     result = ResponseResult()
@@ -113,7 +109,6 @@ def delete_gallery_item(request, item_id):
                                                                             data=result.data.has_key('shout') and {
                                                                             'next': '/shout/' + result.data['shout'].pk} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
-@refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS])
 def shout_item(request, item_id):
     result = ResponseResult()
 

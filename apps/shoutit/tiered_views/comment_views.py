@@ -23,7 +23,6 @@ from apps.shoutit.tiers import non_cached_view, CACHE_TAG_COMMENTS, refresh_cach
                  api_renderer=operation_api,
                  permissions_required=[PERMISSION_COMMENT_ON_POST]
 )
-@refresh_cache(tags=[CACHE_TAG_COMMENTS])
 def comment_on_post(request, post_id):
     result = ResponseResult()
     form = CommentForm(request.POST)
@@ -37,7 +36,6 @@ def comment_on_post(request, post_id):
                  json_renderer=lambda request, result, *args: json_renderer(request, result),
                  validator=lambda request, comment_id: delete_comment_validator(request, comment_id),
 )
-@refresh_cache(tags=[CACHE_TAG_COMMENTS])
 def delete_comment(request, comment_id):
     result = ResponseResult()
     DeleteComment(comment_id)

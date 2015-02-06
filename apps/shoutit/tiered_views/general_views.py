@@ -63,8 +63,7 @@ def learnmore(request):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_TAGS, CACHE_TAG_USERS], methods=['GET'],
-             json_renderer=json_data_renderer)
+@non_cached_view(methods=['GET'], json_renderer=json_data_renderer)
 def hovercard(request):
     type = request.REQUEST['type'] if 'type' in request.REQUEST else None
     name = request.REQUEST['name'] if 'name' in request.REQUEST else None
@@ -357,10 +356,7 @@ def admin_stats(request):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_GLOBAL,
-             tags=[CACHE_TAG_CURRENCIES],
-             methods=['GET'],
-             api_renderer=currencies_api)
+@non_cached_view(methods=['GET'], api_renderer=currencies_api)
 def currencies(request):
     result = ResponseResult()
     # todo: use the cache

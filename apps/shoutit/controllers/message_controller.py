@@ -72,7 +72,7 @@ def getFullConversationDetails(conversations, user):
     conversation_ids = [conversation.pk for conversation in conversations]
     conversations_messages = Message.objects.filter(Q(Conversation__pk__in=conversation_ids) & (
         (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
-        'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile')
+        'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile').order_by('DateCreated')
     shout_pks = [conversation.AboutPost.pk for conversation in conversations]
 
     if shout_pks:

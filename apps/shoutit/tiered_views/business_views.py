@@ -24,7 +24,6 @@ from apps.shoutit.tiers import refresh_cache, non_cached_view, CACHE_TAG_STREAMS
     json_renderer(request, result, success_message=_('Well done, now check your e-mail inbox and follow the instructions')),
     methods=['GET', 'POST'],
     validator=lambda request, *args, **kwargs: form_validator(request, BusinessTempSignUpForm))
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
 def signup_temp(request, tiny_username=None):
     result = ResponseResult()
     business = None
@@ -58,7 +57,6 @@ def signup_temp(request, tiny_username=None):
                                                                             success_message=_(
                                                                                 'Well done, now check your e-mail inbox and follow the instructions')),
                  methods=['GET', 'POST'], )
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
 def signup(request, token=None):
     business = None
     result = ResponseResult()
@@ -219,7 +217,6 @@ def recover_activation(request):
 
 @non_cached_view(json_renderer=lambda request, result, *args: create_tiny_business_renderer_json(request, result),
                  methods=['GET', 'POST'], post_login_required=True)
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
 def create_tiny_business(request):
     if request.method == 'POST':
         form = CreateTinyBusinessForm(request.POST)
@@ -311,7 +308,6 @@ def confirm_business(request):
     login_required=True,
     validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.get_profile(username).user.email),
     permissions_required=[PERMISSION_ACTIVATED])
-@refresh_cache(tags=[CACHE_TAG_USERS])
 def business_edit_profile(request, username):
     profile = user_controller.get_profile(username)
     result = ResponseResult()
@@ -365,7 +361,6 @@ def business_edit_profile(request, username):
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, result.data['template'], 'Subscribe Business'),
                  methods=['GET'], )
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
 def subscribe(request):
     result = ResponseResult()
     user = None

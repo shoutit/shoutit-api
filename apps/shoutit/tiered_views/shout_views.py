@@ -74,10 +74,9 @@ def upload_image(request, method=None):
         return JsonResponseBadRequest({'success': False})
 
 
+@csrf_exempt
 @non_cached_view(methods=['DELETE'], validator=modify_shout_validator, api_renderer=operation_api,
                  json_renderer=lambda request, result, *args, **kwargs: json_renderer(request, result, _('This shout was deleted.')))
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
-@csrf_exempt
 def delete_shout(request, shout_id):
     result = ResponseResult()
     shout = request.validation_result.data['shout']
@@ -85,19 +84,16 @@ def delete_shout(request, shout_id):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS], methods=['GET'], json_renderer=shout_brief_json)
+@non_cached_view(methods=['GET'], json_renderer=shout_brief_json)
 def load_shout(request, shout_id):
     result = ResponseResult()
     result.data['shout'] = shout_controller.get_post(shout_id)
     return result
 
 
-@non_cached_view(methods=['POST'],
+@non_cached_view(methods=['POST'], post_login_required=True, validator=modify_shout_validator,
                  json_renderer=lambda request, result, *args, **kwargs:
-                 json_renderer(request, result, _('This shout was edited successfully.'), data=result.data),
-                 validator=modify_shout_validator,
-                 post_login_required=True)
-@refresh_cache(tags=[CACHE_TAG_STREAMS])
+                 json_renderer(request, result, _('This shout was edited successfully.'), data=result.data))
 def renew_shout(request, shout_id):
     shout_id = shout_id
     shout_controller.RenewShout(request, shout_id)
@@ -106,12 +102,11 @@ def renew_shout(request, shout_id):
 
 
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
+                 permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST],
                  api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
-                               data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
-                 permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST])
-@refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
+                               data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}))
 def post_request(request):
     result = ResponseResult()
     if request.method == 'POST':
@@ -194,12 +189,11 @@ def post_request(request):
 
 # TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
+                 permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER],
                  api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
-                               data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}),
-                 permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
-@refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS, CACHE_TAG_USERS])
+                               data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}))
 def post_offer(request):
     result = ResponseResult()
 
@@ -283,7 +277,6 @@ def post_offer(request):
 @non_cached_view(validator=edit_shout_validator,
                  json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('This shout was edited successfully.'), data=result.data))
-@refresh_cache(tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS])
 def shout_edit(request, shout_id):
     result = ResponseResult()
 
@@ -327,13 +320,12 @@ def shout_edit(request, shout_id):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS, CACHE_TAG_MESSAGES],
-             api_renderer=shout_api,
-             html_renderer=lambda request, result, shout_id:
-             object_page_html(request, result, 'shout.html', 'title' in result.data and result.data['title'] or '',
-                              'desc' in result.data and result.data['desc'] or ''),
-             methods=['GET'],
-             validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id))
+@non_cached_view(methods=['GET'], validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id),
+                 api_renderer=shout_api,
+                 html_renderer=lambda request, result, shout_id:
+                 object_page_html(request, result, 'shout.html', 'title' in result.data and result.data['title'] or '',
+                                  'desc' in result.data and result.data['desc'] or '')
+)
 def shout_view(request, shout_id):
     result = ResponseResult()
     shout_id = shout_id
@@ -382,7 +374,7 @@ def shout_view(request, shout_id):
 
 
 @csrf_exempt
-@cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, api_renderer=shouts_location_api, json_renderer=json_data_renderer)
+@non_cached_view(api_renderer=shouts_location_api, json_renderer=json_data_renderer)
 def nearby_shouts(request):
     result = ResponseResult()
 
@@ -450,7 +442,7 @@ def get_nearest_points_to_clusters(centroids, shout_points, shouts):
     return nearest_points, nearest_points_pks, nearest_points_types, nearest_points_names
 
 
-@cached_view(level=CACHE_LEVEL_GLOBAL, tags=[CACHE_TAG_STREAMS], methods=['GET'], api_renderer=shouts_clusters_api)
+@non_cached_view(methods=['GET'], api_renderer=shouts_clusters_api)
 def load_clusters(request):
     result = ResponseResult()
 

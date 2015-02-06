@@ -23,12 +23,11 @@ from apps.shoutit.tiers import cached_view, CACHE_TAG_COMMENTS, CACHE_TAG_EXPERI
 
 
 # todo: validator
-@cached_view(methods=['GET'], validator=experience_view_validator,
-             tags=[CACHE_TAG_EXPERIENCES, CACHE_TAG_COMMENTS],
-             api_renderer=view_experience_api,
-             html_renderer=lambda request, result, *args: page_html(request, result, 'experience.html',
-                                                                    result.data['page_title'] if result.data['page_title'] else '',
-                                                                    result.data['page_desc'] if result.data['page_desc'] else ''))
+@non_cached_view(methods=['GET'], validator=experience_view_validator,
+                 api_renderer=view_experience_api,
+                 html_renderer=lambda request, result, *args: page_html(request, result, 'experience.html',
+                                                                        result.data['page_title'] if result.data['page_title'] else '',
+                                                                        result.data['page_desc'] if result.data['page_desc'] else ''))
 def view_experience(request, exp_id):
     result = ResponseResult()
     result.data['timestamp'] = time.mktime(datetime.now().timetuple())
@@ -52,9 +51,9 @@ def view_experience(request, exp_id):
 # @cached_view(methods=['GET'],
 # tags=[CACHE_TAG_EXPERIENCES,CACHE_TAG_COMMENTS],
 # json_renderer=lambda request, result, *args: experiences_json(request, result),
-#	html_renderer=lambda request, result, *args: page_html(request, result, 'experiences.html', _('Experiences')))
-#def experiences(request,business_name):
-#	result = ResponseResult()
+# html_renderer=lambda request, result, *args: page_html(request, result, 'experiences.html', _('Experiences')))
+# def experiences(request,business_name):
+# result = ResponseResult()
 #	result.data['timestamp'] = time.mktime(datetime.now().timetuple())
 #	result.data['business_name'] = business_name
 #	result.data['experiences'] = experience_controller.GetExperiences(request.user, business_name, start_index=0, end_index= DEFAULT_PAGE_SIZE)
@@ -63,10 +62,9 @@ def view_experience(request, exp_id):
 #	return result
 
 
-@cached_view(methods=['GET'],
-             tags=[CACHE_TAG_EXPERIENCES, CACHE_TAG_COMMENTS],
-             api_renderer=experiences_api,
-             json_renderer=lambda request, result, *args: experiences_stream_json(request, result))
+@non_cached_view(methods=['GET'],
+                 api_renderer=experiences_api,
+                 json_renderer=lambda request, result, *args: experiences_stream_json(request, result))
 def experiences_stream(request, username, page_num=None):
     if username == '@me':
         username = request.user.username
@@ -107,17 +105,13 @@ def get_business_initials(username):
 
 
 @csrf_exempt
-@non_cached_view(
-    methods=['POST'],
-    login_required=True,
-    json_renderer=lambda request, result, username: post_experience_json_renderer(request, result),
-    api_renderer=view_experience_api,
-    validator=lambda request, *args, **kwargs: experience_validator(request, initial=get_business_initials(
-        args and args[0] or (kwargs.has_key('username') and kwargs['username'] or '')), *args, **kwargs),
-    #	form_validator(request,ExperienceForm),
-    permissions_required=[PERMISSION_POST_EXPERIENCE]
+@non_cached_view(methods=['POST'], login_required=True, permissions_required=[PERMISSION_POST_EXPERIENCE],
+                 json_renderer=lambda request, result, username: post_experience_json_renderer(request, result),
+                 api_renderer=view_experience_api,
+                 validator=lambda request, *args, **kwargs: experience_validator(request, initial=get_business_initials(
+                     args and args[0] or (kwargs.has_key('username') and kwargs['username'] or '')), *args, **kwargs)
+                 # form_validator(request,ExperienceForm),
 )
-@refresh_cache(tags=[CACHE_TAG_EXPERIENCES, CACHE_TAG_USERS])
 def post_exp(request, username=None):
     result = ResponseResult()
     form = ExperienceForm(request.POST)
@@ -148,14 +142,12 @@ def post_exp(request, username=None):
 
 
 @csrf_exempt
-@non_cached_view(
-    methods=['POST'], login_required=True, permissions_required=[PERMISSION_SHARE_EXPERIENCE],
-    api_renderer=operation_api,
-    json_renderer=lambda request, result, exp_id: json_renderer(request, result, success_message=_(
-        'You have shared the experience successfully.')),
-    validator=lambda request, exp_id: share_experience_validator(request, exp_id)
+@non_cached_view(methods=['POST'], login_required=True, permissions_required=[PERMISSION_SHARE_EXPERIENCE],
+                 validator=lambda request, exp_id: share_experience_validator(request, exp_id),
+                 api_renderer=operation_api,
+                 json_renderer=lambda request, result, exp_id: json_renderer(request, result, success_message=_(
+                     'You have shared the experience successfully.'))
 )
-@refresh_cache(tags=[CACHE_TAG_EXPERIENCES])
 def share_experience(request, exp_id):
     shared = ShareExperience(request.user, exp_id)
     result = ResponseResult()
@@ -168,7 +160,6 @@ def share_experience(request, exp_id):
                      'Your experience was edit successfully.')),
                  validator=lambda request, exp_id: edit_experience_validator(request, exp_id)
 )
-@refresh_cache(tags=[CACHE_TAG_EXPERIENCES])
 def edit_experience(request, exp_id):
     result = ResponseResult()
     form = ExperienceForm(request.POST)

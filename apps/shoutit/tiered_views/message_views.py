@@ -23,7 +23,6 @@ from apps.shoutit.xhr_utils import xhr_respond
                  validator=delete_conversation_validator,
                  api_renderer=operation_api,
                  json_renderer=json_data_renderer)
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def delete_conversation(request, conversation_id):
     result = ResponseResult()
     conversation = request.validation_result.data
@@ -35,7 +34,6 @@ def delete_conversation(request, conversation_id):
                  validator=delete_message_validator,
                  api_renderer=operation_api,
                  json_renderer=json_data_renderer)
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def delete_message(request, conversation_id, message_id):
     result = ResponseResult()
     message = request.validation_result.data
@@ -54,11 +52,8 @@ def get_html_message(request):
     return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
 
 
-@cached_view(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_MESSAGES],
-             methods=['GET'],
-             validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id),
-             login_required=True,
-             api_renderer=conversations_api)
+@non_cached_view(methods=['GET'], login_required=True, validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id),
+                 api_renderer=conversations_api)
 def get_shout_conversations(request, shout_id):
     result = ResponseResult()
     shout = shout_controller.get_post(shout_id, True, True)
@@ -67,12 +62,11 @@ def get_shout_conversations(request, shout_id):
     return result
 
 
+@csrf_exempt
 @non_cached_view(json_renderer=json_renderer,
                  api_renderer=operation_api,
                  methods=['POST'],
                  login_required=True)
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
-@csrf_exempt
 def mark_message_as_read(request, message_id):
     result = ResponseResult()
     try:
@@ -106,13 +100,11 @@ def read_conversation(request, conversation_id):
     return result
 
 
-@non_cached_view(post_login_required=True,
-                 methods=['GET', 'POST'],
-                 validator=send_message_validator,
+@non_cached_view(methods=['GET', 'POST'], post_login_required=True, validator=send_message_validator,
                  json_renderer=lambda request, result, shout_id, conversation_id: json_send_message(request, result),
-                 html_renderer=lambda request, result, shout_id, conversation_id: page_html(request, result, 'send_message.html', _('Messages')),
+                 html_renderer=lambda request, result, shout_id, conversation_id: page_html(request, result, 'send_message.html',
+                                                                                            _('Messages')),
                  permissions_required=[PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE])
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def send_message(request, shout_id, conversation_id=None):
     result = ResponseResult()
     validation_result = request.validation_result
@@ -144,7 +136,6 @@ def send_message(request, shout_id, conversation_id=None):
 
 
 @non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation_validator, api_renderer=reply_message_api_render)
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def reply_in_conversation(request, conversation_id):
     """Reply in a Conversation."""
     result = ResponseResult()
@@ -163,7 +154,6 @@ def reply_in_conversation(request, conversation_id):
 
 
 @non_cached_view(login_required=True, methods=['POST'], validator=reply_to_shout_validator, api_renderer=reply_message_api_render)
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def reply_to_shout(request, shout_id):
     """Reply to a Shout for first time. request.user shouldn't be the shout owner."""
     result = ResponseResult()
@@ -181,14 +171,10 @@ def reply_to_shout(request, shout_id):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_MESSAGES],
-             methods=['GET'],
-             login_required=True,
-             api_renderer=conversations_api,
-             json_renderer=lambda request, result, *args, **kwargs: read_conversations_stream_json(request, result))
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
+@non_cached_view(methods=['GET'], login_required=True,
+                 api_renderer=conversations_api,
+                 json_renderer=lambda request, result, *args, **kwargs: read_conversations_stream_json(request, result))
 def read_conversations_stream(request):
-
     result = ResponseResult()
 
     page_num = int(request.GET.get('page', 1))
@@ -201,11 +187,8 @@ def read_conversations_stream(request):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_MESSAGES],
-             login_required=True,
-             methods=['GET'],
-             html_renderer=lambda request, result: page_html(request, result, 'conversations.html', _('Messages')))
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
+@non_cached_view(methods=['GET'], login_required=True,
+                 html_renderer=lambda request, result: page_html(request, result, 'conversations.html', _('Messages')))
 def read_conversations(request):
     result = ResponseResult()
     result.data['conversations'] = message_controller.ReadConversations(request.user, 0, DEFAULT_PAGE_SIZE)
@@ -277,7 +260,7 @@ def reply_in_conversation2(request, conversation_id):
     message_text = validation_result.data['text']
     attachments = validation_result.data['attachments']
 
-    result.data['message'] = message_controller.send_message2(conversation, request.user,  text=message_text, attachments=attachments)
+    result.data['message'] = message_controller.send_message2(conversation, request.user, text=message_text, attachments=attachments)
     result.messages.append(('success', _('Your message was sent successfully.')))
     return result
 

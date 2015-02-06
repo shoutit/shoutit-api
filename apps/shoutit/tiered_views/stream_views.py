@@ -202,8 +202,7 @@ def index_stream(request):
     return result
 
 
-@cached_view(tags=[CACHE_TAG_STREAMS], level=CACHE_LEVEL_GLOBAL, login_required=False, api_renderer=shouts_api,
-             json_renderer=shout_xhr, methods=['GET'])
+@non_cached_view(methods=['GET'], login_required=False, api_renderer=shouts_api, json_renderer=shout_xhr)
 def livetimeline(request, pk=None):
     result = ResponseResult()
 

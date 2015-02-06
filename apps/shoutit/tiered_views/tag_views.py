@@ -11,15 +11,13 @@ from common.constants import *
 from apps.shoutit.templatetags.template_filters import thumbnail
 
 
-@non_cached_view(methods=['GET', 'POST'],
-                 login_required=True,
+@non_cached_view(methods=['GET', 'POST'], login_required=True, permissions_required=[PERMISSION_FOLLOW_TAG],
                  api_renderer=operation_api,
                  json_renderer=lambda request, result, tag_name:
                  json_renderer(request, result, _('You are now listening to shouts about %(tag_name)s.') % {'tag_name': tag_name}),
                  validator=lambda request, tag_name:
-                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name),
-                 permissions_required=[PERMISSION_FOLLOW_TAG])
-@refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
+                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
+                                         tag_name))
 def start_listening_to_tag(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
@@ -33,15 +31,14 @@ def start_listening_to_tag(request, tag_name):
     return result
 
 
-@non_cached_view(methods=['GET', 'DELETE'],
-                 login_required=True,
+@non_cached_view(methods=['GET', 'DELETE'], login_required=True,
                  api_renderer=operation_api,
                  json_renderer=lambda request, result, tag_name:
                  json_renderer(request, result, _('You are no longer listening to shouts about %(tag_name)s.') % {'tag_name': tag_name},
                                success_message_type='info'),
                  validator=lambda request, tag_name:
-                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
-@refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
+                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
+                                         tag_name))
 def stop_listening_to_tag(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
@@ -55,11 +52,7 @@ def stop_listening_to_tag(request, tag_name):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_GLOBAL,
-             tags=[CACHE_TAG_TAGS],
-             api_renderer=tags_api,
-             json_renderer=json_data_renderer,
-             methods=['GET'])
+@non_cached_view(methods=['GET'], api_renderer=tags_api, json_renderer=json_data_renderer)
 def search_tag(request):
     result = ResponseResult()
 
@@ -87,18 +80,13 @@ def search_tag(request):
 
 @non_cached_view(methods=['GET'],
                  json_renderer=json_data_renderer)
-@refresh_cache(tags=[CACHE_TAG_TAGS])
 def set_tag_parent(request):
     result = ResponseResult()
     tag_controller.setTagParent(request.GET[u'child_id'], request.GET[u'parent_name'])
     return result
 
 
-@cached_view(level=CACHE_LEVEL_SESSION,
-             tags=[CACHE_TAG_TAGS],
-             api_renderer=tags_api,
-             json_renderer=json_data_renderer,
-             methods=['GET'])
+@non_cached_view(methods=['GET'], api_renderer=tags_api, json_renderer=json_data_renderer)
 def top_tags(request):
     result = ResponseResult()
 
@@ -125,13 +113,11 @@ def top_tags(request):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_SESSION,
-             tags=[CACHE_TAG_STREAMS, CACHE_TAG_TAGS],
-             methods=['GET'],
-             api_renderer=shouts_api,
-             json_renderer=lambda request, result, tag_name, *args: user_stream_json(request, result),
-             validator=lambda request, tag_name, *args, **kwargs: object_exists_validator(tag_controller.get_tag, False,
-                                                                                          _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
+@non_cached_view(methods=['GET'], api_renderer=shouts_api,
+                 json_renderer=lambda request, result, tag_name, *args: user_stream_json(request, result),
+                 validator=lambda request, tag_name, *args, **kwargs: object_exists_validator(tag_controller.get_tag, False,
+                                                                                              _('Tag %(tag_name)s does not exist.') % {
+                                                                                                  'tag_name': tag_name}, tag_name))
 def tag_stream(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
@@ -155,13 +141,12 @@ def tag_stream(request, tag_name):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_SESSION,
-             tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS],
-             api_renderer=tag_api,
-             html_renderer=lambda request, result, tag_name: object_page_html(request, result, 'tag_profile.html', tag_name),
-             methods=['GET'],
-             validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
-                                                                         _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
+@non_cached_view(methods=['GET'], api_renderer=tag_api,
+                 html_renderer=lambda request, result, tag_name: object_page_html(request, result, 'tag_profile.html', tag_name),
+
+                 validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
+                                                                             _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
+                                                                             tag_name))
 def tag_profile(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
@@ -185,11 +170,10 @@ def tag_profile(request, tag_name):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_SESSION,
-             tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS],
-             methods=['GET'],
-             validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
-                                                                         _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
+@non_cached_view(methods=['GET'],
+                 validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
+                                                                             _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
+                                                                             tag_name))
 def tag_profile_brief(request, tag_name):
     tag = tag_controller.get_tag(tag_name)
     if not tag.image:
@@ -204,12 +188,10 @@ def tag_profile_brief(request, tag_name):
     return result
 
 
-@cached_view(level=CACHE_LEVEL_SESSION,
-             tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS],
-             json_renderer=json_data_renderer,
-             api_renderer=stats_api,
-             validator=lambda request, tag_name:
-             object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
+@non_cached_view(json_renderer=json_data_renderer, api_renderer=stats_api,
+                 validator=lambda request, tag_name:
+                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
+                                         tag_name))
 def tag_stats(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
