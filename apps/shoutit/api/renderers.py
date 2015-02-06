@@ -232,8 +232,6 @@ def render_message_attachment(message_attachment):
         result = {
             'content_type': 'location',
             'location': {
-                'country': message_attachment.attached_object.country,
-                'city': message_attachment.attached_object.city,
                 'latitude': message_attachment.attached_object.latitude,
                 'longitude': message_attachment.attached_object.longitude,
             }
