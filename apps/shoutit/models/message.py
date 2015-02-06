@@ -32,7 +32,7 @@ class Message(UUIDModel):
 
     def __unicode__(self):
         try:
-            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + self.Text[:50]
+            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + (self.Text[:50] if self.Text else '')
         except AttributeError:
             return unicode(self.pk)
 

@@ -241,6 +241,7 @@ def render_message_attachment(message_attachment):
 
     return result
 
+
 def render_conversation(conversation):
     if not conversation:
         return {}

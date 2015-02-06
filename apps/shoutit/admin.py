@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from apps.shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, BusinessCreateApplication, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount
+    StoredFile, Report, BusinessCreateApplication, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment
 # from apps.activity_logger.models import Activity, ActivityData, Request
 # from apps.shoutit.controllers import business_controller
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -197,6 +197,15 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Message, MessageAdmin)
+
+
+# Message Attachment
+class MessageAttachmentAdmin(admin.ModelAdmin):
+    list_display = ('message', 'conversation', 'content_type', 'object_id', 'created_at')
+    search_fields = ['message__id', 'conversation__id']
+
+
+admin.site.register(MessageAttachment, MessageAttachmentAdmin)
 
 
 # Request
