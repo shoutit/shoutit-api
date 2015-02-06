@@ -250,7 +250,7 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
+    event_controller.register_event(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
@@ -301,7 +301,7 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
+    event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
     realtime_controller.BindUserToPost(shouter, trade)
     return trade
 

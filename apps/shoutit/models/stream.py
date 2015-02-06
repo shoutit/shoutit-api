@@ -55,6 +55,7 @@ class Stream(UUIDModel):
         self.Posts.remove(shout)
         self.save()
 
+
 # todo: remove in favor of Listen
 class FollowShip(UUIDModel):
     follower = models.ForeignKey('shoutit.Profile')

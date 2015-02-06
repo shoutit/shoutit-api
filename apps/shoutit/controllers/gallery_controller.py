@@ -33,7 +33,7 @@ def AddItemToGallery(user, gallery, name, price, images, currency, description):
     galleryItem = GalleryItem(Gallery=gallery, Item=item)
     if galleryItem:
         galleryItem.save()
-        event_controller.RegisterEvent(user, EVENT_TYPE_GALLERY_ITEM, galleryItem)
+        event_controller.register_event(user, EVENT_TYPE_GALLERY_ITEM, galleryItem)
     return item
 
 
@@ -76,7 +76,7 @@ def ShoutItem(request, business, item, text, longitude, latitude, country, city,
     save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
-    event_controller.RegisterEvent(request.user, EVENT_TYPE_SHOUT_OFFER, trade)
+    event_controller.register_event(request.user, EVENT_TYPE_SHOUT_OFFER, trade)
     return trade
 
 

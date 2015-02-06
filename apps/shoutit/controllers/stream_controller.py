@@ -82,7 +82,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
                           filter_types=[], filter_query=None, filter_tags=[], nearby_cities=None):
     # Selects shout IDs from database in the right order.
     # ---------------------------------------------------
-    #		user: the User displaying shouts.
+    # user: the User displaying shouts.
     #		rank_type_flag: determines the combination of the types of ranking you like to do.. (see constants.py).
     #		country, city: filtering criteria.
     #		lat, lng: current location.
@@ -320,10 +320,11 @@ def get_trades_by_pks(pks):
     """
     if not pks:
         return []
-    #todo: choose which statement with less queries and enough data
-    #shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = pks)
-    #shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = pks)
-    shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(pk__in=pks)
+    # todo: choose which statement with less queries and enough data
+    # shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = pks)
+    # shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = pks)
+    shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(
+        pk__in=pks)
 
     return attach_related_to_shouts(shout_qs)
 
@@ -333,23 +334,22 @@ def attach_related_to_shouts(shouts, rank_count=None):
     attach tags and images to the shouts to minimize the database queries
     """
     if len(shouts):
-        tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
-        tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout.pk) for shout in shouts])])
-        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__pk'))
+        tags_qs = Tag.objects.select_related('Creator').prefetch_related('Shouts')
+        tags_qs = tags_qs.extra(where=["shout_id IN ({0})".format(','.join(["'{0}'".format(shout.pk) for shout in shouts]))])
+        tags_with_shout_id = list(tags_qs.values('id', 'Name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__id'))
 
-        images = StoredImage.objects.filter(Q(Shout__pk__in=[shout.pk for shout in shouts if shout.Type == POST_TYPE_EXPERIENCE]) | Q(
-            Item__pk__in=[shout.Item.pk for shout in shouts if shout.Type != POST_TYPE_EXPERIENCE])).order_by('image')
+        images = StoredImage.objects.filter(Q(Shout__id__in=[shout.id for shout in shouts if shout.Type == POST_TYPE_EXPERIENCE]) | Q(
+            Item__id__in=[shout.Item.id for shout in shouts if shout.Type != POST_TYPE_EXPERIENCE])).order_by('image')
 
         for shout in shouts:
             if rank_count:
                 shout.rank = ((shout.rank ** 2) * rank_count - shout.time_rank) / (rank_count - 1)
 
-            shout.set_tags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == shout.pk])
-            tags_with_shout_id = [tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) != shout.pk]
+            shout.set_tags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == shout.id])
+            tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['Shouts__id'] != shout.id]
 
-            shout.Item.set_images([image for image in images if image.Item.pk == shout.Item.pk])
-            # reducing the images main array
-            images = [image for image in images if image.Item.pk != shout.Item.pk]
+            shout.Item.set_images([image for image in images if image.Item_id == shout.Item_id])
+            images = [image for image in images if image.Item_id != shout.Item_id]
 
     return list(shouts)
 
@@ -384,8 +384,9 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     """
     return the shouts (offers/requests) in a stream
     """
-    post_pks = [post['pk'] for post in stream.Posts.filter(Type__in=[POST_TYPE_REQUEST, POST_TYPE_OFFER]).order_by('-DatePublished').values('pk')[start_index:end_index]]
-    trades = Trade.objects.filter(pk__in=post_pks).order_by('-DatePublished')
+    shout_types = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
+    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-DatePublished').values_list('id', flat=Trade)[start_index:end_index]
+    trades = list(Trade.objects.filter(id__in=list(post_ids_qs)).order_by('-DatePublished'))
     return attach_related_to_shouts(trades)
 
 

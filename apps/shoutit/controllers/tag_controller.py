@@ -87,7 +87,7 @@ def AddToUserInterests(request, tag, user):
         user.Interests.add(tag)
         user_controller.FollowStream(request, user, tag.Stream)
         user.save()
-        event_controller.RegisterEvent(user.user, EVENT_TYPE_FOLLOW_TAG, tag)
+        event_controller.register_event(user.user, EVENT_TYPE_FOLLOW_TAG, tag)
         Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG: tag.pk, ACTIVITY_DATA_USERNAME: user.username})
 
 

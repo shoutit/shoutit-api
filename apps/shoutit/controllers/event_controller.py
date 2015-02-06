@@ -7,15 +7,14 @@ from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, EVENT_TYPE_FOLL
 from apps.shoutit.models import Event, Tag, Trade, Experience, Deal, Comment, Profile, Business, SharedExperience
 
 
-def RegisterEvent(user, type, attached_object=None):
-    from apps.shoutit.controllers.user_controller import get_profile
+def register_event(user, event_type, attached_object=None):
 
     pk = attached_object and attached_object.pk or None
-    ct = attached_object and ContentType.objects.db_manager(attached_object._state.db).get_for_model(attached_object) or None
-    event = Event(OwnerUser=user, Type=POST_TYPE_EVENT, EventType=type, object_id=pk, content_type=ct)
+    ct = attached_object and ContentType.objects.get_for_model(attached_object) or None
+    event = Event(OwnerUser=user, Type=POST_TYPE_EVENT, EventType=event_type, object_id=pk, content_type=ct)
     event.save()
 
-    profile = get_profile(user.username)
+    profile = user.abstract_profile
     profile.Stream.PublishShout(event)
     profile.stream2.add_post(event)
 
@@ -88,6 +87,7 @@ def get_event(event_id):
 #	if event:
 #		event.IsMuted = True
 #		event.save()
+
 
 def GetDetailedEvents(events):
     from apps.shoutit.controllers.shout_controller import get_trade_images

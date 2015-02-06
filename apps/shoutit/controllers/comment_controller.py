@@ -8,7 +8,7 @@ def CommentOnPost(user, post_id, text):
 	if post:
 		comment = Comment(AboutPost = post,OwnerUser = user,Text = text)
 		comment.save()
-		event_controller.RegisterEvent(user, EVENT_TYPE_COMMENT, comment)
+		event_controller.register_event(user, EVENT_TYPE_COMMENT, comment)
 
 		seen = set()
 		seen_add = seen.add

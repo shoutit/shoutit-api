@@ -67,8 +67,6 @@ class FbContest(UUIDModel):
 
 
 class SharedLocation(UUIDModel):
-    city = models.CharField(max_length=200)
-    country = models.CharField(max_length=2)
     latitude = models.FloatField()
     longitude = models.FloatField()
 

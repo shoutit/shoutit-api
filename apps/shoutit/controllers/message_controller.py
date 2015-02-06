@@ -48,13 +48,12 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
             object_id = attachment['object_id']
             content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
         elif attachment['content_type'] == 'location':
-            if all(attr in attachment['location'] for attr in LOCATION_ATTRIBUTES):
-                location = attachment['location']
-                country, city, latitude, longitude = location['country'], location['city'], location['latitude'], location['longitude']
-                sl = SharedLocation(country=country, city=city, latitude=latitude, longitude=longitude)
+            location = attachment['location']
+            if 'longitude' in location and 'latitude' in location:
+                sl = SharedLocation(latitude=location['latitude'], longitude=location['longitude'])
                 sl.save()
                 object_id = sl.id
-            content_type = ContentType.objects.get_for_model(SharedLocation)  # todo: map the content types to models
+                content_type = ContentType.objects.get_for_model(SharedLocation)  # todo: map the content types to models
 
         if content_type and object_id:
             MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()

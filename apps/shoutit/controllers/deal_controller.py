@@ -48,7 +48,7 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
         tag.Stream.PublishShout(deal)
         tag.stream2.add_post(deal)
 
-    event_controller.RegisterEvent(business_profile.user, EVENT_TYPE_POST_DEAL, deal)
+    event_controller.register_event(business_profile.user, EVENT_TYPE_POST_DEAL, deal)
     return deal
 
 
@@ -257,7 +257,7 @@ def BuyDeal(user, deal, amount):
     deal_buy = DealBuy.objects.create(user=user, Deal=deal, Amount=amount)
     if deal.MaxBuyers and deal.BuyersCount() == deal.MaxBuyers:
         CloseDeal(deal)
-    event_controller.RegisterEvent(user, EVENT_TYPE_BUY_DEAL, deal)
+    event_controller.register_event(user, EVENT_TYPE_BUY_DEAL, deal)
     return deal_buy
 
 

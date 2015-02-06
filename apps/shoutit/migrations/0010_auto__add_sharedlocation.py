@@ -13,8 +13,6 @@ class Migration(SchemaMigration):
             ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=32, primary_key=True)),
             ('created_at', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, null=True, blank=True)),
             ('modified_at', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, null=True, blank=True)),
-            ('city', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('country', self.gf('django.db.models.fields.CharField')(max_length=2)),
             ('latitude', self.gf('django.db.models.fields.FloatField')()),
             ('longitude', self.gf('django.db.models.fields.FloatField')()),
         ))
@@ -329,7 +327,7 @@ class Migration(SchemaMigration):
             'FromUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'received_messages'", 'to': "orm['shoutit.User']"}),
             'IsRead': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'Meta': {'object_name': 'Message'},
-            'Text': ('django.db.models.fields.TextField', [], {'null': 'True'}),
+            'Text': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'ToUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sent_messages'", 'to': "orm['shoutit.User']"}),
             'VisibleToRecivier': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'VisibleToSender': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
@@ -343,7 +341,7 @@ class Migration(SchemaMigration):
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'null': 'True', 'blank': 'True'}),
             'deleted_by': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'deleted_messages2'", 'symmetrical': 'False', 'through': "orm['shoutit.Message2Delete']", 'to': "orm['shoutit.User']"}),
             'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '32', 'primary_key': 'True'}),
-            'message': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'null': 'True'}),
+            'message': ('django.db.models.fields.CharField', [], {'max_length': '2000', 'null': 'True', 'blank': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'null': 'True', 'blank': 'True'}),
             'read_by': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'read_messages2'", 'symmetrical': 'False', 'through': "orm['shoutit.Message2Read']", 'to': "orm['shoutit.User']"}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': "orm['shoutit.User']"})
@@ -516,8 +514,6 @@ class Migration(SchemaMigration):
         },
         'shoutit.sharedlocation': {
             'Meta': {'object_name': 'SharedLocation'},
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
-            'country': ('django.db.models.fields.CharField', [], {'max_length': '2'}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'null': 'True', 'blank': 'True'}),
             'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '32', 'primary_key': 'True'}),
             'latitude': ('django.db.models.fields.FloatField', [], {}),
