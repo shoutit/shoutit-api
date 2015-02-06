@@ -184,7 +184,7 @@ admin.site.register(Tag, TagAdmin)
 # Conversation
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ('pk', 'FromUser', 'ToUser', 'AboutPost')
-    search_fields = ['Fromuser__username', 'Touser__username']
+    search_fields = ['FromUser__username', 'ToUser__username']
 
 
 admin.site.register(Conversation, ConversationAdmin)
@@ -193,7 +193,7 @@ admin.site.register(Conversation, ConversationAdmin)
 # Message
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'Text', 'DateCreated', 'IsRead')
-    search_fields = ['Fromuser__username', 'Touser__username', 'Text']
+    search_fields = ['FromUser__username', 'ToUser__username', 'Text']
 
 
 admin.site.register(Message, MessageAdmin)
