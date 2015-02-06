@@ -168,8 +168,8 @@ def message_validator(message):
         attachments = message['attachments']
         if isinstance(attachments, list) and len(attachments) > 0:
             for idx, attachment in enumerate(attachments):
-                if not ('content_type' in attachment and attachment['content_type'] == 'shout') \
-                        or not ('object_id' in attachment and attachment['object_id']):
+
+                if False:  # todo: validation using jsonschema
                     result = ValidationResult(False, form_errors={
                         "attachments": ["attachments[%s] is missing valid 'content_type' or 'object_id'." % str(idx)]
                     })

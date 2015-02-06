@@ -1,8 +1,9 @@
+from django.contrib.contenttypes.models import ContentType
 from apps.shoutit.api.api_utils import get_custom_url, get_object_api_url, api_urls, JSON_URL_MARK_NOTIFICATION_AS_READ, \
     JSON_URL_MARK_NOTIFICATION_AS_UNREAD
 from common.constants import *
 from common.utils import date_unix
-from apps.shoutit.models import User, Profile, Business, Tag, Conversation2, Message2, Trade, MessageAttachment
+from apps.shoutit.models import User, Profile, Business, Tag, Conversation2, Message2, Trade, MessageAttachment, SharedLocation
 
 
 # todo: better levels
@@ -216,14 +217,31 @@ def render_message_attachment(message_attachment):
     """
     if not isinstance(message_attachment, MessageAttachment):
         return {}
-    content_type = 'shout'  # todo: possible other content types, therefore other content object
-    attached_object = render_shout(message_attachment.attached_object, level=1)
-    return {
-        'content_type': content_type,
-        'object_id': message_attachment.object_id,
-        content_type: attached_object
-    }
 
+    shout_ct = ContentType.objects.get_for_model(Trade)
+    location_ct = ContentType.objects.get_for_model(SharedLocation)
+
+    if message_attachment.content_type == shout_ct:
+        result = {
+            'content_type': 'shout',
+            'object_id': message_attachment.object_id,
+            'shout': render_shout(message_attachment.attached_object, level=1)
+        }
+
+    elif message_attachment.content_type == location_ct:
+        result = {
+            'content_type': 'location',
+            'location': {
+                'country': message_attachment.attached_object.country,
+                'city': message_attachment.attached_object.city,
+                'latitude': message_attachment.attached_object.latitude,
+                'longitude': message_attachment.attached_object.longitude,
+            }
+        }
+    else:
+        result = {}
+
+    return result
 
 def render_conversation(conversation):
     if not conversation:
@@ -351,7 +369,7 @@ def render_gallery(gallery):
     if gallery is None:
         return {}
     return {
-        #		'url' : get_object_api_url(gallery),
+        # 'url' : get_object_api_url(gallery),
         #		'business' : render_business(gallery.OwnerBusiness),
     }
 
@@ -416,7 +434,7 @@ def render_event(event):
             result['attached_object'] = render_shared_exp(event.attached_object)
         elif event.EventType == EVENT_TYPE_COMMENT:
             result['attached_object'] = render_comment(event.attached_object)
-        #		elif event.EventType == EVENT_TYPE_GALLERY_ITEM :
+        # elif event.EventType == EVENT_TYPE_GALLERY_ITEM :
         #			result['attached_object'] = render_gallery_item(event.attached_object)
         #		elif event.EventType == EVENT_TYPE_POST_DEAL or event.EventType == EVENT_TYPE_BUY_DEAL :
         #			result['attached_object'] = render_deal(event.attached_object)
@@ -434,7 +452,7 @@ def render_currency(currency):
 def render_post(post):
     if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
         return render_shout(post)
-    #	elif post.Type == POST_TYPE_DEAL:
+    # elif post.Type == POST_TYPE_DEAL:
     #		return render_deal(post)
     elif post.Type == POST_TYPE_EVENT:
         return render_event(post)

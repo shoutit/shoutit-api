@@ -2,7 +2,7 @@ from apps.shoutit.models.base import UUIDModel, User
 from apps.shoutit.models.item import Currency, Item
 from apps.shoutit.models.stream import Stream, FollowShip, Stream2, Stream2Mixin, Listen
 from apps.shoutit.models.tag import Tag, Category
-from apps.shoutit.models.misc import ConfirmToken, FbContest, PredefinedCity, StoredFile
+from apps.shoutit.models.misc import ConfirmToken, FbContest, PredefinedCity, StoredFile, SharedLocation
 from apps.shoutit.models.business import Business, BusinessCategory, BusinessCreateApplication, BusinessSource, BusinessConfirmation
 from apps.shoutit.models.business import Gallery, GalleryItem
 from apps.shoutit.models.user import Profile, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission

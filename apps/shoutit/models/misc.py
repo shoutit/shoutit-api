@@ -66,10 +66,9 @@ class FbContest(UUIDModel):
     ShareId = models.CharField(max_length=50, null=True, blank=True, default=None)
 
 
-class Location(UUIDModel):
-    class Meta:
-        app_label = 'shoutit'
-
-    city = models.CharField(max_length=200, db_index=True, unique=True)
-    country_code = models.CharField(max_length=200, db_index=True, unique=True)
+class SharedLocation(UUIDModel):
+    city = models.CharField(max_length=200)
+    country = models.CharField(max_length=2)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
 

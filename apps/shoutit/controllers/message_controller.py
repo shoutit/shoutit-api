@@ -1,13 +1,13 @@
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
 
 from apps.shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade, Conversation2, Message2, \
-    Conversation2Delete, Message2Delete, Message2Read
+    Conversation2Delete, Message2Delete, Message2Read, SharedLocation
 from apps.shoutit.controllers import email_controller, notifications_controller, shout_controller
+from common.constants import LOCATION_ATTRIBUTES
 
 
 def conversation_exist(conversation_id=None, user1=None, user2=None, about=None):
@@ -44,9 +44,20 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         attachments = []
 
     for attachment in attachments:
-        object_id = attachment['object_id']
-        content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()
+        if attachment['content_type'] == 'shout':
+            object_id = attachment['object_id']
+            content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
+        elif attachment['content_type'] == 'location':
+            if all(attr in attachment['location'] for attr in LOCATION_ATTRIBUTES):
+                location = attachment['location']
+                country, city, latitude, longitude = location['country'], location['city'], location['latitude'], location['longitude']
+                sl = SharedLocation(country=country, city=city, latitude=latitude, longitude=longitude)
+                sl.save()
+                object_id = sl.id
+            content_type = ContentType.objects.get_for_model(SharedLocation)  # todo: map the content types to models
+
+        if content_type and object_id:
+            MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()
 
     notifications_controller.notify_user_of_message(to_user, message)
     email_controller.send_message_email(message)

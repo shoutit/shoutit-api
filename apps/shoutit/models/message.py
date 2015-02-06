@@ -24,7 +24,7 @@ class Message(UUIDModel):
     Conversation = models.ForeignKey('shoutit.Conversation', related_name='Messages')
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='received_messages')
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='sent_messages')
-    Text = models.TextField(null=True, blank=False)
+    Text = models.TextField(null=True, blank=True)
     IsRead = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)
@@ -125,7 +125,7 @@ class Message2(UUIDModel):
     conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages2')
     read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Message2Read', related_name='read_messages2')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Message2Delete', related_name='deleted_messages2')
-    message = models.CharField(null=True, blank=False, max_length=2000)
+    message = models.CharField(null=True, blank=True, max_length=2000)
 
     def __unicode__(self):
         return "%s c at:%s" % (self.message[:30] + '...' if self.message else '<attachment>', self.created_at_unix)
