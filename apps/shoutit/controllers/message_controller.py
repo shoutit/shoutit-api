@@ -151,9 +151,9 @@ def get_conversation(conversation_id, user=None):
     if not user:
         return conversation
     else:
-        conversations = getFullConversationDetails([conversation], user)
-        conversation = conversations[0] if len(conversations) else None
-        return conversation
+        full_conversations = getFullConversationDetails([conversation], user)
+        full_conversation = full_conversations[0] if len(full_conversations) else None
+        return full_conversation or conversation
 
 
 def get_shout_conversations(shout_id, user):

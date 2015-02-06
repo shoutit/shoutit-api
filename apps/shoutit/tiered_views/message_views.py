@@ -48,8 +48,7 @@ def get_html_message(request):
         variables = RequestContext(request, {'message': message_controller.get_message(request.GET[u'id'])})
         data = {'html': render_to_string("message.html", variables)}
     else:
-        variables = RequestContext(request, {'conversation': message_controller.get_conversation(request.GET[u'id'],
-                                                                                                 request.user)})
+        variables = RequestContext(request, {'conversation': message_controller.get_conversation(request.GET[u'id'], request.user)})
         data = {'html': render_to_string("conversation.html", variables)}
 
     return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
@@ -92,16 +91,16 @@ def mark_message_as_read(request, message_id):
                  json_renderer=lambda request, result, conversation_id: conversation_json(request, result),
                  html_renderer=lambda request, result, conversation_id: page_html(request, result, 'conversations.html',
                                                                                   'title' in result.data and result.data['title'] or ''))
-@refresh_cache(tags=[CACHE_TAG_MESSAGES])
 def read_conversation(request, conversation_id):
     result = ResponseResult()
+    conversation = request.validation_result.data['conversation']
     result.data['form'] = MessageForm()
-    result.data['conversation'] = message_controller.get_conversation(conversation_id, request.user)
-    result.data['shout'] = result.data['conversation'].AboutPost
+    result.data['conversation'] = conversation
+    result.data['shout'] = conversation.AboutPost
     result.data['conversation_messages'] = message_controller.ReadConversation(request.user, conversation_id)
     result.data['conversation_id'] = conversation_id
     name = result.data['conversation'].With.name
-    name = name if name != '' else result.data['conversation'].With.username
+    name = name if name != '' else conversation.With.username
     result.data['title'] = _('You and ') + name
 
     return result
