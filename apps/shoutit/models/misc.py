@@ -64,3 +64,12 @@ class FbContest(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Contest_1')
     FbId = models.CharField(max_length=24, db_index=True)
     ShareId = models.CharField(max_length=50, null=True, blank=True, default=None)
+
+
+class Location(UUIDModel):
+    class Meta:
+        app_label = 'shoutit'
+
+    city = models.CharField(max_length=200, db_index=True, unique=True)
+    country_code = models.CharField(max_length=200, db_index=True, unique=True)
+
