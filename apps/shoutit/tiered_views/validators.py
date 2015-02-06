@@ -146,7 +146,8 @@ def read_conversation_validator(request, conversation_id):
     if result.valid:
         conversation = result.data
         if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
-            return ValidationResult(False, messages=[('error', _("You don't have permissions to view this conversation."))])
+            return ValidationResult(False, errors=[RESPONSE_RESULT_ERROR_FORBIDDEN],
+                                    messages=[('error', _("You don't have permissions to view this conversation."))])
     return result
 
 
