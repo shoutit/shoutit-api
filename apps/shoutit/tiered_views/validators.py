@@ -28,7 +28,8 @@ def uuid_validator(uuid_string):
     try:
         uuid.UUID(uuid_string)
         return VR(True)
-    except (ValueError, TypeError):
+    except Exception as e:
+        print e
         return VR(False)
 
 
@@ -404,7 +405,7 @@ def shout_owner_view_validator(request, shout_id):
 def share_experience_validator(request, exp_id, *args, **kwargs):
     result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), exp_id)
     if result:
-        experience = experience_controller.GetExperience(request.user, exp_id, detailed=True)
+        experience = experience_controller.GetExperience(exp_id, request.user, detailed=True)
         if not experience.canShare:
             return VR(False, messages=[('error', _('You can not share this experience.'))])
     return result
@@ -421,13 +422,13 @@ def experience_validator(request, *args, **kwargs):
 
 
 def experience_view_validator(request, exp_id, *args, **kwargs):
-    return object_exists_validator(experience_controller.GetExperience, True, _('Experience does not exist.'), request.user, exp_id, True)
+    return object_exists_validator(experience_controller.GetExperience, True, _('Experience does not exist.'), exp_id, request.user, True)
 
 
 def edit_experience_validator(request, exp_id, *args, **kwargs):
     result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), exp_id)
     if result.valid:
-        experience = experience_controller.GetExperience(request.user, exp_id, detailed=True)
+        experience = experience_controller.GetExperience(exp_id, request.user, detailed=True)
         if not experience.canEdit:
             return VR(False, messages=[('error', _('You can not edit this experience.'))])
     return result

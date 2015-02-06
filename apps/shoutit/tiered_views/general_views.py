@@ -264,7 +264,7 @@ def modal(request, template=None):
             raise Http404()
 
     elif template == 'experience_edit':
-        exp = experience_controller.GetExperience(request.user, request.GET['id'])
+        exp = experience_controller.GetExperience(request.GET['id'], request.user)
         variables = RequestContext(request, {
             'form': ExperienceForm(initial={
                 'text': exp.Text,

@@ -31,7 +31,7 @@ from apps.shoutit.tiers import cached_view, CACHE_TAG_COMMENTS, CACHE_TAG_EXPERI
 def view_experience(request, exp_id):
     result = ResponseResult()
     result.data['timestamp'] = time.mktime(datetime.now().timetuple())
-    experience = GetExperience(request.user, exp_id, detailed=True)
+    experience = GetExperience(exp_id, request.user, detailed=True)
     result.data['experience'] = experience
     if experience:
         result.data['recent_experiences'] = GetExperiences(user=request.user,

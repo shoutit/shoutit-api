@@ -44,7 +44,7 @@ def GetUsersSharedExperience(exp_id):
     return [sharedExperience.OwnerUser for sharedExperience in experience_sharedExperiences]
 
 
-def GetExperience(user, exp_id, detailed=False):
+def GetExperience(exp_id, user, detailed=False):
     experience = Experience.objects.get_valid_experiences().filter(pk=exp_id).select_related('AboutBusiness', 'AboutBusiness__Profile',
                                                                                            'OwnerUser', 'OwnerUser__Profile').order_by(
         '-DatePublished')
