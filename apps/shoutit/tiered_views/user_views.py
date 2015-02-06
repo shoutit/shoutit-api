@@ -297,7 +297,7 @@ def resend_activation(request):
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
                      'name': user_controller.get_profile(username).name if user_controller.get_profile(username) else ''}),
-                 validator=lambda request, username: object_exists_validator(user_controller.get_profile,
+                 validator=lambda request, username: object_exists_validator(user_controller.get_profile, False,
                                                                              _('User %(username)s does not exist.') %
                                                                              {'username': username}, username),
                  permissions_required=[PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER])
@@ -324,7 +324,7 @@ def start_listening_to_user(request, username):
                                                                                        username).name if user_controller.get_profile(
                                                                                        username) else ''},
                                                                                success_message_type='info'),
-                 validator=lambda request, username: object_exists_validator(user_controller.get_profile,
+                 validator=lambda request, username: object_exists_validator(user_controller.get_profile, False,
                                                                              _('User %(username)s does not exist.') % {
                                                                                  'username': username}, username))
 @refresh_cache(level=CACHE_LEVEL_USER, tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS])

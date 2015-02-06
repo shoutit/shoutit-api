@@ -128,7 +128,7 @@ def profile_picture(request, profile_type='', size='', tag_name='', username='')
 @cache_control(public=True, must_revalidate=False)
 @non_cached_view(methods=['GET'],
                  login_required=False,
-                 validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get,
+                 validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get, True,
                                                                                    _('image does not exist.'), pk=image_id),
                  api_renderer=thumbnail_response,
                  json_renderer=thumbnail_response,

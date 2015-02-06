@@ -17,7 +17,7 @@ from apps.shoutit.templatetags.template_filters import thumbnail
                  json_renderer=lambda request, result, tag_name:
                  json_renderer(request, result, _('You are now listening to shouts about %(tag_name)s.') % {'tag_name': tag_name}),
                  validator=lambda request, tag_name:
-                 object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name),
+                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name),
                  permissions_required=[PERMISSION_FOLLOW_TAG])
 @refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
 def start_listening_to_tag(request, tag_name):
@@ -40,7 +40,7 @@ def start_listening_to_tag(request, tag_name):
                  json_renderer(request, result, _('You are no longer listening to shouts about %(tag_name)s.') % {'tag_name': tag_name},
                                success_message_type='info'),
                  validator=lambda request, tag_name:
-                 object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
+                 object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 @refresh_cache(tags=[CACHE_TAG_STREAMS, CACHE_TAG_USERS, CACHE_TAG_TAGS])
 def stop_listening_to_tag(request, tag_name):
     result = ResponseResult()
@@ -130,7 +130,7 @@ def top_tags(request):
              methods=['GET'],
              api_renderer=shouts_api,
              json_renderer=lambda request, result, tag_name, *args: user_stream_json(request, result),
-             validator=lambda request, tag_name, *args, **kwargs: object_exists_validator(tag_controller.get_tag,
+             validator=lambda request, tag_name, *args, **kwargs: object_exists_validator(tag_controller.get_tag, False,
                                                                                           _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_stream(request, tag_name):
     result = ResponseResult()
@@ -160,7 +160,7 @@ def tag_stream(request, tag_name):
              api_renderer=tag_api,
              html_renderer=lambda request, result, tag_name: object_page_html(request, result, 'tag_profile.html', tag_name),
              methods=['GET'],
-             validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag,
+             validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
                                                                          _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_profile(request, tag_name):
     result = ResponseResult()
@@ -188,7 +188,7 @@ def tag_profile(request, tag_name):
 @cached_view(level=CACHE_LEVEL_SESSION,
              tags=[CACHE_TAG_TAGS, CACHE_TAG_STREAMS],
              methods=['GET'],
-             validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag,
+             validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
                                                                          _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_profile_brief(request, tag_name):
     tag = tag_controller.get_tag(tag_name)
@@ -209,7 +209,7 @@ def tag_profile_brief(request, tag_name):
              json_renderer=json_data_renderer,
              api_renderer=stats_api,
              validator=lambda request, tag_name:
-             object_exists_validator(tag_controller.get_tag, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
+             object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name}, tag_name))
 def tag_stats(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data

@@ -180,7 +180,7 @@ def edit_experience(request, exp_id):
 
 @non_cached_view(methods=['GET'],
                  json_renderer=lambda request, result, exp_id: user_json_renderer(request, result),
-                 validator=lambda request, exp_id: object_exists_validator(get_post, _('Experience dose not exist.'), exp_id),
+                 validator=lambda request, exp_id: object_exists_validator(get_post, True, _('Experience dose not exist.'), exp_id),
 )
 def users_shared_experience(request, exp_id):
     result = ResponseResult()

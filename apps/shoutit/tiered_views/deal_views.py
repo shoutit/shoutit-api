@@ -187,7 +187,7 @@ def invalidate_voucher(request):
 @cached_view(
     tags=[CACHE_TAG_DEALS],
     methods=['GET'],
-    validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, _('Deal does not exist.'), deal_id),
+    validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, True, _('Deal does not exist.'), deal_id),
     json_renderer=deal_renderer_json,
     html_renderer=lambda request, result, deal_id: page_html(request, result, 'deal.html'),
 )

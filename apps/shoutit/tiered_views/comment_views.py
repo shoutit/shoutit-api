@@ -47,7 +47,7 @@ def delete_comment(request, comment_id):
 @non_cached_view(methods=['GET'],
                  json_renderer=lambda request, result, post_id: post_comments_json_renderer(request, result),
                  api_renderer=api_post_comments,
-                 validator=lambda request, post_id: object_exists_validator(get_post, _('post dose not exist.'), post_id),
+                 validator=lambda request, post_id: object_exists_validator(get_post, True, _('post dose not exist.'), post_id),
 )
 def post_comments(request, post_id):
     result = ResponseResult()
