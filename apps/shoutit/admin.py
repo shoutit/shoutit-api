@@ -68,7 +68,7 @@ class CustomUserChangeForm(UserChangeForm):
 
 class CustomUserAdmin(UserAdmin):
     save_on_top = True
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
+    list_display = ('pk', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
     # list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login', 'request_count')
     list_per_page = 50
 
@@ -80,7 +80,7 @@ admin.site.register(User, CustomUserAdmin)
 
 # Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'Country', 'City', 'Sex', 'image', 'Stream')
+    list_display = ('pk', 'name', 'user', 'Country', 'City', 'Sex', 'image', 'Stream')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
     list_filter = ('Country', 'City', 'Sex')
@@ -107,7 +107,7 @@ admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
 
 # Business
 class BusinessProfileAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
+    list_display = ('pk', 'name', 'user', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
     search_fields = ['Name', 'user__email', 'Website', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
 
@@ -183,7 +183,7 @@ admin.site.register(Tag, TagAdmin)
 
 # Conversation
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('FromUser', 'ToUser', 'AboutPost')
+    list_display = ('pk', 'FromUser', 'ToUser', 'AboutPost')
     search_fields = ['Fromuser__username', 'Touser__username']
 
 
@@ -192,7 +192,7 @@ admin.site.register(Conversation, ConversationAdmin)
 
 # Message
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('Conversation', 'FromUser', 'ToUser', 'Text', 'DateCreated', 'IsRead')
+    list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'Text', 'DateCreated', 'IsRead')
     search_fields = ['Fromuser__username', 'Touser__username', 'Text']
 
 
@@ -201,7 +201,7 @@ admin.site.register(Message, MessageAdmin)
 
 # Message Attachment
 class MessageAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('message', 'conversation', 'content_type', 'object_id', 'created_at')
+    list_display = ('pk', 'message', 'conversation', 'content_type', 'object_id', 'created_at')
     search_fields = ['message__id', 'conversation__id']
 
 

@@ -32,7 +32,7 @@ class Message(UUIDModel):
 
     def __unicode__(self):
         try:
-            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " <=>> " + unicode(self.ToUser) + "):" + (self.Text[:50] if self.Text else '')
+            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " => " + unicode(self.ToUser) + "):" + (self.Text[:50] if self.Text else '')
         except AttributeError:
             return unicode(self.pk)
 
@@ -42,7 +42,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
 
     def __unicode__(self):
-        return self.pk + "for message: " + self.message.pk
+        return self.pk + " for message: " + self.message.pk
 
 
 class Notification(UUIDModel, AttachedObjectMixin):
