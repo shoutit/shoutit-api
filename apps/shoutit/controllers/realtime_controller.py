@@ -7,7 +7,6 @@ from django.conf import settings
 from django.utils.translation import ugettext as _
 
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE
-from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.api.renderers import render_notification
 
 
@@ -43,7 +42,6 @@ def GetUserConnectedClientsCount(username):
         return 0 + count
 
 
-@asynchronous_task()
 def SendNotification(notification, username, count=0):
     from apps.shoutit.controllers.user_controller import get_profile
     from apps.shoutit.controllers.message_controller import UnReadConversationsCount
@@ -88,7 +86,6 @@ def WrapRealtimeMessage(message, type):
     return json.dumps(result)
 
 
-@asynchronous_task()
 def SendRealtimeMessage(message, username):
     try:
         channel = realtime_connection.channel()
@@ -98,7 +95,6 @@ def SendRealtimeMessage(message, username):
         print e.message
 
 
-@asynchronous_task()
 def BroadcastRealtimeMessage(message, city='', username='', post=None):
     try:
         channel = realtime_connection.channel()
@@ -118,7 +114,6 @@ def BroadcastRealtimeMessage(message, city='', username='', post=None):
         print e.message
 
 
-@asynchronous_task()
 def BindUserToCity(username, city):
     try:
         channel = realtime_connection.channel()
@@ -131,7 +126,6 @@ def BindUserToCity(username, city):
         print e.message
 
 
-@asynchronous_task()
 def BindUserToUser(username, username_to):
     try:
         channel = realtime_connection.channel()
@@ -144,7 +138,6 @@ def BindUserToUser(username, username_to):
         print e.message
 
 
-@asynchronous_task()
 def BindUserToPost(username, post):
     try:
         channel = realtime_connection.channel()
@@ -157,7 +150,6 @@ def BindUserToPost(username, post):
         print e.message
 
 
-@asynchronous_task()
 def UnbindUserFromCity(username, city):
     try:
         channel = realtime_connection.channel()
@@ -170,7 +162,6 @@ def UnbindUserFromCity(username, city):
         print e.message
 
 
-@asynchronous_task()
 def UnbindUserFromUser(username, username_from):
     try:
         channel = realtime_connection.channel()
@@ -183,7 +174,6 @@ def UnbindUserFromUser(username, username_from):
         print e.message
 
 
-@asynchronous_task()
 def UnbindUserFromPost(username, post):
     try:
         channel = realtime_connection.channel()

@@ -85,6 +85,9 @@ class Constant(object):
     def __str__(self):
         return self.get_text()
 
+    def __repr__(self):
+        return "<{0}: {1}>".format(self.__class__.__name__, self.get_text())
+
     def get_text(self):
         return self.__class__.values[self.value]
 

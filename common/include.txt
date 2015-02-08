@@ -46,6 +46,5 @@ smser.py
 robots.txt
 delete_cache.py
 blaster.py
-celery_tasks.py
 fs_business_category.py
 PyQRNative.py

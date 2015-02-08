@@ -1,1325 +1,1259 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
-
-
-class Migration(SchemaMigration):
-
-    def forwards(self, orm):
-        # Adding model 'User'
-        db.create_table(u'shoutit_user', (
-            ('password', self.gf('django.db.models.fields.CharField')(max_length=128)),
-            ('last_login', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('is_superuser', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('username', self.gf('django.db.models.fields.CharField')(unique=True, max_length=30)),
-            ('first_name', self.gf('django.db.models.fields.CharField')(max_length=30, blank=True)),
-            ('last_name', self.gf('django.db.models.fields.CharField')(max_length=30, blank=True)),
-            ('email', self.gf('django.db.models.fields.EmailField')(max_length=75, blank=True)),
-            ('is_staff', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('is_active', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('date_joined', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-        ))
-        db.send_create_signal(u'shoutit', ['User'])
-
-        # Adding M2M table for field groups on 'User'
-        m2m_table_name = db.shorten_name(u'shoutit_user_groups')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('user', models.ForeignKey(orm[u'shoutit.user'], null=False)),
-            ('group', models.ForeignKey(orm[u'auth.group'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['user_id', 'group_id'])
-
-        # Adding M2M table for field user_permissions on 'User'
-        m2m_table_name = db.shorten_name(u'shoutit_user_user_permissions')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('user', models.ForeignKey(orm[u'shoutit.user'], null=False)),
-            ('permission', models.ForeignKey(orm[u'auth.permission'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['user_id', 'permission_id'])
-
-        # Adding model 'Item'
-        db.create_table(u'shoutit_item', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Name', self.gf('django.db.models.fields.CharField')(default='', max_length=512)),
-            ('Description', self.gf('django.db.models.fields.CharField')(default='', max_length=1000)),
-            ('Price', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Currency', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Items', to=orm['shoutit.Currency'])),
-            ('State', self.gf('django.db.models.fields.IntegerField')(default=0, db_index=True)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Item'])
-
-        # Adding model 'Currency'
-        db.create_table(u'shoutit_currency', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Code', self.gf('django.db.models.fields.CharField')(max_length=10)),
-            ('Country', self.gf('django.db.models.fields.CharField')(max_length=10, blank=True)),
-            ('Name', self.gf('django.db.models.fields.CharField')(max_length=64, null=True)),
-        ))
-        db.send_create_signal('shoutit', ['Currency'])
-
-        # Adding model 'Stream'
-        db.create_table(u'shoutit_stream', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Type', self.gf('django.db.models.fields.IntegerField')(default=0, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['Stream'])
-
-        # Adding model 'Stream2'
-        db.create_table(u'shoutit_stream2', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_id', self.gf('uuidfield.fields.UUIDField')(max_length=36, null=True)),
-            ('type', self.gf('django.db.models.fields.SmallIntegerField')(db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['Stream2'])
-
-        # Adding unique constraint on 'Stream2', fields ['content_type', 'object_id', 'type']
-        db.create_unique(u'shoutit_stream2', ['content_type_id', 'object_id', 'type'])
-
-        # Adding M2M table for field posts on 'Stream2'
-        m2m_table_name = db.shorten_name(u'shoutit_stream2_posts')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('stream2', models.ForeignKey(orm['shoutit.stream2'], null=False)),
-            ('post', models.ForeignKey(orm['shoutit.post'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['stream2_id', 'post_id'])
-
-        # Adding model 'Listen'
-        db.create_table(u'shoutit_listen', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('listener', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.User'])),
-            ('stream', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.Stream2'])),
-            ('date_listened', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Listen'])
-
-        # Adding unique constraint on 'Listen', fields ['listener', 'stream']
-        db.create_unique(u'shoutit_listen', ['listener_id', 'stream_id'])
-
-        # Adding model 'Tag'
-        db.create_table(u'shoutit_tag', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Name', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=100, db_index=True)),
-            ('Creator', self.gf('django.db.models.fields.related.ForeignKey')(related_name='TagsCreated', null=True, on_delete=models.SET_NULL, to=orm['shoutit.User'])),
-            ('Image', self.gf('django.db.models.fields.URLField')(default='/static/img/shout_tag.png', max_length=1024, null=True)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('Parent', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='ChildTags', null=True, to=orm['shoutit.Tag'])),
-            ('Stream', self.gf('django.db.models.fields.related.OneToOneField')(related_name='OwnerTag', unique=True, null=True, to=orm['shoutit.Stream'])),
-            ('Definition', self.gf('django.db.models.fields.TextField')(default='New Tag!', max_length=512, null=True)),
-        ))
-        db.send_create_signal('shoutit', ['Tag'])
-
-        # Adding model 'Category'
-        db.create_table(u'shoutit_category', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Name', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=100, db_index=True)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('TopTag', self.gf('django.db.models.fields.related.OneToOneField')(related_name='OwnerCategory', unique=True, null=True, to=orm['shoutit.Tag'])),
-        ))
-        db.send_create_signal('shoutit', ['Category'])
-
-        # Adding M2M table for field Tags on 'Category'
-        m2m_table_name = db.shorten_name(u'shoutit_category_Tags')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('category', models.ForeignKey(orm['shoutit.category'], null=False)),
-            ('tag', models.ForeignKey(orm['shoutit.tag'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['category_id', 'tag_id'])
-
-        # Adding model 'PredefinedCity'
-        db.create_table(u'shoutit_predefinedcity', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('City', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200, db_index=True)),
-            ('city_encoded', self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=200, db_index=True)),
-            ('Country', self.gf('django.db.models.fields.CharField')(default='', max_length=2, db_index=True)),
-            ('Latitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Longitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Approved', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('shoutit', ['PredefinedCity'])
-
-        # Adding model 'StoredFile'
-        db.create_table(u'shoutit_storedfile', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Documents', null=True, to=orm['shoutit.User'])),
-            ('File', self.gf('django.db.models.fields.URLField')(max_length=1024)),
-            ('Type', self.gf('django.db.models.fields.IntegerField')()),
-        ))
-        db.send_create_signal('shoutit', ['StoredFile'])
-
-        # Adding model 'ConfirmToken'
-        db.create_table(u'shoutit_confirmtoken', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Token', self.gf('django.db.models.fields.CharField')(unique=True, max_length=24, db_index=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Tokens', to=orm['shoutit.User'])),
-            ('Type', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('DateCreated', self.gf('django.db.models.fields.DateField')(auto_now_add=True, blank=True)),
-            ('Email', self.gf('django.db.models.fields.CharField')(max_length=128, blank=True)),
-            ('IsDisabled', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('shoutit', ['ConfirmToken'])
-
-        # Adding model 'FbContest'
-        db.create_table(u'shoutit_fbcontest', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('ContestId', self.gf('django.db.models.fields.IntegerField')(db_index=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Contest_1', to=orm['shoutit.User'])),
-            ('FbId', self.gf('django.db.models.fields.CharField')(max_length=24, db_index=True)),
-            ('ShareId', self.gf('django.db.models.fields.CharField')(default=None, max_length=50, null=True)),
-        ))
-        db.send_create_signal('shoutit', ['FbContest'])
-
-        # Adding model 'BusinessCategory'
-        db.create_table(u'shoutit_businesscategory', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Name', self.gf('django.db.models.fields.CharField')(max_length=1024, db_index=True)),
-            ('Source', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('SourceID', self.gf('django.db.models.fields.CharField')(max_length=128, blank=True)),
-            ('Parent', self.gf('django.db.models.fields.related.ForeignKey')(default=None, related_name='children', null=True, to=orm['shoutit.BusinessCategory'])),
-        ))
-        db.send_create_signal('shoutit', ['BusinessCategory'])
-
-        # Adding model 'Business'
-        db.create_table(u'shoutit_business', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.OneToOneField')(related_name='business', unique=True, to=orm['shoutit.User'])),
-            ('Name', self.gf('django.db.models.fields.CharField')(max_length=1024, db_index=True)),
-            ('Category', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.BusinessCategory'], null=True, on_delete=models.SET_NULL)),
-            ('Image', self.gf('django.db.models.fields.URLField')(max_length=1024, null=True)),
-            ('About', self.gf('django.db.models.fields.TextField')(default='', max_length=512, null=True)),
-            ('Phone', self.gf('django.db.models.fields.CharField')(max_length=20, unique=True, null=True)),
-            ('Website', self.gf('django.db.models.fields.URLField')(max_length=1024, null=True)),
-            ('Country', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, db_index=True)),
-            ('City', self.gf('django.db.models.fields.CharField')(max_length=200, null=True, db_index=True)),
-            ('Latitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Longitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Address', self.gf('django.db.models.fields.CharField')(max_length=200, null=True, db_index=True)),
-            ('Stream', self.gf('django.db.models.fields.related.OneToOneField')(related_name='OwnerBusiness', unique=True, null=True, to=orm['shoutit.Stream'])),
-            ('LastToken', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['shoutit.ConfirmToken'], null=True, on_delete=models.SET_NULL)),
-            ('Confirmed', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('shoutit', ['Business'])
-
-        # Adding model 'BusinessCreateApplication'
-        db.create_table(u'shoutit_businesscreateapplication', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='BusinessCreateApplication', null=True, on_delete=models.SET_NULL, to=orm['shoutit.User'])),
-            ('business', self.gf('django.db.models.fields.related.ForeignKey')(related_name='UserApplications', null=True, on_delete=models.SET_NULL, to=orm['shoutit.Business'])),
-            ('Name', self.gf('django.db.models.fields.CharField')(max_length=1024, null=True, db_index=True)),
-            ('Category', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.BusinessCategory'], null=True, on_delete=models.SET_NULL)),
-            ('Image', self.gf('django.db.models.fields.URLField')(max_length=1024, null=True)),
-            ('About', self.gf('django.db.models.fields.TextField')(default='', max_length=512, null=True)),
-            ('Phone', self.gf('django.db.models.fields.CharField')(max_length=20, null=True)),
-            ('Website', self.gf('django.db.models.fields.URLField')(max_length=1024, null=True)),
-            ('Longitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Latitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Country', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, db_index=True)),
-            ('City', self.gf('django.db.models.fields.CharField')(max_length=200, null=True, db_index=True)),
-            ('Address', self.gf('django.db.models.fields.CharField')(max_length=200, null=True, db_index=True)),
-            ('LastToken', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['shoutit.ConfirmToken'], null=True, on_delete=models.SET_NULL)),
-            ('DateApplied', self.gf('django.db.models.fields.DateField')(auto_now_add=True, blank=True)),
-            ('Status', self.gf('django.db.models.fields.IntegerField')(default=0, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['BusinessCreateApplication'])
-
-        # Adding model 'BusinessSource'
-        db.create_table(u'shoutit_businesssource', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('business', self.gf('django.db.models.fields.related.OneToOneField')(related_name='Source', unique=True, to=orm['shoutit.Business'])),
-            ('Source', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('SourceID', self.gf('django.db.models.fields.CharField')(max_length=128, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['BusinessSource'])
-
-        # Adding model 'BusinessConfirmation'
-        db.create_table(u'shoutit_businessconfirmation', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='BusinessConfirmations', to=orm['shoutit.User'])),
-            ('DateSent', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['BusinessConfirmation'])
-
-        # Adding M2M table for field Files on 'BusinessConfirmation'
-        m2m_table_name = db.shorten_name(u'shoutit_businessconfirmation_Files')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('businessconfirmation', models.ForeignKey(orm['shoutit.businessconfirmation'], null=False)),
-            ('storedfile', models.ForeignKey(orm['shoutit.storedfile'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['businessconfirmation_id', 'storedfile_id'])
-
-        # Adding model 'GalleryItem'
-        db.create_table(u'shoutit_galleryitem', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Item', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['shoutit.Item'])),
-            ('Gallery', self.gf('django.db.models.fields.related.ForeignKey')(related_name='GalleryItems', to=orm['shoutit.Gallery'])),
-            ('IsDisable', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('IsMuted', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['GalleryItem'])
-
-        # Adding unique constraint on 'GalleryItem', fields ['Item', 'Gallery']
-        db.create_unique(u'shoutit_galleryitem', ['Item_id', 'Gallery_id'])
-
-        # Adding model 'Gallery'
-        db.create_table(u'shoutit_gallery', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Description', self.gf('django.db.models.fields.TextField')(default='', max_length=500)),
-            ('OwnerBusiness', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Galleries', to=orm['shoutit.Business'])),
-            ('Category', self.gf('django.db.models.fields.related.OneToOneField')(related_name='+', unique=True, null=True, to=orm['shoutit.Category'])),
-        ))
-        db.send_create_signal('shoutit', ['Gallery'])
-
-        # Adding model 'Profile'
-        db.create_table(u'shoutit_profile', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.OneToOneField')(related_name='profile', unique=True, null=True, to=orm['shoutit.User'])),
-            ('Image', self.gf('django.db.models.fields.URLField')(max_length=1024, null=True)),
-            ('Country', self.gf('django.db.models.fields.CharField')(default='AE', max_length=200, db_index=True)),
-            ('City', self.gf('django.db.models.fields.CharField')(default='Dubai', max_length=200, db_index=True)),
-            ('Latitude', self.gf('django.db.models.fields.FloatField')(default=25.1993957)),
-            ('Longitude', self.gf('django.db.models.fields.FloatField')(default=55.2738326)),
-            ('Bio', self.gf('django.db.models.fields.TextField')(default='New Shouter!', max_length=512, null=True)),
-            ('Mobile', self.gf('django.db.models.fields.CharField')(max_length=20, unique=True, null=True)),
-            ('Stream', self.gf('django.db.models.fields.related.OneToOneField')(related_name='OwnerUser', unique=True, to=orm['shoutit.Stream'])),
-            ('birthday', self.gf('django.db.models.fields.DateField')(null=True)),
-            ('Sex', self.gf('django.db.models.fields.NullBooleanField')(default=True, null=True, blank=True)),
-            ('LastToken', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['shoutit.ConfirmToken'], null=True, on_delete=models.SET_NULL)),
-            ('isSSS', self.gf('django.db.models.fields.BooleanField')(default=False, db_index=True)),
-            ('isSMS', self.gf('django.db.models.fields.BooleanField')(default=False, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['Profile'])
-
-        # Adding M2M table for field Interests on 'Profile'
-        m2m_table_name = db.shorten_name(u'shoutit_profile_Interests')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('profile', models.ForeignKey(orm['shoutit.profile'], null=False)),
-            ('tag', models.ForeignKey(orm['shoutit.tag'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['profile_id', 'tag_id'])
-
-        # Adding model 'LinkedFacebookAccount'
-        db.create_table(u'shoutit_linkedfacebookaccount', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.OneToOneField')(related_name='linked_facebook', unique=True, to=orm['shoutit.User'])),
-            ('facebook_id', self.gf('django.db.models.fields.CharField')(max_length=24, db_index=True)),
-            ('AccessToken', self.gf('django.db.models.fields.CharField')(max_length=512)),
-            ('ExpiresIn', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
-        ))
-        db.send_create_signal('shoutit', ['LinkedFacebookAccount'])
-
-        # Adding model 'LinkedGoogleAccount'
-        db.create_table(u'shoutit_linkedgoogleaccount', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.OneToOneField')(related_name='linked_gplus', unique=True, to=orm['shoutit.User'])),
-            ('credentials_json', self.gf('django.db.models.fields.CharField')(max_length=2048)),
-            ('gplus_id', self.gf('django.db.models.fields.CharField')(max_length=64, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['LinkedGoogleAccount'])
-
-        # Adding model 'Permission'
-        db.create_table(u'shoutit_permission', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=512, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['Permission'])
-
-        # Adding model 'UserPermission'
-        db.create_table(u'shoutit_userpermission', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.User'])),
-            ('permission', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.Permission'])),
-            ('date_given', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['UserPermission'])
-
-        # Adding model 'FollowShip'
-        db.create_table(u'shoutit_followship', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('follower', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.Profile'])),
-            ('stream', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['shoutit.Stream'])),
-            ('date_followed', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('state', self.gf('django.db.models.fields.IntegerField')(default=0, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['FollowShip'])
-
-        # Adding model 'Post'
-        db.create_table(u'shoutit_post', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('OwnerUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Posts', to=orm['shoutit.User'])),
-            ('Text', self.gf('django.db.models.fields.TextField')(default='', max_length=2000, db_index=True)),
-            ('Type', self.gf('django.db.models.fields.IntegerField')(default=0, db_index=True)),
-            ('DatePublished', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, db_index=True, blank=True)),
-            ('IsMuted', self.gf('django.db.models.fields.BooleanField')(default=False, db_index=True)),
-            ('IsDisabled', self.gf('django.db.models.fields.BooleanField')(default=False, db_index=True)),
-            ('Longitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('Latitude', self.gf('django.db.models.fields.FloatField')(default=0.0)),
-            ('CountryCode', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, db_index=True)),
-            ('ProvinceCode', self.gf('django.db.models.fields.CharField')(max_length=200, null=True, db_index=True)),
-            ('Address', self.gf('django.db.models.fields.CharField')(max_length=200, null=True, db_index=True)),
-        ))
-        db.send_create_signal('shoutit', ['Post'])
-
-        # Adding M2M table for field Streams on 'Post'
-        m2m_table_name = db.shorten_name(u'shoutit_post_Streams')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('post', models.ForeignKey(orm['shoutit.post'], null=False)),
-            ('stream', models.ForeignKey(orm['shoutit.stream'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['post_id', 'stream_id'])
-
-        # Adding model 'Shout'
-        db.create_table(u'shoutit_shout', (
-            (u'post_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Post'], unique=True, primary_key=True)),
-            ('ExpiryDate', self.gf('django.db.models.fields.DateTimeField')(default=None, null=True, db_index=True)),
-            ('ExpiryNotified', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('shoutit', ['Shout'])
-
-        # Adding M2M table for field Tags on 'Shout'
-        m2m_table_name = db.shorten_name(u'shoutit_shout_Tags')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('shout', models.ForeignKey(orm['shoutit.shout'], null=False)),
-            ('tag', models.ForeignKey(orm['shoutit.tag'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['shout_id', 'tag_id'])
-
-        # Adding model 'ShoutWrap'
-        db.create_table(u'shoutit_shoutwrap', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Shout', self.gf('django.db.models.fields.related.ForeignKey')(related_name='ShoutWraps', to=orm['shoutit.Shout'])),
-            ('Stream', self.gf('django.db.models.fields.related.ForeignKey')(related_name='ShoutWraps', to=orm['shoutit.Stream'])),
-            ('Rank', self.gf('django.db.models.fields.FloatField')(default=1.0)),
-        ))
-        db.send_create_signal('shoutit', ['ShoutWrap'])
-
-        # Adding model 'Trade'
-        db.create_table(u'shoutit_trade', (
-            (u'shout_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Shout'], unique=True, primary_key=True)),
-            ('Item', self.gf('django.db.models.fields.related.OneToOneField')(related_name='Shout', unique=True, null=True, to=orm['shoutit.Item'])),
-            ('RelatedStream', self.gf('django.db.models.fields.related.OneToOneField')(related_name='InitShoutRelated', unique=True, null=True, to=orm['shoutit.Stream'])),
-            ('RecommendedStream', self.gf('django.db.models.fields.related.OneToOneField')(related_name='InitShoutRecommended', unique=True, null=True, to=orm['shoutit.Stream'])),
-            ('StreamsCode', self.gf('django.db.models.fields.CharField')(default='', max_length=2000)),
-            ('MaxFollowings', self.gf('django.db.models.fields.IntegerField')(default=6)),
-            ('MaxDistance', self.gf('django.db.models.fields.FloatField')(default=180.0)),
-            ('MaxPrice', self.gf('django.db.models.fields.FloatField')(default=1.0)),
-            ('IsShowMobile', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('IsSSS', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('BaseDatePublished', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('RenewalCount', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal('shoutit', ['Trade'])
-
-        # Adding model 'Deal'
-        db.create_table(u'shoutit_deal', (
-            (u'shout_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Shout'], unique=True, primary_key=True)),
-            ('MinBuyers', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('MaxBuyers', self.gf('django.db.models.fields.IntegerField')(null=True)),
-            ('OriginalPrice', self.gf('django.db.models.fields.FloatField')()),
-            ('IsClosed', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('Item', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Deals', null=True, on_delete=models.SET_NULL, to=orm['shoutit.Item'])),
-            ('ValidFrom', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-            ('ValidTo', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-        ))
-        db.send_create_signal('shoutit', ['Deal'])
-
-        # Adding model 'Experience'
-        db.create_table(u'shoutit_experience', (
-            (u'post_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Post'], unique=True, primary_key=True)),
-            ('AboutBusiness', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Experiences', to=orm['shoutit.Business'])),
-            ('State', self.gf('django.db.models.fields.IntegerField')()),
-        ))
-        db.send_create_signal('shoutit', ['Experience'])
-
-        # Adding model 'SharedExperience'
-        db.create_table(u'shoutit_sharedexperience', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Experience', self.gf('django.db.models.fields.related.ForeignKey')(related_name='SharedExperiences', to=orm['shoutit.Experience'])),
-            ('OwnerUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='SharedExperiences', to=orm['shoutit.User'])),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['SharedExperience'])
-
-        # Adding unique constraint on 'SharedExperience', fields ['Experience', 'OwnerUser']
-        db.create_unique(u'shoutit_sharedexperience', ['Experience_id', 'OwnerUser_id'])
-
-        # Adding model 'Video'
-        db.create_table(u'shoutit_video', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('shout', self.gf('django.db.models.fields.related.ForeignKey')(related_name='videos', null=True, to=orm['shoutit.Shout'])),
-            ('item', self.gf('django.db.models.fields.related.ForeignKey')(related_name='videos', null=True, to=orm['shoutit.Item'])),
-            ('url', self.gf('django.db.models.fields.URLField')(max_length=1024)),
-            ('thumbnail_url', self.gf('django.db.models.fields.URLField')(max_length=1024)),
-            ('provider', self.gf('django.db.models.fields.CharField')(max_length=1024)),
-            ('id_on_provider', self.gf('django.db.models.fields.CharField')(max_length=256)),
-            ('duration', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal('shoutit', ['Video'])
-
-        # Adding model 'StoredImage'
-        db.create_table(u'shoutit_storedimage', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Shout', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Images', null=True, to=orm['shoutit.Shout'])),
-            ('Item', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Images', null=True, to=orm['shoutit.Item'])),
-            ('Image', self.gf('django.db.models.fields.URLField')(max_length=1024)),
-        ))
-        db.send_create_signal('shoutit', ['StoredImage'])
-
-        # Adding model 'Comment'
-        db.create_table(u'shoutit_comment', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('AboutPost', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Comments', null=True, to=orm['shoutit.Post'])),
-            ('OwnerUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['shoutit.User'])),
-            ('IsDisabled', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('Text', self.gf('django.db.models.fields.TextField')(max_length=300)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Comment'])
-
-        # Adding model 'Event'
-        db.create_table(u'shoutit_event', (
-            (u'post_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['shoutit.Post'], unique=True, primary_key=True)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_id', self.gf('uuidfield.fields.UUIDField')(max_length=36, null=True)),
-            ('EventType', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal('shoutit', ['Event'])
-
-        # Adding model 'Conversation'
-        db.create_table(u'shoutit_conversation', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('FromUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['shoutit.User'])),
-            ('ToUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['shoutit.User'])),
-            ('AboutPost', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['shoutit.Trade'])),
-            ('IsRead', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('VisibleToRecivier', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('VisibleToSender', self.gf('django.db.models.fields.BooleanField')(default=True)),
-        ))
-        db.send_create_signal('shoutit', ['Conversation'])
-
-        # Adding model 'Message'
-        db.create_table(u'shoutit_message', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Conversation', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Messages', to=orm['shoutit.Conversation'])),
-            ('FromUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='received_messages', to=orm['shoutit.User'])),
-            ('ToUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sent_messages', to=orm['shoutit.User'])),
-            ('Text', self.gf('django.db.models.fields.TextField')(null=True)),
-            ('IsRead', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('VisibleToRecivier', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('VisibleToSender', self.gf('django.db.models.fields.BooleanField')(default=True)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Message'])
-
-        # Adding model 'MessageAttachment'
-        db.create_table(u'shoutit_messageattachment', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_id', self.gf('uuidfield.fields.UUIDField')(max_length=36, null=True)),
-            ('message', self.gf('django.db.models.fields.related.ForeignKey')(related_name='attachments', to=orm['shoutit.Message'])),
-        ))
-        db.send_create_signal('shoutit', ['MessageAttachment'])
-
-        # Adding model 'Notification'
-        db.create_table(u'shoutit_notification', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_id', self.gf('uuidfield.fields.UUIDField')(max_length=36, null=True)),
-            ('ToUser', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Notifications', to=orm['shoutit.User'])),
-            ('FromUser', self.gf('django.db.models.fields.related.ForeignKey')(default=None, related_name='+', null=True, to=orm['shoutit.User'])),
-            ('IsRead', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('Type', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Notification'])
-
-        # Adding model 'Report'
-        db.create_table(u'shoutit_report', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_id', self.gf('uuidfield.fields.UUIDField')(max_length=36, null=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Reports', to=orm['shoutit.User'])),
-            ('Text', self.gf('django.db.models.fields.TextField')(default='', max_length=300)),
-            ('IsSolved', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('IsDisabled', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Report'])
-
-        # Adding model 'Payment'
-        db.create_table(u'shoutit_payment', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'], null=True)),
-            ('object_id', self.gf('uuidfield.fields.UUIDField')(max_length=36, null=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Payments', to=orm['shoutit.User'])),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('DateUpdated', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('Amount', self.gf('django.db.models.fields.FloatField')()),
-            ('Currency', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['shoutit.Currency'])),
-            ('Status', self.gf('django.db.models.fields.IntegerField')()),
-            ('Transaction', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Payment', to=orm['shoutit.Transaction'])),
-        ))
-        db.send_create_signal('shoutit', ['Payment'])
-
-        # Adding model 'Transaction'
-        db.create_table(u'shoutit_transaction', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('RemoteIdentifier', self.gf('django.db.models.fields.CharField')(max_length=1024)),
-            ('RemoteData', self.gf('django.db.models.fields.CharField')(max_length=1024)),
-            ('RemoteStatus', self.gf('django.db.models.fields.CharField')(max_length=1024)),
-            ('DateCreated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('DateUpdated', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['Transaction'])
-
-        # Adding model 'Voucher'
-        db.create_table(u'shoutit_voucher', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('DealBuy', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Vouchers', to=orm['shoutit.DealBuy'])),
-            ('Code', self.gf('django.db.models.fields.CharField')(max_length=22)),
-            ('DateGenerated', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-            ('IsValidated', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('IsSent', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal('shoutit', ['Voucher'])
-
-        # Adding model 'DealBuy'
-        db.create_table(u'shoutit_dealbuy', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Deal', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Buys', null=True, on_delete=models.SET_NULL, to=orm['shoutit.Deal'])),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='DealsBought', null=True, on_delete=models.SET_NULL, to=orm['shoutit.User'])),
-            ('Amount', self.gf('django.db.models.fields.IntegerField')(default=1)),
-            ('DateBought', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['DealBuy'])
-
-        # Adding model 'Service'
-        db.create_table(u'shoutit_service', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Code', self.gf('django.db.models.fields.CharField')(max_length=256)),
-            ('Name', self.gf('django.db.models.fields.CharField')(max_length=1024)),
-            ('Price', self.gf('django.db.models.fields.FloatField')()),
-        ))
-        db.send_create_signal('shoutit', ['Service'])
-
-        # Adding model 'ServiceBuy'
-        db.create_table(u'shoutit_servicebuy', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Services', to=orm['shoutit.User'])),
-            ('Service', self.gf('django.db.models.fields.related.ForeignKey')(related_name='Buyers', to=orm['shoutit.Service'])),
-            ('Amount', self.gf('django.db.models.fields.IntegerField')(default=1)),
-            ('DateBought', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['ServiceBuy'])
-
-        # Adding model 'ServiceUsage'
-        db.create_table(u'shoutit_serviceusage', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='ServicesUsages', to=orm['shoutit.User'])),
-            ('Service', self.gf('django.db.models.fields.related.ForeignKey')(related_name='BuyersUsages', to=orm['shoutit.Service'])),
-            ('Amount', self.gf('django.db.models.fields.IntegerField')(default=1)),
-            ('DateUsed', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
-        ))
-        db.send_create_signal('shoutit', ['ServiceUsage'])
-
-        # Adding model 'Subscription'
-        db.create_table(u'shoutit_subscription', (
-            ('id', self.gf('uuidfield.fields.UUIDField')(unique=True, max_length=36, primary_key=True)),
-            ('Type', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('State', self.gf('django.db.models.fields.IntegerField')(default=0)),
-            ('SignUpDate', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-            ('DeactivateDate', self.gf('django.db.models.fields.DateTimeField')(null=True)),
-            ('UserName', self.gf('django.db.models.fields.CharField')(max_length=64)),
-            ('Password', self.gf('django.db.models.fields.CharField')(max_length=24)),
-        ))
-        db.send_create_signal('shoutit', ['Subscription'])
-
-
-    def backwards(self, orm):
-        # Removing unique constraint on 'SharedExperience', fields ['Experience', 'OwnerUser']
-        db.delete_unique(u'shoutit_sharedexperience', ['Experience_id', 'OwnerUser_id'])
-
-        # Removing unique constraint on 'GalleryItem', fields ['Item', 'Gallery']
-        db.delete_unique(u'shoutit_galleryitem', ['Item_id', 'Gallery_id'])
-
-        # Removing unique constraint on 'Listen', fields ['listener', 'stream']
-        db.delete_unique(u'shoutit_listen', ['listener_id', 'stream_id'])
-
-        # Removing unique constraint on 'Stream2', fields ['content_type', 'object_id', 'type']
-        db.delete_unique(u'shoutit_stream2', ['content_type_id', 'object_id', 'type'])
-
-        # Deleting model 'User'
-        db.delete_table(u'shoutit_user')
-
-        # Removing M2M table for field groups on 'User'
-        db.delete_table(db.shorten_name(u'shoutit_user_groups'))
-
-        # Removing M2M table for field user_permissions on 'User'
-        db.delete_table(db.shorten_name(u'shoutit_user_user_permissions'))
-
-        # Deleting model 'Item'
-        db.delete_table(u'shoutit_item')
-
-        # Deleting model 'Currency'
-        db.delete_table(u'shoutit_currency')
-
-        # Deleting model 'Stream'
-        db.delete_table(u'shoutit_stream')
-
-        # Deleting model 'Stream2'
-        db.delete_table(u'shoutit_stream2')
-
-        # Removing M2M table for field posts on 'Stream2'
-        db.delete_table(db.shorten_name(u'shoutit_stream2_posts'))
-
-        # Deleting model 'Listen'
-        db.delete_table(u'shoutit_listen')
-
-        # Deleting model 'Tag'
-        db.delete_table(u'shoutit_tag')
-
-        # Deleting model 'Category'
-        db.delete_table(u'shoutit_category')
-
-        # Removing M2M table for field Tags on 'Category'
-        db.delete_table(db.shorten_name(u'shoutit_category_Tags'))
-
-        # Deleting model 'PredefinedCity'
-        db.delete_table(u'shoutit_predefinedcity')
-
-        # Deleting model 'StoredFile'
-        db.delete_table(u'shoutit_storedfile')
-
-        # Deleting model 'ConfirmToken'
-        db.delete_table(u'shoutit_confirmtoken')
-
-        # Deleting model 'FbContest'
-        db.delete_table(u'shoutit_fbcontest')
-
-        # Deleting model 'BusinessCategory'
-        db.delete_table(u'shoutit_businesscategory')
-
-        # Deleting model 'Business'
-        db.delete_table(u'shoutit_business')
-
-        # Deleting model 'BusinessCreateApplication'
-        db.delete_table(u'shoutit_businesscreateapplication')
-
-        # Deleting model 'BusinessSource'
-        db.delete_table(u'shoutit_businesssource')
-
-        # Deleting model 'BusinessConfirmation'
-        db.delete_table(u'shoutit_businessconfirmation')
-
-        # Removing M2M table for field Files on 'BusinessConfirmation'
-        db.delete_table(db.shorten_name(u'shoutit_businessconfirmation_Files'))
-
-        # Deleting model 'GalleryItem'
-        db.delete_table(u'shoutit_galleryitem')
-
-        # Deleting model 'Gallery'
-        db.delete_table(u'shoutit_gallery')
-
-        # Deleting model 'Profile'
-        db.delete_table(u'shoutit_profile')
-
-        # Removing M2M table for field Interests on 'Profile'
-        db.delete_table(db.shorten_name(u'shoutit_profile_Interests'))
-
-        # Deleting model 'LinkedFacebookAccount'
-        db.delete_table(u'shoutit_linkedfacebookaccount')
-
-        # Deleting model 'LinkedGoogleAccount'
-        db.delete_table(u'shoutit_linkedgoogleaccount')
-
-        # Deleting model 'Permission'
-        db.delete_table(u'shoutit_permission')
-
-        # Deleting model 'UserPermission'
-        db.delete_table(u'shoutit_userpermission')
-
-        # Deleting model 'FollowShip'
-        db.delete_table(u'shoutit_followship')
-
-        # Deleting model 'Post'
-        db.delete_table(u'shoutit_post')
-
-        # Removing M2M table for field Streams on 'Post'
-        db.delete_table(db.shorten_name(u'shoutit_post_Streams'))
-
-        # Deleting model 'Shout'
-        db.delete_table(u'shoutit_shout')
-
-        # Removing M2M table for field Tags on 'Shout'
-        db.delete_table(db.shorten_name(u'shoutit_shout_Tags'))
-
-        # Deleting model 'ShoutWrap'
-        db.delete_table(u'shoutit_shoutwrap')
-
-        # Deleting model 'Trade'
-        db.delete_table(u'shoutit_trade')
-
-        # Deleting model 'Deal'
-        db.delete_table(u'shoutit_deal')
-
-        # Deleting model 'Experience'
-        db.delete_table(u'shoutit_experience')
-
-        # Deleting model 'SharedExperience'
-        db.delete_table(u'shoutit_sharedexperience')
-
-        # Deleting model 'Video'
-        db.delete_table(u'shoutit_video')
-
-        # Deleting model 'StoredImage'
-        db.delete_table(u'shoutit_storedimage')
-
-        # Deleting model 'Comment'
-        db.delete_table(u'shoutit_comment')
-
-        # Deleting model 'Event'
-        db.delete_table(u'shoutit_event')
-
-        # Deleting model 'Conversation'
-        db.delete_table(u'shoutit_conversation')
-
-        # Deleting model 'Message'
-        db.delete_table(u'shoutit_message')
-
-        # Deleting model 'MessageAttachment'
-        db.delete_table(u'shoutit_messageattachment')
-
-        # Deleting model 'Notification'
-        db.delete_table(u'shoutit_notification')
-
-        # Deleting model 'Report'
-        db.delete_table(u'shoutit_report')
-
-        # Deleting model 'Payment'
-        db.delete_table(u'shoutit_payment')
-
-        # Deleting model 'Transaction'
-        db.delete_table(u'shoutit_transaction')
-
-        # Deleting model 'Voucher'
-        db.delete_table(u'shoutit_voucher')
-
-        # Deleting model 'DealBuy'
-        db.delete_table(u'shoutit_dealbuy')
-
-        # Deleting model 'Service'
-        db.delete_table(u'shoutit_service')
-
-        # Deleting model 'ServiceBuy'
-        db.delete_table(u'shoutit_servicebuy')
-
-        # Deleting model 'ServiceUsage'
-        db.delete_table(u'shoutit_serviceusage')
-
-        # Deleting model 'Subscription'
-        db.delete_table(u'shoutit_subscription')
-
-
-    models = {
-        u'auth.group': {
-            'Meta': {'object_name': 'Group'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
-        },
-        u'auth.permission': {
-            'Meta': {'ordering': "(u'content_type__app_label', u'content_type__model', u'codename')", 'unique_together': "((u'content_type', u'codename'),)", 'object_name': 'Permission'},
-            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        u'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        'shoutit.business': {
-            'About': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '512', 'null': 'True'}),
-            'Address': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'db_index': 'True'}),
-            'Category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['shoutit.BusinessCategory']", 'null': 'True', 'on_delete': 'models.SET_NULL'}),
-            'City': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'db_index': 'True'}),
-            'Confirmed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Country': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'db_index': 'True'}),
-            'Image': ('django.db.models.fields.URLField', [], {'max_length': '1024', 'null': 'True'}),
-            'LastToken': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['shoutit.ConfirmToken']", 'null': 'True', 'on_delete': 'models.SET_NULL'}),
-            'Latitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Longitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Meta': {'object_name': 'Business'},
-            'Name': ('django.db.models.fields.CharField', [], {'max_length': '1024', 'db_index': 'True'}),
-            'Phone': ('django.db.models.fields.CharField', [], {'max_length': '20', 'unique': 'True', 'null': 'True'}),
-            'Stream': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'OwnerBusiness'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Stream']"}),
-            'Website': ('django.db.models.fields.URLField', [], {'max_length': '1024', 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'business'", 'unique': 'True', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.businesscategory': {
-            'Meta': {'object_name': 'BusinessCategory'},
-            'Name': ('django.db.models.fields.CharField', [], {'max_length': '1024', 'db_index': 'True'}),
-            'Parent': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'related_name': "'children'", 'null': 'True', 'to': "orm['shoutit.BusinessCategory']"}),
-            'Source': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'SourceID': ('django.db.models.fields.CharField', [], {'max_length': '128', 'blank': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.businessconfirmation': {
-            'DateSent': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Files': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'Confirmation'", 'symmetrical': 'False', 'to': "orm['shoutit.StoredFile']"}),
-            'Meta': {'object_name': 'BusinessConfirmation'},
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'BusinessConfirmations'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.businesscreateapplication': {
-            'About': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '512', 'null': 'True'}),
-            'Address': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'db_index': 'True'}),
-            'Category': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['shoutit.BusinessCategory']", 'null': 'True', 'on_delete': 'models.SET_NULL'}),
-            'City': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'db_index': 'True'}),
-            'Country': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'db_index': 'True'}),
-            'DateApplied': ('django.db.models.fields.DateField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Image': ('django.db.models.fields.URLField', [], {'max_length': '1024', 'null': 'True'}),
-            'LastToken': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['shoutit.ConfirmToken']", 'null': 'True', 'on_delete': 'models.SET_NULL'}),
-            'Latitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Longitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Meta': {'object_name': 'BusinessCreateApplication'},
-            'Name': ('django.db.models.fields.CharField', [], {'max_length': '1024', 'null': 'True', 'db_index': 'True'}),
-            'Phone': ('django.db.models.fields.CharField', [], {'max_length': '20', 'null': 'True'}),
-            'Status': ('django.db.models.fields.IntegerField', [], {'default': '0', 'db_index': 'True'}),
-            'Website': ('django.db.models.fields.URLField', [], {'max_length': '1024', 'null': 'True'}),
-            'business': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'UserApplications'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': "orm['shoutit.Business']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'BusinessCreateApplication'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.businesssource': {
-            'Meta': {'object_name': 'BusinessSource'},
-            'Source': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'SourceID': ('django.db.models.fields.CharField', [], {'max_length': '128', 'blank': 'True'}),
-            'business': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'Source'", 'unique': 'True', 'to': "orm['shoutit.Business']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.category': {
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Meta': {'object_name': 'Category'},
-            'Name': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '100', 'db_index': 'True'}),
-            'Tags': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'Category'", 'symmetrical': 'False', 'to': "orm['shoutit.Tag']"}),
-            'TopTag': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'OwnerCategory'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Tag']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.comment': {
-            'AboutPost': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Comments'", 'null': 'True', 'to': "orm['shoutit.Post']"}),
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'IsDisabled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Comment'},
-            'OwnerUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': u"orm['shoutit.User']"}),
-            'Text': ('django.db.models.fields.TextField', [], {'max_length': '300'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.confirmtoken': {
-            'DateCreated': ('django.db.models.fields.DateField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Email': ('django.db.models.fields.CharField', [], {'max_length': '128', 'blank': 'True'}),
-            'IsDisabled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'ConfirmToken'},
-            'Token': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '24', 'db_index': 'True'}),
-            'Type': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Tokens'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.conversation': {
-            'AboutPost': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': "orm['shoutit.Trade']"}),
-            'FromUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': u"orm['shoutit.User']"}),
-            'IsRead': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Conversation'},
-            'ToUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': u"orm['shoutit.User']"}),
-            'VisibleToRecivier': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'VisibleToSender': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.currency': {
-            'Code': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
-            'Country': ('django.db.models.fields.CharField', [], {'max_length': '10', 'blank': 'True'}),
-            'Meta': {'object_name': 'Currency'},
-            'Name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.deal': {
-            'IsClosed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Item': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Deals'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': "orm['shoutit.Item']"}),
-            'MaxBuyers': ('django.db.models.fields.IntegerField', [], {'null': 'True'}),
-            'Meta': {'object_name': 'Deal', '_ormbases': ['shoutit.Shout']},
-            'MinBuyers': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'OriginalPrice': ('django.db.models.fields.FloatField', [], {}),
-            'ValidFrom': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'ValidTo': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            u'shout_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Shout']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'shoutit.dealbuy': {
-            'Amount': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'DateBought': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Deal': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Buys'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': "orm['shoutit.Deal']"}),
-            'Meta': {'object_name': 'DealBuy'},
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'DealsBought'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.event': {
-            'EventType': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'Meta': {'object_name': 'Event', '_ormbases': ['shoutit.Post']},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'object_id': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'null': 'True'}),
-            u'post_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Post']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'shoutit.experience': {
-            'AboutBusiness': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Experiences'", 'to': "orm['shoutit.Business']"}),
-            'Meta': {'object_name': 'Experience', '_ormbases': ['shoutit.Post']},
-            'State': ('django.db.models.fields.IntegerField', [], {}),
-            u'post_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Post']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'shoutit.fbcontest': {
-            'ContestId': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
-            'FbId': ('django.db.models.fields.CharField', [], {'max_length': '24', 'db_index': 'True'}),
-            'Meta': {'object_name': 'FbContest'},
-            'ShareId': ('django.db.models.fields.CharField', [], {'default': 'None', 'max_length': '50', 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Contest_1'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.followship': {
-            'Meta': {'object_name': 'FollowShip'},
-            'date_followed': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'follower': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['shoutit.Profile']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'state': ('django.db.models.fields.IntegerField', [], {'default': '0', 'db_index': 'True'}),
-            'stream': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['shoutit.Stream']"})
-        },
-        'shoutit.gallery': {
-            'Category': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'+'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Category']"}),
-            'Description': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '500'}),
-            'Meta': {'object_name': 'Gallery'},
-            'OwnerBusiness': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Galleries'", 'to': "orm['shoutit.Business']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.galleryitem': {
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Gallery': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'GalleryItems'", 'to': "orm['shoutit.Gallery']"}),
-            'IsDisable': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'IsMuted': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Item': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': "orm['shoutit.Item']"}),
-            'Meta': {'unique_together': "(('Item', 'Gallery'),)", 'object_name': 'GalleryItem'},
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.item': {
-            'Currency': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Items'", 'to': "orm['shoutit.Currency']"}),
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Description': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '1000'}),
-            'Meta': {'object_name': 'Item'},
-            'Name': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '512'}),
-            'Price': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'State': ('django.db.models.fields.IntegerField', [], {'default': '0', 'db_index': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.linkedfacebookaccount': {
-            'AccessToken': ('django.db.models.fields.CharField', [], {'max_length': '512'}),
-            'ExpiresIn': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
-            'Meta': {'object_name': 'LinkedFacebookAccount'},
-            'facebook_id': ('django.db.models.fields.CharField', [], {'max_length': '24', 'db_index': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'linked_facebook'", 'unique': 'True', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.linkedgoogleaccount': {
-            'Meta': {'object_name': 'LinkedGoogleAccount'},
-            'credentials_json': ('django.db.models.fields.CharField', [], {'max_length': '2048'}),
-            'gplus_id': ('django.db.models.fields.CharField', [], {'max_length': '64', 'db_index': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'linked_gplus'", 'unique': 'True', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.listen': {
-            'Meta': {'unique_together': "(('listener', 'stream'),)", 'object_name': 'Listen'},
-            'date_listened': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'listener': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['shoutit.User']"}),
-            'stream': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['shoutit.Stream2']"})
-        },
-        'shoutit.message': {
-            'Conversation': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Messages'", 'to': "orm['shoutit.Conversation']"}),
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'FromUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'received_messages'", 'to': u"orm['shoutit.User']"}),
-            'IsRead': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Message'},
-            'Text': ('django.db.models.fields.TextField', [], {'null': 'True'}),
-            'ToUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sent_messages'", 'to': u"orm['shoutit.User']"}),
-            'VisibleToRecivier': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'VisibleToSender': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.messageattachment': {
-            'Meta': {'object_name': 'MessageAttachment'},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'message': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'attachments'", 'to': "orm['shoutit.Message']"}),
-            'object_id': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'null': 'True'})
-        },
-        'shoutit.notification': {
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'FromUser': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'related_name': "'+'", 'null': 'True', 'to': u"orm['shoutit.User']"}),
-            'IsRead': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Notification'},
-            'ToUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Notifications'", 'to': u"orm['shoutit.User']"}),
-            'Type': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'object_id': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'null': 'True'})
-        },
-        'shoutit.payment': {
-            'Amount': ('django.db.models.fields.FloatField', [], {}),
-            'Currency': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': "orm['shoutit.Currency']"}),
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'DateUpdated': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'Meta': {'object_name': 'Payment'},
-            'Status': ('django.db.models.fields.IntegerField', [], {}),
-            'Transaction': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Payment'", 'to': "orm['shoutit.Transaction']"}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'object_id': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'null': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Payments'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.permission': {
-            'Meta': {'object_name': 'Permission'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '512', 'db_index': 'True'}),
-            'users': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'permissions'", 'symmetrical': 'False', 'through': "orm['shoutit.UserPermission']", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.post': {
-            'Address': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'db_index': 'True'}),
-            'CountryCode': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'db_index': 'True'}),
-            'DatePublished': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'db_index': 'True', 'blank': 'True'}),
-            'IsDisabled': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
-            'IsMuted': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
-            'Latitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Longitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Meta': {'object_name': 'Post'},
-            'OwnerUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Posts'", 'to': u"orm['shoutit.User']"}),
-            'ProvinceCode': ('django.db.models.fields.CharField', [], {'max_length': '200', 'null': 'True', 'db_index': 'True'}),
-            'Streams': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'Posts'", 'symmetrical': 'False', 'to': "orm['shoutit.Stream']"}),
-            'Text': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '2000', 'db_index': 'True'}),
-            'Type': ('django.db.models.fields.IntegerField', [], {'default': '0', 'db_index': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.predefinedcity': {
-            'Approved': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'City': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200', 'db_index': 'True'}),
-            'Country': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '2', 'db_index': 'True'}),
-            'Latitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Longitude': ('django.db.models.fields.FloatField', [], {'default': '0.0'}),
-            'Meta': {'object_name': 'PredefinedCity'},
-            'city_encoded': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '200', 'db_index': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.profile': {
-            'Bio': ('django.db.models.fields.TextField', [], {'default': "'New Shouter!'", 'max_length': '512', 'null': 'True'}),
-            'City': ('django.db.models.fields.CharField', [], {'default': "'Dubai'", 'max_length': '200', 'db_index': 'True'}),
-            'Country': ('django.db.models.fields.CharField', [], {'default': "'AE'", 'max_length': '200', 'db_index': 'True'}),
-            'Following': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['shoutit.Stream']", 'through': "orm['shoutit.FollowShip']", 'symmetrical': 'False'}),
-            'Image': ('django.db.models.fields.URLField', [], {'max_length': '1024', 'null': 'True'}),
-            'Interests': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'Followers'", 'symmetrical': 'False', 'to': "orm['shoutit.Tag']"}),
-            'LastToken': ('django.db.models.fields.related.ForeignKey', [], {'default': 'None', 'to': "orm['shoutit.ConfirmToken']", 'null': 'True', 'on_delete': 'models.SET_NULL'}),
-            'Latitude': ('django.db.models.fields.FloatField', [], {'default': '25.1993957'}),
-            'Longitude': ('django.db.models.fields.FloatField', [], {'default': '55.2738326'}),
-            'Meta': {'object_name': 'Profile'},
-            'Mobile': ('django.db.models.fields.CharField', [], {'max_length': '20', 'unique': 'True', 'null': 'True'}),
-            'Sex': ('django.db.models.fields.NullBooleanField', [], {'default': 'True', 'null': 'True', 'blank': 'True'}),
-            'Stream': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'OwnerUser'", 'unique': 'True', 'to': "orm['shoutit.Stream']"}),
-            'birthday': ('django.db.models.fields.DateField', [], {'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'isSMS': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
-            'isSSS': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'db_index': 'True'}),
-            'user': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'profile'", 'unique': 'True', 'null': 'True', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.report': {
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'IsDisabled': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'IsSolved': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Report'},
-            'Text': ('django.db.models.fields.TextField', [], {'default': "''", 'max_length': '300'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'object_id': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'null': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Reports'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.service': {
-            'Code': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'Meta': {'object_name': 'Service'},
-            'Name': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
-            'Price': ('django.db.models.fields.FloatField', [], {}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.servicebuy': {
-            'Amount': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'DateBought': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Meta': {'object_name': 'ServiceBuy'},
-            'Service': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Buyers'", 'to': "orm['shoutit.Service']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Services'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.serviceusage': {
-            'Amount': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'DateUsed': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Meta': {'object_name': 'ServiceUsage'},
-            'Service': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'BuyersUsages'", 'to': "orm['shoutit.Service']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ServicesUsages'", 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.sharedexperience': {
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Experience': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'SharedExperiences'", 'to': "orm['shoutit.Experience']"}),
-            'Meta': {'unique_together': "(('Experience', 'OwnerUser'),)", 'object_name': 'SharedExperience'},
-            'OwnerUser': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'SharedExperiences'", 'to': u"orm['shoutit.User']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.shout': {
-            'ExpiryDate': ('django.db.models.fields.DateTimeField', [], {'default': 'None', 'null': 'True', 'db_index': 'True'}),
-            'ExpiryNotified': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Shout', '_ormbases': ['shoutit.Post']},
-            'Tags': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'Shouts'", 'symmetrical': 'False', 'to': "orm['shoutit.Tag']"}),
-            u'post_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Post']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'shoutit.shoutwrap': {
-            'Meta': {'object_name': 'ShoutWrap'},
-            'Rank': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'Shout': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ShoutWraps'", 'to': "orm['shoutit.Shout']"}),
-            'Stream': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'ShoutWraps'", 'to': "orm['shoutit.Stream']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.storedfile': {
-            'File': ('django.db.models.fields.URLField', [], {'max_length': '1024'}),
-            'Meta': {'object_name': 'StoredFile'},
-            'Type': ('django.db.models.fields.IntegerField', [], {}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Documents'", 'null': 'True', 'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.storedimage': {
-            'Image': ('django.db.models.fields.URLField', [], {'max_length': '1024'}),
-            'Item': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Images'", 'null': 'True', 'to': "orm['shoutit.Item']"}),
-            'Meta': {'object_name': 'StoredImage'},
-            'Shout': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Images'", 'null': 'True', 'to': "orm['shoutit.Shout']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.stream': {
-            'Meta': {'object_name': 'Stream'},
-            'Type': ('django.db.models.fields.IntegerField', [], {'default': '0', 'db_index': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.stream2': {
-            'Meta': {'unique_together': "(('content_type', 'object_id', 'type'),)", 'object_name': 'Stream2'},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'listeners': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'listening'", 'symmetrical': 'False', 'through': "orm['shoutit.Listen']", 'to': u"orm['shoutit.User']"}),
-            'object_id': ('uuidfield.fields.UUIDField', [], {'max_length': '36', 'null': 'True'}),
-            'posts': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'streams'", 'symmetrical': 'False', 'to': "orm['shoutit.Post']"}),
-            'type': ('django.db.models.fields.SmallIntegerField', [], {'db_index': 'True'})
-        },
-        'shoutit.subscription': {
-            'DeactivateDate': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'Meta': {'object_name': 'Subscription'},
-            'Password': ('django.db.models.fields.CharField', [], {'max_length': '24'}),
-            'SignUpDate': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'State': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'Type': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'UserName': ('django.db.models.fields.CharField', [], {'max_length': '64'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.tag': {
-            'Creator': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'TagsCreated'", 'null': 'True', 'on_delete': 'models.SET_NULL', 'to': u"orm['shoutit.User']"}),
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'Definition': ('django.db.models.fields.TextField', [], {'default': "'New Tag!'", 'max_length': '512', 'null': 'True'}),
-            'Image': ('django.db.models.fields.URLField', [], {'default': "'/static/img/shout_tag.png'", 'max_length': '1024', 'null': 'True'}),
-            'Meta': {'object_name': 'Tag'},
-            'Name': ('django.db.models.fields.CharField', [], {'default': "''", 'unique': 'True', 'max_length': '100', 'db_index': 'True'}),
-            'Parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'ChildTags'", 'null': 'True', 'to': "orm['shoutit.Tag']"}),
-            'Stream': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'OwnerTag'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Stream']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        'shoutit.trade': {
-            'BaseDatePublished': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'IsSSS': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'IsShowMobile': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'Item': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'Shout'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Item']"}),
-            'MaxDistance': ('django.db.models.fields.FloatField', [], {'default': '180.0'}),
-            'MaxFollowings': ('django.db.models.fields.IntegerField', [], {'default': '6'}),
-            'MaxPrice': ('django.db.models.fields.FloatField', [], {'default': '1.0'}),
-            'Meta': {'object_name': 'Trade', '_ormbases': ['shoutit.Shout']},
-            'RecommendedStream': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'InitShoutRecommended'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Stream']"}),
-            'RelatedStream': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'InitShoutRelated'", 'unique': 'True', 'null': 'True', 'to': "orm['shoutit.Stream']"}),
-            'RenewalCount': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'StreamsCode': ('django.db.models.fields.CharField', [], {'default': "''", 'max_length': '2000'}),
-            u'shout_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['shoutit.Shout']", 'unique': 'True', 'primary_key': 'True'})
-        },
-        'shoutit.transaction': {
-            'DateCreated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'DateUpdated': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'Meta': {'object_name': 'Transaction'},
-            'RemoteData': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
-            'RemoteIdentifier': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
-            'RemoteStatus': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        },
-        u'shoutit.user': {
-            'Meta': {'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
-            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
-        },
-        'shoutit.userpermission': {
-            'Meta': {'object_name': 'UserPermission'},
-            'date_given': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'permission': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['shoutit.Permission']"}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['shoutit.User']"})
-        },
-        'shoutit.video': {
-            'Meta': {'object_name': 'Video'},
-            'duration': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'}),
-            'id_on_provider': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
-            'item': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'videos'", 'null': 'True', 'to': "orm['shoutit.Item']"}),
-            'provider': ('django.db.models.fields.CharField', [], {'max_length': '1024'}),
-            'shout': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'videos'", 'null': 'True', 'to': "orm['shoutit.Shout']"}),
-            'thumbnail_url': ('django.db.models.fields.URLField', [], {'max_length': '1024'}),
-            'url': ('django.db.models.fields.URLField', [], {'max_length': '1024'})
-        },
-        'shoutit.voucher': {
-            'Code': ('django.db.models.fields.CharField', [], {'max_length': '22'}),
-            'DateGenerated': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'DealBuy': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'Vouchers'", 'to': "orm['shoutit.DealBuy']"}),
-            'IsSent': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'IsValidated': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'Meta': {'object_name': 'Voucher'},
-            'id': ('uuidfield.fields.UUIDField', [], {'unique': 'True', 'max_length': '36', 'primary_key': 'True'})
-        }
-    }
-
-    complete_apps = ['shoutit']
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import re
+import django.utils.timezone
+import django.db.models.deletion
+from django.conf import settings
+import uuidfield.fields
+import django.core.validators
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('auth', '0001_initial'),
+        ('contenttypes', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='User',
+            fields=[
+                ('password', models.CharField(max_length=128, verbose_name='password')),
+                ('last_login', models.DateTimeField(default=django.utils.timezone.now, verbose_name='last login')),
+                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('username', models.CharField(help_text='Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)', unique=True, max_length=30, verbose_name='username', validators=[django.core.validators.RegexValidator(re.compile(b'^[\\w.]+$'), 'Enter a valid username.', b'invalid'), django.core.validators.MinLengthValidator(2)])),
+                ('first_name', models.CharField(max_length=30, verbose_name='first name', blank=True)),
+                ('last_name', models.CharField(max_length=30, verbose_name='last name', blank=True)),
+                ('email', models.EmailField(max_length=254, verbose_name='email address', blank=True)),
+                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
+                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
+                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
+                ('groups', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Group', blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of his/her group.', verbose_name='groups')),
+            ],
+            options={
+                'abstract': False,
+                'verbose_name': 'user',
+                'verbose_name_plural': 'users',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Business',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Name', models.CharField(max_length=1024, db_index=True)),
+                ('image', models.CharField(max_length=1024, null=True, blank=True)),
+                ('About', models.TextField(default=b'', max_length=512, null=True, blank=True)),
+                ('Phone', models.CharField(max_length=20, unique=True, null=True, blank=True)),
+                ('Website', models.URLField(max_length=1024, null=True, blank=True)),
+                ('Country', models.CharField(db_index=True, max_length=2, null=True, blank=True)),
+                ('City', models.CharField(db_index=True, max_length=200, null=True, blank=True)),
+                ('Latitude', models.FloatField(default=0.0)),
+                ('Longitude', models.FloatField(default=0.0)),
+                ('Address', models.CharField(db_index=True, max_length=200, null=True, blank=True)),
+                ('Confirmed', models.BooleanField(default=False)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BusinessCategory',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Name', models.CharField(max_length=1024, db_index=True)),
+                ('Source', models.IntegerField(default=0)),
+                ('SourceID', models.CharField(max_length=128, blank=True)),
+                ('Parent', models.ForeignKey(related_name=b'children', default=None, blank=True, to='shoutit.BusinessCategory', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BusinessConfirmation',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('DateSent', models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BusinessCreateApplication',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Name', models.CharField(db_index=True, max_length=1024, null=True, blank=True)),
+                ('image', models.CharField(max_length=1024, null=True, blank=True)),
+                ('About', models.TextField(default=b'', max_length=512, null=True, blank=True)),
+                ('Phone', models.CharField(max_length=20, null=True, blank=True)),
+                ('Website', models.URLField(max_length=1024, null=True, blank=True)),
+                ('Longitude', models.FloatField(default=0.0)),
+                ('Latitude', models.FloatField(default=0.0)),
+                ('Country', models.CharField(db_index=True, max_length=2, null=True, blank=True)),
+                ('City', models.CharField(db_index=True, max_length=200, null=True, blank=True)),
+                ('Address', models.CharField(db_index=True, max_length=200, null=True, blank=True)),
+                ('DateApplied', models.DateField(auto_now_add=True)),
+                ('Status', models.IntegerField(default=0, db_index=True)),
+                ('Category', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.BusinessCategory', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='BusinessSource',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Source', models.IntegerField(default=0)),
+                ('SourceID', models.CharField(max_length=128, blank=True)),
+                ('business', models.OneToOneField(related_name=b'Source', to='shoutit.Business')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Category',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Name', models.CharField(default=b'', unique=True, max_length=100, db_index=True, blank=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='CLUser',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('cl_email', models.EmailField(max_length=254)),
+                ('user', models.OneToOneField(related_name=b'cluser', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Comment',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('IsDisabled', models.BooleanField(default=False)),
+                ('Text', models.TextField(max_length=300)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ConfirmToken',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Token', models.CharField(unique=True, max_length=24, db_index=True)),
+                ('Type', models.IntegerField(default=0)),
+                ('DateCreated', models.DateField(auto_now_add=True)),
+                ('Email', models.CharField(max_length=128, blank=True)),
+                ('IsDisabled', models.BooleanField(default=False)),
+                ('user', models.ForeignKey(related_name=b'Tokens', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Conversation',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('IsRead', models.BooleanField(default=False)),
+                ('VisibleToRecivier', models.BooleanField(default=True)),
+                ('VisibleToSender', models.BooleanField(default=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Conversation2',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Conversation2Delete',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('conversation', models.ForeignKey(related_name=b'deleted_set', to='shoutit.Conversation2')),
+                ('user', models.ForeignKey(related_name=b'deleted_conversations2_set', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Currency',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Code', models.CharField(max_length=10)),
+                ('Country', models.CharField(max_length=10, blank=True)),
+                ('Name', models.CharField(max_length=64, null=True, blank=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='DBCLConversation',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('in_email', models.EmailField(max_length=254, null=True, blank=True)),
+                ('ref', models.CharField(max_length=100, null=True, blank=True)),
+                ('from_user', models.ForeignKey(related_name=b'+', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='DealBuy',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Amount', models.IntegerField(default=1)),
+                ('DateBought', models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='FbContest',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('ContestId', models.IntegerField(db_index=True)),
+                ('FbId', models.CharField(max_length=24, db_index=True)),
+                ('ShareId', models.CharField(default=None, max_length=50, null=True, blank=True)),
+                ('user', models.ForeignKey(related_name=b'Contest_1', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='FollowShip',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('date_followed', models.DateTimeField(auto_now_add=True)),
+                ('state', models.IntegerField(default=0, db_index=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Gallery',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Description', models.TextField(default=b'', max_length=500)),
+                ('Category', models.OneToOneField(related_name=b'+', null=True, blank=True, to='shoutit.Category')),
+                ('OwnerBusiness', models.ForeignKey(related_name=b'Galleries', to='shoutit.Business')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='GalleryItem',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('IsDisable', models.BooleanField(default=False)),
+                ('IsMuted', models.BooleanField(default=False)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('Gallery', models.ForeignKey(related_name=b'GalleryItems', to='shoutit.Gallery')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Item',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Name', models.CharField(default=b'', max_length=512, blank=True)),
+                ('Description', models.CharField(max_length=1000)),
+                ('Price', models.FloatField(default=0.0)),
+                ('State', models.IntegerField(default=0, db_index=True)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('Currency', models.ForeignKey(related_name=b'Items', to='shoutit.Currency')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='LinkedFacebookAccount',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('facebook_id', models.CharField(max_length=24, db_index=True)),
+                ('AccessToken', models.CharField(max_length=512)),
+                ('ExpiresIn', models.BigIntegerField(default=0)),
+                ('user', models.OneToOneField(related_name=b'linked_facebook', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='LinkedGoogleAccount',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('credentials_json', models.CharField(max_length=2048)),
+                ('gplus_id', models.CharField(max_length=64, db_index=True)),
+                ('user', models.OneToOneField(related_name=b'linked_gplus', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Listen',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('date_listened', models.DateTimeField(auto_now_add=True)),
+                ('listener', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Message',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Text', models.TextField(null=True, blank=True)),
+                ('IsRead', models.BooleanField(default=False)),
+                ('VisibleToRecivier', models.BooleanField(default=True)),
+                ('VisibleToSender', models.BooleanField(default=True)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('Conversation', models.ForeignKey(related_name=b'Messages', to='shoutit.Conversation')),
+                ('FromUser', models.ForeignKey(related_name=b'received_messages', to=settings.AUTH_USER_MODEL)),
+                ('ToUser', models.ForeignKey(related_name=b'sent_messages', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Message2',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('message', models.CharField(max_length=2000, null=True, blank=True)),
+                ('conversation', models.ForeignKey(related_name=b'messages2', to='shoutit.Conversation2')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Message2Delete',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('conversation', models.ForeignKey(related_name=b'messages2_deleted_set', to='shoutit.Conversation2')),
+                ('message', models.ForeignKey(related_name=b'deleted_set', to='shoutit.Message2')),
+                ('user', models.ForeignKey(related_name=b'deleted_messages2_set', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Message2Read',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('conversation', models.ForeignKey(related_name=b'messages2_read_set', to='shoutit.Conversation2')),
+                ('message', models.ForeignKey(related_name=b'read_set', to='shoutit.Message2')),
+                ('user', models.ForeignKey(related_name=b'read_messages2_set', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='MessageAttachment',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+                ('conversation', models.ForeignKey(related_name=b'messages_attachments', to='shoutit.Conversation')),
+                ('message', models.ForeignKey(related_name=b'attachments', to='shoutit.Message')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Notification',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('IsRead', models.BooleanField(default=False)),
+                ('Type', models.IntegerField(default=0, choices=[(0, b'Listen'), (1, b'Message'), (2, b'Experience'), (3, b'Experience Shared'), (4, b'Comment')])),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('FromUser', models.ForeignKey(related_name=b'+', default=None, blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('ToUser', models.ForeignKey(related_name=b'Notifications', to=settings.AUTH_USER_MODEL)),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Payment',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('DateUpdated', models.DateTimeField(auto_now=True)),
+                ('Amount', models.FloatField()),
+                ('Status', models.IntegerField()),
+                ('Currency', models.ForeignKey(related_name=b'+', to='shoutit.Currency')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Permission',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('name', models.CharField(unique=True, max_length=512, db_index=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Post',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Text', models.TextField(default=b'', max_length=2000, db_index=True, blank=True)),
+                ('Type', models.IntegerField(default=0, db_index=True, choices=[(0, b'Request'), (1, b'Offer'), (2, b'Experience'), (3, b'Deal'), (4, b'Event')])),
+                ('DatePublished', models.DateTimeField(auto_now_add=True, db_index=True)),
+                ('IsMuted', models.BooleanField(default=False, db_index=True)),
+                ('IsDisabled', models.BooleanField(default=False, db_index=True)),
+                ('Latitude', models.FloatField(default=0.0)),
+                ('Longitude', models.FloatField(default=0.0)),
+                ('CountryCode', models.CharField(db_index=True, max_length=2, null=True, blank=True)),
+                ('ProvinceCode', models.CharField(db_index=True, max_length=200, null=True, blank=True)),
+                ('Address', models.CharField(db_index=True, max_length=200, null=True, blank=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Experience',
+            fields=[
+                ('post_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Post')),
+                ('State', models.IntegerField()),
+                ('AboutBusiness', models.ForeignKey(related_name=b'Experiences', to='shoutit.Business')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('shoutit.post',),
+        ),
+        migrations.CreateModel(
+            name='Event',
+            fields=[
+                ('post_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Post')),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('EventType', models.IntegerField(default=0, choices=[(0, b'Follow User'), (1, b'Follow Tag'), (2, b'Shout Offer'), (3, b'Shout Request'), (4, b'Experience'), (5, b'Share Experience'), (6, b'Comment'), (7, b'Gallery Item'), (8, b'Post Deal'), (9, b'Buy Deal'), (10, b'Follow Business')])),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('shoutit.post', models.Model),
+        ),
+        migrations.CreateModel(
+            name='PredefinedCity',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('City', models.CharField(default=b'', unique=True, max_length=200, db_index=True, blank=True)),
+                ('city_encoded', models.CharField(default=b'', unique=True, max_length=200, db_index=True, blank=True)),
+                ('Country', models.CharField(default=b'', max_length=2, db_index=True, blank=True)),
+                ('Latitude', models.FloatField(default=0.0)),
+                ('Longitude', models.FloatField(default=0.0)),
+                ('Approved', models.BooleanField(default=False)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Profile',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('image', models.CharField(max_length=1024, null=True, blank=True)),
+                ('Country', models.CharField(default=b'AE', max_length=200, db_index=True)),
+                ('City', models.CharField(default=b'Dubai', max_length=200, db_index=True)),
+                ('Latitude', models.FloatField(default=25.1993957)),
+                ('Longitude', models.FloatField(default=55.2738326)),
+                ('Bio', models.TextField(default=b'New Shouter!', max_length=512, null=True, blank=True)),
+                ('Mobile', models.CharField(max_length=20, unique=True, null=True, blank=True)),
+                ('birthday', models.DateField(null=True, blank=True)),
+                ('Sex', models.NullBooleanField()),
+                ('isSSS', models.BooleanField(default=False, db_index=True)),
+                ('isSMS', models.BooleanField(default=False, db_index=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Report',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('Text', models.TextField(default=b'', max_length=300, blank=True)),
+                ('IsSolved', models.BooleanField(default=False)),
+                ('IsDisabled', models.BooleanField(default=False)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+                ('user', models.ForeignKey(related_name=b'Reports', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Service',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Code', models.CharField(max_length=256)),
+                ('Name', models.CharField(max_length=1024)),
+                ('Price', models.FloatField()),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ServiceBuy',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Amount', models.IntegerField(default=1)),
+                ('DateBought', models.DateTimeField(auto_now_add=True)),
+                ('Service', models.ForeignKey(related_name=b'Buyers', to='shoutit.Service')),
+                ('user', models.ForeignKey(related_name=b'Services', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ServiceUsage',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Amount', models.IntegerField(default=1)),
+                ('DateUsed', models.DateTimeField(auto_now_add=True)),
+                ('Service', models.ForeignKey(related_name=b'BuyersUsages', to='shoutit.Service')),
+                ('user', models.ForeignKey(related_name=b'ServicesUsages', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='SharedExperience',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('Experience', models.ForeignKey(related_name=b'SharedExperiences', to='shoutit.Experience')),
+                ('OwnerUser', models.ForeignKey(related_name=b'SharedExperiences', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='SharedLocation',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('latitude', models.FloatField()),
+                ('longitude', models.FloatField()),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Shout',
+            fields=[
+                ('post_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Post')),
+                ('ExpiryDate', models.DateTimeField(default=None, null=True, db_index=True, blank=True)),
+                ('ExpiryNotified', models.BooleanField(default=False)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('shoutit.post',),
+        ),
+        migrations.CreateModel(
+            name='Deal',
+            fields=[
+                ('shout_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Shout')),
+                ('MinBuyers', models.IntegerField(default=0)),
+                ('MaxBuyers', models.IntegerField(null=True, blank=True)),
+                ('OriginalPrice', models.FloatField()),
+                ('IsClosed', models.BooleanField(default=False)),
+                ('ValidFrom', models.DateTimeField(null=True, blank=True)),
+                ('ValidTo', models.DateTimeField(null=True, blank=True)),
+                ('Item', models.ForeignKey(related_name=b'Deals', on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.Item', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('shoutit.shout',),
+        ),
+        migrations.CreateModel(
+            name='ShoutWrap',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Rank', models.FloatField(default=1.0)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='StoredFile',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('File', models.CharField(max_length=1024)),
+                ('Type', models.IntegerField()),
+                ('user', models.ForeignKey(related_name=b'Documents', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='StoredImage',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('image', models.CharField(max_length=1024)),
+                ('Item', models.ForeignKey(related_name=b'Images', blank=True, to='shoutit.Item', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Stream',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Type', models.IntegerField(default=0, db_index=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Stream2',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('object_id', uuidfield.fields.UUIDField(max_length=32, null=True, blank=True)),
+                ('type', models.SmallIntegerField(db_index=True, choices=[(0, b'Profile'), (1, b'Tag'), (2, b'Business'), (3, b'Related'), (4, b'Recommended')])),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+                ('listeners', models.ManyToManyField(related_name=b'listening', through='shoutit.Listen', to=settings.AUTH_USER_MODEL)),
+                ('posts', models.ManyToManyField(related_name=b'streams2', to='shoutit.Post')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Subscription',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Type', models.IntegerField(default=0)),
+                ('State', models.IntegerField(default=0)),
+                ('SignUpDate', models.DateTimeField(null=True, blank=True)),
+                ('DeactivateDate', models.DateTimeField(null=True, blank=True)),
+                ('UserName', models.CharField(max_length=64)),
+                ('Password', models.CharField(max_length=24)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Tag',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Name', models.CharField(default=b'', unique=True, max_length=100, db_index=True, blank=True)),
+                ('image', models.CharField(default=b'/static/img/shout_tag.png', max_length=1024, null=True, blank=True)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('Definition', models.TextField(default=b'New Tag!', max_length=512, null=True, blank=True)),
+                ('Creator', models.ForeignKey(related_name=b'TagsCreated', on_delete=django.db.models.deletion.SET_NULL, blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('Parent', models.ForeignKey(related_name=b'ChildTags', blank=True, to='shoutit.Tag', null=True)),
+                ('Stream', models.OneToOneField(related_name=b'OwnerTag', null=True, blank=True, to='shoutit.Stream')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Trade',
+            fields=[
+                ('shout_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Shout')),
+                ('StreamsCode', models.CharField(default=b'', max_length=2000, blank=True)),
+                ('MaxFollowings', models.IntegerField(default=6)),
+                ('MaxDistance', models.FloatField(default=180.0)),
+                ('MaxPrice', models.FloatField(default=1.0)),
+                ('IsShowMobile', models.BooleanField(default=True)),
+                ('IsSSS', models.BooleanField(default=False)),
+                ('BaseDatePublished', models.DateTimeField(auto_now_add=True)),
+                ('RenewalCount', models.IntegerField(default=0)),
+                ('Item', models.OneToOneField(related_name=b'Shout', null=True, blank=True, to='shoutit.Item')),
+                ('RecommendedStream', models.OneToOneField(related_name=b'InitShoutRecommended', null=True, blank=True, to='shoutit.Stream')),
+                ('RelatedStream', models.OneToOneField(related_name=b'InitShoutRelated', null=True, blank=True, to='shoutit.Stream')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=('shoutit.shout',),
+        ),
+        migrations.CreateModel(
+            name='Transaction',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('RemoteIdentifier', models.CharField(max_length=1024)),
+                ('RemoteData', models.CharField(max_length=1024)),
+                ('RemoteStatus', models.CharField(max_length=1024)),
+                ('DateCreated', models.DateTimeField(auto_now_add=True)),
+                ('DateUpdated', models.DateTimeField(auto_now=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='UserPermission',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('date_given', models.DateTimeField(auto_now_add=True)),
+                ('permission', models.ForeignKey(to='shoutit.Permission')),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Video',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('url', models.URLField(max_length=1024)),
+                ('thumbnail_url', models.URLField(max_length=1024)),
+                ('provider', models.CharField(max_length=1024)),
+                ('id_on_provider', models.CharField(max_length=256)),
+                ('duration', models.IntegerField(default=0)),
+                ('item', models.ForeignKey(related_name=b'videos', blank=True, to='shoutit.Item', null=True)),
+                ('shout', models.ForeignKey(related_name=b'videos', blank=True, to='shoutit.Shout', null=True)),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Voucher',
+            fields=[
+                ('id', uuidfield.fields.UUIDField(primary_key=True, serialize=False, editable=False, max_length=32, blank=True, unique=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('Code', models.CharField(max_length=22)),
+                ('DateGenerated', models.DateTimeField(auto_now_add=True)),
+                ('IsValidated', models.BooleanField(default=False)),
+                ('IsSent', models.BooleanField(default=False)),
+                ('DealBuy', models.ForeignKey(related_name=b'Vouchers', to='shoutit.DealBuy')),
+            ],
+            options={
+                'abstract': False,
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AlterUniqueTogether(
+            name='stream2',
+            unique_together=set([('content_type', 'object_id', 'type')]),
+        ),
+        migrations.AddField(
+            model_name='storedimage',
+            name='Shout',
+            field=models.ForeignKey(related_name=b'Images', blank=True, to='shoutit.Shout', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='shoutwrap',
+            name='Shout',
+            field=models.ForeignKey(related_name=b'ShoutWraps', to='shoutit.Shout'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='shoutwrap',
+            name='Stream',
+            field=models.ForeignKey(related_name=b'ShoutWraps', to='shoutit.Stream'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='shout',
+            name='Tags',
+            field=models.ManyToManyField(related_name=b'Shouts', to='shoutit.Tag'),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='sharedexperience',
+            unique_together=set([('Experience', 'OwnerUser')]),
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='Following',
+            field=models.ManyToManyField(to='shoutit.Stream', through='shoutit.FollowShip'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='Interests',
+            field=models.ManyToManyField(related_name=b'Followers', to='shoutit.Tag'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='LastToken',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, default=None, blank=True, to='shoutit.ConfirmToken', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='Stream',
+            field=models.OneToOneField(related_name=b'OwnerUser', to='shoutit.Stream'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='user',
+            field=models.OneToOneField(related_name=b'profile', null=True, blank=True, to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='profile',
+            name='video',
+            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.Video'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='post',
+            name='OwnerUser',
+            field=models.ForeignKey(related_name=b'Posts', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='post',
+            name='Streams',
+            field=models.ManyToManyField(related_name=b'Posts', to='shoutit.Stream'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='permission',
+            name='users',
+            field=models.ManyToManyField(related_name=b'permissions', through='shoutit.UserPermission', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='payment',
+            name='Transaction',
+            field=models.ForeignKey(related_name=b'Payment', to='shoutit.Transaction'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='payment',
+            name='content_type',
+            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='payment',
+            name='user',
+            field=models.ForeignKey(related_name=b'Payments', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='message2read',
+            unique_together=set([('user', 'message', 'conversation')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='message2delete',
+            unique_together=set([('user', 'message', 'conversation')]),
+        ),
+        migrations.AddField(
+            model_name='message2',
+            name='deleted_by',
+            field=models.ManyToManyField(related_name=b'deleted_messages2', through='shoutit.Message2Delete', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='message2',
+            name='read_by',
+            field=models.ManyToManyField(related_name=b'read_messages2', through='shoutit.Message2Read', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='message2',
+            name='user',
+            field=models.ForeignKey(related_name=b'+', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='listen',
+            name='stream',
+            field=models.ForeignKey(to='shoutit.Stream2'),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='listen',
+            unique_together=set([('listener', 'stream')]),
+        ),
+        migrations.AddField(
+            model_name='galleryitem',
+            name='Item',
+            field=models.ForeignKey(related_name=b'+', to='shoutit.Item'),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='galleryitem',
+            unique_together=set([('Item', 'Gallery')]),
+        ),
+        migrations.AddField(
+            model_name='followship',
+            name='follower',
+            field=models.ForeignKey(to='shoutit.Profile'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='followship',
+            name='stream',
+            field=models.ForeignKey(to='shoutit.Stream'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='dealbuy',
+            name='Deal',
+            field=models.ForeignKey(related_name=b'Buys', on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.Deal', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='dealbuy',
+            name='user',
+            field=models.ForeignKey(related_name=b'DealsBought', on_delete=django.db.models.deletion.SET_NULL, blank=True, to=settings.AUTH_USER_MODEL, null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='dbclconversation',
+            name='shout',
+            field=models.ForeignKey(to='shoutit.Trade'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='dbclconversation',
+            name='to_user',
+            field=models.ForeignKey(related_name=b'+', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='conversation2delete',
+            unique_together=set([('user', 'conversation')]),
+        ),
+        migrations.AddField(
+            model_name='conversation2',
+            name='deleted_by',
+            field=models.ManyToManyField(related_name=b'deleted_conversations2', through='shoutit.Conversation2Delete', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='conversation2',
+            name='last_message',
+            field=models.OneToOneField(related_name=b'+', null=True, blank=True, to='shoutit.Message2'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='conversation2',
+            name='users',
+            field=models.ManyToManyField(related_name=b'conversations2', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='conversation',
+            name='AboutPost',
+            field=models.ForeignKey(related_name=b'+', to='shoutit.Trade'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='conversation',
+            name='FromUser',
+            field=models.ForeignKey(related_name=b'+', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='conversation',
+            name='ToUser',
+            field=models.ForeignKey(related_name=b'+', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='comment',
+            name='AboutPost',
+            field=models.ForeignKey(related_name=b'Comments', blank=True, to='shoutit.Post', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='comment',
+            name='OwnerUser',
+            field=models.ForeignKey(related_name=b'+', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='category',
+            name='Tags',
+            field=models.ManyToManyField(related_name=b'Category', null=True, to='shoutit.Tag', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='category',
+            name='TopTag',
+            field=models.OneToOneField(related_name=b'OwnerCategory', null=True, blank=True, to='shoutit.Tag'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='businesscreateapplication',
+            name='LastToken',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, default=None, blank=True, to='shoutit.ConfirmToken', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='businesscreateapplication',
+            name='business',
+            field=models.ForeignKey(related_name=b'UserApplications', on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.Business', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='businesscreateapplication',
+            name='user',
+            field=models.ForeignKey(related_name=b'BusinessCreateApplication', on_delete=django.db.models.deletion.SET_NULL, blank=True, to=settings.AUTH_USER_MODEL, null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='businessconfirmation',
+            name='Files',
+            field=models.ManyToManyField(related_name=b'Confirmation', to='shoutit.StoredFile'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='businessconfirmation',
+            name='user',
+            field=models.ForeignKey(related_name=b'BusinessConfirmations', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='business',
+            name='Category',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.BusinessCategory', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='business',
+            name='LastToken',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, default=None, blank=True, to='shoutit.ConfirmToken', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='business',
+            name='Stream',
+            field=models.OneToOneField(related_name=b'OwnerBusiness', null=True, blank=True, to='shoutit.Stream'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='business',
+            name='user',
+            field=models.OneToOneField(related_name=b'business', to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='user',
+            name='user_permissions',
+            field=models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Permission', blank=True, help_text='Specific permissions for this user.', verbose_name='user permissions'),
+            preserve_default=True,
+        ),
+    ]

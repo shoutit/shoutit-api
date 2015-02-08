@@ -4,7 +4,6 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 
 from apps.shoutit.models import DealBuy, Voucher, Shout
-from apps.shoutit.utils import asynchronous_task
 from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
 from reportlab.lib.colors import orange
 from geraldo.utils import cm, BAND_WIDTH, TA_RIGHT
@@ -221,7 +220,6 @@ def GenerateBuyersDocument(deal):
     return buffer.getvalue()
 
 
-@asynchronous_task()
 def CloseDeal(deal):
     deal.IsClosed = True
     deal.save()

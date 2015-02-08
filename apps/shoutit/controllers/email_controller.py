@@ -7,12 +7,11 @@ from django.conf import settings
 from apps.shoutit import utils
 from apps.shoutit.models import DBCLConversation
 
-from apps.shoutit.utils import asynchronous_task, get_shout_name_preview, remove_non_ascii
+from apps.shoutit.utils import get_shout_name_preview, remove_non_ascii
 from apps.shoutit.controllers import sms_controller
 from common import constants
 
 
-@asynchronous_task()
 def SendEmail(email, variables, html_template, text_template):
     subject = _('[ShoutIt] Welcome to ShoutIt!')
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -32,7 +31,6 @@ def SendEmail(email, variables, html_template, text_template):
     msg.send()
 
 
-@asynchronous_task()
 def SendPasswordRecoveryEmail(user, email, link):
     subject = _('[ShoutIt] Welcome to ShoutIt!')
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -60,7 +58,6 @@ def SendPasswordRecoveryEmail(user, email, link):
     msg.send()
 
 
-@asynchronous_task()
 def SendRegistrationActivationEmail(user, email, link, token):
     subject = _('[ShoutIt] Welcome to ShoutIt!')
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -90,7 +87,6 @@ def SendRegistrationActivationEmail(user, email, link, token):
     msg.send()
 
 
-@asynchronous_task()
 def SendListenEmail(follower, followed):
     subject = _('[ShoutIt] %(name)s has started listening to your shouts') % {'name': follower.name}
     link = 'http%s://%s%s' % (settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % follower.username)
@@ -118,7 +114,6 @@ def SendListenEmail(follower, followed):
     msg.send(True)
 
 
-@asynchronous_task()
 def SendExpiryNotificationEmail(user, shout):
     subject = _('[ShoutIt] your shout is about to expire! reshout it now.')
     title = shout.Item.Name
@@ -149,7 +144,6 @@ def SendExpiryNotificationEmail(user, shout):
     msg.send()
 
 # todo: links
-@asynchronous_task()
 def SendBuyOfferEmail(shout, buyer):
     subject = u'[ShoutIt] %s offered to buy your %s' % (buyer.username, shout.Name)
     shout_link = 'http%s://%s%s' % (
@@ -188,7 +182,6 @@ def SendBuyOfferEmail(shout, buyer):
     msg.send()
 
 
-@asynchronous_task()
 def SendSellOfferEmail(shout, seller):
     subject = u'[ShoutIt] %s has %s and willing to sell it to you' % (seller.username, shout.Name)
     shout_link = 'http%s://%s%s' % (
@@ -228,7 +221,6 @@ def SendSellOfferEmail(shout, seller):
     msg.send()
 
 
-@asynchronous_task()
 def send_message_email(message):
 
     to_user = message.ToUser
@@ -306,7 +298,6 @@ def send_message_email(message):
         msg.send()
 
 
-@asynchronous_task()
 def SendUserDealCancel(user, deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
     to_name = user.name
@@ -339,7 +330,6 @@ def SendUserDealCancel(user, deal):
     msg.send()
 
 
-@asynchronous_task()
 def SendBusinessDealCancel(deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
     to_name = deal.Business.name
@@ -368,7 +358,6 @@ def SendBusinessDealCancel(deal):
     msg.send()
 
 
-@asynchronous_task()
 def SendBusinessSignupEmail(user, email, name):
     subject = _('[ShoutIt] Welcome to ShoutIt!')
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -394,7 +383,6 @@ def SendBusinessSignupEmail(user, email, name):
     msg.send()
 
 
-@asynchronous_task()
 def SendBusinessRejectionEmail(user, email, link):
     subject = _('[ShoutIt] Welcome to ShoutIt!')
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -422,7 +410,6 @@ def SendBusinessRejectionEmail(user, email, link):
     msg.send()
 
 
-@asynchronous_task()
 def SendBusinessAcceptanceEmail(user, email, link):
     subject = _('[ShoutIt] Welcome to ShoutIt!')
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -452,7 +439,6 @@ def SendBusinessAcceptanceEmail(user, email, link):
     msg.send()
 
 
-@asynchronous_task()
 def SendBusinessBuyersDocument(deal, document):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': deal.Item.Name}
     to_name = deal.Business.user.get_full_name()
@@ -484,7 +470,6 @@ def SendBusinessBuyersDocument(deal, document):
     msg.send()
 
 
-@asynchronous_task()
 def SendUserDealVoucher(buy, voucher):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': buy.Deal.Item.Name}
     to_name = buy.user.get_full_name()
@@ -516,7 +501,6 @@ def SendUserDealVoucher(buy, voucher):
     msg.send()
 
 
-@asynchronous_task()
 def SendInvitationEmail(from_user, names_emails_dict):
     subject = '%s invites you to join Shoutit' % from_user.get_full_name()
     messages = []

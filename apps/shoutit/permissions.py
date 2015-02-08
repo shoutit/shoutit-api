@@ -1,5 +1,4 @@
-from django.db.utils import DatabaseError
-import django.dispatch
+from django.dispatch import Signal
 from django.utils.translation import ugettext_lazy as _
 
 from common.constants import Constant
@@ -9,26 +8,25 @@ from apps.shoutit.models import Permission
 class ConstantPermission(Constant):
     counter = 0
     values = {}
-    instances = {}
     reversed_instances = {}
 
     def __init__(self, text, message):
         self.message = message
-        try:
-            self.permission, created = Permission.objects.get_or_create(name=text)
-            self.value = self.permission.pk
-            self.__class__.instances[self] = self.permission
-            self.__class__.reversed_instances[self.permission] = self
-            Constant.__init__(self, text, self.value)
-        except DatabaseError, e:
-            if Permission._meta.db_table in e.message:
-                self.value = 1
-                from django import db
-                db.close_connection()
-            else:
-                raise e
+        self.permission, created = Permission.objects.get_or_create(name=text)
+        self.value = self.permission.id
+        self.__class__.reversed_instances[self.permission] = self
+        Constant.__init__(self, text, self.value)
 
-permissions_changed = django.dispatch.Signal(providing_args=["request", "permissions"])
+    def __hash__(self):
+        return self.value.int
+
+    def __int__(self):
+        return self.value.int
+
+    def __eq__(self, other):
+        return self.value.int == other.value.int
+
+permissions_changed = Signal(providing_args=["request", "permissions"])
 
 PERMISSION_USE_SHOUT_IT = ConstantPermission("USE_SHOUT_IT", _("You're not allowed to use Shoutit"))
 PERMISSION_SHOUT_MORE = ConstantPermission("SHOUT_MORE", _("Please, activate your account to add more shouts (check your email for activation link)"))

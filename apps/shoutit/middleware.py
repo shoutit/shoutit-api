@@ -39,12 +39,13 @@ class UserPermissionsMiddleware(object):
     @staticmethod
     def attach_permissions_to_request(request):
         if request.user.is_authenticated():
-            permissions = TaggedCache.get('perma|permissions|%s' % request.user.username)
-            if not permissions:
-                permissions = UserPermission.objects.get_user_permissions(request.user)
-                permissions = [ConstantPermission.reversed_instances[p] for p in permissions]
-                TaggedCache.set('perma|permissions|%s' % request.user.username, permissions, timeout=10 * 356 * 24 * 60 * 60)
-            request.user.constant_permissions = permissions
+            c_permissions = TaggedCache.get('perma|permissions|%s' % request.user.pk)
+            if not c_permissions:
+                # permissions = UserPermission.objects.get_user_permissions(request.user)
+                permissions = request.user.permissions.all()
+                c_permissions = [ConstantPermission.reversed_instances[p] for p in permissions]
+                TaggedCache.set('perma|permissions|%s' % request.user.username, c_permissions, timeout=10 * 356 * 24 * 60 * 60)
+            request.user.constant_permissions = c_permissions
         else:
             request.user.constant_permissions = ANONYMOUS_USER_PERMISSIONS
 

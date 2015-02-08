@@ -13,7 +13,7 @@ from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from apps.shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Post, PredefinedCity
 from apps.shoutit.controllers import email_controller, stream_controller, event_controller, item_controller, realtime_controller
-from apps.shoutit.utils import asynchronous_task, to_seo_friendly
+from apps.shoutit.utils import to_seo_friendly
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
@@ -33,7 +33,7 @@ def get_post(post_id, find_muted=False, find_expired=False):
               | Q(shout__ExpiryDate__isnull=False, DatePublished__lte=F('shout__ExpiryDate'))
              )
              & (Q(Type=POST_TYPE_REQUEST) | Q(Type=POST_TYPE_OFFER)))
-        ).select_related(depth=2)
+        ).select_related()
     if post:
         post = post[0]
         if post.Type == POST_TYPE_OFFER or post.Type == POST_TYPE_REQUEST:
@@ -54,7 +54,7 @@ def delete_post(post):
             # elif post.Type == POST_TYPE_DEAL:
             # event_controller.delete_event_about_obj(post.shout.deal)
             # elif post.Type == POST_TYPE_EXPERIENCE:
-            #     event_controller.delete_event_about_obj(post.experience)
+            # event_controller.delete_event_about_obj(post.experience)
     except:
         pass
 
@@ -171,7 +171,6 @@ def GetStreamAffectedByShout(shout):
     return []
 
 
-@asynchronous_task()
 def save_relocated_shouts(trade, stream_type):
     if not trade or stream_type not in [STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED]:
         return

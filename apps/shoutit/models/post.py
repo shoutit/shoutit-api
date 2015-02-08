@@ -136,7 +136,7 @@ class Shout(Post):
         if hasattr(self, 'tags'):
             return self.tags
         else:
-            self.tags = list(self.Tags.all().select_related(depth=2))
+            self.tags = list(self.Tags.all().select_related())
             return self.tags
 
     def get_images(self):

@@ -52,7 +52,7 @@ class ConfirmToken(UUIDModel):
             t = ConfirmToken.objects.filter(Token__iexact=token, DateCreated__gte=begin, DateCreated__lte=today)
         if not get_disabled:
             t = t.filter(IsDisabled=False)
-        t = t.select_related(depth=1)
+        t = t.select_related()
         if len(t) > 0:
             return t[0]
         else:

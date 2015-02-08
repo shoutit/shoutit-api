@@ -103,16 +103,6 @@ RANK_COEFFICIENT_TIME = 0.7  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_FOLLOW = 0.014  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 
-# Celery Settings
-BROKER_HOST = 'localhost'
-BROKER_PORT = 5672
-# BROKER_USER = "celery"
-# BROKER_PASSWORD = "celery"
-#BROKER_VHOST = "celery_host"
-CELERY_RESULT_BACKEND = "amqp"
-#CELERY_TASK_SERIALIZER = "json"
-CELERY_IMPORTS = ("celery_tasks", )
-#djcelery.setup_loader()
 
 # Realtime and Redis
 REALTIME_SERVER_ON = False
@@ -169,11 +159,9 @@ AUTH_USER_MODEL = 'shoutit.User'
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.sites',
     'grappelli',
-    'django.contrib.auth',
     'django.contrib.admin',
-    'django.contrib.admindocs',
+    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -184,8 +172,6 @@ INSTALLED_APPS = (
     'piston3',
     'push_notifications',
     'django_mobile',
-    'djcelery',
-    'djcelery_email',
 
     #'paypal.standard.ipn',
     #'paypal.standard.pdt',
@@ -194,7 +180,6 @@ INSTALLED_APPS = (
     #'l10n',,
     #'payment',
     #'subscription',
-    'south',
 )
 # apps only on local development
 if DEV:
@@ -238,6 +223,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -261,7 +247,7 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'shoutit_dev' if DEV or DEV_ON_SERVER else 'shoutit_prod',  # Or path to database file if using sqlite3.
+        'NAME': 'shoutit_dev17' if DEV or DEV_ON_SERVER else 'shoutit_prod',  # Or path to database file if using sqlite3.
         'USER': 'syron',  # Not used with sqlite3.
         'PASSWORD': '123',  # Not used with sqlite3.
         'HOST': 'db.shoutit.com',
@@ -285,7 +271,6 @@ USE_TZ = False
 ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
-    #('ar', ugettext('Arabic')),
 )
 DEFAULT_LANGUAGE_CODE = 'en'
 
@@ -323,10 +308,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "apps.shoutit.middleware.default_location"
 )
 
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
 
 # Logging
 LOGGING = {
@@ -357,7 +338,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
         'console_debug': {
-            'level': 'DEBUG' if DEV else 'WARNING',
+            'level': 'INFO' if DEV else 'WARNING',
             'class': 'logging.StreamHandler',
             'filters': ['require_debug_true'],
         },
@@ -448,7 +429,6 @@ elif USE_MANDRILL:
     EMAIL_USE_TLS = True
     EMAIL_USE_SSL = True
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    #EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 else:
     DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = SHOUT_IT_HOST

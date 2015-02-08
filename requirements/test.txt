@@ -1,2 +1,0 @@
-# test requirements
--r common.txt

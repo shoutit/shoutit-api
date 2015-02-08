@@ -239,32 +239,6 @@ from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 
 
-def asynchronous_task():
-    def wrapper(f):
-        try:
-            @wraps(f, assigned=available_attrs(f))
-            def _wrapper(*args, **kwargs):
-                try:
-                    # from celery.task.control import inspect
-                    # insp = inspect()
-                    # d = insp.active()
-                    # if not d:
-                    from libs.celery.celery_tasks_____asdasd import execute
-
-                    execute.delay('', f.__module__, '', f.func_name, *args, **kwargs)
-                except Exception, e:
-                    print e
-                    f(*args, **kwargs)
-
-            _wrapper.func = f
-            return _wrapper
-        except Exception:
-            return f
-
-    return wrapper
-
-
-@asynchronous_task()
 def make_image_thumbnail(url, size, container_name):
     from PIL.Image import open as image_open, ANTIALIAS
     from mimetypes import guess_type

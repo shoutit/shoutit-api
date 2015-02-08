@@ -14,7 +14,6 @@ from django.utils.translation import ugettext as _
 from common.constants import Constant
 from common.tagged_cache import TaggedCache
 from apps.shoutit.permissions import PERMISSION_USE_SHOUT_IT
-from apps.shoutit.utils import asynchronous_task
 from apps.shoutit.middleware import JsonPostMiddleware
 
 
@@ -315,7 +314,6 @@ def refresh_cache(level=CACHE_REFRESH_LEVEL_ALL, tags=None, dynamic_tags=None):
     return wrapper
 
 
-@asynchronous_task()
 def _refresh_cache(level, tags, session_key, user_id):
     if level == CACHE_REFRESH_LEVEL_ALL:
         [TaggedCache.delete_by_tag(tag) for tag in tags]
@@ -347,20 +345,3 @@ def get_data(tags, function, *args, **kwargs):
 
 def refresh_cache_dynamically(tags):
     map(TaggedCache.delete_by_tag, tags)
-
-
-def permissions_point_cut(request, permissions_required, *args, **kwargs):
-    if PERMISSION_USE_SHOUT_IT not in permissions_required:
-        permissions_required.append(PERMISSION_USE_SHOUT_IT)
-    if not hasattr(request.user, 'constant_permissions'):
-        from apps.shoutit.middleware import UserPermissionsMiddleware
-        UserPermissionsMiddleware.attach_permissions_to_request(request)
-    if not request.user.is_superuser and permissions_required and not frozenset(permissions_required) <= frozenset(request.user.constant_permissions):
-        result = ResponseResult()
-        needed_permissions = frozenset(permissions_required) - frozenset(request.user.constant_permissions)
-        result.errors.append(RESPONSE_RESULT_ERROR_PERMISSION_NEEDED)
-        for permission in needed_permissions:
-            result.messages.append(('error', permission.message))
-        result.missing_permissions = list(needed_permissions)
-        return result
-    return None

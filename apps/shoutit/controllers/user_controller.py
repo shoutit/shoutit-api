@@ -24,11 +24,11 @@ def get_profile(username):
     if not isinstance(username, basestring):
         return None
     try:
-        q = Profile.objects.filter(user__username__iexact=username).select_related(depth=1)
+        q = Profile.objects.filter(user__username__iexact=username).select_related()
         if q:
             return q[0]
         else:
-            q = Business.objects.filter(user__username__iexact=username).select_related(depth=1)
+            q = Business.objects.filter(user__username__iexact=username).select_related()
             if q:
                 return q[0]
             else:
@@ -97,7 +97,7 @@ def GetUserByEmail(email):
     if not isinstance(email, str) and not isinstance(email, unicode):
         return None
     try:
-        q = User.objects.filter(email__iexact=email).select_related(depth=1)
+        q = User.objects.filter(email__iexact=email).select_related()
         if q:
             return GetProfile(q[0])
         else:
@@ -110,7 +110,7 @@ def GetUserByMobile(mobile):
     if not isinstance(mobile, str) and not isinstance(mobile, unicode):
         return None
     try:
-        q = Profile.objects.filter(Mobile__iexact=mobile).select_related(depth=1)
+        q = Profile.objects.filter(Mobile__iexact=mobile).select_related()
         if q:
             return q[0]
         else:

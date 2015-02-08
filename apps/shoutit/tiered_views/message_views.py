@@ -115,9 +115,6 @@ def send_message(request, shout_id, conversation_id=None):
 
     result.data['to_user'] = to_user
     if request.method == 'POST':
-        permissions_result = permissions_point_cut(request, [PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE])
-        if permissions_result:
-            return permissions_result
         form = MessageForm(request.POST)
         form.is_valid()
         message = message_controller.send_message(request.user, to_user, shout, form.cleaned_data['text'], conversation=conversation)
