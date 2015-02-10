@@ -25,3 +25,12 @@ Structure
 Env Name: shoutit_backend_[dev|prod]
 
 Log Dir: /var/opt/log/<env name>
+
+Requirements
+=================
+
+
+Debian Requirements
+-----------------
+python-dev
+libpq-dev

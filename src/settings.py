@@ -51,7 +51,7 @@ else:  # LOCAL
 
 
 # if ON_SERVER:
-#     if GUNICORN:
+# if GUNICORN:
 #         DEBUG = False
 #         SHOUT_IT_DOMAIN = 'www.shoutit.com'
 #         SHOUT_IT_HOST = 'shoutit.com'
@@ -369,6 +369,9 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'message_only'
+        },
+        'null': {
+            "class": 'django.utils.log.NullHandler',
         }
     },
     'loggers': {
@@ -380,6 +383,7 @@ LOGGING = {
             'handlers': ['console_debug', 'sentry'],
         },
 
+        # add another action for security errors
         # 'django.security': {
         # 'handlers': ['mail_admins'],
         #     'level': 'ERROR',
@@ -406,6 +410,19 @@ LOGGING = {
         #     'level': 'INFO',
         #     'propagate': False
         # }
+        'gunicorn.access': {
+            'level': 'INFO',
+            'handlers': ['console'],
+
+        },
+        'gunicorn.error': {
+            'level': 'INFO',
+            'handlers': ['console_debug', 'sentry'],
+
+        },
+        '': {
+            'handlers': ['console_debug', 'sentry'],
+        }
     }
 }
 

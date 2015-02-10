@@ -33,3 +33,5 @@ https://cl.ly/1w3v1B2i1P1A/django-push-notifications.zip
 
 jsonschema
 raven
+
+gunicorn>=19

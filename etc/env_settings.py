@@ -18,6 +18,10 @@ else:
     ENV = os.path.basename(ENV_DIR)
     LOG_DIR = os.path.join('var', 'log', 'opt', ENV)
 
+if not (BACKEND_DIR and DJANGO_DIR and ENV_DIR and ENV and LOG_DIR):
+    raise EnvironmentError("BACKEND_DIR, DJANGO_DIR, ENV_DIR, ENV and LOG_DIR can not be None. "
+                           "Deactivate the virtualenv if you are running manage.py directly or run start.sh")
+
 
 # Local or Dev or Prod
 LOCAL = ENV == 'shoutit_backend_local'
