@@ -1,0 +1,48 @@
+server {
+        listen 80;
+        server_name shoutit.com;
+        return 301 https://www.shoutit.com$request_uri;
+}
+
+server {
+        listen 80;
+        server_name www.shoutit.com;
+        return 301 https://www.shoutit.com$request_uri;
+}
+
+server {
+        listen 443 ssl;
+        server_name shoutit.com;
+        ssl_certificate /etc/nginx/ssl/server.crt;
+        ssl_certificate_key /etc/nginx/ssl/server.key;
+        return 301 https://www.shoutit.com$request_uri;
+}
+
+server {
+        listen 443 ssl;
+        server_name www.shoutit.com;
+
+        ssl_certificate /etc/nginx/ssl/server.crt;
+        ssl_certificate_key /etc/nginx/ssl/server.key;
+
+        access_log off;
+
+        location /static/ {
+            alias /opt/myenv/shoutit/static_prod/;
+        }
+
+        location /media/ {
+            alias /opt/myenv/shoutit/media_prod/;
+        }
+
+        location / {
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_pass http://127.0.0.1:8001;
+
+        }
+
+}
