@@ -3,7 +3,7 @@
 DJANGO_SETTINGS_MODULE="settings"
 DJANGO_WSGI_MODULE="wsgi"
 
-BACKEND_DIR="${PWD}"
+BACKEND_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 DJANGO_DIR="${BACKEND_DIR}/src"
 ENV_DIR="$(dirname "${BACKEND_DIR}")"
 ENV="$(basename "${ENV_DIR}")"
