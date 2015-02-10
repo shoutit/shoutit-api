@@ -463,15 +463,6 @@ def shouts_location_api(request, result, *args, **kwargs):
     return response, pre_json_result
 
 
-def shouts_clusters_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result.update(result.data)
-
-    return response, pre_json_result
-
-
 def shout_form_renderer_api(request, result, *args, **kwargs):
     response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
     if 'shout' in result.data:

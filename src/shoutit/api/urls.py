@@ -120,12 +120,6 @@ shout_api = patterns('',
                          })
                      ),
 
-                     url(r'^nearby/clusters/$',
-                         TieredResource(TieredHandler, oauth, {
-                             'GET': shout_views.load_clusters
-                         })
-                     ),
-
                      url(r'^buy/$',
                          TieredResource(TieredHandler, oauth, {
                              'POST': shout_views.post_request

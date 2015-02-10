@@ -14,10 +14,8 @@ import os
 import re
 from PIL import Image
 import pyrax
-from django.http import HttpResponse, Http404
-from numpy import array, argmax, sum, sqrt
-from milk.unsupervised import _kmeans, kmeans as __kmeans
 import numpy as np
+from django.http import HttpResponse, Http404
 from django.conf import settings
 
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
@@ -34,12 +32,12 @@ def random_uuid_str():
 
 
 def get_farest_point(observation, points):
-    observation = array(observation)
-    points = array(points)
+    observation = np.array(observation)
+    points = np.array(points)
 
     diff = points - observation
-    dist = sqrt(sum(diff ** 2, axis=-1))
-    farest_index = argmax(dist)
+    dist = np.sqrt(np.sum(diff ** 2, axis=-1))
+    farest_index = np.argmax(dist)
     return farest_index
 
 
@@ -85,56 +83,6 @@ def get_ip(request):
     if not ip or ip == '':
         ip = '80.227.53.34'
     return ip
-
-
-def number_of_clusters_based_on_zoom(zoom):
-    if 3 <= zoom <= 4:
-        return 15
-    if 5 <= zoom <= 6:
-        return 10
-    if 7 <= zoom <= 8:
-        return 8
-    if 9 <= zoom <= 12:
-        return 15
-    if 13 <= zoom <= 14:
-        return 20
-    if 15 <= zoom <= 18:
-        return 50
-    return 0
-
-
-def dist_function(f_matrix, cs):
-    dists = np.dot(f_matrix, (-2) * cs.T)
-    dists += np.array([np.dot(c, c) for c in cs])
-    return dists
-
-
-def kmeans(fmatrix, k, max_iter=1000):
-    fmatrix = np.asanyarray(fmatrix)
-
-    if fmatrix.dtype in (np.float32, np.float64) and fmatrix.flags['C_CONTIGUOUS']:
-        computecentroids = _kmeans.computecentroids
-    else:
-        computecentroids = __kmeans._pycomputecentroids
-
-    centroids = np.array(fmatrix[0:k], fmatrix.dtype)
-    prev = np.zeros(len(fmatrix), np.int32)
-    counts = np.empty(k, np.int32)
-    dists = None
-    for i in xrange(max_iter):
-        dists = dist_function(fmatrix, centroids)
-        assignments = dists.argmin(1)
-        if np.all(assignments == prev):
-            break
-        if computecentroids(fmatrix, centroids, assignments.astype(np.int32), counts):
-            (empty,) = np.where(counts == 0)
-            centroids = np.delete(centroids, empty, axis=0)
-            k = len(centroids)
-            counts = np.empty(k, np.int32)
-            # This will cause new matrices to be allocated in the next iteration
-            dists = None
-        prev[:] = assignments
-    return assignments, centroids
 
 
 def generate_confirm_token(type):

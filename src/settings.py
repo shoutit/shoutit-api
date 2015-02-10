@@ -10,62 +10,66 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 import os
 import sys
-from common.utils import check_runserver_address_port, check_offline_mood
+from common.utils import get_address_port, check_offline_mood
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
-SRC_DIR = BASE_DIR = os.path.dirname(__file__)
-SITE_DIR = os.path.dirname(SRC_DIR)
-ENV_DIR = os.path.dirname(SITE_DIR)
-print "ENV_DIR:", ENV_DIR
 
 OFFLINE_MODE = check_offline_mood()
 
-# Prod or Dev or Dev on Server
-DEV = False if os.environ.get('HOME') == '/root' else True
-ON_SERVER = not DEV
-DEV_ON_SERVER = ON_SERVER and ENV_DIR == 'shoutit_backend_dev'
-PROD_ON_SERVER = ON_SERVER and ENV_DIR == 'shoutit_backend_prod'
+from etc.env_settings import *
+
+# using gunicorn or not
+GUNICORN = 'SERVER_SOFTWARE' in os.environ and 'gunicorn' in os.environ.get('SERVER_SOFTWARE')
+ADDRESS, PORT = get_address_port(GUNICORN)
 
 print "=================================================="
 print "================= Shoutit Server ================="
 print "=================================================="
+print "ENV:", ENV
 if OFFLINE_MODE:
     print "OFFLINE MODE: ON"
-
-ADDRESS, PORT = check_runserver_address_port()
-GUNICORN = ADDRESS == '0.0.0.0'
-
-print 'ADDRESS:', ADDRESS
-print 'PORT:', PORT
 print 'GUNICORN:', GUNICORN
+print 'BIND: %s:%s' % (ADDRESS, PORT)
 
-print "ENV:", "DEV" if DEV else "ON_SERVER" if ON_SERVER else ""
-if ON_SERVER:
-    print "SERVER STATUS:", "DEV" if DEV_ON_SERVER else "PROD" if PROD_ON_SERVER else ""
-
-if ON_SERVER:
-    if GUNICORN:
-        DEBUG = False
-        SHOUT_IT_DOMAIN = 'www.shoutit.com'
-        SHOUT_IT_HOST = 'shoutit.com'
-
-    else:
-        DEBUG = True
-        SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
-        SHOUT_IT_HOST = 'shoutit.com'
+if PROD:
+    DEBUG = False
+    SHOUT_IT_DOMAIN = 'www.shoutit.com'
+    SHOUT_IT_HOST = 'shoutit.com'
 
 elif DEV:
     DEBUG = True
-    SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
-    SHOUT_IT_HOST = '127.0.0.1'
+    SHOUT_IT_DOMAIN = 'dev.shoutit.com'
+    SHOUT_IT_HOST = 'dev.shoutit.com'
 
-else:
+else:  # LOCAL
     DEBUG = True
-    SHOUT_IT_DOMAIN = 'www.shoutit.com'
-    SHOUT_IT_HOST = 'shoutit.com'
+    SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
+    SHOUT_IT_HOST = 'shoutit.dev'
+
+
+# if ON_SERVER:
+#     if GUNICORN:
+#         DEBUG = False
+#         SHOUT_IT_DOMAIN = 'www.shoutit.com'
+#         SHOUT_IT_HOST = 'shoutit.com'
+#
+#     else:
+#         DEBUG = True
+#         SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
+#         SHOUT_IT_HOST = 'shoutit.com'
+#
+# elif LOCAL:
+#     DEBUG = True
+#     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
+#     SHOUT_IT_HOST = '127.0.0.1'
+#
+# else:
+#     DEBUG = True
+#     SHOUT_IT_DOMAIN = 'www.shoutit.com'
+#     SHOUT_IT_HOST = 'shoutit.com'
 
 print "DEBUG:", DEBUG
 
@@ -76,9 +80,9 @@ PISTON_EMAIL_ERRORS = False
 # URLs
 ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
-IS_SITE_SECURE = ON_SERVER and GUNICORN
-PROTO = 'https://' if IS_SITE_SECURE else 'http://'
-SITE_LINK = '%s%s/' % (PROTO, SHOUT_IT_DOMAIN)
+IS_SITE_SECURE = PROD
+SCHEME = 'https' if IS_SITE_SECURE else 'http'
+SITE_LINK = '%s://%s/' % (SCHEME, SHOUT_IT_DOMAIN)
 WSGI_APPLICATION = 'wsgi.application'
 
 print "SITE_LINK:", SITE_LINK
@@ -143,7 +147,7 @@ REDIS_CACHES = {
     }
 }
 # todo: use only redis
-if DEV or DEV_ON_SERVER:
+if LOCAL or DEV:
     redis = ''
     SESSION_ENGINE = DEV_SESSION_ENGINE
     CACHES = DEV_CACHES
@@ -186,16 +190,16 @@ INSTALLED_APPS = (
     # 'subscription',
 )
 # apps only on local development
-if DEV:
+if LOCAL:
     INSTALLED_APPS += (
         'django_extensions',
     )
 # apps only on server development
-if DEV_ON_SERVER:
+if DEV:
     INSTALLED_APPS += (
     )
 # apps only on production
-if PROD_ON_SERVER:
+if PROD:
     INSTALLED_APPS += (
     )
 # apps when gunicorn is on
@@ -210,7 +214,7 @@ RAVEN_CONFIG = {
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(SITE_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
+    'APNS_CERTIFICATE': os.path.join(BACKEND_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
                                      % ('dev' if APNS_SANDBOX else 'prod')),
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
@@ -245,12 +249,12 @@ MIDDLEWARE_CLASSES = (
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'shoutit_dev17' if DEV or DEV_ON_SERVER else 'shoutit_prod',  # Or path to database file if using sqlite3.
-        'USER': 'syron',  # Not used with sqlite3.
-        'PASSWORD': '123',  # Not used with sqlite3.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': ENV,
+        'USER': 'syron',
+        'PASSWORD': '123',
         'HOST': 'db.shoutit.com',
-        'PORT': '5432'  # Set to empty string for default. Not used with sqlite3.
+        'PORT': '5432',
     }
 }
 
@@ -288,15 +292,15 @@ STATIC_ROOT = os.path.join(ENV_DIR, 'static')
 MEDIA_ROOT = os.path.join(ENV_DIR, 'media')
 
 STATICFILES_DIRS = (
-    os.path.join(SRC_DIR, 'static'),
+    os.path.join(DJANGO_DIR, 'static'),
 )
 
 # Templates
 TEMPLATE_DIRS = (
-    os.path.join(SRC_DIR, 'templates', 'site'),
-    os.path.join(SRC_DIR, 'templates', 'ajax_templates'),
-    os.path.join(SRC_DIR, 'templates', 'text_messages'),
-    os.path.join(SRC_DIR, 'templates', 'html_messages'),
+    os.path.join(DJANGO_DIR, 'templates', 'site'),
+    os.path.join(DJANGO_DIR, 'templates', 'ajax_templates'),
+    os.path.join(DJANGO_DIR, 'templates', 'text_messages'),
+    os.path.join(DJANGO_DIR, 'templates', 'html_messages'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -337,11 +341,11 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG' if DEV else 'WARNING',
+            'level': 'DEBUG' if LOCAL else 'WARNING',
             'class': 'logging.StreamHandler',
         },
         'console_debug': {
-            'level': 'INFO' if DEV else 'WARNING',
+            'level': 'DEBUG' if LOCAL else 'WARNING',
             'class': 'logging.StreamHandler',
             'filters': ['require_debug_true'],
         },
@@ -356,11 +360,11 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'include_html': False,
         },
-        'sql_file': {
-            'class': 'logging.FileHandler',
-            'level': 'INFO',
-            'filename': os.path.join(ENV_DIR, 'logs', 'sql.log')
-        },
+        # 'sql_file': {
+        #     'class': 'logging.FileHandler',
+        #     'level': 'INFO',
+        #     'filename': os.path.join(ENV_DIR, 'logs', 'sql.log')
+        # },
         'sql_console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -456,9 +460,9 @@ FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
 # Google App
 GOOGLE_API = {
     'CLIENTS': {
-        'web': {'FILE': os.path.join(SITE_DIR, 'assets', 'googleapiclients', 'web.json')},
-        'android': {'FILE': os.path.join(SITE_DIR, 'assets', 'googleapiclients', 'android.json')},
-        'ios': {'FILE': os.path.join(SITE_DIR, 'assets', 'googleapiclients', 'ios.json')},
+        'web': {'FILE': os.path.join(BACKEND_DIR, 'assets', 'googleapiclients', 'web.json')},
+        'android': {'FILE': os.path.join(BACKEND_DIR, 'assets', 'googleapiclients', 'android.json')},
+        'ios': {'FILE': os.path.join(BACKEND_DIR, 'assets', 'googleapiclients', 'ios.json')},
     }
 }
 
@@ -536,9 +540,9 @@ SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(SITE_DIR, 'assets', 'certificates', 'paypal', 'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(SITE_DIR, 'assets', 'certificates', 'paypal', 'paypal-public-key.pem')
-PAYPAL_CERT = os.path.join(SITE_DIR, 'assets', 'certificates', 'paypal', 'paypal-cert.pem')
+PAYPAL_PRIVATE_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-public-key.pem')
+PAYPAL_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-cert.pem')
 PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
 PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
 PAYPAL_RETURN_URL = 'http://80.227.53.34/paypal_return/'

@@ -10,7 +10,7 @@ def custom_sql(sender, **kwargs):
     if sender.name == 'shoutit':
         print "Adding Shoutit custom SQL functions (deploy.sql) ..."
         cursor = connection.cursor()
-        cursor.execute(open(os.path.join(settings.SRC_DIR, 'deploy_scripts', 'deploy.sql'), 'r').read())
+        cursor.execute(open(os.path.join(settings.DJANGO_DIR, 'deploy_scripts', 'deploy.sql'), 'r').read())
 
 
 class ShoutitConfig(AppConfig):

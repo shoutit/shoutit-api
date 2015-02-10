@@ -1,19 +1,18 @@
 """
 Utils that are independent of Apps and their models
 """
-import httplib2
 import sys
 import re
 from datetime import datetime
+import httplib2
 
 from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
 
 from common.constants import NOT_ALLOWED_USERNAMES
 
 
 class NotAllowedUsernamesValidator(object):
-    message = _('This username can not be used, please choose something else.')
+    message = 'This username can not be used, please choose something else.'
     code = 'invalid'
 
     def __call__(self, value):
@@ -24,7 +23,11 @@ class NotAllowedUsernamesValidator(object):
 validate_allowed_usernames = NotAllowedUsernamesValidator()
 
 
-def check_runserver_address_port():
+def get_address_port(using_gunicorn=False):
+    if using_gunicorn:
+        from etc.gunicorn_settings import bind
+        return bind.split(':')
+
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":
         address_port = sys.argv[-1] if len(sys.argv) > 2 else "127.0.0.1:8000"
         if address_port.startswith("-"):
@@ -37,10 +40,6 @@ def check_runserver_address_port():
         if not address:
             address = '127.0.0.1'
         return address, port
-
-    elif 'wsgi' in sys.argv:
-        address_port = sys.argv[-1]
-        return address_port.split(':')
 
     else:
         return '127.0.0.1', '8000'

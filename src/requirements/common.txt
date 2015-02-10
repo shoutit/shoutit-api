@@ -1,20 +1,16 @@
 # common requirements
 numpy>=1.8.0
-milk>=0.4.2
 
 Django==1.7
 django-uuidfield
 psycopg2
 
-# PIL 1.1.7
-#http://effbot.org/media/downloads/Imaging-1.1.7.tar.gz
-# Pillow instead
 Pillow
 
 oauth2==1.5.211
 
 # modified django-piston3
-http://cl.ly/2o2h3T1j0a2k/download/django-piston3.zip
+http://cl.ly/250T1k3M0I1Z/download/django-piston3.zip
 
 httplib2==0.8
 django-mobile==0.3.0
