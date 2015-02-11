@@ -10,16 +10,16 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 import os
 import sys
+# include the BACKEND_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from etc.env_settings import *
 from common.utils import get_address_port, check_offline_mood
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
-
-SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
 OFFLINE_MODE = check_offline_mood()
 
-from etc.env_settings import *
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
+SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
 # using gunicorn or not
 GUNICORN = 'SERVER_SOFTWARE' in os.environ and 'gunicorn' in os.environ.get('SERVER_SOFTWARE')

@@ -8,12 +8,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.extras.widgets import SelectDateWidget
 
-from common.utils import validate_allowed_usernames
 from common.constants import ExperienceState, TOKEN_TYPE_HTML_NUM
-from shoutit.controllers import user_controller
 from shoutit.models import User, Currency, Business, BusinessCategory, BusinessCreateApplication
 from shoutit.controllers import user_controller
-from shoutit.utils import safe_string
+from shoutit.utils import safe_string, validate_allowed_usernames
 from common.tagged_cache import TaggedCache
 
 
