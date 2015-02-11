@@ -111,16 +111,19 @@ RANK_COEFFICIENT_FOLLOW = 0.014  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 
 
-# Realtime and Redis
+# Realtime
 REALTIME_SERVER_ON = False
 REALTIME_SERVER_URL = 'http://' + SHOUT_IT_HOST + ':7772/'  # 'www.shoutit.com'
 REALTIME_SERVER_ADDRESS = SHOUT_IT_HOST
 REALTIME_SERVER_TCP_PORT = 7771
 REALTIME_SERVER_HTTP_PORT = 7772
 REALTIME_SERVER_API_PORT = 7773
+
+# RabbitMQ
 RABBIT_MQ_HOST = SHOUT_IT_HOST
 RABBIT_MQ_PORT = 5672
 
+# Redis
 SESSION_REDIS_HOST = 'localhost'
 SESSION_REDIS_PORT = 6379
 REDIS_SOCKET_TIMEOUT = 30
@@ -146,21 +149,9 @@ REDIS_CACHES = {
         'TIMEOUT': 12 * 60 * 60
     }
 }
-# todo: use only redis
-if LOCAL or DEV:
-    redis = ''
-    SESSION_ENGINE = DEV_SESSION_ENGINE
-    CACHES = DEV_CACHES
-else:
-    try:
-        import redis
 
-        SESSION_ENGINE = REDIS_SESSION_ENGINE
-        CACHES = REDIS_CACHES
-    except ImportError:
-        redis = ''
-        SESSION_ENGINE = DEV_SESSION_ENGINE
-        CACHES = DEV_CACHES
+SESSION_ENGINE = REDIS_SESSION_ENGINE
+CACHES = REDIS_CACHES
 
 AUTH_USER_MODEL = 'shoutit.User'
 
