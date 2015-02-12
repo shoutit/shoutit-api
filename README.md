@@ -39,6 +39,7 @@ nginx
 supervisor
 python-pip
 tcl8.5
+libjpeg-dev
 redis [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-redis]
 
 

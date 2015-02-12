@@ -63,13 +63,13 @@ def get_access_token_using_social_channel(request, social_channel=None):
             error, user = Exception("unsupported social channel: " + social_channel), None
 
     except KeyError, k:
-                return JsonResponseBadRequest({'error': "missing " + k.message})
+                return JsonResponseBadRequest({'error': "missing " + str(k)})
 
     except Exception, e:
-        return JsonResponseBadRequest({'error': e.message})
+        return JsonResponseBadRequest({'error': str(e)})
 
     if not user:
-        return JsonResponseBadRequest({'error': error.message})
+        return JsonResponseBadRequest({'error': str(error)})
 
     request.user = user
 

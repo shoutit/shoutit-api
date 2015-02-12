@@ -24,4 +24,4 @@ export LOG_DIR=$LOG_DIR
 echo "Starting ${ENV} as `whoami`"
 
 cd ${DJANGO_DIR}
-exec gunicorn ${DJANGO_WSGI_MODULE} --config ${BACKEND_DIR}/etc/gunicorn_settings.py
+gunicorn ${DJANGO_WSGI_MODULE} --config ${BACKEND_DIR}/etc/gunicorn_settings.py

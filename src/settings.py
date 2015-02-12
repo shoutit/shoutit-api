@@ -166,7 +166,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'activity_logger',
-    'shoutit',
     'widget_tweaks',
     'piston3',
     'push_notifications',
@@ -179,6 +178,7 @@ INSTALLED_APPS = (
     # 'l10n',
     # 'payment',
     # 'subscription',
+    'shoutit',
 )
 # apps only on local development
 if LOCAL:
@@ -332,11 +332,11 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG' if LOCAL else 'WARNING',
+            # 'level': 'DEBUG' if LOCAL else 'WARNING',
             'class': 'logging.StreamHandler',
         },
         'console_debug': {
-            'level': 'DEBUG' if LOCAL else 'WARNING',
+            # 'level': 'DEBUG' if LOCAL else 'WARNING',
             'class': 'logging.StreamHandler',
             'filters': ['require_debug_true'],
         },
@@ -408,7 +408,7 @@ LOGGING = {
         },
         'gunicorn.error': {
             'level': 'INFO',
-            'handlers': ['console_debug', 'sentry'],
+            'handlers': ['console', 'sentry'],
 
         },
         '': {

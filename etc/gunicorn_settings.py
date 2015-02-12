@@ -12,9 +12,11 @@ else:
     bind = '0.0.0.0:8001'
     workers = 1
 
-accesslog = os.path.join(LOG_DIR, 'gunicorn.access')
-errorlog = os.path.join(LOG_DIR, 'gunicorn.error')
-loglevel = 'debug'
+# accesslog = os.path.join(LOG_DIR, 'gunicorn.access')
+# errorlog = os.path.join(LOG_DIR, 'gunicorn.error')
+loglevel = 'info'
+
+check_config = False
 
 
 def when_ready(server):

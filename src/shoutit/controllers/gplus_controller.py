@@ -9,9 +9,14 @@ from shoutit.controllers.user_controller import auth_with_gplus, login_without_p
 
 
 def user_from_gplus_code(request, code, initial_user=None):
+    print 'user_from_gplus_code'
+
     redirect_uri = 'postmessage'
     if request.is_api and request.api_client != 'web':
         redirect_uri = OOB_CALLBACK_URN
+
+    print 'request.api_client', request.api_client
+    print 'redirect_uri', redirect_uri
 
     try:
         # Upgrade the authorization code into a credentials object
@@ -27,6 +32,7 @@ def user_from_gplus_code(request, code, initial_user=None):
         linked_account = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         user = linked_account.user
     except LinkedGoogleAccount.DoesNotExist:
+        print 'LinkedGoogleAccount.DoesNotExist for gplus_id', gplus_id, 'creating new user'
         user = None
 
     if not user:
@@ -38,9 +44,10 @@ def user_from_gplus_code(request, code, initial_user=None):
             service = discovery.build("plus", "v1", http=http)
             gplus_user = service.people().get(userId='me').execute()
         except AccessTokenRefreshError as e:
+            print "calling service.people() error: AccessTokenRefreshError"
             return e, None
         except Exception as e:
-            print e
+            print "calling service.people() error: ", str(e)
             return e, None
 
         user = auth_with_gplus(request, gplus_user, credentials)

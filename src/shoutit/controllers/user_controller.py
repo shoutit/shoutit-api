@@ -415,7 +415,7 @@ def auth_with_gplus(request, gplus_user, credentials):
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_user['id'])
         la.save()
     except Exception, e:
-        print e.message
+        print 'LinkedGoogleAccount Error: ', str(e)
         return None
 
     if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
@@ -429,8 +429,7 @@ def auth_with_gplus(request, gplus_user, credentials):
             user.profile.save()
 
         except Exception, e:
-            print e.message
-            pass
+            print 'auth_with_gplus profile.image error:', e.message
     return user
 
 
