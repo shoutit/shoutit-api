@@ -144,7 +144,7 @@ class LinkedFacebookAccount(UUIDModel):
 
 class LinkedGoogleAccount(UUIDModel):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')
-    credentials_json = models.CharField(max_length=2048)
+    credentials_json = models.CharField(max_length=4096)
     gplus_id = models.CharField(max_length=64, db_index=True)
 
 

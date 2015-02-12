@@ -2,3 +2,4 @@
 -r common.txt
 django_extensions
 behave
+logging_tree
