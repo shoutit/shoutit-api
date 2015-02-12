@@ -7,7 +7,7 @@ BACKEND_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 DJANGO_DIR="${BACKEND_DIR}/src"
 ENV_DIR="$(dirname "${BACKEND_DIR}")"
 ENV="$(basename "${ENV_DIR}")"
-LOG_DIR="/var/log/opt/${ENV}"
+LOG_DIR="/var/opt/log/${ENV}"
 
 source "${ENV_DIR}/bin/activate"
 
