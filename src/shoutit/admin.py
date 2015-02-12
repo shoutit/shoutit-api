@@ -5,7 +5,7 @@ from django import forms
 
 from shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment
+    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post
 
 # from activity_logger.models import Activity, ActivityData, Request
 # from shoutit.controllers import business_controller
@@ -46,6 +46,13 @@ class TradeAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Trade, TradeAdmin)
+
+
+# Post
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('pk',  'OwnerUser', 'Type', 'Text', 'CountryCode', 'ProvinceCode', 'IsMuted', 'IsDisabled')
+
+admin.site.register(Post, PostAdmin)
 
 admin.site.register(Item)
 
