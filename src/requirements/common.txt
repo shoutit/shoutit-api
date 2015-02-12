@@ -9,10 +9,7 @@ Pillow
 
 oauth2==1.5.211
 
-# modified django-piston3
-http://cl.ly/250T1k3M0I1Z/download/django-piston3.zip
-
-httplib2==0.8
+httplib2==0.9
 django-mobile==0.3.0
 django-widget-tweaks==1.3
 django-grappelli>=2.6.3
@@ -23,7 +20,7 @@ suds==0.4
 pika==0.9.13
 apns==1.1.2
 twisted==11
-django-paypal==0.1.2
+django-paypal==0.2
 geraldo==0.4.17
 google-api-python-client
 pyrax

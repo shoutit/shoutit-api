@@ -170,7 +170,6 @@ INSTALLED_APPS = (
     'piston3',
     'push_notifications',
     'django_mobile',
-
     # 'paypal.standard.ipn',
     # 'paypal.standard.pdt',
     # 'keyedcache',
@@ -369,6 +368,11 @@ LOGGING = {
         'django': {
             'handlers': ['console_debug', 'sentry'],
             'level': 'DEBUG',
+        },
+        'django.db': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
         },
         'py.warnings': {
             'handlers': ['console_debug', 'sentry'],

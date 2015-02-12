@@ -7,9 +7,6 @@ from common.utils import date_unix
 from shoutit.models import User, Profile, Business, Tag, Message2, Trade, MessageAttachment, SharedLocation
 
 
-
-
-
 # todo: better levels
 from shoutit.utils import full_url_path, shout_link, tag_link, user_link
 
