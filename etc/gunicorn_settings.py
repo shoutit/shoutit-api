@@ -1,17 +1,20 @@
+# include the BACKEND_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'src'))
 from etc.env_settings import *
 
 if LOCAL:
     bind = '0.0.0.0:8000'
     workers = 1
-    errorlog = '-'
-    accesslog = '-'
 else:
     bind = '0.0.0.0:8001'
     workers = 1
-    errorlog = '-'
-    accesslog = '-'
 
-loglevel = 'info'
+accesslog = os.path.join(LOG_DIR, 'gunicorn.access')
+errorlog = os.path.join(LOG_DIR, 'gunicorn.error')
+loglevel = 'debug'
 
 
 def when_ready(server):
