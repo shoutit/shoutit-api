@@ -7,11 +7,11 @@ if LOCAL:
     accesslog = '-'
 else:
     bind = '0.0.0.0:8001'
-    workers = 3
+    workers = 1
     errorlog = '-'
     accesslog = '-'
 
-# loglevel = 'debug'
+loglevel = 'info'
 
 
 def when_ready(server):
