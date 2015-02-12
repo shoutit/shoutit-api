@@ -461,8 +461,6 @@
 
 
   {
-    "pk": 1,
-    "model": "piston3.consumer",
     "fields": {
       "status": "accepted",
       "name": "test consumer",
@@ -470,11 +468,11 @@
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "123",
       "description": "test consumer"
-    }
+    },
+    "model": "piston3.consumer",
+    "pk": 1
   },
   {
-    "pk": 2,
-    "model": "piston3.consumer",
     "fields": {
       "status": "accepted",
       "name": "Android",
@@ -482,11 +480,11 @@
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "shoutit-android",
       "description": "The Consumer for our first tier Android Application"
-    }
+    },
+    "model": "piston3.consumer",
+    "pk": 2
   },
   {
-    "pk": 3,
-    "model": "piston3.consumer",
     "fields": {
       "status": "accepted",
       "name": "iOS",
@@ -494,11 +492,11 @@
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "shoutit-ios",
       "description": "The consumer for our first tier ios application."
-    }
+    },
+    "model": "piston3.consumer",
+    "pk": 3
   },
   {
-    "pk": 4,
-    "model": "piston3.consumer",
     "fields": {
       "status": "accepted",
       "name": "WebApp",
@@ -506,43 +504,47 @@
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
       "key": "shoutit-web",
       "description": "The consumer for our first tier web application."
-    }
+    },
+    "model": "piston3.consumer",
+    "pk": 4
   },
+
   {
-    "pk": 1,
-    "model": "piston3.token",
     "fields": {
       "is_approved": true,
-      "timestamp": 1416270388,
-      "verifier": "Vtu3npMEby",
+      "timestamp": 1423768704,
+      "verifier": "xbZ2u2Dbyt",
       "token_type": 1,
-      "callback": "",
-      "secret": "spggySeZkTMJQhJUEq73GSJe2NH7vPpn",
+      "callback": null,
+      "secret": "DyAX3PxrZcHEHzEKfa9DkP2qKGGZhPkE",
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
-      "key": "yZ4GtEqVKzPFyEUUzn",
+      "key": "kDAx295T2a7gu6JgeN",
       "consumer": 1,
       "callback_confirmed": false
-    }
+    },
+    "model": "piston3.token",
+    "pk": 1
   },
   {
-    "pk": 2,
-    "model": "piston3.token",
     "fields": {
       "is_approved": false,
-      "timestamp": 1416271280,
+      "timestamp": 1423768740,
       "verifier": "",
       "token_type": 2,
-      "callback": "",
-      "secret": "9QygNQnG7yFeLney6qQszGAXng9g9RTL",
+      "callback": null,
+      "secret": "RV6KfrZPDdAhZLSKBWEJWagUgc7VPdj7",
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
-      "key": "M7UWMcfnVVQ6DkzujU",
+      "key": "jFg96Vq8T8E3tmWbD6",
       "consumer": 1,
       "callback_confirmed": false
-    }
+    },
+    "model": "piston3.token",
+    "pk": 2
   }
+,
 
 
-,  {
+  {
     "pk": "00d779fb-c4f6-4058-bd69-ca66ce1f2fd3",
     "model": "shoutit.category",
     "fields": {
