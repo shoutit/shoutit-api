@@ -332,11 +332,11 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            # 'level': 'DEBUG' if LOCAL else 'WARNING',
+            'level': 'DEBUG' if LOCAL else 'INFO',
             'class': 'logging.StreamHandler',
         },
         'console_debug': {
-            # 'level': 'DEBUG' if LOCAL else 'WARNING',
+            'level': 'DEBUG' if LOCAL else 'INFO',
             'class': 'logging.StreamHandler',
             'filters': ['require_debug_true'],
         },
