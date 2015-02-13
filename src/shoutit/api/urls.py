@@ -293,7 +293,7 @@ urlpatterns = patterns('',
                            })
                        ),
 
-                       url(r'^users/(?P<username>@me|[\w.]+)/', include(user_api)),
+                       url(r'^users/(?P<username>[\w.]+)/', include(user_api)),
 
 
                        # Shouts

@@ -703,6 +703,7 @@ NOT_ALLOWED_USERNAMES = [
     'learnmore',
     'link',
     'links',
+    'me',
     'messages',
     'message',
     'modal',

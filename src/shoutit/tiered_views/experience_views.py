@@ -66,7 +66,7 @@ def view_experience(request, exp_id):
                  api_renderer=experiences_api,
                  json_renderer=lambda request, result, *args: experiences_stream_json(request, result))
 def experiences_stream(request, username, page_num=None):
-    if username == '@me':
+    if username == 'me':
         username = request.user.username
 
     if not page_num:

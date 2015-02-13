@@ -102,7 +102,7 @@ def hovercard(request):
                  api_renderer=operation_api,
                  html_renderer=thumbnail_response)
 def profile_picture(request, profile_type='', size='', tag_name='', username=''):
-    if profile_type == 'user' and username == '@me':
+    if profile_type == 'user' and username == 'me':
         username = request.user.username
 
     path = ''

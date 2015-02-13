@@ -80,7 +80,7 @@ def shout_form_validator(request, form_class, message='You have entered some inv
                 OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             return VR(False, messages=[
                 ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],
-                errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+                      errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
     return validation_result
 
 
@@ -316,10 +316,11 @@ def delete_conversation_validator(request, conversation_id):
 
 
 def user_profile_validator(request, username, *args, **kwargs):
-    if username == '@me' and request.user.is_authenticated():
-        username = request.user.username
-    elif username == '@me':
-        return VR(False, messages=[('error', _('You are not signed in.'))], errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN])
+    if username == 'me':
+        if request.user.is_authenticated():
+            username = request.user.username
+        else:
+            return VR(False, messages=[('error', _('You are not signed in.'))], errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN])
 
     result = object_exists_validator(get_profile, False, _('User %(username)s does not exist.') % {'username': username}, username)
     if not result:
@@ -328,7 +329,7 @@ def user_profile_validator(request, username, *args, **kwargs):
         profile = result.data
         if not profile.user.is_active and profile.user != request.user and not request.user.is_staff:
             return VR(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})],
-                                    errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
+                      errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
         if request.method in ['POST', 'PUT', 'DELETE'] and request.user != profile.user:
             return VR(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
 
@@ -374,7 +375,7 @@ def push_validator(request, username, push_type, *args, **kwargs):
 def activate_api_validator(request, token, *args, **kwargs):
     if not token:
         return VR(False, {'token': [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
-                                [('error', _('You have entered some invalid input.'))])
+                  [('error', _('You have entered some invalid input.'))])
     t = ConfirmToken.getToken(token, False, False)
     if not t:
         return VR(False, {'token': [_('Invalid activation token.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
@@ -399,7 +400,7 @@ def shout_owner_view_validator(request, shout_id):
 # if result:
 # business = business_controller.GetBusiness(business_name)
 # if not business:
-#			return VR(False, messages=[('error', _('Business dose not exist.'))],)
+# return VR(False, messages=[('error', _('Business dose not exist.'))],)
 #	return result
 
 
