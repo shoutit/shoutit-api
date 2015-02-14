@@ -4,12 +4,22 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions
+from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, list_route
 
 from shoutit.models import User
+from shoutit.api.v2.serializers import UserSerializer
+from shoutit.api.v2.permissions import IsOwnerOrReadOnly
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
 class ListUsers(APIView):
@@ -19,7 +29,7 @@ class ListUsers(APIView):
     * Requires token authentication.
     * Only admin users are able to access this view.
     """
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser, IsOwnerOrReadOnly)
 
     def get(self, request, format=None):
         """
