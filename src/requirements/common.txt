@@ -25,10 +25,14 @@ geraldo==0.4.17
 google-api-python-client
 pyrax
 
-# modified django-push-notifications
-https://cl.ly/1w3v1B2i1P1A/django-push-notifications.zip
+django-push-notifications
 
 jsonschema
 raven
 
 gunicorn>=19
+
+# django-rest-framework
+djangorestframework
+markdown
+django-filter

@@ -6,10 +6,13 @@ from django.core import validators
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.core.mail import send_mail
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
+from rest_framework.authtoken.models import Token
 from uuidfield import UUIDField
 from common.utils import date_unix
 
@@ -171,3 +174,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
         Sends an email to this User.
         """
         send_mail(subject, message, from_email, [self.email])
+
+
+@receiver(post_save, sender=User)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)

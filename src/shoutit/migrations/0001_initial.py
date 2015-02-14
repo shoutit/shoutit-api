@@ -12,6 +12,10 @@ import django.core.validators
 
 class Migration(migrations.Migration):
 
+    run_before = [
+        ('push_notifications', '0001_initial'),
+        ('authtoken', '0001_initial'),
+    ]
     dependencies = [
         ('auth', '0001_initial'),
         ('contenttypes', '0001_initial'),

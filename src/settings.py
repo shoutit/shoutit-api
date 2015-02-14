@@ -178,6 +178,8 @@ INSTALLED_APPS = (
     # 'payment',
     # 'subscription',
     'shoutit',
+    'rest_framework',
+    'rest_framework.authtoken',
 )
 # apps only on local development
 if LOCAL:
@@ -577,6 +579,16 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}
 
 
 # some monkey patching for global imports
