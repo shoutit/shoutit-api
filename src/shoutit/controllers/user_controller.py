@@ -37,7 +37,25 @@ def get_profile(username):
         return None
 
 
-# todo: start index, limit, user/profile mix
+def list_users(query, start_index=0, end_index=30):
+
+    related = ['profile', 'business']
+
+    queries = query.split()
+    users = User.objects
+    filters = Q()
+    for q in queries:
+        filters |= Q(username__icontains=q)
+        filters |= Q(first_name__icontains=q)
+        filters |= Q(last_name__icontains=q)
+        filters |= Q(email__iexact=q)
+        filters |= Q(business__isnull=False, business__Name__icontains=q)
+
+    users = users.select_related(*related).filter(filters)[start_index:end_index]
+
+    return users
+
+
 def search_users(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), start_index=0, end_index=30, email_search=False):
 
     related = ['profile', 'business']
@@ -316,12 +334,11 @@ def CompleteSignUpSSS(request, firstname, lastname, password, user, username, to
 
     ActivateUser(token, user)
 
+
 # todo: links
 def ChangeEmailAndSendActivation(request, user, email):
     token = SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
-    email_controller.SendRegistrationActivationEmail(user, email,
-                                                                              "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'),
-                                                                              token)
+    email_controller.SendRegistrationActivationEmail(user, email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
 
 
 def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthday=None):
@@ -433,7 +450,7 @@ def auth_with_gplus(request, gplus_user, credentials):
     return user
 
 
-def auth_with_facebook(request, fb_user, auth_response):
+def auth_with_facebook(request, fb_user, long_lived_token):
     user = User.objects.filter(email__iexact=fb_user['email'])
     user = user[0] if user else None
 
@@ -454,16 +471,17 @@ def auth_with_facebook(request, fb_user, auth_response):
         give_user_permissions(None, ACTIVATED_USER_PERMISSIONS, user)
 
     try:
-        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
+        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=long_lived_token['access_token'],
+                                   ExpiresIn=long_lived_token['expires'])
         la.save()
     except Exception, e:
-        print e.message
+        print str(e)
         return None
 
     if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
         try:
             import urllib2
-            response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + auth_response['accessToken'],
+            response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + long_lived_token['accessToken'],
                                        timeout=20)
             no_pic = ['yDnr5YfbJCH', 'HsTZSDw4avx']
             pic_file = os.path.splitext(response.geturl().split('/')[-1])

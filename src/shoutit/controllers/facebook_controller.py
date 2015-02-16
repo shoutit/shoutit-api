@@ -12,14 +12,18 @@ from settings import SITE_LINK
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
+    try:
+        access_token = auth_response['accessToken']
+    except (KeyError, TypeError):
+        access_token = auth_response
 
     try:
-        response = urllib2.urlopen('https://graph.facebook.com/me?access_token=' + auth_response['accessToken'], timeout=20)
+        response = urllib2.urlopen('https://graph.facebook.com/me?access_token={}'.format(access_token), timeout=20)
         fb_user = json.loads(response.read())
         if 'email' not in fb_user:
             return KeyError("couldn't access user email"), None
     except urllib2.HTTPError, e:
-        return e, None
+        return Exception("Invalid facebook accessToken"), None
 
     try:
         linked_account = LinkedFacebookAccount.objects.get(facebook_id=fb_user['id'])
@@ -28,14 +32,11 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
         user = None
 
     if not user:
-        long_lived_token = extend_token(auth_response['accessToken'])
+        long_lived_token = extend_token(access_token)
         if not long_lived_token:
             return Exception("could not extend the facebook short lived access_token with long lived one"), None
 
-        auth_response['accessToken'] = long_lived_token['access_token']
-        auth_response['expiresIn'] = long_lived_token['expires']
-
-        user = auth_with_facebook(request, fb_user, auth_response)
+        user = auth_with_facebook(request, fb_user, long_lived_token)
 
     if user:
         if initial_user and initial_user['location']:
@@ -68,7 +69,6 @@ def exchange_code(request, code):
     auth_response = {
         'accessToken': params['access_token'],
         'expiresIn': params['expires'],
-        'signedRequest': 'Code',
     }
     return auth_response
 
@@ -76,10 +76,14 @@ def exchange_code(request, code):
 def extend_token(short_lived_token):
 
     try:
-        exchange_url = 'https://graph.facebook.com/oauth/access_token?client_id=%s&client_secret=%s&grant_type=fb_exchange_token&fb_exchange_token=%s' % (settings.FACEBOOK_APP_ID, settings.FACEBOOK_APP_SECRET, short_lived_token)
+        query = "client_id={}&client_secret={}&grant_type=fb_exchange_token&fb_exchange_token={}".format(
+            settings.FACEBOOK_APP_ID, settings.FACEBOOK_APP_SECRET, short_lived_token
+        )
+        exchange_url = 'https://graph.facebook.com/oauth/access_token?{}'.format(query)
+
         response = urllib2.urlopen(exchange_url, timeout=20)
         params = dict(urlparse.parse_qsl(response.read()))
-        if not 'access_token' in params:
+        if 'access_token' not in params:
             return None
     except Exception, e:
         print e.message

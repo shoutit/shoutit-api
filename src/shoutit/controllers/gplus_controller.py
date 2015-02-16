@@ -8,12 +8,12 @@ from shoutit.models import LinkedGoogleAccount
 from shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_profile_location
 
 
-def user_from_gplus_code(request, code, initial_user=None):
+def user_from_gplus_code(request, code, initial_user=None, client='other'):
     print 'user_from_gplus_code'
 
-    redirect_uri = 'postmessage'
-    if request.is_api and request.api_client != 'web':
-        redirect_uri = OOB_CALLBACK_URN
+    redirect_uri = OOB_CALLBACK_URN
+    if (request.is_api and request.api_client == 'web') or client == 'shoutit-web':
+        redirect_uri = 'postmessage'
 
     print 'request.api_client', request.api_client
     print 'redirect_uri', redirect_uri
@@ -62,10 +62,10 @@ def user_from_gplus_code(request, code, initial_user=None):
         return Exception('Could not login the user'), None
 
 
-def link_gplus_user(request, code):
-    redirect_uri = 'postmessage'
-    if request.is_api and request.api_client != 'web':
-        redirect_uri = OOB_CALLBACK_URN
+def link_gplus_user(request, code, client='other'):
+    redirect_uri = OOB_CALLBACK_URN
+    if (request.is_api and request.api_client == 'web') or client == 'shoutit-web':
+        redirect_uri = 'postmessage'
 
     try:
         # Upgrade the authorization code into a credentials object

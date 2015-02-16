@@ -178,6 +178,10 @@ INSTALLED_APPS = (
     # 'payment',
     # 'subscription',
     'shoutit',
+
+    'provider',
+    'provider.oauth2',
+
     'rest_framework',
     'rest_framework.authtoken',
 )
@@ -583,15 +587,22 @@ CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.OAuth2Authentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'PAGINATE_BY': 1,
+    'DEFAULT_FILTER_BACKENDS': [],
+    'PAGINATE_BY': 10,
 }
 
+# oauth2 settings
+OAUTH_SINGLE_ACCESS_TOKEN = True
+ENFORCE_SECURE = False
+ENFORCE_CLIENT_SECURE = True
+DELETE_EXPIRED = True
 
 # some monkey patching for global imports
 from common import monkey_patches
