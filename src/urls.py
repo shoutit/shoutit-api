@@ -91,8 +91,6 @@ urlpatterns = patterns('',
                        url(r'^oauth/access_token/(\w+)/$', 'shoutit.api.authentication.get_access_token_using_social_channel'),
                        # url(r'^oauth/access_token/$', 'shoutit.api.authentication.get_basic_access_token'),
 
-                       url(r'^oauth2/', include('provider.oauth2.urls', namespace='oauth2')),
-
                        # ## XHR ## #
                        url(r'^xhr/user/$', 'shoutit.tiered_views.user_views.search_user'),
                        url(r'^xhr/user/(\w+)/start_listening/$', 'shoutit.tiered_views.user_views.start_listening_to_user'),

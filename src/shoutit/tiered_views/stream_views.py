@@ -83,7 +83,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
         tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
     #TODO session
-    if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
+    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
     all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
@@ -168,11 +168,11 @@ def index_stream(request):
             tag_ids = []
         tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__Name__iexact=category)])
 
-    #TODO: session
-    if page_num == 1 and request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
+    # TODO: session
+    if page_num == 1 and request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
         TaggedCache.delete(request.session.session_key + 'shout_ids')
 
-    if request.session.session_key and TaggedCache.has_key(request.session.session_key + 'shout_ids'):
+    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
         all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
     else:
         all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0, DEFAULT_HOME_SHOUT_COUNT,

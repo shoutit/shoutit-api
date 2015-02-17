@@ -109,7 +109,7 @@ def get_business_initials(username):
                  json_renderer=lambda request, result, username: post_experience_json_renderer(request, result),
                  api_renderer=view_experience_api,
                  validator=lambda request, *args, **kwargs: experience_validator(request, initial=get_business_initials(
-                     args and args[0] or (kwargs.has_key('username') and kwargs['username'] or '')), *args, **kwargs)
+                     args and args[0] or ('username' in kwargs and kwargs['username'] or '')), *args, **kwargs)
                  # form_validator(request,ExperienceForm),
 )
 def post_exp(request, username=None):
@@ -120,18 +120,18 @@ def post_exp(request, username=None):
     if username is None or username == '':
         business_form = CreateTinyBusinessForm(request.POST)
         business_form.is_valid()
-        latlng = business_form.cleaned_data.has_key('location') and business_form.cleaned_data['location'] or ''
+        latlng = 'location' in business_form.cleaned_data and business_form.cleaned_data['location'] or ''
         lat = len(latlng) and latlng.split(',')[0].strip() or 0.0
         lng = len(latlng) and latlng.split(',')[1].strip() or 0.0
         business = CreateTinyBusinessProfile(
             business_form.cleaned_data['name'],
-            business_form.cleaned_data.has_key('category') and business_form.cleaned_data['category'] or None,
+            'category' in business_form.cleaned_data and business_form.cleaned_data['category'] or None,
             lat, lng,
-            business_form.cleaned_data.has_key('country') and business_form.cleaned_data['country'] or None,
-            business_form.cleaned_data.has_key('city') and business_form.cleaned_data['city'] or None,
-            business_form.cleaned_data.has_key('address') and business_form.cleaned_data['address'] or None,
-            business_form.cleaned_data.has_key('source') and business_form.cleaned_data['source'] or None,
-            business_form.cleaned_data.has_key('source_id') and business_form.cleaned_data['source_id'] or None)
+            'country' in business_form.cleaned_data and business_form.cleaned_data['country'] or None,
+            'city' in business_form.cleaned_data and business_form.cleaned_data['city'] or None,
+            'address' in business_form.cleaned_data and business_form.cleaned_data['address'] or None,
+            'source' in business_form.cleaned_data and business_form.cleaned_data['source'] or None,
+            'source_id' in business_form.cleaned_data and business_form.cleaned_data['source_id'] or None)
     else:
         business = GetBusiness(username)
 

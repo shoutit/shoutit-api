@@ -16,6 +16,10 @@ from shoutit.controllers import facebook_controller
 class APIDetectionMiddleware(object):
     @staticmethod
     def process_request(request):
+        # todo: collect general info about api and attach to request
+        # do not apply on api v2
+        if '/api/v2/' in request.META.get('PATH_INFO'):
+            return
         request.is_api = "/api/" in request.META.get('PATH_INFO') or "/oauth/" in request.META.get('PATH_INFO')
         request.api_client = request.META.get('HTTP_SHOUTIT_CLIENT', 'other')
         pass
@@ -24,6 +28,10 @@ class APIDetectionMiddleware(object):
 class SetLanguageMiddleware(object):
     @staticmethod
     def process_request(request):
+        # do not apply on api v2
+        if '/api/v2/' in request.META.get('PATH_INFO'):
+            return
+
         lang = settings.DEFAULT_LANGUAGE_CODE
         if 'lang' in request.GET:
             lang = request.GET['lang']
@@ -39,12 +47,11 @@ class UserPermissionsMiddleware(object):
     @staticmethod
     def attach_permissions_to_request(request):
         if request.user.is_authenticated():
-            c_permissions = TaggedCache.get('perma|permissions|%s' % request.user.pk)
+            c_permissions = TaggedCache.get('perma|permissions|{}'.format(request.user.pk))
             if not c_permissions:
-                # permissions = UserPermission.objects.get_user_permissions(request.user)
                 permissions = request.user.permissions.all()
                 c_permissions = [ConstantPermission.reversed_instances[p] for p in permissions]
-                TaggedCache.set('perma|permissions|%s' % request.user.username, c_permissions, timeout=10 * 356 * 24 * 60 * 60)
+                TaggedCache.set('perma|permissions|{}'.format(request.user.pk), c_permissions, timeout=356 * 24 * 60 * 60)
             request.user.constant_permissions = c_permissions
         else:
             request.user.constant_permissions = ANONYMOUS_USER_PERMISSIONS
@@ -67,6 +74,10 @@ class FBMiddleware(object):
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
+        # do not apply on api v2
+        if '/api/v2/' in request.META.get('PATH_INFO'):
+            return
+
         # add the json_data attribute to all POST requests.
         if request.method in ['POST', 'PUT'] and 'CONTENT_TYPE' in request.META and 'json' in request.META['CONTENT_TYPE']:
             try:

@@ -62,7 +62,7 @@ def signup(request, token=None):
     result = ResponseResult()
     business_init = {}
     user = None
-    if request.session.has_key('business_user_id'):
+    if 'business_user_id' in request.session:
         user = User.objects.filter(pk=request.session['business_user_id'])
         if not user:
             del request.session['business_user_id']
@@ -114,9 +114,9 @@ def signup(request, token=None):
             tiny_business_form = CreateTinyBusinessForm(request.POST, initial=business_init)
 
             files = []
-            if request.POST.has_key('business_documents[]'):
+            if 'business_documents[]' in request.POST:
                 files = request.POST.getlist('business_documents[]')
-            elif request.POST.has_key('business_documents'):
+            elif 'business_documents' in request.POST:
                 files = request.POST.getlist('business_documents')
 
             if not len(files):
@@ -223,12 +223,12 @@ def create_tiny_business(request):
         form.is_valid()
 
         business_controller.CreateTinyBusinessProfile(form.cleaned_data['name'],
-                                                      form.cleaned_data.has_key('category') and form.cleaned_data['category'] or None,
-                                                      form.cleaned_data.has_key('latitude') and form.cleaned_data['latitude'] or 0.0,
-                                                      form.cleaned_data.has_key('longitude') and form.cleaned_data['longitude'] or 0.0,
-                                                      form.cleaned_data.has_key('country') and form.cleaned_data['country'] or None,
-                                                      form.cleaned_data.has_key('city') and form.cleaned_data['city'] or None,
-                                                      form.cleaned_data.has_key('address') and form.cleaned_data['address'] or None)
+                                                      'category' in form.cleaned_data and form.cleaned_data['category'] or None,
+                                                      'latitude'in form.cleaned_data and form.cleaned_data['latitude'] or 0.0,
+                                                      'longitude' in form.cleaned_data and form.cleaned_data['longitude'] or 0.0,
+                                                      'country'in form.cleaned_data and form.cleaned_data['country'] or None,
+                                                      'city' in form.cleaned_data and form.cleaned_data['city'] or None,
+                                                      'address' in form.cleaned_data and form.cleaned_data['address'] or None)
     else:
         form = CreateTinyBusinessForm()
     result = ResponseResult()
@@ -317,19 +317,19 @@ def business_edit_profile(request, username):
                                        initial={'username': username, 'email': profile.user.email})
         form.is_valid()
 
-        if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
+        if 'username'in form.cleaned_data and form.cleaned_data['username']:
             profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
-        if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
+        if 'email' in form.cleaned_data and form.cleaned_data['email']:
             profile.user.email = form.cleaned_data['email']
-        if form.cleaned_data.has_key('name') and form.cleaned_data['name']:
+        if 'name' in form.cleaned_data and form.cleaned_data['name']:
             profile.user.first_name = form.cleaned_data['name']
-        if form.cleaned_data.has_key('mobile') and form.cleaned_data['mobile']:
+        if 'mobile'in form.cleaned_data and form.cleaned_data['mobile']:
             profile.Mobile = form.cleaned_data['mobile']
-        if form.cleaned_data.has_key('website') and form.cleaned_data['website']:
+        if 'website' in form.cleaned_data and form.cleaned_data['website']:
             profile.Website = form.cleaned_data['website']
 
-        if form.cleaned_data.has_key('location') and form.cleaned_data['location']:
+        if 'location' in form.cleaned_data and form.cleaned_data['location']:
             latlng = form.cleaned_data['location']
             latitude = float(latlng.split(',')[0].strip())
             longitude = float(latlng.split(',')[1].strip())
@@ -344,7 +344,7 @@ def business_edit_profile(request, username):
             profile.Address = address
 
         profile.Bio = form.cleaned_data['bio']
-        if form.cleaned_data.has_key('password') and form.cleaned_data['password']:
+        if 'password' in form.cleaned_data and form.cleaned_data['password']:
             profile.user.set_password(form.cleaned_data['password'])
 
         profile.user.save()
@@ -364,7 +364,7 @@ def business_edit_profile(request, username):
 def subscribe(request):
     result = ResponseResult()
     user = None
-    if request.session.has_key('business_user_id'):
+    if 'business_user_id' in request.session:
         user = User.objects.filter(pk=request.session['business_user_id'])
         if not user:
             del request.session['business_user_id']

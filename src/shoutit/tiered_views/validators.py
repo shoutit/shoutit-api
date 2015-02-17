@@ -414,9 +414,9 @@ def share_experience_validator(request, exp_id, *args, **kwargs):
 
 
 def experience_validator(request, *args, **kwargs):
-    exp_frm = form_validator(request, ExperienceForm, initial=kwargs.has_key('initial') and kwargs['initial'] or {})
-    if not args and (not kwargs.has_key('username') or not kwargs['username']):
-        extended_exp_frm = form_validator(request, CreateTinyBusinessForm, initial=kwargs.has_key('initial') and kwargs['initial'] or {})
+    exp_frm = form_validator(request, ExperienceForm, initial='initial' in kwargs and kwargs['initial'] or {})
+    if not args and ('username' not in kwargs or not kwargs['username']):
+        extended_exp_frm = form_validator(request, CreateTinyBusinessForm, initial='initial' in kwargs and kwargs['initial'] or {})
         exp_frm.form_errors.update(extended_exp_frm.form_errors)
         exp_frm.valid = exp_frm.valid and extended_exp_frm.valid
         exp_frm.messages = exp_frm.messages if exp_frm.messages else extended_exp_frm.messages

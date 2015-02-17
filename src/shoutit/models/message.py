@@ -21,6 +21,10 @@ class Conversation(UUIDModel):
     def __unicode__(self):
         return unicode(self.pk)
 
+    @property
+    def contributors(self):
+        return [self.FromUser, self.ToUser]
+
 
 class Message(UUIDModel):
     Conversation = models.ForeignKey('shoutit.Conversation', related_name='Messages')
@@ -37,6 +41,10 @@ class Message(UUIDModel):
             return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " => " + unicode(self.ToUser) + "):" + (self.Text[:50] if self.Text else '')
         except AttributeError:
             return unicode(self.pk)
+
+    @property
+    def contributors(self):
+        return [self.FromUser, self.ToUser]
 
 
 class MessageAttachment(UUIDModel, AttachedObjectMixin):
@@ -107,6 +115,10 @@ class Conversation2(UUIDModel, AttachedObjectMixin):
     def messages_attachments(self):
         return MessageAttachment.objects.filter(conversation_id=self.id)
 
+    @property
+    def contributors(self):
+        return self.users.all()
+
 
 class Conversation2Delete(UUIDModel):
     """
@@ -135,6 +147,10 @@ class Message2(UUIDModel):
     @property
     def attachments(self):
         return MessageAttachment.objects.filter(message_id=self.id)
+
+    @property
+    def contributors(self):
+        return self.conversation.users.all()
 
 
 class Message2Read(UUIDModel):

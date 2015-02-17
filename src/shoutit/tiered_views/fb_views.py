@@ -47,9 +47,10 @@ def fb_comp(request, comp_num, template=None):
 
 @csrf_exempt
 def fb_comp_page(request, comp_num, template=None):
-    page_num = request.GET['page'] if request.GET.has_key('page') else '1'
-    variables = {}
-    variables['page_num'] = int(page_num)
+    page_num = request.GET.get('page', '1')
+    variables = {
+        'page_num': int(page_num)
+    }
     if variables['page_num'] == 1:
         user = request.user
         fb_contest = FbContest.objects.filter(user=user) if user.pk else None

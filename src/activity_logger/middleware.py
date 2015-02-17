@@ -9,18 +9,18 @@ class ActivityLogger(object):
             return response
 
         r = Request()
-        if request.META.has_key('HTTP_X_REAL_IP'):
+        if 'HTTP_X_REAL_IP' in request.META:
             r.ip_address = request.META['HTTP_X_REAL_IP']
         else:
             r.ip_address = request.META['REMOTE_ADDR']
         if getattr(request, 'user', None) and request.user.is_authenticated():
             r.user = request.user
         r.method = request.method
-        if request.META.has_key('HTTP_REFERER'):
+        if 'HTTP_REFERER' in request.META:
             r.referer = request.META['HTTP_REFERER']
         r.url = request.build_absolute_uri()
         r.plain_url = request.path
-        if request.META.has_key('HTTP_USER_AGENT'):
+        if 'HTTP_USER_AGENT' in request.META:
             r.user_agent = request.META['HTTP_USER_AGENT']
         if getattr(request, 'session', None):
             r.session_id = str(request.session.session_key)

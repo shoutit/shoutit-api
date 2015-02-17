@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from rest_framework import permissions, viewsets, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, list_route
+from rest_framework.decorators import api_view, list_route, detail_route
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from common.constants import USER_TYPE_INDIVIDUAL, USER_TYPE_BUSINESS
@@ -20,7 +20,7 @@ from shoutit.api.v2.permissions import IsOwnerOrReadOnly
 from shoutit.api.renderers import render_user
 
 
-class UserViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class UserViewSet(viewsets.GenericViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
@@ -37,7 +37,7 @@ class UserViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        return list of users based on query args
+        get users based on `filter_fields` and `search_fields`
         """
         users = self.filter_queryset(self.get_queryset())
         ret = {
@@ -48,45 +48,78 @@ class UserViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         return Response()
 
-    def retrieve(self, request, username, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         """
-        return specific user using his username
+        get user
         """
         user = self.get_object()
         return Response(render_user(user, 5, request.user == user))
 
-    def update(self, request, username, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         """
-        update user attributes
+        modify user
         """
-        return Response()
+        user = self.get_object()
+        return Response(render_user(user, 5, request.user == user))
 
-    def destroy(self, request, username, *args, **kwargs):
+    def destroy(self, request,  *args, **kwargs):
         """
         delete user and everything attached to him
         """
         return Response()
 
-
-class ListUsers(APIView):
-    """
-    View to list all users in the system.
-
-    * Requires token authentication.
-    * Only admin users are able to access this view.
-    """
-    permission_classes = (permissions.IsAdminUser, IsOwnerOrReadOnly)
-
-    def get(self, request, format=None):
+    @detail_route(methods=['get', 'put'])
+    def location(self, request, *args, **kwargs):
         """
-        Return a list of all users.
+        get or modify user location
         """
-        usernames = [user.username for user in User.objects.all()]
-        return Response(usernames)
+        return Response()
 
+    @detail_route(methods=['get', 'put'])
+    def image(self, request, *args, **kwargs):
+        """
+        get or modify user image
+        """
+        return Response()
 
+    @detail_route(methods=['get', 'put', 'delete'])
+    def video(self, request, *args, **kwargs):
+        """
+        get, modify or delete user video
+        """
+        return Response()
 
+    @detail_route(methods=['get', 'put', 'delete'])
+    def push(self, request, *args, **kwargs):
+        """
+        get, modify or delete user push tokens
+        """
+        return Response()
 
-@api_view(['GET'])
-def view(request, mo):
-    return Response({"message": "Hello for today! See you tomorrow!"})
+    @detail_route(methods=['get'])
+    def shouts(self, request, *args, **kwargs):
+        """
+        get user shouts
+        """
+        return Response()
+
+    @detail_route(methods=['post', 'delete'])
+    def listen(self, request, *args, **kwargs):
+        """
+        start/stop listening to user
+        """
+        return Response()
+
+    @detail_route(methods=['get'])
+    def listeners(self, request, *args, **kwargs):
+        """
+        get user listeners
+        """
+        return Response()
+
+    @detail_route(methods=['get'])
+    def listening(self, request, *args, **kwargs):
+        """
+        get user listening
+        """
+        return Response()

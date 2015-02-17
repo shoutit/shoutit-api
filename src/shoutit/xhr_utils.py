@@ -49,7 +49,7 @@ def xhr_login_required(function=None):
         if request.user.is_authenticated():
             return function(request, *args, **kwargs)
         else:
-            if request.META.has_key('HTTP_REFERER'):
+            if 'HTTP_REFERER' in request.META:
                 referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
                 path = referer_parts[2]
                 if referer_parts[3]:
@@ -71,7 +71,7 @@ def xhr_login_required(function=None):
 
 
 def redirect_to_modal_xhr(request,to, message, modal_key = None):
-    if request.META.has_key('HTTP_REFERER'):
+    if 'HTTP_REFERER' in request.META:
         referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
         path = referer_parts[2]
         if referer_parts[3]:
@@ -93,7 +93,7 @@ def redirect_to_modal_xhr(request,to, message, modal_key = None):
                        data=post_data, message_type='error')
 
 #def redirect_to_login_xhr(request):
-#	if request.META.has_key('HTTP_REFERER'):
+#	if 'HTTP_REFERER' in request.META:
 #		referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
 #		path = referer_parts[2]
 #		if referer_parts[3]:
@@ -112,7 +112,7 @@ def redirect_to_modal_xhr(request,to, message, modal_key = None):
 #					   data={'link': urlparse.urlunparse(login_url_parts)}, message_type='error')
 #
 #def redirect_to_activate_xhr(request):
-#	if request.META.has_key('HTTP_REFERER'):
+#	if 'HTTP_REFERER' in request.META:
 #		referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
 #		path = referer_parts[2]
 #		if referer_parts[3]:

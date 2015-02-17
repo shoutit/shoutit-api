@@ -138,7 +138,7 @@ class ExtenedSignUpSSS(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ExtenedSignUpSSS, self).__init__(*args, **kwargs)
         if self.initial is not None:
-            if self.initial.has_key('mobile'):
+            if 'mobile' in self.initial:
                 self.fields['mobile'].widget.attrs['disabled'] = True
 
     username = forms.CharField(label=_('Username'), max_length=30, min_length=2, required=True)
@@ -210,9 +210,9 @@ class ExtenedSignUp(forms.Form):
     def __init__(self, *args, **kwargs):
         super(ExtenedSignUp, self).__init__(*args, **kwargs)
         if self.initial is not None:
-            if self.initial.has_key('mobile'):
+            if 'mobile' in self.initial:
                 self.fields['mobile'].widget.attrs['disabled'] = True
-            elif self.initial.has_key('email'):
+            elif 'email' in self.initial:
                 self.fields['email'].widget.attrs['disabled'] = True
 
     username = forms.CharField(label=_('Username'), max_length=30, min_length=2, required=False)
@@ -444,9 +444,9 @@ class CreateTinyBusinessForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(CreateTinyBusinessForm, self).__init__(*args, **kwargs)
         if self.initial is not None:
-            if self.initial.has_key('name') and self.initial['name'] and len(self.initial['name'].strip()):
+            if 'name' in self.initial and self.initial['name'] and len(self.initial['name'].strip()):
                 self.fields['name'].widget.attrs['disabled'] = True
-            if self.initial.has_key('email') and self.initial['email'] and len(self.initial['email'].strip()):
+            if 'email' in self.initial and self.initial['email'] and len(self.initial['email'].strip()):
                 self.fields['email'].widget.attrs['disabled'] = True
 
 
@@ -507,7 +507,7 @@ class BusinessTempSignUpForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(BusinessTempSignUpForm, self).__init__(*args, **kwargs)
         if self.initial is not None:
-            if self.initial.has_key('name'):
+            if 'name' in self.initial:
                 self.fields['name'].widget.attrs['disabled'] = True
 
     name = forms.CharField(label=_('Name'), max_length=120, required=False)
@@ -591,32 +591,32 @@ class DealForm(forms.Form):
     valid_to = forms.DateTimeField(label=_('Valid To'), required=False)
 
     def clean_original_price(self):
-        if self.cleaned_data.has_key('original_price'):
-            if self.cleaned_data.has_key('price') and self.cleaned_data['original_price'] < self.cleaned_data['price']:
+        if 'original_price' in self.cleaned_data:
+            if 'price' in self.cleaned_data and self.cleaned_data['original_price'] < self.cleaned_data['price']:
                 raise forms.ValidationError(_('Original price can\'t be less than the price itself.'))
             return self.cleaned_data['original_price']
         return None
 
     def clean_max_buyers(self):
-        if self.cleaned_data.has_key('max_buyers') and self.cleaned_data.has_key('min_buyers') and self.cleaned_data['max_buyers'] and \
+        if 'max_buyers' in self.cleaned_data and 'min_buyers' in self.cleaned_data and self.cleaned_data['max_buyers'] and \
                         self.cleaned_data['max_buyers'] < self.cleaned_data['min_buyers']:
             raise forms.ValidationError(_('Maximum number of buyres can\'t be less than the minimum number of buyers.'))
-        return self.cleaned_data.has_key('max_buyers') and self.cleaned_data['max_buyers'] or None
+        return 'max_buyers' in self.cleaned_data and self.cleaned_data['max_buyers'] or None
 
     def clean_expiry_date(self):
-        expiry_date = self.cleaned_data.has_key('expiry_date') and self.cleaned_data['expiry_date'] or None
+        expiry_date = 'expiry_date' in self.cleaned_data and self.cleaned_data['expiry_date'] or None
         if expiry_date and expiry_date < datetime.now():
             raise forms.ValidationError(_('Expiry date can\'t be in the past.'))
         return expiry_date
 
     def clean_valid_to(self):
         try:
-            valid_to = self.cleaned_data.has_key('valid_to') and self.cleaned_data['valid_to'] or None
+            valid_to = 'valid_to' in self.cleaned_data and self.cleaned_data['valid_to'] or None
         except ValueError, e:
             raise forms.ValidationError(_('Invalid expiry date.'))
         if valid_to and valid_to < datetime.now():
             raise forms.ValidationError(_('Valid to date can\'t be in the past.'))
-        valid_from = self.cleaned_data.has_key('valid_from') and self.cleaned_data['valid_from'] or None
+        valid_from = 'valid_from' in self.cleaned_data and self.cleaned_data['valid_from'] or None
         if valid_to and valid_from and valid_from >= valid_to:
             raise forms.ValidationError(_('Valid to date can\'t be before valid from date.'))
         return valid_to

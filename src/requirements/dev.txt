@@ -3,3 +3,4 @@
 django_extensions
 behave
 logging_tree
+mkdocs

@@ -48,7 +48,7 @@ def deal_to_dict(deal):
 def deals_renderer_json(request, result, *args, **kwargs):
     if not result.errors:
         data = {'deals': []}
-        if result.data.has_key('deals'):
+        if 'deals' in result.data:
             for deal in result.data['deals']:
                 data['deals'].append(deal_to_dict(deal))
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, result.messages and result.messages[0][1] or '', data=data, message_type='success')
@@ -62,7 +62,7 @@ def deal_renderer_json(request, result, *args, **kwargs):
         # Business Profile
         data = deal_to_dict(result.data['deal'])
         for k in ['user_bought_deal', 'available_count', 'buyers_count', 'is_closed']:
-            if result.data.has_key(k):
+            if k in result.data:
                 data[k] = result.data[k]
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, result.messages and result.messages[0][1] or '', data=data, message_type='success')
     else:
@@ -99,10 +99,10 @@ def shout_deal(request):
         result.data['form'].is_valid()
         bp = Business.objects.get(user__pk=request.user.pk)
         images = []
-        if request.POST.has_key('images[]'):
-            images = request.POST.getlist('images[]')
-        elif request.POST.has_key('images'):
-            images = request.POST.getlist('images')
+        if 'item_images[]' in request.POST:
+            images = request.POST.getlist('item_images[]')
+        elif 'item_images' in request.POST:
+            images = request.POST.getlist('item_images')
         result.data['deal'] = deal_controller.ShoutDeal(
             result.data['form'].cleaned_data['name'],
             result.data['form'].cleaned_data['description'],
@@ -134,7 +134,7 @@ def shout_deal(request):
 )
 def is_voucher_valid(request):
     result = ResponseResult()
-    if request.GET.has_key('code') and request.GET['code']:
+    if 'code' in request.GET and request.GET['code']:
         try:
             voucher = deal_controller.GetValidVoucher(request.GET['code'])
             if voucher.DealBuy.Deal.business.user == request.user:
@@ -157,7 +157,7 @@ def is_voucher_valid(request):
 )
 def invalidate_voucher(request):
     result = ResponseResult()
-    if request.GET.has_key('code') and request.GET['code']:
+    if 'code' in request.GET and request.GET['code']:
         try:
             voucher = deal_controller.GetValidVoucher(request.GET['code'])
             if voucher.DealBuy.Deal.business.user == request.user:
@@ -210,9 +210,9 @@ def close_deal(request, deal_id):
 def view_deals(request):
     result = ResponseResult()
     result.data['deals'] = deal_controller.GetOpenDeals(request.user.is_authenticated() and request.user or None,
-                                                        country=request.session.has_key('user_country') and request.session[
+                                                        country='user_country' in request.session and request.session[
                                                             'user_country'] or '',
-                                                        city=request.session.has_key('user_city') and request.session[
+                                                        city='user_city' in request.session and request.session[
                                                             'user_city'] or '')
     return result
 
@@ -230,7 +230,7 @@ def paypal(request):
 @csrf_exempt
 def cpsp_action(request, action):
     regex = re.compile(r'(\w+)_(\w+)_U_([^_]+)(?:_x_(\d+))?')
-    if request.POST.has_key('STATUS') and request.POST.has_key('orderID'):
+    if 'STATUS' in request.POST and 'orderID' in request.POST:
         transaction_data = 'CPSP TXN #%s' % request.POST['PAYID']
         transaction_identifier = 'CPSP#%s' % request.POST['PAYID']
         match = regex.match(request.POST['orderID'])

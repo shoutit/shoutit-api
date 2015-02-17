@@ -225,7 +225,7 @@ def gplus_auth(request):
         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
         return result
 
-    error, user = user_from_gplus_code(request, code)
+    error, user = user_from_gplus_code(request, code, client='shoutit-web')
 
     if user:
         result.data['profile'] = user.profile
@@ -356,17 +356,17 @@ def signin(request):
         user = user_controller.SignInUser(request, form.cleaned_data['password'],
                                           form.cleaned_data['username_or_email'])
         result.data['username'] = user.username
-        if request.POST.has_key('next'):
+        if 'next' in request.POST:
             result.data['next'] = request.POST['next']
         else:
             result.data['next'] = '/'
 
-        if request.session.has_key('business_user_id'):
+        if 'business_user_id' in request.session:
             result.data['next'] = '/bsignup/'
 
     else:
         form = LoginForm()
-        if request.GET.has_key('next'):
+        if 'next' in request.GET:
             next = request.GET['next']
         else:
             next = '/'
@@ -548,20 +548,20 @@ def user_edit_profile(request, username):
         form = UserEditProfileForm(request.POST, request.FILES, initial={'username': username, 'email': profile.user.email})
         form.is_valid()
 
-        if form.cleaned_data.has_key('username') and form.cleaned_data['username']:
+        if 'username' in form.cleaned_data and form.cleaned_data['username']:
             profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
 
-        if form.cleaned_data.has_key('email') and form.cleaned_data['email']:
+        if 'email' in form.cleaned_data and form.cleaned_data['email']:
             profile.user.email = form.cleaned_data['email']
 
-        if form.cleaned_data.has_key('firstname') and form.cleaned_data['firstname']:
+        if 'firstname' in form.cleaned_data and form.cleaned_data['firstname']:
             profile.user.first_name = form.cleaned_data['firstname']
 
-        if form.cleaned_data.has_key('lastname') and form.cleaned_data['lastname']:
+        if 'lastname' in form.cleaned_data and form.cleaned_data['lastname']:
             profile.user.last_name = form.cleaned_data['lastname']
 
-        if form.cleaned_data.has_key('mobile') and form.cleaned_data['mobile']:
+        if 'mobile' in form.cleaned_data and form.cleaned_data['mobile']:
             profile.Mobile = form.cleaned_data['mobile']
 
         profile.birthday = form.cleaned_data['birthday']
@@ -572,7 +572,7 @@ def user_edit_profile(request, username):
 
         profile.Bio = form.cleaned_data['bio']
 
-        if form.cleaned_data.has_key('password') and form.cleaned_data['password']:
+        if 'password' in form.cleaned_data and form.cleaned_data['password']:
             profile.user.set_password(form.cleaned_data['password'])
 
         profile.user.save()
@@ -766,9 +766,9 @@ def import_contacts(request, contact_provider):
 def send_invitations(request):
     result = ResponseResult()
     emails = []
-    if request.POST.has_key('emails'):
+    if 'emails' in request.POST:
         emails = request.POST.getlist('emails')
-    elif request.POST.has_key('emails[]'):
+    elif 'emails[]' in request.POST:
         emails = request.POST.getlist('emails[]')
 
     if emails:

@@ -45,9 +45,9 @@ def add_gallery_item(request, business_name, gallery_id=None):
     gallery = business.Galleries.all()[0]
 
     images = []
-    if request.POST.has_key('item_images[]'):
+    if 'item_images[]' in request.POST:
         images = request.POST.getlist('item_images[]')
-    elif request.POST.has_key('item_images'):
+    elif 'item_images' in request.POST:
         images = request.POST.getlist('item_images')
 
     result.data['item'] = gallery_controller.AddItemToGallery(
@@ -74,9 +74,9 @@ def edit_item(request, item_id):
     form.is_valid()
 
     images = []
-    if request.POST.has_key('item_images[]'):
+    if 'item_images[]' in request.POST:
         images = request.POST.getlist('item_images[]')
-    elif request.POST.has_key('item_images'):
+    elif 'item_images' in request.POST:
         images = request.POST.getlist('item_images')
 
     result.data['item'] = item_controller.edit_item(item_id,
@@ -107,7 +107,7 @@ def delete_gallery_item(request, item_id):
                  json_renderer=lambda request, result, *args: json_renderer(request,
                                                                             result,
                                                                             _('Your shout was shouted!'),
-                                                                            data=result.data.has_key('shout') and {
+                                                                            data='shout' in result.data and {
                                                                             'next': '/shout/' + result.data['shout'].pk} or {}),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER])
 def shout_item(request, item_id):

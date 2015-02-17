@@ -29,12 +29,26 @@ class MiscViewSet(viewsets.ViewSet):
     def hello(self, request):
         """
         hi there!
-        :param request:
-        :return:
         """
         return Response({'hello': 'DRF!'})
 
+    @list_route(methods=['post'])
+    def upload_shout_image(self, request):
+        """
+        upload image for shout
+        """
+        return Response({'hello': 'DRF!'})
 
-class Categories(APIView):
-    def get(self, request):
-        return Response({'hello': 'man!'})
+    @list_route(methods=['get'])
+    def currencies(self, request):
+        """
+        get currencies
+        """
+        return Response({'hello': 'DRF!'})
+
+    @list_route(methods=['get'])
+    def categories(self, request):
+        """
+        get categories
+        """
+        return Response({'hello': 'DRF!'})

@@ -34,7 +34,7 @@ def GetUserConnectedClientsCount(username):
         result = s.recv(4096)
         s.close()
         obj = json.loads(result, 'utf-8')
-        if obj.has_key('error'):
+        if 'error' in obj:
             return 0 + count
         else:
             return obj['result'] + count

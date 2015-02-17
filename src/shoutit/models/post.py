@@ -118,6 +118,10 @@ class Post(UUIDModel):
         self.IsMuted = True
         self.save()
 
+    @property
+    def owner(self):
+        return self.OwnerUser
+
 
 class Shout(Post):
     Tags = models.ManyToManyField('shoutit.Tag', related_name='Shouts')

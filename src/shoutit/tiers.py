@@ -211,7 +211,7 @@ def tiered_view(
 
                 if validation_result.valid:
                     if cache_settings:
-                        if TaggedCache.has_key(get_cache_key(request, cache_settings['level'])):
+                        if get_cache_key(request, cache_settings['level']) in TaggedCache:
                             result = TaggedCache.get(get_cache_key(request, cache_settings['level']))
                             cache_settings['to_cache'] = False
                         else:
@@ -326,12 +326,12 @@ def _refresh_cache(level, tags, session_key, user_id):
 def get_data(tags, function, *args, **kwargs):
     current_frame = inspect.stack()[1][0]
     frame = current_frame.f_back
-    if not frame.f_locals.has_key('timeout'):
+    if 'timeout' not in frame.f_locals:
         frame = frame.f_back
-    if frame.f_locals.has_key('timeout') and frame.f_locals.has_key('key'):
+    if 'timeout' in frame.f_locals and 'key' in frame.f_locals:
         frame_info = inspect.getframeinfo(current_frame)
         key = u'%s•%s•%d•%d' % (frame.f_locals['key'], frame_info.function, frame_info.lineno, frame_info.index)
-        if TaggedCache.has_key(key):
+        if key in TaggedCache:
             result = TaggedCache.get(key)
         else:
             result = function(*args, **kwargs)
