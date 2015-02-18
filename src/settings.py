@@ -194,7 +194,7 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
-# print 'APNS_SANDBOX:', APNS_SANDBOX
+info('APNS_SANDBOX:', APNS_SANDBOX)
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -413,7 +413,6 @@ USE_GOOGLE = False
 USE_MANDRILL = False
 
 if USE_GOOGLE:
-    # print "USE_GOOGLE:", USE_GOOGLE
     DEFAULT_FROM_EMAIL = 'Nour <nour@syrex.me>'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = '587'
@@ -423,7 +422,6 @@ if USE_GOOGLE:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 elif USE_MANDRILL:
-    # print "USE_MANDRILL:", USE_MANDRILL
     DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = 'smtp.mandrillapp.com'
     EMAIL_PORT = '587'
@@ -443,6 +441,8 @@ else:
     EMAIL_USE_TLS = False
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(LOG_DIR, 'messages')
+
+info("EMAIL_HOST:", EMAIL_HOST)
 
 # Auth Settings
 LOGIN_URL = '/signin/'
@@ -587,6 +587,5 @@ DELETE_EXPIRED = True
 # some monkey patching for global imports
 from common import monkey_patches
 
-# print 'Monkeys: Loaded'
-# print "=================================================="
-# print "\n"
+info('Monkeys: Loaded')
+info("==================================================")
