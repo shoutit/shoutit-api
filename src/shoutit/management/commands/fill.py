@@ -33,6 +33,21 @@ class Command(NoArgsCommand):
         t1.delete()
         Token.objects.get_or_create(user=u1, key="1-5fbb04817861540553ca6ecc6d8fb6569f3adb")
         give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, u1)
+        try:
+            p1 = u1.profile
+        except:
+            s1 = Stream(Type=0)
+            s1.save()
+            p1 = Profile(user=u1, Stream=s1)
+
+        p1.Bio = 'Shoutit Master!'
+        p1.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
+        p1.Sex = True
+        p1.City = 'Dubai'
+        p1.Country = 'AE'
+        p1.Latitude = 25.1993957
+        p1.Longitude = 55.2738326
+        p1.save()
 
         u2, c2 = User.objects.get_or_create(
             username='mo',
@@ -49,6 +64,21 @@ class Command(NoArgsCommand):
         t2.delete()
         Token.objects.get_or_create(user=u2, key="2-5fbb04817861540553ca6ecc6d8fb6569f3adb")
         give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, u2)
+        try:
+            p2 = u2.profile
+        except:
+            s2 = Stream(Type=0)
+            s2.save()
+            p2 = Profile(user=u2, Stream=s2)
+
+        p2.Bio = 'Shoutit Master 2!'
+        p2.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
+        p2.Sex = True
+        p2.City = 'Dubai'
+        p2.Country = 'AE'
+        p2.Latitude = 25.1593957
+        p2.Longitude = 55.2338326
+        p2.save()
 
         # todo: categories, tags, etc
 
