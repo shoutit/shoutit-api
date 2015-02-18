@@ -6,11 +6,8 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, filters
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view, list_route, detail_route
-from rest_framework_extensions.mixins import NestedViewSetMixin
 
-from common.constants import USER_TYPE_INDIVIDUAL, USER_TYPE_BUSINESS
 from shoutit.controllers import user_controller
 
 from shoutit.models import User

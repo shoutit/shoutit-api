@@ -1,15 +1,19 @@
+# -*- coding: utf-8 -*-
 """
-Django settings for shoutit project.
 
-For more information on this file, see
-https://docs.djangoproject.com/en/1.6/topics/settings/
-
-For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.6/ref/settings/
 """
+from __future__ import unicode_literals, print_function
 
 import os
 import sys
+
+
+def info(*args):
+    print("INFO: ", *args, file=sys.stdout)
+
+
+info('starting shoutit')
+
 # include the BACKEND_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from etc.env_settings import *
@@ -25,15 +29,15 @@ SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 GUNICORN = 'SERVER_SOFTWARE' in os.environ and 'gunicorn' in os.environ.get('SERVER_SOFTWARE')
 ADDRESS, PORT = get_address_port(GUNICORN)
 
-print "=================================================="
-print "================= Shoutit Server ================="
-print "=================================================="
-print "ENV:", ENV
-if OFFLINE_MODE:
-    print "OFFLINE MODE: ON"
-print 'GUNICORN:', GUNICORN
-print 'BIND: %s:%s' % (ADDRESS, PORT)
-
+info("==================================================")
+info("================= Shoutit Server =================")
+info("==================================================")
+# print "ENV:", ENV
+# if OFFLINE_MODE:
+#     print "OFFLINE MODE: ON"
+# print 'GUNICORN:', GUNICORN
+# print 'BIND: %s:%s' % (ADDRESS, PORT)
+#
 if PROD:
     DEBUG = False
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
@@ -71,7 +75,7 @@ else:  # LOCAL
 #     SHOUT_IT_DOMAIN = 'www.shoutit.com'
 #     SHOUT_IT_HOST = 'shoutit.com'
 
-print "DEBUG:", DEBUG
+# print "DEBUG:", DEBUG
 
 # PISTON
 PISTON_DISPLAY_ERRORS = False
@@ -85,7 +89,7 @@ SCHEME = 'https' if IS_SITE_SECURE else 'http'
 SITE_LINK = '%s://%s/' % (SCHEME, SHOUT_IT_DOMAIN)
 WSGI_APPLICATION = 'wsgi.application'
 
-print "SITE_LINK:", SITE_LINK
+# print "SITE_LINK:", SITE_LINK
 
 USE_X_FORWARDED_HOST = True
 
@@ -215,7 +219,7 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
-print 'APNS_SANDBOX:', APNS_SANDBOX
+# print 'APNS_SANDBOX:', APNS_SANDBOX
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -311,6 +315,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "shoutit.middleware.default_location"
 )
 
+LOG_SQL = False
 
 # Logging
 LOGGING = {
@@ -334,21 +339,36 @@ LOGGING = {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
         },
+        'level_below_warning': {
+            '()': 'common.log.LevelBelowWarning',
+        },
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG' if LOCAL else 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
+            'stream': sys.stderr,
         },
-        'console_debug': {
-            'level': 'DEBUG' if LOCAL else 'INFO',
+        'console_err': {
+            'level': 'WARNING',
             'class': 'logging.StreamHandler',
-            'filters': ['require_debug_true'],
+            'stream': sys.stderr,
+        },
+        'console_out': {
+            'level': 'DEBUG' if LOCAL and LOG_SQL else 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'filters': ['level_below_warning'],
         },
         'sentry': {
             'level': 'ERROR',
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
             'filters': ['require_debug_false'],
+        },
+        'sentry_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'sentry.err.log'),
         },
         'mail_admins': {
             'level': 'ERROR',
@@ -372,34 +392,32 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console_debug', 'sentry'],
+            'handlers': ['console_out', 'console_err', 'sentry'],
             'level': 'DEBUG',
-        },
-        'django.db': {
-            'handlers': ['console'],
-            'level': 'WARNING',
             'propagate': False,
         },
         'py.warnings': {
-            'handlers': ['console_debug', 'sentry'],
+            'handlers': ['console_err', 'sentry'],
+            'propagate': False,
         },
-
-        # add another action for security errors
-        # 'django.security': {
-        # 'handlers': ['mail_admins'],
-        #     'level': 'ERROR',
-        #     'propagate': True,
-        # },
         'raven': {
             'level': 'WARNING',
-            'handlers': ['console'],
+            'handlers': ['sentry_file'],
             'propagate': False,
         },
-        'sentry.errors': {
+        'sentry': {
             'level': 'WARNING',
-            'handlers': ['console'],
+            'handlers': ['sentry_file'],
             'propagate': False,
         },
+        'gunicorn': {
+            'level': 'DEBUG',
+            'handlers': ['console_out', 'console_err', 'sentry'],
+            'propagate': False,
+        },
+        '': {
+            'handlers': ['console_out', 'console_err', 'sentry'],
+        }
 
         # 'SqlLogMiddleware': {
         #     'handlers': ['sql_file'],
@@ -411,19 +429,6 @@ LOGGING = {
         #     'level': 'INFO',
         #     'propagate': False
         # }
-        'gunicorn.access': {
-            'level': 'INFO',
-            'handlers': ['console'],
-
-        },
-        'gunicorn.error': {
-            'level': 'INFO',
-            'handlers': ['console', 'sentry'],
-
-        },
-        '': {
-            'handlers': ['console_debug', 'sentry'],
-        }
     }
 }
 
@@ -433,7 +438,7 @@ USE_GOOGLE = False
 USE_MANDRILL = False
 
 if USE_GOOGLE:
-    print "USE_GOOGLE:", USE_GOOGLE
+    # print "USE_GOOGLE:", USE_GOOGLE
     DEFAULT_FROM_EMAIL = 'Nour <nour@syrex.me>'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = '587'
@@ -443,7 +448,7 @@ if USE_GOOGLE:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 elif USE_MANDRILL:
-    print "USE_MANDRILL:", USE_MANDRILL
+    # print "USE_MANDRILL:", USE_MANDRILL
     DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = 'smtp.mandrillapp.com'
     EMAIL_PORT = '587'
@@ -462,7 +467,7 @@ else:
     EMAIL_HOST_PASSWORD = 'password'
     EMAIL_USE_TLS = False
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-    EMAIL_FILE_PATH = os.path.join(ENV_DIR, 'logs', 'messages')
+    EMAIL_FILE_PATH = os.path.join(LOG_DIR, 'messages')
 
 # Auth Settings
 LOGIN_URL = '/signin/'
@@ -607,6 +612,6 @@ DELETE_EXPIRED = True
 # some monkey patching for global imports
 from common import monkey_patches
 
-print 'Monkeys: Loaded'
-print "=================================================="
-print "\n"
+# print 'Monkeys: Loaded'
+# print "=================================================="
+# print "\n"
