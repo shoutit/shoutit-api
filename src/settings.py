@@ -9,10 +9,7 @@ import sys
 
 
 def info(*args):
-    print("INFO: ", *args, file=sys.stdout)
-
-
-info('starting shoutit')
+    print("[INFO]  ", *args, file=sys.stderr)
 
 # include the BACKEND_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -32,12 +29,12 @@ ADDRESS, PORT = get_address_port(GUNICORN)
 info("==================================================")
 info("================= Shoutit Server =================")
 info("==================================================")
-# print "ENV:", ENV
-# if OFFLINE_MODE:
-#     print "OFFLINE MODE: ON"
-# print 'GUNICORN:', GUNICORN
-# print 'BIND: %s:%s' % (ADDRESS, PORT)
-#
+info("ENV:", ENV)
+if OFFLINE_MODE:
+    info("OFFLINE MODE: ON")
+info("GUNICORN:", GUNICORN)
+info("BIND: {}:{}".format(ADDRESS, PORT))
+
 if PROD:
     DEBUG = False
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
@@ -53,29 +50,7 @@ else:  # LOCAL
     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = 'shoutit.dev'
 
-
-# if ON_SERVER:
-# if GUNICORN:
-#         DEBUG = False
-#         SHOUT_IT_DOMAIN = 'www.shoutit.com'
-#         SHOUT_IT_HOST = 'shoutit.com'
-#
-#     else:
-#         DEBUG = True
-#         SHOUT_IT_DOMAIN = 'www.shoutit.com:8000'
-#         SHOUT_IT_HOST = 'shoutit.com'
-#
-# elif LOCAL:
-#     DEBUG = True
-#     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
-#     SHOUT_IT_HOST = '127.0.0.1'
-#
-# else:
-#     DEBUG = True
-#     SHOUT_IT_DOMAIN = 'www.shoutit.com'
-#     SHOUT_IT_HOST = 'shoutit.com'
-
-# print "DEBUG:", DEBUG
+info("DEBUG:", DEBUG)
 
 # PISTON
 PISTON_DISPLAY_ERRORS = False
@@ -89,7 +64,7 @@ SCHEME = 'https' if IS_SITE_SECURE else 'http'
 SITE_LINK = '%s://%s/' % (SCHEME, SHOUT_IT_DOMAIN)
 WSGI_APPLICATION = 'wsgi.application'
 
-# print "SITE_LINK:", SITE_LINK
+info("SITE_LINK:", SITE_LINK)
 
 USE_X_FORWARDED_HOST = True
 
@@ -330,7 +305,7 @@ LOGGING = {
         },
         'message_only': {
             'format': '%(message)s'
-        }
+        },
     },
     'filters': {
         'require_debug_false': {
@@ -376,11 +351,11 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'include_html': False,
         },
-        # 'sql_file': {
-        #     'class': 'logging.FileHandler',
-        #     'level': 'INFO',
-        #     'filename': os.path.join(ENV_DIR, 'logs', 'sql.log')
-        # },
+        'sql_file': {
+            'class': 'logging.FileHandler',
+            'level': 'INFO',
+            'filename': os.path.join(LOG_DIR, 'sql.log')
+        },
         'sql_console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -388,7 +363,7 @@ LOGGING = {
         },
         'null': {
             "class": 'django.utils.log.NullHandler',
-        }
+        },
     },
     'loggers': {
         'django': {
@@ -417,18 +392,18 @@ LOGGING = {
         },
         '': {
             'handlers': ['console_out', 'console_err', 'sentry'],
-        }
+        },
 
-        # 'SqlLogMiddleware': {
-        #     'handlers': ['sql_file'],
-        #     'level': 'INFO',
-        #     'propagate': False
-        # },
-        # 'SqlLogMiddleware_console': {
-        #     'handlers': ['sql_console'],
-        #     'level': 'INFO',
-        #     'propagate': False
-        # }
+        'SqlLogMiddleware': {
+            'handlers': ['sql_file'],
+            'level': 'INFO',
+            'propagate': False
+        },
+        'SqlLogMiddleware_console': {
+            'handlers': ['sql_console'],
+            'level': 'INFO',
+            'propagate': False
+        },
     }
 }
 

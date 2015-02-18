@@ -19,7 +19,7 @@ errorlog = accesslog = '-'
 loglevel = 'info'
 
 check_config = False
-
+proc_name = ENV
 
 # def when_ready(server):
 #     from django import setup
