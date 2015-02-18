@@ -22,10 +22,6 @@ Structure
 * media
 
 
-Env Name: shoutit_backend_[dev|prod]
-
-Log Dir: /var/opt/log/<env name>
-
 Requirements
 ====================
 
@@ -73,10 +69,13 @@ ssh-keygen
 
 virtualenv
 --------------------
-/opt/shoutit_backend_[prod|dev]
+env_name: shoutit_backend_[dev|prod|local]
+env_dir: /opt/{env_name}
+log_dir: {env_dir}/log
+backend_dir: {env_dir}/backend
 
 
-backend dir
+backend_dir
 --------------------
 git clone git@bitbucket.org:shoutitcom/shoutit_backend.git .
 
