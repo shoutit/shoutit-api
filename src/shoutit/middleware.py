@@ -16,9 +16,10 @@ from shoutit.controllers import facebook_controller
 class APIDetectionMiddleware(object):
     @staticmethod
     def process_request(request):
-        # todo: collect general info about api and attach to request
         # do not apply on api v2
         if '/api/v2/' in request.META.get('PATH_INFO'):
+            request.is_api = False
+            request.api_client = 'other'
             return
         request.is_api = "/api/" in request.META.get('PATH_INFO') or "/oauth/" in request.META.get('PATH_INFO')
         request.api_client = request.META.get('HTTP_SHOUTIT_CLIENT', 'other')
