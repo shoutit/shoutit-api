@@ -28,6 +28,23 @@ api_urls = {
 }
 
 
+api2_urls = {
+    'User': ('users/{}', 'username'),
+    'Profile': ('users/{}', 'username'),
+    'Business': ('users/{}', 'username'),
+    'Shout': ('shouts/{}', 'pk'),
+    'Trade': ('shouts/{}', 'pk'),
+    'StoredImage': ('images/{}', 'pk'),
+    'Item': ('items/{}', 'pk'),
+    'Tag': ('tags/{}', 'Name'),
+    'Conversation2': ('messages2/{}', 'pk'),
+    'Experience': ('experiences/{}', 'pk'),
+
+    JSON_URL_MARK_NOTIFICATION_AS_READ: JSON_URL_MARK_NOTIFICATION_AS_READ,
+    JSON_URL_MARK_NOTIFICATION_AS_UNREAD: JSON_URL_MARK_NOTIFICATION_AS_UNREAD,
+}
+
+
 def get_object_api_url(obj, extra_params=None):
     class_name = obj.__class__.__name__
     if obj is not None and class_name in api_urls:
@@ -39,6 +56,17 @@ def get_object_api_url(obj, extra_params=None):
             params.extend(extra_params)
         url = url % tuple(params)
         return SITE_LINK + 'api' + url
+    else:
+        raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
+
+
+def get_api2_url(obj):
+    class_name = obj.__class__.__name__
+    if obj is not None and class_name in api2_urls:
+        url_tuple = api2_urls[class_name]
+        obj_url, pk_field = url_tuple[0], url_tuple[1]
+        url = obj_url.format(getattr(obj, pk_field))
+        return "{}api/v2/{}".format(SITE_LINK, url)
     else:
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
 

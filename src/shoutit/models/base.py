@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core import validators
@@ -15,6 +14,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.authtoken.models import Token
 from uuidfield import UUIDField
 from common.utils import date_unix
+from shoutit.api.api_utils import get_api2_url
 
 
 class UUIDModel(models.Model):
@@ -60,7 +60,17 @@ class AttachedObjectMixin(models.Model):
         abstract = True
 
 
-class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
+class APIModelMixin(object):
+    @property
+    def api_url(self):
+        return get_api2_url(self)
+
+    @property
+    def web_url(self):
+        return ''
+
+
+class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     """
     An abstract base class implementing a fully featured User model with
     admin-compliant permissions and uuid field.
@@ -73,8 +83,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
                                     validators.RegexValidator(re.compile('[0-9a-zA-Z.]{2,30}'), _('Enter a valid username.'), 'invalid'),
                                     validators.MinLengthValidator(2)
                                 ])
-    first_name = models.CharField(_('first name'), max_length=30, blank=True)
-    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    first_name = models.CharField(_('first name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
+    last_name = models.CharField(_('last name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
     email = models.EmailField(_('email address'), max_length=254, blank=True)
     is_staff = models.BooleanField(_('staff status'), default=False,
                                    help_text=_('Designates whether the user can log into this admin site.'))
@@ -94,30 +104,39 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
 
     @property
     def abstract_profile(self):
-        if hasattr(self, 'profile'):
-            return self.profile
-        elif hasattr(self, 'business'):
-            return self.business
-        else:
-            return None
+        if not hasattr(self, '_abstract_profile'):
+            if hasattr(self, 'profile'):
+                self._abstract_profile = self.profile
+            elif hasattr(self, 'business'):
+                self._abstract_profile = self.business
+            else:
+                self._abstract_profile = None
+        return self._abstract_profile
 
     @property
     def latitude(self):
-        if hasattr(self, 'profile'):
-            return self.profile.Latitude
-        elif hasattr(self, 'business'):
-            return self.business.Latitude
-        else:
-            return None
+        return self.abstract_profile and self.abstract_profile.Latitude
 
     @property
     def longitude(self):
-        if hasattr(self, 'profile'):
-            return self.profile.Longitude
-        elif hasattr(self, 'business'):
-            return self.business.Longitude
-        else:
-            return None
+        return self.abstract_profile and self.abstract_profile.Longitude
+
+    @property
+    def city(self):
+        return self.abstract_profile and self.abstract_profile.City
+
+    @property
+    def country(self):
+        return self.abstract_profile and self.abstract_profile.Country
+
+    @property
+    def location(self):
+        return {
+            'country': self.country,
+            'city': self.city,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+        }
 
     @property
     def name(self):
@@ -154,6 +173,24 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel):
             self._gcm_device = None
 
         return self._gcm_device
+
+    @property
+    def social_channels(self):
+        if not hasattr(self, '_social_channels'):
+            self._social_channels = {
+                'facebook': True if (hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
+                'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
+            }
+        return self._social_channels
+
+    @property
+    def push_tokens(self):
+        if not hasattr(self, '_push_tokens'):
+            self._push_tokens = {
+                'apns': self.apns_device.registration_id if self.apns_device else None,
+                'gcm': self.gcm_device.registration_id if self.gcm_device else None
+            }
+        return self._push_tokens
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)
