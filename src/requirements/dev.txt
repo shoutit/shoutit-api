@@ -1,6 +1,5 @@
 # development requirements
--r common.txt
--r dev.txt
+-r prod.txt
 django_extensions
 behave
 logging_tree
