@@ -296,17 +296,20 @@ class JsonResponseBadRequest(JsonResponse):
     status_code = 400
 
 
+cloud_connection = None
+
+
 def get_cloud_connection():
-    pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
-    pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
-    return pyrax
-if not settings.OFFLINE_MODE:
-    cloud_connection = get_cloud_connection()
+    global cloud_connection
+    if cloud_connection is None:
+        pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
+        cloud_connection = pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
+    return cloud_connection
 
 
 def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
     try:
-        cf = cloud_connection.cloudfiles
+        cf = get_cloud_connection().cloudfiles
         container = cf.get_container(container_name)
         data = ''
         if is_raw:
@@ -344,7 +347,7 @@ def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
 
 def cloud_upload_file(uploaded, container, filename, is_raw):
     try:
-        cf = cloud_connection.cloudfiles
+        cf = get_cloud_connection().cloudfiles
         container = cf.get_container(container)
         data = ''
         if is_raw:
