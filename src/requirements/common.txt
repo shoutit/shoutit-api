@@ -40,3 +40,4 @@ raven
 
 gunicorn>=19
 
+django-rest-swagger

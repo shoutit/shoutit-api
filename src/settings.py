@@ -163,6 +163,7 @@ INSTALLED_APPS = (
 
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_swagger',
 )
 # apps only on local development
 if LOCAL:
@@ -583,6 +584,29 @@ OAUTH_SINGLE_ACCESS_TOKEN = True
 ENFORCE_SECURE = False
 ENFORCE_CLIENT_SECURE = True
 DELETE_EXPIRED = True
+
+
+SWAGGER_SETTINGS = {
+    'exclude_namespaces': [],
+    'api_version': '2.0',
+    'api_path': '/',
+    'enabled_methods': [
+        'get',
+        'post',
+        'put',
+        'delete'
+    ],
+    'api_key': '',
+    'is_authenticated': True,
+    'is_superuser': True,
+    'permission_denied_handler': None,
+    'info': {
+        'contact': 'mo.chawich@gmail.com',
+        'description': '',
+        'title': 'Shoutit API V2 Documentation',
+    },
+    'doc_expansion': 'none',
+}
 
 # some monkey patching for global imports
 from common import monkey_patches

@@ -19,7 +19,8 @@ from shoutit.api.renderers import render_user
 
 class UserViewSet(viewsets.GenericViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    User API Resource.
+
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
@@ -43,80 +44,83 @@ class UserViewSet(viewsets.GenericViewSet):
         return Response(ret)
 
     def create(self, request, *args, **kwargs):
+        """
+        Create user
+        """
         return Response()
 
     def retrieve(self, request, *args, **kwargs):
         """
-        get user
+        Get user
         """
         user = self.get_object()
         return Response(render_user(user, 5, request.user == user))
 
     def update(self, request, *args, **kwargs):
         """
-        modify user
+        Modify user
         """
         user = self.get_object()
         return Response(render_user(user, 5, request.user == user))
 
     def destroy(self, request,  *args, **kwargs):
         """
-        delete user and everything attached to him
+        Delete user and everything attached to him
         """
         return Response()
 
     @detail_route(methods=['get', 'put'])
     def location(self, request, *args, **kwargs):
         """
-        get or modify user location
+        Get or modify user location
         """
         return Response()
 
     @detail_route(methods=['get', 'put'])
     def image(self, request, *args, **kwargs):
         """
-        get or modify user image
+        Get or modify user image
         """
         return Response()
 
     @detail_route(methods=['get', 'put', 'delete'])
     def video(self, request, *args, **kwargs):
         """
-        get, modify or delete user video
+        Get, modify or delete user video
         """
         return Response()
 
     @detail_route(methods=['get', 'put', 'delete'])
     def push(self, request, *args, **kwargs):
         """
-        get, modify or delete user push tokens
+        Get, modify or delete user push tokens
         """
         return Response()
 
     @detail_route(methods=['get'])
     def shouts(self, request, *args, **kwargs):
         """
-        get user shouts
+        Get user shouts
         """
         return Response()
 
     @detail_route(methods=['post', 'delete'])
     def listen(self, request, *args, **kwargs):
         """
-        start/stop listening to user
+        Start/Stop listening to user
         """
         return Response()
 
     @detail_route(methods=['get'])
     def listeners(self, request, *args, **kwargs):
         """
-        get user listeners
+        Get user listeners
         """
         return Response()
 
     @detail_route(methods=['get'])
     def listening(self, request, *args, **kwargs):
         """
-        get user listening
+        Get user listening
         """
         return Response()

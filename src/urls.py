@@ -2,6 +2,7 @@ from django.conf.urls import patterns, include, url, handler500
 from django.views.generic import TemplateView, RedirectView
 
 from django.contrib import admin
+from django.conf import settings
 
 admin.autodiscover()
 
@@ -204,7 +205,7 @@ urlpatterns = patterns('',
 
 )
 
-# urlpatterns += patterns('',
-#	url(r'^admin/django-lean/', include('django_lean.experiments.admin_urls')),
-#	url(r'^django-lean/', include('django_lean.experiments.urls')),
-#)
+# serving static files while developing locally using gunicorn
+if settings.GUNICORN and settings.LOCAL:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    urlpatterns += staticfiles_urlpatterns()

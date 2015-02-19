@@ -36,7 +36,10 @@ class RequestParamsClientBackend(object):
         return None
 
 
-class AccessTokenView(OAuthAccessTokenView, APIView):
+class AccessTokenView(APIView, OAuthAccessTokenView):
+    """
+    OAuth2 Resource
+    """
 
     # client authentication
     authentication = (
@@ -92,10 +95,10 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Handle ``grant_type=facebook_access_token`` requests.
         {
-            "client_id": "shoutit-web",
-            "client_secret": "a5499bf97ab54b671e34127bc43226ab78cf7e14",
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "facebook_access_token",
-            "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMyUEBpc9pSKiFhrxmiVHE2kwbFWj8iBHEaGEkSgNXOcQaYuZCUlfJqunkDGPQ2rM5e7j5anYynp1nOEZBXB6g91wyn8JJoLXoPTOb3dzVKFn51rIboQHZCp2p6TUCSQvFhSJpGrcZD"
+            "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy"
         }
         """
 
@@ -126,8 +129,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Handle ``grant_type=gplus_code`` requests.
         {
-            "client_id": "shoutit-web",
-            "client_secret": "a5499bf97ab54b671e34127bc43226ab78cf7e14",
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "gplus_code",
             "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI"
         }
@@ -166,10 +169,64 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             return self.gplus_code
         return None
 
+    # override get, not to be documented or listed in urls.
+    get = property()
+
     def post(self, request):
         """
-        As per :rfc:`3.2` the token endpoint *only* supports POST requests.
-        Modified to work with DRF request.data instead request.REQUEST
+        Authorize the user and return an access token to be used in later API calls.
+
+        ###Using Google Code
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "gplus_code",
+            "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI"
+        }
+        </code></pre>
+
+        ###Using Facebook Access Token
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "facebook_access_token",
+            "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy"
+        }
+        </code></pre>
+
+        ###Refreshing the Token
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ###Using the Token in header for later API calls.
+        ```
+        Authorization: Bearer 1bd93abdbe4e5b4949e17dce114d94d96f21fe4a
+        ```
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         if provider_constants.ENFORCE_SECURE and not request.is_secure():
             return self.error_response({
