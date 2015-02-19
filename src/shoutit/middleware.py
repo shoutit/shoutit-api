@@ -118,3 +118,7 @@ def refresh_permissions_cache(sender, **kwargs):
 
 def default_location(request):
     return {'default_location': DEFAULT_LOCATION}
+
+
+def include_settings(request):
+    return {'settings': settings}

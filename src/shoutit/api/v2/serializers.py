@@ -11,10 +11,11 @@ from rest_framework import serializers
 class UserSerializer2(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'url', 'username', 'email', 'groups')
+        fields = ('id', 'url', 'username', 'email', 'first_name', 'last_name')
         extra_kwargs = {
             'url': {'lookup_field': 'username'}
         }
+
 
 
 class UserSerializer(serializers.Serializer):
