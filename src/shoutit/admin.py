@@ -69,10 +69,10 @@ admin.site.register(Experience, ExperienceAdmin)
 
 class CustomUserChangeForm(UserChangeForm):
     username = forms.RegexField(
-        label=_("Username"), min_length=2, max_length=30, regex=r"^[\w.]+$",
-        help_text=_("Required. 2 to 30 characters. Letters, digits and ./_ only."),
+        label=_("Username"), max_length=30, min_length=2, regex=r"^[0-9a-zA-Z.]{2,30}$",
+        help_text=_('Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
         error_messages={
-            'invalid': _("This value may contain only letters, numbers and ./_ characters.")})
+            'invalid': _("This value may only contain A-Z, a-z, 0-9, and periods (.)")})
 
 
 class CustomUserAdmin(UserAdmin):
@@ -83,6 +83,12 @@ class CustomUserAdmin(UserAdmin):
 
     form = CustomUserChangeForm
 
+    def get_urls(self):
+        from django.conf.urls import patterns
+        return patterns('',
+            (r'^([-\w]+)/password/$',
+             self.admin_site.admin_view(self.user_change_password))
+        ) + super(UserAdmin, self).get_urls()
 
 admin.site.register(User, CustomUserAdmin)
 
