@@ -303,7 +303,8 @@ def get_cloud_connection():
     global cloud_connection
     if cloud_connection is None:
         pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
-        cloud_connection = pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
+        pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
+        cloud_connection = pyrax
     return cloud_connection
 
 
@@ -341,8 +342,11 @@ def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
             make_cloud_thumbnails_for_user_image(obj.container.cdn_uri + '/' + obj.name)
 
         return obj
-    except Exception, e:
-        raise Http404(e.message)
+
+    # todo: very bad error handling
+    except Exception as e:
+        print str(e)
+        return None
 
 
 def cloud_upload_file(uploaded, container, filename, is_raw):

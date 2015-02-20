@@ -395,6 +395,10 @@ LOGGING = {
         '': {
             'handlers': ['console_out', 'console_err', 'sentry'],
         },
+        # 'requests': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console_out', 'console_err', 'sentry'],
+        # },
 
         'SqlLogMiddleware': {
             'handlers': ['sql_file'],
@@ -595,7 +599,8 @@ SWAGGER_SETTINGS = {
         'get',
         'post',
         'put',
-        'delete'
+        'patch',
+        'delete',
     ],
     'api_key': '',
     'is_authenticated': True,

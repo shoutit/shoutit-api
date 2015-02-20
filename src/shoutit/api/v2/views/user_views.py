@@ -4,27 +4,22 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets, filters
+from rest_framework import permissions, viewsets, filters, mixins
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, list_route, detail_route
+from rest_framework.decorators import detail_route
+from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.controllers import user_controller
 
 from shoutit.models import User
-from shoutit.api.v2.serializers import UserSerializer, UserSerializer2
+from shoutit.api.v2.serializers import UserSerializer, UserDetailSerializer
 from shoutit.api.v2.permissions import IsOwnerOrReadOnly
 
-from shoutit.api.renderers import render_user
 
-
-class UserViewSet(viewsets.GenericViewSet):
-    """
-    User API Resource.
-
-    """
+class _UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
-    serializer_class = UserSerializer2
+    serializer_class = UserSerializer
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('id', 'username', 'email')
@@ -33,60 +28,270 @@ class UserViewSet(viewsets.GenericViewSet):
     def get_queryset(self):
         return User.objects.all()
 
+
+class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    User API Resource.
+
+    """
+    lookup_field = 'username'
+    lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
+
+    serializer_class = UserSerializer
+    serializer_detail_class = UserDetailSerializer
+
+    queryset = User.objects.all()
+    queryset_detail = queryset.prefetch_related('profile')
+
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    filter_fields = ('id', 'username', 'email')
+    search_fields = ('username', 'first_name', 'last_name', '=email')
+
     def list(self, request, *args, **kwargs):
         """
         get users based on `filter_fields` and `search_fields`
-        """
-        users = self.filter_queryset(self.get_queryset())
-        ret = {
-            "results": [render_user(user) for user in users]
-        }
-        return Response(ret)
 
-    def create(self, request, *args, **kwargs):
+        ###Response
+        <pre><code>
+        {
+          "id": "a45c843f-8983-4f55-bde4-0236f070151d",
+          "api_url": "http://shoutit.dev:8000/api/v2/users/syron",
+          "username": "syron",
+          "name": "Mo Chawich",
+          "first_name": "Mo",
+          "last_name": "Chawich",
+          "web_url": "",
+          "is_active": true
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: search
+              paramType: query
         """
-        Create user
-        """
-        return Response()
+        instance = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(instance)
+        if page is not None:
+            serializer = self.get_pagination_serializer(page)
+        else:
+            serializer = self.get_serializer(instance, many=True)
+        return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         """
         Get user
-        """
-        user = self.get_object()
-        return Response(render_user(user, 5, request.user == user))
 
-    def update(self, request, *args, **kwargs):
+        ###Response
+        <pre><code>
+        {
+          "id": "65682def-d120-40f4-92b8-4d99361bdc6d",
+          "api_url": "http://shoutit.dev:8000/api/v2/users/mo",
+          "username": "mo",
+          "name": "Mohamad Nour Chawich",
+          "first_name": "Mohamad Nour",
+          "last_name": "Chawich",
+          "web_url": "",
+          "is_active": true,
+          "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
+          "sex": true,
+          "video": null,
+          "date_joined": 1424292476,
+          "bio": "Shoutit Master 2!",
+          "location": {
+            "latitude": 25.1593957,
+            "country": "AE",
+            "longitude": 55.2338326,
+            "city": "Dubai"
+          },
+          "email": "mo.chawich@gmail.com",
+          "social_channels": {
+            "gplus": false,
+            "facebook": true
+          },
+          "push_tokens": {
+            "apns": null,
+            "gcm": null
+          }
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: username
+              paramType: path
+              required: true
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
         """
         Modify user
+
+        ###Request
+        <pre><code>
+        {
+            "username": "mo",
+            "email": "mo.chawich@gmail.com",
+            "first_name": "Mo",
+            "last_name": "Chawich",
+            "bio": "I'm a good shouter",
+            "sex": 1
+        }
+        </code></pre>
+
+        ###Response
+        Detailed User object
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters_strategy:
+            form: replace
+            query: merge
+
+        parameters:
+            - name: body
+              paramType: body
         """
-        user = self.get_object()
-        return Response(render_user(user, 5, request.user == user))
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     def destroy(self, request,  *args, **kwargs):
         """
         Delete user and everything attached to him
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
-        return Response()
+        return super(UserViewSet, self).destroy(request, *args, **kwargs)
 
     @detail_route(methods=['get', 'put'])
     def location(self, request, *args, **kwargs):
         """
         Get or modify user location
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()
 
-    @detail_route(methods=['get', 'put'])
+    @detail_route(methods=['put'])
     def image(self, request, *args, **kwargs):
         """
         Get or modify user image
+
+        ###Request
+        image url in json body
+        <pre><code>
+        {
+            "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg"
+        }
+        </code></pre>
+
+        or
+
+        ```
+        PUT request with attached image file named `image_file`
+        ```
+        ###Response
+        Detailed User object
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: image_file
+              type: file
         """
-        return Response()
+        return self.partial_update(request, *args, **kwargs)
 
     @detail_route(methods=['get', 'put', 'delete'])
     def video(self, request, *args, **kwargs):
         """
         Get, modify or delete user video
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()
 
@@ -94,6 +299,33 @@ class UserViewSet(viewsets.GenericViewSet):
     def push(self, request, *args, **kwargs):
         """
         Get, modify or delete user push tokens
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()
 
@@ -101,6 +333,33 @@ class UserViewSet(viewsets.GenericViewSet):
     def shouts(self, request, *args, **kwargs):
         """
         Get user shouts
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()
 
@@ -108,6 +367,33 @@ class UserViewSet(viewsets.GenericViewSet):
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to user
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()
 
@@ -115,6 +401,33 @@ class UserViewSet(viewsets.GenericViewSet):
     def listeners(self, request, *args, **kwargs):
         """
         Get user listeners
+
+        ###Request
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "refresh_token",
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()
 
@@ -122,5 +435,23 @@ class UserViewSet(viewsets.GenericViewSet):
     def listening(self, request, *args, **kwargs):
         """
         Get user listening
+
+        ###Response
+        <pre><code>
+        {
+            ""
+            "next": ""
+            "results": {
+                "users": [],
+                "tags": []
+            }
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: listening_type
+              paramType: path
         """
         return Response()
