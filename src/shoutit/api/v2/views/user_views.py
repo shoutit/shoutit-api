@@ -4,12 +4,12 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets, filters, mixins
+from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
-from shoutit.controllers import user_controller
+from shoutit.controllers import user_controller, stream_controller
 
 from shoutit.models import User
 from shoutit.api.v2.serializers import UserSerializer, UserDetailSerializer
@@ -216,6 +216,8 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             - code: 204
               message: User Deleted
         omit_serializer: true
+        omit_parameters:
+            - form
         parameters:
             - name: body
               paramType: body
@@ -257,18 +259,38 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         """
         Start/Stop listening to user
 
-        ###Request
+        ###Listen
         <pre><code>
+        POST:
         </code></pre>
 
-        ###Response
+        ###Stop listening
         <pre><code>
+        DELETE:
         </code></pre>
 
         ---
         omit_serializer: true
+        omit_parameters:
+            - form
         """
-        return Response()
+        user = self.get_object()
+        profile = user.profile
+
+        if request.method == 'POST':
+            stream_controller.listen_to_stream(request.user, profile.stream2)
+            msg = "you started listening to {} shouts.".format(user.name)
+
+        else:
+            stream_controller.remove_listener_from_stream(request.user, profile.stream2)
+            msg = "you stopped listening to {} shouts.".format(user.name)
+
+        ret = {
+            'data': {'success': msg},
+            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
+        }
+
+        return Response(**ret)
 
     @detail_route(methods=['get'])
     def listeners(self, request, *args, **kwargs):
@@ -285,6 +307,8 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         ---
         omit_serializer: true
+        omit_parameters:
+            - form
         """
         return Response()
 
@@ -303,6 +327,8 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         ---
         omit_serializer: true
+        omit_parameters:
+            - form
         parameters:
             - name: listening_type
               paramType: query

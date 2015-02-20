@@ -73,43 +73,6 @@ def get_or_create_tags(tags, creator):
     return [get_or_create_tag(tag, creator, False) for tag in tags]
 
 
-# todo: remove
-def AddToUserInterests(request, tag, user):
-    if isinstance(user, User):
-        user = user.profile
-    if isinstance(tag, unicode):
-        tag = Tag.objects.filter(Name__iexact=tag)
-        if not tag:
-            raise Tag.DoesNotExist()
-        else:
-            tag = tag[0]
-    if tag not in user.Interests.all():
-        user.Interests.add(tag)
-        user_controller.FollowStream(request, user, tag.Stream)
-        user.save()
-        event_controller.register_event(user.user, EVENT_TYPE_FOLLOW_TAG, tag)
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_ADDED, data={ACTIVITY_DATA_TAG: tag.pk, ACTIVITY_DATA_USERNAME: user.username})
-
-
-# todo: remove
-def RemoveFromUserInterests(request, tag, user):
-    if isinstance(user, User):
-        user = user.profile
-    if isinstance(tag, unicode):
-        tag = Tag.objects.filter(Name__iexact=tag)[:]
-        if not tag:
-            raise Tag.DoesNotExist()
-        else:
-            tag = tag[0]
-    if tag in user.Interests.all():
-        user_controller.UnfollowStream(request, user, tag.Stream)
-        user.Interests.remove(tag)
-        user.save()
-
-        Logger.log(request, type=ACTIVITY_TYPE_TAG_INTEREST_REMOVED,
-                   data={ACTIVITY_DATA_TAG: tag.pk, ACTIVITY_DATA_USERNAME: user.username})
-
-
 def search_tags(query='', limit=10):
     tags = Tag.objects.filter(Name__icontains=query).values('Name', 'image')[:limit]
     return list(tags)

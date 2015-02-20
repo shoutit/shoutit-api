@@ -297,11 +297,6 @@ def resend_activation(request):
 def start_listening_to_user(request, username):
     profile = request.validation_result.data
     stream_controller.listen_to_stream(request.user, profile.stream2)
-
-    # todo: remove old streams
-    user_controller.FollowStream(request, request.user.username, profile.Stream)
-    realtime_controller.BindUserToUser(request.user.username, username)
-
     return ResponseResult()
 
 
@@ -321,11 +316,6 @@ def start_listening_to_user(request, username):
 def stop_listening_to_user(request, username):
     profile = request.validation_result.data
     stream_controller.remove_listener_from_stream(request.user, profile.stream2)
-
-    # todo: remove old streams
-    user_controller.UnfollowStream(request, request.user.username, user_controller.get_profile(username).Stream)
-    realtime_controller.UnbindUserFromUser(request.user.username, username)
-
     return ResponseResult()
 
 

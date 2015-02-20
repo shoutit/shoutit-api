@@ -21,13 +21,7 @@ from shoutit.templatetags.template_filters import thumbnail
 def start_listening_to_tag(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
-
     stream_controller.listen_to_stream(request.user, tag.stream2)
-    # todo: add tracking event
-
-    # todo: remove old streams
-    tag_controller.AddToUserInterests(request, tag_name, request.user)
-
     return result
 
 
@@ -42,13 +36,7 @@ def start_listening_to_tag(request, tag_name):
 def stop_listening_to_tag(request, tag_name):
     result = ResponseResult()
     tag = request.validation_result.data
-
     stream_controller.remove_listener_from_stream(request.user, tag.stream2)
-    # todo: add tracking event
-
-    # todo: [listen] replace
-    tag_controller.RemoveFromUserInterests(request, tag_name, request.user)
-
     return result
 
 

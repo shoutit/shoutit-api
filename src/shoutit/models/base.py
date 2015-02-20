@@ -206,9 +206,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def get_full_name(self):
         """
         Returns the first_name plus the last_name, with a space in between.
+        username in case the above is empty string
         """
         full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
+        full_name = full_name.strip()
+        return full_name if full_name != '' else self.username
 
     def get_short_name(self):
         "Returns the short name for the user."

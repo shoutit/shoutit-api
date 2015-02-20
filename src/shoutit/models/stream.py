@@ -99,6 +99,10 @@ class Stream2(UUIDModel, AttachedObjectMixin):
         self.posts.remove(post)
         self.save()
 
+    @property
+    def owner(self):
+        return self.attached_object
+
 
 class Stream2Mixin(models.Model):
     # todo: after updating to django 1.7 'related_query_name' can be used to filter on owner (attached_object) attributes

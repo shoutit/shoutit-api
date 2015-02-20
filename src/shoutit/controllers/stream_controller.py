@@ -7,10 +7,11 @@ from django.db.models.query_utils import Q
 from django.conf import settings
 
 from common.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, \
-    POST_TYPE_REQUEST, POST_TYPE_OFFER, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
+    POST_TYPE_REQUEST, POST_TYPE_OFFER, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, \
+    EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
 from shoutit import utils
-from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile
-from shoutit import utils
+from shoutit.controllers import notifications_controller, event_controller
+from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile, FollowShip
 
 
 def PublishShoutToShout(shout, other):
@@ -443,6 +444,21 @@ def listen_to_stream(listener, stream):
     except Listen.DoesNotExist:
         listen = Listen(listener=listener, stream=stream)
         listen.save()
+        if stream.type == STREAM2_TYPE_PROFILE:
+            notifications_controller.notify_user_of_listen(stream.owner.user, listener)
+            event_controller.register_event(listener, EVENT_TYPE_FOLLOW_USER, stream.owner)
+        elif stream.type == STREAM2_TYPE_TAG:
+            event_controller.register_event(listener, EVENT_TYPE_FOLLOW_TAG, stream.owner)
+
+        # todo: deprecate backward stream compatibility
+        follower = listener.profile  # profile of follower
+        followed = stream.owner  # tag or profile
+        if followed.Stream not in follower.Following.all():
+            follow_ship = FollowShip(follower=follower, stream=followed.Stream)
+            follow_ship.save()
+        if stream.type == STREAM2_TYPE_TAG:
+            if followed not in follower.Interests.all():
+                follower.Interests.add(followed)
 
 
 def remove_listener_from_stream(listener, stream):
@@ -457,3 +473,16 @@ def remove_listener_from_stream(listener, stream):
 
     if listen:
         listen.delete()
+
+        # todo: deprecate backward stream compatibility
+        follower = listener.profile  # profile of follower
+        followed = stream.owner  # tag or profile
+        if followed.Stream in follower.Following.all():
+            try:
+                follow_ship = FollowShip.objects.get(follower=follower, stream=followed.Stream)
+                follow_ship.delete()
+            except FollowShip.DoesNotExist:
+                pass
+        if stream.type == STREAM2_TYPE_TAG:
+            if followed in follower.Interests.all():
+                follower.Interests.remove(followed)

@@ -531,42 +531,6 @@ def SignOut(request):
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_OUT)
 
 
-def FollowStream(request, follower, followed):
-    if isinstance(follower, unicode):
-        follower = get_profile(follower)
-        if not follower:
-            raise ObjectDoesNotExist()
-    if follower.Stream == followed:
-        return
-    if followed not in follower.Following.all():
-        followShip = FollowShip(follower=follower, stream=followed)
-        followShip.save()
-        Logger.log(request, type=ACTIVITY_TYPE_LISTEN_CREATED,
-                   data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
-        if followed.Type == STREAM_TYPE_USER:
-            followedUser = Profile.objects.get(Stream=followed)
-            email_controller.SendListenEmail(follower.user, followedUser.user)
-            notifications_controller.notify_user_of_listen(followedUser.user, follower.user)
-            event_controller.register_event(request.user, EVENT_TYPE_FOLLOW_USER, followedUser)
-        elif followed.Type == STREAM_TYPE_BUSINESS:
-            followedUser = Business.objects.get(Stream=followed)
-            email_controller.SendListenEmail(follower.user, followedUser.user)
-            notifications_controller.notify_user_of_listen(followedUser.user, follower.user)
-            event_controller.register_event(request.user, EVENT_TYPE_FOLLOW_BUSINESS, followedUser)
-
-
-def UnfollowStream(request, follower, followed):
-    if isinstance(follower, unicode):
-        follower = get_profile(follower)
-        if not follower:
-            raise ObjectDoesNotExist()
-    if followed in follower.Following.all():
-        followShip = FollowShip.objects.get(follower=follower, stream=followed)
-        followShip.delete()
-        Logger.log(request, type=ACTIVITY_TYPE_LISTEN_REMOVED,
-                   data={ACTIVITY_DATA_FOLLOWER: follower.username, ACTIVITY_DATA_STREAM: followed.pk})
-
-
 def UserFollowing(username, type='all', period='recent'):
     user = get_profile(username)
     result = {'users': [], 'tags': []}
