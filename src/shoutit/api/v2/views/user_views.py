@@ -49,9 +49,9 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
     def list(self, request, *args, **kwargs):
         """
-        get users based on `filter_fields` and `search_fields`
+        Get users based on `search` query param.
 
-        ###Response
+        ###User Object
         <pre><code>
         {
           "id": "a45c843f-8983-4f55-bde4-0236f070151d",
@@ -62,6 +62,16 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
           "last_name": "Chawich",
           "web_url": "",
           "is_active": true
+        }
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        {
+          "count": 7, // number of results
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of user objects as described above
         }
         </code></pre>
 
@@ -111,8 +121,8 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             "facebook": true
           },
           "push_tokens": {
-            "apns": null,
-            "gcm": null
+            "apns": "56yhnjflsdjfirjeoifjsorj4o",
+            "gcm": "asjkdhsakjdhi3uhekndkjadkjsak"
           }
         }
         </code></pre>
@@ -140,7 +150,36 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             "first_name": "Mo",
             "last_name": "Chawich",
             "bio": "I'm a good shouter",
-            "sex": 1
+            "sex": 1,
+            "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
+            "location": {
+                "latitude": 25.1593957,
+                "country": "AE",
+                "longitude": 55.2338326,
+                "city": "Dubai"
+            },
+            "video": {
+                "url": "https://www.youtube.com/watch?v=Mp12bkOzO9Q",
+                "thumbnail_url": "https://i.ytimg.com/vi/jXa4QfICnOg/default.jpg",
+                "provider": "youtube",
+                "id_on_provider": "Mp12bkOzO9Q",
+                "duration": 12
+            },
+            "push_tokens": {
+                "apns": "56yhnjflsdjfirjeoifjsorj4o",
+                "gcm": "asjkdhsakjdhi3uhekndkjadkjsak"
+            }
+        }
+        </code></pre>
+
+        ####Deleting video and/or push_tokens
+        <code><pre>
+        {
+            "video": null,
+            "push_tokens": {
+                "apns": null,
+                "gcm": null
+            }
         }
         </code></pre>
 
@@ -164,32 +203,18 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         serializer.save()
         return Response(serializer.data)
 
-    def destroy(self, request,  *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         """
         Delete user and everything attached to him
 
         ###Request
         <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
-        </code></pre>
-
-        ###Response
-        <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
         </code></pre>
 
         ---
+        responseMessages:
+            - code: 204
+              message: User Deleted
         omit_serializer: true
         parameters:
             - name: body
@@ -197,44 +222,10 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         """
         return super(UserViewSet, self).destroy(request, *args, **kwargs)
 
-    @detail_route(methods=['get', 'put'])
-    def location(self, request, *args, **kwargs):
-        """
-        Get or modify user location
-
-        ###Request
-        <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
-        </code></pre>
-
-        ###Response
-        <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
-        </code></pre>
-
-        ---
-        omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
-        """
-        return Response()
-
     @detail_route(methods=['put'])
     def image(self, request, *args, **kwargs):
         """
-        Get or modify user image
+        Modify user image
 
         ###Request
         image url in json body
@@ -246,9 +237,9 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         or
 
-        ```
+        <pre><code>
         PUT request with attached image file named `image_file`
-        ```
+        </pre></code>
         ###Response
         Detailed User object
         ---
@@ -261,108 +252,6 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         """
         return self.partial_update(request, *args, **kwargs)
 
-    @detail_route(methods=['get', 'put', 'delete'])
-    def video(self, request, *args, **kwargs):
-        """
-        Get, modify or delete user video
-
-        ###Request
-        <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
-        </code></pre>
-
-        ###Response
-        <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
-        </code></pre>
-
-        ---
-        omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
-        """
-        return Response()
-
-    @detail_route(methods=['get', 'put', 'delete'])
-    def push(self, request, *args, **kwargs):
-        """
-        Get, modify or delete user push tokens
-
-        ###Request
-        <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
-        </code></pre>
-
-        ###Response
-        <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
-        </code></pre>
-
-        ---
-        omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
-        """
-        return Response()
-
-    @detail_route(methods=['get'])
-    def shouts(self, request, *args, **kwargs):
-        """
-        Get user shouts
-
-        ###Request
-        <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
-        </code></pre>
-
-        ###Response
-        <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
-        </code></pre>
-
-        ---
-        omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
-        """
-        return Response()
-
     @detail_route(methods=['post', 'delete'])
     def listen(self, request, *args, **kwargs):
         """
@@ -370,30 +259,14 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         ###Request
         <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
         </code></pre>
 
         ###Response
         <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
         </code></pre>
 
         ---
         omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
         """
         return Response()
 
@@ -404,30 +277,14 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         ###Request
         <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "refresh_token",
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697"
-        }
         </code></pre>
 
         ###Response
         <pre><code>
-        {
-            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
-            "token_type": "Bearer",
-            "expires_in": 31480817,
-            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-        }
         </code></pre>
 
         ---
         omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
         """
         return Response()
 
@@ -436,22 +293,39 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         """
         Get user listening
 
+        ###Request
+        <pre><code>
+        </code></pre>
+
         ###Response
         <pre><code>
-        {
-            ""
-            "next": ""
-            "results": {
-                "users": [],
-                "tags": []
-            }
-        }
         </code></pre>
 
         ---
         omit_serializer: true
         parameters:
             - name: listening_type
-              paramType: path
+              paramType: query
+        """
+        return Response()
+
+    @detail_route(methods=['get'])
+    def shouts(self, request, *args, **kwargs):
+        """
+        Get user shouts
+
+        ###Request
+        <pre><code>
+        </code></pre>
+
+        ###Response
+        <pre><code>
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: type
+              paramType: query
         """
         return Response()

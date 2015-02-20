@@ -19,7 +19,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 class AbstractProfile(UUIDModel, Stream2Mixin):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True, blank=True)
     image = models.CharField(max_length=1024, null=True, blank=True)
-    video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
+    video = models.OneToOneField('shoutit.Video', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     # Location attributes
     Country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)

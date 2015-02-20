@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 import os
+from push_notifications.models import APNSDevice, GCMDevice
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -18,6 +19,11 @@ class LocationSerializer(serializers.Serializer):
     city = serializers.CharField(max_length=200)
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
+
+
+class PushTokensSerializer(serializers.Serializer):
+    apns = serializers.CharField(max_length=64, allow_null=True)
+    gcm = serializers.CharField(allow_null=True)
 
 
 class VideoSerializer(serializers.ModelSerializer):
@@ -44,8 +50,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='profile.image')
     sex = serializers.BooleanField(source='profile.Sex')
     bio = serializers.CharField(source='profile.Bio')
-    video = VideoSerializer(source='profile.video', required=False)
+    video = VideoSerializer(source='profile.video', required=False, allow_null=True)
     location = LocationSerializer()
+    push_tokens = PushTokensSerializer()
     image_file = serializers.ImageField(required=False)
 
     def to_representation(self, instance):
@@ -63,6 +70,27 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         validated_data = super(UserDetailSerializer, self).to_internal_value(data)
+
+        # force partial=false validation for location and video
+
+        location_data = validated_data.get('location', {})
+        profile_data = validated_data.get('profile', {})
+        video_data = profile_data.get('video', {})
+
+        errors = OrderedDict()
+
+        if isinstance(location_data, OrderedDict):
+            ls = LocationSerializer(data=location_data)
+            if not ls.is_valid():
+                errors['location'] = ls.errors
+
+        if isinstance(video_data, OrderedDict):
+            vs = VideoSerializer(data=video_data)
+            if not vs.is_valid():
+                errors['video'] = vs.errors
+
+        if errors:
+            raise ValidationError(errors)
 
         # todo: simplify, handle upload errors better
         image_file = validated_data.pop('image_file', None)
@@ -83,7 +111,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
         return validated_data
 
     def update(self, user, validated_data):
-        profile_data = validated_data.pop('profile', None)
+        location_data = validated_data.get('location', {})
+        push_tokens_data = validated_data.get('push_tokens', {})
+        profile_data = validated_data.get('profile', {})
+        video_data = profile_data.get('video', {})
+
         profile = user.profile
 
         user.username = validated_data.get('username', user.username)
@@ -92,11 +124,56 @@ class UserDetailSerializer(serializers.ModelSerializer):
         user.email = validated_data.get('email', user.email)
         user.save()
 
+        if location_data:
+            profile.Country = location_data['country']
+            profile.City = location_data['city']
+            profile.Latitude = location_data['latitude']
+            profile.Longitude = location_data['longitude']
+            profile.save()
+
         if profile_data:
+
+            if video_data:
+                video = Video(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'], provider=video_data['provider'],
+                              id_on_provider=video_data['id_on_provider'], duration=video_data['duration'])
+                video.save()
+                # delete existing video first
+                if profile.video:
+                    profile.video.delete()
+                profile.video = video
+
+            # if video sent as null, delete existing video
+            elif video_data is None and profile.video:
+                profile.video.delete()
+                profile.video = None
+
             profile.Bio = profile_data.get('Bio', profile.Bio)
             profile.Sex = profile_data.get('Sex', profile.Sex)
             profile.image = profile_data.get('image', profile.image)
             profile.save()
+
+        if push_tokens_data:
+            if 'apns' in push_tokens_data:
+                apns_token = push_tokens_data.get('apns')
+                # delete user device if exists
+                if user.apns_device:
+                    user.delete_apns_device()
+                if apns_token is not None:
+                    # delete devices with same apns_token
+                    APNSDevice.objects.filter(registration_id=apns_token).delete()
+                    # create new device for user with apns_token
+                    APNSDevice(registration_id=apns_token, user=user).save()
+
+            if 'gcm' in push_tokens_data:
+                gcm_token = push_tokens_data.get('gcm')
+                # delete user device if exists
+                if user.gcm_device:
+                    user.delete_gcm_device()
+                if gcm_token is not None:
+                    # delete devices with same gcm_token
+                    GCMDevice.objects.filter(registration_id=gcm_token).delete()
+                    # create new device for user with gcm_token
+                    GCMDevice(registration_id=gcm_token, user=user).save()
 
         return user
 

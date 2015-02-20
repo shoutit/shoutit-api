@@ -271,7 +271,7 @@ class Video(UUIDModel):
     thumbnail_url = models.URLField(max_length=1024)
     provider = models.CharField(max_length=1024)
     id_on_provider = models.CharField(max_length=256)
-    duration = models.IntegerField(default=0)
+    duration = models.IntegerField()
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)

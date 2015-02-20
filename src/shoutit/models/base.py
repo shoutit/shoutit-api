@@ -152,27 +152,35 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def apns_device(self):
-        if hasattr(self, '_apns_device') and self._apns_device:
+        if hasattr(self, '_apns_device'):
             return self._apns_device
-
         try:
             self._apns_device = APNSDevice.objects.get(user=self)
+            return self._apns_device
         except APNSDevice.DoesNotExist:
-            self._apns_device = None
+            return None
 
-        return self._apns_device
+    def delete_apns_device(self):
+        if self.apns_device:
+            self.apns_device.delete()
+            if hasattr(self, '_apns_device'):
+                delattr(self, '_apns_device')
 
     @property
     def gcm_device(self):
-        if hasattr(self, '_gcm_device') and self._gcm_device:
+        if hasattr(self, '_gcm_device'):
             return self._gcm_device
-
         try:
             self._gcm_device = GCMDevice.objects.get(user=self)
+            return self._gcm_device
         except GCMDevice.DoesNotExist:
-            self._gcm_device = None
+            return None
 
-        return self._gcm_device
+    def delete_gcm_device(self):
+        if self.gcm_device:
+            self.gcm_device.delete()
+            if hasattr(self, '_gcm_device'):
+                delattr(self, '_gcm_device')
 
     @property
     def social_channels(self):
