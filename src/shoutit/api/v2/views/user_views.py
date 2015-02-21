@@ -32,8 +32,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
     queryset_detail = queryset.prefetch_related('profile')
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('id', 'username', 'email')
-    search_fields = ('username', 'first_name', 'last_name', '=email')
+    filter_fields = ('username', 'email')
+    search_fields = ('=id', 'username', 'first_name', 'last_name', '=email')
 
     def list(self, request, *args, **kwargs):
         """

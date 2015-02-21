@@ -29,8 +29,8 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
     queryset = Tag.objects.all()
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('id', 'Name')
-    search_fields = ('id', 'Name')
+    filter_fields = ('Name',)
+    search_fields = ('=id', 'Name')
 
     def list(self, request, *args, **kwargs):
         """
