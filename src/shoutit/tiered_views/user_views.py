@@ -601,8 +601,8 @@ def user_profile(request, username):
         result.data['requests_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).filter(OwnerUser=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
         result.data['listening_count'] = {
-            'users': stream_controller.get_user_listening(user=profile.user, stream_type=STREAM2_TYPE_PROFILE, count_only=True),
-            'tags': stream_controller.get_user_listening(user=profile.user, stream_type=STREAM2_TYPE_TAG, count_only=True),
+            'users': stream_controller.get_user_listening(user=profile.user, listening_type=STREAM2_TYPE_PROFILE, count_only=True),
+            'tags': stream_controller.get_user_listening(user=profile.user, listening_type=STREAM2_TYPE_TAG, count_only=True),
         }
         result.data['listening_count']['all'] = result.data['listening_count']['users'] + result.data['listening_count']['tags']
         fb_la = hasattr(profile.user, 'linked_facebook') and profile.user.linked_facebook or None
@@ -625,21 +625,6 @@ def user_profile(request, username):
     result.data['report_form'] = ReportForm()
     result.data['is_fb_og'] = True
     result.data['fb_og_url'] = user_link(profile.user)
-    return result
-
-
-@non_cached_view(methods=['GET'], validator=user_profile_validator, api_renderer=user_api)
-def user_profile_brief(request, username):
-    result = ResponseResult()
-    profile = request.validation_result.data['profile']
-
-    result.data['shouts_count'] = Trade.objects.get_valid_trades().filter(OwnerUser=profile.user).count()
-    result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
-    result.data['listening_count'] = stream_controller.get_user_listening(user=profile.user, count_only=True)
-    result.data['profile'] = profile
-    result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
-    if request.user.is_authenticated():
-        result.data['is_listening'] = user_controller.is_listening(request.user, profile.stream2)
     return result
 
 

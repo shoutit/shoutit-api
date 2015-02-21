@@ -14,6 +14,16 @@ class Item(UUIDModel):
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.Name
 
+    @property
+    def thumbnail(self):
+        if self.get_videos():
+            return self.get_videos()[0]['thumbnail_url']
+        elif self.get_images():
+            return self.get_images()[0].image
+        else:
+            return None
+
+
     def get_images(self):
         if not hasattr(self, '_images'):
             self._images = list(self.Images.all().order_by('image'))

@@ -19,12 +19,6 @@ user_api = patterns('',
                         })
                     ),
 
-                    url(r'^brief/$',
-                        TieredResource(TieredHandler, oauth, {
-                            'GET': user_views.user_profile_brief
-                        })
-                    ),
-
                     url(r'^listen/$',
                         TieredResource(TieredHandler, oauth, {
                             'POST': user_views.start_listening_to_user,

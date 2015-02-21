@@ -5,7 +5,7 @@ from django.db.models import Q, Sum
 from django.conf import settings
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
-from shoutit.models.base import UUIDModel, AttachedObjectMixin
+from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -95,7 +95,7 @@ class EventManager(PostManager):
         return PostManager.get_valid_posts(self, types=[POST_TYPE_EVENT], country=country, city=city, get_expired=True, get_muted=get_muted)
 
 
-class Post(UUIDModel):
+class Post(UUIDModel, APIModelMixin):
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
     Streams = models.ManyToManyField('shoutit.Stream', related_name='Posts')  # todo: move to stream as posts
 
@@ -122,6 +122,27 @@ class Post(UUIDModel):
     def owner(self):
         return self.OwnerUser
 
+    @property
+    def user(self):
+        return self.OwnerUser
+
+    @property
+    def location(self):
+        return {
+            'country': self.CountryCode,
+            'city': self.ProvinceCode,
+            'latitude': self.Latitude,
+            'longitude': self.Longitude,
+            'address': self.Address,
+        }
+
+    @property
+    def thumbnail(self):
+        if self.Type in [POST_TYPE_REQUEST, POST_TYPE_OFFER]:
+            return self.Item.thumbnail
+        else:
+            return None
+
 
 class Shout(Post):
     Tags = models.ManyToManyField('shoutit.Tag', related_name='Shouts')
@@ -134,13 +155,17 @@ class Shout(Post):
         return unicode(self.pk) + ": " + self.get_text()
 
     def set_tags(self, tags):
-        self.tags = tags
+        self._tags = tags
+
+    @property
+    def tags(self):
+        return self.get_tags()
 
     def get_tags(self):
-        if hasattr(self, 'tags'):
-            return self.tags
+        if hasattr(self, '_tags'):
+            return self._tags
         else:
-            self.tags = list(self.Tags.all().select_related())
+            self._tags = list(self.Tags.all())
             return self.tags
 
     def get_images(self):

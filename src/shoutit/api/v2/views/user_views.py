@@ -13,7 +13,7 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.controllers import user_controller, stream_controller
 
 from shoutit.models import User
-from shoutit.api.v2.serializers import UserSerializer, UserDetailSerializer, TagSerializer
+from shoutit.api.v2.serializers import UserSerializer, UserDetailSerializer, TagSerializer, TradeSerializer
 from shoutit.api.v2.permissions import IsOwnerOrReadOnly
 
 
@@ -392,14 +392,14 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             if page is not None:
                 serializer = self.get_custom_pagination_serializer(page, UserSerializer)
             else:
-                serializer = self.get_serializer(listening, many=True)
+                serializer = UserSerializer(listening, many=True)
             return Response(serializer.data)
 
         if listening_type == 'tags':
             if page is not None:
                 serializer = self.get_custom_pagination_serializer(page, TagSerializer)
             else:
-                serializer = self.get_serializer(listening, many=True)
+                serializer = TagSerializer(listening, many=True)
             return Response(serializer.data)
 
 
@@ -408,10 +408,40 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         """
         Get user shouts
 
-        ###Response
+        ###Shout Object
         <pre><code>
+        {
+          "id": "fc598c12-f7b6-4a24-b56e-defd6178876e",
+          "api_url": "http://shoutit.dev:8000/api/v2/shouts/fc598c12-f7b6-4a24-b56e-defd6178876e",
+          "web_url": "",
+          "title": "offer 1",
+          "text": "selling some stuff",
+          "price": 1,
+          "currency": "AED",
+          "thumbnail": null,
+          "images": "[]", // list of urls
+          "videos": [],  // list of {Video Object}
+          "tags": [],  // list of {Tag Object}
+          "location": {
+            "country": "AE",
+            "city": "Dubai",
+            "latitude": 25.165173368664,
+            "longitude": 55.2667236328125
+          },
+          "user": {}, // {User Object}
+          "date_published": 1424481256
+        }
         </code></pre>
 
+        ###Response
+        <pre><code>
+        {
+          "count": 4, // number of results
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {Shout Object} as described above
+        }
+        </code></pre>
         ---
         omit_serializer: true
         omit_parameters:
@@ -427,4 +457,15 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             - name: page
               paramType: query
         """
-        return Response()
+        shout_type = request.query_params.get('type', 'offers')
+        if shout_type not in ['offers', 'requests']:
+            raise ValidationError({'type': "should be `offers` or `requests`."})
+
+        user = self.get_object()
+        trades = stream_controller.get_user_trades_qs(user, shout_type)
+        page = self.paginate_queryset(trades)
+        if page is not None:
+            serializer = self.get_custom_pagination_serializer(page, TradeSerializer)
+        else:
+            serializer = TradeSerializer(trades, many=True)
+        return Response(serializer.data)

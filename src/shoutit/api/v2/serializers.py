@@ -9,6 +9,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from common.utils import date_unix
 
 from shoutit.models import User, Video, Tag, Trade
 from shoutit.utils import cloud_upload_image, random_uuid_str
@@ -44,19 +45,33 @@ class TagSerializer(serializers.ModelSerializer):
         return tag.is_listening(self.context['request'].user)
 
 
-class TradeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Trade
-        fields = ('id', 'api_url', 'web_url', 'text')
-
-    text = serializers.CharField(source='Item.Text')
-
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'api_url', 'username', 'name', 'first_name', 'last_name', 'web_url', 'is_active')
+
+
+class TradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = ('id', 'api_url', 'web_url', 'title', 'text', 'price', 'currency', 'thumbnail',
+                  'images', 'videos', 'tags', 'location', 'user', 'date_published',
+        )
+
+    title = serializers.CharField(source='Item.Name')
+    text = serializers.CharField(source='Text')
+    price = serializers.FloatField(source='Item.Price')
+    currency = serializers.CharField(source='Item.Currency.Code')
+    images = serializers.CharField(source='Item.get_images')
+    videos = VideoSerializer(source='Item.get_videos', many=True)
+    tags = TagSerializer(many=True)
+    location = LocationSerializer()
+    user = UserSerializer()
+    date_published = serializers.SerializerMethodField()
+
+    def get_date_published(self, trade):
+        return date_unix(trade.DatePublished)
+
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
