@@ -23,6 +23,8 @@ class Item(UUIDModel):
         else:
             return None
 
+    def get_image_urls(self):
+        return [image.image for image in self.get_images()]
 
     def get_images(self):
         if not hasattr(self, '_images'):
