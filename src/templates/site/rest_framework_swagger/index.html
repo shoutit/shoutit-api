@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load template_filters %}
 {% spaceless %}
   <!DOCTYPE html>
   <html>
@@ -12,6 +13,27 @@
     <link href='{% static "rest_framework_swagger/css/atelier-dune.light.css" %}' media='screen' rel='stylesheet' type='text/css'/>
     <link href='{% static "rest_framework_swagger/css/rest_framework_swagger.css" %}' media='screen' rel='stylesheet' type='text/css'/>
     <link href='{% static "rest_framework_swagger/css/screen.css" %}' media='screen' rel='stylesheet' type='text/css'/>
+    <style>
+      #header form#api_selector .input a#_user {
+        display: block;
+        text-decoration: none;
+        font-weight: bold;
+        padding: 6px 8px;
+        font-size: 0.9em;
+        color: white;
+        background-color: #547f00;
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        -o-border-radius: 4px;
+        -ms-border-radius: 4px;
+        -khtml-border-radius: 4px;
+        border-radius: 4px;
+      }
+      #header form#api_selector .input a#_user:hover {
+        background-color: #547f00;
+      }
+
+    </style>
   </head>
 
   <body>
@@ -25,7 +47,14 @@
         {#        </div>#}
         {#        <div class='input'><input placeholder="http://example.com/api" id="input_baseUrl" name="baseUrl" type="text"/></div>#}
         {#        <div class='input'><input placeholder="api_key" id="input_apiKey" name="apiKey" type="text"/></div>#}
-        {#        <div class='input'><a id="explore" href="#">Explore</a></div>#}
+        <div class='input'>
+          {% if user.is_authenticated %}
+            {% auth_logout request user%}
+          {% else %}
+            {% auth_login request %}
+          {% endif %}
+
+        </div>
       </form>
     </div>
   </div>
