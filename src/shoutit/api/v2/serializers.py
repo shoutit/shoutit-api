@@ -62,7 +62,8 @@ class TradeSerializer(serializers.ModelSerializer):
     text = serializers.CharField(source='Text')
     price = serializers.FloatField(source='Item.Price')
     currency = serializers.CharField(source='Item.Currency.Code')
-    images = serializers.CharField(source='Item.get_images')
+    images = serializers.ListField(source='Item.get_images',
+                                   child=serializers.URLField(source='image'))
     videos = VideoSerializer(source='Item.get_videos', many=True)
     tags = TagSerializer(many=True)
     location = LocationSerializer()
