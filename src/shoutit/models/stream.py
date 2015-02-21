@@ -68,7 +68,6 @@ class FollowShip(UUIDModel):
         return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
 
 # ######## experiment new stream ######### #
-from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
@@ -93,11 +92,9 @@ class Stream2(UUIDModel, AttachedObjectMixin):
 
     def add_post(self, post):
         self.posts.add(post)
-        self.save()
 
     def remove_post(self, post):
         self.posts.remove(post)
-        self.save()
 
     @property
     def owner(self):
@@ -107,7 +104,7 @@ class Stream2(UUIDModel, AttachedObjectMixin):
 class Stream2Mixin(models.Model):
     """
     Each model that uses this mixin should have this property with `related_query_name` set to the model name
-    e.g:
+    eg.:
     ```
     _stream2 = GenericRelation('shoutit.Stream2', related_query_name='profile')
     ```

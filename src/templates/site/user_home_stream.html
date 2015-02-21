@@ -1,6 +1,6 @@
 {% load template_filters %}
 {% for post in posts %}
-    {% if post.Type == constants|key:"Offer" or post.Type == constants|key:"Request" %}
+    {% if post.Type == constants|key:"offer" or post.Type == constants|key:"request" %}
         {% set shout = post %}
         {% include "shout_in_stream.html" %}
     {% endif %}

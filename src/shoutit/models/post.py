@@ -127,6 +127,10 @@ class Post(UUIDModel, APIModelMixin):
         return self.OwnerUser
 
     @property
+    def type(self):
+        return PostType.values[self.Type]
+
+    @property
     def location(self):
         return {
             'country': self.CountryCode,

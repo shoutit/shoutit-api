@@ -8,7 +8,7 @@ from django.conf.urls import url, include
 from rest_framework import routers
 
 from shoutit.api.v2.authentication import AccessTokenView
-from shoutit.api.v2.views import user_views, misc_views, message_views, shout_views, notification_views
+from shoutit.api.v2.views import user_views, misc_views, message_views, shout_views, notification_views, tag_views
 
 
 class ShoutitRouter(routers.DefaultRouter):
@@ -18,11 +18,10 @@ class ShoutitRouter(routers.DefaultRouter):
 router = ShoutitRouter(trailing_slash=False)
 # router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('users', user_views.UserViewSet, 'user')
-# router.register('_users', user_views._UserViewSet, '_user')
 # router.register('conversations', message_views.ConversationViewSet, 'conversation')
 # router.register('messages', message_views.MessageViewSet, 'message')
 # router.register('notifications', notification_views.NotificationViewSet, 'notification')
-# router.register('tags', user_views.UserViewSet, 'tag')
+router.register('tags', tag_views.TagViewSet, 'tag')
 # router.register(r'misc', misc_views.MiscViewSet, 'misc')
 
 urlpatterns = (

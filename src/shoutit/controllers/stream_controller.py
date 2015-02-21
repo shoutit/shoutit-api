@@ -392,19 +392,20 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     return attach_related_to_shouts(trades)
 
 
-def get_user_trades_qs(user, trade_type=None):
+def get_stream2_trades_qs(stream2, trade_type=None):
     """
-    return the Trades Queryset (offers/requests) in a stream
+    return the Trades Queryset (offers/requests) in a stream2
     """
     trade_types = {
         'requests': [POST_TYPE_REQUEST],
         POST_TYPE_REQUEST: [POST_TYPE_REQUEST],
         'offers': [POST_TYPE_OFFER],
         POST_TYPE_OFFER: [POST_TYPE_OFFER],
+        'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
         None: [POST_TYPE_REQUEST, POST_TYPE_OFFER],
     }
     post_types = trade_types[trade_type]
-    qs = Trade.objects.get_valid_trades(types=post_types).filter(OwnerUser=user).order_by('-DatePublished')
+    qs = Trade.objects.get_valid_trades(types=post_types).filter(streams2=stream2).order_by('-DatePublished')
     return qs
 
 

@@ -262,8 +262,8 @@ class PostType(Constant):
         Constant.__init__(self, text)
 
 
-POST_TYPE_REQUEST = PostType('Request')
-POST_TYPE_OFFER = PostType('Offer')
+POST_TYPE_REQUEST = PostType('request')
+POST_TYPE_OFFER = PostType('offer')
 POST_TYPE_EXPERIENCE = PostType('Experience')
 POST_TYPE_DEAL = PostType('Deal')
 POST_TYPE_EVENT = PostType('Event')

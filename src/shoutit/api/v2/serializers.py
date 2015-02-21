@@ -20,6 +20,7 @@ class LocationSerializer(serializers.Serializer):
     city = serializers.CharField(max_length=200)
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
+    address = serializers.CharField(required=False)
 
 
 class PushTokensSerializer(serializers.Serializer):
@@ -54,7 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
 class TradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
-        fields = ('id', 'api_url', 'web_url', 'title', 'text', 'price', 'currency', 'thumbnail',
+        fields = ('id', 'api_url', 'web_url', 'type', 'title', 'text', 'price', 'currency', 'thumbnail',
                   'images', 'videos', 'tags', 'location', 'user', 'date_published',
         )
 

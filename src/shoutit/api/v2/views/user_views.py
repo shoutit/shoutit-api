@@ -4,7 +4,7 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets, filters, mixins, status
+from rest_framework import permissions, viewsets, filters, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
@@ -13,27 +13,14 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.controllers import user_controller, stream_controller
 
 from shoutit.models import User
+from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
 from shoutit.api.v2.serializers import UserSerializer, UserDetailSerializer, TagSerializer, TradeSerializer
 from shoutit.api.v2.permissions import IsOwnerOrReadOnly
 
 
-class _UserViewSet(viewsets.ModelViewSet):
-    lookup_field = 'username'
-    lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
-    serializer_class = UserSerializer
-
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('id', 'username', 'email')
-    search_fields = ('username', 'first_name', 'last_name', '=email')
-
-    def get_queryset(self):
-        return User.objects.all()
-
-
-class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewsets.GenericViewSet):
     """
     User API Resource.
-
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
@@ -47,18 +34,6 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('id', 'username', 'email')
     search_fields = ('username', 'first_name', 'last_name', '=email')
-
-    def get_custom_pagination_serializer(self, page, serializer_class):
-        """
-        Return a serializer instance to use with paginated data using the `serializer_class` param
-        """
-        class SerializerClass(self.pagination_serializer_class):
-            class Meta:
-                object_serializer_class = serializer_class
-
-        pagination_serializer_class = SerializerClass
-        context = self.get_serializer_context()
-        return pagination_serializer_class(instance=page, context=context)
 
     def list(self, request, *args, **kwargs):
         """
@@ -94,12 +69,10 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             - name: search
               paramType: query
         """
+
         instance = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(instance)
-        if page is not None:
-            serializer = self.get_pagination_serializer(page)
-        else:
-            serializer = self.get_serializer(instance, many=True)
+        serializer = self.get_pagination_serializer(page)
         return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
@@ -142,10 +115,6 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         ---
         omit_serializer: true
-        parameters:
-            - name: username
-              paramType: path
-              required: true
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -216,26 +185,22 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         serializer.save()
         return Response(serializer.data)
 
-    # def destroy(self, request, *args, **kwargs):
-    #     """
-    #     Delete user and everything attached to him
-    #
-    #     ###Request
-    #     <pre><code>
-    #     </code></pre>
-    #
-    #     ---
-    #     responseMessages:
-    #         - code: 204
-    #           message: User Deleted
-    #     omit_serializer: true
-    #     omit_parameters:
-    #         - form
-    #     parameters:
-    #         - name: body
-    #           paramType: body
-    #     """
-    #     return super(UserViewSet, self).destroy(request, *args, **kwargs)
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete user and everything attached to him
+
+
+        ###ATTN!
+        <pre><code>
+        NOT YET IMPLEMENTED
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['put'])
     def image(self, request, *args, **kwargs):
@@ -329,10 +294,7 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         user = self.get_object()
         listeners = stream_controller.get_stream_listeners(user.profile.stream2)
         page = self.paginate_queryset(listeners)
-        if page is not None:
-            serializer = self.get_pagination_serializer(page)
-        else:
-            serializer = self.get_serializer(listeners, many=True)
+        serializer = self.get_pagination_serializer(page)
         return Response(serializer.data)
 
     @detail_route(methods=['get'])
@@ -366,7 +328,7 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
         omit_parameters:
             - form
         parameters:
-            - name: listening_type
+            - name: type
               description:
               paramType: query
               required: true
@@ -379,29 +341,23 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
 
         """
 
-        listening_type = request.query_params.get('listening_type', 'users')
+        listening_type = request.query_params.get('type', 'users')
         if listening_type not in ['users', 'tags']:
-            raise ValidationError({'listening_type': "should be `users` or `tags`."})
+            raise ValidationError({'type': "should be `users` or `tags`."})
 
         user = self.get_object()
 
         listening = stream_controller.get_user_listening_qs(user, listening_type)
         page = self.paginate_queryset(listening)
 
-        if listening_type == 'users':
-            if page is not None:
-                serializer = self.get_custom_pagination_serializer(page, UserSerializer)
-            else:
-                serializer = UserSerializer(listening, many=True)
-            return Response(serializer.data)
+        result_object_serializers = {
+            'users': UserSerializer,
+            'tags': TagSerializer,
+        }
+        result_object_serializer = result_object_serializers[listening_type]
 
-        if listening_type == 'tags':
-            if page is not None:
-                serializer = self.get_custom_pagination_serializer(page, TagSerializer)
-            else:
-                serializer = TagSerializer(listening, many=True)
-            return Response(serializer.data)
-
+        serializer = self.get_custom_pagination_serializer(page, result_object_serializer)
+        return Response(serializer.data)
 
     @detail_route(methods=['get'])
     def shouts(self, request, *args, **kwargs):
@@ -414,6 +370,7 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
           "id": "fc598c12-f7b6-4a24-b56e-defd6178876e",
           "api_url": "http://shoutit.dev:8000/api/v2/shouts/fc598c12-f7b6-4a24-b56e-defd6178876e",
           "web_url": "",
+          "type": "offer",
           "title": "offer 1",
           "text": "selling some stuff",
           "price": 1,
@@ -450,22 +407,20 @@ class UserViewSet(DetailSerializerMixin, mixins.DestroyModelMixin, viewsets.Gene
             - name: type
               paramType: query
               required: true
-              defaultValue: offers
+              defaultValue: all
               enum:
                 - requests
                 - offers
+                - all
             - name: page
               paramType: query
         """
-        shout_type = request.query_params.get('type', 'offers')
-        if shout_type not in ['offers', 'requests']:
-            raise ValidationError({'type': "should be `offers` or `requests`."})
+        shout_type = request.query_params.get('type', 'all')
+        if shout_type not in ['offers', 'requests', 'all']:
+            raise ValidationError({'type': "should be `offers`, `requests` or `all`."})
 
         user = self.get_object()
-        trades = stream_controller.get_user_trades_qs(user, shout_type)
+        trades = stream_controller.get_stream2_trades_qs(user.profile.stream2, shout_type)
         page = self.paginate_queryset(trades)
-        if page is not None:
-            serializer = self.get_custom_pagination_serializer(page, TradeSerializer)
-        else:
-            serializer = TradeSerializer(trades, many=True)
+        serializer = self.get_custom_pagination_serializer(page, TradeSerializer)
         return Response(serializer.data)
