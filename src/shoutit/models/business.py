@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.conf import settings
@@ -54,6 +55,8 @@ class Business(UUIDModel, Stream2Mixin):
     LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     Confirmed = models.BooleanField(default=False)
+
+    _stream2 = GenericRelation('shoutit.Stream2', related_query_name='business')
 
     def __unicode__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.Name), unicode(self.user))

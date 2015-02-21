@@ -105,9 +105,14 @@ class Stream2(UUIDModel, AttachedObjectMixin):
 
 
 class Stream2Mixin(models.Model):
-    # todo: after updating to django 1.7 'related_query_name' can be used to filter on owner (attached_object) attributes
-    _stream2 = GenericRelation(Stream2)
-
+    """
+    Each model that uses this mixin should have this property with `related_query_name` set to the model name
+    e.g:
+    ```
+    _stream2 = GenericRelation('shoutit.Stream2', related_query_name='profile')
+    ```
+    this will make it easier to query streams based on attributes of their owners
+    """
     class Meta:
         abstract = True
 
@@ -117,17 +122,6 @@ class Stream2Mixin(models.Model):
             return self._stream2.get()
         except Stream2.DoesNotExist:
             return None
-
-    # todo: remove?
-    @property
-    def stream2_old(self):
-        if not hasattr(self, '_stream2'):
-            ct = ContentType.objects.get_for_model(self.__class__)
-            try:
-                self._stream2 = Stream2.objects.get(content_type__pk=ct.pk, object_id=self.pk)
-            except Stream2.DoesNotExist:
-                return None
-        return self._stream2
 
 
 @receiver(post_save)

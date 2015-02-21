@@ -3,13 +3,11 @@ from itertools import chain
 from django.db import models
 from django.db.models import Min
 from django.db.models.signals import post_delete, post_save
+from django.contrib.contenttypes.fields import GenericRelation
 from django.dispatch import receiver
 from django.conf import settings
 
 from common.constants import DEFAULT_LOCATION
-
-
-# from activity_logger.models import Request
 from shoutit.models.base import UUIDModel
 from shoutit.models.stream import Stream2Mixin
 
@@ -38,9 +36,8 @@ class Profile(AbstractProfile):
     # todo: [listen] remove
     Following = models.ManyToManyField('shoutit.Stream', through='shoutit.FollowShip')
     Interests = models.ManyToManyField('shoutit.Tag', related_name='Followers')
-
-    # todo: remove
     Stream = models.OneToOneField('shoutit.Stream', related_name='OwnerUser', db_index=True)
+
     # isBlocked = models.BooleanField(default=False)
 
     birthday = models.DateField(null=True, blank=True)
@@ -52,6 +49,8 @@ class Profile(AbstractProfile):
     isSMS = models.BooleanField(default=False, db_index=True)
 
     # State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
+
+    _stream2 = GenericRelation('shoutit.Stream2', related_query_name='profile')
 
     def __unicode__(self):
         return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())

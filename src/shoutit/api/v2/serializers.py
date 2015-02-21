@@ -10,7 +10,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from shoutit.models import User, Video
+from shoutit.models import User, Video, Tag, Trade
 from shoutit.utils import cloud_upload_image, random_uuid_str
 
 
@@ -30,6 +30,27 @@ class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = ('url', 'thumbnail_url', 'provider', 'id_on_provider', 'duration')
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'api_url', 'web_url', 'is_listening', 'listeners_count')
+
+    name = serializers.CharField(source='Name')
+    is_listening = serializers.SerializerMethodField()
+
+    def get_is_listening(self, tag):
+        return tag.is_listening(self.context['request'].user)
+
+
+class TradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = ('id', 'api_url', 'web_url', 'text')
+
+    text = serializers.CharField(source='Item.Text')
+
 
 
 class UserSerializer(serializers.ModelSerializer):
