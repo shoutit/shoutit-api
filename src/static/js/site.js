@@ -367,7 +367,7 @@ function save_location(id_location, id_city, id_country) {
   requestAjaxily({
     url: '/xhr/update_location/',
     data: post_data,
-    type: 'PUT',
+    type: 'POST',
     successCallback: function (data) {
       var user_country = data.data.user_country;
       var user_city = data.data.user_city;
