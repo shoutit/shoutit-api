@@ -4,10 +4,10 @@
 <form id='signup_form' action="/signup/" method="post">
     {% csrf_token %}
     <div class="input-field">
-        {{ form.firstname|trans_attr:"placeholder:First Name"|attr:"autocomplete:off" }}
+        {{ form.first_name|trans_attr:"placeholder:First Name"|attr:"autocomplete:off" }}
     </div>
     <div class="input-field">
-        {{ form.lastname|trans_attr:"placeholder:Last Name"|attr:"autocomplete:off" }}
+        {{ form.last_name|trans_attr:"placeholder:Last Name"|attr:"autocomplete:off" }}
     </div>
     <div class="input-field">
         {{ form.email|trans_attr:"placeholder:Email"|attr:"autocomplete:off" }}

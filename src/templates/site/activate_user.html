@@ -6,10 +6,10 @@
         {% if request.user.is_authenticated and request.user.profile.isSSS %}
 			<div class="divs-inline">
 				<div class="input-field fifty">
-					{{ form.firstname|trans_attr:"placeholder:First Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
+					{{ form.first_name|trans_attr:"placeholder:First Name"|attr:"data-qtip-error-my:bottom right"|attr:"data-qtip-error-at:top left" }}
 				</div>
 				<div class="input-field fifty">
-					{{ form.lastname|trans_attr:"placeholder:Last Name"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
+					{{ form.last_name|trans_attr:"placeholder:Last Name"|attr:"data-qtip-my:left center"|attr:"data-qtip-at:right center"|attr:"data-qtip-error-my:bottom left"|attr:"data-qtip-error-at:top right" }}
 				</div>
 			</div>
 			<div class="divs-inline">

@@ -19,14 +19,14 @@ def get_tag(name):
 def get_top_tags(limit=10, country=None, city=None):
     filters = {}
     if country:
-        filters['Followers__Country'] = country
+        filters['Followers__country'] = country
 
     if city:
-        filters['Followers__City'] = city
+        filters['Followers__city'] = city
 
     top_tags = Tag.objects.filter(**filters).values('pk').annotate(
         listeners_count=Count('Followers')
-    ).filter(listeners_count__gte=1).values('Name', 'listeners_count', 'image').order_by('-listeners_count')[:limit]
+    ).filter(listeners_count__gte=1).values('name', 'listeners_count', 'image').order_by('-listeners_count')[:limit]
     return list(top_tags)
 
 
@@ -46,7 +46,7 @@ def GetSynonymParent(name):
     max_index = 0
     ite = 0
     for tag in parentsTag:
-        ratio = difflib.SequenceMatcher(None, name, tag.Name).ratio()
+        ratio = difflib.SequenceMatcher(None, name, tag.name).ratio()
         if ratio > max:
             max = ratio
             max_index = ite
@@ -59,9 +59,9 @@ def GetSynonymParent(name):
 
 
 def get_or_create_tag(name, creator, is_parent):
-    tag, created = Tag.objects.get_or_create(Name=name)
+    tag, created = Tag.objects.get_or_create(name=name)
     if created:
-        stream = Stream(Type=STREAM_TYPE_TAG)
+        stream = Stream(type=STREAM_TYPE_TAG)
         stream.save()
         tag.Stream = stream
         tag.Creator = creator
@@ -74,5 +74,5 @@ def get_or_create_tags(tags, creator):
 
 
 def search_tags(query='', limit=10):
-    tags = Tag.objects.filter(Name__icontains=query).values('Name', 'image')[:limit]
+    tags = Tag.objects.filter(name__icontains=query).values('name', 'image')[:limit]
     return list(tags)

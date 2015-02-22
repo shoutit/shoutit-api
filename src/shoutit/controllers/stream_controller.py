@@ -16,7 +16,7 @@ from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, St
 
 def PublishShoutToShout(shout, other):
     rank = 0.0
-    distance = utils.normalized_distance(shout.Latitude, shout.Longitude, other.Latitude, other.Longitude)
+    distance = utils.normalized_distance(shout.latitude, shout.longitude, other.latitude, other.longitude)
     if distance > other.MaxDistance:
         other.MaxDistance = distance
         other.save()
@@ -27,23 +27,23 @@ def PublishShoutToShout(shout, other):
         other.save()
     rank += 1 - (followings / other.MaxFollowings)
     rank /= 2
-    if shout.Type == other.Type:
-        if other.RelatedStream is None:
-            other.RelatedStream = Stream(Type=STREAM_TYPE_RELATED)
-            other.RelatedStream.save()
+    if shout.type == other.type:
+        if other.related_stream is None:
+            other.related_stream = Stream(type=STREAM_TYPE_RELATED)
+            other.related_stream.save()
             other.save()
-        if other.RelatedStream.ShoutWraps.filter(Shout=shout).count():
-            other.RelatedStream.ShoutWraps.filter(Shout=shout).delete()
-        shout_wrap = ShoutWrap(Shout=shout, Stream=other.RelatedStream, Rank=rank)
+        if other.related_stream.ShoutWraps.filter(shout=shout).count():
+            other.related_stream.ShoutWraps.filter(shout=shout).delete()
+        shout_wrap = ShoutWrap(shout=shout, Stream=other.related_stream, rank=rank)
         shout_wrap.save()
     else:
-        if other.RecommendedStream is None:
-            other.RecommendedStream = Stream(Type=STREAM_TYPE_RECOMMENDED)
-            other.RecommendedStream.save()
+        if other.recommended_stream is None:
+            other.recommended_stream = Stream(type=STREAM_TYPE_RECOMMENDED)
+            other.recommended_stream.save()
             other.save()
-        if other.RecommendedStream.ShoutWraps.filter(Shout=shout).count():
-            other.RecommendedStream.ShoutWraps.filter(Shout=shout).delete()
-        shout_wrap = ShoutWrap(Shout=shout, Stream=other.RecommendedStream, Rank=rank)
+        if other.recommended_stream.ShoutWraps.filter(shout=shout).count():
+            other.recommended_stream.ShoutWraps.filter(shout=shout).delete()
+        shout_wrap = ShoutWrap(shout=shout, Stream=other.recommended_stream, rank=rank)
         shout_wrap.save()
     return rank
 
@@ -59,17 +59,17 @@ def MaxFollowings(pks, country, city, filters):
 def MaxDistance(points, lat, lng):
     max_distance = 180
     if len(points) > 0:
-        codes = [[float(point['Latitude']), float(point['Longitude'])] for point in points]
+        codes = [[float(point['latitude']), float(point['longitude'])] for point in points]
         observation = [float(lat), float(lng)]
         farest_index = utils.get_farest_point(observation, codes)
         farest_point = points[farest_index]
-        max_distance = utils.normalized_distance(farest_point['Latitude'], farest_point['Longitude'], lat, lng)
+        max_distance = utils.normalized_distance(farest_point['latitude'], farest_point['longitude'], lat, lng)
 
     return max_distance
 
 
 def GetShoutTimeOrder(pk, country, city, limit=0):
-    shout_qs = Trade.objects.get_valid_trades(country=country, city=city).order_by('-DatePublished')
+    shout_qs = Trade.objects.get_valid_trades(country=country, city=city).order_by('-date_published')
     shout_qs = shout_qs.values('pk')
     shouts = list(shout_qs)
     shouts = [shout['pk'] for shout in shouts]
@@ -105,24 +105,24 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
     group_by_string = ''
 
     filters = {
-        'IsMuted__exact': False,
-        'IsDisabled__exact': False
+        'muted': False,
+        'is_disabled': False
     }
 
     # Types filtering
     if filter_types is not None and len(filter_types) > 0:
-        filters['Type__in'] = filter_types
-        if int(rank_type_flag & PRICE_RANK_TYPE) and filters['Type__in'].count(POST_TYPE_EXPERIENCE):
-            filters['Type__in'].remove(POST_TYPE_EXPERIENCE)
+        filters['type__in'] = filter_types
+        if int(rank_type_flag & PRICE_RANK_TYPE) and filters['type__in'].count(POST_TYPE_EXPERIENCE):
+            filters['type__in'].remove(POST_TYPE_EXPERIENCE)
     else:
         if int(rank_type_flag & PRICE_RANK_TYPE):
-            filters['Type__in'] = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
+            filters['type__in'] = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
 
     if filter_tags is not None and len(filter_tags) > 0:
-        if 'Tags__pk__in' in filters:
-            filters['Tags__pk__in'].extend(filter_tags)
+        if 'tags__pk__in' in filters:
+            filters['tags__pk__in'].extend(filter_tags)
         else:
-            filters['Tags__pk__in'] = filter_tags
+            filters['tags__pk__in'] = filter_tags
 
     # initializing current and base time variables
     today = datetime.today()
@@ -137,7 +137,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
     rank_count = 0
 
     # building the queryset
-    shout_qs = Shout.objects.select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile', 'Tags').filter(**filters)
+    shout_qs = Shout.objects.select_related('item', 'item__Currency', 'user', 'user__Profile', 'tags').filter(**filters)
 
     # Calculating the stream following rank attribute
     if int(rank_type_flag & FOLLOW_RANK_TYPE):
@@ -163,27 +163,27 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
     # Calculating the Distance rank attribute:
     if int(rank_type_flag & DISTANCE_RANK_TYPE):
         # A temporary solution for max distance:
-        points = list(Shout.objects.filter(**filters).values('Latitude', 'Longitude'))
+        points = list(Shout.objects.filter(**filters).values('latitude', 'longitude'))
         if lat is not None and lng is not None:
             max_distance = MaxDistance(points, lat, lng)
             if max_distance > 0.0:
                 extra_order_bys += 'power( ' + str(settings.RANK_COEFFICIENT_DISTANCE) + \
-                                   ' * (normalized_distance("shoutit_post"."Latitude", "shoutit_post"."Longitude", ' \
+                                   ' * (normalized_distance("shoutit_post"."latitude", "shoutit_post"."longitude", ' \
                                    'CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / ' \
                                    'CAST(%.100f as DOUBLE PRECISION)' \
                                    '), 2.0) + ' % (float(lat), float(lng), max_distance)
                 rank_count += 1
             if group_by_string != '':
-                group_by_string += ', "shoutit_post"."Latitude", "shoutit_post"."Longitude"'
+                group_by_string += ', "shoutit_post"."latitude", "shoutit_post"."longitude"'
 
     # Calculating the Time rank attribute:
     if int(rank_type_flag & TIME_RANK_TYPE):
         extra_order_bys += 'power( ' + str(
-            settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d), 2.0) + ' % (
+            settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d), 2.0) + ' % (
             now_timestamp_string, now_timestamp - base_timestamp)
         rank_count += 1
         if group_by_string != '':
-            group_by_string += ', "shoutit_post"."DatePublished"'
+            group_by_string += ', "shoutit_post"."date_published"'
 
     # Calculating the Price rank attribute
     if int(rank_type_flag & PRICE_RANK_TYPE):
@@ -203,35 +203,35 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
         for keyword in filter_query.split(' '):
             keyword = utils.safe_sql(keyword)
             if item_name_q != '':
-                item_name_q += "AND UPPER(\"shoutit_item\".\"Name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
-                text_q += "AND UPPER(\"shoutit_post\".\"Text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+                item_name_q += "AND UPPER(\"shoutit_item\".\"name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+                text_q += "AND UPPER(\"shoutit_post\".\"text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
             else:
-                item_name_q = "UPPER(\"shoutit_item\".\"Name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
-                text_q = "UPPER(\"shoutit_post\".\"Text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+                item_name_q = "UPPER(\"shoutit_item\".\"name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
+                text_q = "UPPER(\"shoutit_post\".\"text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
         where_custom_clause.append('((' + item_name_q + ') OR (' + text_q + '))')
-        additional_selects.append('trade__Item__Name')
+        additional_selects.append('trade__item__name')
         if group_by_string != '':
-            group_by_string += ', "shoutit_item"."Name"'
+            group_by_string += ', "shoutit_item"."name"'
 
     # completing WHERE part of the SQL query string and merge it into the QuerySet
     where_custom_clause.append(
-        '(("shoutit_shout"."ExpiryDate" IS NULL AND "shoutit_post"."DatePublished" BETWEEN \'%s\' AND \'%s\') OR ("shoutit_shout"."ExpiryDate" IS NOT NULL AND now() < "shoutit_shout"."ExpiryDate"))' % (
+        '(("shoutit_shout"."expiry_date" IS NULL AND "shoutit_post"."date_published" BETWEEN \'%s\' AND \'%s\') OR ("shoutit_shout"."expiry_date" IS NOT NULL AND now() < "shoutit_shout"."expiry_date"))' % (
             str(begin), str(today)))
     if country:
-        where_custom_clause.append('"shoutit_post"."CountryCode" = \'%s\'' % country)
+        where_custom_clause.append('"shoutit_post"."country" = \'%s\'' % country)
     if city:
         if nearby_cities:
             quoted_cities = ["'%s'" % c.lower() for c in nearby_cities]
-            where_custom_clause.append(u'LOWER("shoutit_post"."ProvinceCode") in (%s)' % u','.join(quoted_cities))
+            where_custom_clause.append(u'LOWER("shoutit_post"."city") in (%s)' % u','.join(quoted_cities))
         else:
-            where_custom_clause.append(u'LOWER("shoutit_post"."ProvinceCode") = \'%s\'' % city.lower())
+            where_custom_clause.append(u'LOWER("shoutit_post"."city") = \'%s\'' % city.lower())
 
     shout_qs = shout_qs.extra(where=where_custom_clause)
 
     if extra_order_bys != '':
         shout_qs = shout_qs.distinct().extra(select={'rank': extra_order_bys}).extra(order_by=['rank'])[start_index:end_index]
     else:
-        shout_qs = shout_qs.distinct().order_by('-DatePublished')[start_index:end_index]
+        shout_qs = shout_qs.distinct().order_by('-date_published')[start_index:end_index]
 
     # extracting the raw SQl from the QuerySet
     query_string = unicode(shout_qs.values('pk', 'rank', *additional_selects).query)
@@ -265,8 +265,8 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
     today = datetime.today()
     days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
     begin = today - days
-    filters['Type'] = int(type)
-    filters['Tags__pk__in'] = [t.pk for t in base_shout.get_tags()]
+    filters['type'] = int(type)
+    filters['tags__pk__in'] = [t.pk for t in base_shout.get_tags()]
 
     base_timestamp = int(time.mktime(begin.utctimetuple()))
     now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
@@ -274,21 +274,21 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
 
     extra_order_bys = ''
     points = list(
-        Trade.objects.get_valid_trades(country=base_shout.CountryCode, city=base_shout.ProvinceCode).filter(**filters).values(
-            'Latitude', 'Longitude'))
-    max_distance = MaxDistance(points, float(base_shout.Latitude), float(base_shout.Longitude))
+        Trade.objects.get_valid_trades(country=base_shout.country, city=base_shout.city).filter(**filters).values(
+            'latitude', 'longitude'))
+    max_distance = MaxDistance(points, float(base_shout.latitude), float(base_shout.longitude))
     pks = [x for x in base_shout.StreamsCode.split(',')]
-    max_followings = MaxFollowings(pks, base_shout.CountryCode, base_shout.ProvinceCode, filters)
+    max_followings = MaxFollowings(pks, base_shout.country, base_shout.city, filters)
 
     extra_order_bys += 'power( ' + str(
-        settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d), 2.0) + ' % (
+        settings.RANK_COEFFICIENT_TIME) + ' * (extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d), 2.0) + ' % (
         now_timestamp_string, now_timestamp - base_timestamp)
     rank_count = 1
 
     if max_distance > 0.0:
         extra_order_bys += 'power( ' + str(
-            settings.RANK_COEFFICIENT_TIME) + ' * (normalized_distance("shoutit_post"."Latitude", "shoutit_post"."Longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%.100f as DOUBLE PRECISION)), 2.0) + ' % (
-            float(base_shout.Latitude), float(base_shout.Longitude), max_distance)
+            settings.RANK_COEFFICIENT_TIME) + ' * (normalized_distance("shoutit_post"."latitude", "shoutit_post"."longitude", CAST(%f as DOUBLE PRECISION), CAST(%f as DOUBLE PRECISION)) / CAST(%.100f as DOUBLE PRECISION)), 2.0) + ' % (
+            float(base_shout.latitude), float(base_shout.longitude), max_distance)
         rank_count += 1
         base_shout.MaxDistance = max_distance
         base_shout.save()
@@ -303,11 +303,11 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
 
     extra_order_bys = '(|/(' + extra_order_bys.strip()[:-1] + ')) / |/(%d)' % rank_count
 
-    shout_qs = Trade.objects.get_valid_trades(country=base_shout.CountryCode, city=base_shout.ProvinceCode).select_related(
-        'Item', 'Item__Currency', 'OwnerUser__Profile', 'Tags').filter(**filters).filter(~Q(pk=base_shout.pk))
+    shout_qs = Trade.objects.get_valid_trades(country=base_shout.country, city=base_shout.city).select_related(
+        'item', 'item__Currency', 'user__Profile', 'tags').filter(**filters).filter(~Q(pk=base_shout.pk))
     if exclude_shouter:
-        shout_qs = shout_qs.filter(~Q(OwnerUser=base_shout.OwnerUser))
-    shout_qs = shout_qs.extra(select={'time_rank': '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' % (
+        shout_qs = shout_qs.filter(~Q(user=base_shout.user))
+    shout_qs = shout_qs.extra(select={'time_rank': '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
         now_timestamp_string, now_timestamp - base_timestamp)})
     shout_qs = shout_qs.extra(select={'rank': extra_order_bys}).extra(order_by=['rank'])[start_index:end_index]
 
@@ -323,9 +323,9 @@ def get_trades_by_pks(pks):
     if not pks:
         return []
     # todo: choose which statement with less queries and enough data
-    # shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').prefetch_related('Tags','Item__Images').filter(pk__in = pks)
-    # shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile','Tags').filter(pk__in = pks)
-    shout_qs = Trade.objects.get_valid_trades().select_related('Item', 'Item__Currency', 'OwnerUser', 'OwnerUser__Profile').filter(
+    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').prefetch_related('tags','item__Images').filter(pk__in = pks)
+    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile','tags').filter(pk__in = pks)
+    shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').filter(
         pk__in=pks)
 
     return attach_related_to_shouts(shout_qs)
@@ -338,10 +338,10 @@ def attach_related_to_shouts(shouts, rank_count=None):
     if len(shouts):
         tags_qs = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags_qs = tags_qs.extra(where=["shout_id IN ({0})".format(','.join(["'{0}'".format(shout.pk) for shout in shouts]))])
-        tags_with_shout_id = list(tags_qs.values('id', 'Name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags_with_shout_id = list(tags_qs.values('id', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__id'))
 
-        images = StoredImage.objects.filter(Q(Shout__id__in=[shout.id for shout in shouts if shout.Type == POST_TYPE_EXPERIENCE]) | Q(
-            Item__id__in=[shout.Item.id for shout in shouts if shout.Type != POST_TYPE_EXPERIENCE])).order_by('image')
+        images = StoredImage.objects.filter(Q(shout__id__in=[shout.id for shout in shouts if shout.type == POST_TYPE_EXPERIENCE]) | Q(
+            item__id__in=[shout.item.id for shout in shouts if shout.type != POST_TYPE_EXPERIENCE])).order_by('image')
 
         for shout in shouts:
             if rank_count:
@@ -350,8 +350,8 @@ def attach_related_to_shouts(shouts, rank_count=None):
             shout.set_tags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == shout.id])
             tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['Shouts__id'] != shout.id]
 
-            shout.Item.set_images([image for image in images if image.Item_id == shout.Item_id])
-            images = [image for image in images if image.Item_id != shout.Item_id]
+            shout.item.set_images([image for image in images if image.item_id == shout.item_id])
+            images = [image for image in images if image.item_id != shout.item_id]
 
     return list(shouts)
 
@@ -367,18 +367,18 @@ def get_ranked_stream_shouts(stream):
     now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
     now_timestamp_string = str(datetime.now())
 
-    time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."DatePublished"))/ %d)' % (
+    time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
         now_timestamp_string, now_timestamp - base_timestamp)
 
-    shouts = stream.ShoutWraps.select_related('Shout', 'Trade').filter(
-        Q(Shout__ExpiryDate__isnull=True, Shout__DatePublished__range=(begin, today)) | Q(Shout__ExpiryDate__isnull=False,
-                                                                                          Shout__DatePublished__lte=F(
-                                                                                              'Shout__ExpiryDate')),
-        Shout__IsMuted=False, Shout__IsDisabled=False).extra(select={'overall_rank': '(("Rank" * 2) + %s) / 3' % time_axis}).extra(
+    shout_wraps = stream.ShoutWraps.select_related('shout', 'trade').filter(
+        Q(shout__expiry_date__isnull=True, shout__date_published__range=(begin, today)) | Q(shout__expiry_date__isnull=False,
+                                                                                          shout__date_published__lte=F(
+                                                                                              'shout__expiry_date')),
+        shout__muted=False, shout__is_disabled=False).extra(select={'overall_rank': '(("rank" * 2) + %s) / 3' % time_axis}).extra(
         order_by=['overall_rank'])
-    if not shouts:
+    if not shout_wraps:
         return []
-    return [shout.Shout.trade for shout in shouts]
+    return [shout_wrap.shout.trade for shout_wrap in shout_wraps]
 
 
 # todo: use country, city, etc
@@ -387,8 +387,8 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     return the shouts (offers/requests) in a stream
     """
     shout_types = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
-    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-DatePublished').values_list('id', flat=Trade)[start_index:end_index]
-    trades = list(Trade.objects.filter(id__in=list(post_ids_qs)).order_by('-DatePublished'))
+    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-date_published').values_list('id', flat=Trade)[start_index:end_index]
+    trades = list(Trade.objects.filter(id__in=list(post_ids_qs)).order_by('-date_published'))
     return attach_related_to_shouts(trades)
 
 
@@ -405,7 +405,7 @@ def get_stream2_trades_qs(stream2, trade_type=None):
         None: [POST_TYPE_REQUEST, POST_TYPE_OFFER],
     }
     post_types = trade_types[trade_type]
-    qs = Trade.objects.get_valid_trades(types=post_types).filter(streams2=stream2).order_by('-DatePublished')
+    qs = Trade.objects.get_valid_trades(types=post_types).filter(streams2=stream2).order_by('-date_published')
     return qs
 
 
@@ -413,7 +413,7 @@ def get_stream_shouts_count(stream):
     """
     return the total number of shouts (offers/requests) in a stream
     """
-    return stream.Posts.filter(Type__in=[POST_TYPE_REQUEST, POST_TYPE_OFFER]).count()
+    return stream.Posts.filter(type__in=[POST_TYPE_REQUEST, POST_TYPE_OFFER]).count()
 
 
 def get_stream_listeners(stream, count_only=False):
@@ -429,7 +429,7 @@ def get_stream_listeners(stream, count_only=False):
 
 def get_user_listening(user, listening_type=None, count_only=False):
     """
-    return the objects (Profiles, Tags, etc) that the users are listening to their streams
+    return the objects (Profiles, tags, etc) that the users are listening to their streams
     """
     stream_types = {
         'users': STREAM2_TYPE_PROFILE,
@@ -464,7 +464,7 @@ def get_user_listening(user, listening_type=None, count_only=False):
 
 def get_user_listening_qs(user, listening_type):
     """
-    return the queryset of Users or Tags that the users are listening to
+    return the queryset of Users or tags that the users are listening to
     normally the user listens to a profile stream, but for ease we return the User classes with Profile pre-fetched.
     """
     stream_types = {

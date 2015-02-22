@@ -117,7 +117,7 @@ def SendListenEmail(follower, followed):
 
 def SendExpiryNotificationEmail(user, shout):
     subject = _('[ShoutIt] your shout is about to expire! reshout it now.')
-    title = shout.Item.Name
+    title = shout.item.name
     link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
@@ -125,7 +125,7 @@ def SendExpiryNotificationEmail(user, shout):
 
     html_template = get_template('expiry_email.html')
     html_context = Context({
-        'username': user.first_name + ' ' + user.lastname,
+        'username': user.first_name + ' ' + user.last_name,
         'title': title,
         'link': link
     })
@@ -133,7 +133,7 @@ def SendExpiryNotificationEmail(user, shout):
 
     text_template = get_template('expiry_email.txt')
     text_context = Context({
-        'username': user.first_name + ' ' + user.lastname,
+        'username': user.first_name + ' ' + user.last_name,
         'title': title,
         'link': link
     })
@@ -144,20 +144,21 @@ def SendExpiryNotificationEmail(user, shout):
 
     msg.send()
 
+
 # todo: links
 def SendBuyOfferEmail(shout, buyer):
-    subject = u'[ShoutIt] %s offered to buy your %s' % (buyer.username, shout.Name)
+    subject = u'[ShoutIt] %s offered to buy your %s' % (buyer.username, shout.name)
     shout_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
     buyer_link = 'http%s://%s%s' % (settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % buyer.username)
     mute_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
-    to = shout.OwnerUser.email
+    to = shout.user.email
 
     html_template = get_template('buy_offer_email.html')
     html_context = Context({
-        'username': shout.OwnerUser.username,
+        'username': shout.user.username,
         'buyer': buyer.username,
         'shout_link': shout_link,
         'buyer_link': buyer_link,
@@ -168,7 +169,7 @@ def SendBuyOfferEmail(shout, buyer):
 
     text_template = get_template('buy_offer_email.txt')
     text_context = Context({
-        'username': shout.OwnerUser.username,
+        'username': shout.user.username,
         'buyer': buyer.username,
         'shout_link': shout_link,
         'buyer_link': buyer_link,
@@ -184,7 +185,7 @@ def SendBuyOfferEmail(shout, buyer):
 
 
 def SendSellOfferEmail(shout, seller):
-    subject = u'[ShoutIt] %s has %s and willing to sell it to you' % (seller.username, shout.Name)
+    subject = u'[ShoutIt] %s has %s and willing to sell it to you' % (seller.username, shout.name)
     shout_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
     seller_link = 'http%s://%s%s' % (
@@ -192,11 +193,11 @@ def SendSellOfferEmail(shout, seller):
     mute_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
-    to = shout.OwnerUser.email
+    to = shout.user.email
 
     html_template = get_template('sell_offer_email.html')
     html_context = Context({
-        'username': shout.OwnerUser.username,
+        'username': shout.user.username,
         'buyer': seller.username,
         'shout_link': shout_link,
         'seller_link': seller_link,
@@ -207,7 +208,7 @@ def SendSellOfferEmail(shout, seller):
 
     text_template = get_template('sell_offer_email.txt')
     text_context = Context({
-        'username': shout.OwnerUser.username,
+        'username': shout.user.username,
         'buyer': seller.username,
         'shout_link': shout_link,
         'seller_link': seller_link,
@@ -227,12 +228,12 @@ def send_message_email(message):
     to_user = message.ToUser
     from_user = message.FromUser
     shout = message.Conversation.AboutPost
-    message_text = message.Text
+    message_text = message.text
 
     # old sms case
     profile = to_user.profile
     if not to_user.is_active and profile.Mobile:
-        content = remove_non_ascii(shout.Item.Name)
+        content = remove_non_ascii(shout.item.name)
         title = get_shout_name_preview(content, 25)
         link = 'shoutit.com/' + profile.LastToken.Token
         msg = get_shout_name_preview(remove_non_ascii(message_text), 30)
@@ -251,7 +252,7 @@ def send_message_email(message):
     from_email = settings.DEFAULT_FROM_EMAIL
     from_link = utils.user_link(from_user)
 
-    shout_name = shout.Item.Name
+    shout_name = shout.item.name
     shout_link = utils.shout_link(shout)
 
     subject = _('[Shoutit] %(name)s sent you a message regarding: %(about)s') % {'name': from_user.first_name, 'about': shout_name}
@@ -300,19 +301,19 @@ def send_message_email(message):
 
 
 def SendUserDealCancel(user, deal):
-    subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
+    subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.item.name}
     to_name = user.name
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
-    deal_name = deal.Item.Name
+    deal_name = deal.item.name
 
     html_template = get_template('deal_cancel_user.html')
     html_context = Context({
         'to': to_name,
         'deal_link': deal_link,
         'deal_name': deal_name,
-        'price': deal.Item.Price,
-        'currency': deal.Item.Currency.Code,
+        'price': deal.item.Price,
+        'currency': deal.item.Currency.Code,
     })
     html_message = html_template.render(html_context)
 
@@ -321,8 +322,8 @@ def SendUserDealCancel(user, deal):
         'to': to_name,
         'deal_link': deal_link,
         'deal_name': deal_name,
-        'price': deal.Item.Price,
-        'currency': deal.Item.Currency.Code,
+        'price': deal.item.Price,
+        'currency': deal.item.Currency.Code,
     })
     text_message = text_template.render(text_context)
 
@@ -332,11 +333,11 @@ def SendUserDealCancel(user, deal):
 
 
 def SendBusinessDealCancel(deal):
-    subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.Item.Name}
+    subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.item.name}
     to_name = deal.Business.name
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
-    deal_name = deal.Item.Name
+    deal_name = deal.item.name
 
     html_template = get_template('deal_cancel_business.html')
     html_context = Context({
@@ -441,11 +442,11 @@ def SendBusinessAcceptanceEmail(user, email, link):
 
 
 def SendBusinessBuyersDocument(deal, document):
-    subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': deal.Item.Name}
+    subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': deal.item.name}
     to_name = deal.Business.user.get_full_name()
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
-    deal_name = deal.Item.Name
+    deal_name = deal.item.name
     buyers_count = deal.BuyersCount()
     html_template = get_template('deal_close_business.html')
     html_context = Context({
@@ -472,11 +473,11 @@ def SendBusinessBuyersDocument(deal, document):
 
 
 def SendUserDealVoucher(buy, voucher):
-    subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': buy.Deal.Item.Name}
+    subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': buy.Deal.item.name}
     to_name = buy.user.get_full_name()
     deal_link = 'http%s://%s%s' % (
         settings.IS_SITE_SECURE and 's' or '', settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % buy.Deal.pk)
-    deal_name = buy.Deal.Item.Name
+    deal_name = buy.Deal.item.name
     vouchers_count = buy.Amount
     html_template = get_template('deal_close_user.html')
     html_context = Context({

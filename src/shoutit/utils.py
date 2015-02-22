@@ -238,21 +238,21 @@ def shout_link(post):
         return None
     post_id = post.pk
 
-    if post.Type == POST_TYPE_EXPERIENCE:
+    if post.type == POST_TYPE_EXPERIENCE:
         # todo: make sure the actual exp is passed so no need for using the model here
         if post.__class__.__name__ == 'Post':
             post = Experience.objects.get(pk=post.pk)
         experience = post
         about = to_seo_friendly(experience.AboutBusiness.name)
 
-        city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.City))) if experience.AboutBusiness.City else ''
+        city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.city))) if experience.AboutBusiness.city else ''
         experience_type = 'bad' if experience.State == 0 else 'good'
         link = '%s%s-experience/%s/%s%s/' % (SITE_LINK, experience_type, post_id, about, city)
     else:
         shout = post
-        shout_type = 'request' if shout.Type == POST_TYPE_REQUEST else 'offer' if shout.Type == POST_TYPE_OFFER else 'shout'
-        etc = to_seo_friendly(shout.Item.Name if hasattr(shout, 'Item') else shout.trade.Item.Name)
-        city = to_seo_friendly(unicode.lower(shout.ProvinceCode))
+        shout_type = 'request' if shout.type == POST_TYPE_REQUEST else 'offer' if shout.type == POST_TYPE_OFFER else 'shout'
+        etc = to_seo_friendly(shout.item.name if hasattr(shout, 'item') else shout.trade.item.name)
+        city = to_seo_friendly(unicode.lower(shout.city))
         link = '%s%s/%s/%s-%s/' % (SITE_LINK, shout_type, post_id, etc, city)
 
     return link
@@ -267,7 +267,7 @@ def user_link(user):
 def tag_link(tag):
     if not isinstance(tag, (Tag, dict)):
         return None
-    tag_name = tag.Name if hasattr(tag, 'Name') else tag['Name'] if 'Name' in tag else None
+    tag_name = tag.name if hasattr(tag, 'name') else tag['name'] if 'name' in tag else None
     if not tag_name:
         return None
     return "{0}tag/{1}/".format(SITE_LINK, tag_name)

@@ -171,7 +171,7 @@ def post_request(request):
 
         result.messages.append(('success', _('Your shout was shouted!')))
 
-        if not request.user.is_active and Shout.objects.filter(OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
+        if not request.user.is_active and Shout.objects.filter(user=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             take_permission_from_user(request, PERMISSION_SHOUT_MORE)
 
     else:
@@ -259,7 +259,7 @@ def post_offer(request):
 
         result.messages.append(('success', _('Your shout was shouted!')))
 
-        if not request.user.is_active and Shout.objects.filter(OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
+        if not request.user.is_active and Shout.objects.filter(user=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             take_permission_from_user(request, PERMISSION_SHOUT_MORE)
 
     else:
@@ -276,7 +276,7 @@ def shout_edit(request, shout_id):
 
     shout = request.validation_result.data['shout']
     form = request.validation_result.data['form']
-    shouter = shout.OwnerUser
+    shouter = shout.user
 
     latlng = form.cleaned_data['location']
     latitude = float(latlng.split(',')[0].strip())
@@ -329,23 +329,23 @@ def shout_view(request, shout_id):
         shout = shout_controller.get_post(shout_id)
 
     result.data['shout'] = shout
-    result.data['owner'] = (shout.OwnerUser == request.user or request.user.is_staff)
+    result.data['owner'] = (shout.user == request.user or request.user.is_staff)
 
-    if request.user == shout.OwnerUser:
-        shouts = get_ranked_stream_shouts(shout.RecommendedStream)
+    if request.user == shout.user:
+        shouts = get_ranked_stream_shouts(shout.recommended_stream)
         result.data['shouts_type'] = 'Recommended'
     else:
-        shouts = get_ranked_stream_shouts(shout.RelatedStream)
+        shouts = get_ranked_stream_shouts(shout.related_stream)
         result.data['shouts_type'] = 'Related'
 
     result.data['shouts'] = shouts
 
-    if shout.Type == POST_TYPE_EXPERIENCE:
-        result.data['title'] = shout.OwnerUser.username + "'s experience with " + shout.AboutStore.Name
+    if shout.type == POST_TYPE_EXPERIENCE:
+        result.data['title'] = shout.user.username + "'s experience with " + shout.AboutStore.name
     else:
-        result.data['title'] = shout.Item.Name
+        result.data['title'] = shout.item.name
 
-    result.data['desc'] = shout.Text
+    result.data['desc'] = shout.text
 
     if request.user.is_authenticated():
         conversations = get_shout_conversations(shout_id, request.user)
@@ -391,8 +391,8 @@ def nearby_shouts(request):
         if len(shout_points) == 1:
             result.data['locations'] = [(str(shout_points[0][0]) + ' ' + str(shout_points[0][1]))]
             result.data['shout_pks'] = [shouts[0]['pk']]
-            result.data['shout_types'] = [shouts[0]['Type']]
-            result.data['shout_names'] = [shouts[0]['Item__Name']]
+            result.data['shout_types'] = [shouts[0]['type']]
+            result.data['shout_names'] = [shouts[0]['item__name']]
         else:
             result.data['locations'] = []
             result.data['shout_pks'] = []
@@ -401,10 +401,10 @@ def nearby_shouts(request):
         return result
 
     # todo: cluster-ify this on big data
-    shout_points = [str(shout['Latitude']) + ' ' + str(shout['Longitude']) for shout in shouts]
+    shout_points = [str(shout['latitude']) + ' ' + str(shout['longitude']) for shout in shouts]
     shout_pks = [shout['pk'] for shout in shouts]
-    shout_types = [shout['Type'] for shout in shouts]
-    shout_names = [shout['Item__Name'] for shout in shouts]
+    shout_types = [shout['type'] for shout in shouts]
+    shout_names = [shout['item__name'] for shout in shouts]
 
     result.data['locations'] = shout_points
     result.data['shout_pks'] = shout_pks
@@ -471,7 +471,7 @@ def shout_sss4(request):
 
     tags = process_tags(tags)
     if not tags:
-        return JsonResponseBadRequest({'error': "Invalid Tags"})
+        return JsonResponseBadRequest({'error': "Invalid tags"})
 
     try:
         if shout['type'] == 'request':

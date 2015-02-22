@@ -59,7 +59,7 @@ def get_shout_conversations(request, shout_id):
     result = ResponseResult()
     shout = shout_controller.get_post(shout_id, True, True)
     result.data['conversations'] = message_controller.get_shout_conversations(shout_id, request.user)
-    result.data['is_owner'] = (request.user.pk == shout.OwnerUser.pk)
+    result.data['is_owner'] = (request.user.pk == shout.user.pk)
     return result
 
 
@@ -112,7 +112,7 @@ def send_message(request, shout_id, conversation_id=None):
 
     shout = validation_result.data['shout']
     conversation = validation_result.data['conversation']
-    to_user = conversation.With if conversation else shout.OwnerUser
+    to_user = conversation.With if conversation else shout.user
 
     result.data['to_user'] = to_user
     if request.method == 'POST':
@@ -161,7 +161,7 @@ def reply_to_shout(request, shout_id):
     text = validation_result.data['text']
     attachments = validation_result.data['attachments']
 
-    message = message_controller.send_message(request.user, shout.OwnerUser, shout, text, attachments=attachments)
+    message = message_controller.send_message(request.user, shout.user, shout, text, attachments=attachments)
 
     result.messages.append(('success', _('Your message was sent successfully.')))
     result.data['url'] = get_object_api_url(message.Conversation)
@@ -272,7 +272,7 @@ def reply_to_shout2(request, shout_id):
     message_text = validation_result.data['text']
     attachments = validation_result.data['attachments']
 
-    result.data['message'] = message_controller.send_message2(None, request.user, to_users=[shout.OwnerUser], about=shout, text=message_text
+    result.data['message'] = message_controller.send_message2(None, request.user, to_users=[shout.user], about=shout, text=message_text
                                                               , attachments=attachments)
     result.messages.append(('success', _('Your message was sent successfully.')))
     return result

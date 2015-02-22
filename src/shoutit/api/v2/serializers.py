@@ -39,7 +39,7 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'api_url', 'web_url', 'is_listening', 'listeners_count')
 
-    name = serializers.CharField(source='Name')
+    name = serializers.CharField(source='name')
     is_listening = serializers.SerializerMethodField()
 
     def get_is_listening(self, tag):
@@ -59,19 +59,19 @@ class TradeSerializer(serializers.ModelSerializer):
                   'images', 'videos', 'tags', 'location', 'user', 'date_published',
         )
 
-    title = serializers.CharField(source='Item.Name')
-    text = serializers.CharField(source='Text')
-    price = serializers.FloatField(source='Item.Price')
-    currency = serializers.CharField(source='Item.Currency.Code')
-    images = serializers.ListField(source='Item.get_image_urls', child=serializers.URLField())
-    videos = VideoSerializer(source='Item.get_videos', many=True)
+    title = serializers.CharField(source='item.name')
+    text = serializers.CharField(source='text')
+    price = serializers.FloatField(source='item.Price')
+    currency = serializers.CharField(source='item.Currency.Code')
+    images = serializers.ListField(source='item.get_image_urls', child=serializers.URLField())
+    videos = VideoSerializer(source='item.get_videos', many=True)
     tags = TagSerializer(many=True)
     location = LocationSerializer()
     user = UserSerializer()
     date_published = serializers.SerializerMethodField()
 
     def get_date_published(self, trade):
-        return date_unix(trade.DatePublished)
+        return date_unix(trade.date_published)
 
 
 
@@ -162,10 +162,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
         user.save()
 
         if location_data:
-            profile.Country = location_data['country']
-            profile.City = location_data['city']
-            profile.Latitude = location_data['latitude']
-            profile.Longitude = location_data['longitude']
+            profile.country = location_data['country']
+            profile.city = location_data['city']
+            profile.latitude = location_data['latitude']
+            profile.longitude = location_data['longitude']
             profile.save()
 
         if profile_data:

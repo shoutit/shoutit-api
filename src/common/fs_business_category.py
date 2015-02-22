@@ -29,7 +29,7 @@ categories = json.loads(json_string)['response']['categories']
 
 
 def f(category, parent):
-    c = BusinessCategory(Name=category['name'], Source=BUSINESS_SOURCE_TYPE_FOURSQUARE, SourceID=category['id'], Parent=parent)
+    c = BusinessCategory(name=category['name'], Source=BUSINESS_SOURCE_TYPE_FOURSQUARE, SourceID=category['id'], Parent=parent)
     c.save()
     return c
 

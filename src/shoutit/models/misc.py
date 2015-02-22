@@ -9,21 +9,21 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel):
-    City = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
+    city = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
     city_encoded = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
-    Country = models.CharField(max_length=2, default='', blank=True, db_index=True)
-    Latitude = models.FloatField(default=0.0)
-    Longitude = models.FloatField(default=0.0)
+    country = models.CharField(max_length=2, default='', blank=True, db_index=True)
+    latitude = models.FloatField(default=0.0)
+    longitude = models.FloatField(default=0.0)
     Approved = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return unicode(self.Country + ':' + self.City)
+        return unicode(self.country + ':' + self.city)
 
 
 class StoredFile(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True, blank=True)
     File = models.CharField(max_length=1024)
-    Type = models.IntegerField()
+    type = models.IntegerField()
 
     def __unicode__(self):
         return "(" + unicode(self.pk) + ") " + unicode(self.File)
@@ -32,16 +32,16 @@ class StoredFile(UUIDModel):
 class ConfirmToken(UUIDModel):
     Token = models.CharField(max_length=24, db_index=True, unique=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name="Tokens")
-    Type = models.IntegerField(default=0)
+    type = models.IntegerField(default=0)
     DateCreated = models.DateField(auto_now_add=True)
     Email = models.CharField(max_length=128, blank=True)
-    IsDisabled = models.BooleanField(default=False, null=False)
+    is_disabled = models.BooleanField(default=False, null=False)
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
 
     def disable(self):
-        self.IsDisabled = True
+        self.is_disabled = True
         self.save()
 
     @staticmethod
@@ -54,7 +54,7 @@ class ConfirmToken(UUIDModel):
         else:
             t = ConfirmToken.objects.filter(Token__iexact=token, DateCreated__gte=begin, DateCreated__lte=today)
         if not get_disabled:
-            t = t.filter(IsDisabled=False)
+            t = t.filter(is_disabled=False)
         t = t.select_related()
         if len(t) > 0:
             return t[0]

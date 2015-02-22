@@ -1,8 +1,8 @@
 {% load template_filters %}
 
-<a class="experience-text" href="{% shout_link experience %}">{{ experience.Text }}</a>
+<a class="experience-text" href="{% shout_link experience %}">{{ experience.text }}</a>
 {% if experience.State == 0 %}<span class="user-icon-thumbdown pull-right"></span>{% else %}<span class="user-icon-thumbup pull-right"></span>{% endif %}
-<div class="pd" title="{{ experience.DatePublished|ISO8601 }}">{{ experience.DatePublished }}</div>
+<div class="pd" title="{{ experience.date_published|ISO8601 }}">{{ experience.date_published }}</div>
 
 {#    Shared: <label>{{ experience.sharedExpsCount }}</label>#}
 {#    Comments: <label >{{ experience.commentsCount }}</label>#}

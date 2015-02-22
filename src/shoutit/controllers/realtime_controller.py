@@ -57,10 +57,10 @@ def SendNotification(notification, username, count=0):
                 unread_conversations_num = UnReadConversationsCount(userProfile.user)
                 notifications_count = get_user_notifications_without_messages_count(userProfile.user)
                 customMessage = {}
-                if notification.Type == NOTIFICATION_TYPE_LISTEN:
+                if notification.type == NOTIFICATION_TYPE_LISTEN:
                     message += " " + _("started listening to your shouts")
                     customMessage = {'URCnv':unread_conversations_num}
-                elif notification.Type == NOTIFICATION_TYPE_MESSAGE:
+                elif notification.type == NOTIFICATION_TYPE_MESSAGE:
                     message += " " + _("sent you a message")
                     customMessage = {'UC': unread_conversations_num, 'CID': notification.attached_object.Conversation_id}
 

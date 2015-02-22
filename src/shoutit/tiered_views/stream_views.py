@@ -18,18 +18,18 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     result = ResponseResult()
     result.data['notifications'] = []
 
-    # City
+    # city
     result.data['predefined_cities'] = PredefinedCity.objects.all()
     try:
         pre_city = PredefinedCity.objects.get(city_encoded=url_encoded_city)
     except PredefinedCity.DoesNotExist:
         pre_city = PredefinedCity.objects.get(city_encoded=DEFAULT_LOCATION['city_encoded'])
 
-    result.data['browse_country'] = pre_city.Country
-    result.data['browse_city'] = pre_city.City
+    result.data['browse_country'] = pre_city.country
+    result.data['browse_city'] = pre_city.city
     result.data['browse_city_encoded'] = pre_city.city_encoded
-    result.data['browse_latitude'] = pre_city.Latitude
-    result.data['browse_longitude'] = pre_city.Longitude
+    result.data['browse_latitude'] = pre_city.latitude
+    result.data['browse_longitude'] = pre_city.longitude
 
     if url_encoded_city not in [c.city_encoded for c in result.data['predefined_cities']]:
         result.data['redirect_city'] = True
@@ -42,18 +42,18 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
     # Category
     result.data['browse_category'] = browse_category
-    result.data['categories'] = Category.objects.all().order_by('Name')
-    if browse_category and browse_category not in [unicode.lower(c.Name) for c in result.data['categories']]:
+    result.data['categories'] = Category.objects.all().order_by('name')
+    if browse_category and browse_category not in [unicode.lower(c.name) for c in result.data['categories']]:
         result.data['redirect_category'] = True
         return result
 
     # Shouts of Landing Page
     user = request.user if request.user.is_authenticated() else None
     # todo: more cases of default location
-    user_country = pre_city.Country
-    user_city = pre_city.City
-    user_lat = user.profile.Latitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Latitude
-    user_lng = user.profile.Longitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Longitude
+    user_country = pre_city.country
+    user_city = pre_city.city
+    user_lat = user.profile.latitude if (request.user.is_authenticated() and user.profile.city == pre_city.city) else pre_city.latitude
+    user_lng = user.profile.longitude if (request.user.is_authenticated() and user.profile.city == pre_city.city) else pre_city.longitude
 
     page_num = 1
     tag_ids = []
@@ -80,7 +80,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__Name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__name__iexact=category)])
 
     #TODO session
     if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
@@ -119,20 +119,20 @@ def index_stream(request):
 
     user = request.user if request.user.is_authenticated() else None
 
-    city = request.GET.get('city', user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city'])
+    city = request.GET.get('city', user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city'])
     try:
-        pre_city = PredefinedCity.objects.get(City=city)
+        pre_city = PredefinedCity.objects.get(city=city)
     except PredefinedCity.DoesNotExist:
-        pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
+        pre_city = PredefinedCity.objects.get(city=DEFAULT_LOCATION['city'])
 
     # todo: more cases of default location
-    user_country = pre_city.Country
-    user_city = pre_city.City
+    user_country = pre_city.country
+    user_city = pre_city.city
     # todo: better nearby cities based on radius from main city
-    user_nearby_cities = PredefinedCity.objects.filter(Country=pre_city.Country)
-    user_nearby_cities = [nearby_city.City for nearby_city in user_nearby_cities]
-    user_lat = user.profile.Latitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Latitude
-    user_lng = user.profile.Longitude if (request.user.is_authenticated() and user.profile.City == pre_city.City) else pre_city.Longitude
+    user_nearby_cities = PredefinedCity.objects.filter(country=pre_city.country)
+    user_nearby_cities = [nearby_city.city for nearby_city in user_nearby_cities]
+    user_lat = user.profile.latitude if (request.user.is_authenticated() and user.profile.city == pre_city.city) else pre_city.latitude
+    user_lng = user.profile.longitude if (request.user.is_authenticated() and user.profile.city == pre_city.city) else pre_city.longitude
 
     page_num = int(request.GET.get('page', 1))
 
@@ -166,7 +166,7 @@ def index_stream(request):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__Name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__name__iexact=category)])
 
     # TODO: session
     if page_num == 1 and request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
@@ -206,12 +206,12 @@ def index_stream(request):
 def livetimeline(request, pk=None):
     result = ResponseResult()
 
-    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(City=city)
-    user_country = pre_city.Country
-    user_city = pre_city.City
-    user_lat = pre_city.Latitude
-    user_lng = pre_city.Longitude
+    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(city=city)
+    user_country = pre_city.country
+    user_city = pre_city.city
+    user_lat = pre_city.latitude
+    user_lng = pre_city.longitude
 
     if pk is not None:
         index = GetShoutTimeOrder(pk, user_country, user_city)

@@ -25,14 +25,14 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
         MinBuyers=min_buyers,
         MaxBuyers=max_buyers,
         OriginalPrice=original_price,
-        Item=item,
-        CountryCode=country,
-        ProvinceCode=city
+        item=item,
+        country=country,
+        city=city
     )
-    deal.Text = description
-    deal.Type = POST_TYPE_DEAL
-    deal.OwnerUser = business_profile.user
-    deal.ExpiryDate = expiry_date
+    deal.text = description
+    deal.type = POST_TYPE_DEAL
+    deal.user = business_profile.user
+    deal.expiry_date = expiry_date
     deal.ValidFrom = valid_from
     deal.ValidTo = valid_to
     deal.save()
@@ -43,8 +43,8 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
     stream.PublishShout(deal)
     stream2.add_post(deal)
 
-    for tag in shoutit.controllers.tag_controller.get_or_create_tags(tags, deal.OwnerUser):
-        deal.Tags.add(tag)
+    for tag in shoutit.controllers.tag_controller.get_or_create_tags(tags, deal.user):
+        deal.tags.add(tag)
         tag.Stream.PublishShout(deal)
         tag.stream2.add_post(deal)
 
@@ -53,12 +53,12 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
 
 
 def GetConcurrentDeals(business_profile):
-    return Deal.objects.get_valid_deals().filter(OwnerUser=business_profile.user, IsClosed=False)
+    return Deal.objects.get_valid_deals().filter(user=business_profile.user, IsClosed=False)
 
 
 def get_image_for_voucher(voucher_band):
 
-    image_url = voucher_band.instance.DealBuy.Deal.Item.get_first_image()
+    image_url = voucher_band.instance.DealBuy.Deal.item.get_first_image()
     if image_url:
         img_file = urllib2.urlopen(image_url)
         return image_open(StringIO.StringIO(img_file.read()))
@@ -120,7 +120,7 @@ class VoucherReport(Report):
         height = 25.1 * cm
         elements = [
             Rect(left=00.00 * cm, top=00.25 * cm, width=06.0 * cm, height=02.50 * cm, fill=True, stroke=False, fill_color=orange),  #Logo
-            Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.Item.Name,
+            Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.item.name,
                   style={'wordWrap': True, 'alignment': TA_JUSTIFY, 'fontName': 'Helvetica-Bold', 'fontSize': 28},
                   left=00.00 * cm, top=03.40 * cm, width=12.0 * cm, height=02.50 * cm),  #Deal Name
             Label(get_value=get_validity_for_deal,
@@ -135,11 +135,11 @@ class VoucherReport(Report):
             Label(get_value=lambda widget, band: widget.instance.Code,
                   style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 18},
                   left=13.00 * cm, top=05.20 * cm, width=06.5 * cm, height=00.70 * cm),  #Code
-            Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.Item.Price,
-                                                       widget.instance.DealBuy.Deal.Item.Currency.Code),
+            Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.item.Price,
+                                                       widget.instance.DealBuy.Deal.item.Currency.Code),
                   style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 24},
                   left=13.20 * cm, top=06.20 * cm, width=05.5 * cm, height=02.50 * cm, fill=True, stroke=False, fill_color=orange),  #Worth
-            Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.Text,
+            Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.text,
                   style={'wordWrap': True, 'alignment': TA_JUSTIFY, 'fontName': 'Helvetica', 'fontSize': 14},
                   left=06.95 * cm, top=09.00 * cm, width=11.5 * cm, height=10.50 * cm),  #Description
         ]
@@ -205,7 +205,7 @@ def GenerateVoucherDocument(deal_buy):
             Code="%s-%s-%s" % (deal_buy.pk, i, deal_buy.Deal.pk),  # todo: check
         ))
     r = VoucherReport(queryset=vouchers)
-    r.title = '[%s] deal vouchers' % deal_buy.Deal.Item.Name
+    r.title = '[%s] deal vouchers' % deal_buy.Deal.item.name
     buffer = StringIO.StringIO()
     r.generate_by(PDFGenerator, filename=buffer)
     buffer.seek(0)
@@ -214,7 +214,7 @@ def GenerateVoucherDocument(deal_buy):
 
 def GenerateBuyersDocument(deal):
     buyers_report = BuyersReport(queryset=Voucher.objects.filter(DealBuy__Deal=deal).order_by('DealBuy__DateBought'))
-    buyers_report.title = "[%s] deal vouchers" % deal.Item.Name
+    buyers_report.title = "[%s] deal vouchers" % deal.item.name
     buffer = StringIO.StringIO()
     buyers_report.generate_by(PDFGenerator, filename=buffer)
     buffer.seek(0)
@@ -248,7 +248,7 @@ def CloseDeal(deal):
 
 def GetDealsToBeClosed():
     now = datetime.now()
-    deals = Deal.objects.filter(ExpiryDate__lte=now, IsDisabled=False, IsMuted=False, IsClosed=False)
+    deals = Deal.objects.filter(expiry_date__lte=now, is_disabled=False, muted=False, IsClosed=False)
     return deals
 
 
@@ -261,9 +261,9 @@ def BuyDeal(user, deal, amount):
 
 
 def GetValidVoucher(code):
-    vouchers = Voucher.objects.filter(Code=code, IsValidated=False).select_related('DealBuy', 'DealBuy__Deal', 'DealBuy__Deal__Item',
-                                                                                   'DealBuy__Deal__OwnerUser',
-                                                                                   'DealBuy__Deal__OwnerUser__Profile')
+    vouchers = Voucher.objects.filter(Code=code, IsValidated=False).select_related('DealBuy', 'DealBuy__Deal', 'DealBuy__Deal__item',
+                                                                                   'DealBuy__Deal__user',
+                                                                                   'DealBuy__Deal__user__Profile')
     if vouchers and len(vouchers) == 1:
         return vouchers[0]
     else:
@@ -281,7 +281,7 @@ def InvalidateVoucher(voucher=None, code=''):
 
 
 def GetDeal(deal_id):
-    deals = Deal.objects.filter(pk=deal_id).select_related('shout', 'post', 'OwnerUser', 'OwnerUser__Profile', 'Item', 'Item__Currency')
+    deals = Deal.objects.filter(pk=deal_id).select_related('shout', 'post', 'user', 'user__profile', 'item', 'item__Currency')
     if deals:
         return deals[0]
     raise ObjectDoesNotExist
@@ -289,16 +289,16 @@ def GetDeal(deal_id):
 
 def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, country='', city=''):
     now = datetime.now()
-    qs = Deal.objects.filter(ExpiryDate__gt=now, IsDisabled=False, IsMuted=False, IsClosed=False).select_related('shout', 'post',
-                                                                                                                 'OwnerUser',
-                                                                                                                 'OwnerUser__Profile',
-                                                                                                                 'Item', 'Item__Currency')
+    qs = Deal.objects.filter(expiry_date__gt=now, is_disabled=False, muted=False, IsClosed=False).select_related('shout', 'post',
+                                                                                                                 'user',
+                                                                                                                 'user__Profile',
+                                                                                                                 'item', 'item__Currency')
     if country:
-        qs = qs.filter(CountryCode=country)
+        qs = qs.filter(country=country)
     if city:
-        qs = qs.filter(ProvinceCode=city)
+        qs = qs.filter(city=city)
     if business:
-        qs = qs.filter(OwnerUser=business.user)
+        qs = qs.filter(user=business.user)
     qs = qs.extra(select={
         'buys_count': 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(deal_id)s" = "%(deal_table)s"."%(deal_table_pk)s"' % {
         'table': DealBuy._meta.db_table, 'amount': DealBuy._meta.get_field_by_name('Amount')[0].column,
@@ -311,7 +311,7 @@ def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, cou
         'table': DealBuy._meta.db_table, 'amount': DealBuy._meta.get_field_by_name('Amount')[0].column,
         'user_id': DealBuy.user.field.column, 'deal_id': DealBuy.Deal.field.column, 'uid': user.pk, 'deal_table': Deal._meta.db_table,
         'deal_table_pk': Deal._meta.get_ancestor_link(Shout).column}})
-    qs = qs.order_by('-DatePublished')
+    qs = qs.order_by('-date_published')
     qs = qs[start_index:end_index]
     return qs
 

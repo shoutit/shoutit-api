@@ -25,11 +25,11 @@ def index(request, browse_type=None):
     result.data['browse_type'] = browse_type or 'offers'
 
     if request.user.is_authenticated():
-        city = request.user.profile.City
+        city = request.user.profile.city
     else:
         city = DEFAULT_LOCATION['city']
 
-    pre_city = PredefinedCity.objects.get(City=city)
+    pre_city = PredefinedCity.objects.get(city=city)
 
     result.data['browse_city'] = pre_city.city_encoded
     return result
@@ -71,7 +71,7 @@ def hovercard(request):
     if name is not None:
         if type == 'user':
             data = user_controller.get_profile(name)
-            data.Name = data.username
+            data.name = data.username
             if request.user.is_authenticated() and request.user.profile == data:
                 data.isFollowing = 0
             elif request.user.is_authenticated() and data in request.user.profile.Following.all():
@@ -86,8 +86,8 @@ def hovercard(request):
                 data.isFollowing = -1
 
     if data:
-        data = {'type': type, 'name': data.Name, 'id': data.pk, 'image': str(data.image),
-                'listeners': data.Stream.userprofile_set.count(), 'shouts': data.Stream.Shouts.count(),
+        data = {'type': type, 'name': data.name, 'id': data.pk, 'image': str(data.image),
+                'listeners': data.Stream.userprofile_set.count(), 'shouts': data.Stream.shouts.count(),
                 'isFollowing': data.isFollowing}
     else:
         data = {}
@@ -161,8 +161,8 @@ def modal(request, template=None):
         template = ''
     user = request.user
     fb_la = hasattr(user, 'linked_facebook') and user.linked_facebook or None
-    _categories = [category.TopTag and category.TopTag.Name or tag_controller.get_or_create_tag(category.Name.lower(), None, False).Name for
-                   category in Category.objects.all().order_by('Name').select_related('TopTag')]
+    _categories = [category.TopTag and category.TopTag.name or tag_controller.get_or_create_tag(category.name.lower(), None, False).name for
+                   category in Category.objects.all().order_by('name').select_related('TopTag')]
     fb_access_token = fb_la.AccessToken if fb_la else None
 
     if template == 'signin':
@@ -209,8 +209,8 @@ def modal(request, template=None):
             username = request.GET['username']
             business = business_controller.GetBusiness(username)
             cat = business.Category and business.Category.pk or 0
-            init = {'name': business.Name, 'category': cat, 'location': str(business.Latitude) + ', ' + str(business.Longitude),
-                    'country': business.Country, 'city': business.City, 'address': business.Address, 'username': username}
+            init = {'name': business.name, 'category': cat, 'location': str(business.latitude) + ', ' + str(business.longitude),
+                    'country': business.country, 'city': business.city, 'address': business.address, 'username': username}
         variables = RequestContext(request, {
             'form': ExperienceForm(initial=init),
             'tiny_business_form': CreateTinyBusinessForm(initial=init),
@@ -236,12 +236,12 @@ def modal(request, template=None):
                 'shout': shout,
                 'shout_id': request.GET['id'],
                 'form': ShoutForm(initial={
-                    'price': shout.Item.Price,
-                    'name': shout.Item.Name,
-                    'tags': ' '.join([tag.Name for tag in shout.get_tags()]),
-                    'location': '%f,%f' % (shout.Latitude, shout.Longitude),
-                    'description': shout.Text,
-                    'currency': shout.Item.Currency.Code
+                    'price': shout.item.Price,
+                    'name': shout.item.name,
+                    'tags': ' '.join([tag.name for tag in shout.get_tags()]),
+                    'location': '%f,%f' % (shout.latitude, shout.longitude),
+                    'description': shout.text,
+                    'currency': shout.item.Currency.Code
                 }),
             })
         else:
@@ -255,7 +255,7 @@ def modal(request, template=None):
                 'images': [image.image for image in item.get_images()],
                 'form': ShoutForm(initial={
                     'price': item.Price,
-                    'name': item.Name,
+                    'name': item.name,
                     'description': item.Description,
                     'currency': item.Currency.Code
                 })
@@ -267,7 +267,7 @@ def modal(request, template=None):
         exp = experience_controller.GetExperience(request.GET['id'], request.user)
         variables = RequestContext(request, {
             'form': ExperienceForm(initial={
-                'text': exp.Text,
+                'text': exp.text,
                 'state': exp.State
             }),
             'experience_id': request.GET['id']
@@ -316,14 +316,14 @@ def admin_stats(request):
 
             result.data['shouts_req'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).count()
             result.data['shouts_ofr'] = Trade.objects.get_valid_trades(types=[POST_TYPE_OFFER]).count()
-            result.data['shouts_exp'] = Post.objects.get_valid_posts().filter(Type=POST_TYPE_EXPERIENCE).count()
+            result.data['shouts_exp'] = Post.objects.get_valid_posts().filter(type=POST_TYPE_EXPERIENCE).count()
             result.data['shouts'] = result.data['shouts_req'] + result.data['shouts_ofr'] + result.data['shouts_exp']
             result.data['shouts_a'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
-                OwnerUser__pk__in=users_a).count()
+                user__pk__in=users_a).count()
             result.data['shouts_e'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
-                OwnerUser__pk__in=users_e).count()
-            result.data['shouts_r'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(OwnerUser__pk__in=users_e,
-                                                                                                                  IsSSS=False).count()
+                user__pk__in=users_e).count()
+            result.data['shouts_r'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(user__pk__in=users_e,
+                                                                                                                  is_sss=False).count()
 
             result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
             result.data['changed_pic'] = Profile.objects.filter(~Q(
@@ -337,18 +337,18 @@ def admin_stats(request):
             result.data['followships'] = FollowShip.objects.all().count()
 
             result.data['countries'] = Profile.objects.filter(~Q(user__email__iexact='')).values(
-                'Country').annotate(count=Count('Country'))
+                'country').annotate(count=Count('country'))
             for c in result.data['countries']:
-                c['Country'] = constants.COUNTRY_ISO[c['Country']]
-            result.data['countries'] = sorted(result.data['countries'], key=lambda k: k['Country'])
+                c['country'] = constants.COUNTRY_ISO[c['country']]
+            result.data['countries'] = sorted(result.data['countries'], key=lambda k: k['country'])
 
-            # result.data['cities'] = Profile.objects.filter(~Q(user__email__iexact='')).values('City',
-            # 'Country').annotate(count=Count('City'))
+            # result.data['cities'] = Profile.objects.filter(~Q(user__email__iexact='')).values('city',
+            # 'country').annotate(count=Count('city'))
             #			for c in result.data['cities']:
-            #				if c['City'] == '':
-            #					c['City'] = 'None'
-            #				c['Country'] = constants.COUNTRY_ISO[c['Country']]
-            #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['Country'])
+            #				if c['city'] == '':
+            #					c['city'] = 'None'
+            #				c['country'] = constants.COUNTRY_ISO[c['country']]
+            #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['country'])
 
             #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
             #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
@@ -368,7 +368,7 @@ def currencies(request):
 def categories(request):
     result = ResponseResult()
     # todo: use the cache
-    result.data['categories'] = list(Category.objects.all().values_list('Name', flat=True))
+    result.data['categories'] = list(Category.objects.all().values_list('name', flat=True))
     return result
 
 
@@ -440,12 +440,12 @@ def live_events(request):
 
     city = request.GET.get('city', DEFAULT_LOCATION['city'])
     try:
-        pre_city = PredefinedCity.objects.get(City=city)
+        pre_city = PredefinedCity.objects.get(city=city)
     except PredefinedCity.DoesNotExist:
-        pre_city = PredefinedCity.objects.get(City=DEFAULT_LOCATION['city'])
+        pre_city = PredefinedCity.objects.get(city=DEFAULT_LOCATION['city'])
 
-    user_country = pre_city.Country
-    user_city = pre_city.City
+    user_country = pre_city.country
+    user_city = pre_city.city
 
     events = []
     if 'timestamp' in request.GET and request.GET['timestamp'] != '':

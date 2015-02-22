@@ -16,7 +16,7 @@
     <div class="round shadow white-container pull-{% if right %}right{% else %}left{% endif %} message-content">
         <span class="message-date pd" title="{{ message.DateCreated|ISO8601 }}">{{ message.DateCreated }}</span>
         <br>
-        {{ message.Text|linebreaksbr }}
+        {{ message.text|linebreaksbr }}
         <div class="controls">
             <a class="shout_message_delete" onclick="deleteMessage('{{ message.Conversation.pk }}', '{{message.pk}}', this)"><i class="icon-trash" title="delete message"></i></a>
         </div>

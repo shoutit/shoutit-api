@@ -35,7 +35,7 @@ def signup_temp(request, tiny_username=None):
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
             result.data['next'] = '/btempsignup/'
             return result
-        init = {'name': business.Name}
+        init = {'name': business.name}
     if request.method == 'POST':
         form = BusinessTempSignUpForm(request.POST, request.FILES, initial=init)
         form.is_valid()
@@ -97,17 +97,17 @@ def signup(request, token=None):
         if application.Business:
             business = application.Business
             business_init = {'name': business.name, 'category': application.Category and application.Category.pk or 0,
-                             'location': unicode(business.Latitude) + ', ' + unicode(business.Longitude), 'city': business.City,
-                             'country': business.Country}
-            lat = business.Latitude
-            lng = business.Longitude
+                             'location': unicode(business.latitude) + ', ' + unicode(business.longitude), 'city': business.city,
+                             'country': business.country}
+            lat = business.latitude
+            lng = business.longitude
         else:
-            business_init = {'name': application.Name, 'category': application.Category and application.Category.pk or 0,
-                             'location': unicode(application.Latitude) + ', ' + unicode(application.Longitude), 'city': application.City,
-                             'country': application.Country}
+            business_init = {'name': application.name, 'category': application.Category and application.Category.pk or 0,
+                             'location': unicode(application.latitude) + ', ' + unicode(application.longitude), 'city': application.city,
+                             'country': application.country}
             init.update({'phone': application.Phone, 'description': application.About, 'website': application.Website})
-            lat = application.Latitude
-            lng = application.Longitude
+            lat = application.latitude
+            lng = application.longitude
 
         if request.method == 'POST':
             form = BusinessSignUpForm(request.POST, request.FILES, initial=init)
@@ -125,12 +125,12 @@ def signup(request, token=None):
                 return result
             if form.is_valid() and tiny_business_form.is_valid():
                 if business:
-                    lat = business.Latitude
-                    lng = business.Longitude
+                    lat = business.latitude
+                    lng = business.longitude
                     category = business.Category and business.Category.pk or None
-                    city = business.City
-                    country = business.Country
-                    address = business.Address
+                    city = business.city
+                    country = business.country
+                    address = business.address
                 else:
                     latlng = tiny_business_form.cleaned_data['location']
                     lat = len(latlng.split(',')) and latlng.split(',')[0].strip() or 0
@@ -273,7 +273,7 @@ def confirm_business(request):
         result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
         return result
 
-    type = t.Type
+    type = t.type
     source_email = None
     if t.Email and t.Email.strip() != '':
         source_email = t.Email
@@ -283,7 +283,7 @@ def confirm_business(request):
         email = source_email
 
     if request.method == 'POST':
-        init = {'name': profile.Name, 'username': user.username, 'email': user.email, 'phone': profile.Phone, 'tokentype': type}
+        init = {'name': profile.name, 'username': user.username, 'email': user.email, 'phone': profile.Phone, 'tokentype': type}
         form = StartBusinessForm(request.POST, request.FILES, initial=init)
         if not form.is_valid():
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -297,7 +297,7 @@ def confirm_business(request):
         profile.save()
     # result.data['next'] = '/user/' + user.username
     else:
-        init = {'name': profile.Name, 'username': user.username, 'email': email, 'phone': profile.Phone, 'tokentype': type}
+        init = {'name': profile.name, 'username': user.username, 'email': email, 'phone': profile.Phone, 'tokentype': type}
         form = StartBusinessForm(initial=init)
     result.data['form'] = form
     return result
@@ -337,11 +337,11 @@ def business_edit_profile(request, username):
             country = form.cleaned_data['country']
             address = form.cleaned_data['address']
 
-            profile.Latitude = latitude
-            profile.Longitude = longitude
-            profile.City = city
-            profile.Country = country
-            profile.Address = address
+            profile.latitude = latitude
+            profile.longitude = longitude
+            profile.city = city
+            profile.country = country
+            profile.address = address
 
         profile.Bio = form.cleaned_data['bio']
         if 'password' in form.cleaned_data and form.cleaned_data['password']:
@@ -405,5 +405,5 @@ def subscribe(request):
 @non_cached_view(html_renderer=categories_api, api_renderer=categories_api, methods=['GET'])
 def business_categories(request):
     result = ResponseResult()
-    result.data['categories'] = BusinessCategory.objects.get_top_level_categories().order_by('Name')
+    result.data['categories'] = BusinessCategory.objects.get_top_level_categories().order_by('name')
     return result

@@ -56,9 +56,9 @@ def search_tag(request):
     if show_is_listening:
         profile = user_controller.GetProfile(request.user)
         if request.user.is_authenticated() and isinstance(profile, Profile):
-            user_interests = profile.Interests.all().values_list('Name')
+            user_interests = profile.Interests.all().values_list('name')
             for tag in result.data['tags']:
-                tag['is_listening'] = (tag['Name'], ) in user_interests
+                tag['is_listening'] = (tag['name'], ) in user_interests
         else:
             for tag in result.data['tags']:
                 tag['is_listening'] = False
@@ -82,9 +82,9 @@ def top_tags(request):
     # todo: use country only filter too
 
     try:
-        pre_city = PredefinedCity.objects.get(City=city)
-        user_country = pre_city.Country
-        user_city = pre_city.City
+        pre_city = PredefinedCity.objects.get(city=city)
+        user_country = pre_city.country
+        user_city = pre_city.city
     except PredefinedCity.DoesNotExist:
         user_country = None
         user_city = None
@@ -92,9 +92,9 @@ def top_tags(request):
     profile = user_controller.GetProfile(request.user)
     result.data['tags'] = tag_controller.get_top_tags(10, user_country, user_city)
     if request.user.is_authenticated() and isinstance(profile, Profile):
-        user_interests = profile.Interests.all().values_list('Name')
+        user_interests = profile.Interests.all().values_list('name')
         for tag in result.data['tags']:
-            tag['is_listening'] = (tag['Name'], ) in user_interests
+            tag['is_listening'] = (tag['name'], ) in user_interests
     else:
         for tag in result.data['tags']:
             tag['is_listening'] = False
@@ -114,10 +114,10 @@ def tag_stream(request, tag_name):
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num
 
-    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(City=city)
-    user_country = pre_city.Country
-    user_city = pre_city.City
+    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(city=city)
+    user_country = pre_city.country
+    user_city = pre_city.city
 
     result.data['shouts_count'] = stream_controller.get_stream_shouts_count(tag.Stream)
     result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream, start_index, end_index, country=user_country, city=user_city)
@@ -140,10 +140,10 @@ def tag_profile(request, tag_name):
     tag = request.validation_result.data
     result.data['tag'] = tag
 
-    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(City=city)
-    user_country = pre_city.Country
-    user_city = pre_city.City
+    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(city=city)
+    user_country = pre_city.country
+    user_city = pre_city.city
 
     # result.data['shouts2'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
     # result.data['shouts_count2'] = len(result.data['shouts2'])
@@ -169,7 +169,7 @@ def tag_profile_brief(request, tag_name):
     result = ResponseResult()
     result.data['tag'] = tag
 
-    result.data['shouts_count'] = Trade.objects.get_valid_trades().filter(Tags=tag).count()
+    result.data['shouts_count'] = Trade.objects.get_valid_trades().filter(tags=tag).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)

@@ -8,7 +8,7 @@ def get_item(item_id):
 
 def create_item(name, price, currency, description, images=None, videos=None):
     currency = get_currency(currency)
-    item = Item(Name=name, Price=price, Currency=currency, Description=description)
+    item = Item(name=name, Price=price, Currency=currency, Description=description)
     item.save()
 
     if images:
@@ -16,7 +16,7 @@ def create_item(name, price, currency, description, images=None, videos=None):
 
         for image in images:
             stored_image = StoredImage()
-            stored_image.Item = item
+            stored_image.item = item
             stored_image.image = image
             stored_image.save()
 
@@ -40,7 +40,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
         item = get_item(item)
 
     if name:
-        item.Name = name
+        item.name = name
     if price:
         item.Price = price
     if currency:
@@ -61,7 +61,7 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
             existed = StoredImage.objects.get(image__exact=image)
         except StoredImage.DoesNotExist:
             stored_image = StoredImage()
-            stored_image.Item = item
+            stored_image.item = item
             stored_image.image = image
             stored_image.save()
         except StoredImage.MultipleObjectsReturned, e:

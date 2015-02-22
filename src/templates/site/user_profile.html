@@ -81,7 +81,7 @@
         </div>
         <div class="user-started">Started Shouting on {{ profile.user.date_joined.date }}</div>
         {#				<div class="user-started">Started Shouting on 10.05.2012</div>#}
-        <div class="user-location"><i class="lang-icon dark-earth"></i>{{ profile.City }}, {{ profile.Country }}</div>
+        <div class="user-location"><i class="lang-icon dark-earth"></i>{{ profile.city }}, {{ profile.country }}</div>
         {#				<div class="user-location"><i class="lang-icon dark-earth"></i>DUBAI, United Arab Emirates</div>#}
         {% if not is_owner %}
           {% if is_listening %}
@@ -107,7 +107,7 @@
         {% if not is_owner %}
           <div style="text-align: right; height: 30px;">
             {#					<span>report this user :</span>#}
-            <span onclick="report_profile('{{ profile.username }}')" class="icon-remove" title="{% trans "Report this user" %}"></span>
+            <span onclick="report_profile('{{ profile.user.username }}')" class="icon-remove" title="{% trans "Report this user" %}"></span>
           </div>
         {% endif %}
         <div class="user-info">{{ profile.Bio|linebreaksbr }}</div>
@@ -232,11 +232,11 @@
       size: '5px',
       resumePageScroll: false
     });
-    {#            $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/stream/', '.shouts .box-content');#}
-    $('.activities .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/activities_stream/', '.activities .box-content', 0);
+    {#            $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.user.username }}/stream/', '.shouts .box-content');#}
+    $('.activities .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.user.username }}/activities_stream/', '.activities .box-content', 0);
     $('.activities .box-content').refreshScrollableStream();
 
-    $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.username }}/stream/', '.shouts .box-content', 0);
+    $('.shouts .box-content').scrollableStream('810px', true, '/xhr/user/{{ profile.user.username }}/stream/', '.shouts .box-content', 0);
     $('.shouts .box-content').refreshScrollableStream();
     setup_colorbox();
 //			setup_shouts_hover();
@@ -290,7 +290,7 @@
     if (listenersLoaded)
       return;
     requestAjaxily({
-      url: '/xhr/user/{{ profile.username }}/listeners/',
+      url: '/xhr/user/{{ profile.user.username }}/listeners/',
       successCallback: function (data) {
         listenersLoaded = true;
         var listeners = data.data.listeners;
@@ -317,7 +317,7 @@
         if (RecentFollowingLoaded)
           return;
         requestAjaxily({
-          url: '/xhr/user/{{ profile.username }}/listening/' + type + '/' + period + '/',
+          url: '/xhr/user/{{ profile.user.username }}/listening/' + type + '/' + period + '/',
           successCallback: function (data) {
             RecentFollowingLoaded = true;
             var listening_users = data.data.listening.users;
@@ -348,7 +348,7 @@
         if (UsersFollowingLoaded)
           return;
         requestAjaxily({
-          url: '/xhr/user/{{ profile.username }}/listening/' + type + '/' + period + '/',
+          url: '/xhr/user/{{ profile.user.username }}/listening/' + type + '/' + period + '/',
           successCallback: function (data) {
             UsersFollowingLoaded = true;
             var listening_users = data.data.listening.users;
@@ -371,7 +371,7 @@
         if (TagsFollowingLoaded)
           return;
         requestAjaxily({
-          url: '/xhr/user/{{ profile.username }}/listening/' + type + '/' + period + '/',
+          url: '/xhr/user/{{ profile.user.username }}/listening/' + type + '/' + period + '/',
           successCallback: function (data) {
             TagsFollowingLoaded = true;
             var listening_tags = data.data.listening.tags;
@@ -416,7 +416,7 @@
 
   function follow() {
     requestAjaxily({
-      url: '/xhr/user/{{ profile.username }}/start_listening/',
+      url: '/xhr/user/{{ profile.user.username }}/start_listening/',
       successCallback: function (data) {
         $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id', 'unfollow');
         var counter = $('#aFollowers .count');
@@ -429,7 +429,7 @@
 
   function unfollow() {
     requestAjaxily({
-      url: '/xhr/user/{{ profile.username }}/stop_listening/',
+      url: '/xhr/user/{{ profile.user.username }}/stop_listening/',
       successCallback: function (data) {
         $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id', 'follow');
         var counter = $('#aFollowers .count');

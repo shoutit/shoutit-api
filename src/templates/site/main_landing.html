@@ -113,31 +113,31 @@
                 $(this).find('#id_name').val('{% trans "Selling BMW 325i Coupe 2008" %}');
                 $(this).find('#id_price').val('80000');
                 $(this).find('#id_description').val('{% trans "Selling a bmw 325i coupe 2008 in mint condition. Full service history is available." %}');
-//                $(this).find('#id_tags').importTags('autos bmw 325i 2008');
+//                $(this).find('#id_tags').importtags('autos bmw 325i 2008');
             });
             setup_modal('#dosh_modal', '/modal/shout_sell/', '#dosh', function () {
                 $(this).find('#id_name').val('{% trans "Offering Piano Lessons for Kids" %}');
                 $(this).find('#id_price').val('200');
                 $(this).find('#id_description').val('{% trans "I offer piano lessons for your kids at your place or mine." %}');
-//                $(this).find('#id_tags').importTags('piano lessons');
+//                $(this).find('#id_tags').importtags('piano lessons');
             });
             setup_modal('#hobby_modal', '/modal/shout_buy/', '#hobby', function () {
                 $(this).find('#id_name').val('{% trans "Photography friends" %}');
                 $(this).find('#id_price').val('0');
                 $(this).find('#id_description').val('{% trans "Going to shoot animals in Dubai Zoo at 2pm , feel free to join" %}');
-//                $(this).find('#id_tags').importTags('hobby zoo shooting photography');
+//                $(this).find('#id_tags').importtags('hobby zoo shooting photography');
             });
             setup_modal('#learn_modal', '/modal/shout_buy/', '#learn', function () {
                 $(this).find('#id_name').val('{% trans "Looking for German language teacher" %}');
                 $(this).find('#id_price').val('1500');
                 $(this).find('#id_description').val('{% trans "I want someone who is able to teach me German language in a month as I am planning to take my masters there." %}');
-//                $(this).find('#id_tags').importTags('teacher german');
+//                $(this).find('#id_tags').importtags('teacher german');
             });
             setup_modal('#spending_modal', '/modal/shout_buy/', '#spending', function () {
                 $(this).find('#id_name').val('{% trans "iPhone 4s" %}');
                 $(this).find('#id_price').val('2500');
                 $(this).find('#id_description').val('{% trans "Looking for a new iPhone 4s unlocked" %}');
-//                $(this).find('#id_tags').importTags('new iphone4s unlocked');
+//                $(this).find('#id_tags').importtags('new iphone4s unlocked');
             });
             var remove_data = function () {
                 $(this).find('.modal-body').html('<div style="text-align: center;"><img src="{% static "img/modal-loading.gif"%}" alt=""></div>');

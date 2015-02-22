@@ -32,7 +32,7 @@
                 <li><a href="/user/{{ request.user.username }}/#reactivate" data-toggle="modal" data-target="#resend_activation_modal"><i class="icon-pencil"></i> {% trans "Activate" %}</a></li>
               {% endif %}
               {% if user.profile  %}
-                <li><a href="#" id="ShowMap" data-toggle="modal" data-target="#MapModal" title="Click to change your City"><i class="icon-map-marker"></i> {% if user.profile.City != "" %}[{{user.profile.City}}]{% endif %}</a></li>
+                <li><a href="#" id="ShowMap" data-toggle="modal" data-target="#MapModal" title="Click to change your city"><i class="icon-map-marker"></i> {% if user.profile.city != "" %}[{{user.profile.city}}]{% endif %}</a></li>
               {% endif  %}
               <li class="divider"></li>
               <li><a id="signout_link" href="/signout/"><i class="icon-off"></i> {% trans "Sign Out" %}</a></li>

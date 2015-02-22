@@ -1,11 +1,11 @@
 {% load template_filters %}
 {% load staticfiles %}
 
-<div class="shout_post type-{{ shout.Type }} clearfix">
+<div class="shout_post type-{{ shout.type }} clearfix">
 
-	<div class="shout_post_user_image hovercard" hovercard-name="{{ shout.OwnerUser.username }}" hovercard-type="user" hovercard-data="">
-		<a href="/user/{{shout.OwnerUser.username }}/"><img src="/xhr/user/{{ shout.OwnerUser.username }}/picture/50/" alt="{{ shout.OwnerUser.username }}"></a><br />
-{#        <a href="/user/{{shout.OwnerUser.username }}/">{{shout.OwnerUser.username }}</a> {% if shout.Type == 0 %}wants to buy{% else %}{% if shout.Type == 1 %}is selling{% endif %}{% endif %}#}
+	<div class="shout_post_user_image hovercard" hovercard-name="{{ shout.user.username }}" hovercard-type="user" hovercard-data="">
+		<a href="/user/{{shout.user.username }}/"><img src="/xhr/user/{{ shout.user.username }}/picture/50/" alt="{{ shout.user.username }}"></a><br />
+{#        <a href="/user/{{shout.user.username }}/">{{shout.user.username }}</a> {% if shout.type == 0 %}wants to buy{% else %}{% if shout.type == 1 %}is selling{% endif %}{% endif %}#}
 	</div>
 
 
@@ -13,26 +13,26 @@
 
 		<div class="shout_post_body">
 			<div class="shout_post_headline clearfix">
-{#				<b><a href="/user/{{shout.OwnerUser.username }}/" class="hovercard" hovercard-name="{{ shout.OwnerUser.username }}" hovercard-type="user" hovercard-data="">{{shout.OwnerUser.username }}</a></b>#}
+{#				<b><a href="/user/{{shout.user.username }}/" class="hovercard" hovercard-name="{{ shout.user.username }}" hovercard-type="user" hovercard-data="">{{shout.user.username }}</a></b>#}
 
-{#				{% if shout.Type == 0 %}#}
-{#					<span>is willing to pay {{ shout.Item.Price|price }} for <a href="/shout/{{ shout.pk }}/">{{ shout.Item.Name }}</a></span>#}
+{#				{% if shout.type == 0 %}#}
+{#					<span>is willing to pay {{ shout.item.Price|price }} for <a href="/shout/{{ shout.pk }}/">{{ shout.item.name }}</a></span>#}
 {#				{% else %}#}
-{#					<span>is selling <a href="/shout/{{ shout.id }}/">{{ shout.Item.Name }}</a> for {{ shout.Item.Price|price }}</span>#}
+{#					<span>is selling <a href="/shout/{{ shout.id }}/">{{ shout.item.name }}</a> for {{ shout.item.Price|price }}</span>#}
 {#				{% endif %}#}
-				<a class="shout_post_name" href="/shout/{{ shout.pk }}/">{{ shout.Item.Name }}</a>
-				<span class="shout_post_price">{{ shout.Item.Price|price }}</span>
-{#				{% if user.username == shout.OwnerUser.username %}#}
+				<a class="shout_post_name" href="/shout/{{ shout.pk }}/">{{ shout.item.name }}</a>
+				<span class="shout_post_price">{{ shout.item.Price|price }}</span>
+{#				{% if user.username == shout.user.username %}#}
 {#				<span class="shout_post_delete btn" id="delete{{shout.id}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></span>#}
 {#				{% endif %}#}
 				<br>
-				<span class="shout_post_date pd" title="{{ shout.DatePublished|date:"Y-n-d H:i:s" }}">.</span>
+				<span class="shout_post_date pd" title="{{ shout.date_published|date:"Y-n-d H:i:s" }}">.</span>
 				<br>
-				<span class="shout_post_mobile" title="call owner">{{ shout.OwnerUser.profile.Mobile }}</span>
+				<span class="shout_post_mobile" title="call owner">{{ shout.user.profile.Mobile }}</span>
 			</div>
 
 			<div class="clearfix">
-				{% if shout.Type < 2 and shout.get_images %}
+				{% if shout.type < 2 and shout.get_images %}
 					{% for image in shout.get_images %}
 						{% if forloop.first %}
 							<div class="shout_post_image" style="cursor: pointer;" rel="shout_{{ shout.pk }}" href="/image/{{ image.pk }}/i.png"><img src="/xhr/image/{{ image.pk }}/100/"></div>
@@ -41,21 +41,21 @@
 						{% endif %}
 					{% endfor %}
 				{% endif %}
-				<div class="shout_post_text">{{ shout.Text|linebreaks }}</div>
+				<div class="shout_post_text">{{ shout.text|linebreaks }}</div>
 			</div>
 
 			<div class="shout_post_tags">
 				{% for tag in shout.get_tags %}
-					<a class="post_tag hovercard unselectable" href="/tag/{{tag.Name}}/" hovercard-name="{{ tag.Name }}" hovercard-type="tag" hovercard-data="">{{ tag.Name }}</a>
+					<a class="post_tag hovercard unselectable" href="/tag/{{tag.name}}/" hovercard-name="{{ tag.name }}" hovercard-type="tag" hovercard-data="">{{ tag.name }}</a>
 				{% endfor %}
 			</div>
 
             <div class="shout_post_buttons">
-			{% if user.is_staff and  user.username != shout.OwnerUser.username%}
+			{% if user.is_staff and  user.username != shout.user.username%}
 				<a id="reply_to_{{shout.pk}}" class="btn" href="/shout/{{ shout.pk }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
 				<a class="shout_post_delete btn" shout_id="{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
             {%  else %}
-				{% if user.username == shout.OwnerUser.username %}
+				{% if user.username == shout.user.username %}
                 <a class="shout_post_delete btn" shout_id="{{shout.pk}}"><img src="{% static "img/delete.png"%}" title="Delete shout" /></a>
 				{% else %}
 					<a id="reply_to_{{shout.pk}}" class="btn" href="/shout/{{ shout.pk }}/" title="Message this Shouter"><img src="{% static "img/message2.png"%}" /></a>
@@ -64,7 +64,7 @@
             </div>
 
 			<div class="shout_post_location">
-				<span class="shout_post_location_address" >{{ shout.Address }}</span>
+				<span class="shout_post_location_address" >{{ shout.address }}</span>
 			</div>
 		</div>
 	</div>

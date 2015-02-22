@@ -65,7 +65,7 @@ def activate_api(request, token):
     if source_email is not None:
         email = source_email
 
-    user_controller.CompleteSignUp(request, request.user, token, t.Type, form.cleaned_data['username'], email,
+    user_controller.CompleteSignUp(request, request.user, token, t.type, form.cleaned_data['username'], email,
                                    form.cleaned_data['mobile'], bool(int(form.cleaned_data['sex'])), form.cleaned_data['birthday'])
     result.messages.append(('success', _('You are now activated.')))
     user_controller.give_user_permissions(request, ACTIVATED_USER_PERMISSIONS)
@@ -84,7 +84,7 @@ def activate_modal(request, token):
     t = ConfirmToken.getToken(token, False, False)
 
     if t:
-        type = t.Type
+        type = t.type
     else:
         result.errors.append(RESPONSE_RESULT_ERROR_404)
         return result
@@ -127,7 +127,7 @@ def activate_user(request):
         result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
         return result
 
-    type = t.Type
+    type = t.type
     source_email = None
     if t.Email and t.Email.strip() != '':
         source_email = t.Email
@@ -139,7 +139,7 @@ def activate_user(request):
                 result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
                 result.form_errors = form.errors
                 return result
-            user_controller.CompleteSignUpSSS(request, form.cleaned_data['firstname'], form.cleaned_data['lastname'],
+            user_controller.CompleteSignUpSSS(request, form.cleaned_data['first_name'], form.cleaned_data['last_name'],
                                               form.cleaned_data['password'], user, form.cleaned_data['username'], token, type,
                                               form.cleaned_data['email'], bool(int(form.cleaned_data['sex'])),
                                               form.cleaned_data['birthday'])
@@ -376,7 +376,7 @@ def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         form.is_valid()
-        user = user_controller.SignUpUser(request, form.cleaned_data['firstname'], form.cleaned_data['lastname'],
+        user = user_controller.SignUpUser(request, form.cleaned_data['first_name'], form.cleaned_data['last_name'],
                                           form.cleaned_data['password'], form.cleaned_data['email'])
         user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
     else:
@@ -463,7 +463,7 @@ def update_user_location(request):
         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
         return result
 
-    old_city = profile.City
+    old_city = profile.city
     location = {
         'country': country,
         'city': city,
@@ -472,11 +472,11 @@ def update_user_location(request):
     }
 
     profile = user_controller.update_profile_location(profile, location)
-    result.data['user_lat'] = profile.Latitude
-    result.data['user_lng'] = profile.Longitude
-    result.data['user_country'] = profile.Country
-    result.data['user_city'] = profile.City
-    result.data['user_city_encoded'] = to_seo_friendly(unicode.lower(unicode(profile.City)))
+    result.data['user_lat'] = profile.latitude
+    result.data['user_lng'] = profile.longitude
+    result.data['user_country'] = profile.country
+    result.data['user_city'] = profile.city
+    result.data['user_city_encoded'] = to_seo_friendly(unicode.lower(unicode(profile.city)))
 
     if city != old_city:
         realtime_controller.UnbindUserFromCity(request.user.username, old_city)
@@ -532,6 +532,7 @@ def edit_profile(request, username):
 def user_edit_profile(request, username):
     result = ResponseResult()
     profile = user_controller.get_profile(username)
+    user = profile.user
 
     result.data['user_profile'] = profile
     if request.method == 'POST':
@@ -545,11 +546,11 @@ def user_edit_profile(request, username):
         if 'email' in form.cleaned_data and form.cleaned_data['email']:
             profile.user.email = form.cleaned_data['email']
 
-        if 'firstname' in form.cleaned_data and form.cleaned_data['firstname']:
-            profile.user.first_name = form.cleaned_data['firstname']
+        if 'first_name' in form.cleaned_data and form.cleaned_data['first_name']:
+            profile.user.first_name = form.cleaned_data['first_name']
 
-        if 'lastname' in form.cleaned_data and form.cleaned_data['lastname']:
-            profile.user.last_name = form.cleaned_data['lastname']
+        if 'last_name' in form.cleaned_data and form.cleaned_data['last_name']:
+            profile.user.last_name = form.cleaned_data['last_name']
 
         if 'mobile' in form.cleaned_data and form.cleaned_data['mobile']:
             profile.Mobile = form.cleaned_data['mobile']
@@ -570,8 +571,8 @@ def user_edit_profile(request, username):
         result.messages.append(('success', _('Your profile was updated successfully.')))
     else:
         form = UserEditProfileForm(
-            initial={'email': profile.email, 'bio': profile.Bio, 'username': profile.username,
-                     'firstname': profile.user.first_name, 'lastname': profile.user.last_name,
+            initial={'email': user.email, 'bio': profile.Bio, 'username': user.username,
+                     'first_name': user.first_name, 'last_name': user.last_name,
                      'mobile': profile.Mobile, 'sex': int(profile.Sex), 'birthday': profile.birthday})
     result.data['form'] = form
     return result
@@ -591,14 +592,14 @@ def user_profile(request, username):
     result.data['profile'] = profile
     result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
 
-    result.data['offers_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_OFFER]).filter(OwnerUser=profile.user).count()
+    result.data['offers_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_OFFER]).filter(user=profile.user).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
 
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, profile.stream2)
 
     if isinstance(profile, Profile):
-        result.data['requests_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).filter(OwnerUser=profile.user).count()
+        result.data['requests_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).filter(user=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
         result.data['listening_count'] = {
             'users': stream_controller.get_user_listening(user=profile.user, listening_type=STREAM2_TYPE_PROFILE, count_only=True),
@@ -716,7 +717,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
             # todo: minimize the db queries
             # in the case of empty array the user requested this state so return it even if it is empty
             if listening_tags or listening_tags == []:
-                result.data['listening']['tags'] = [tag.Name for tag in listening_tags]
+                result.data['listening']['tags'] = [tag.name for tag in listening_tags]
             if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = [
                     {'username': p.username, 'name': p.name, 'image': thumbnail(p.image, 32)}
@@ -765,7 +766,7 @@ def user_stream(request, username):
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num
 
-    # result.data['shouts_count2'] = profile.Stream.Posts.filter(Q(Type=POST_TYPE_REQUEST) | Q(Type=POST_TYPE_OFFER)).count()
+    # result.data['shouts_count2'] = profile.Stream.Posts.filter(Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)).count()
     # result.data['shouts2'] = stream_controller.GetStreamShouts(profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num)
 
     result.data['shouts_count'] = stream_controller.get_stream_shouts_count(profile.Stream)

@@ -20,10 +20,10 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     video = models.OneToOneField('shoutit.Video', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     # Location attributes
-    Country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
-    City = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)
-    Latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
-    Longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
+    country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
+    city = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)
+    latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
+    longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
 
     class Meta(UUIDModel.Meta):
         abstract = True
@@ -36,7 +36,7 @@ class Profile(AbstractProfile):
     # todo: [listen] remove
     Following = models.ManyToManyField('shoutit.Stream', through='shoutit.FollowShip')
     Interests = models.ManyToManyField('shoutit.Tag', related_name='Followers')
-    Stream = models.OneToOneField('shoutit.Stream', related_name='OwnerUser', db_index=True)
+    Stream = models.OneToOneField('shoutit.Stream', related_name='user', db_index=True)
 
     # isBlocked = models.BooleanField(default=False)
 
@@ -89,18 +89,18 @@ class Profile(AbstractProfile):
     def name(self):
         return self.user.get_full_name()
 
-    def __getattribute__(self, name):
-        if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts', 'get_full_name']:
-            return getattr(self.user, name)
-        else:
-            # return getattr(self, name) < this can't be used here and will cause exit code 138 without any error message!
-            return object.__getattribute__(self, name)
-
-    def __setattr__(self, name, value):
-        if name in ['username', 'firstname', 'lastname', 'email', 'TagsCreated', 'Shouts', 'get_full_name']:
-            setattr(self.user, name, value)
-        else:
-            object.__setattr__(self, name, value)
+    # def __getattribute__(self, name):
+    #     if name in ['username', 'first_name', 'last_name', 'email', 'tagsCreated', 'Shouts', 'get_full_name']:
+    #         return getattr(self.user, name)
+    #     else:
+    #         # return getattr(self, name) < this can't be used here and will cause exit code 138 without any error message!
+    #         return object.__getattribute__(self, name)
+    #
+    # def __setattr__(self, name, value):
+    #     if name in ['username', 'first_name', 'last_name', 'email', 'tagsCreated', 'Shouts', 'get_full_name']:
+    #         setattr(self.user, name, value)
+    #     else:
+    #         object.__setattr__(self, name, value)
 
     def save(self, *args, **kwargs):
         # todo: check! do we really need to save the user on profile save?

@@ -320,7 +320,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {User Object} or {Tags Object} as described above
+          "results": [] // list of {User Object} or {tags Object} as described above
         }
         </code></pre>
         ---

@@ -77,7 +77,7 @@ def shout_form_validator(request, form_class, message='You have entered some inv
     validation_result = form_validator(request, form_class, _(message), initial)
     if validation_result.valid:
         if not request.user.is_active and Trade.objects.get_valid_trades().filter(
-                OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
+                user=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             return VR(False, messages=[
                 ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],
                       errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
@@ -96,7 +96,7 @@ def send_message_validator(request, shout_id, conversation_id):
             conversation = None
 
             # 3 - if there is no conversation_id, make sure user is not sending to himself
-            if not conversation_id and request.user.pk == shout.OwnerUser.pk:
+            if not conversation_id and request.user.pk == shout.user.pk:
                 return VR(False, messages=[('error', _("You can't start a conversation about your own shout."))])
 
             # 4 - if there is conversation_id, make sure the conversation exists
@@ -237,7 +237,7 @@ def reply_to_shout_validator(request, shout_id):
     result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id)
     if result:
         shout = result.data
-        if request.user.pk == shout.OwnerUser.pk:
+        if request.user.pk == shout.user.pk:
             return VR(False, messages=[('error', _("You can't start a conversation about your own shout."))])
         result.data = {
             'shout': shout,
@@ -254,7 +254,7 @@ def modify_shout_validator(request, shout_id):
     result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, True, True)
     if result:
         shout = result.data
-        if shout.OwnerUser == request.user or request.user.is_staff:
+        if shout.user == request.user or request.user.is_staff:
             return VR(True, data={'shout': shout})
         else:
             return VR(False, errors=[RESPONSE_RESULT_ERROR_FORBIDDEN],
@@ -390,7 +390,7 @@ def shout_owner_view_validator(request, shout_id):
     if result:
         shout = shout_controller.get_post(shout_id, True, True)
         if shout.is_expired:
-            if shout.OwnerUser != request.user and not request.user.is_staff:
+            if shout.user != request.user and not request.user.is_staff:
                 return VR(False, messages=[('error', _('Shout does not exist.'))], errors=[RESPONSE_RESULT_ERROR_404])
     return result
 
@@ -437,10 +437,10 @@ def edit_experience_validator(request, exp_id, *args, **kwargs):
 
 
 def delete_gallery_item_validator(request, item_id, *args, **kwargs):
-    result = object_exists_validator(GalleryItem.objects.filter, True, _('Gallery Item dose not exist.'), Item=Item.objects.get(pk=item_id),
+    result = object_exists_validator(GalleryItem.objects.filter, True, _('Gallery item dose not exist.'), item=Item.objects.get(pk=item_id),
                                      IsDisable=False)
     if result:
-        gallery_item = GalleryItem.objects.filter(Item=Item.objects.get(pk=item_id), IsDisable=False)[0]
+        gallery_item = GalleryItem.objects.filter(item=Item.objects.get(pk=item_id), IsDisable=False)[0]
         try:
             # galleries = request.user.Business.Galleries.all()
             galleries = business_controller.GetBusiness('business').Galleries.all()
@@ -480,7 +480,7 @@ def delete_comment_validator(request, comment_id):
     result = object_exists_validator(comment_controller.GetCommentByID, True, _('Comment dose not exist.'), comment_id)
     if result:
         comment = comment_controller.GetCommentByID(comment_id)
-        if comment.OwnerUser != request.user:
+        if comment.user != request.user:
             return VR(False, messages=[('error', _('You do not have permission to delete this comment'))])
     return result
 
@@ -489,6 +489,6 @@ def delete_event_validator(request, event_id):
     result = object_exists_validator(event_controller.get_event, True, _('Activity dose not exist.'), event_id)
     if result:
         event = event_controller.get_event(event_id)
-        if event.OwnerUser != request.user:
+        if event.user != request.user:
             return VR(False, messages=[('error', _('You do not have permission to delete this activity'))])
     return result

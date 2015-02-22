@@ -4,18 +4,18 @@
 {% load staticfiles %}
 
 {% block fb_og_meta %}
-	<meta property="og:type"   content="shoutitcom:{% if shout.Type == 0 %}request{% else %}offer{% endif %}" />
+	<meta property="og:type"   content="shoutitcom:{% if shout.type == 0 %}request{% else %}offer{% endif %}" />
 	<meta property="og:url"    content="{% shout_link shout %}" />
-	<meta property="og:title"  content="{{ shout.Item.Name|title }}" />
-	<meta property="shoutitcom:price"  content="{{ shout.Item.Price|price:shout.Item.Currency.Code }}" />
+	<meta property="og:title"  content="{{ shout.item.name|title }}" />
+	<meta property="shoutitcom:price"  content="{{ shout.item.Price|price:shout.item.Currency.Code }}" />
 	{% if shout.get_images %}
 		{% with myimg=shout.get_images|key:0  %}
 			<meta property="og:image"  content="{{ myimg.image|secure_url }}" />
 		{% endwith %}
 	{% else %}
-		<meta property="og:image"  content="{{ settings.SITE_LINK }}static/img/{% if shout.Type == 0 %}fb_og_request.png{% else %}fb_og_offer.png{% endif %}" />
+		<meta property="og:image"  content="{{ settings.SITE_LINK }}static/img/{% if shout.type == 0 %}fb_og_request.png{% else %}fb_og_offer.png{% endif %}" />
 	{% endif %}
-	<meta property="og:description" content="{{ shout.Text|striptags|truncatewords:30|safe }}"/>
+	<meta property="og:description" content="{{ shout.text|striptags|truncatewords:30|safe }}"/>
 {% endblock %}
 {% block content %}
     <div class="modal fade in" id="map_modal">
@@ -23,7 +23,7 @@
             <a class="close" data-dismiss="modal">×</a>
         </div>
         <div class="modal-title">
-            {{ shout.Item.Name|title }}
+            {{ shout.item.name|title }}
         </div>
         <div class="modal-body">
             <div class="map"></div>
@@ -188,7 +188,7 @@
             var f = function () {
                 if (!mapLoaded) {
                     ViewShoutMap = new GoogleMap('.map',null);
-                    ViewShoutMap.CreateViewShoutMap({{ shout.Latitude }}, {{ shout.Longitude }}, {{ shout.Type }});
+                    ViewShoutMap.CreateViewShoutMap({{ shout.latitude }}, {{ shout.longitude }}, {{ shout.type }});
                     mapLoaded = true;
                 }
             };

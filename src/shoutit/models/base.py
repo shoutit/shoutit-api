@@ -110,24 +110,24 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             elif hasattr(self, 'business'):
                 self._abstract_profile = self.business
             else:
-                self._abstract_profile = None
+                raise AttributeError("user has neither 'profile' nor 'business'")
         return self._abstract_profile
 
     @property
     def latitude(self):
-        return self.abstract_profile and self.abstract_profile.Latitude
+        return self.abstract_profile.latitude
 
     @property
     def longitude(self):
-        return self.abstract_profile and self.abstract_profile.Longitude
+        return self.abstract_profile.longitude
 
     @property
     def city(self):
-        return self.abstract_profile and self.abstract_profile.City
+        return self.abstract_profile.city
 
     @property
     def country(self):
-        return self.abstract_profile and self.abstract_profile.Country
+        return self.abstract_profile.country
 
     @property
     def location(self):
@@ -143,7 +143,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if hasattr(self, 'profile'):
             return self.get_full_name()
         elif hasattr(self, 'business'):
-            return self.Business.Name
+            return self.Business.name
         else:
             return None
 

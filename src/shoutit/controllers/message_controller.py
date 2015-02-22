@@ -37,7 +37,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
     conversation.VisibleToRecivier = True
     conversation.save()
 
-    message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, Text=text if text else None)
+    message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, text=text if text else None)
     message.save()
 
     if not attachments:
@@ -78,12 +78,12 @@ def getFullConversationDetails(conversations, user):
     if shout_pks:
         tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout_pk) for shout_pk in shout_pks])])
-        tags_with_shout_id = list(tags.values('pk', 'Name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__pk'))
+        tags_with_shout_id = list(tags.values('pk', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__pk'))
 
     else:
         tags_with_shout_id = []
 
-    images = StoredImage.objects.filter(Item__pk__in=[conversation.AboutPost.Item.pk for conversation in conversations]).order_by('image')
+    images = StoredImage.objects.filter(item__pk__in=[conversation.AboutPost.item.pk for conversation in conversations]).order_by('image')
 
     empty_conversations_to = []
     empty_conversations_from = []
@@ -95,10 +95,10 @@ def getFullConversationDetails(conversations, user):
             else:
                 empty_conversations_to.append(conversation.pk)
             continue
-        conversation.AboutPost.set_images([image for image in images if image.Item.pk == conversation.AboutPost.Item.pk])
+        conversation.AboutPost.set_images([image for image in images if image.item.pk == conversation.AboutPost.item.pk])
         conversation.AboutPost.set_tags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == conversation.AboutPost.pk])
         last_message = list(conversation.messages)[-1]
-        conversation.Text = last_message.Text[0:256] if last_message.Text else "attachment"
+        conversation.text = last_message.text[0:256] if last_message.text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
         conversation.With = conversation.FromUser if conversation.FromUser != user else conversation.ToUser
         conversation.IsRead = False if [1 if message.ToUser == user and not message.IsRead else 0 for message in
@@ -118,12 +118,12 @@ def ReadConversations(user, start_index=None, end_index=None):
                      'ToUser',
                      'ToUser__Profile',
                      'AboutPost',
-                     'AboutPost__Item',
-                     'AboutPost__Item__Currency',
-                     'AboutPost__Item__Images',
+                     'AboutPost__item',
+                     'AboutPost__item__Currency',
+                     'AboutPost__item__Images',
                      'AboutPost__shout',
-                     'AboutPost__OwnerUser',
-                     'AboutPost__OwnerUser__Profile').annotate(max_date=Max('Messages__DateCreated')).order_by(
+                     'AboutPost__user',
+                     'AboutPost__user__Profile').annotate(max_date=Max('Messages__DateCreated')).order_by(
         '-max_date')[start_index:end_index]
     return getFullConversationDetails(conversations, user)
 
@@ -159,20 +159,20 @@ def get_conversation(conversation_id, user=None):
 def get_shout_conversations(shout_id, user):
     # todo: simplify
     shout = shout_controller.get_post(shout_id, True, True)
-    if user.is_authenticated() and user.pk == shout.OwnerUser.pk:
+    if user.is_authenticated() and user.pk == shout.user.pk:
         conversations = Conversation.objects.filter(AboutPost=shout, ToUser=user, VisibleToRecivier=True).annotate(
             max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__Profile', 'FromUser',
-                                                                  'FromUser__Profile', 'AboutPost', 'AboutPost__Item',
-                                                                  'AboutPost__Item__Currency', 'AboutPost__shout',
-                                                                  'AboutPost__shout__Tags',
+                                                                  'FromUser__Profile', 'AboutPost', 'AboutPost__item',
+                                                                  'AboutPost__item__Currency', 'AboutPost__shout',
+                                                                  'AboutPost__shout__tags',
                                                                   'AboutPost__shout__Images').order_by('-max_date')
         conversations = getFullConversationDetails(conversations, user)
     elif user.is_authenticated():
         conversations = Conversation.objects.filter(AboutPost=shout, FromUser=user, VisibleToSender=True).annotate(
             max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__Profile', 'FromUser',
-                                                                  'FromUser__Profile', 'AboutPost', 'AboutPost__Item',
-                                                                  'AboutPost__Item__Currency', 'AboutPost__shout',
-                                                                  'AboutPost__shout__Tags',
+                                                                  'FromUser__Profile', 'AboutPost', 'AboutPost__item',
+                                                                  'AboutPost__item__Currency', 'AboutPost__shout',
+                                                                  'AboutPost__shout__tags',
                                                                   'AboutPost__shout__Images').order_by('-max_date')
         conversations = getFullConversationDetails(conversations, user)
     else:
@@ -347,7 +347,7 @@ def message2_from_message(message):
     # get or create Message2
     message2, m2_created = Message2.objects.get_or_create(id=message.id, conversation=conversation2, user=message.FromUser)
     if m2_created:
-        message2.message = message.Text
+        message2.message = message.text
         message2.save()
 
     conversation2.last_message = message2

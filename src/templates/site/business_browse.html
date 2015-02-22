@@ -31,7 +31,7 @@
             <div style="display: inline-block;">
               <ul class="dropdown_search">
                 {% if user.is_authenticated %}
-                  <li id="location_search_id" {% if user.is_authenticated %}title="Click to change your City" class="search_location"
+                  <li id="location_search_id" {% if user.is_authenticated %}title="Click to change your city" class="search_location"
                       data-target="#MapModal" {% else %} class="search_location not_logged" {% endif %}data-toggle="modal">
                     <span class="icon-map-marker"></span>
                     <label class="browse_in">{{ browse_city }}</label>
@@ -42,7 +42,7 @@
                       class="caret dropdown-toggle" style=""></b>
                     <ul class="">
                       {% for predefined_city in predefined_cities_approved %}
-                        <li><a href="/{{ browse_type }}/{{ predefined_city.city_encoded }}/">{{ predefined_city.City }}</a></li>
+                        <li><a href="/{{ browse_type }}/{{ predefined_city.city_encoded }}/">{{ predefined_city.city }}</a></li>
                       {% endfor %}
                     </ul>
                   </li>
@@ -70,9 +70,9 @@
                 <li><a class="btn {% if not browse_category %}selected_category{% endif %} all_categories"
                        href="/{{ browse_type }}/{{ browse_city_encoded }}/" data-category="All">{% trans "All" %}</a></li>
                 {% for category in categories %}
-                  <li><a class="btn {% if browse_category == category.Name|lower %}selected_category{% endif %}"
-                         href="/{{ browse_type }}/{{ browse_city_encoded }}/{{ category.Name|lower }}/"
-                         data-category="{{ category.Name }}">{% trans category.Name %}</a></li>
+                  <li><a class="btn {% if browse_category == category.name|lower %}selected_category{% endif %}"
+                         href="/{{ browse_type }}/{{ browse_city_encoded }}/{{ category.name|lower }}/"
+                         data-category="{{ category.name }}">{% trans category.name %}</a></li>
                 {% endfor %}
               </ul>
             </div>
@@ -214,7 +214,7 @@
 
       {#            landing_map = new GoogleMap("#Map");#}
       {#            {% if user.is_authenticated %}#}
-      {#                landing_map.CreateLandingMap({{ user.profile.Latitude }},{{ user.profile.Longitude }});#}
+      {#                landing_map.CreateLandingMap({{ user.profile.latitude }},{{ user.profile.longitude }});#}
       {#            {% else %}#}
       {#                landing_map.CreateLandingMap(0,0);#}
       {#            {% endif %}#}

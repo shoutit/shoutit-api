@@ -41,7 +41,7 @@ def view_experience(request, exp_id):
         result.data['thumb_up_count'] = thumps_count['ups']
         result.data['thumb_down_count'] = thumps_count['downs']
         result.data['page_title'] = '%s Experience with %s' % ('Bad' if experience.State == 0 else 'Good', experience.AboutBusiness.name)
-        result.data['page_desc'] = experience.Text
+        result.data['page_desc'] = experience.text
         result.data['is_fb_og'] = True
     result.data['report_form'] = ReportForm()
     result.data['comment_form'] = CommentForm()
@@ -99,8 +99,8 @@ def get_business_initials(username):
         return {}
     business = GetBusiness(username)
     cat = business.Category and business.Category.pk or 0
-    init = {'name': business.Name, 'category': cat, 'location': str(business.Latitude) + ', ' + str(business.Longitude),
-            'country': business.Country, 'city': business.City, 'address': business.Address, 'username': username}
+    init = {'name': business.name, 'category': cat, 'location': str(business.latitude) + ', ' + str(business.longitude),
+            'country': business.country, 'city': business.city, 'address': business.address, 'username': username}
     return init
 
 

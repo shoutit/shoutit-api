@@ -73,7 +73,7 @@
 
   $(document).ready(function () {
     var shout_map = new GoogleMap("#business_edit_map", "location input");
-    shout_map.CreateShoutMap("business_location_input_search", "city input", "country input", "address input", {{ profile.Latitude }}, {{ profile.Longitude }}, "sell");
+    shout_map.CreateShoutMap("business_location_input_search", "city input", "country input", "address input", {{ profile.latitude }}, {{ profile.longitude }}, "sell");
   });
 
   var uploader = new qq.FileUploader({

@@ -6,7 +6,7 @@ from common.constants import *
 
 
 def PostExperience(user, state, text, businessProfile):
-    exp = Experience(State=state, Text=text, AboutBusiness=businessProfile, OwnerUser=user, Type=int(POST_TYPE_EXPERIENCE))
+    exp = Experience(State=state, text=text, AboutBusiness=businessProfile, user=user, type=int(POST_TYPE_EXPERIENCE))
     exp.save()
     businessProfile.Stream.PublishShout(exp)
     businessProfile.stream2.add_post(exp)
@@ -21,10 +21,10 @@ def PostExperience(user, state, text, businessProfile):
 def ShareExperience(user, exp_id):
     experience = shout_controller.get_post(exp_id)
     if experience:
-        shared = SharedExperience(Experience=experience, OwnerUser=user)
+        shared = SharedExperience(Experience=experience, user=user)
         shared.save()
         event_controller.register_event(user, EVENT_TYPE_SHARE_EXPERIENCE, shared)
-        notifications_controller.notify_user_of_exp_shared(experience.OwnerUser, shared)
+        notifications_controller.notify_user_of_exp_shared(experience.user, shared)
         return shared
     else:
         raise ObjectDoesNotExist()
@@ -33,28 +33,28 @@ def ShareExperience(user, exp_id):
 def EditExperience(exp_id, state, text):
     experience = shout_controller.get_post(exp_id)
     experience.State = state
-    experience.Text = text
+    experience.text = text
     experience.save()
     return experience
 
 
 def GetUsersSharedExperience(exp_id):
-    experience_sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'OwnerUser',
-                                                                                                         'OwnerUser__Profile')
-    return [sharedExperience.OwnerUser for sharedExperience in experience_sharedExperiences]
+    experience_sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'user',
+                                                                                                         'user__Profile')
+    return [sharedExperience.user for sharedExperience in experience_sharedExperiences]
 
 
 def GetExperience(exp_id, user, detailed=False):
     experience = Experience.objects.get_valid_experiences().filter(pk=exp_id).select_related('AboutBusiness', 'AboutBusiness__Profile',
-                                                                                           'OwnerUser', 'OwnerUser__Profile').order_by(
-        '-DatePublished')
+                                                                                           'user', 'user__Profile').order_by(
+        '-date_published')
     if experience:
         experience = experience[0]
         experience.detailed = detailed
         if detailed:
-            sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'OwnerUser',
-                                                                                                      'OwnerUser__Profile')
-            comments = Comment.objects.filter(AboutPost__pk=exp_id).select_related('AboutPost', 'OwnerUser', 'OwnerUser__Profile')
+            sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'user',
+                                                                                                      'user__Profile')
+            comments = Comment.objects.filter(AboutPost__pk=exp_id).select_related('AboutPost', 'user', 'user__Profile')
             getDetailedExperience(user, experience, sharedExperiences, comments)
         return experience
     else:
@@ -62,23 +62,23 @@ def GetExperience(exp_id, user, detailed=False):
 
 
 def GetExperiences(user, owner_user=None, about_business=None, start_index=None, end_index=None, detailed=False, city=None):
-    experiences_posts = Post.objects.filter(Type=POST_TYPE_EXPERIENCE)
+    experiences_posts = Post.objects.filter(type=POST_TYPE_EXPERIENCE)
     if owner_user:
-        experiences_posts = experiences_posts.filter(OwnerUser=owner_user)
+        experiences_posts = experiences_posts.filter(user=owner_user)
     if about_business:
         experiences_posts = experiences_posts.filter(experience__AboutBusiness=about_business)
     if city:
-        experiences_posts = experiences_posts.filter(experience__AboutBusiness__City=city)
+        experiences_posts = experiences_posts.filter(experience__AboutBusiness__city=city)
     experiences_post_ids = experiences_posts.values('pk')
 
     experiences = Experience.objects.get_valid_experiences().filter(pk__in=experiences_post_ids).select_related('AboutBusiness',
                                                                                                               'AboutBusiness__Profile',
-                                                                                                              'OwnerUser',
-                                                                                                              'OwnerUser__Profile').order_by(
-        '-DatePublished')[start_index:end_index]
-    sharedExperiences = SharedExperience.objects.filter(Experience__pk__in=experiences_post_ids).select_related('Experience', 'OwnerUser',
-                                                                                                                'OwnerUser__Profile')
-    comments = Comment.objects.filter(AboutPost__pk__in=experiences_post_ids).select_related('AboutPost', 'OwnerUser', 'OwnerUser__Profile')
+                                                                                                              'user',
+                                                                                                              'user__Profile').order_by(
+        '-date_published')[start_index:end_index]
+    sharedExperiences = SharedExperience.objects.filter(Experience__pk__in=experiences_post_ids).select_related('Experience', 'user',
+                                                                                                                'user__Profile')
+    comments = Comment.objects.filter(AboutPost__pk__in=experiences_post_ids).select_related('AboutPost', 'user', 'user__Profile')
 
     for experience in experiences:
         experience.detailed = detailed
@@ -88,8 +88,8 @@ def GetExperiences(user, owner_user=None, about_business=None, start_index=None,
 
 
 def GetBusinessThumbsCount(business):
-    ups = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_UP.value).values('OwnerUser').distinct().count()
-    downs = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_DOWN.value).values('OwnerUser').distinct().count()
+    ups = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_UP.value).values('user').distinct().count()
+    downs = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_DOWN.value).values('user').distinct().count()
     return {
     'ups': ups,
     'downs': downs
@@ -98,21 +98,21 @@ def GetBusinessThumbsCount(business):
 
 def GetExperiencesCount(profile):
     if profile and isinstance(profile, Profile):
-        return profile.Stream.Posts.filter(Type=POST_TYPE_EXPERIENCE).count()
+        return profile.Stream.Posts.filter(type=POST_TYPE_EXPERIENCE).count()
     elif profile and isinstance(profile, Business):
-        return Post.objects.filter(Type=POST_TYPE_EXPERIENCE, experience__AboutBusiness=profile).count()
+        return Post.objects.filter(type=POST_TYPE_EXPERIENCE, experience__AboutBusiness=profile).count()
 
 
 def getDetailedExperience(user, experience, sharedExperiences, comments):
-    experience.usersSharedExperience = [sharedExperience.OwnerUser for sharedExperience in sharedExperiences if
+    experience.usersSharedExperience = [sharedExperience.user for sharedExperience in sharedExperiences if
                                         sharedExperience.Experience.pk == experience.pk]
-    experience.comments = [comment for comment in comments if comment.AboutPost.pk == experience.pk and not comment.IsDisabled]
+    experience.comments = [comment for comment in comments if comment.AboutPost.pk == experience.pk and not comment.is_disabled]
 
     experience.sharedExpsCount = len(experience.usersSharedExperience)
     experience.commentsCount = len(experience.comments)
-    experience.canShare = user != experience.OwnerUser and user != experience.AboutBusiness.user and user not in experience.usersSharedExperience
-    experience.canEdit = user == experience.OwnerUser and not experience.sharedExpsCount and not experience.commentsCount
-    experience.isOwner = True if experience.OwnerUser == user else False
+    experience.canShare = user != experience.user and user != experience.AboutBusiness.user and user not in experience.usersSharedExperience
+    experience.canEdit = user == experience.user and not experience.sharedExpsCount and not experience.commentsCount
+    experience.isOwner = True if experience.user == user else False
 
 
 from shoutit.controllers import event_controller, shout_controller, notifications_controller, \

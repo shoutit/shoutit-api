@@ -450,9 +450,9 @@ function getTopTags(city){
 				var tag = data.data.tags[i];
 				var tag_bool = tag.is_listening;
 				if(tag_bool==true){
-					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Stop listening')+'"  class="tag_listening"></span></div></li>';
+					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.name+'</a><span data-tag="'+tag.name+'" title="'+gettext('Stop listening')+'"  class="tag_listening"></span></div></li>';
 				}else{
-					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.Name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.Name+'</a><span data-tag="'+tag.Name+'" title="'+gettext('Listen')+'" class="tag_listening tag_non_listening"></span></div></li>';
+					var tag_html = '<li><div class="tag"><a href="/tag/' + tag.name + '/" class="tag_name" data-is_listening="' + tag_bool + '">'+tag.name+'</a><span data-tag="'+tag.name+'" title="'+gettext('Listen')+'" class="tag_listening tag_non_listening"></span></div></li>';
 				}
 				$('#tags ul').append(tag_html);
 			}

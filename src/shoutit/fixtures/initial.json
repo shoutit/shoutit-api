@@ -3,27 +3,27 @@
     "pk": "4dd03aff-338a-4c13-83e8-7d7b882cfb6e",
     "model": "shoutit.currency",
     "fields": {
-      "Country": "AE",
+      "country": "AE",
       "Code": "AED",
-      "Name": "Dirham"
+      "name": "Dirham"
     }
   },
   {
     "pk": "32d4ead9-da5d-4dda-8b24-4a44c91d98d7",
     "model": "shoutit.currency",
     "fields": {
-      "Country": "US",
+      "country": "US",
       "Code": "USD",
-      "Name": "Dollar"
+      "name": "Dollar"
     }
   },
   {
     "pk": "d1fe5bc8-7958-4ee4-8c8a-8c982c1c46cd",
     "model": "shoutit.currency",
     "fields": {
-      "Country": "EU",
+      "country": "EU",
       "Code": "EUR",
-      "Name": "Euro"
+      "name": "Euro"
     }
   },
 
@@ -32,11 +32,11 @@
     "pk": "7e2631fb-36a0-4d31-b3ae-64eb8a886672",
     "model": "shoutit.predefinedcity",
     "fields": {
-      "City": "Dubai",
+      "city": "Dubai",
       "city_encoded": "dubai",
-      "Country": "AE",
-      "Latitude": 25.1993957,
-      "Longitude": 55.2738326,
+      "country": "AE",
+      "latitude": 25.1993957,
+      "longitude": 55.2738326,
       "Approved": true
     }
   },
@@ -44,11 +44,11 @@
     "pk": "4cbcabaa-8aa5-404c-8bf9-c05da93c3cce",
     "model": "shoutit.predefinedcity",
     "fields": {
-      "City": "Aachen",
+      "city": "Aachen",
       "city_encoded": "aachen",
-      "Country": "DE",
-      "Latitude": 50.7738792,
-      "Longitude": 6.0844869,
+      "country": "DE",
+      "latitude": 50.7738792,
+      "longitude": 6.0844869,
       "Approved": true
     }
   },
@@ -56,11 +56,11 @@
     "pk": "e8ed3e71-7e87-4479-96d5-eb93d772a858",
     "model": "shoutit.predefinedcity",
     "fields": {
-      "City": "Berlin",
+      "city": "Berlin",
       "city_encoded": "berlin",
-      "Country": "DE",
-      "Latitude": 52.522594,
-      "Longitude": 13.402388,
+      "country": "DE",
+      "latitude": 52.522594,
+      "longitude": 13.402388,
       "Approved": true
     }
   },
@@ -113,7 +113,7 @@
     "pk": "19f6e681-f738-4c90-a1dd-9101da41a455",
     "model": "shoutit.stream",
     "fields": {
-      "Type": 0
+      "type": 0
     }
   },
 
@@ -121,7 +121,7 @@
     "pk": "4938A8F7-79A1-43AC-BD99-849E59D32E04",
     "model": "shoutit.stream",
     "fields": {
-      "Type": 0
+      "type": 0
     }
   },
 
@@ -131,18 +131,18 @@
     "model": "shoutit.profile",
     "fields": {
       "isSSS": false,
-      "City": "Dubai",
+      "city": "Dubai",
       "Stream": "19f6e681-f738-4c90-a1dd-9101da41a455",
       "Bio": "Shoutit Master!",
       "Mobile": null,
-      "Country": "AE",
+      "country": "AE",
       "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
-      "Longitude": 55.2738326,
+      "longitude": 55.2738326,
       "Sex": true,
       "isSMS": false,
       "birthday": null,
       "user": "5a767f4e-20b0-4685-8e03-94e00ad00650",
-      "Latitude": 25.1993957,
+      "latitude": 25.1993957,
       "Interests": [],
       "LastToken": null,
       "created_at": "2014-09-03T00:46:18",
@@ -155,18 +155,18 @@
     "model": "shoutit.profile",
     "fields": {
       "isSSS": false,
-      "City": "Dubai",
+      "city": "Dubai",
       "Stream": "4938A8F7-79A1-43AC-BD99-849E59D32E04",
       "Bio": "Shoutit Master 2!",
       "Mobile": null,
-      "Country": "AE",
+      "country": "AE",
       "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/2a41e1c0ff0b.jpg",
-      "Longitude": 55.2738326,
+      "longitude": 55.2738326,
       "Sex": true,
       "isSMS": false,
       "birthday": null,
       "user": "D7A555BA-8618-4962-A46B-E342AFF21AFA",
-      "Latitude": 25.1993957,
+      "latitude": 25.1993957,
       "Interests": [],
       "LastToken": null,
       "created_at": "2014-09-03T00:46:18",
@@ -549,9 +549,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:01:59.319",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:01:59.320",
-      "Name": "autos",
+      "name": "autos",
       "TopTag": null
     }
   },
@@ -560,9 +560,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:01:05.156",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:01:05.156",
-      "Name": "electronics",
+      "name": "electronics",
       "TopTag": null
     }
   },
@@ -571,9 +571,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:02:20.755",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:02:20.755",
-      "Name": "fashion",
+      "name": "fashion",
       "TopTag": null
     }
   },
@@ -582,9 +582,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:03:10.394",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:03:10.394",
-      "Name": "household",
+      "name": "household",
       "TopTag": null
     }
   },
@@ -593,9 +593,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:03:39.616",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:03:39.616",
-      "Name": "pets",
+      "name": "pets",
       "TopTag": null
     }
   },
@@ -604,9 +604,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:03:30.166",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:03:30.167",
-      "Name": "services",
+      "name": "services",
       "TopTag": null
     }
   },
@@ -615,9 +615,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:04:40.137",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:04:40.137",
-      "Name": "jobs",
+      "name": "jobs",
       "TopTag": null
     }
   },
@@ -626,9 +626,9 @@
     "model": "shoutit.category",
     "fields": {
       "created_at": "2015-01-30T01:01:24.907",
-      "Tags": [],
+      "tags": [],
       "modified_at": "2015-01-30T01:01:24.907",
-      "Name": "properties",
+      "name": "properties",
       "TopTag": null
     }
   }

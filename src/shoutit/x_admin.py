@@ -14,8 +14,8 @@ from django.utils.translation import ugettext_lazy as _
 
 # Shout
 class ShoutAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'DatePublished', 'OwnerUser', 'Text', 'CountryCode', 'ProvinceCode')
-    readonly_fields = ('OwnerUser', 'Streams', 'Tags')
+    list_display = ('pk', 'date_published', 'user', 'text', 'country', 'city')
+    readonly_fields = ('user', 'Streams', 'tags')
 
 
 admin.site.register(Shout, ShoutAdmin)
@@ -24,22 +24,22 @@ admin.site.register(Shout, ShoutAdmin)
 # Trade
 class TradeAdmin(admin.ModelAdmin):
     list_display = (
-        'pk', 'BaseDatePublished', 'Owner', 'OwnerProfile', 'Type', 'Item', 'Text', 'CountryCode', 'ProvinceCode', 'IsSSS', 'IsDisabled')
-    list_filter = ('Type', 'IsSSS', 'IsDisabled')
-    readonly_fields = ('OwnerUser', 'Streams', 'Tags', 'RelatedStream', 'RecommendedStream', 'StreamsCode', 'Item')
+        'pk', 'base_date_published', 'Owner', 'OwnerProfile', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
+    list_filter = ('type', 'is_sss', 'is_disabled')
+    readonly_fields = ('user', 'Streams', 'tags', 'related_stream', 'recommended_stream', 'StreamsCode', 'item')
 
     def Owner(self, obj):
         return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
-            '/admin/auth/user/', obj.OwnerUser.username, obj.OwnerUser, obj.OwnerUser.username)
+            '/admin/auth/user/', obj.user.username, obj.user, obj.user.username)
 
     Owner.allow_tags = True
     Owner.short_description = 'Owner User'
 
     def OwnerProfile(self, obj):
-        if hasattr(obj.OwnerUser, 'profile') and obj.OwnerUser.profile:
-            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.OwnerUser.profile.pk, obj.OwnerUser.profile)
-        elif hasattr(obj.OwnerUser, 'Business') and obj.OwnerUser.Business:
-            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessprofile/', obj.OwnerUser.Business.pk, obj.OwnerUser.Business)
+        if hasattr(obj.user, 'profile') and obj.user.profile:
+            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.user.profile.pk, obj.user.profile)
+        elif hasattr(obj.user, 'Business') and obj.user.Business:
+            return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessprofile/', obj.user.Business.pk, obj.user.Business)
 
     OwnerProfile.allow_tags = True
     OwnerProfile.short_description = 'Owner Profile/Business'
@@ -50,7 +50,7 @@ admin.site.register(Trade, TradeAdmin)
 
 # Post
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('pk',  'OwnerUser', 'Type', 'Text', 'CountryCode', 'ProvinceCode', 'IsMuted', 'IsDisabled')
+    list_display = ('pk',  'user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
 
 admin.site.register(Post, PostAdmin)
 
@@ -59,8 +59,8 @@ admin.site.register(Item)
 
 # Experience
 class ExperienceAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'OwnerUser', 'AboutBusiness', 'State', 'Text')
-    search_fields = ['AboutBusiness__Name', 'Text']
+    list_display = ('pk', 'user', 'AboutBusiness', 'State', 'text')
+    search_fields = ['AboutBusiness__name', 'text']
     readonly_fields = ('Streams', 'AboutBusiness')
 
 
@@ -95,10 +95,10 @@ admin.site.register(User, CustomUserAdmin)
 
 # Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'user', 'Country', 'City', 'Sex', 'image', 'Stream')
+    list_display = ('pk', 'name', 'user', 'country', 'city', 'Sex', 'image', 'Stream')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
-    list_filter = ('Country', 'City', 'Sex')
+    list_filter = ('country', 'city', 'Sex')
 
 
 admin.site.register(Profile, ProfileAdmin)
@@ -122,8 +122,8 @@ admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
 
 # Business
 class BusinessProfileAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'user', 'Country', 'City', 'Category', 'Confirmed', 'Stream')
-    search_fields = ['Name', 'user__email', 'Website', 'Mobile']
+    list_display = ('pk', 'name', 'user', 'country', 'city', 'Category', 'Confirmed', 'Stream')
+    search_fields = ['name', 'user__email', 'Website', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
 
 
@@ -132,8 +132,8 @@ admin.site.register(Business, BusinessProfileAdmin)
 
 # BusinessCreateApplication
 # class BusinessCreateApplicationAdmin(admin.ModelAdmin):
-# list_display = ('Name', 'user', 'Business','confirmation_url','Country', 'City', 'Status')
-# search_fields = ['Name', 'user__email','Website', 'Phone']
+# list_display = ('name', 'user', 'Business','confirmation_url','country', 'city', 'Status')
+# search_fields = ['name', 'user__email','Website', 'Phone']
 # readonly_fields = ('user','Business','LastToken')
 #     list_filter = ('Status',)
 #     actions = ['accept_business', 'reject_business']
@@ -170,8 +170,8 @@ admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 
 # BusinessCategory
 class BusinessCategoryAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'Name', 'Source', 'SourceID', 'Parent')
-    search_fields = ['Name', 'Parent__Name']
+    list_display = ('pk', 'name', 'Source', 'SourceID', 'Parent')
+    search_fields = ['name', 'Parent__name']
 
 
 admin.site.register(BusinessCategory, BusinessCategoryAdmin)
@@ -189,8 +189,8 @@ admin.site.register(FollowShip, FollowShipAdmin)
 
 # Tag
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'Name', 'Stream')
-    search_fields = ['pk', 'Name']
+    list_display = ('pk', 'name', 'Stream')
+    search_fields = ['pk', 'name']
 
 
 admin.site.register(Tag, TagAdmin)
@@ -207,8 +207,8 @@ admin.site.register(Conversation, ConversationAdmin)
 
 # Message
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'Text', 'DateCreated', 'IsRead')
-    search_fields = ['FromUser__username', 'ToUser__username', 'Text']
+    list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'text', 'DateCreated', 'IsRead')
+    search_fields = ['FromUser__username', 'ToUser__username', 'text']
 
 
 admin.site.register(Message, MessageAdmin)
@@ -234,8 +234,8 @@ class RequestAdmin(admin.ModelAdmin):
 
 # Report
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('user', 'attached_object', 'content_type', 'Text', 'IsSolved', 'IsDisabled')
-    list_filter = ('IsSolved', 'IsDisabled')
+    list_display = ('user', 'attached_object', 'content_type', 'text', 'IsSolved', 'is_disabled')
+    list_filter = ('IsSolved', 'is_disabled')
     actions = ['mark_as_solved', 'mark_as_disabled']
     readonly_fields = ('user', 'attached_object', 'content_type')
 
@@ -245,7 +245,7 @@ class ReportAdmin(admin.ModelAdmin):
     mark_as_solved.short_description = "Mark selected reports as solved"
 
     def mark_as_disabled(self, request, queryset):
-        queryset.update(IsDisabled=True)
+        queryset.update(is_disabled=True)
 
     mark_as_disabled.short_description = "Mark selected reports as disabled"
 

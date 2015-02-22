@@ -33,13 +33,13 @@ def render_in_master_page(request, template, variables, page_title='', page_desc
     variables['report_constants'] = constants.report_types
     variables['settings'] = settings
 
-    city = request.user.profile.City if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(City=city)
+    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
+    pre_city = PredefinedCity.objects.get(city=city)
 
-    variables['user_lat'] = pre_city.Latitude
-    variables['user_lng'] = pre_city.Longitude
-    variables['user_country'] = pre_city.Country
-    variables['user_city'] = pre_city.City
+    variables['user_lat'] = pre_city.latitude
+    variables['user_lng'] = pre_city.longitude
+    variables['user_country'] = pre_city.country
+    variables['user_city'] = pre_city.city
     variables['user_city_encoded'] = pre_city.city_encoded
 
     if 'loop' in request.GET:
@@ -160,10 +160,10 @@ def index_mobile(request, result, *args, **kwargs):
 
 def activate_modal_mobile(request, result, token):
     result.data['link'] = "shoutit.com%s" % '/' + token + '/'
-    shout = Trade.objects.get_valid_trades().filter(OwnerUser=request.user).select_related('Item')
+    shout = Trade.objects.get_valid_trades().filter(user=request.user).select_related('item')
     content = ''
     if len(shout):
-        content = shout[0].Item.Name
+        content = shout[0].item.name
     result.data['content'] = content
     return page_html(request, result, 'mobile_activation.html')
 
@@ -725,24 +725,24 @@ def activate_modal_html(request, result, token):
 
         link = settings.SITE_LINK
 
-        if t.Type == int(constants.TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE):
+        if t.type == int(constants.TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE):
             request.session['business_user_id'] = user.pk
             response = HttpResponseRedirect('/bsignup/')
             response.set_cookie('ba_t_' + request.session.session_key, token)
             return response
 
-        if t.Type == int(constants.TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM):
+        if t.type == int(constants.TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM):
             response = HttpResponseRedirect(link + '#confirm_business')
             response.set_cookie('bc_t_' + request.session.session_key, token)
             return response
 
-        shout = Trade.objects.get_valid_trades().filter(OwnerUser=t.user)
+        shout = Trade.objects.get_valid_trades().filter(user=t.user)
         if len(shout):
             url = shout_link(shout[0])
         else:
             url = link
 
-        if t.Type == int(constants.TOKEN_TYPE_RECOVER_PASSWORD) and request.user.is_authenticated():
+        if t.type == int(constants.TOKEN_TYPE_RECOVER_PASSWORD) and request.user.is_authenticated():
             response = HttpResponseRedirect(link + 'user/' + request.user.username + '/#edit')
             return response
 
@@ -920,9 +920,9 @@ def gallery_items_stream_json(request, result):
 def post_experience_json_renderer(request, result, message=_('Your experience was post successfully.')):
     if not result.errors:
         data = {
-            'text': result.data['experience'].Text,
+            'text': result.data['experience'].text,
             'state': int(result.data['experience'].State),
-            'date': result.data['experience'].DatePublished.strftime('%d/%m/%Y %H:%M:%S%z'),
+            'date': result.data['experience'].date_published.strftime('%d/%m/%Y %H:%M:%S%z'),
             'next': shout_link(result.data['experience'])
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
@@ -934,7 +934,7 @@ def comment_on_post_json_renderer(request, result, message=_('Your comment was p
     if not result.errors:
         data = {
             'id': result.data['comment'].pk,
-            'text': result.data['comment'].Text,
+            'text': result.data['comment'].text,
             'date': result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
@@ -953,8 +953,8 @@ def profile_json_renderer(request, result):
                     'about': user.Bio,
                     'lat': user.latitude,
                     'lng': user.longitude,
-                    'city': user.City,
-                    'country': user.Country,
+                    'city': user.city,
+                    'country': user.country,
                     'image': user.abstract_profile.image,
                     'source': user.has_source() and user.Source.Source or int(constants.BUSINESS_SOURCE_TYPE_NONE),
                     'source_id': user.has_source() and user.Source.SourceID or None
@@ -986,7 +986,7 @@ def user_json_renderer(request, result):
 def gallery_item_json_renderer(request, result, message=_('Your item was added successfully.')):
     if not result.errors:
         data = {
-            'name': result.data['item'].Name,
+            'name': result.data['item'].name,
             'description': result.data['item'].Description,
             'price': result.data['item'].Price,
             'currency': result.data['item'].Currency.Code,
@@ -1004,7 +1004,7 @@ def post_comments_json_renderer(request, result):
                 {
                     'id': comment.pk,
                     'isOwner': comment.isOwner,
-                    'text': comment.Text,
+                    'text': comment.text,
                     'date': comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
                 } for comment in result.data['comments']]
         }
@@ -1050,8 +1050,8 @@ def live_events_json_renderer(request, result):
 
 def categories_api(request, result):
     def _get_category_dict(category):
-        d = {'name': category.Name, 'id': category.pk}
-        children = category.children.all().order_by('Name')
+        d = {'name': category.name, 'id': category.pk}
+        children = category.children.all().order_by('name')
         d['children_count'] = len(children)
         if children:
             d['children'] = [_get_category_dict(child) for child in children]

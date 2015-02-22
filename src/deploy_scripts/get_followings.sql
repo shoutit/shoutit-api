@@ -19,7 +19,7 @@ BEGIN
 --	from "shoutit_shout_Streams" AS shout_streams
 --	INNER JOIN "shoutit_stream" AS stream ON
 --	(shout_streams.stream_id = stream.id)
---	where shout_id = p_shout_id and stream."Type" <> 3
+--	where shout_id = p_shout_id and stream."type" <> 3
 	) as subq);
 END
 $BODY$

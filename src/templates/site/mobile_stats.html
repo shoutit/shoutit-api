@@ -51,12 +51,12 @@
 
 		<h4>Countries: {{ countries|length }}</h4>
 		{% for country in countries %}
-			<p>{{ country.Country }} : {{ country.count }}</p>
+			<p>{{ country.country }} : {{ country.count }}</p>
 		{% endfor %}
 
 		<h4>Cities: {{ cities|length }}</h4>
 		{% for city in cities %}
-			<p>{{ city.City }}  - {{ city.Country }}: {{ city.count }}</p>
+			<p>{{ city.city }}  - {{ city.country }}: {{ city.count }}</p>
 		{% endfor %}
     </div>
 </body>

@@ -131,8 +131,8 @@
               var tags = data.data.tags;
               response($.map(tags, function (item) {
                 return {
-                  label: item.Name,
-                  value: item.Name
+                  label: item.name,
+                  value: item.name
                 }
               }));
             }
@@ -184,6 +184,6 @@
     });
 
     var shout_map = new GoogleMap("#shout_map_{{ method }}", "{{ method }}_location input");
-    shout_map.CreateShoutMap("input_search_{{ method }}", "{{ method }}_city input", "{{ method }}_country input", "{{ method }}_address input", {{ shout.Latitude }}, {{ shout.Longitude }}, "{{ method }}");
+    shout_map.CreateShoutMap("input_search_{{ method }}", "{{ method }}_city input", "{{ method }}_country input", "{{ method }}_address input", {{ shout.latitude }}, {{ shout.longitude }}, "{{ method }}");
   });
 </script>

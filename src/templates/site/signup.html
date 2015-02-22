@@ -13,14 +13,14 @@
 {#				{{ form.username|attr:"placeholder:Username"|attr:"autocomplete:off" }}#}
 {#			</div>#}
 
-            <div class="holding clearfix {% if form.firstname.errors %}error{% endif %}">
-				<div class="sidetip">{% if form.firstname.errors %}{% for error in form.firstname.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
-				{{ form.firstname|attr:"placeholder:First Name"|attr:"autocomplete:off" }}
+            <div class="holding clearfix {% if form.first_name.errors %}error{% endif %}">
+				<div class="sidetip">{% if form.first_name.errors %}{% for error in form.first_name.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.first_name|attr:"placeholder:First Name"|attr:"autocomplete:off" }}
 			</div>
 
-            <div class="holding clearfix {% if form.lastname.errors %}error{% endif %}">
-				<div class="sidetip">{% if form.lastname.errors %}{% for error in form.lastname.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
-				{{ form.lastname|attr:"placeholder:Last Name"|attr:"autocomplete:off" }}
+            <div class="holding clearfix {% if form.last_name.errors %}error{% endif %}">
+				<div class="sidetip">{% if form.last_name.errors %}{% for error in form.last_name.errors %}<span > {{ error }}</span>{% endfor %}{% endif %}</div>
+				{{ form.last_name|attr:"placeholder:Last Name"|attr:"autocomplete:off" }}
 			</div>
 
 			<div class="holding clearfix {% if form.email.errors %}error{% endif %}">

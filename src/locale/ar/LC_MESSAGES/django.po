@@ -54,7 +54,7 @@ msgstr "بيانات الدخول خاطئة"
 #: ShoutWebsite/forms.py:438 ShoutWebsite/forms.py:496
 #: ShoutWebsite/forms.py:528 ShoutWebsite/forms.py:561
 #: ShoutWebsite/templatetags/translating_variables.py:21
-msgid "Name"
+msgid "name"
 msgstr "الاسم"
 
 #: ShoutWebsite/forms.py:45 ShoutWebsite/forms.py:55 ShoutWebsite/forms.py:78
@@ -97,12 +97,12 @@ msgstr "العملة"
 #: ShoutWebsite/forms.py:56 ShoutWebsite/forms.py:563
 #: templates/shout_detailed.html:11 templates/user_profile.html:30
 #: templates/user_profile.html.py:342
-msgid "Tags"
+msgid "tags"
 msgstr "الكلمات المفتاحية"
 
 #: ShoutWebsite/forms.py:59 ShoutWebsite/forms.py:303
 #: ShoutWebsite/forms.py:444 ShoutWebsite/forms.py:565
-msgid "Country"
+msgid "country"
 msgstr "البلد"
 
 #: ShoutWebsite/forms.py:60 ShoutWebsite/forms.py:304
@@ -1258,7 +1258,7 @@ msgid "Public Activities"
 msgstr "نشاطات عامة"
 
 #: templates/browse.html:95 templates/business_browse.html:95
-msgid "Top Tags"
+msgid "Top tags"
 msgstr "كلمات متداولة"
 
 #: templates/browse.html:105 templates/business_browse.html:105
@@ -2436,7 +2436,7 @@ msgid "Followers"
 msgstr ""
 
 #: templates/tag_profile.html:94
-msgid "Child Tags"
+msgid "Child tags"
 msgstr ""
 
 #: templates/tag_profile.html:102

@@ -17,11 +17,11 @@
   <div class="tag-wrapper">
     <div class="box-container white-container round shadow tag-details">
       <div class="tag-image pull-left">
-        <img class="round" src="{{ tag.image|secure_url }}" alt="{{ tag.Name }} picture">
+        <img class="round" src="{{ tag.image|secure_url }}" alt="{{ tag.name }} picture">
       </div>
 
       <div class="pull-left">
-        <div class="tag-name">{{ tag.Name }}</div>
+        <div class="tag-name">{{ tag.name }}</div>
         <div class="tag-info pull-left">{{ tag.Definition|linebreaksbr }}</div>
         <div>
           {% if is_listening %}
@@ -42,7 +42,7 @@
     <div class="page_content">
       <div class="left-column">
         <div class="outer-box-header round shadow">
-          {{ tag.Name }} shouts in <span class="browse_in">{{ city }}</span>
+          {{ tag.name }} shouts in <span class="browse_in">{{ city }}</span>
         </div>
         <div class="box-container dark-container round shadow shouts">
           <div class="box-content">
@@ -99,7 +99,7 @@
 {% block scripts %}
   <script type="text/javascript" language="JavaScript">
     $(document).ready(function () {
-      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tag.Name }}/stream/', '.shouts .box-content', 1);
+      $('.shouts .box-content').scrollableStream('796px', true, '/xhr/tag/{{ tag.name }}/stream/', '.shouts .box-content', 1);
       setup_colorbox();
 //			setup_shouts_hover();
       $('.follow-unfollow').click(follow_unfollow);
@@ -123,7 +123,7 @@
       if (listenersLoaded)
         return;
       requestAjaxily({
-        url: '/xhr/tag/{{ tag.Name }}/listeners/',
+        url: '/xhr/tag/{{ tag.name }}/listeners/',
         successCallback: function (data) {
           listenersLoaded = true;
           var listeners = data.data.listeners;
@@ -155,7 +155,7 @@
 
     function listen() {
       requestAjaxily({
-        url: '/xhr/tag/{{ tag.Name }}/start_listening/',
+        url: '/xhr/tag/{{ tag.name }}/start_listening/',
         successCallback: function (data) {
           $('.follow-unfollow').html('<span>{% trans "Listening" %}</span>').attr('id', 'unfollow');
           var counter = $('#aFollowers .count');
@@ -168,7 +168,7 @@
 
     function unfollow() {
       requestAjaxily({
-        url: '/xhr/tag/{{ tag.Name }}/stop_listening/',
+        url: '/xhr/tag/{{ tag.name }}/stop_listening/',
         successCallback: function (data) {
           $('.follow-unfollow').html('<span>{% trans "Listen" %}</span>').attr('id', 'follow');
           var counter = $('#aFollowers .count');

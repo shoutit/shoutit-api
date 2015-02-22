@@ -4,7 +4,7 @@ from shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
-    Name = models.CharField(max_length=512, default='', blank=True)
+    name = models.CharField(max_length=512, default='', blank=True)
     Description = models.CharField(max_length=1000)
     Price = models.FloatField(default=0.0)
     Currency = models.ForeignKey('shoutit.Currency', related_name='Items')
@@ -12,7 +12,7 @@ class Item(UUIDModel):
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.Name
+        return unicode(self.pk) + ": " + self.name
 
     @property
     def thumbnail(self):
@@ -54,8 +54,8 @@ class Item(UUIDModel):
 
 class Currency(UUIDModel):
     Code = models.CharField(max_length=10)
-    Country = models.CharField(max_length=10, blank=True)
-    Name = models.CharField(max_length=64, null=True, blank=True)
+    country = models.CharField(max_length=10, blank=True)
+    name = models.CharField(max_length=64, null=True, blank=True)
 
     def __unicode__(self):
         return '[' + self.Code + '] '

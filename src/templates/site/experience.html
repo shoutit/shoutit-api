@@ -27,7 +27,7 @@
 			<img class="round" width="95" height="95" src="{{ experience.AboutBusiness.image|secure_url }}" alt="{{ experience.AboutBusiness.name }}'s profile picture">
 		</div>
 		<div class="user-name">
-			<a href="/user/{{ experience.AboutBusiness.username }}/">{{ experience.AboutBusiness.Name }}/</a>
+			<a href="/user/{{ experience.AboutBusiness.username }}/">{{ experience.AboutBusiness.name }}/</a>
 		</div>
 		<div class="business-experiences">
 			<div class="thumb-up">
@@ -41,7 +41,7 @@
 		</div>
 	</div>
 	<div class="box-container white-container round shadow public-events experience-event">
-		<div class="box-header">{% trans "Experiences of" %} {{ experience.AboutBusiness.Name }} </div>
+		<div class="box-header">{% trans "Experiences of" %} {{ experience.AboutBusiness.name }} </div>
 		{% for experience in recent_experiences %}
 			{% set detailed = 2 %}
 			{% include 'experience_in_stream.html' %}

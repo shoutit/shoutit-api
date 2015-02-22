@@ -1,20 +1,20 @@
 {% load template_filters %}
 <div class="shout{% if right %} shout-right{% endif %} {% if shout.featured %}featured{% endif %}">
 	<div class="shout-picture-contain pull-{% if right %}right{% else %}left{% endif %}">
-	<span class="user-icon-{% if shout.Type == 0 %}requests{% else %}offers{% endif %}"><a {% if shout.OwnerUser.is_active or shout.OwnerUser == request.user %}href="/user/{{ shout.OwnerUser.username }}/"{% endif %} title="{{ shout.OwnerUser.name }}"></a></span>
-{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.OwnerUser.profile.image|secure_url }}{% else %}{{ shout.OwnerUser.profile.image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.OwnerUser.name }}'s profile picture">#}
+	<span class="user-icon-{% if shout.type == 0 %}requests{% else %}offers{% endif %}"><a {% if shout.user.is_active or shout.user == request.user %}href="/user/{{ shout.user.username }}/"{% endif %} title="{{ shout.user.name }}"></a></span>
+{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.user.profile.image|secure_url }}{% else %}{{ shout.user.profile.image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.user.name }}'s profile picture">#}
 {#        </a>#}
-        <!--<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.Type == 0 %}request{% else %}offer{% endif %}.png' />-->
-{#		<img class="shout-type-icon" title='{% if shout.Type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.Type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
+        <!--<img class="shout-type-icon" title='{% if shout.type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.type == 0 %}request{% else %}offer{% endif %}.png' />-->
+{#		<img class="shout-type-icon" title='{% if shout.type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
 	</div>
     <div class="pull-{% if right %}right{% else %}left{% endif %} shout-content {% if shout.get_images %}with-image{% endif %}">
         <div class="shout-head">
-            <div class="shout-title pull-{% if right %}right{% else %}left{% endif %}"><a href="{% shout_link shout %}" title="{{ shout.Item.Name|title }}">{% if shout.featured %}<i class="icon-star"></i>{% endif %}{{ shout.Item.Name|title }}</a></div>
-            <div class="shout-price pull-{% if right %}left{% else %}right{% endif %}">{{ shout.Item.Price|price:shout.Item.Currency.Code }}</div>
+            <div class="shout-title pull-{% if right %}right{% else %}left{% endif %}"><a href="{% shout_link shout %}" title="{{ shout.item.name|title }}">{% if shout.featured %}<i class="icon-star"></i>{% endif %}{{ shout.item.name|title }}</a></div>
+            <div class="shout-price pull-{% if right %}left{% else %}right{% endif %}">{{ shout.item.Price|price:shout.item.Currency.Code }}</div>
             {% if detailed %}
-                {% if shout.OwnerUser.profile.Mobile %}
-                    <div class="shout-phone pull-{% if right %}left{% else %}right{% endif %}" title="Call {{ shout.OwnerUser.name }}">
-                        <a href="tel:{{ shout.OwnerUser.profile.Mobile }}">{{ shout.OwnerUser.profile.Mobile }}</a></div>
+                {% if shout.user.profile.Mobile %}
+                    <div class="shout-phone pull-{% if right %}left{% else %}right{% endif %}" title="Call {{ shout.user.name }}">
+                        <a href="tel:{{ shout.user.profile.Mobile }}">{{ shout.user.profile.Mobile }}</a></div>
                 {% endif %}
             {% endif %}
             <div style="clear: both;"></div>
@@ -25,9 +25,9 @@
         <div class="shout-description pull-{% if right %}right{% else %}left{% endif %}">
             <div>
 			{% if not detailed %}
-                {{ shout.Text|replacebr|striptags|truncatewords:15|linebreaksbr|safe }}
+                {{ shout.text|replacebr|striptags|truncatewords:15|linebreaksbr|safe }}
             {% else %}
-                {{ shout.Text|safe|linebreaksbr }}
+                {{ shout.text|safe|linebreaksbr }}
                 {% for video in shout.get_videos %}
                   <br><br>
                   <iframe id="player" type="text/html" width="555" height="400" src="{{ settings.SCHEME }}://www.youtube.com/embed/{{ video.id_on_provider }}?enablejsapi=1&origin=http://shoutit.syrex:8000" frameborder="0"></iframe>
@@ -35,7 +35,7 @@
 
             {% endif %}
 			</div>
-			<div class="shout-date pd pull-left" title="{{ shout.DatePublished|ISO8601 }}">{{ shout.DatePublished }}</div>
+			<div class="shout-date pd pull-left" title="{{ shout.date_published|ISO8601 }}">{{ shout.date_published }}</div>
         </div>
 		{% if detailed %}
 			{% if shout.get_images %}

@@ -11,7 +11,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Stream(UUIDModel):
-    Type = models.IntegerField(default=0, db_index=True)
+    type = models.IntegerField(default=0, db_index=True)
 
     def __unicode__(self):
         return unicode(self.pk) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
@@ -19,16 +19,16 @@ class Stream(UUIDModel):
     def GetOwner(self):
         owner = None
         try:
-            if self.Type == STREAM_TYPE_TAG:
-                owner = self.OwnerTag
-            elif self.Type == STREAM_TYPE_USER:
-                owner = self.OwnerUser
-            elif self.Type == STREAM_TYPE_BUSINESS:
-                owner = self.OwnerBusiness
-            elif self.Type == STREAM_TYPE_RECOMMENDED:
-                owner = self.InitShoutRecommended
-            elif self.Type == STREAM_TYPE_RELATED:
-                owner = self.InitShoutRelated
+            if self.type == STREAM_TYPE_TAG:
+                owner = self.tag
+            elif self.type == STREAM_TYPE_USER:
+                owner = self.user
+            elif self.type == STREAM_TYPE_BUSINESS:
+                owner = self.business
+            elif self.type == STREAM_TYPE_RECOMMENDED:
+                owner = self.init_shout_recommended
+            elif self.type == STREAM_TYPE_RELATED:
+                owner = self.init_shout_related
         except AttributeError, e:
             print e.message
             return None
@@ -36,15 +36,15 @@ class Stream(UUIDModel):
 
     def GetTypeText(self):
         stream_type = u'None'
-        if self.Type == STREAM_TYPE_TAG:
+        if self.type == STREAM_TYPE_TAG:
             stream_type = unicode(STREAM_TYPE_TAG)
-        elif self.Type == STREAM_TYPE_USER:
+        elif self.type == STREAM_TYPE_USER:
             stream_type = unicode(STREAM_TYPE_USER)
-        elif self.Type == STREAM_TYPE_BUSINESS:
+        elif self.type == STREAM_TYPE_BUSINESS:
             stream_type = unicode(STREAM_TYPE_BUSINESS)
-        elif self.Type == STREAM_TYPE_RECOMMENDED:
+        elif self.type == STREAM_TYPE_RECOMMENDED:
             stream_type = unicode(STREAM_TYPE_RECOMMENDED)
-        elif self.Type == STREAM_TYPE_RELATED:
+        elif self.type == STREAM_TYPE_RELATED:
             stream_type = unicode(STREAM_TYPE_RELATED)
         return stream_type
 

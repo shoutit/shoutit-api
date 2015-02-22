@@ -72,10 +72,10 @@ print 'Going to send %d SMS\'s' % (len(users))
 for user in users:
     print str(list(users).index(user) + 1) + ' : ',
     try:
-        shout = Trade.objects.get_valid_trades().filter(OwnerUser=user.user).select_related('Item')
+        shout = Trade.objects.get_valid_trades().filter(user=user.user).select_related('item')
         content = 'an advertisement'
         if len(shout):
-            content = utils.remove_non_ascii(shout[0].Item.Name)
+            content = utils.remove_non_ascii(shout[0].item.name)
 
         link = 'shoutit.com/' + user.LastToken.Token
         title = utils.get_shout_name_preview(content, 22)
@@ -87,19 +87,19 @@ for user in users:
         quoted_text = urllib.quote(text)
         mobile = user.Mobile
 
-        if user.Country == 'US':
+        if user.country == 'US':
             message = client.sms.messages.create(to="+" + mobile, from_="+16464309339", body=text)
             print 'sms via Twilio US to: %s mobile: %s sent' % (user.user.pk, mobile)
             user.isSMS = True
             user.save()
 
-        elif user.Country == 'GB':
+        elif user.country == 'GB':
             message = client.sms.messages.create(to="+" + mobile, from_="+442033224455", body=text)
             print 'sms via Twilio UK to: %s mobile: %s sent' % (user.user.pk, mobile)
             user.isSMS = True
             user.save()
 
-        elif user.Country == 'CA':
+        elif user.country == 'CA':
             message = client.sms.messages.create(to="+" + mobile, from_="+16479315866", body=text)
             print 'sms via Twilio CA to: %s mobile: %s sent' % (user.user.pk, mobile)
             user.isSMS = True

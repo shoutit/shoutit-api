@@ -13,7 +13,7 @@ def SignUp(sender, **kwargs):
 			#TODO check state Canceled-->Forbidden | Trail-->pass
 			pass
 		else:
-			subscription = Subscription(Id = sender.subscr_id,Type = SUBSCRIPE_BUSINESS,State = SUBSCRIPTION_TRAIL,SignUpDate = sender.subscr_date)
+			subscription = Subscription(Id = sender.subscr_id,type = SUBSCRIPE_BUSINESS,State = SUBSCRIPTION_TRAIL,SignUpDate = sender.subscr_date)
 			subscription.save()
 			business.Subscription = subscription
 			business.save()

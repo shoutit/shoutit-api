@@ -14,9 +14,9 @@ CREATE OR REPLACE FUNCTION max_followings(p_profile_id UUID , p_begin NUMERIC)
 																														 (post_streams.stream_id = stream.uuid)
 										 INNER JOIN "shoutit_followship" AS followship ON (followship.stream_id = stream.uuid)
 									 WHERE
-										 stream."Type" <> 3 AND followship.follower_id = p_profile_id AND post."IsMuted" = FALSE AND post."IsDisabled" = FALSE
+										 stream."type" <> 3 AND followship.follower_id = p_profile_id AND post."muted" = FALSE AND post."is_disabled" = FALSE
 										 AND
-										 EXTRACT(EPOCH FROM post."DatePublished") > p_begin
+										 EXTRACT(EPOCH FROM post."date_published") > p_begin
 									 GROUP BY post_id
 									 ORDER BY rank DESC) AS subq);
 	END

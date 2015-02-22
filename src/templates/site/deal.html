@@ -20,14 +20,14 @@
 	{% endif %}
 
 	<div class="shadow deal-buyers">0 Buys</div>
-	<div class="shadow countdown"><span>Valid </span><span title="{{ deal.ExpiryDate|ISO8601 }}" class="deal-ticker"></span></div>
+	<div class="shadow countdown"><span>Valid </span><span title="{{ deal.expiry_date|ISO8601 }}" class="deal-ticker"></span></div>
 </div>
 	<div class="deal-details">
-    <span class="deal-title"> {{ deal.Item.Name }}</span>
-    <span class="deal-description"> {{ deal.Text }}</span>
+    <span class="deal-title"> {{ deal.item.name }}</span>
+    <span class="deal-description"> {{ deal.text }}</span>
 	<span class="deal-time">1 hour ago </span>...
 	{#ask nour what we need from here#}
-    <span class="deal-Price"> {{ deal.Item.Price|price:deal.Item.Currency.Code }}</span>
+    <span class="deal-Price"> {{ deal.item.Price|price:deal.item.Currency.Code }}</span>
     {% if deal.MinBuyers %}
         <p><b>Min Buyers</b> {{ deal.MinBuyers }}</p>
     {% endif %}
@@ -39,9 +39,9 @@
     {% else %}
         <p>Open</p>
     {% endif %}
-    <p><b>Original Price</b> {{ deal.OriginalPrice|price:deal.Item.Currency.Code }}</p>
-    <p><b>Country Code</b> {{ deal.CountryCode }}</p>
-    <p><b>Province Code</b> {{ deal.ProvinceCode }}</p>
+    <p><b>Original Price</b> {{ deal.OriginalPrice|price:deal.item.Currency.Code }}</p>
+    <p><b>Country Code</b> {{ deal.country }}</p>
+    <p><b>Province Code</b> {{ deal.city }}</p>
     {% if deal.ValidFrom %}
         <p><b>Valid From</b> {{ deal.ValidFrom|date }}</p>
     {% endif %}

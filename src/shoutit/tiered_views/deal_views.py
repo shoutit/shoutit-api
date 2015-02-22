@@ -25,16 +25,16 @@ from shoutit.permissions import PERMISSION_SHOUT_DEAL
 
 def deal_to_dict(deal):
     result = {
-        'name': deal.Item.Name,
-        'text': deal.Text,
-        'pirce': deal.Item.Price,
-        'expiry_date': deal.ExpiryDate.strftime('%d/%m/%Y %H:%M:%S%z'),
+        'name': deal.item.name,
+        'text': deal.text,
+        'pirce': deal.item.Price,
+        'expiry_date': deal.expiry_date.strftime('%d/%m/%Y %H:%M:%S%z'),
         'min_buyers': deal.MinBuyers,
         'max_buyers': deal.MaxBuyers,
         'original_price': deal.OriginalPrice,
-        'currency': deal.Item.Currency.Code,
-        'country': deal.CountryCode,
-        'city': deal.ProvinceCode,
+        'currency': deal.item.Currency.Code,
+        'country': deal.country,
+        'city': deal.city,
     }
     if deal.ValidFrom:
         result['valid_from'] = deal.ValidFrom.strftime('%d/%m/%Y %H:%M:%S%z')
@@ -139,7 +139,7 @@ def is_voucher_valid(request):
             voucher = deal_controller.GetValidVoucher(request.GET['code'])
             if voucher.DealBuy.Deal.business.user == request.user:
                 result.data['is_valid'] = True
-                result.data['deal'] = voucher.DealBuy.Deal.Item.Name
+                result.data['deal'] = voucher.DealBuy.Deal.item.name
                 return result
             else:
                 result.errors.append(RESPONSE_RESULT_ERROR_FORBIDDEN)
@@ -163,7 +163,7 @@ def invalidate_voucher(request):
             if voucher.DealBuy.Deal.business.user == request.user:
                 deal_controller.InvalidateVoucher(voucher=voucher)
                 result.data['is_validated'] = True
-                result.data['deal'] = voucher.DealBuy.Deal.Item.Name
+                result.data['deal'] = voucher.DealBuy.Deal.item.name
                 return result
             else:
                 result.errors.append(RESPONSE_RESULT_ERROR_FORBIDDEN)
@@ -192,7 +192,7 @@ def view_deal(request, deal_id):
     result.data['buyers_count'] = deal.BuyersCount()
     if deal.MaxBuyers:
         result.data['available_count'] = deal.MaxBuyers - result.data['buyers_count']
-    result.data['is_closed'] = deal.IsClosed or deal.ExpiryDate <= datetime.now()
+    result.data['is_closed'] = deal.IsClosed or deal.expiry_date <= datetime.now()
     return result
 
 

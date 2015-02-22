@@ -56,8 +56,8 @@ def PayForDeal(user, deal, amount, remote_transaction_data, remote_transaction_i
 		deal_buy = deal_controller.BuyDeal(user, deal, amount)
 		payment = Payment.objects.create(
 			user =  user,
-			Amount = deal.Item.Price * amount,
-			Currency = deal.Item.Currency,
+			Amount = deal.item.Price * amount,
+			Currency = deal.item.Currency,
 			Status = 1,
 			Transaction = transaction,
 			object_id = deal_buy.pk,
@@ -119,8 +119,8 @@ def GetPaypalFormForDeal(deal, user, amount = 1):
 		'notify_url' : settings.PAYPAL_NOTIFY_URL,
 		'return' : settings.PAYPAL_RETURN_URL,
 		'cancel_return' : settings.PAYPAL_CANCEL_URL,
-		'amount' : '%.2f' % ConvertCurrency(deal.Item.Price * amount, deal.Item.Currency.Code, 'USD'),
-		'item_name' : '%s by Shoutit' % deal.Item.Name,
+		'amount' : '%.2f' % ConvertCurrency(deal.item.Price * amount, deal.item.Currency.Code, 'USD'),
+		'item_name' : '%s by Shoutit' % deal.item.name,
 		'item_number' : 'Deal_%s' % deal.pk,
 		'currency_code' : 'USD',
 		'invoice' : 'Deal_%s_User_%s_x_%s' % (deal.pk, user.pk, amount),
@@ -168,7 +168,7 @@ def GetPaypalFormForSubscription(user):
 		'return' : settings.PAYPAL_SUBSCRIPTION_RETURN_URL + '%s/' % token,
 		'return_url' : settings.PAYPAL_SUBSCRIPTION_RETURN_URL + '%s/' % token,
 		'cancel_return' : settings.PAYPAL_SUBSCRIPTION_CANCEL_URL,
-		#'amount' : '%.2f' % ConvertCurrency(deal.Item.Price * amount, deal.Item.Currency.Code, 'USD'),
+		#'amount' : '%.2f' % ConvertCurrency(deal.item.Price * amount, deal.item.Currency.Code, 'USD'),
 		'item_name' : 'Subscription by Shoutit',
 		'item_number' : '1',
 		'custom' : '%s' % user.pk,
@@ -191,11 +191,11 @@ def GetCPSPFormForDeal(deal, user, amount = 1):
 	cpsp_dict = {
 		'PSPID' : settings.CPSP_ID,
 		'ORDERID' : 'D_%s_U_%s_x_%d_%s' % (deal.pk, user.pk, amount, str(time.time())),  # todo: check
-		'AMOUNT' : str(int(deal.Item.Price * amount * 100)),
-		'CURRENCY' : deal.Item.Currency.Code,
+		'AMOUNT' : str(int(deal.item.Price * amount * 100)),
+		'CURRENCY' : deal.item.Currency.Code,
 		'LANGUAGE' : 'en_US',
 		'CUID' : str(user.pk),
-		'TITLE' : '%s by Shoutit' % deal.Item.Name,
+		'TITLE' : '%s by Shoutit' % deal.item.name,
 		'ACCEPTURL' : 'http://80.227.53.34/cpsp_accept/',
 		'DECLINEURL' : 'http://80.227.53.34/cpsp_decline/',
 		'EXCEPTIONURL' : 'http://80.227.53.34/cpsp_exception/',
@@ -218,8 +218,8 @@ def CheckTransaction(pdt):
 		if not deal:
 			return True, 'Deal not found'
 		deal = deal[0]
-		gross = '%.2f' % ConvertCurrency(deal.Item.Price * int(amount), deal.Item.Currency.Code, 'USD')
-		name = '%s by Shoutit' % deal.Item.Name
+		gross = '%.2f' % ConvertCurrency(deal.item.Price * int(amount), deal.item.Currency.Code, 'USD')
+		name = '%s by Shoutit' % deal.item.name
 		number = 'Deal_%s' % deal.pk
 	elif item_type == 'Service':
 		pass

@@ -156,7 +156,7 @@ def send_fake_notification(request, username):
     num += 1
     notification.ToUser = User.objects.get(username__iexact=username)
     notification.FromUser = User.objects.get(username__iexact='syron')
-    notification.Type = NOTIFICATION_TYPE_LISTEN
+    notification.type = NOTIFICATION_TYPE_LISTEN
     notification.DateCreated = datetime.now()
     notification.IsRead = False
     notification.attached_object = notification.FromUser

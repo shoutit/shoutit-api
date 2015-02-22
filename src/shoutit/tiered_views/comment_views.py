@@ -57,7 +57,7 @@ def post_comments(request, post_id):
     date = datetime.fromtimestamp(timestamp)
     comments = GetPostComments(post_id, date=date, start_index=start_index, end_index=end_index)
     for comment in comments:
-        comment.isOwner = True if comment.OwnerUser == request.user else False
+        comment.isOwner = True if comment.user == request.user else False
     result.data['comments'] = comments
     result.data['timestamp'] = timestamp
     return result

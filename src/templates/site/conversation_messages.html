@@ -5,7 +5,7 @@
         {% include "message.html" %}
     {% endfor %}
 </div>
-{% if request.user.username == shout.OwnerUser.username and not conversation_messages|length %}
+{% if request.user.username == shout.user.username and not conversation_messages|length %}
 {% else %}
     <div class="conversation-form">
         <div class="user-image pull-{% if right %}right{% else %}left{% endif %} shadow round">

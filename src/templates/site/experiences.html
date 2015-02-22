@@ -43,7 +43,7 @@
                 });
         }
         $('form#post_experience_form').submitAjaxily();
-        $('.experiences .box-content').scrollableStream('560px', true, '/xhr/experiences_stream/{{ profile.username }}/', '.experiences .box-content', 0,sendCommentsAjaxly);
+        $('.experiences .box-content').scrollableStream('560px', true, '/xhr/experiences_stream/{{ profile.user.username }}/', '.experiences .box-content', 0,sendCommentsAjaxly);
         $('.experiences .box-content').refreshScrollableStream(sendCommentsAjaxly);
         setup_modal('#experience_edit_modal', '/modal/experience_edit/', '#edit_experience', function () {});
     });

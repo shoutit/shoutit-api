@@ -30,7 +30,7 @@ class Message(UUIDModel):
     Conversation = models.ForeignKey('shoutit.Conversation', related_name='Messages')
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='received_messages')
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='sent_messages')
-    Text = models.TextField(null=True, blank=True)
+    text = models.TextField(null=True, blank=True)
     IsRead = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)
@@ -38,7 +38,7 @@ class Message(UUIDModel):
 
     def __unicode__(self):
         try:
-            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " => " + unicode(self.ToUser) + "):" + (self.Text[:50] if self.Text else '')
+            return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " => " + unicode(self.ToUser) + "):" + (self.text[:50] if self.text else '')
         except AttributeError:
             return unicode(self.pk)
 
@@ -59,15 +59,15 @@ class Notification(UUIDModel, AttachedObjectMixin):
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Notifications')
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
     IsRead = models.BooleanField(default=False)
-    Type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
+    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.pk + ": " + self.Text
+        return self.pk + ": " + self.text
 
     @property
-    def Text(self):
-        return NotificationType.values[self.Type]
+    def text(self):
+        return NotificationType.values[self.type]
 
     def MarkAsRead(self):
         self.IsRead = True
@@ -76,18 +76,18 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
 class Report(UUIDModel, AttachedObjectMixin):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Reports')
-    Text = models.TextField(default='', blank=True, max_length=300)
-    Type = models.IntegerField(default=0)
+    text = models.TextField(default='', blank=True, max_length=300)
+    type = models.IntegerField(default=0)
     IsSolved = models.BooleanField(default=False)
-    IsDisabled = models.BooleanField(default=False)
+    is_disabled = models.BooleanField(default=False)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return "From user:%s about: %s:%s" % (self.user.pk, self.Type(), self.attached_object.pk)
+        return "From user:%s about: %s:%s" % (self.user.pk, self.type(), self.attached_object.pk)
 
     @property
-    def Type(self):
-        return ReportType.values[self.Type]
+    def type(self):
+        return ReportType.values[self.type]
 
 
 ########## M2 ###########

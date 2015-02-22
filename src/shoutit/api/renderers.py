@@ -24,22 +24,22 @@ def render_shout(shout, level=5):
 
     shout_json = {
         'id': shout.pk,
-        'type': PostType.values[shout.Type],
-        'name': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Name,
-        'description': shout.Text,
-        'price': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Price,
-        'currency': None if shout.Type == POST_TYPE_EXPERIENCE else shout.Item.Currency.Code,
+        'type': PostType.values[shout.type],
+        'name': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.name,
+        'description': shout.text,
+        'price': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.Price,
+        'currency': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.Currency.Code,
         'thumbnail': videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
-        'date_created': shout.DatePublished.strftime('%s'),
+        'date_created': shout.date_published.strftime('%s'),
         'api_url': get_object_api_url(shout),
         'web_url': shout_link(shout),
-        'user': render_user(shout.OwnerUser, level=2),
+        'user': render_user(shout.user, level=2),
         'location': {
-            'country': shout.CountryCode,
-            'city': shout.ProvinceCode,
-            'latitude': shout.Latitude,
-            'longitude': shout.Longitude,
-            'address': shout.Address
+            'country': shout.country,
+            'city': shout.city,
+            'latitude': shout.latitude,
+            'longitude': shout.longitude,
+            'address': shout.address
         }
     }
 
@@ -57,12 +57,12 @@ def render_tag(tag):
     if tag is None:
         return {}
     if isinstance(tag, basestring):
-        tag = Tag(Name=tag)
+        tag = Tag(name=tag)
     # TODO: find what is the case when tag is a dict not instance of Tag class
     elif isinstance(tag, dict):
-        tag = Tag(Name=tag['Name'])
+        tag = Tag(name=tag['name'])
     base = {
-        'name': tag.Name,
+        'name': tag.name,
         'api_url': get_object_api_url(tag),
         'web_url': tag_link(tag),
         'image': full_url_path(tag.image)
@@ -72,8 +72,8 @@ def render_tag(tag):
 
 def render_tag_dict(tag_dict):
     tag = {
-        'name': tag_dict['Name'],
-        'api_url': full_url_path('/tags/%s/' % tag_dict['Name']),
+        'name': tag_dict['name'],
+        'api_url': full_url_path('/tags/%s/' % tag_dict['name']),
         'web_url': tag_link(tag_dict),
         'image': full_url_path(tag_dict['image'])
     }
@@ -142,15 +142,15 @@ def render_user(user, level=1, owner=False):
                 'date_joined': date_unix(user.date_joined),
                 'bio': profile.Bio,
                 'location': {
-                    'country': profile.Country,
-                    'city': profile.City
+                    'country': profile.country,
+                    'city': profile.city
 
                 }
             })
             if owner:
                 result['location'].update({
-                    'latitude': profile.Latitude,
-                    'longitude': profile.Longitude
+                    'latitude': profile.latitude,
+                    'longitude': profile.longitude
                 })
         if level >= 4:
             result.update({
@@ -186,7 +186,7 @@ def render_message(message):
         'shout_id': message.Conversation.AboutPost.pk,
         'from_user': render_user(message.FromUser, level=1),
         'to_user': render_user(message.ToUser, level=1),
-        'text': message.Text,
+        'text': message.text,
         'is_read': message.IsRead,
         'date_created': message.DateCreated.strftime('%s'),
         'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
@@ -253,7 +253,7 @@ def render_conversation(conversation):
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost, level=1),
         'is_read': conversation.IsRead,
-        'text': conversation.Text if hasattr(conversation, 'Text') else '',
+        'text': conversation.text if hasattr(conversation, 'text') else '',
         'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
     }
 
@@ -283,7 +283,7 @@ def render_conversation_full(conversation):
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost),
         'is_read': conversation.IsRead,
-        'text': conversation.Text if hasattr(conversation, 'Text') else '',
+        'text': conversation.text if hasattr(conversation, 'text') else '',
         'conversation_messages': [render_message(message) for message in conversation.messages],
         'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
     }
@@ -296,11 +296,11 @@ def render_experience(experience):
         rendered_experience = {
             'id': experience.pk,
             'api_url': get_object_api_url(experience),
-            'user': render_user(experience.OwnerUser),
+            'user': render_user(experience.user),
             'business': render_user(experience.AboutBusiness),
             'state': experience.State,
-            'text': experience.Text,
-            'date_created': experience.DatePublished.strftime('%s'),
+            'text': experience.text,
+            'date_created': experience.date_published.strftime('%s'),
             'detailed': experience.detailed if hasattr(experience, 'detailed') else False
         }
 
@@ -324,7 +324,7 @@ def render_shared_exp(shared):
         return {}
     return {
         'api_url': get_object_api_url(shared.Experience),
-        'user': render_user(shared.OwnerUser),
+        'user': render_user(shared.user),
         'experience': render_experience(shared.Experience),
         'date_created': shared.DateCreated.strftime('%s')
     }
@@ -335,9 +335,9 @@ def render_comment(comment):
         return {}
     return {
         'api_url': get_object_api_url(comment.AboutPost.experience),
-        'user': render_user(comment.OwnerUser),
+        'user': render_user(comment.user),
         'post': render_experience(comment.AboutPost.experience),
-        'text': comment.Text,
+        'text': comment.text,
         'date_created': comment.DateCreated.strftime('%s')
     }
 
@@ -346,7 +346,7 @@ def render_item(item):
     if item is None:
         return {}
     return {
-        'name': item.Name,
+        'name': item.name,
         'price': item.Price,
         'currency': item.Currency.Code,
         'date_created': item.DateCreated.strftime('%s')
@@ -370,7 +370,7 @@ def render_gallery(gallery):
         return {}
     return {
         # 'url' : get_object_api_url(gallery),
-        #		'business' : render_business(gallery.OwnerBusiness),
+        #		'business' : render_business(gallery.business),
     }
 
 
@@ -378,8 +378,8 @@ def render_gallery_item(gallery_item):
     if gallery_item is None:
         return {}
     return {
-        'url': '/gallery_items/%s/' % gallery_item.Gallery.OwnerBusiness.user.username,
-        'item': render_item(gallery_item.Item),
+        'url': '/gallery_items/%s/' % gallery_item.Gallery.business.user.username,
+        'item': render_item(gallery_item.item),
         'gallery': render_gallery(gallery_item.Gallery),
         'date_created': gallery_item.DateCreated.strftime('%s')
     }
@@ -391,7 +391,7 @@ def render_notification(notification):
     result = {
         'from_user': render_user(notification.FromUser, level=2),
         'is_read': notification.IsRead,
-        'type': NotificationType.values[notification.Type],
+        'type': NotificationType.values[notification.type],
         'date_created': notification.DateCreated.strftime('%s'),
         'mark_as_read_url': get_custom_url(api_urls[JSON_URL_MARK_NOTIFICATION_AS_READ], notification.pk),
         'mark_as_unread_url': get_custom_url(api_urls[JSON_URL_MARK_NOTIFICATION_AS_UNREAD], notification.pk),
@@ -399,15 +399,15 @@ def render_notification(notification):
     }
 
     if notification.attached_object:
-        if notification.Type == NOTIFICATION_TYPE_MESSAGE:
+        if notification.type == NOTIFICATION_TYPE_MESSAGE:
             result['attached_object'] = render_message(notification.attached_object)
-        elif notification.Type == NOTIFICATION_TYPE_LISTEN:
+        elif notification.type == NOTIFICATION_TYPE_LISTEN:
             result['attached_object'] = render_user(notification.attached_object, level=2)
-        elif notification.Type == NOTIFICATION_TYPE_EXP_POSTED:
+        elif notification.type == NOTIFICATION_TYPE_EXP_POSTED:
             result['attached_object'] = render_experience(notification.attached_object)
-        elif notification.Type == NOTIFICATION_TYPE_EXP_SHARED:
+        elif notification.type == NOTIFICATION_TYPE_EXP_SHARED:
             result['attached_object'] = render_shared_exp(notification.attached_object)
-        elif notification.Type == NOTIFICATION_TYPE_COMMENT:
+        elif notification.type == NOTIFICATION_TYPE_COMMENT:
             result['attached_object'] = render_comment(notification.attached_object)
     return result
 
@@ -416,9 +416,9 @@ def render_event(event):
     if event is None:
         return {}
     result = {
-        'user': render_user(event.OwnerUser, level=2),
+        'user': render_user(event.user, level=2),
         'event_type': EventType.values[event.EventType],
-        'date_created': event.DatePublished.strftime('%s')
+        'date_created': event.date_published.strftime('%s')
     }
 
     if event.attached_object:
@@ -444,19 +444,19 @@ def render_event(event):
 def render_currency(currency):
     return {
         'code': currency.Code,
-        'name': currency.Name,
-        'country': currency.Country
+        'name': currency.name,
+        'country': currency.country
     }
 
 
 def render_post(post):
-    if post.Type == POST_TYPE_REQUEST or post.Type == POST_TYPE_OFFER:
+    if post.type == POST_TYPE_REQUEST or post.type == POST_TYPE_OFFER:
         return render_shout(post)
-    # elif post.Type == POST_TYPE_DEAL:
+    # elif post.type == POST_TYPE_DEAL:
     #		return render_deal(post)
-    elif post.Type == POST_TYPE_EVENT:
+    elif post.type == POST_TYPE_EVENT:
         return render_event(post)
-    elif post.Type == POST_TYPE_EXPERIENCE:
+    elif post.type == POST_TYPE_EXPERIENCE:
         return render_experience(post)
     else:
         return {}

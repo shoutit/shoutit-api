@@ -66,7 +66,7 @@ def add_gallery_item(request, business_name, gallery_id=None):
     methods=['POST'],
     json_renderer=lambda request, result, item_id: gallery_item_json_renderer(request, result,
                                                                               message=_('Your item was edited successfully.')),
-    validator=lambda request, item_id: object_exists_validator(item_controller.get_item, True, _('Item does not exist.'), item_id)
+    validator=lambda request, item_id: object_exists_validator(item_controller.get_item, True, _('item does not exist.'), item_id)
 )
 def edit_item(request, item_id):
     result = ResponseResult()
@@ -139,7 +139,7 @@ def shout_item(request, item_id):
 
         result.messages.append(('success', _('Your shout was shouted!')))
 
-        if not request.user.is_active and Shout.objects.filter(OwnerUser=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
+        if not request.user.is_active and Shout.objects.filter(user=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             user_controller.take_permission_from_user(request, PERMISSION_SHOUT_MORE)
 
     else:

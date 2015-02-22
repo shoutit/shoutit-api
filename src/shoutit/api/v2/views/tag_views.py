@@ -21,7 +21,7 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
     """
     Tag API Resource.
     """
-    lookup_field = 'Name'
+    lookup_field = 'name'
     lookup_value_regex = '[a-z0-9-]{2,30}'
 
     serializer_class = TagSerializer
@@ -29,8 +29,8 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
     queryset = Tag.objects.all()
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('Name',)
-    search_fields = ('=id', 'Name')
+    filter_fields = ('name',)
+    search_fields = ('=id', 'name')
 
     def list(self, request, *args, **kwargs):
         """
@@ -54,7 +54,7 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Tags Object} as described above
+          "results": [] // list of {Tag Object} as described above
         }
         </code></pre>
         ---
@@ -107,12 +107,12 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
 
         ###Listen
         <pre><code>
-        POST: /api/v2/tags/{Name}/listen
+        POST: /api/v2/tags/{name}/listen
         </code></pre>
 
         ###Stop listening
         <pre><code>
-        DELETE: /api/v2/tags/{Name}/listen
+        DELETE: /api/v2/tags/{name}/listen
         </code></pre>
         ---
         omit_serializer: true
@@ -123,11 +123,11 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
 
         if request.method == 'POST':
             stream_controller.listen_to_stream(request.user, tag.stream2)
-            msg = "you started listening to {} shouts.".format(tag.Name)
+            msg = "you started listening to {} shouts.".format(tag.name)
 
         else:
             stream_controller.remove_listener_from_stream(request.user, tag.stream2)
-            msg = "you stopped listening to {} shouts.".format(tag.Name)
+            msg = "you stopped listening to {} shouts.".format(tag.name)
 
         ret = {
             'data': {'success': msg},

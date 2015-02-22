@@ -11,7 +11,7 @@ def register_event(user, event_type, attached_object=None):
 
     pk = attached_object and attached_object.pk or None
     ct = attached_object and ContentType.objects.get_for_model(attached_object) or None
-    event = Event(OwnerUser=user, Type=POST_TYPE_EVENT, EventType=event_type, object_id=pk, content_type=ct)
+    event = Event(user=user, type=POST_TYPE_EVENT, EventType=event_type, object_id=pk, content_type=ct)
     event.save()
 
     profile = user.abstract_profile
@@ -20,17 +20,17 @@ def register_event(user, event_type, attached_object=None):
 
 
 # realtime_message = realtime_controller.WrapRealtimeMessage(render_event(event),RealtimeType.values[REALTIME_TYPE_EVENT])
-#	realtime_controller.BroadcastRealtimeMessage(realtime_message,user_controller.GetProfile(user).City)
+#	realtime_controller.BroadcastRealtimeMessage(realtime_message,user_controller.GetProfile(user).city)
 
 def GetUserEvents(user, start_index=None, end_index=None):
-    return Event.objects.get_valid_events().filter(OwnerUser=user)
+    return Event.objects.get_valid_events().filter(user=user)
 
 
 def GetPublicEventsByLocation(country=None, city=None, date=None):
     events = []
     #	Q(event__EventType = EVENT_TYPE_FOLLOW_USER ) |
-    events = Event.objects.filter(IsDisabled=False)
-    events = events.filter(~Q(OwnerUser__first_name=""))
+    events = Event.objects.filter(is_disabled=False)
+    events = events.filter(~Q(user__first_name=""))
 
     #	events = events.filter(Q(EventType = EVENT_TYPE_FOLLOW_TAG ) | Q(EventType = EVENT_TYPE_SHARE_EXPERIENCE ) | Q(EventType = EVENT_TYPE_COMMENT ) | Q(EventType = EVENT_TYPE_SHOUT_OFFER) | Q(EventType = EVENT_TYPE_SHOUT_REQUEST ) | Q(EventType = EVENT_TYPE_FOLLOW_BUSINESS )  )
     events = events.filter(
@@ -39,21 +39,21 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
             EventType=EVENT_TYPE_FOLLOW_BUSINESS))
 
     if country:
-        events = events.filter(Q(OwnerUser__profile__Country=country) | Q(OwnerUser__business__Country=country))
+        events = events.filter(Q(user__profile__country=country) | Q(user__business__country=country))
 
     if city:
-        events = events.filter(Q(OwnerUser__profile__City=city) | Q(OwnerUser__business__City=city))
+        events = events.filter(Q(user__profile__city=city) | Q(user__business__city=city))
 
-    #	extra_ids = Experience.objects.filter(AboutBusiness__City = city).values('pk')
+    #	extra_ids = Experience.objects.filter(AboutBusiness__city = city).values('pk')
     #	ct = ContentType.objects.get_for_model(Experience)
     #	extra_events = Event.objects.filter( object_id__in=extra_ids)
     #	extra_events += events
     if date:
-        events = events.filter(DatePublished__gte=date).order_by('-DatePublished').select_related('OwnerUser', 'OwnerUser__Profile',
-                                                                                                  'OwnerUser__Business', 'attached_object')
+        events = events.filter(date_published__gte=date).order_by('-date_published').select_related('user', 'user__Profile',
+                                                                                                  'user__Business', 'attached_object')
     else:
-        events = events.order_by('-DatePublished')[0:DEFAULT_PAGE_SIZE].select_related('OwnerUser', 'OwnerUser__Profile',
-                                                                                       'OwnerUser__Business', 'attached_object')
+        events = events.order_by('-date_published')[0:DEFAULT_PAGE_SIZE].select_related('user', 'user__Profile',
+                                                                                       'user__Business', 'attached_object')
     return events
 
 
@@ -61,7 +61,7 @@ def delete_event_about_obj(attached_object):
     ct = ContentType.objects.get_for_model(attached_object)
     try:
         event = Event.objects.get(content_type=ct, object_id=attached_object.id)
-        event.IsDisabled = True
+        event.is_disabled = True
         event.save()
     except Event.DoesNotExist:
         pass
@@ -70,7 +70,7 @@ def delete_event_about_obj(attached_object):
 def delete_event(event_id):
     try:
         event = Event.objects.get(pk=event_id)
-        event.IsDisabled = True
+        event.is_disabled = True
         event.save()
     except Event.DoesNotExist:
         pass
@@ -85,7 +85,7 @@ def get_event(event_id):
 #def MuteEvent(event_id):
 #	event = Event.objects.get(pk = event_id)
 #	if event:
-#		event.IsMuted = True
+#		event.muted = True
 #		event.save()
 
 
@@ -120,27 +120,27 @@ def GetDetailedEvents(events):
     if related_ids['tag_ids']:
         related['tags'] = list(Tag.objects.filter(pk__in=related_ids['tag_ids']))
     if related_ids['trade_ids']:
-        trades = Trade.objects.filter(pk__in=related_ids['trade_ids']).select_related('OwnerUser', 'OwnerUser__Profile',
-                                                                                      'OwnerUser__Business', 'Item', 'Item__Currency')
+        trades = Trade.objects.filter(pk__in=related_ids['trade_ids']).select_related('user', 'user__Profile',
+                                                                                      'user__Business', 'item', 'item__Currency')
         trades = get_trade_images(trades)
         related['trades'] = list(trades)
     if related_ids['experience_ids']:
         related['experiences'] = list(
-            Experience.objects.filter(pk__in=related_ids['experience_ids']).select_related('OwnerUser', 'OwnerUser__Profile',
+            Experience.objects.filter(pk__in=related_ids['experience_ids']).select_related('user', 'user__Profile',
                                                                                            'AboutBusiness__User'))
     if related_ids['shared_exp_ids']:
         related['shared_exps'] = list(
-            SharedExperience.objects.filter(pk__in=related_ids['shared_exp_ids']).select_related('OwnerUser', 'OwnerUser__Profile',
+            SharedExperience.objects.filter(pk__in=related_ids['shared_exp_ids']).select_related('user', 'user__Profile',
                                                                                                  'Experience', 'Experience__AboutBusiness',
                                                                                                  'Experience__AboutBusiness__User'))
     if related_ids['comment_ids']:
         related['comments'] = list(
-            Comment.objects.filter(pk__in=related_ids['comment_ids']).select_related('OwnerUser', 'OwnerUser__Profile',
-                                                                                     'OwnerUser__Business', 'AboutPost'))
+            Comment.objects.filter(pk__in=related_ids['comment_ids']).select_related('user', 'user__Profile',
+                                                                                     'user__Business', 'AboutPost'))
     if related_ids['deal_ids']:
         related['deals'] = list(
-            Deal.objects.filter(pk__in=related_ids['deal_ids']).select_related('OwnerUser', 'OwnerUser__Business', 'Item',
-                                                                               'Item__Currency'))
+            Deal.objects.filter(pk__in=related_ids['deal_ids']).select_related('user', 'user__Business', 'item',
+                                                                               'item__Currency'))
 
     for event in events:
         if event.EventType == EVENT_TYPE_FOLLOW_USER:

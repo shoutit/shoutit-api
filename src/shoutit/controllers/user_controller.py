@@ -49,7 +49,7 @@ def list_users(query, start_index=0, end_index=30):
         filters |= Q(first_name__icontains=q)
         filters |= Q(last_name__icontains=q)
         filters |= Q(email__iexact=q)
-        filters |= Q(business__isnull=False, business__Name__icontains=q)
+        filters |= Q(business__isnull=False, business__name__icontains=q)
 
     users = users.select_related(*related).filter(filters)[start_index:end_index]
 
@@ -70,7 +70,7 @@ def search_users(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), sta
         for q in queries:
             filters |= Q(first_name__icontains=q)
             filters |= Q(last_name__icontains=q)
-            filters |= Q(business__isnull=False, business__Name__icontains=q)
+            filters |= Q(business__isnull=False, business__name__icontains=q)
             if flag:
                 if not (flag & int(USER_TYPE_INDIVIDUAL)):
                     filters &= Q(profile__isnull=True)
@@ -143,7 +143,7 @@ def SetRecoveryToken(user):
     while db_token is not None:
         token = generate_confirm_token(TOKEN_LONG)
         db_token = ConfirmToken.getToken(token)
-    tok = ConfirmToken(Token=token, user=user, Type=TOKEN_TYPE_RECOVER_PASSWORD)
+    tok = ConfirmToken(Token=token, user=user, type=TOKEN_TYPE_RECOVER_PASSWORD)
     tok.save()
     return token
 
@@ -154,7 +154,7 @@ def SetRegisterToken(user, email, token_length, token_type):
     while db_token is not None:
         token = generate_confirm_token(token_length)
         db_token = ConfirmToken.getToken(token)
-    tok = ConfirmToken(Token=token, user=user, Email=email, Type=token_type)
+    tok = ConfirmToken(Token=token, user=user, Email=email, type=token_type)
     tok.save()
     profile = GetProfile(user)
     profile.LastToken = tok
@@ -212,7 +212,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     django_user.is_active = False
     django_user.save()
 
-    stream = Stream(Type=STREAM_TYPE_USER)
+    stream = Stream(type=STREAM_TYPE_USER)
     stream.save()
 
     up = Profile(user=django_user, Stream=stream, Mobile=mobile)
@@ -220,12 +220,12 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     up.image = '/static/img/_user_male.png'
     up.save()
 
-    encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
-    predefined_city = PredefinedCity.objects.filter(City=up.City)
+    encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
+    predefined_city = PredefinedCity.objects.filter(city=up.city)
     if not predefined_city:
             predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(City=up.City, city_encoded=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
+        PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
@@ -250,22 +250,22 @@ def SignUpSSS(request, mobile, location, country, city):
     django_user = User.objects.create_user(username, "", password)
     django_user.is_active = False
     django_user.save()
-    stream = Stream(Type=STREAM_TYPE_USER)
+    stream = Stream(type=STREAM_TYPE_USER)
     stream.save()
 
     up = Profile(user=django_user, Stream=stream, Mobile=mobile, isSSS=True)
     up.save()
 
-    up.Latitude = location[0]
-    up.Longitude = location[1]
-    up.Country = country
-    up.City = city
+    up.latitude = location[0]
+    up.longitude = location[1]
+    up.country = country
+    up.city = city
     up.image = '/static/img/_user_male.png'
     up.save()
 
-    if not PredefinedCity.objects.filter(City=up.City):
-        encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
-        PredefinedCity(City=up.City, city_encoded=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
+    if not PredefinedCity.objects.filter(city=up.city):
+        encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
+        PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
     Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, '', token_length, token_type)
@@ -296,19 +296,19 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
     dbcl_user = dbcl_model(user=django_user)
     dbcl_user.save()
 
-    stream = Stream(Type=STREAM_TYPE_USER)
+    stream = Stream(type=STREAM_TYPE_USER)
     stream.save()
 
     up = Profile(
         user=django_user, Stream=stream, isSSS=True,
-        Latitude=lat, Longitude=lng, City=city, Country=country,
+        latitude=lat, longitude=lng, city=city, country=country,
         image='/static/img/_user_male.png'
     )
     up.save()
 
-    if not PredefinedCity.objects.filter(City=up.City):
-        encoded_city = to_seo_friendly(unicode.lower(unicode(up.City)))
-        PredefinedCity(City=up.City, city_encoded=encoded_city, Country=up.Country, Latitude=up.Latitude, Longitude=up.Longitude).save()
+    if not PredefinedCity.objects.filter(city=up.city):
+        encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
+        PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
     token = SetRegisterToken(django_user, email, token_length, token_type)
     django_user.token = token
@@ -316,11 +316,11 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
     return django_user
 
 
-def CompleteSignUpSSS(request, firstname, lastname, password, user, username, token, tokenType, email, sex, birthday):
+def CompleteSignUpSSS(request, first_name, last_name, password, user, username, token, tokenType, email, sex, birthday):
     if tokenType == TOKEN_TYPE_HTML_NUM:
         user.email = email
-    user.first_name = firstname
-    user.last_name = lastname
+    user.first_name = first_name
+    user.last_name = last_name
     if username and username.strip() != '':
         user.username = username
     if password is not None and password.strip() != '':
@@ -357,7 +357,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     user.profile.save()
     from shoutit.controllers import realtime_controller as realtime_controller
 
-    realtime_controller.BindUserToCity(user.username, user.profile.City)
+    realtime_controller.BindUserToCity(user.username, user.profile.city)
     if token is not None and len(token) > 0:
         ActivateUser(token, user)
 
@@ -381,7 +381,7 @@ def SignUpUserFromAPI(request, first_name, last_name, username, email, password,
     django_user.last_name = last_name
     django_user.is_active = False
     django_user.save()
-    stream = Stream(Type=STREAM_TYPE_USER)
+    stream = Stream(type=STREAM_TYPE_USER)
     stream.save()
     up = Profile(user=django_user, Stream=stream, Mobile=mobile)
     up.birthday = birthday
@@ -543,13 +543,13 @@ def UserFollowing(username, type='all', period='recent'):
 
     if type == 'users' or type == 'all':
         users = [f[0] for f in
-                 FollowShip.objects.filter(follower__pk=user.pk, stream__Type=STREAM_TYPE_USER).values_list('stream__OwnerUser').order_by(
+                 FollowShip.objects.filter(follower__pk=user.pk, stream__type=STREAM_TYPE_USER).values_list('stream__user').order_by(
                      '-date_followed')[:limit]]
         result['users'] = [u for u in Profile.objects.all().filter(pk__in=users)]
 
     if type == 'tags' or type == 'all':
-        result['tags'] = [f[0] for f in FollowShip.objects.filter(follower__pk=user.pk, stream__Type=STREAM_TYPE_TAG).values_list(
-            'stream__OwnerTag__Name').order_by('-date_followed')[:limit]]
+        result['tags'] = [f[0] for f in FollowShip.objects.filter(follower__pk=user.pk, stream__type=STREAM_TYPE_TAG).values_list(
+            'stream__tag__name').order_by('-date_followed')[:limit]]
 
     return result
 
@@ -564,18 +564,18 @@ def is_listening(user, stream):
 
 def update_profile_location(profile, location):
 
-    profile.Latitude = location['latitude']
-    profile.Longitude = location['longitude']
-    profile.City = location['city']
-    profile.Country = location['country']
+    profile.latitude = location['latitude']
+    profile.longitude = location['longitude']
+    profile.city = location['city']
+    profile.country = location['country']
     profile.save()
 
     try:
-        PredefinedCity.objects.get(City=location['city'])
+        PredefinedCity.objects.get(city=location['city'])
     except PredefinedCity.DoesNotExist:
         encoded_city = to_seo_friendly(unicode.lower(unicode(location['city'])))
-        PredefinedCity(City=location['city'], city_encoded=encoded_city, Country=location['country'], Latitude=location['latitude'],
-                       Longitude=location['longitude']).save()
+        PredefinedCity(city=location['city'], city_encoded=encoded_city, country=location['country'], latitude=location['latitude'],
+                       longitude=location['longitude']).save()
 
     return profile
 
@@ -684,25 +684,25 @@ def get_unread_notifications_count(profile):
 
 def activities_stream(profile, start_index=None, end_index=None):
     stream_posts_query_set = profile.Stream.Posts.get_valid_posts([POST_TYPE_EVENT]).filter(
-        ~Q(Type=POST_TYPE_EVENT) |
-        (Q(Type=POST_TYPE_EVENT)
-         & Q(event__IsDisabled=False)
+        ~Q(type=POST_TYPE_EVENT) |
+        (Q(type=POST_TYPE_EVENT)
+         & Q(event__is_disabled=False)
          & (Q(event__EventType=EVENT_TYPE_FOLLOW_USER) | Q(event__EventType=EVENT_TYPE_FOLLOW_BUSINESS) | Q(
             event__EventType=EVENT_TYPE_FOLLOW_TAG) | Q(event__EventType=EVENT_TYPE_SHARE_EXPERIENCE) | Q(
             event__EventType=EVENT_TYPE_COMMENT) | Q(event__EventType=EVENT_TYPE_BUY_DEAL))
         )
-    ).order_by('-DatePublished')
+    ).order_by('-date_published')
 
     post_count = stream_posts_query_set.count()
 
     post_ids = [post['pk'] for post in stream_posts_query_set[start_index:end_index].values('pk')]
-    #	trades = Trade.objects.get_valid_trades().filter(pk__in = post_ids).select_related('Item','Item__Currency','OwnerUser','OwnerUser__Profile','OwnerUser__Business')
+    #	trades = Trade.objects.get_valid_trades().filter(pk__in = post_ids).select_related('item','item__Currency','user','user__Profile','user__Business')
     #	trades = shout_controller.get_trade_images(trades)
 
-    events = Event.objects.get_valid_events().filter(pk__in=post_ids).select_related('OwnerUser', 'OwnerUser__Profile').order_by(
-        '-DatePublished')
+    events = Event.objects.get_valid_events().filter(pk__in=post_ids).select_related('user', 'user__Profile').order_by(
+        '-date_published')
     events = event_controller.GetDetailedEvents(events)
-    #	stream_posts = sorted(chain( trades, events),key=lambda instance: instance.DatePublished,reverse = True)
+    #	stream_posts = sorted(chain( trades, events),key=lambda instance: instance.date_published,reverse = True)
     stream_posts = events
 
     return post_count, stream_posts

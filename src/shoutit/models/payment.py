@@ -65,7 +65,7 @@ class DealBuy(UUIDModel):
 
 class Service(UUIDModel):
     Code = models.CharField(max_length=256)
-    Name = models.CharField(max_length=1024)
+    name = models.CharField(max_length=1024)
     Price = models.FloatField()
 
 
@@ -106,7 +106,7 @@ class ServiceUsage(UUIDModel):
 
 
 class Subscription(UUIDModel):
-    Type = models.IntegerField(default=0)
+    type = models.IntegerField(default=0)
     State = models.IntegerField(default=0)
     SignUpDate = models.DateTimeField(null=True, blank=True)
     DeactivateDate = models.DateTimeField(null=True, blank=True)

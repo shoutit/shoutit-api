@@ -40,7 +40,7 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 	django_user.is_active = True
 	django_user.save()
 
-	stream = Stream(Type = STREAM_TYPE_BUSINESS)
+	stream = Stream(type = STREAM_TYPE_BUSINESS)
 	stream.save()
 
 	cat = None
@@ -50,14 +50,14 @@ def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, c
 		except ObjectDoesNotExist, e:
 			cat = None
 
-	bp = Business(user =  django_user, Category = cat, Stream = stream, Name = name,
-						 Latitude = latitude, Longitude = longitude, Country = country, City = city, Address = address)
+	bp = Business(user =  django_user, Category = cat, Stream = stream, name = name,
+						 latitude = latitude, longitude = longitude, country = country, city = city, address = address)
 	bp.image = '/static/img/_user_male.png'
 	bp.save()
 
-	if not PredefinedCity.objects.filter(City = city):
+	if not PredefinedCity.objects.filter(city = city):
 		encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-		PredefinedCity(City = city, city_encoded = encoded_city, Country = country, Latitude = latitude, Longitude = longitude).save()
+		PredefinedCity(city = city, city_encoded = encoded_city, country = country, latitude = latitude, longitude = longitude).save()
 
 	if source_id is not None:
 		source = BusinessSource(business = bp, Source = source_type, SourceID = source_id)
@@ -83,7 +83,7 @@ def ClaimTinyBusiness(request, tiny_username, email, phone, website, about = Non
 		confirmation = BusinessConfirmation(user =  django_user)
 		confirmation.save()
 		for document in documents:
-			doc = StoredFile(user =  django_user, File = document, Type = FILE_TYPE_BUSINESS_DOCUMENT)
+			doc = StoredFile(user =  django_user, File = document, type = FILE_TYPE_BUSINESS_DOCUMENT)
 			doc.save()
 			confirmation.Files.add(doc)
 		confirmation.save()
@@ -106,10 +106,10 @@ def SignUpTempBusiness(request, email, password, send_activation = True, busines
 	app.save()
 
 	token = SetTempRegisterToken(django_user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
-	
+
 	if email is not None and send_activation:
 		email_controller.SendEmail(email, {
-			'name'  : business and business.Name or "New Business",
+			'name'  : business and business.name or "New Business",
 			'email' : email,
 			'link' 	: "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/')
 		}, "business_temp_registration_email.html", "business_temp_registration_email.txt")
@@ -122,7 +122,7 @@ def SetTempRegisterToken(user, email, tokenLength, tokenType):
 	while db_token is not None:
 		token = utils.generate_confirm_token(tokenLength)
 		db_token = ConfirmToken.getToken(token)
-	tok = ConfirmToken(Token = token, user =  user, Email = email, Type = tokenType)
+	tok = ConfirmToken(Token = token, user =  user, Email = email, type = tokenType)
 	tok.save()
 
 	profile = user.BusinessCreateApplication.count() and user.BusinessCreateApplication.all()[0] or None
@@ -142,41 +142,41 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 	if user.BusinessCreateApplication.count():
 		ba = user.BusinessCreateApplication.all()[0]
 		if ba and ba.Business:
-			ba.Name = ba.Business.Name
+			ba.name = ba.Business.name
 			ba.Category = ba.Business.Category
-			ba.Latitude = ba.Business.Latitude
-			ba.Longitude = ba.Business.Longitude
-			ba.Country = ba.Business.Country
-			ba.City = ba.Business.City
-			ba.Address = ba.Business.Address
+			ba.latitude = ba.Business.latitude
+			ba.longitude = ba.Business.longitude
+			ba.country = ba.Business.country
+			ba.city = ba.Business.city
+			ba.address = ba.Business.address
 		else:
-			ba.Name = name
+			ba.name = name
 			ba.Category = cat
-			ba.Latitude = latitude
-			ba.Longitude = longitude
-			ba.Country = country
-			ba.City = city
-			ba.Address = address
+			ba.latitude = latitude
+			ba.longitude = longitude
+			ba.country = country
+			ba.city = city
+			ba.address = address
 
 		ba.Phone = phone
 		ba.About = about
 		ba.Website = website
 
 	else:
-		ba = BusinessCreateApplication(user =  user, Category = cat, Name = name, Phone = phone, About = about, Website = website,
-					 Latitude = latitude, Longitude = longitude, Country = country, City = city, Address = address)
+		ba = BusinessCreateApplication(user =  user, Category = cat, name = name, Phone = phone, About = about, Website = website,
+					 latitude = latitude, longitude = longitude, country = country, city = city, address = address)
 	ba.save()
 
-	if not PredefinedCity.objects.filter(City = city):
+	if not PredefinedCity.objects.filter(city = city):
 		encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-		PredefinedCity(City = city, city_encoded = encoded_city, Country = country, Latitude = latitude, Longitude = longitude).save()
+		PredefinedCity(city = city, city_encoded = encoded_city, country = country, latitude = latitude, longitude = longitude).save()
 
 
 	if len(documents):
 		confirmation = BusinessConfirmation(user =  user)
 		confirmation.save()
 		for document in documents:
-			doc = StoredFile(user =  user, File = document, Type = FILE_TYPE_BUSINESS_DOCUMENT)
+			doc = StoredFile(user =  user, File = document, type = FILE_TYPE_BUSINESS_DOCUMENT)
 			doc.save()
 			confirmation.Files.add(doc)
 		confirmation.save()
@@ -184,13 +184,13 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 
 #	bp.image = '/static/img/_user_male.png'
 #	bp.save()
-#	business_gallery = Gallery(Description = '', OwnerBusiness = bp)
+#	business_gallery = Gallery(Description = '', business = bp)
 #	business_gallery.save()
 
 #	TODO log the sign up activity
 #	Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME : username})
-	
-	email_controller.SendBusinessSignupEmail(user, user.email, ba.Name)
+
+	email_controller.SendBusinessSignupEmail(user, user.email, ba.name)
 	return ba
 
 def EditBusiness(request, username = None, name = None, password = None, email = None, phone=None, image = None,
@@ -199,7 +199,7 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 		business = GetBusiness(username)
 
 		if name:
-			business.Name = name
+			business.name = name
 		if password:
 			business.user.set_password(password)
 		if email:
@@ -213,22 +213,22 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 		if website:
 			business.Website = website
 		if latitude != 0.0:
-			business.Latitude = latitude
+			business.latitude = latitude
 		if longitude != 0.0:
-			business.Longitude = longitude
+			business.longitude = longitude
 		if country:
-			business.CountryCode = country
+			business.country = country
 		if city:
-			business.ProvinceCode = city
+			business.city = city
 		if address:
-			business.Address = address
+			business.address = address
 
 		business.user.save()
 		business.save()
 
-		if not PredefinedCity.objects.filter(City = city):
+		if not PredefinedCity.objects.filter(city = city):
 			encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-			PredefinedCity(City = city, city_encoded = encoded_city, Country = country, Latitude = latitude, Longitude = longitude).save()
+			PredefinedCity(city = city, city_encoded = encoded_city, country = country, latitude = latitude, longitude = longitude).save()
 
 
 		# TODO log editing activity
@@ -281,11 +281,11 @@ def AcceptBusiness(request, username):
 		ba.Business.save()
 
 	elif not ba.Business and not profile:
-		stream = Stream(Type = STREAM_TYPE_BUSINESS)
+		stream = Stream(type = STREAM_TYPE_BUSINESS)
 		stream.save()
-		bp = Business(user =  user, Name = ba.Name, Category = ba.Category, image = "/static/img/_user_male.png",
-							About = ba.About, Phone = ba.Phone, Website = ba.Website, Latitude = ba.Latitude, Longitude = ba.Longitude,
-							Country = ba.Country, City = ba.City, Address = ba.Address, Stream = stream, Confirmed = True)
+		bp = Business(user =  user, name = ba.name, Category = ba.Category, image = "/static/img/_user_male.png",
+							About = ba.About, Phone = ba.Phone, Website = ba.Website, latitude = ba.latitude, longitude = ba.longitude,
+							country = ba.country, city = ba.city, address = ba.address, Stream = stream, Confirmed = True)
 		bp.save()
 	elif ba.Business:
 		ba.Business.Confirmed = True

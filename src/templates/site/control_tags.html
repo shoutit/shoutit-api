@@ -12,12 +12,12 @@
 {#{% csrf_token %}#}
 {#<table>#}
 {#<tr>#}
-{#    <td>Parent Tags</td>#}
+{#    <td>Parent tags</td>#}
 {#    <td>Remove From Parents</td>#}
 {#</tr>#}
-{#{% for parentTag in parentTags %}#}
+{#{% for parentTag in parenttags %}#}
 {#<tr>#}
-{#    <td> {{ parentTag.Name }}</td>#}
+{#    <td> {{ parentTag.name }}</td>#}
 {#    <td> <input type="checkbox" name="tag{{ parentTag.id }}"  > </td>#}
 {#</tr>#}
 {#{% endfor %}#}
@@ -44,12 +44,12 @@
 </tr>
 {% for tag in allTags  %}
     <tr>
-        <td>{{ tag.Name }}</td>
+        <td>{{ tag.name }}</td>
         <td>
             <select name="tag{{ tag.pk }}">
                     {% if tag.Parent != Null %}
                         <option selected="selected" >
-                        {{ tag.Parent.Name }}
+                        {{ tag.Parent.name }}
                         </option>
                         <option> ----- </option>
                     {% else %}
@@ -58,7 +58,7 @@
 
                 {% for parentTag in allTags %}
                     {% if parentTag != tag.Parent and parentTag != tag %}
-                        <option>{{ parentTag.Name }}</option>
+                        <option>{{ parentTag.name }}</option>
                     {% endif %}
                 {% endfor %}
             </select>

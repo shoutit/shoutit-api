@@ -3,7 +3,7 @@
 {% load template_filters %}
 {% block shout_details %}
     <a data-target="#map_modal" href="#" data-toggle="modal">
-        <img src="https://maps.googleapis.com/maps/api/staticmap?center={{ shout.Latitude }},{{ shout.Longitude }}&zoom=10&size=310x150&markers=icon:http%3A%2F%2Fgoo.gl%2F{% if shout.Type == 0 %}djrt7{% else %}sZCBD{% endif %}%7Csize:mid%7Ccolor:0x8AB736%7C{{ shout.Latitude }},{{ shout.Longitude }}&sensor=false&style=saturation:-87&style=feature:road|hue:0x55ff00|saturation:5|lightness:31&style=feature:water|lightness:-5&style=element:labels|visibility:simplified&style=feature:poi|visibility:simplified" />
+        <img src="https://maps.googleapis.com/maps/api/staticmap?center={{ shout.latitude }},{{ shout.longitude }}&zoom=10&size=310x150&markers=icon:http%3A%2F%2Fgoo.gl%2F{% if shout.type == 0 %}djrt7{% else %}sZCBD{% endif %}%7Csize:mid%7Ccolor:0x8AB736%7C{{ shout.latitude }},{{ shout.longitude }}&sensor=false&style=saturation:-87&style=feature:road|hue:0x55ff00|saturation:5|lightness:31&style=feature:water|lightness:-5&style=element:labels|visibility:simplified&style=feature:poi|visibility:simplified" />
     </a>
     <div>
         {% if shout.get_tags %}
@@ -11,7 +11,7 @@
                 <span class="tags">{% trans "Tags" %}</span>:
                 {% for tag in shout.get_tags %}
                     {% if forloop.counter0 != 0 %} | {% endif %}
-                    <a href="/tag/{{ tag.Name|urlencode }}/" title="{{ tag.Name }}">{{ tag.Name }}</a>
+                    <a href="/tag/{{ tag.name|urlencode }}/" title="{{ tag.name }}">{{ tag.name }}</a>
                 {% endfor %}
             </div>
         {% endif %}

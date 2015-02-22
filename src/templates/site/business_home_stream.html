@@ -1,14 +1,14 @@
 {% load template_filters %}
 {% for post in posts %}
-    {% if post.Type == constants|key:"Offer" %}
+    {% if post.type == constants|key:"Offer" %}
         {% set shout = post %}
         {% include "shout_in_stream.html" %}
     {% endif %}
-    {% if post.Type == constants|key:"Deal" %}
+    {% if post.type == constants|key:"Deal" %}
         {% set deal = post %}
         {% include "deal.html" %}
     {% endif %}
-    {% if post.Type == constants|key:"Event" %}
+    {% if post.type == constants|key:"Event" %}
         {% set event = post %}
 		{% set user_stream = 1 %}
         {% include "event.html" %}

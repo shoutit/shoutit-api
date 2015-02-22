@@ -54,7 +54,7 @@ class CacheTag(Constant):
     values = {}
 
 CACHE_TAG_STREAMS = CacheTag(text='Streams')
-CACHE_TAG_TAGS = CacheTag(text='Tags')
+CACHE_TAG_TAGS = CacheTag(text='tags')
 CACHE_TAG_USERS = CacheTag(text='Users')
 CACHE_TAG_NOTIFICATIONS = CacheTag(text='Notifications')
 CACHE_TAG_MESSAGES = CacheTag(text='Messages')
