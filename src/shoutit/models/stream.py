@@ -1,9 +1,9 @@
-from django.contrib.contenttypes.generic import GenericRelation
-from django.db import models
+from django.db import models, IntegrityError
 from django.conf import settings
 
 from common.constants import StreamType2
 from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_BUSINESS, STREAM_TYPE_TAG, STREAM_TYPE_USER, STREAM_TYPE_RELATED
+import shoutit
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
 
 
@@ -91,10 +91,18 @@ class Stream2(UUIDModel, AttachedObjectMixin):
         super(Stream2, self).__init__(*args, **kwargs)
 
     def add_post(self, post):
-        self.posts.add(post)
+        assert isinstance(post, shoutit.models.Post)
+        try:
+            self.posts.add(post)
+            post.refresh_streams2_ids()
+        except IntegrityError:
+            # the post exists already in this stream2
+            pass
 
     def remove_post(self, post):
+        assert isinstance(post, shoutit.models.Post)
         self.posts.remove(post)
+        post.refresh_streams2_ids()
 
     @property
     def owner(self):

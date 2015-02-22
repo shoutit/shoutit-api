@@ -268,6 +268,8 @@ POST_TYPE_EXPERIENCE = PostType('Experience')
 POST_TYPE_DEAL = PostType('Deal')
 POST_TYPE_EVENT = PostType('Event')
 
+TAGS_PER_POST = 20
+
 
 class ActivityType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()

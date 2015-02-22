@@ -1,10 +1,12 @@
 from datetime import timedelta, datetime
+import json
 
 from django.db import models
 from django.db.models import Q, Sum
 from django.conf import settings
 
-from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
+from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, \
+    TAGS_PER_POST
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -99,6 +101,9 @@ class Post(UUIDModel, APIModelMixin):
     OwnerUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
     Streams = models.ManyToManyField('shoutit.Stream', related_name='Posts')  # todo: move to stream as posts
 
+    # the uuid(s) of streams this post appears in. assuming uuid with hyphens size is 36 characters
+    streams2_ids = models.CharField(max_length=(TAGS_PER_POST * 36) + TAGS_PER_POST, blank=True, default="")
+
     Text = models.TextField(max_length=2000, default='', db_index=True, blank=True)
     Type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True, choices=PostType.choices)
     DatePublished = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -146,6 +151,10 @@ class Post(UUIDModel, APIModelMixin):
             return self.Item.thumbnail
         else:
             return None
+
+    def refresh_streams2_ids(self):
+        # save the ids of streams2 this post appears in as a json array, to be used in raw queries.
+        self.streams2_ids = json.dumps(self.streams2.values_list('id', flat=True))
 
 
 class Shout(Post):

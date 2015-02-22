@@ -1,5 +1,7 @@
 import uuid
 from json import JSONEncoder
+from django.db.models.query import QuerySet
+
 default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
 
 
@@ -10,6 +12,9 @@ class ShoutitCustomJSONEncoder(JSONEncoder):
         # case: UUID
         if isinstance(obj, uuid.UUID):
             return str(obj)
+
+        if isinstance(obj, QuerySet):
+            return list(obj)
 
         # case: Class
         # if isinstance(obj, Class):
