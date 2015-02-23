@@ -5,6 +5,7 @@ import sys
 import re
 from datetime import datetime
 from django.core.exceptions import ValidationError
+from django.utils.deconstruct import deconstructible
 import httplib2
 from common.constants import NOT_ALLOWED_USERNAMES
 
@@ -60,6 +61,7 @@ def date_unix(date):
     return int((date - datetime(1970, 1, 1)).total_seconds())
 
 
+@deconstructible
 class AllowedUsernamesValidator(object):
     message = "'%s' can not be used as username, please choose something else."
     code = 'invalid'
