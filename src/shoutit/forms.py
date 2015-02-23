@@ -9,9 +9,10 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.extras.widgets import SelectDateWidget
 
 from common.constants import ExperienceState, TOKEN_TYPE_HTML_NUM
+from common.utils import validate_allowed_usernames
 from shoutit.models import User, Currency, Business, BusinessCategory, BusinessCreateApplication
 from shoutit.controllers import user_controller
-from shoutit.utils import safe_string, validate_allowed_usernames
+from shoutit.utils import safe_string
 from common.tagged_cache import TaggedCache
 
 

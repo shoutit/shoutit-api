@@ -17,7 +17,6 @@ import numpy as np
 from django.http import HttpResponse, Http404
 from django.conf import settings
 
-from django.core.exceptions import ValidationError
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER, NOT_ALLOWED_USERNAMES
 
 from shoutit.models import Experience, Tag, User
@@ -364,15 +363,3 @@ def cloud_upload_file(uploaded, container, filename, is_raw):
     except Exception, e:
         print e
     return None
-
-
-class NotAllowedUsernamesValidator(object):
-    message = 'This username can not be used, please choose something else.'
-    code = 'invalid'
-
-    def __call__(self, value):
-        if value in NOT_ALLOWED_USERNAMES:
-            raise ValidationError(self.message, code=self.code)
-
-
-validate_allowed_usernames = NotAllowedUsernamesValidator()

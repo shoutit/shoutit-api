@@ -35,6 +35,13 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
     filter_fields = ('username', 'email')
     search_fields = ('=id', 'username', 'first_name', 'last_name', '=email')
 
+    def get_object(self):
+        username = self.kwargs.get('username')
+        if username == 'me' and self.request.user.is_authenticated():
+            self.kwargs['username'] = self.request.user.username
+
+        return super(UserViewSet, self).get_object()
+
     def list(self, request, *args, **kwargs):
         """
         Get users based on `search` query param.
@@ -115,6 +122,12 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
 
         ---
         omit_serializer: true
+        parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -172,6 +185,11 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_parameters:
             - form
         parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
             - name: body
               paramType: body
         """
@@ -195,6 +213,12 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_serializer: true
         omit_parameters:
             - form
+        parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
         """
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -223,6 +247,11 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_parameters:
             - form
         parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
             - name: image_file
               type: file
         """
@@ -284,6 +313,11 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_parameters:
             - form
         parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
             - name: page
               paramType: query
         """
@@ -324,6 +358,11 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_parameters:
             - form
         parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
             - name: type
               description:
               paramType: query
@@ -400,6 +439,11 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_parameters:
             - form
         parameters:
+            - name: username
+              description: me for logged in user
+              paramType: path
+              required: true
+              defaultValue: me
             - name: type
               paramType: query
               required: true

@@ -155,12 +155,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
         errors = OrderedDict()
 
-        if isinstance(location_data, OrderedDict):
+        has_location = 'location' in data
+        if has_location and isinstance(location_data, OrderedDict):
             ls = LocationSerializer(data=location_data)
             if not ls.is_valid():
                 errors['location'] = ls.errors
 
-        if isinstance(video_data, OrderedDict):
+        has_video = 'video' in data
+        if has_video and isinstance(video_data, OrderedDict):
             vs = VideoSerializer(data=video_data)
             if not vs.is_valid():
                 errors['video'] = vs.errors

@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.authtoken.models import Token
 from uuidfield import UUIDField
-from common.utils import date_unix
+from common.utils import date_unix, AllowedUsernamesValidator
 from shoutit.api.api_utils import get_api2_url
 
 
@@ -81,7 +81,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                                 help_text=_('Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
                                 validators=[
                                     validators.RegexValidator(re.compile('[0-9a-zA-Z.]{2,30}'), _('Enter a valid username.'), 'invalid'),
-                                    validators.MinLengthValidator(2)
+                                    validators.MinLengthValidator(2),
+                                    AllowedUsernamesValidator()
                                 ])
     first_name = models.CharField(_('first name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
     last_name = models.CharField(_('last name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])

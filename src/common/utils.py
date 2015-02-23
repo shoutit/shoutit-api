@@ -4,7 +4,9 @@ Utils that are independent of Apps and their models
 import sys
 import re
 from datetime import datetime
+from django.core.exceptions import ValidationError
 import httplib2
+from common.constants import NOT_ALLOWED_USERNAMES
 
 
 def get_address_port(using_gunicorn=False):
@@ -56,3 +58,15 @@ def process_tags(tags):
 
 def date_unix(date):
     return int((date - datetime(1970, 1, 1)).total_seconds())
+
+
+class AllowedUsernamesValidator(object):
+    message = "'%s' can not be used as username, please choose something else."
+    code = 'invalid'
+
+    def __call__(self, value):
+        if value in NOT_ALLOWED_USERNAMES:
+            raise ValidationError(self.message % value, code=self.code)
+
+
+validate_allowed_usernames = AllowedUsernamesValidator()
