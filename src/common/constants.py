@@ -145,13 +145,11 @@ TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM = TokenType("Business Html Confirm")
 class FileType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 FILE_TYPE_BUSINESS_DOCUMENT = FileType("Business Document")
 
 
 class BusinessConfirmationState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
 
 BUSINESS_CONFIRMATION_STATUS_WAITING = BusinessConfirmationState("Waiting")
 BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT = BusinessConfirmationState("Waiting Payment")
@@ -169,7 +167,6 @@ class BusinessSourceType(Constant):
     def __init__(self, text=''):
         Constant.__init__(self, text)
         business_source_types[text] = self.value
-
 
 BUSINESS_SOURCE_TYPE_NONE = BusinessSourceType('None')
 BUSINESS_SOURCE_TYPE_FOURSQUARE = BusinessSourceType('Foursquare')
@@ -193,14 +190,12 @@ class UserTypeFlag(Flag):
         Flag.__init__(self, text)
         user_type_flags[text] = self.value
 
-
 USER_TYPE_INDIVIDUAL = UserTypeFlag('Individual')
 USER_TYPE_BUSINESS = UserTypeFlag('Business')
 
 
 class StreamType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
 
 STREAM_TYPE_USER = StreamType('User')
 STREAM_TYPE_TAG = StreamType('Tag')
@@ -211,7 +206,6 @@ STREAM_TYPE_BUSINESS = StreamType('Business')
 
 class StreamType2(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
 
 STREAM2_TYPE_PROFILE = StreamType2('Profile')
 STREAM2_TYPE_TAG = StreamType2('Tag')
@@ -230,7 +224,6 @@ class RankTypeFlag(Flag):
         Flag.__init__(self, text)
         rank_flags[text] = self.value
 
-
 TIME_RANK_TYPE = RankTypeFlag('Time')
 DISTANCE_RANK_TYPE = RankTypeFlag('Distance')
 PRICE_RANK_TYPE = RankTypeFlag('Price')
@@ -239,7 +232,6 @@ FOLLOW_RANK_TYPE = RankTypeFlag('Follow')
 
 class ItemState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
 
 ITEM_STATE_AVAILABLE = ItemState('Available')
 ITEM_STATE_SOLD_OUT = ItemState('Sold Out')
@@ -250,9 +242,18 @@ ITEM_STATE_EXPIRED = ItemState('Expired')
 class ExperienceState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 EXPERIENCE_DOWN = ExperienceState('Thumbs down')
 EXPERIENCE_UP = ExperienceState('Thumbs up')
+
+
+class MessageAttachmentType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+    def __init__(self, text=''):
+        Constant.__init__(self, text)
+
+MESSAGE_ATTACHMENT_TYPE_SHOUT = MessageAttachmentType('shout')
+MESSAGE_ATTACHMENT_TYPE_LOCATION = MessageAttachmentType('location')
 
 
 class PostType(Constant):
@@ -260,7 +261,6 @@ class PostType(Constant):
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
-
 
 POST_TYPE_REQUEST = PostType('request')
 POST_TYPE_OFFER = PostType('offer')
@@ -294,7 +294,6 @@ ACTIVITY_TYPE_TAG_INTEREST_REMOVED = ActivityType('Tag Interest Removed')
 class ActivityData(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 ACTIVITY_DATA_CREDENTIAL = ActivityData('Credential')
 ACTIVITY_DATA_USERNAME = ActivityData('Username')
 ACTIVITY_DATA_EMAIL = ActivityData('Email')
@@ -310,7 +309,6 @@ ACTIVITY_DATA_EVENT = ActivityData('Event')
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 NOTIFICATION_TYPE_LISTEN = NotificationType('Listen')
 NOTIFICATION_TYPE_MESSAGE = NotificationType('Message')
 NOTIFICATION_TYPE_EXP_POSTED = NotificationType('Experience')
@@ -321,7 +319,6 @@ NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
 class RealtimeType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 REALTIME_TYPE_NOTIFICATION = RealtimeType('Notification')
 REALTIME_TYPE_EVENT = RealtimeType('Event')
 
@@ -331,7 +328,6 @@ class EventType(Constant):
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
-
 
 EVENT_TYPE_FOLLOW_USER = EventType('Follow User')
 EVENT_TYPE_FOLLOW_TAG = EventType('Follow Tag')  #x
@@ -354,7 +350,6 @@ class ReportType(Constant):
     def __init__(self, text=''):
         Constant.__init__(self, text)
         report_types[text] = self.value
-
 
 REPORT_TYPE_USER = ReportType('User')
 REPORT_TYPE_BUSINESS = ReportType('Business')
@@ -386,7 +381,6 @@ DEFAULT_CURRENCY_CODE = 'USD'
 class PaymentStatus(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 PAYMENT_AUTHORIZED = PaymentStatus('Authorized')
 PAYMENT_SETTLING = PaymentStatus('Settling')
 PAYMENT_SETTLED = PaymentStatus('Settled')
@@ -397,13 +391,11 @@ PAYMENT_REFUNDED = PaymentStatus('Refunded')
 class SubscriptionType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-
 SUBSCRIPE_BUSINESS = SubscriptionType('Business')
 
 
 class SubscriptionStatus(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
 
 SUBSCRIPTION_TRAIL = SubscriptionStatus('Trail')
 SUBSCRIPTION_ACTIVE = SubscriptionStatus('Active')
