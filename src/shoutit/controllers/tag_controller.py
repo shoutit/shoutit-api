@@ -11,7 +11,7 @@ from shoutit.controllers import event_controller, user_controller
 
 def get_tag(name):
     try:
-        return Tag.objects.get(Name__iexact=name)
+        return Tag.objects.get(name__iexact=name)
     except Tag.DoesNotExist:
         return None
 
