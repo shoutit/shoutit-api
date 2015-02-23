@@ -70,5 +70,7 @@ class AllowedUsernamesValidator(object):
         if value in NOT_ALLOWED_USERNAMES:
             raise ValidationError(self.message % value, code=self.code)
 
+    def __eq__(self, other):
+        return True
 
 validate_allowed_usernames = AllowedUsernamesValidator()
