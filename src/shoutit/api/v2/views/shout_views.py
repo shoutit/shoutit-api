@@ -75,35 +75,95 @@ class ShoutViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """
-        get shout
+        Get shout
+
+        ###Shout Object
+        <pre><code>
+        {
+          "id": "fc598c12-f7b6-4a24-b56e-defd6178876e",
+          "api_url": "http://shoutit.dev:8000/api/v2/shouts/fc598c12-f7b6-4a24-b56e-defd6178876e",
+          "web_url": "",
+          "type": "offer",
+          "title": "offer 1",
+          "text": "selling some stuff",
+          "price": 1,
+          "currency": "AED",
+          "thumbnail": null,
+          "images": "[]", // list of urls
+          "videos": [],  // list of {Video Object}
+          "tags": [],  // list of {Tag Object}
+          "location": {
+            "country": "AE",
+            "city": "Dubai",
+            "latitude": 25.165173368664,
+            "longitude": 55.2667236328125
+          },
+          "user": {}, // {User Object}
+          "date_published": 1424481256
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
         """
-        shout = self.get_object()
-        return Response(render_shout(shout))
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
         """
-        modify shout
+        Modify shout
+
+        ```
+        NOT IMPLEMENTED!
+        ```
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
         """
-        shout = self.get_object()
-        return Response(render_shout(shout))
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         """
-        delete shout
+        Delete shout
+
+        ```
+        NOT IMPLEMENTED!
+        ```
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
         """
-        shout = self.get_object()
-        return Response()
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @list_route(methods=['get'])
     def nearby(self, request, *args, **kwargs):
         """
-        get nearby shouts
+        Get nearby shouts
         """
         return Response()
 
     @detail_route(methods=['post'])
     def reply(self, request, *args, **kwargs):
         """
-        reply to a shout
+        Reply to a shout
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
         """
         return Response()

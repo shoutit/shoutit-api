@@ -171,10 +171,6 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         omit_serializer: true
         omit_parameters:
             - form
-        parameters_strategy:
-            form: replace
-            query: merge
-
         parameters:
             - name: body
               paramType: body
