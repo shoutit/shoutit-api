@@ -15,10 +15,15 @@ class ShoutFilter(django_filters.FilterSet):
     min_price = django_filters.NumberFilter(name="item__Price", lookup_type='gte')
     max_price = django_filters.NumberFilter(name="item__Price", lookup_type='lte')
     tags = django_filters.MethodFilter(action='filter_tags')
+    down_left_lat = django_filters.NumberFilter(name='latitude', lookup_type='gte')
+    down_left_lng = django_filters.NumberFilter(name='longitude', lookup_type='gte')
+    up_right_lat = django_filters.NumberFilter(name='latitude', lookup_type='lte')
+    up_right_lng = django_filters.NumberFilter(name='longitude', lookup_type='lte')
 
     class Meta:
         model = Trade
-        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags']
+        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags',
+                  'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng']
         order_by = ['-date_published']
 
     def filter_type(self, queryset, value):

@@ -3,6 +3,7 @@
 
 """
 from __future__ import unicode_literals
+from collections import OrderedDict
 
 from rest_framework import permissions, viewsets, filters, mixins, generics
 from rest_framework.exceptions import ValidationError
@@ -18,7 +19,7 @@ from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwner
 from shoutit.api.renderers import render_conversation, render_message, render_shout
 
 
-class ShoutViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class ShoutViewSet(viewsets.ModelViewSet):
     """
     Shout API Resource
     """
@@ -58,14 +59,39 @@ class ShoutViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
               paramType: query
             - name: max_price
               paramType: query
+            - name: down_left_lat
+              description: -90 to 90, can not be greater than up_right_lat
+              paramType: query
+            - name: down_left_lng
+              description: -180 to 180, can not be greater than up_right_lng
+              paramType: query
+            - name: up_right_lat
+              description: -90 to 90
+              paramType: query
+            - name: up_right_lng
+              description: -180 to 180
+              paramType: query
             - name: tags
               description: space or comma separated tags. returned shouts will contain ALL of them
               paramType: query
         """
-        instance = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(instance)
-        serializer = self.get_pagination_serializer(page)
-        return Response(serializer.data)
+        errors = OrderedDict()
+        down_left_lat = float(request.query_params.get('down_left_lat', -90))
+        down_left_lng = float(request.query_params.get('down_left_lng', -180))
+        up_right_lat = float(request.query_params.get('up_right_lat', 90))
+        up_right_lng = float(request.query_params.get('up_right_lng', 180))
+        if down_left_lat > up_right_lat or not (90 >= down_left_lat >= -90):
+            errors['down_left_lat'] = "should be between -90 and 90, also not greater than 'up_right_lat'"
+        if down_left_lng > up_right_lng or not (180 >= down_left_lng >= -180):
+            errors['down_left_lng'] = "should be between -180 and 180, also not greater than 'up_right_lng'"
+        if not (90 >= up_right_lat >= -90):
+            errors['up_right_lat'] = "should be between -90 and 90"
+        if not (180 >= up_right_lng >= -180):
+            errors['up_right_lng'] = "should be between -180 and 180"
+        if errors:
+            raise ValidationError(errors)
+
+        return super(ShoutViewSet, self).list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         """
@@ -132,9 +158,7 @@ class ShoutViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         ---
         omit_serializer: true
         """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return super(ShoutViewSet, self).retrieve(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         """
@@ -170,20 +194,6 @@ class ShoutViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-
-    @list_route(methods=['get'])
-    def nearby(self, request, *args, **kwargs):
-        """
-        Get nearby shouts
-        ```
-        NOT IMPLEMENTED!
-        ```
-        ---
-        omit_serializer: true
-        omit_parameters:
-            - form
-        """
-        return Response()
 
     @detail_route(methods=['post'])
     def reply(self, request, *args, **kwargs):
