@@ -18,7 +18,7 @@ from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwner
 from shoutit.api.renderers import render_conversation, render_message, render_shout
 
 
-class ShoutViewSet(viewsets.GenericViewSet):
+class ShoutViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     Shout API Resource
     """
@@ -69,9 +69,36 @@ class ShoutViewSet(viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        create shout
+        Create shout
+
+        ###Request
+        <pre><code>
+        {
+          "type": "offer", // `offer` or `request`
+          "title": "macbook pro 15",
+          "text": "apple macbook pro 15-inch in good condition for sale.",
+          "price": 1000,
+          "currency": "EUR",
+          "images": [], // image urls
+          "videos": [], // {Video Object}
+          "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
+          "location": {
+            "country": "AE",
+            "city": "Dubai",
+            "latitude": 25.165173368664,
+            "longitude": 55.2667236328125
+          }
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
         """
-        return Response()
+        return super(ShoutViewSet, self).create(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -148,6 +175,13 @@ class ShoutViewSet(viewsets.GenericViewSet):
     def nearby(self, request, *args, **kwargs):
         """
         Get nearby shouts
+        ```
+        NOT IMPLEMENTED!
+        ```
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
         """
         return Response()
 
@@ -155,6 +189,9 @@ class ShoutViewSet(viewsets.GenericViewSet):
     def reply(self, request, *args, **kwargs):
         """
         Reply to a shout
+        ```
+        NOT IMPLEMENTED!
+        ```
         ---
         omit_serializer: true
         omit_parameters:

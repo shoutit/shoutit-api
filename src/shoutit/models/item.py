@@ -17,7 +17,7 @@ class Item(UUIDModel):
     @property
     def thumbnail(self):
         if self.get_videos():
-            return self.get_videos()[0]['thumbnail_url']
+            return self.get_videos()[0].thumbnail_url
         elif self.get_images():
             return self.get_images()[0].image
         else:
@@ -28,7 +28,7 @@ class Item(UUIDModel):
 
     def get_images(self):
         if not hasattr(self, '_images'):
-            self._images = list(self.Images.all().order_by('image'))
+            self._images = list(self.images.all().order_by('image'))
         return self._images
 
     def set_images(self, images):

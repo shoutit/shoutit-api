@@ -237,10 +237,20 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
+    # if passed as [{'name': 'tag-x'},...]
+    if tags:
+        if not isinstance(tags[0], basestring):
+            tags = [tag['name'] for tag in tags]
+    # remove duplicates in case any
+    tags = list(OrderedDict.fromkeys(tags))
     for tag in tag_controller.get_or_create_tags(tags, shouter):
-        trade.tags.add(tag)
-        tag.Stream.PublishShout(trade)
-        tag.stream2.add_post(trade)
+        # prevent adding existing tags
+        try:
+            trade.tags.add(tag)
+            tag.Stream.PublishShout(trade)
+            tag.stream2.add_post(trade)
+        except IntegrityError:
+            pass
 
     if trade:
         trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
@@ -282,6 +292,10 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     stream.PublishShout(trade)
     stream2.add_post(trade)
 
+    # if passed as [{'name': 'tag-x'},...]
+    if tags:
+        if not isinstance(tags[0], basestring):
+            tags = [tag['name'] for tag in tags]
     # remove duplicates in case any
     tags = list(OrderedDict.fromkeys(tags))
     for tag in tag_controller.get_or_create_tags(tags, shouter):

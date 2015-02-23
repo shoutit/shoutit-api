@@ -324,7 +324,7 @@ def get_trades_by_pks(pks):
     if not pks:
         return []
     # todo: choose which statement with less queries and enough data
-    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').prefetch_related('tags','item__Images').filter(pk__in = pks)
+    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').prefetch_related('tags','item__images').filter(pk__in = pks)
     # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile','tags').filter(pk__in = pks)
     shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').filter(
         pk__in=pks)

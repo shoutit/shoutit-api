@@ -120,7 +120,7 @@ def ReadConversations(user, start_index=None, end_index=None):
                      'AboutPost',
                      'AboutPost__item',
                      'AboutPost__item__Currency',
-                     'AboutPost__item__Images',
+                     'AboutPost__item__images',
                      'AboutPost__shout',
                      'AboutPost__user',
                      'AboutPost__user__Profile').annotate(max_date=Max('Messages__DateCreated')).order_by(
@@ -165,7 +165,7 @@ def get_shout_conversations(shout_id, user):
                                                                   'FromUser__Profile', 'AboutPost', 'AboutPost__item',
                                                                   'AboutPost__item__Currency', 'AboutPost__shout',
                                                                   'AboutPost__shout__tags',
-                                                                  'AboutPost__shout__Images').order_by('-max_date')
+                                                                  'AboutPost__shout__images').order_by('-max_date')
         conversations = getFullConversationDetails(conversations, user)
     elif user.is_authenticated():
         conversations = Conversation.objects.filter(AboutPost=shout, FromUser=user, VisibleToSender=True).annotate(
@@ -173,7 +173,7 @@ def get_shout_conversations(shout_id, user):
                                                                   'FromUser__Profile', 'AboutPost', 'AboutPost__item',
                                                                   'AboutPost__item__Currency', 'AboutPost__shout',
                                                                   'AboutPost__shout__tags',
-                                                                  'AboutPost__shout__Images').order_by('-max_date')
+                                                                  'AboutPost__shout__images').order_by('-max_date')
         conversations = getFullConversationDetails(conversations, user)
     else:
         conversations = []

@@ -176,7 +176,7 @@ class Shout(Post):
     def get_images(self):
         if not hasattr(self, '_images'):
             if self.type == POST_TYPE_EXPERIENCE:
-                self._images = list(self.Images.all().order_by('image'))
+                self._images = list(self.images.all().order_by('image'))
             else:
                 self._images = self.item.get_images()
         return self._images
@@ -310,12 +310,12 @@ class Video(UUIDModel):
 
 # todo: use attached object mixin
 class StoredImage(UUIDModel):
-    shout = models.ForeignKey('shoutit.Shout', related_name='Images', null=True, blank=True)
-    item = models.ForeignKey('shoutit.Item', related_name='Images', null=True, blank=True)
+    shout = models.ForeignKey('shoutit.Shout', related_name='images', null=True, blank=True)
+    item = models.ForeignKey('shoutit.Item', related_name='images', null=True, blank=True)
     image = models.CharField(max_length=1024)
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.image + " @ " + unicode(self.item)
+        return unicode(self.image)
 
 
 class Comment(UUIDModel):

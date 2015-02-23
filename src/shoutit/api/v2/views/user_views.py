@@ -155,7 +155,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         </code></pre>
 
         ####Deleting video and/or push_tokens
-        <code><pre>
+        <pre><code>
         {
             "video": null,
             "push_tokens": {
@@ -372,7 +372,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
           "price": 1,
           "currency": "AED",
           "thumbnail": null,
-          "images": "[]", // list of urls
+          "images": [], // list of urls
           "videos": [],  // list of {Video Object}
           "tags": [],  // list of {Tag Object}
           "location": {

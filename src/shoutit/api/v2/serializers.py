@@ -10,6 +10,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from common.utils import date_unix
+from shoutit.controllers import shout_controller
 
 from shoutit.models import User, Video, Tag, Trade
 from shoutit.utils import cloud_upload_image, random_uuid_str
@@ -35,11 +36,12 @@ class VideoSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=30)
+    is_listening = serializers.SerializerMethodField()
+
     class Meta:
         model = Tag
         fields = ('id', 'name', 'api_url', 'web_url', 'is_listening', 'listeners_count')
-
-    is_listening = serializers.SerializerMethodField()
 
     def get_is_listening(self, tag):
         return tag.is_listening(self.context['request'].user)
@@ -62,15 +64,54 @@ class TradeSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='item.name')
     price = serializers.FloatField(source='item.Price')
     currency = serializers.CharField(source='item.Currency.Code')
-    images = serializers.ListField(source='item.get_image_urls', child=serializers.URLField())
-    videos = VideoSerializer(source='item.get_videos', many=True)
+    images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
+    videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     tags = TagSerializer(many=True)
     location = LocationSerializer()
-    user = UserSerializer()
+    user = UserSerializer(read_only=True)
     date_published = serializers.SerializerMethodField()
 
     def get_date_published(self, trade):
         return date_unix(trade.date_published)
+
+    def to_internal_value(self, data):
+        validated_data = super(TradeSerializer, self).to_internal_value(data)
+
+        return validated_data
+
+    def create(self, validated_data):
+        location_data = validated_data.get('location')
+
+        if validated_data['type_name'] == 'offer':
+            shout = shout_controller.post_offer(name=validated_data['item']['name'],
+                                                text=validated_data['text'],
+                                                price=validated_data['item']['Price'],
+                                                latitude=location_data['latitude'],
+                                                longitude=location_data['longitude'],
+                                                tags=validated_data['tags'],
+                                                shouter=self.context['request'].user,
+                                                country=location_data['country'],
+                                                city=location_data['city'],
+                                                address=location_data.get('address', ""),
+                                                currency=validated_data['item']['Currency']['Code'],
+                                                images=validated_data['item']['images']['all'],
+                                                videos=validated_data['item']['videos']['all'])
+        else:
+            shout = shout_controller.post_request(name=validated_data['item']['name'],
+                                                  text=validated_data['text'],
+                                                  price=validated_data['item']['Price'],
+                                                  latitude=location_data['latitude'],
+                                                  longitude=location_data['longitude'],
+                                                  tags=validated_data['tags'],
+                                                  shouter=self.context['request'].user,
+                                                  country=location_data['country'],
+                                                  city=location_data['city'],
+                                                  address=location_data.get('address', ""),
+                                                  currency=validated_data['item']['Currency']['Code'],
+                                                  images=validated_data['item']['images']['all'],
+                                                  videos=validated_data['item']['videos']['all'])
+
+        return shout
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
