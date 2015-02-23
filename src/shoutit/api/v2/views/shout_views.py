@@ -104,9 +104,6 @@ class ShoutViewSet(viewsets.GenericViewSet):
         </code></pre>
         ---
         omit_serializer: true
-        parameters:
-            - name: body
-              paramType: body
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
