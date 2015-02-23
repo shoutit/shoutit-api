@@ -121,7 +121,7 @@ class Post(UUIDModel, APIModelMixin):
 
     objects = PostManager()
 
-    def Mute(self):
+    def mute(self):
         self.muted = True
         self.save()
 
@@ -129,9 +129,9 @@ class Post(UUIDModel, APIModelMixin):
     def owner(self):
         return self.user
 
-    # @property
-    # def type(self):
-    #     return PostType.values[self.type]
+    @property
+    def type_name(self):
+        return PostType.values[self.type]
 
     @property
     def location(self):

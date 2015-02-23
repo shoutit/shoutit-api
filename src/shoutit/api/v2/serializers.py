@@ -39,7 +39,6 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'api_url', 'web_url', 'is_listening', 'listeners_count')
 
-    name = serializers.CharField(source='name')
     is_listening = serializers.SerializerMethodField()
 
     def get_is_listening(self, tag):
@@ -59,8 +58,8 @@ class TradeSerializer(serializers.ModelSerializer):
                   'images', 'videos', 'tags', 'location', 'user', 'date_published',
         )
 
+    type = serializers.CharField(source='type_name')
     title = serializers.CharField(source='item.name')
-    text = serializers.CharField(source='text')
     price = serializers.FloatField(source='item.Price')
     currency = serializers.CharField(source='item.Currency.Code')
     images = serializers.ListField(source='item.get_image_urls', child=serializers.URLField())
@@ -72,7 +71,6 @@ class TradeSerializer(serializers.ModelSerializer):
 
     def get_date_published(self, trade):
         return date_unix(trade.date_published)
-
 
 
 class UserDetailSerializer(serializers.ModelSerializer):

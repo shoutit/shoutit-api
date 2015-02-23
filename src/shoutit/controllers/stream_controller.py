@@ -9,6 +9,7 @@ from django.conf import settings
 from common.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, \
     POST_TYPE_REQUEST, POST_TYPE_OFFER, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, \
     EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
+from common.utils import process_tags
 from shoutit import utils
 from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile, FollowShip, User
@@ -536,3 +537,27 @@ def remove_listener_from_stream(listener, stream):
         if stream.type == STREAM2_TYPE_TAG:
             if followed in follower.Interests.all():
                 follower.Interests.remove(followed)
+
+
+def filter_posts_qs(qs, post_type=None):
+    post_types = {
+        'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
+        None: [POST_TYPE_REQUEST, POST_TYPE_OFFER],
+        'requests': [POST_TYPE_REQUEST],
+        POST_TYPE_REQUEST: [POST_TYPE_REQUEST],
+        'offers': [POST_TYPE_OFFER],
+        POST_TYPE_OFFER: [POST_TYPE_OFFER],
+    }
+    types = post_types[post_type]
+    return qs.filter(type__in=types)
+
+
+def filter_shouts_qs(qs, tag_names=None):
+    if not tag_names:
+        return qs
+
+    tag_names = process_tags(tag_names)
+    for tag_name in tag_names:
+        qs = qs.filter(tags__name=tag_name)
+    return qs
+

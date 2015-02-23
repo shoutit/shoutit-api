@@ -448,7 +448,7 @@ def sss(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['PUT'], login_required=True, json_renderer=json_data_renderer, api_renderer=user_location)
+@non_cached_view(methods=['PUT', 'POST'], login_required=True, json_renderer=json_data_renderer, api_renderer=user_location)
 def update_user_location(request):
     result = ResponseResult()
     profile = request.user.profile

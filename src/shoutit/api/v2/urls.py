@@ -16,20 +16,20 @@ class ShoutitRouter(routers.DefaultRouter):
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = ShoutitRouter(trailing_slash=False)
-# router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('users', user_views.UserViewSet, 'user')
+router.register('tags', tag_views.TagViewSet, 'tag')
+router.register('shouts', shout_views.ShoutViewSet, 'shout')
 # router.register('conversations', message_views.ConversationViewSet, 'conversation')
 # router.register('messages', message_views.MessageViewSet, 'message')
 # router.register('notifications', notification_views.NotificationViewSet, 'notification')
-router.register('tags', tag_views.TagViewSet, 'tag')
 # router.register(r'misc', misc_views.MiscViewSet, 'misc')
 
 urlpatterns = (
-    url(r'^', include(router.urls)),
-
     url(r'^oauth2/access_token$', AccessTokenView.as_view(), name='access_token'),
 
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     url(r'^docs/', include('rest_framework_swagger.urls')),
+
+    url(r'^', include(router.urls)),
 )

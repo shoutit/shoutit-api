@@ -39,8 +39,6 @@ def check_offline_mood():
 
 
 def process_tags(tags):
-    if not isinstance(tags, list):
-        return []
     processed_tags = []
     for tag in tags:
         if not isinstance(tag, basestring):
