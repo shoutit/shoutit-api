@@ -3,7 +3,7 @@ from datetime import datetime
 from django.db import models
 from django.conf import settings
 
-from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN
+from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
 
 
@@ -48,11 +48,15 @@ class Message(UUIDModel):
 
 
 class MessageAttachment(UUIDModel, AttachedObjectMixin):
+    type = models.SmallIntegerField(choices=MessageAttachmentType.choices, default=MESSAGE_ATTACHMENT_TYPE_SHOUT.value)
     message = models.ForeignKey('shoutit.Message', related_name='attachments')
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
 
     def __unicode__(self):
         return self.pk + " for message: " + self.message.pk
+
+    def type_name(self):
+        return MessageAttachmentType.values[self.type]
 
 
 class Notification(UUIDModel, AttachedObjectMixin):

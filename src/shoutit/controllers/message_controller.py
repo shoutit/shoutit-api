@@ -4,6 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.db.models.aggregates import Max
 from django.db.models.query_utils import Q
+from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT
+from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
 
 from shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade, Conversation2, Message2, \
     Conversation2Delete, Message2Delete, Message2Read, SharedLocation
@@ -47,6 +49,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
         if attachment['content_type'] == 'shout':
             object_id = attachment['object_id']
             content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
+            type = MESSAGE_ATTACHMENT_TYPE_SHOUT
         elif attachment['content_type'] == 'location':
             location = attachment['location']
             if 'longitude' in location and 'latitude' in location:
@@ -54,9 +57,10 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
                 sl.save()
                 object_id = sl.id
                 content_type = ContentType.objects.get_for_model(SharedLocation)  # todo: map the content types to models
+                type = MESSAGE_ATTACHMENT_TYPE_LOCATION
 
-        if content_type and object_id:
-            MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()
+        if content_type and object_id and type:
+            MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id, type=type).save()
 
     notifications_controller.notify_user_of_message(to_user, message)
     email_controller.send_message_email(message)
@@ -319,10 +323,21 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
         attachments = []
 
     for attachment in attachments:
-        object_id = attachment['object_id']
-        content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-        MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id).save()
+            if attachment['content_type'] == 'shout':
+                object_id = attachment['object_id']
+                content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
+                type = MESSAGE_ATTACHMENT_TYPE_SHOUT
+            elif attachment['content_type'] == 'location':
+                location = attachment['location']
+                if 'longitude' in location and 'latitude' in location:
+                    sl = SharedLocation(latitude=location['latitude'], longitude=location['longitude'])
+                    sl.save()
+                    object_id = sl.id
+                    content_type = ContentType.objects.get_for_model(SharedLocation)  # todo: map the content types to models
+                    type = MESSAGE_ATTACHMENT_TYPE_LOCATION
 
+            if content_type and object_id and type:
+                MessageAttachment(message_id=message.id, conversation=conversation, content_type=content_type, object_id=object_id, type=type).save()
     # notifications_controller.notify_user_of_message(to_user, message)
     # email_controller.send_message_email(message)
 
