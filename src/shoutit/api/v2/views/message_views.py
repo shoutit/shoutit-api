@@ -8,9 +8,10 @@ from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework.settings import api_settings
+from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
-from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
+from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, ConversationDetailSerializer, MessageDetailSerializer
 
 from shoutit.controllers import message_controller
 
@@ -18,7 +19,7 @@ from shoutit.models import Message2, Conversation2
 from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwnerOrContributorsReadOnly
 
 
-class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
@@ -26,6 +27,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
     lookup_value_regex = '[0-9a-f-]{32,36}'
 
     serializer_class = ConversationSerializer
+    serializer_detail_class = ConversationDetailSerializer
 
     # todo: conversations search
     # filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
@@ -41,30 +43,17 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         """
         Get signed in user conversations
 
-        ###Conversation Object
-        <pre><code>
-        {
-          "id": "358ab248-8128-465b-971e-80d8c95f0270",
-          "api_url": "http://shoutit.dev:8000/api/v2/conversations/358ab248-8128-465b-971e-80d8c95f0270",
-          "web_url": "",
-          "type": "about_shout", // currently could be either 'chat' or 'about_shout'
-          "users": [], // list of {User Object}
-          "last_message": {} // last {Message Object},
-          "shout": {} // {Shout Object} only set if the conversation of type 'about_shout'
-        }
-        </code></pre>
-
         ###Response
         <pre><code>
         {
           "count": 3, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Conversation Object} as described above
+          "results": [] // list of `ConversationSerializer`
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: ConversationSerializer
         parameters:
             - name: search
               description: not yet active
@@ -76,7 +65,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         """
         Get conversation
         ---
-        omit_serializer: true
+        serializer: ConversationDetailSerializer
         omit_parameters:
             - form
         """
@@ -100,38 +89,8 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         """
         Get conversation messages
 
-        ###Response {Message Object}
-        <pre><code>
-        {
-          "id": "d75e8536-473a-4209-9147-8c93ab0c2b75",
-          "read_url": "",
-          "delete_url": "",
-          "user": {}, // {User Object}
-          "message": "hey!",
-          "attachments": [] // list of {Attachment Object}
-        }
-        </code></pre>
-
-        ####{Attachment Object}
-        <pre><code>
-        {
-          "{attachment type}": {attachment}
-        }
-        </code></pre>
-
-        attachment type: 'shout' or 'location'
-
-        attachment: {Shout Object} or {Shared Location Object}
-
-        ####{Shared Location Object}
-        <pre><code>
-        {
-          "latitude": 12.3456,
-          "longitude": 12.3456
-        }
-        </code></pre>
         ---
-        omit_serializer: true
+        serializer: MessageDetailSerializer
         parameters:
             - name: search
               description: NOT ACTIVE
@@ -140,7 +99,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         conversation = self.get_object()
         instance = conversation.get_messages_qs()
         page = self.paginate_queryset(instance)
-        serializer = self.get_custom_pagination_serializer(page, MessageSerializer)
+        serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
         return Response(serializer.data)
 
     @detail_route(methods=['post'])
@@ -151,7 +110,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         ###Request
         <pre><code>
         {
-            "messag": "text goes here",
+            "text": "text goes here",
             "attachments": [
                 {
                     "shout": {
@@ -169,7 +128,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         </code></pre>
 
         ---
-        omit_serializer: true
+        response_serializer: MessageDetailSerializer
         omit_parameters:
             - form
         parameters:
@@ -177,12 +136,12 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
               paramType: body
         """
         conversation = self.get_object()
-        serializer = MessageSerializer(data=request.data, partial=True)
+        serializer = MessageDetailSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        text = serializer.validated_data['message']
+        text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation, request.user, text=text, attachments=attachments)
-        message = MessageSerializer(instance=message)
+        message = MessageDetailSerializer(instance=message)
         headers = self.get_success_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 

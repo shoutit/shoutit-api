@@ -7,6 +7,7 @@ from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 import httplib2
+import uuid
 from common.constants import NOT_ALLOWED_USERNAMES
 
 
@@ -74,3 +75,24 @@ class AllowedUsernamesValidator(object):
         return True
 
 validate_allowed_usernames = AllowedUsernamesValidator()
+
+
+@deconstructible
+class UUIDValidator(object):
+    message = "'%s' is not a valid id."
+    code = 'invalid'
+
+    def __call__(self, value):
+        UUIDValidator.validate(value)
+
+    def __eq__(self, other):
+        return True
+
+    @staticmethod
+    def validate(value):
+        try:
+            uuid.UUID(value)
+        except:
+            raise ValidationError(UUIDValidator.message % value, code=UUIDValidator.code)
+
+

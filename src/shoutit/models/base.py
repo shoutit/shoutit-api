@@ -70,6 +70,14 @@ class APIModelMixin(object):
         return ''
 
 
+class LocationMixin(models.Model):
+    latitude = models.FloatField(validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
+    longitude = models.FloatField(validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
+
+    class Meta:
+        abstract = True
+
+
 class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     """
     An abstract base class implementing a fully featured User model with

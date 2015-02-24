@@ -582,6 +582,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': [],
     'PAGINATE_BY': 10,
+    'URL_FIELD_NAME': 'api_url',
 }
 
 # oauth2 settings

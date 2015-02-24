@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 from django.db import models
 from django.conf import settings
 
-from shoutit.models.base import UUIDModel
+from shoutit.models.base import UUIDModel, LocationMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -69,7 +69,5 @@ class FbContest(UUIDModel):
     ShareId = models.CharField(max_length=50, null=True, blank=True, default=None)
 
 
-class SharedLocation(UUIDModel):
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-
+class SharedLocation(LocationMixin, UUIDModel):
+    pass

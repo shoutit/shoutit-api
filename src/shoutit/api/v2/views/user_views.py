@@ -14,7 +14,7 @@ from shoutit.controllers import user_controller, stream_controller
 
 from shoutit.models import User
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
-from shoutit.api.v2.serializers import UserSerializer, UserDetailSerializer, TagSerializer, TradeSerializer
+from shoutit.api.v2.serializers import *
 from shoutit.api.v2.permissions import IsOwnerOrReadOnly
 
 
@@ -23,7 +23,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
     User API Resource.
     """
     lookup_field = 'username'
-    lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
+    # lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
 
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
@@ -46,32 +46,18 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         Get users based on `search` query param.
 
-        ###User Object
-        <pre><code>
-        {
-          "id": "a45c843f-8983-4f55-bde4-0236f070151d",
-          "api_url": "http://shoutit.dev:8000/api/v2/users/syron",
-          "username": "syron",
-          "name": "Mo Chawich",
-          "first_name": "Mo",
-          "last_name": "Chawich",
-          "web_url": "",
-          "is_active": true
-        }
-        </code></pre>
-
         ###Response
         <pre><code>
         {
           "count": 7, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {User Object} as described above
+          "results": [] // list of {UserSerializer}
         }
         </code></pre>
 
         ---
-        omit_serializer: true
+        serializer: UserSerializer
         parameters:
             - name: search
               paramType: query
@@ -86,42 +72,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         Get user
 
-        ###Response {User detailed object}
-        <pre><code>
-        {
-          "id": "65682def-d120-40f4-92b8-4d99361bdc6d",
-          "api_url": "http://shoutit.dev:8000/api/v2/users/mo",
-          "username": "mo",
-          "name": "Mohamad Nour Chawich",
-          "first_name": "Mohamad Nour",
-          "last_name": "Chawich",
-          "web_url": "",
-          "is_active": true,
-          "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
-          "sex": true,
-          "video": null,
-          "date_joined": 1424292476,
-          "bio": "Shoutit Master 2!",
-          "location": {
-            "latitude": 25.1593957,
-            "country": "AE",
-            "longitude": 55.2338326,
-            "city": "Dubai"
-          },
-          "email": "mo.chawich@gmail.com",
-          "social_channels": {
-            "gplus": false,
-            "facebook": true
-          },
-          "push_tokens": {
-            "apns": "56yhnjflsdjfirjeoifjsorj4o",
-            "gcm": "asjkdhsakjdhi3uhekndkjadkjsak"
-          }
-        }
-        </code></pre>
-
         ---
-        omit_serializer: true
+        serializer: UserDetailSerializer
         parameters:
             - name: username
               description: me for logged in user
@@ -138,6 +90,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         Modify user
 
         ###Request
+        Specify any or all of these attributes to change them.
+
         <pre><code>
         {
             "username": "mo",
@@ -178,11 +132,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         }
         </code></pre>
 
-        ###Response
-        Detailed User object
-
         ---
-        omit_serializer: true
+        serializer: UserDetailSerializer
         omit_parameters:
             - form
         parameters:
@@ -204,11 +155,9 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         Delete user and everything attached to him
 
-
-        ###ATTN!
-        <pre><code>
+        ```
         NOT YET IMPLEMENTED
-        </code></pre>
+        ```
 
         ---
         omit_serializer: true
@@ -241,10 +190,9 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         <pre><code>
         PUT request with attached image file named `image_file`
         </pre></code>
-        ###Response
-        Detailed User object
+
         ---
-        omit_serializer: true
+        serializer: UserDetailSerializer
         omit_parameters:
             - form
         parameters:
@@ -306,11 +254,11 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {User Object} as described above
+          "results": [] // list of {UserSerializer}
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: UserSerializer
         omit_parameters:
             - form
         parameters:
@@ -333,29 +281,17 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         Get user listening
 
-        ###Tag Object
-        <pre><code>
-        {
-          "id": "a45c843f-8473-2135-bde4-0236754f151d",
-          "name": "computer-games",
-          "api_url": "http://shoutit.dev:8000/api/v2/tags/computer-games",
-          "web_url": "http://shoutit.dev:8000/tag/computer-games",
-          "is_listening": true,
-          "listeners_count": 321
-        }
-        </code></pre>
-
         ###Response
         <pre><code>
         {
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {User Object} or {tags Object} as described above
+          "results": [] // list of {UserSerializer} same as in listeners or {TagSerializer}
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: TagSerializer
         omit_parameters:
             - form
         parameters:
@@ -400,43 +336,17 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         Get user shouts
 
-        ###Shout Object
-        <pre><code>
-        {
-          "id": "fc598c12-f7b6-4a24-b56e-defd6178876e",
-          "api_url": "http://shoutit.dev:8000/api/v2/shouts/fc598c12-f7b6-4a24-b56e-defd6178876e",
-          "web_url": "",
-          "type": "offer",
-          "title": "offer 1",
-          "text": "selling some stuff",
-          "price": 1,
-          "currency": "AED",
-          "thumbnail": null,
-          "images": [], // list of urls
-          "videos": [],  // list of {Video Object}
-          "tags": [],  // list of {Tag Object}
-          "location": {
-            "country": "AE",
-            "city": "Dubai",
-            "latitude": 25.165173368664,
-            "longitude": 55.2667236328125
-          },
-          "user": {}, // {User Object}
-          "date_published": 1424481256
-        }
-        </code></pre>
-
         ###Response
         <pre><code>
         {
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Shout Object} as described above
+          "results": [] // list of {TradeSerializer}
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: TradeSerializer
         omit_parameters:
             - form
         parameters:

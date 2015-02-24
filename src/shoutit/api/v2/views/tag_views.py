@@ -5,26 +5,26 @@
 from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, filters, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
+from rest_framework_extensions.mixins import DetailSerializerMixin
 
+from shoutit.api.v2.serializers import *
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
 from shoutit.controllers import stream_controller
 
-from shoutit.models import User, Tag
-from shoutit.api.v2.serializers import TagSerializer, UserSerializer, TradeSerializer
 from shoutit.api.v2.permissions import IsOwnerOrReadOnly
 
 
-class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
+class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewsets.GenericViewSet):
     """
     Tag API Resource.
     """
     lookup_field = 'name'
-    lookup_value_regex = '[a-z0-9-]{2,30}'
+    # lookup_value_regex = '[a-z0-9-]{2,30}'
 
     serializer_class = TagSerializer
+    serializer_detail_class = TagDetailSerializer
 
     queryset = Tag.objects.all()
 
@@ -36,29 +36,17 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
         """
         Get tags based on `search` query param.
 
-        ###Tag Object
-        <pre><code>
-        {
-          "id": "a45c843f-8473-2135-bde4-0236754f151d",
-          "name": "computer-games",
-          "api_url": "http://shoutit.dev:8000/api/v2/tags/computer-games",
-          "web_url": "http://shoutit.dev:8000/tag/computer-games",
-          "is_listening": true,
-          "listeners_count": 321
-        }
-        </code></pre>
-
         ###Response
         <pre><code>
         {
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Tag Object} as described above
+          "results": [] // list of {Tag Object}
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: TagSerializer
         parameters:
             - name: search
               paramType: query
@@ -94,7 +82,7 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
         """
         Get tag
         ---
-        omit_serializer: true
+        serializer: TagDetailSerializer
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -151,7 +139,7 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: UserSerializer
         omit_parameters:
             - form
         parameters:
@@ -169,43 +157,17 @@ class TagViewSet(CustomPaginationSerializerMixin, viewsets.GenericViewSet):
         """
         Get tag shouts
 
-        ###Shout Object
-        <pre><code>
-        {
-          "id": "fc598c12-f7b6-4a24-b56e-defd6178876e",
-          "api_url": "http://shoutit.dev:8000/api/v2/shouts/fc598c12-f7b6-4a24-b56e-defd6178876e",
-          "web_url": "",
-          "type": "offer",
-          "title": "offer 1",
-          "text": "selling some stuff",
-          "price": 1,
-          "currency": "AED",
-          "thumbnail": null,
-          "images": "[]", // list of urls
-          "videos": [],  // list of {Video Object}
-          "tags": [],  // list of {Tag Object}
-          "location": {
-            "country": "AE",
-            "city": "Dubai",
-            "latitude": 25.165173368664,
-            "longitude": 55.2667236328125
-          },
-          "user": {}, // {User Object}
-          "date_published": 1424481256
-        }
-        </code></pre>
-
         ###Response
         <pre><code>
         {
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Shout Object} as described above
+          "results": [] // list of {TradeSerializer}
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: TradeSerializer
         omit_parameters:
             - form
         parameters:

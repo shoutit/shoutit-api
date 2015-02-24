@@ -61,7 +61,6 @@
 
   <div id="django-rest-swagger">
     <div class="swagger-ui-wrap">
-      {#      <a href="https://github.com/marcgibbons/django-rest-swagger/">Django REST Swagger</a>#}
       <a href="https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0">Shoutit API V2</a>
     </div>
   </div>
@@ -117,7 +116,6 @@
 
       window.swaggerUi = new SwaggerUi({
         url: "{{ swagger_settings.discovery_url }}",
-        apiKey: "{{ swagger_settings.api_key }}",
         dom_id: "swagger-ui-container",
         supportedSubmitMethods: {{ swagger_settings.enabled_methods }},
         onComplete: function (swaggerApi, swaggerUi) {
@@ -132,17 +130,6 @@
         docExpansion: "{{ swagger_settings.doc_expansion }}",
       });
 
-      $('#input_apiKey').change(function () {
-        var key = $('#input_apiKey')[0].value;
-        log("key: " + key);
-        if (key && key.trim() != "") {
-          console.log("added key " + key);
-          window.authorizations.add("key", new ApiKeyAuthorization("Authorization", "{{ swagger_settings.token_type }} " + key, "header"));
-        }
-      });
-      {% if swagger_settings.api_key %}
-        window.authorizations.add("key", new ApiKeyAuthorization("Authorization", "{{ swagger_settings.token_type }} " + "{{ swagger_settings.api_key }}", "header"));
-      {% endif %}
       window.swaggerUi.load();
     });
 

@@ -312,7 +312,7 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
         conversation.save()
         conversation.users = to_users
 
-    message = Message2(conversation=conversation, user=user, message=text)
+    message = Message2(conversation=conversation, user=user, text=text)
     message.save()
 
     conversation.last_message = message
@@ -336,9 +336,9 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
             type = MESSAGE_ATTACHMENT_TYPE_LOCATION
 
         if content_type and object_id and type:
-            MessageAttachment(message_id=message.id, conversation=conversation, content_type=content_type, object_id=object_id, type=type).save()
+            MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id, type=type).save()
 
-    for to_user in conversation.users.all():
+    for to_user in conversation.contributors:
         if user != to_user:
             notifications_controller.notify_user_of_message2(to_user, message)
 
@@ -363,7 +363,7 @@ def message2_from_message(message):
     # get or create Message2
     message2, m2_created = Message2.objects.get_or_create(id=message.id, conversation=conversation2, user=message.FromUser)
     if m2_created:
-        message2.message = message.text
+        message2.text = message.text
         message2.save()
 
     conversation2.last_message = message2

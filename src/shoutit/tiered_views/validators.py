@@ -160,7 +160,7 @@ def conversation2_validator(request, conversation_id):
     if not result:
         return result
     conversation = result.data
-    if request.user not in conversation.users.all():
+    if request.user not in conversation.contributors:
         return VR(False, messages=[('error', _("You don't have permissions to view this conversation."))])
 
     return VR(True, data={'conversation': conversation})

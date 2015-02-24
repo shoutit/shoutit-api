@@ -5,18 +5,18 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 import os
+import uuid
 from push_notifications.models import APNSDevice, GCMDevice
 
-from rest_framework import serializers, pagination
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import DefaultObjectSerializer
-from rest_framework.templatetags.rest_framework import replace_query_param
-from common.constants import MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, \
+from rest_framework.reverse import reverse
+from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, \
     CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT
 from common.utils import date_unix
 from shoutit.controllers import shout_controller
 
-from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2
+from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation
 from shoutit.utils import cloud_upload_image, random_uuid_str
 
 
@@ -41,14 +41,28 @@ class VideoSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=30)
-    is_listening = serializers.SerializerMethodField()
 
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'api_url', 'web_url', 'is_listening', 'listeners_count')
+        fields = ('id', 'name', 'api_url')
+
+
+class TagDetailSerializer(TagSerializer):
+    is_listening = serializers.SerializerMethodField()
+    # todo
+    # listeners
+    # listen
+    # shouts
+
+    class Meta(TagSerializer.Meta):
+        model = Tag
+        parent_fields = TagSerializer.Meta.fields
+        fields = parent_fields + ('web_url', 'listeners_count', 'is_listening')
 
     def get_is_listening(self, tag):
-        return tag.is_listening(self.root.context['request'].user)
+        if 'request' in self.root.context:
+            return tag.is_listening(self.root.context['request'].user)
+        return None
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -57,83 +71,31 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_active')
 
 
-class TradeSerializer(serializers.ModelSerializer):
-    type = serializers.CharField(source='type_name')
-    title = serializers.CharField(source='item.name')
-    price = serializers.FloatField(source='item.Price')
-    currency = serializers.CharField(source='item.Currency.Code')
-    images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
-    videos = VideoSerializer(source='item.videos.all', many=True, required=False)
-    tags = TagSerializer(many=True)
-    location = LocationSerializer()
-    user = UserSerializer(read_only=True)
-    date_published = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Trade
-        fields = ('id', 'api_url', 'web_url', 'type', 'title', 'text', 'price', 'currency', 'thumbnail',
-                  'images', 'videos', 'tags', 'location', 'user', 'date_published',
-        )
-
-    def get_date_published(self, trade):
-        return date_unix(trade.date_published)
-
-    def to_internal_value(self, data):
-        validated_data = super(TradeSerializer, self).to_internal_value(data)
-
-        return validated_data
-
-    def create(self, validated_data):
-        location_data = validated_data.get('location')
-
-        if validated_data['type_name'] == 'offer':
-            shout = shout_controller.post_offer(name=validated_data['item']['name'],
-                                                text=validated_data['text'],
-                                                price=validated_data['item']['Price'],
-                                                latitude=location_data['latitude'],
-                                                longitude=location_data['longitude'],
-                                                tags=validated_data['tags'],
-                                                shouter=self.root.context['request'].user,
-                                                country=location_data['country'],
-                                                city=location_data['city'],
-                                                address=location_data.get('address', ""),
-                                                currency=validated_data['item']['Currency']['Code'],
-                                                images=validated_data['item']['images']['all'],
-                                                videos=validated_data['item']['videos']['all'])
-        else:
-            shout = shout_controller.post_request(name=validated_data['item']['name'],
-                                                  text=validated_data['text'],
-                                                  price=validated_data['item']['Price'],
-                                                  latitude=location_data['latitude'],
-                                                  longitude=location_data['longitude'],
-                                                  tags=validated_data['tags'],
-                                                  shouter=self.root.context['request'].user,
-                                                  country=location_data['country'],
-                                                  city=location_data['city'],
-                                                  address=location_data.get('address', ""),
-                                                  currency=validated_data['item']['Currency']['Code'],
-                                                  images=validated_data['item']['images']['all'],
-                                                  videos=validated_data['item']['videos']['all'])
-
-        return shout
-
-
-class UserDetailSerializer(serializers.ModelSerializer):
-    date_joined = serializers.IntegerField(source='created_at_unix')
+class UserDetailSerializer(UserSerializer):
+    email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="only shown for owner")
+    date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     image = serializers.URLField(source='profile.image')
     sex = serializers.BooleanField(source='profile.Sex')
     bio = serializers.CharField(source='profile.Bio')
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
-    location = LocationSerializer()
-    push_tokens = PushTokensSerializer()
+    location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
+    push_tokens = PushTokensSerializer(help_text="only shown for owner")
+    social_channels = serializers.ReadOnlyField(help_text="only shown for owner")
     image_file = serializers.ImageField(required=False)
 
-    class Meta:
-        model = User
-        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name',
-                  'is_active', 'image', 'sex', 'video', 'date_joined',
-                  'bio', 'location', 'email', 'social_channels', 'push_tokens', 'image_file',
-        )
+    # todo:
+    # listeners_count
+    # listeners
+    # listening_count
+    # listening
+    # shouts
+    # is_listening
+    # is_owner
+
+    class Meta(UserSerializer.Meta):
+        parent_fields = UserSerializer.Meta.fields
+        fields = parent_fields + ('image', 'sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens',
+                                  'image_file')
 
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
@@ -260,60 +222,192 @@ class UserDetailSerializer(serializers.ModelSerializer):
         return user
 
 
+class TradeSerializer(serializers.ModelSerializer):
+    type = serializers.CharField(source='type_name')
+    location = LocationSerializer()
+    title = serializers.CharField(source='item.name')
+    price = serializers.FloatField(source='item.Price')
+    currency = serializers.CharField(source='item.Currency.Code')
+    date_published = serializers.SerializerMethodField()
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Trade
+        fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'user', 'date_published')
+
+    def get_date_published(self, trade):
+        return date_unix(trade.date_published)
+
+    def to_internal_value(self, data):
+        ret = super(TradeSerializer, self).to_internal_value(data)
+
+        trade_id = data.get('id', None)
+        if trade_id:
+            try:
+                uuid.UUID(trade_id)
+                ret['id'] = trade_id
+            except:
+                raise ValidationError("'%s' is not a valid id." % trade_id)
+        return ret
+
+
+class TradeDetailSerializer(TradeSerializer):
+    tags = TagSerializer(many=True)
+    images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
+    videos = VideoSerializer(source='item.videos.all', many=True, required=False)
+
+    class Meta(TradeSerializer.Meta):
+        parent_fields = TradeSerializer.Meta.fields
+        fields = parent_fields + ('tags', 'images', 'videos')
+
+    def create(self, validated_data):
+        location_data = validated_data.get('location')
+        images = validated_data['item'].get('images', {'all': []})['all']
+        videos = validated_data['item'].get('videos', {'all': []})['all']
+
+        if validated_data['type_name'] == 'offer':
+            shout = shout_controller.post_offer(name=validated_data['item']['name'],
+                                                text=validated_data['text'],
+                                                price=validated_data['item']['Price'],
+                                                latitude=location_data['latitude'],
+                                                longitude=location_data['longitude'],
+                                                tags=validated_data['tags'],
+                                                shouter=self.root.context['request'].user,
+                                                country=location_data['country'],
+                                                city=location_data['city'],
+                                                address=location_data.get('address', ""),
+                                                currency=validated_data['item']['Currency']['Code'],
+                                                images=images,
+                                                videos=videos)
+        else:
+            shout = shout_controller.post_request(name=validated_data['item']['name'],
+                                                  text=validated_data['text'],
+                                                  price=validated_data['item']['Price'],
+                                                  latitude=location_data['latitude'],
+                                                  longitude=location_data['longitude'],
+                                                  tags=validated_data['tags'],
+                                                  shouter=self.root.context['request'].user,
+                                                  country=location_data['country'],
+                                                  city=location_data['city'],
+                                                  address=location_data.get('address', ""),
+                                                  currency=validated_data['item']['Currency']['Code'],
+                                                  images=images,
+                                                  videos=videos)
+
+        return shout
+
+
+class SharedLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SharedLocation
+        fields = ['latitude', 'longitude']
+
+
 class MessageAttachmentSerializer(serializers.ModelSerializer):
+    shout = TradeSerializer(required=False)
+    location = SharedLocationSerializer(required=False)
+
     class Meta:
         model = MessageAttachment
-        fields = ('type', 'attached_object')
+        fields = ['shout', 'location']
 
     def to_representation(self, instance):
+        ret = super(MessageAttachmentSerializer, self).to_representation(instance)
+
         if instance.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
-            attached_object = TradeSerializer(instance.attached_object, context=self.root.context).data
-        elif instance.type == MESSAGE_ATTACHMENT_TYPE_LOCATION:
-            attached_object = LocationSerializer(instance.attached_object, context=self.root.context).data
-        else:
-            attached_object = None
+            del ret['location']
+        if instance.type == MESSAGE_ATTACHMENT_TYPE_LOCATION:
+            del ret['shout']
 
-        if attached_object:
-            rep = {
-                MessageAttachmentType.values[instance.type]: attached_object
-            }
-        else:
-            raise AssertionError("attached_object is not shout or location")
-
-        return rep
+        return ret
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    attachments = MessageAttachmentSerializer(many=True, source='attachments.all')
+    user = UserSerializer(read_only=True)
+    created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
 
     class Meta:
         model = Message2
-        fields = ('id', 'read_url', 'delete_url', 'user', 'message', 'attachments')
+        fields = ('id', 'created_at', 'read_url', 'user', 'text')
+
+
+class MessageDetailSerializer(MessageSerializer):
+    attachments = MessageAttachmentSerializer(many=True, required=False,
+                                              help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
+
+    class Meta(MessageSerializer.Meta):
+        parent_fields = MessageSerializer.Meta.fields
+        fields = parent_fields + ('attachments',)
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
-        if 'message' not in validated_data:
-            validated_data['message'] = None
+
+        # todo: better validation
+        errors = OrderedDict()
+        if 'text' not in validated_data:
+            validated_data['text'] = None
+        else:
+            if validated_data['text'] == "":
+                errors['text'] = "text can not be empty"
+
         if 'attachments' not in validated_data:
             validated_data['attachments'] = None
+        else:
+            if isinstance(validated_data['attachments'], list) and len(validated_data['attachments']):
+
+                for attachment in validated_data['attachments']:
+                    if 'shout' not in attachment and 'location' not in attachment:
+                        errors['attachments'] = "attachment should have either 'shout' or 'location'"
+                        continue
+                    if 'shout' in attachment and 'id' not in attachment['shout']:
+                        errors['attachments'] = {'shout': "shout object should have 'id'"}
+                    else:
+                        if not Trade.objects.filter(id=attachment['shout']['id']).exists():
+                            errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
+
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                        errors['attachments'] = {'shout': "location object should have 'latitude' and 'longitude'"}
+            else:
+                errors['attachments'] = "'attachments' should be a non empty list"
+
+        if not (validated_data['text'] or validated_data['attachments']):
+            errors['error'] = "please provide 'text' or 'attachments'"
+
+        if errors:
+            raise ValidationError(errors)
+
         return validated_data
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    users = UserSerializer(many=True, source='users.all')
-    last_message = MessageSerializer()
-    type = serializers.CharField(source='type_name')
+    users = UserSerializer(many=True, source='contributors', help_text="List of users in this conversations")
+    last_message = MessageSerializer(required=False)
+    type = serializers.CharField(source='type_name', help_text="Either 'chat' or 'about_shout'")
+    created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
+    modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
+    about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
 
     class Meta:
         model = Conversation2
-        fields = ('id', 'api_url', 'web_url', 'type', 'users', 'last_message')
+        fields = ('id', 'created_at', 'modified_at', 'api_url', 'web_url', 'type', 'users', 'last_message', 'about')
 
-    def to_representation(self, instance):
-        rep = super(ConversationSerializer, self).to_representation(instance)
+    def get_about(self, instance):
 
+        # todo: map types
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
-            shout = TradeSerializer(instance.attached_object, context=self.root.context).data
-            rep['about'] = shout
+            return TradeSerializer(instance.attached_object, context=self.root.context).data
 
-        return rep
+        return None
+
+
+class ConversationDetailSerializer(ConversationSerializer):
+    messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
+    # todo:
+    # reply
+
+    class Meta(ConversationSerializer.Meta):
+        parent_fields = ConversationSerializer.Meta.fields
+        fields = parent_fields + ('messages_url', )
+
+    def get_messages_url(self, conversation):
+        return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])

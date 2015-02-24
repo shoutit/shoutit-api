@@ -5,19 +5,20 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 
-from rest_framework import permissions, filters
+from rest_framework import permissions, filters, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
+from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.filters import ShoutFilter
-from shoutit.api.v2.serializers import TradeSerializer
+from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageDetailSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
 
 from shoutit.models import Trade
 from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwnerOrContributorsReadOnly
 
 
-class ShoutViewSet(NoUpdateModelViewSet):
+class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
     """
     Shout API Resource
     """
@@ -25,6 +26,7 @@ class ShoutViewSet(NoUpdateModelViewSet):
     lookup_value_regex = '[0-9a-f-]{32,36}'
 
     serializer_class = TradeSerializer
+    serializer_detail_class = TradeDetailSerializer
 
     def get_queryset(self):
         return Trade.objects.get_valid_trades().all()
@@ -37,7 +39,7 @@ class ShoutViewSet(NoUpdateModelViewSet):
         """
         Get shouts based on filters
         ---
-        omit_serializer: true
+        serializer: TradeSerializer
         parameters:
             - name: search
               description: space or comma separated keywords to search in title, text, tags
@@ -121,46 +123,25 @@ class ShoutViewSet(NoUpdateModelViewSet):
         }
         </code></pre>
         ---
-        omit_serializer: true
+        serializer: TradeDetailSerializer
         omit_parameters:
             - form
         parameters:
             - name: body
               paramType: body
         """
-        return super(ShoutViewSet, self).create(request, *args, **kwargs)
+        serializer = TradeDetailSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def retrieve(self, request, *args, **kwargs):
         """
         Get shout
 
-        ###Shout Object
-        <pre><code>
-        {
-          "id": "fc598c12-f7b6-4a24-b56e-defd6178876e",
-          "api_url": "http://shoutit.dev:8000/api/v2/shouts/fc598c12-f7b6-4a24-b56e-defd6178876e",
-          "web_url": "",
-          "type": "offer",
-          "title": "offer 1",
-          "text": "selling some stuff",
-          "price": 1,
-          "currency": "AED",
-          "thumbnail": null,
-          "images": "[]", // list of urls
-          "videos": [],  // list of {Video Object}
-          "tags": [],  // list of {Tag Object}
-          "location": {
-            "country": "AE",
-            "city": "Dubai",
-            "latitude": 25.165173368664,
-            "longitude": 55.2667236328125
-          },
-          "user": {}, // {User Object}
-          "date_published": 1424481256
-        }
-        </code></pre>
         ---
-        omit_serializer: true
+        serializer: TradeDetailSerializer
         """
         return super(ShoutViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -172,7 +153,7 @@ class ShoutViewSet(NoUpdateModelViewSet):
         NOT IMPLEMENTED!
         ```
         ---
-        omit_serializer: true
+        serializer: TradeDetailSerializer
         omit_parameters:
             - form
         parameters:
@@ -203,8 +184,12 @@ class ShoutViewSet(NoUpdateModelViewSet):
     def reply(self, request, *args, **kwargs):
         """
         Reply to shout
+
+        ```
+        NOT IMPLEMENTED
+        ```
         ---
-        omit_serializer: true
+        serializer: MessageDetailSerializer
         omit_parameters:
             - form
         parameters:

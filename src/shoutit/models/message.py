@@ -10,7 +10,7 @@ from django.db import models
 from django.conf import settings
 
 from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
-    ConversationType
+    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 
@@ -56,14 +56,28 @@ class Message(UUIDModel):
 
 class MessageAttachment(UUIDModel, AttachedObjectMixin):
     type = models.SmallIntegerField(choices=MessageAttachmentType.choices, blank=False)
-    message = models.ForeignKey('shoutit.Message', related_name='attachments')
-    conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
+    message = models.ForeignKey('shoutit.Message2', related_name='attachments')
+    conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages_attachments')
 
     def __unicode__(self):
         return self.pk + " for message: " + self.message.pk
 
     def type_name(self):
         return MessageAttachmentType.values[self.type]
+
+    @property
+    def shout(self):
+        if self.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
+            return self.attached_object
+        else:
+            return None
+
+    @property
+    def location(self):
+        if self.type == MESSAGE_ATTACHMENT_TYPE_LOCATION:
+            return self.attached_object
+        else:
+            return None
 
 
 class Notification(UUIDModel, AttachedObjectMixin):
@@ -162,10 +176,11 @@ class Message2(UUIDModel):
     conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages2')
     read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Message2Read', related_name='read_messages2')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Message2Delete', related_name='deleted_messages2')
-    message = models.CharField(null=True, blank=True, max_length=2000)
+    text = models.CharField(null=True, blank=True, max_length=2000,
+                            help_text="The text body of this message, could be None if the message has attachments")
 
     def __unicode__(self):
-        return "%s c at:%s" % (self.message[:30] + '...' if self.message else '<attachment>', self.created_at_unix)
+        return "%s c at:%s" % (self.text[:30] + '...' if self.text else '<attachment>', self.created_at_unix)
 
     @property
     def attachments(self):
@@ -173,14 +188,10 @@ class Message2(UUIDModel):
 
     @property
     def contributors(self):
-        return self.conversation.users.all()
+        return self.conversation.contributors
 
     @property
     def read_url(self):
-        return ""
-
-    @property
-    def delete_url(self):
         return ""
 
 

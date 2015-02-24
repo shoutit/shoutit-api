@@ -206,7 +206,7 @@ def render_message2(message):
             'id': message.conversation.pk
         },
         'user': render_user(message.user, level=1),
-        'message': message.message,
+        'message': message.text,
         'created_at': message.created_at_unix,
         'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
     }
@@ -265,7 +265,7 @@ def render_conversation2(conversation):
     obj = {
         'id': conversation.pk,
         'api_url': get_object_api_url(conversation),
-        'users': [render_user(user, level=2) for user in conversation.users.all()],
+        'users': [render_user(user, level=2) for user in conversation.contributors],
         'last_message': render_message2(conversation.last_message),
         'modified_at': conversation.modified_at_unix,
     }
