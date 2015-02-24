@@ -1,10 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+
+"""
+from __future__ import unicode_literals
+
 from datetime import datetime
 
 from django.db import models
 from django.conf import settings
 
-from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT
-from shoutit.models.base import UUIDModel, AttachedObjectMixin
+from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
+    ConversationType
+from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -48,7 +55,7 @@ class Message(UUIDModel):
 
 
 class MessageAttachment(UUIDModel, AttachedObjectMixin):
-    type = models.SmallIntegerField(choices=MessageAttachmentType.choices, default=MESSAGE_ATTACHMENT_TYPE_SHOUT.value)
+    type = models.SmallIntegerField(choices=MessageAttachmentType.choices, blank=False)
     message = models.ForeignKey('shoutit.Message', related_name='attachments')
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
 
@@ -95,11 +102,12 @@ class Report(UUIDModel, AttachedObjectMixin):
 
 
 ########## M2 ###########
-class Conversation2(UUIDModel, AttachedObjectMixin):
+class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
     """
     Conversation2 will introduce group chat where a conversation can have many users, each will contribute by creating Message2
     the attached_object is the topic of the conversation and it is allowed not to have a topic.
     """
+    type = models.SmallIntegerField(choices=ConversationType.choices, blank=False)
     users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations2')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Conversation2Delete', related_name='deleted_conversations2')
     last_message = models.OneToOneField('shoutit.Message2', related_name='+', null=True, blank=True)
@@ -114,6 +122,17 @@ class Conversation2(UUIDModel, AttachedObjectMixin):
         if after:
             messages = messages.filter(created_at__gt=datetime.fromtimestamp(after))
         return messages[:limit][::-1]
+
+    def get_messages_qs(self, ):
+        return self.messages2.order_by('-created_at')
+
+    @property
+    def about(self):
+        return self.attached_object
+
+    @property
+    def type_name(self):
+        return ConversationType.values[self.type]
 
     @property
     def messages_attachments(self):
@@ -156,6 +175,14 @@ class Message2(UUIDModel):
     def contributors(self):
         return self.conversation.users.all()
 
+    @property
+    def read_url(self):
+        return ""
+
+    @property
+    def delete_url(self):
+        return ""
+
 
 class Message2Read(UUIDModel):
     """
@@ -166,7 +193,8 @@ class Message2Read(UUIDModel):
     conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages2_read_set')
 
     class Meta(UUIDModel.Meta):
-        unique_together = ('user', 'message', 'conversation')  # so the user can mark the message as 'read' only once
+        # user can mark the message as 'read' only once
+        unique_together = ('user', 'message', 'conversation')
 
 
 class Message2Delete(UUIDModel):
@@ -178,4 +206,5 @@ class Message2Delete(UUIDModel):
     conversation = models.ForeignKey(Conversation2, related_name='messages2_deleted_set')
 
     class Meta(UUIDModel.Meta):
-        unique_together = ('user', 'message', 'conversation')  # so the user can mark the message as 'deleted' only once
+        # user can mark the message as 'deleted' only once
+        unique_together = ('user', 'message', 'conversation')

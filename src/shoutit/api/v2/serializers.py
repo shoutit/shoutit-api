@@ -7,12 +7,16 @@ from collections import OrderedDict
 import os
 from push_notifications.models import APNSDevice, GCMDevice
 
-from rest_framework import serializers
+from rest_framework import serializers, pagination
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import DefaultObjectSerializer
+from rest_framework.templatetags.rest_framework import replace_query_param
+from common.constants import MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, \
+    CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT
 from common.utils import date_unix
 from shoutit.controllers import shout_controller
 
-from shoutit.models import User, Video, Tag, Trade
+from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2
 from shoutit.utils import cloud_upload_image, random_uuid_str
 
 
@@ -44,22 +48,16 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'api_url', 'web_url', 'is_listening', 'listeners_count')
 
     def get_is_listening(self, tag):
-        return tag.is_listening(self.context['request'].user)
+        return tag.is_listening(self.root.context['request'].user)
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'api_url', 'username', 'name', 'first_name', 'last_name', 'web_url', 'is_active')
+        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_active')
 
 
 class TradeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Trade
-        fields = ('id', 'api_url', 'web_url', 'type', 'title', 'text', 'price', 'currency', 'thumbnail',
-                  'images', 'videos', 'tags', 'location', 'user', 'date_published',
-        )
-
     type = serializers.CharField(source='type_name')
     title = serializers.CharField(source='item.name')
     price = serializers.FloatField(source='item.Price')
@@ -70,6 +68,12 @@ class TradeSerializer(serializers.ModelSerializer):
     location = LocationSerializer()
     user = UserSerializer(read_only=True)
     date_published = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Trade
+        fields = ('id', 'api_url', 'web_url', 'type', 'title', 'text', 'price', 'currency', 'thumbnail',
+                  'images', 'videos', 'tags', 'location', 'user', 'date_published',
+        )
 
     def get_date_published(self, trade):
         return date_unix(trade.date_published)
@@ -89,7 +93,7 @@ class TradeSerializer(serializers.ModelSerializer):
                                                 latitude=location_data['latitude'],
                                                 longitude=location_data['longitude'],
                                                 tags=validated_data['tags'],
-                                                shouter=self.context['request'].user,
+                                                shouter=self.root.context['request'].user,
                                                 country=location_data['country'],
                                                 city=location_data['city'],
                                                 address=location_data.get('address', ""),
@@ -103,7 +107,7 @@ class TradeSerializer(serializers.ModelSerializer):
                                                   latitude=location_data['latitude'],
                                                   longitude=location_data['longitude'],
                                                   tags=validated_data['tags'],
-                                                  shouter=self.context['request'].user,
+                                                  shouter=self.root.context['request'].user,
                                                   country=location_data['country'],
                                                   city=location_data['city'],
                                                   address=location_data.get('address', ""),
@@ -115,13 +119,6 @@ class TradeSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'api_url', 'username', 'name', 'first_name', 'last_name',
-                  'web_url', 'is_active', 'image', 'sex', 'video', 'date_joined',
-                  'bio', 'location', 'email', 'social_channels', 'push_tokens', 'image_file',
-        )
-
     date_joined = serializers.IntegerField(source='created_at_unix')
     image = serializers.URLField(source='profile.image')
     sex = serializers.BooleanField(source='profile.Sex')
@@ -131,11 +128,18 @@ class UserDetailSerializer(serializers.ModelSerializer):
     push_tokens = PushTokensSerializer()
     image_file = serializers.ImageField(required=False)
 
+    class Meta:
+        model = User
+        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name',
+                  'is_active', 'image', 'sex', 'video', 'date_joined',
+                  'bio', 'location', 'email', 'social_channels', 'push_tokens', 'image_file',
+        )
+
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
 
         # hide sensitive attributes from other users than owner
-        if self.context['request'].user != instance:
+        if self.root.context['request'].user != instance:
             del ret['email']
             del ret['location']['latitude']
             del ret['location']['longitude']
@@ -256,3 +260,60 @@ class UserDetailSerializer(serializers.ModelSerializer):
         return user
 
 
+class MessageAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessageAttachment
+        fields = ('type', 'attached_object')
+
+    def to_representation(self, instance):
+        if instance.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
+            attached_object = TradeSerializer(instance.attached_object, context=self.root.context).data
+        elif instance.type == MESSAGE_ATTACHMENT_TYPE_LOCATION:
+            attached_object = LocationSerializer(instance.attached_object, context=self.root.context).data
+        else:
+            attached_object = None
+
+        if attached_object:
+            rep = {
+                MessageAttachmentType.values[instance.type]: attached_object
+            }
+        else:
+            raise AssertionError("attached_object is not shout or location")
+
+        return rep
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+    attachments = MessageAttachmentSerializer(many=True, source='attachments.all')
+
+    class Meta:
+        model = Message2
+        fields = ('id', 'read_url', 'delete_url', 'user', 'message', 'attachments')
+
+    def to_internal_value(self, data):
+        validated_data = super(MessageSerializer, self).to_internal_value(data)
+        if 'message' not in validated_data:
+            validated_data['message'] = None
+        if 'attachments' not in validated_data:
+            validated_data['attachments'] = None
+        return validated_data
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    users = UserSerializer(many=True, source='users.all')
+    last_message = MessageSerializer()
+    type = serializers.CharField(source='type_name')
+
+    class Meta:
+        model = Conversation2
+        fields = ('id', 'api_url', 'web_url', 'type', 'users', 'last_message')
+
+    def to_representation(self, instance):
+        rep = super(ConversationSerializer, self).to_representation(instance)
+
+        if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
+            shout = TradeSerializer(instance.attached_object, context=self.root.context).data
+            rep['about'] = shout
+
+        return rep

@@ -37,7 +37,7 @@ api2_urls = {
     'StoredImage': ('images/{}', 'pk'),
     'item': ('items/{}', 'pk'),
     'Tag': ('tags/{}', 'name'),
-    'Conversation2': ('messages2/{}', 'pk'),
+    'Conversation2': ('conversations/{}', 'pk'),
     'Experience': ('experiences/{}', 'pk'),
 
     JSON_URL_MARK_NOTIFICATION_AS_READ: JSON_URL_MARK_NOTIFICATION_AS_READ,

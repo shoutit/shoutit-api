@@ -180,6 +180,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
 
         ###Response
         Detailed User object
+
         ---
         omit_serializer: true
         omit_parameters:

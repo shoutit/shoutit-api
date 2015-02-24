@@ -5,21 +5,19 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 
-from rest_framework import permissions, viewsets, filters, mixins, generics
+from rest_framework import permissions, filters
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route, list_route
-from rest_framework.settings import api_settings
+from rest_framework.decorators import detail_route
 from shoutit.api.v2.filters import ShoutFilter
 from shoutit.api.v2.serializers import TradeSerializer
+from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
 
-
-from shoutit.models import  Trade
+from shoutit.models import Trade
 from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwnerOrContributorsReadOnly
-from shoutit.api.renderers import render_conversation, render_message, render_shout
 
 
-class ShoutViewSet(viewsets.ModelViewSet):
+class ShoutViewSet(NoUpdateModelViewSet):
     """
     Shout API Resource
     """
@@ -56,20 +54,26 @@ class ShoutViewSet(viewsets.ModelViewSet):
             - name: city
               paramType: query
             - name: min_price
+              type: float
               paramType: query
+              type: float
             - name: max_price
               paramType: query
             - name: down_left_lat
               description: -90 to 90, can not be greater than up_right_lat
+              type: float
               paramType: query
             - name: down_left_lng
               description: -180 to 180, can not be greater than up_right_lng
+              type: float
               paramType: query
             - name: up_right_lat
               description: -90 to 90
+              type: float
               paramType: query
             - name: up_right_lng
               description: -180 to 180
+              type: float
               paramType: query
             - name: tags
               description: space or comma separated tags. returned shouts will contain ALL of them
@@ -160,7 +164,7 @@ class ShoutViewSet(viewsets.ModelViewSet):
         """
         return super(ShoutViewSet, self).retrieve(request, *args, **kwargs)
 
-    def update(self, request, *args, **kwargs):
+    def partial_update(self, request, *args, **kwargs):
         """
         Modify shout
 
@@ -198,10 +202,7 @@ class ShoutViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def reply(self, request, *args, **kwargs):
         """
-        Reply to a shout
-        ```
-        NOT IMPLEMENTED!
-        ```
+        Reply to shout
         ---
         omit_serializer: true
         omit_parameters:
@@ -210,4 +211,5 @@ class ShoutViewSet(viewsets.ModelViewSet):
             - name: body
               paramType: body
         """
+
         return Response()

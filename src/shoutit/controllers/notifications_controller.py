@@ -3,8 +3,8 @@ from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 
-from shoutit.models import Notification
-from shoutit.api.renderers import render_notification, render_user, render_message
+from shoutit.models import Notification, Message2
+from shoutit.api.renderers import render_notification, render_user, render_message, render_message2
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
     NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
 from shoutit.controllers import realtime_controller
@@ -30,7 +30,10 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
         attached_object_dict = render_user(attached_object, 2)
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")
-        attached_object_dict = render_message(attached_object)
+        if isinstance(attached_object, Message2):
+            attached_object_dict = render_message2(attached_object)
+        else:
+            attached_object_dict = render_message(attached_object)
     else:
         message = None
         attached_object_dict = {}
@@ -63,6 +66,10 @@ def notify_user_of_listen(user, listener):
 
 def notify_user_of_message(user, message):
     notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
+
+
+def notify_user_of_message2(user, message):
+    notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.user, message)
 
 
 def notify_business_of_exp_posted(business, exp):

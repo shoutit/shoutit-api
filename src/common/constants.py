@@ -57,6 +57,7 @@ class Constant(object):
         return self.value
 
     def __init__(self, text='', value=None):
+        self.text = text
         if not value:
             self.value = self.__class__.counter
             self.__class__.counter += 1
@@ -100,7 +101,6 @@ class Flag(object):
         self.value = self.__class__.counter
         self.__class__.values[self.value] = text
         self.__class__.counter *= 2
-
 
     def __hash__(self):
         return self.value
@@ -246,11 +246,15 @@ EXPERIENCE_DOWN = ExperienceState('Thumbs down')
 EXPERIENCE_UP = ExperienceState('Thumbs up')
 
 
-class MessageAttachmentType(Constant):
+class ConversationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-    def __init__(self, text=''):
-        Constant.__init__(self, text)
+CONVERSATION_TYPE_CHAT = ConversationType('chat')
+CONVERSATION_TYPE_ABOUT_SHOUT = ConversationType('about_shout')
+
+
+class MessageAttachmentType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
 
 MESSAGE_ATTACHMENT_TYPE_SHOUT = MessageAttachmentType('shout')
 MESSAGE_ATTACHMENT_TYPE_LOCATION = MessageAttachmentType('location')
