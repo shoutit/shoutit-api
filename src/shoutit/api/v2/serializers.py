@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 import os
+import profile
 import uuid
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -12,9 +13,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, \
-    CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT
+    CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
 from common.utils import date_unix
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller, stream_controller
 
 from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation
 from shoutit.utils import cloud_upload_image, random_uuid_str
@@ -49,20 +50,24 @@ class TagSerializer(serializers.ModelSerializer):
 
 class TagDetailSerializer(TagSerializer):
     is_listening = serializers.SerializerMethodField()
-    # todo
-    # listeners
-    # listen
-    # shouts
+    listeners_url = serializers.SerializerMethodField()
+    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
 
     class Meta(TagSerializer.Meta):
         model = Tag
         parent_fields = TagSerializer.Meta.fields
-        fields = parent_fields + ('web_url', 'listeners_count', 'is_listening')
+        fields = parent_fields + ('web_url', 'listeners_count', 'listeners_url', 'is_listening', 'shouts_url')
 
     def get_is_listening(self, tag):
         if 'request' in self.root.context:
             return tag.is_listening(self.root.context['request'].user)
         return None
+
+    def get_listeners_url(self, tag):
+        return reverse('tag-listeners', kwargs={'name': tag.name}, request=self.context['request'])
+
+    def get_shouts_url(self, tag):
+        return reverse('tag-shouts', kwargs={'name': tag.name}, request=self.context['request'])
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -85,20 +90,20 @@ class UserDetailSerializer(UserSerializer):
     image_file = serializers.ImageField(required=False)
     is_listening = serializers.SerializerMethodField()
     is_listener = serializers.SerializerMethodField()
-
-
-    # todo:
-    # listeners_count
-    # listeners
-    # listening_count
-    # listening
-    # shouts
-    # is_owner
+    listeners_count = serializers.SerializerMethodField()
+    listeners_url = serializers.SerializerMethodField()
+    listening_count = serializers.SerializerMethodField()
+    listening_url = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
+    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
+    message_url = serializers.SerializerMethodField(
+        help_text="URL to message this user if is possible. This is the case when user is one of your listeners")
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens',
-                                  'image_file', 'is_listening', 'is_listener')
+        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens', 'image_file',
+                                  'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
+                                  'listening_count', 'listening_url', 'is_owner', 'message_url')
 
     def get_is_listening(self, user):
         if 'request' in self.root.context:
@@ -110,16 +115,48 @@ class UserDetailSerializer(UserSerializer):
             return user.profile.is_listener(self.root.context['request'].user.profile.stream2)
         return None
 
+    def get_shouts_url(self, user):
+        return reverse('user-shouts', kwargs={'username': user.username}, request=self.context['request'])
+
+    def get_listening_url(self, user):
+        return reverse('user-listening', kwargs={'username': user.username}, request=self.context['request'])
+
+    def get_listeners_url(self, user):
+        return reverse('user-listeners', kwargs={'username': user.username}, request=self.context['request'])
+
+    def get_is_owner(self, user):
+        return self.root.context['request'].user == user
+
+    def get_listeners_count(self, user):
+        return stream_controller.get_stream_listeners(stream=user.profile.stream2, count_only=True)
+
+    def get_listening_count(self, user):
+        return {
+            'users': stream_controller.get_user_listening(user=user.profile.user, listening_type=STREAM2_TYPE_PROFILE, count_only=True),
+            'tags': stream_controller.get_user_listening(user=user.profile.user, listening_type=STREAM2_TYPE_TAG, count_only=True),
+        }
+
+    def get_message_url(self, user):
+        return reverse('user-message', kwargs={'username': user.id}, request=self.context['request'])
+
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
 
         # hide sensitive attributes from other users than owner
-        if self.root.context['request'].user != instance:
+        if not ret['is_owner']:
             del ret['email']
             del ret['location']['latitude']
             del ret['location']['longitude']
             del ret['push_tokens']
             del ret['social_channels']
+            if not ret['is_listener']:
+                del ret['message_url']
+
+        # hide obvious attributes if the user `is_owner`
+        else:
+            del ret['is_listening']
+            del ret['is_listener']
+            del ret['message_url']
 
         return ret
 
@@ -268,10 +305,20 @@ class TradeDetailSerializer(TradeSerializer):
     tags = TagSerializer(many=True)
     images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
+    reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout")
 
     class Meta(TradeSerializer.Meta):
         parent_fields = TradeSerializer.Meta.fields
-        fields = parent_fields + ('tags', 'images', 'videos')
+        fields = parent_fields + ('tags', 'images', 'videos', 'reply_url')
+
+    def get_reply_url(self, trade):
+        return reverse('shout-reply', kwargs={'id': trade.id}, request=self.context['request'])
+
+    def to_representation(self, instance):
+        ret = super(TradeDetailSerializer, self).to_representation(instance)
+        if self.root.context['request'].user == instance.owner:
+            del ret['reply_url']
+        return ret
 
     def create(self, validated_data):
         location_data = validated_data.get('location')

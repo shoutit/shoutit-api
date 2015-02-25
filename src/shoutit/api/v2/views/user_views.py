@@ -277,13 +277,13 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         user = self.get_object()
         listeners = stream_controller.get_stream_listeners(user.profile.stream2)
         page = self.paginate_queryset(listeners)
-        serializer = self.get_pagination_serializer(page)
+        serializer = self.get_custom_pagination_serializer(page, UserSerializer)
         return Response(serializer.data)
 
     @detail_route(methods=['get'])
     def listening(self, request, *args, **kwargs):
         """
-        Get user listening
+        Get user listening based on `type` query param. It could be either 'users' or 'tags', default is 'users'
 
         ###Response
         <pre><code>
