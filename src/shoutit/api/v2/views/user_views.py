@@ -8,9 +8,10 @@ from rest_framework import permissions, viewsets, filters, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
+from rest_framework.settings import api_settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
-from shoutit.controllers import user_controller, stream_controller
+from shoutit.controllers import user_controller, stream_controller, message_controller
 
 from shoutit.models import User
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
@@ -228,6 +229,9 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         user = self.get_object()
         profile = user.profile
 
+        if request.user == user:
+            raise ValidationError({'error': "You can not listen to your self"})
+
         if request.method == 'POST':
             stream_controller.listen_to_stream(request.user, profile.stream2)
             msg = "you started listening to {} shouts.".format(user.name)
@@ -375,3 +379,55 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         page = self.paginate_queryset(trades)
         serializer = self.get_custom_pagination_serializer(page, TradeSerializer)
         return Response(serializer.data)
+
+    @detail_route(methods=['post'])
+    def message(self, request, *args, **kwargs):
+        """
+        Reply in a conversation
+
+        ###Request
+        <pre><code>
+        {
+            "text": "text goes here",
+            "attachments": [
+                {
+                    "shout": {
+                        "id": ""
+                    }
+                },
+                {
+                    "location": {
+                        "latitude": 12.345,
+                        "longitude": 12.345
+                    }
+                }
+            ]
+        }
+        </code></pre>
+
+        ---
+        response_serializer: MessageDetailSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        user = self.get_object()
+        if request.user == user:
+            raise ValidationError({'error': "You can not start a conversation with your self"})
+        if not user.profile.is_listener(request.user.profile.stream2):
+            raise ValidationError({'error': "You can only start a conversation with your listeners"})
+
+        serializer = MessageDetailSerializer(data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        text = serializer.validated_data['text']
+        attachments = serializer.validated_data['attachments']
+        message = message_controller.send_message2(conversation=None, user=request.user,
+                                                   to_users=[user], text=text, attachments=attachments)
+        message = MessageDetailSerializer(instance=message, context={'request': request})
+        headers = self.get_success_message_headers(message.data)
+        return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def get_success_message_headers(self, data):
+        return {'Location': data['conversation_url']}

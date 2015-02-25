@@ -9,7 +9,7 @@ from django.conf import settings
 
 from common.constants import DEFAULT_LOCATION
 from shoutit.models.base import UUIDModel
-from shoutit.models.stream import Stream2Mixin
+from shoutit.models.stream import Stream2Mixin, Listen
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -27,6 +27,12 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
 
     class Meta(UUIDModel.Meta):
         abstract = True
+
+    def is_listener(self, stream2):
+        """
+        Check whether the user of this profile is listening to this stream2 or not
+        """
+        return Listen.objects.filter(listener=self.user, stream=stream2).exists()
 
 
 class Profile(AbstractProfile):

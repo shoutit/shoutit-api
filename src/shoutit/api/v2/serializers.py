@@ -82,6 +82,9 @@ class UserDetailSerializer(UserSerializer):
     push_tokens = PushTokensSerializer(help_text="only shown for owner")
     social_channels = serializers.ReadOnlyField(help_text="only shown for owner")
     image_file = serializers.ImageField(required=False)
+    is_listening = serializers.SerializerMethodField()
+    is_listener = serializers.SerializerMethodField()
+
 
     # todo:
     # listeners_count
@@ -89,13 +92,22 @@ class UserDetailSerializer(UserSerializer):
     # listening_count
     # listening
     # shouts
-    # is_listening
     # is_owner
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
         fields = parent_fields + ('image', 'sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens',
-                                  'image_file')
+                                  'image_file', 'is_listening', 'is_listener')
+
+    def get_is_listening(self, user):
+        if 'request' in self.root.context:
+            return user.profile.is_listening(self.root.context['request'].user)
+        return None
+
+    def get_is_listener(self, user):
+        if 'request' in self.root.context:
+            return user.profile.is_listener(self.root.context['request'].user.profile.stream2)
+        return None
 
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
@@ -334,10 +346,14 @@ class MessageSerializer(serializers.ModelSerializer):
 class MessageDetailSerializer(MessageSerializer):
     attachments = MessageAttachmentSerializer(many=True, required=False,
                                               help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
+    conversation_url = serializers.SerializerMethodField()
 
     class Meta(MessageSerializer.Meta):
         parent_fields = MessageSerializer.Meta.fields
-        fields = parent_fields + ('attachments',)
+        fields = parent_fields + ('attachments', 'conversation_url')
+
+    def get_conversation_url(self, message):
+        return reverse('conversation-detail', kwargs={'id': message.conversation.id}, request=self.context['request'])
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)

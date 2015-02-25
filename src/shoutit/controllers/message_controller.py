@@ -235,7 +235,12 @@ def conversation2_exist(conversation_id=None, users=None, about=None):
         assert isinstance(users, list)
         # remove duplicates if any
         users = list(set(users))
-        conversations = Conversation2.objects.with_attached_object(about) if about else Conversation2.objects.filter(object_id=None)
+
+        if about:
+            conversations = Conversation2.objects.with_attached_object(about)
+        else:
+            conversations = Conversation2.objects.filter(object_id=None)
+
         for user in users:
             conversations = conversations.filter(users=user)
         return conversations[0] if len(conversations) else False

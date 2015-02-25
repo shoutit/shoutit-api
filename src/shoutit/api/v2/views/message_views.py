@@ -136,20 +136,17 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
               paramType: body
         """
         conversation = self.get_object()
-        serializer = MessageDetailSerializer(data=request.data, partial=True)
+        serializer = MessageDetailSerializer(data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation, request.user, text=text, attachments=attachments)
-        message = MessageDetailSerializer(instance=message)
-        headers = self.get_success_headers(message.data)
+        message = MessageDetailSerializer(instance=message, context={'request': request})
+        headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def get_success_headers(self, data):
-        try:
-            return {'Location': data[api_settings.URL_FIELD_NAME]}
-        except (TypeError, KeyError):
-            return {}
+    def get_success_message_headers(self, data):
+        return {'Location': data['conversation_url']}
 
 
 class MessageViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):

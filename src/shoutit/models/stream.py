@@ -128,6 +128,12 @@ class Stream2Mixin(models.Model):
         except Stream2.DoesNotExist:
             return None
 
+    def is_listening(self, user):
+        """
+        Check whether user is listening to this object's stream2 or not
+        """
+        return Listen.objects.filter(listener=user, stream=self.stream2).exists()
+
 
 @receiver(post_save)
 def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs):
