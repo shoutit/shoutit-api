@@ -79,25 +79,27 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(UserSerializer):
-    email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="only shown for owner")
+    email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     sex = serializers.BooleanField(source='profile.Sex')
     bio = serializers.CharField(source='profile.Bio')
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
-    push_tokens = PushTokensSerializer(help_text="only shown for owner")
+    push_tokens = PushTokensSerializer(help_text="Only shown for owner")
     social_channels = serializers.ReadOnlyField(help_text="only shown for owner")
     image_file = serializers.ImageField(required=False)
-    is_listening = serializers.SerializerMethodField()
-    is_listener = serializers.SerializerMethodField()
-    listeners_count = serializers.SerializerMethodField()
-    listeners_url = serializers.SerializerMethodField()
-    listening_count = serializers.SerializerMethodField()
-    listening_url = serializers.SerializerMethodField()
-    is_owner = serializers.SerializerMethodField()
+    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
+    is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
+    listeners_count = serializers.SerializerMethodField(help_text="Number of this user's listeners")
+    listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
+    listening_count = serializers.SerializerMethodField(
+        help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
+    listening_url = serializers.SerializerMethodField(
+        help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
+    is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
     message_url = serializers.SerializerMethodField(
-        help_text="URL to message this user if is possible. This is the case when user is one of your listeners")
+        help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
@@ -305,7 +307,7 @@ class TradeDetailSerializer(TradeSerializer):
     tags = TagSerializer(many=True)
     images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
-    reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout")
+    reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout if possible, not set for shout owner.")
 
     class Meta(TradeSerializer.Meta):
         parent_fields = TradeSerializer.Meta.fields
