@@ -359,9 +359,9 @@ class MessageDetailSerializer(MessageSerializer):
                     if 'shout' not in attachment and 'location' not in attachment:
                         errors['attachments'] = "attachment should have either 'shout' or 'location'"
                         continue
-                    if 'shout' in attachment and 'id' not in attachment['shout']:
-                        errors['attachments'] = {'shout': "shout object should have 'id'"}
-                    else:
+                    if 'shout' in attachment:
+                        if 'id' not in attachment['shout']:
+                            errors['attachments'] = {'shout': "shout object should have 'id'"}
                         if not Trade.objects.filter(id=attachment['shout']['id']).exists():
                             errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
