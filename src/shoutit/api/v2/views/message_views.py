@@ -37,7 +37,7 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
     permission_classes = (permissions.IsAuthenticated, IsContributor)
 
     def get_queryset(self):
-        return Conversation2.objects.filter(users=self.request.user)
+        return self.request.user.conversations2.all().order_by('-modified_at')
 
     def list(self, request, *args, **kwargs):
         """

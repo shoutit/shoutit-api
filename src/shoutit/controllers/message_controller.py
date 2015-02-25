@@ -226,9 +226,15 @@ def get_message2(message_id):
 
 
 def conversation2_exist(conversation_id=None, users=None, about=None):
+    """
+    Check whether a conversation with same id or both users and about exists
+    """
     if conversation_id:
         return get_conversation2(conversation_id) or False
     elif users:
+        assert isinstance(users, list)
+        # remove duplicates if any
+        users = list(set(users))
         conversations = Conversation2.objects.with_attached_object(about) if about else Conversation2.objects.filter(object_id=None)
         for user in users:
             conversations = conversations.filter(users=user)
@@ -285,12 +291,17 @@ def get_user_conversations(user, before=None, after=None, limit=25):
 def send_message2(conversation, user, to_users=None, about=None, text=None, attachments=None):
     assert conversation or to_users, "Either an existing conversation or a list of to_users should be provided to create a message."
 
+    # conversation users include everyone in it
+    to_users.append(user)
+
     if not conversation:
-        to_users.append(user)
         conversation = conversation2_exist(users=to_users, about=about)
 
     if not conversation:
-        conversation = Conversation2(attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT) if about else Conversation2(type=CONVERSATION_TYPE_CHAT)
+        if about:
+            conversation = Conversation2(attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)
+        else:
+            conversation = Conversation2(type=CONVERSATION_TYPE_CHAT)
         conversation.save()
         conversation.users = to_users
 

@@ -13,6 +13,7 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.filters import ShoutFilter
 from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageDetailSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
+from shoutit.controllers import message_controller
 
 from shoutit.models import Trade
 from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwnerOrContributorsReadOnly
@@ -185,9 +186,26 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
         """
         Reply to shout
 
-        ```
-        NOT IMPLEMENTED
-        ```
+        ###Request
+        <pre><code>
+        {
+            "text": "text goes here",
+            "attachments": [
+                {
+                    "shout": {
+                        "id": ""
+                    }
+                },
+                {
+                    "location": {
+                        "latitude": 12.345,
+                        "longitude": 12.345
+                    }
+                }
+            ]
+        }
+        </code></pre>
+
         ---
         serializer: MessageDetailSerializer
         omit_parameters:
@@ -196,5 +214,15 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
             - name: body
               paramType: body
         """
-
-        return Response()
+        shout = self.get_object()
+        if request.user == shout.owner:
+            raise ValidationError({'error': "You can not start a conversation about your own shout"})
+        serializer = MessageDetailSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        text = serializer.validated_data['text']
+        attachments = serializer.validated_data['attachments']
+        message = message_controller.send_message2(conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
+                                                   attachments=attachments)
+        message = MessageDetailSerializer(instance=message)
+        headers = self.get_success_headers(message.data)
+        return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
