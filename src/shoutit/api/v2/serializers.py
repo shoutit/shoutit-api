@@ -378,7 +378,7 @@ class MessageDetailSerializer(MessageSerializer):
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
-                        if not Trade.objects.filter(id=attachment['shout']['id']).exists():
+                        elif not Trade.objects.filter(id=attachment['shout']['id']).exists():
                             errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
@@ -418,12 +418,14 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 class ConversationDetailSerializer(ConversationSerializer):
     messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
-    # todo:
-    # reply
+    reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta(ConversationSerializer.Meta):
         parent_fields = ConversationSerializer.Meta.fields
-        fields = parent_fields + ('messages_url', )
+        fields = parent_fields + ('messages_url', 'reply_url')
 
     def get_messages_url(self, conversation):
         return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])
+
+    def get_reply_url(self, conversation):
+        return reverse('conversation-reply', kwargs={'id': conversation.id}, request=self.context['request'])

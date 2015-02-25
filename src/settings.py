@@ -396,7 +396,7 @@ LOGGING = {
             'handlers': ['console_out', 'console_err', 'sentry'],
         },
         # 'requests': {
-        #     'level': 'DEBUG',
+        # 'level': 'DEBUG',
         #     'handlers': ['console_out', 'console_err', 'sentry'],
         # },
 
@@ -570,7 +570,6 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
@@ -579,6 +578,10 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'shoutit.api.v2.renderers.ShoutitBrowsableAPIRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': [],
     'PAGINATE_BY': 10,
@@ -590,7 +593,6 @@ OAUTH_SINGLE_ACCESS_TOKEN = True
 ENFORCE_SECURE = False
 ENFORCE_CLIENT_SECURE = True
 DELETE_EXPIRED = True
-
 
 SWAGGER_SETTINGS = {
     'exclude_namespaces': [],
