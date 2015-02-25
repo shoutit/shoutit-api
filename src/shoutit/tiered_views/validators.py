@@ -168,22 +168,7 @@ def conversation2_validator(request, conversation_id):
 
 def message_validator(message):
     result = VR(True)
-    # todo: validator for json object attributes
-    if 'attachments' in message:
-        attachments = message['attachments']
-        if isinstance(attachments, list) and len(attachments) > 0:
-            for idx, attachment in enumerate(attachments):
-
-                if False:  # todo: validation using jsonschema
-                    result = VR(False, form_errors={
-                        "attachments": ["attachments[%s] is missing valid 'content_type' or 'object_id'." % str(idx)]
-                    })
-                    return result
-
-        else:
-            result = VR(False, form_errors={"attachments": ["This field should be a non-empty list of {attachment}."]})
-
-    elif not ('text' in message and unicode(message['text']).strip()):
+    if not ('text' in message and unicode(message['text']).strip()):
         result = VR(False, form_errors={"text": ["This field is required and can't be empty."]})
 
     return result

@@ -189,7 +189,7 @@ def render_message(message):
         'text': message.text,
         'is_read': message.IsRead,
         'date_created': message.DateCreated.strftime('%s'),
-        'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
+        # 'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
     }
 
 

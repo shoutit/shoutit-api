@@ -26,7 +26,7 @@ def conversation_exist(conversation_id=None, user1=None, user2=None, about=None)
         return False
 
 
-def send_message(from_user, to_user, about, text=None, attachments=None, conversation=None):
+def send_message(from_user, to_user, about, text=None, conversation=None):
     if not conversation:
         conversation = conversation_exist(user1=from_user, user2=to_user, about=about)
 
@@ -42,25 +42,7 @@ def send_message(from_user, to_user, about, text=None, attachments=None, convers
     message = Message(Conversation=conversation, FromUser=from_user, ToUser=to_user, text=text if text else None)
     message.save()
 
-    if not attachments:
-        attachments = []
-
-    for attachment in attachments:
-        if attachment['content_type'] == 'shout':
-            object_id = attachment['object_id']
-            content_type = ContentType.objects.get_for_model(Trade)  # todo: map the content types to models
-            type = MESSAGE_ATTACHMENT_TYPE_SHOUT
-        elif attachment['content_type'] == 'location':
-            location = attachment['location']
-            if 'longitude' in location and 'latitude' in location:
-                sl = SharedLocation(latitude=location['latitude'], longitude=location['longitude'])
-                sl.save()
-                object_id = sl.id
-                content_type = ContentType.objects.get_for_model(SharedLocation)  # todo: map the content types to models
-                type = MESSAGE_ATTACHMENT_TYPE_LOCATION
-
-        if content_type and object_id and type:
-            MessageAttachment(message=message, conversation=conversation, content_type=content_type, object_id=object_id, type=type).save()
+    # removed attachment from old messages
 
     notifications_controller.notify_user_of_message(to_user, message)
     email_controller.send_message_email(message)
@@ -356,7 +338,8 @@ def message2_from_message(message):
     # get or create Conversation2
     shout = message.Conversation.AboutPost
     ct = ContentType.objects.get_for_model(shout)
-    conversation2, c2_created = Conversation2.objects.get_or_create(id=message.Conversation.id, content_type=ct, object_id=shout.id)
+    conversation2, c2_created = Conversation2.objects.get_or_create(id=message.Conversation.id, content_type=ct, object_id=shout.id,
+                                                                    type=CONVERSATION_TYPE_ABOUT_SHOUT)
     if c2_created:
         conversation2.users = [message.FromUser, message.ToUser]
 

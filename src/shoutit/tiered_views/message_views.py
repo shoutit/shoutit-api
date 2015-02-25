@@ -143,8 +143,7 @@ def reply_in_conversation(request, conversation_id):
     text = validation_result.data['text']
     attachments = validation_result.data['attachments']
 
-    message = message_controller.send_message(request.user, conversation.With, conversation.AboutPost, text, conversation=conversation,
-                                              attachments=attachments)
+    message = message_controller.send_message(request.user, conversation.With, conversation.AboutPost, text, conversation=conversation)
 
     result.data['message'] = message
     result.messages.append(('success', _('Your message was sent successfully.')))
@@ -161,7 +160,7 @@ def reply_to_shout(request, shout_id):
     text = validation_result.data['text']
     attachments = validation_result.data['attachments']
 
-    message = message_controller.send_message(request.user, shout.user, shout, text, attachments=attachments)
+    message = message_controller.send_message(request.user, shout.user, shout, text)
 
     result.messages.append(('success', _('Your message was sent successfully.')))
     result.data['url'] = get_object_api_url(message.Conversation)
