@@ -66,15 +66,16 @@ class TagDetailSerializer(TagSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    image = serializers.URLField(source='profile.image')
+
     class Meta:
         model = User
-        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_active')
+        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_active', 'image')
 
 
 class UserDetailSerializer(UserSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="only shown for owner")
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    image = serializers.URLField(source='profile.image')
     sex = serializers.BooleanField(source='profile.Sex')
     bio = serializers.CharField(source='profile.Bio')
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
@@ -96,7 +97,7 @@ class UserDetailSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('image', 'sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens',
+        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens',
                                   'image_file', 'is_listening', 'is_listener')
 
     def get_is_listening(self, user):
