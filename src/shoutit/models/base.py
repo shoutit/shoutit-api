@@ -46,7 +46,7 @@ class UUIDModel(models.Model):
 class AttachedObjectMixinManager(models.Manager):
     def with_attached_object(self, attached_object):
         ct = ContentType.objects.get_for_model(attached_object)
-        return super(AttachedObjectMixinManager, self).get_query_set().filter(content_type=ct, object_id=attached_object.id)
+        return super(AttachedObjectMixinManager, self).get_queryset().filter(content_type=ct, object_id=attached_object.id)
 
 
 class AttachedObjectMixin(models.Model):
