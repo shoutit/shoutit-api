@@ -19,11 +19,12 @@ class ShoutFilter(django_filters.FilterSet):
     down_left_lng = django_filters.NumberFilter(name='longitude', lookup_type='gte')
     up_right_lat = django_filters.NumberFilter(name='latitude', lookup_type='lte')
     up_right_lng = django_filters.NumberFilter(name='longitude', lookup_type='lte')
+    user = django_filters.CharFilter(name='user__username')
 
     class Meta:
         model = Trade
         fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags',
-                  'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng']
+                  'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng', 'user']
         order_by = ['-date_published']
 
     def filter_type(self, queryset, value):
