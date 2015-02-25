@@ -296,8 +296,9 @@ def get_user_conversations(user, before=None, after=None, limit=25):
 def send_message2(conversation, user, to_users=None, about=None, text=None, attachments=None):
     assert conversation or to_users, "Either an existing conversation or a list of to_users should be provided to create a message."
 
-    # conversation users include everyone in it
-    to_users.append(user)
+    if to_users and isinstance(to_users, list):
+        # conversation users include everyone in it
+        to_users.append(user)
 
     if not conversation:
         conversation = conversation2_exist(users=to_users, about=about)
