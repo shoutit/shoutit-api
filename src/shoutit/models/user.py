@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.dispatch import receiver
 from django.conf import settings
 
-from common.constants import DEFAULT_LOCATION
+from common.constants import DEFAULT_LOCATION, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
 from shoutit.models.base import UUIDModel
 from shoutit.models.stream import Stream2Mixin, Listen
 
@@ -33,6 +33,12 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
         Check whether the user of this profile is listening to this stream2 or not
         """
         return Listen.objects.filter(listener=self.user, stream=stream2).exists()
+
+    def listening_count(self, user):
+        return {
+            'users': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_PROFILE).count(),
+            'tags': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_TAG).count()
+        }
 
 
 class Profile(AbstractProfile):

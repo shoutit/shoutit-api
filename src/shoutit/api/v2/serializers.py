@@ -92,7 +92,7 @@ class UserDetailSerializer(UserSerializer):
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
     listeners_count = serializers.SerializerMethodField(help_text="Number of this user's listeners")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
-    listening_count = serializers.SerializerMethodField(
+    listening_count = serializers.DictField(child=serializers.IntegerField(), source='profile.listening_count',
         help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
@@ -131,12 +131,6 @@ class UserDetailSerializer(UserSerializer):
 
     def get_listeners_count(self, user):
         return stream_controller.get_stream_listeners(stream=user.profile.stream2, count_only=True)
-
-    def get_listening_count(self, user):
-        return {
-            'users': stream_controller.get_user_listening(user=user.profile.user, listening_type=STREAM2_TYPE_PROFILE, count_only=True),
-            'tags': stream_controller.get_user_listening(user=user.profile.user, listening_type=STREAM2_TYPE_TAG, count_only=True),
-        }
 
     def get_message_url(self, user):
         return reverse('user-message', kwargs={'username': user.id}, request=self.context['request'])
@@ -282,10 +276,12 @@ class TradeSerializer(serializers.ModelSerializer):
     currency = serializers.CharField(source='item.Currency.Code')
     date_published = serializers.SerializerMethodField()
     user = UserSerializer(read_only=True)
+    tags = TagSerializer(many=True)
 
     class Meta:
         model = Trade
-        fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'user', 'date_published')
+        fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'user',
+                  'date_published', 'tags')
 
     def get_date_published(self, trade):
         return date_unix(trade.date_published)
@@ -304,14 +300,13 @@ class TradeSerializer(serializers.ModelSerializer):
 
 
 class TradeDetailSerializer(TradeSerializer):
-    tags = TagSerializer(many=True)
     images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout if possible, not set for shout owner.")
 
     class Meta(TradeSerializer.Meta):
         parent_fields = TradeSerializer.Meta.fields
-        fields = parent_fields + ('tags', 'images', 'videos', 'reply_url')
+        fields = parent_fields + ('images', 'videos', 'reply_url')
 
     def get_reply_url(self, trade):
         return reverse('shout-reply', kwargs={'id': trade.id}, request=self.context['request'])
