@@ -72,7 +72,7 @@ def mark_message_as_read(request, message_id):
     result = ResponseResult()
     try:
         message = Message.objects.get(pk=message_id)
-        message.IsRead = True
+        message.is_read = True
         message.save()
     except ObjectDoesNotExist:
         raise Http404()

@@ -21,7 +21,7 @@ router.register('tags', tag_views.TagViewSet, 'tag')
 router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('conversations', message_views.ConversationViewSet, 'conversation')
 router.register('messages', message_views.MessageViewSet, 'message')
-# router.register('notifications', notification_views.NotificationViewSet, 'notification')
+router.register('notifications', notification_views.NotificationViewSet, 'notification')
 # router.register(r'misc', misc_views.MiscViewSet, 'misc')
 
 urlpatterns = (

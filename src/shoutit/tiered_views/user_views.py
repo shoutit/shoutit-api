@@ -686,14 +686,12 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
     result = ResponseResult()
     profile = request.validation_result.data['profile']
 
-    # todo: period usage
     if stats_type == 'listeners':
         listeners = stream_controller.get_stream_listeners(profile.stream2)
 
         if hasattr(request, 'is_api') and request.is_api:
             result.data['listeners'] = listeners
         else:
-            # todo: minimize the db queries
             result.data['listeners'] = [
                 {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.image, 32)}
                 for user in listeners]
@@ -714,13 +712,12 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
             if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = listening_profiles
         else:
-            # todo: minimize the db queries
             # in the case of empty array the user requested this state so return it even if it is empty
             if listening_tags or listening_tags == []:
                 result.data['listening']['tags'] = [tag.name for tag in listening_tags]
             if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = [
-                    {'username': p.username, 'name': p.name, 'image': thumbnail(p.image, 32)}
+                    {'username': p.user.username, 'name': p.user.name, 'image': thumbnail(p.image, 32)}
                     for p in listening_profiles]
     return result
 

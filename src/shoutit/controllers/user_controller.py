@@ -651,25 +651,25 @@ def take_permission_from_user(request, permission):
 
 def get_notifications(profile):
     if not hasattr(profile, 'notifications'):
-        min_date = profile.user.Notifications.filter(ToUser=profile.user, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
+        min_date = profile.user.notifications.filter(ToUser=profile.user, is_read=False).aggregate(min_date=Min('DateCreated'))['min_date']
         if min_date:
-            notifications = list(profile.user.Notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
+            notifications = list(profile.user.notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
             if len(notifications) < 5:
                 notifications = sorted(
                     chain(notifications, list(
-                        profile.user.Notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
+                        profile.user.notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
                     key=lambda n: n.DateCreated,
                     reverse=True
                 )
         else:
-            notifications = list(profile.user.Notifications.filter(IsRead=True).order_by('-DateCreated')[:5])
+            notifications = list(profile.user.notifications.filter(is_read=True).order_by('-DateCreated')[:5])
         profile.notifications = notifications
     return profile.notifications
 
 
 def get_all_notifications(profile):
     if not hasattr(profile, 'all_notifications'):
-        profile.all_notifications = list(profile.user.Notifications.order_by('-DateCreated'))
+        profile.all_notifications = list(profile.user.notifications.order_by('-DateCreated'))
     return profile.all_notifications
 
 
@@ -679,7 +679,7 @@ def get_unread_notifications_count(profile):
         notifications = hasattr(profile, 'all_notifications') and profile.all_notifications
     if not notifications:
         notifications = get_notifications(profile)
-    return len(filter(lambda n: not n.IsRead, notifications))
+    return len(filter(lambda n: not n.is_read, notifications))
 
 
 def activities_stream(profile, start_index=None, end_index=None):

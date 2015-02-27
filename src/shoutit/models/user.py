@@ -70,24 +70,24 @@ class Profile(AbstractProfile):
 
     def get_notifications(self):
         if not hasattr(self, 'notifications'):
-            min_date = self.user.Notifications.filter(ToUser=self.user, IsRead=False).aggregate(min_date=Min('DateCreated'))['min_date']
+            min_date = self.user.notifications.filter(ToUser=self.user, is_read=False).aggregate(min_date=Min('DateCreated'))['min_date']
             if min_date:
-                notifications = list(self.user.Notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
+                notifications = list(self.user.notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
                 if len(notifications) < 5:
                     notifications = sorted(
                         chain(notifications, list(
-                            self.user.Notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
+                            self.user.notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
                         key=lambda n: n.DateCreated,
                         reverse=True
                     )
             else:
-                notifications = list(self.user.Notifications.filter(IsRead=True).order_by('-DateCreated')[:5])
+                notifications = list(self.user.notifications.filter(is_read=True).order_by('-DateCreated')[:5])
             self.notifications = notifications
         return self.notifications
 
     def get_all_notifications(self):
         if not hasattr(self, 'all_notifications'):
-            self.all_notifications = list(self.user.Notifications.order_by('-DateCreated'))
+            self.all_notifications = list(self.user.notifications.order_by('-DateCreated'))
         return self.all_notifications
 
     def get_unread_notifications_count(self):
@@ -96,7 +96,7 @@ class Profile(AbstractProfile):
             notifications = hasattr(self, 'all_notifications') and self.all_notifications
         if not notifications:
             notifications = self.get_notifications()
-        return len(filter(lambda n: not n.IsRead, notifications))
+        return len(filter(lambda n: not n.is_read, notifications))
 
     @property
     def name(self):

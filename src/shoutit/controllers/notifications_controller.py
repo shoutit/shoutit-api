@@ -11,7 +11,12 @@ from shoutit.controllers import realtime_controller
 
 
 def mark_all_as_read(user):
-    Notification.objects.filter(IsRead=False, ToUser=user).update(IsRead=True)
+    Notification.objects.filter(is_read=False, ToUser=user).update(is_read=True)
+
+
+def mark_notifications_as_read_by_ids(notification_ids):
+    assert notification_ids and isinstance(notification_ids, list) and len(notification_ids)
+    Notification.objects.filter(id__in=notification_ids).update(is_read=True)
 
 
 def notify_user(user, notification_type, from_user=None, attached_object=None):
@@ -86,12 +91,12 @@ def notify_users_of_comment(users, comment):
 
 
 def get_user_notifications(user):
-    return Notification.objects.filter(IsRead=False, ToUser=user)
+    return Notification.objects.filter(is_read=False, ToUser=user)
 
 
 def get_user_notifications_count(user):
-    return Notification.objects.filter(IsRead=False, ToUser=user).count()
+    return Notification.objects.filter(is_read=False, ToUser=user).count()
 
 
 def get_user_notifications_without_messages_count(user):
-    return Notification.objects.filter(Q(IsRead=False) & Q(ToUser=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()
+    return Notification.objects.filter(Q(is_read=False) & Q(ToUser=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()

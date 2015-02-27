@@ -140,7 +140,7 @@
           <div class="user-interactions listenings">
             <span id="aFollowing" class="user-icon-listenings" data-toggle="modal" data-target="#FollowingModal"></span>
             <label>{% trans "Listening" %}</label>
-            <span class="counter">{{ listening_count }}</span>
+            <span class="counter">{{ listening_count.users|add:listening_count.tags }}</span>
           </div>
         </div>
       </div>

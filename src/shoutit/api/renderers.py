@@ -187,7 +187,7 @@ def render_message(message):
         'from_user': render_user(message.FromUser, level=1),
         'to_user': render_user(message.ToUser, level=1),
         'text': message.text,
-        'is_read': message.IsRead,
+        'is_read': message.is_read,
         'date_created': message.DateCreated.strftime('%s'),
         # 'attachments': [render_message_attachment(attachment) for attachment in message.attachments.all()],
     }
@@ -252,7 +252,7 @@ def render_conversation(conversation):
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost, level=1),
-        'is_read': conversation.IsRead,
+        'is_read': conversation.is_read,
         'text': conversation.text if hasattr(conversation, 'text') else '',
         'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
     }
@@ -282,7 +282,7 @@ def render_conversation_full(conversation):
         'from_user': render_user(conversation.FromUser, level=2),
         'to_user': render_user(conversation.ToUser, level=2),
         'about': render_shout(conversation.AboutPost),
-        'is_read': conversation.IsRead,
+        'is_read': conversation.is_read,
         'text': conversation.text if hasattr(conversation, 'text') else '',
         'conversation_messages': [render_message(message) for message in conversation.messages],
         'date_created': hasattr(conversation, 'DateCreated') and conversation.DateCreated.strftime('%s') or None
@@ -390,7 +390,7 @@ def render_notification(notification):
         return {}
     result = {
         'from_user': render_user(notification.FromUser, level=2),
-        'is_read': notification.IsRead,
+        'is_read': notification.is_read,
         'type': NotificationType.values[notification.type],
         'date_created': notification.DateCreated.strftime('%s'),
         'mark_as_read_url': get_custom_url(api_urls[JSON_URL_MARK_NOTIFICATION_AS_READ], notification.pk),

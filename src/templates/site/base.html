@@ -510,7 +510,7 @@
             var message = '';
             var link = '';
 
-            if (data.type == 'Listen') {
+            if (data.type == 'listen') {
               message = data.from_user.name + ' has started listening to your shouts.';
               link = "/user/" + data.from_user.username + "/";
               showMessage(message, 'info', 'new-notification', link);
@@ -527,7 +527,7 @@
               message = data.from_user.name + ' commented on an experience.';
               link = data.attached_object.url;
               showMessage(message, 'info', 'new-notification', link);
-            } else if (data.type == 'Message') {
+            } else if (data.type == 'message') {
               link = "/messages/" + data.attached_object.conversation_id + "/";
 
               var conversation_id = data.attached_object.conversation_id;
@@ -586,9 +586,9 @@
           } else {
             for (var i = 0; i < data.length; i++) {
               message = '';
-              if (data[i].type == 'Listen') {
+              if (data[i].type == 'listen') {
                 message = data[i].from_user.name + ' has started listening to your shouts.';
-              } else if (data[i].type == 'Message') {
+              } else if (data[i].type == 'message') {
                 message = data[i].from_user.name + ' sent you a message.';
               }
               showMessage(message, 'info', 'new-notification');

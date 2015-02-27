@@ -10,9 +10,8 @@ class CustomPaginationSerializerMixin(object):
 
     def get_custom_pagination_serializer(self, page, custom_serializer_class, custom_results_field='results'):
         """
-        Return a serializer instance to use with paginated data using the `serializer_class` param
+        Return a serializer instance to use with paginated data using the `custom_serializer_class` and `custom_results_field`.
         """
-
         class PaginationSerializerClass(PaginationSerializer):
             results_field = custom_results_field
 

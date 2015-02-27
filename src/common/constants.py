@@ -313,8 +313,8 @@ ACTIVITY_DATA_EVENT = ActivityData('Event')
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-NOTIFICATION_TYPE_LISTEN = NotificationType('Listen')
-NOTIFICATION_TYPE_MESSAGE = NotificationType('Message')
+NOTIFICATION_TYPE_LISTEN = NotificationType('listen')
+NOTIFICATION_TYPE_MESSAGE = NotificationType('message')
 NOTIFICATION_TYPE_EXP_POSTED = NotificationType('Experience')
 NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')

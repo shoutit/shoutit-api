@@ -95,7 +95,7 @@ def mark_notification_as_read(request, notification_id):
     result = ResponseResult()
     try:
         notification = Notification.objects.get(pk=notification_id)
-        notification.IsRead = True
+        notification.is_read = True
         notification.save()
     except ObjectDoesNotExist:
         raise Http404()
@@ -107,7 +107,7 @@ def mark_notification_as_unread(request, notification_id):
     result = ResponseResult()
     try:
         notification = Notification.objects.get(pk=notification_id)
-        notification.IsRead = False
+        notification.is_read = False
         notification.save()
     except ObjectDoesNotExist:
         raise Http404()
@@ -158,7 +158,7 @@ def send_fake_notification(request, username):
     notification.FromUser = User.objects.get(username__iexact='syron')
     notification.type = NOTIFICATION_TYPE_LISTEN
     notification.DateCreated = datetime.now()
-    notification.IsRead = False
+    notification.is_read = False
     notification.attached_object = notification.FromUser
     realtime_controller.SendNotification(notification, username)
     return HttpResponse(content='Num: %d' % (num - 1,))

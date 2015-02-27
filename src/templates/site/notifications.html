@@ -2,7 +2,7 @@
 {% load i18n %}
 <div class='notifications'>
     {% for notification in notifications %}
-        <div class="notification round {% if not notification.IsRead %}un{% endif %}read{% if not forloop.first %} bordered{% endif %}">
+        <div class="notification round {% if not notification.is_read %}un{% endif %}read{% if not forloop.first %} bordered{% endif %}">
             <div class='notification-content'>
                 {% switch notification.type %}
                     {% case NOTIFICATION_TYPE_LISTEN %}

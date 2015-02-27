@@ -21,7 +21,7 @@ class Conversation(UUIDModel):
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     AboutPost = models.ForeignKey('shoutit.Trade', related_name='+')
-    IsRead = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)
 
@@ -38,7 +38,7 @@ class Message(UUIDModel):
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='received_messages')
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='sent_messages')
     text = models.TextField(null=True, blank=True)
-    IsRead = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
@@ -81,9 +81,9 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
 
 class Notification(UUIDModel, AttachedObjectMixin):
-    ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='Notifications')
+    ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
-    IsRead = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
     type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
@@ -95,7 +95,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
         return NotificationType.values[self.type]
 
     def MarkAsRead(self):
-        self.IsRead = True
+        self.is_read = True
         self.save()
 
 

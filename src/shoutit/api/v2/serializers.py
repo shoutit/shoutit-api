@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 import os
-import profile
 import uuid
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -13,11 +12,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, \
-    CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
+    CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, NOTIFICATION_TYPE_MESSAGE, \
+    NOTIFICATION_TYPE_LISTEN, NotificationType
 from common.utils import date_unix
 from shoutit.controllers import shout_controller, stream_controller
 
-from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation
+from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification
 from shoutit.utils import cloud_upload_image, random_uuid_str
 
 
@@ -474,3 +474,33 @@ class ConversationDetailSerializer(ConversationSerializer):
 
     def get_reply_url(self, conversation):
         return reverse('conversation-reply', kwargs={'id': conversation.id}, request=self.context['request'])
+
+
+class AttachedObjectSerializer(serializers.Serializer):
+    user = UserSerializer(source='attached_user', required=False)
+    message = MessageSerializer(source='attached_message', required=False)
+
+    def to_representation(self, attached_object):
+        # create reference to the object inside itself with name based on its class
+        # to be used for representation
+        class_name = attached_object.__class__.__name__
+        if class_name == 'User':
+            setattr(attached_object, 'attached_user', attached_object)
+        if class_name == 'Message2':
+            setattr(attached_object, 'attached_message', attached_object)
+
+        return super(AttachedObjectSerializer, self).to_representation(attached_object)
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    created_at = serializers.IntegerField(source='created_at_unix')
+    type = serializers.SerializerMethodField(help_text="Currently, either 'listen' or 'message'")
+    attached_object = AttachedObjectSerializer(
+        help_text="Attached Object that contain either 'user' or 'message' objects depending on notification type")
+
+    class Meta:
+        model = Notification
+        fields = ('id', 'type', 'created_at', 'is_read', 'attached_object')
+
+    def get_type(self, notification):
+        return NotificationType.values[notification.type]

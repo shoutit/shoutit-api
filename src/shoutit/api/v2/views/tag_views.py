@@ -146,6 +146,8 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
         parameters:
             - name: page
               paramType: query
+            - name: page_size
+              paramType: query
         """
         tag = self.get_object()
         listeners = stream_controller.get_stream_listeners(tag.stream2)
@@ -181,6 +183,8 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
                 - offers
                 - all
             - name: page
+              paramType: query
+            - name: page_size
               paramType: query
         """
         shout_type = request.query_params.get('type', 'all')

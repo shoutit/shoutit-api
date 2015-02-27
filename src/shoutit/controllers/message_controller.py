@@ -34,7 +34,7 @@ def send_message(from_user, to_user, about, text=None, conversation=None):
         conversation = Conversation(FromUser=from_user, ToUser=to_user, AboutPost=about)
 
     # todo: fix visibility to sender receiver!?
-    conversation.IsRead = False
+    conversation.is_read = False
     conversation.VisibleToSender = True
     conversation.VisibleToRecivier = True
     conversation.save()
@@ -87,7 +87,7 @@ def getFullConversationDetails(conversations, user):
         conversation.text = last_message.text[0:256] if last_message.text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
         conversation.With = conversation.FromUser if conversation.FromUser != user else conversation.ToUser
-        conversation.IsRead = False if [1 if message.ToUser == user and not message.IsRead else 0 for message in
+        conversation.is_read = False if [1 if message.ToUser == user and not message.is_read else 0 for message in
                                         conversation.messages].count(1) else True
         result_conversations.append(conversation)
 
@@ -116,7 +116,7 @@ def ReadConversations(user, start_index=None, end_index=None):
 
 def ReadConversation(user, conversation_id):
     conversation = Conversation.objects.get(pk=conversation_id)
-    Message.objects.filter(Q(Conversation=conversation) & (Q(FromUser=user) | Q(ToUser=user))).update(IsRead=True)
+    Message.objects.filter(Q(Conversation=conversation) & (Q(FromUser=user) | Q(ToUser=user))).update(is_read=True)
     messages = Message.objects.filter(
         Q(Conversation=conversation) & ((Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))
     ).order_by('DateCreated')
@@ -202,7 +202,7 @@ def ConversationsCount(user):
 
 
 def UnReadConversationsCount(user):
-    return Conversation.objects.filter(Q(Messages__ToUser=user) & Q(Messages__IsRead=False) & (
+    return Conversation.objects.filter(Q(Messages__ToUser=user) & Q(Messages__is_read=False) & (
         (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).values(
         "pk").distinct().count()
 

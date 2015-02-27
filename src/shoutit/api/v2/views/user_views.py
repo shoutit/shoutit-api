@@ -273,6 +273,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
               defaultValue: me
             - name: page
               paramType: query
+            - name: page_size
+              paramType: query
         """
         user = self.get_object()
         listeners = stream_controller.get_stream_listeners(user.profile.stream2)
@@ -294,6 +296,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
           "results": [] // list of {UserSerializer} same as in listeners or {TagSerializer}
         }
         </code></pre>
+
         ---
         serializer: TagSerializer
         omit_parameters:
@@ -314,7 +317,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
                 - tags
             - name: page
               paramType: query
-
+            - name: page_size
+              paramType: query
         """
 
         listening_type = request.query_params.get('type', 'users')
@@ -368,6 +372,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
                 - offers
                 - all
             - name: page
+              paramType: query
+            - name: page_size
               paramType: query
         """
         shout_type = request.query_params.get('type', 'all')

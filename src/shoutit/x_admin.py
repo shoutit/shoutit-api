@@ -207,7 +207,7 @@ admin.site.register(Conversation, ConversationAdmin)
 
 # Message
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'text', 'DateCreated', 'IsRead')
+    list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'text', 'DateCreated', 'is_read')
     search_fields = ['FromUser__username', 'ToUser__username', 'text']
 
 
