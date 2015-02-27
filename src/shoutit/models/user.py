@@ -34,7 +34,8 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
         """
         return Listen.objects.filter(listener=self.user, stream=stream2).exists()
 
-    def listening_count(self, user):
+    @property
+    def listening_count(self):
         return {
             'users': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_PROFILE).count(),
             'tags': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_TAG).count()
