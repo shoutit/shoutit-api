@@ -552,12 +552,21 @@ def filter_posts_qs(qs, post_type=None):
     return qs.filter(type__in=types)
 
 
-def filter_shouts_qs(qs, tag_names=None):
+def filter_shouts_qs_by_tag_names(qs, tag_names=None):
     if not tag_names:
         return qs
 
     tag_names = process_tags(tag_names)
     for tag_name in tag_names:
         qs = qs.filter(tags__name=tag_name)
+    return qs
+
+
+def filter_shouts_qs_by_tags(qs, tags=None):
+    if not tags:
+        return qs
+
+    for tag in tags:
+        qs = qs.filter(tags=tag)
     return qs
 

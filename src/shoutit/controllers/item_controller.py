@@ -63,4 +63,4 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
 
 
 def get_currency(currency_code):
-    return Currency.objects.get(Code__iexact=currency_code)
+    return Currency.objects.get(code__iexact=currency_code)

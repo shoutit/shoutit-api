@@ -72,7 +72,7 @@ class Service(UUIDModel):
 class ServiceManager(models.Manager):
     def GetUserServiceBuyRemaining(self, user, service_code):
         return self.values(ServiceBuy._meta.get_field_by_name('User')[0].column).filter(user=user,
-                                                                                        Service__Code__iexact=service_code).annotate(
+                                                                                        Service__code__iexact=service_code).annotate(
             buys_count=Sum('Amount')).extra(select={
             'used_count': 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(service_id)s" IN (%(sid)s)' % {
                 'table': ServiceUsage._meta.db_table,

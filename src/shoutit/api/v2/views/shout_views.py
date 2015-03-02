@@ -78,6 +78,9 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
               description: -180 to 180
               type: float
               paramType: query
+            - name: category
+              description: the category name
+              paramType: query
             - name: tags
               description: space or comma separated tags. returned shouts will contain ALL of them
               paramType: query

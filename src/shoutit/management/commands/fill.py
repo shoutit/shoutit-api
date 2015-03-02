@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from django.core.management.base import NoArgsCommand, CommandError
+from common.constants import STREAM_TYPE_TAG
 from shoutit.models import *
 from rest_framework.authtoken.models import Token
 from shoutit.controllers.user_controller import give_user_permissions
@@ -88,7 +89,16 @@ class Command(NoArgsCommand):
         }
         for t, c in tag_category.iteritems():
             tag, _ = Tag.objects.get_or_create(name=t)
+            if not tag.Stream:
+                s = Stream(type=STREAM_TYPE_TAG)
+                s.save()
+                tag.Stream = s
+                tag.save()
             category, _ = Category.objects.get_or_create(name=c, main_tag=tag)
+            try:
+                category.tags.add(tag)
+            except:
+                pass
 
         # oauth clients
         Client.objects.get_or_create(user=u1, name='shoutit-android', client_id='shoutit-android',
