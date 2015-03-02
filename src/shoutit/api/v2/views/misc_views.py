@@ -4,35 +4,36 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, list_route
+from rest_framework.decorators import list_route
 
-from shoutit.models import User
-from shoutit.api.v2.permissions import IsOwnerOrReadOnly
+from shoutit.api.v2.serializers import CategorySerializer, CurrencySerializer
+from shoutit.models import Currency, Category
 
 
 class MiscViewSet(viewsets.ViewSet):
     """
-    Other API Resources
+    Other API Resources.
     """
-    @list_route(methods=['post'])
-    def upload_shout_image(self, request):
-        """
-        Upload shout image
-        """
-        return Response({'hello': 'DRF!'})
-
     @list_route(methods=['get'])
     def currencies(self, request):
         """
         Get currencies
+        ---
+        serializer: CurrencySerializer
         """
-        return Response({'hello': 'DRF!'})
+        currencies = Currency.objects.all()
+        serializer = CurrencySerializer(currencies, many=True)
+        return Response(serializer.data)
 
     @list_route(methods=['get'])
     def categories(self, request):
         """
         Get categories
+        ---
+        serializer: CategorySerializer
         """
-        return Response({'hello': 'DRF!'})
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)

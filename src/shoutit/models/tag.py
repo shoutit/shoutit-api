@@ -9,9 +9,9 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
-    name = models.CharField(max_length=100, default='', blank=True, unique=True, db_index=True)
+    name = models.CharField(max_length=100, unique=True, db_index=True)
     Creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True, on_delete=models.SET_NULL)
-    image = models.CharField(max_length=1024, null=True, blank=True, default='/static/img/shout_tag.png')
+    image = models.CharField(max_length=1024, null=True, blank=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
     Parent = models.ForeignKey('shoutit.Tag', related_name='ChildTags', null=True, blank=True, db_index=True)
 
@@ -24,8 +24,8 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
         return unicode(self.pk) + ": " + self.name
 
     @property
-    def IsCategory(self):
-        return True if Category.objects.get(TopTag=self) else False
+    def is_category(self):
+        return Category.objects.get(main_tag=self).exists()
 
     @property
     def listeners_count(self):
@@ -33,8 +33,8 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
 
 
 class Category(UUIDModel):
-    name = models.CharField(max_length=100, default='', blank=True, unique=True, db_index=True)
-    TopTag = models.OneToOneField('shoutit.Tag', related_name='OwnerCategory', null=True, blank=True)
+    name = models.CharField(max_length=100, unique=True, db_index=True)
+    main_tag = models.OneToOneField('shoutit.Tag', related_name='OwnerCategory', null=True, blank=True)
     tags = models.ManyToManyField('shoutit.Tag', related_name='Category', null=True, blank=True)
 
     def __unicode__(self):

@@ -28,7 +28,7 @@ def render_shout(shout, level=5):
         'name': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.name,
         'description': shout.text,
         'price': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.Price,
-        'currency': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.Currency.Code,
+        'currency': None if shout.type == POST_TYPE_EXPERIENCE else shout.item.Currency.code,
         'thumbnail': videos[0]['thumbnail_url'] if videos else shout.get_first_image().image if images else '',
         'date_created': shout.date_published.strftime('%s'),
         'api_url': get_object_api_url(shout),
@@ -348,7 +348,7 @@ def render_item(item):
     return {
         'name': item.name,
         'price': item.Price,
-        'currency': item.Currency.Code,
+        'currency': item.Currency.code,
         'date_created': item.DateCreated.strftime('%s')
     }
 
@@ -424,7 +424,7 @@ def render_event(event):
 
 def render_currency(currency):
     return {
-        'code': currency.Code,
+        'code': currency.code,
         'name': currency.name,
         'country': currency.country
     }

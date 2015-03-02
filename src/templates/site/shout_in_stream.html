@@ -6,7 +6,7 @@
     <div class="pull-{% if right %}right{% else %}left{% endif %} shout-content {% if shout.get_images %}with-image{% endif %}">
         <div class="shout-head">
             <div class="shout-title pull-{% if right %}right{% else %}left{% endif %}"><a href="{% shout_link shout %}" title="{{ shout.item.name|title }}">{% if shout.featured %}<i class="icon-star"></i>{% endif %}{{ shout.item.name|title }}</a></div>
-            <div class="shout-price pull-{% if right %}left{% else %}right{% endif %}">{{ shout.item.Price|price:shout.item.Currency.Code }}</div>
+            <div class="shout-price pull-{% if right %}left{% else %}right{% endif %}">{{ shout.item.Price|price:shout.item.Currency.code }}</div>
             {% if detailed %}
                 {% if shout.user.profile.Mobile %}
                     <div class="shout-phone pull-{% if right %}left{% else %}right{% endif %}" title="Call {{ shout.user.name }}">

@@ -161,8 +161,8 @@ def modal(request, template=None):
         template = ''
     user = request.user
     fb_la = hasattr(user, 'linked_facebook') and user.linked_facebook or None
-    _categories = [category.TopTag and category.TopTag.name or tag_controller.get_or_create_tag(category.name.lower(), None, False).name for
-                   category in Category.objects.all().order_by('name').select_related('TopTag')]
+    _categories = [category.main_tag and category.main_tag.name or tag_controller.get_or_create_tag(category.name.lower(), None, False).name for
+                   category in Category.objects.all().order_by('name').select_related('main_tag')]
     fb_access_token = fb_la.AccessToken if fb_la else None
 
     if template == 'signin':
@@ -241,7 +241,7 @@ def modal(request, template=None):
                     'tags': ' '.join([tag.name for tag in shout.get_tags()]),
                     'location': '%f,%f' % (shout.latitude, shout.longitude),
                     'description': shout.text,
-                    'currency': shout.item.Currency.Code
+                    'currency': shout.item.Currency.code
                 }),
             })
         else:
@@ -257,7 +257,7 @@ def modal(request, template=None):
                     'price': item.Price,
                     'name': item.name,
                     'description': item.Description,
-                    'currency': item.Currency.Code
+                    'currency': item.Currency.code
                 })
             })
         else:

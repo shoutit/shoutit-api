@@ -19,7 +19,7 @@ from common.tagged_cache import TaggedCache
 def _get_currencies():
     currencies = TaggedCache.get('perma|currencies')
     if not currencies:
-        currencies = tuple((c.Code, c.Code) for c in Currency.objects.all())
+        currencies = tuple((c.code, c.code) for c in Currency.objects.all())
         TaggedCache.set('perma|currencies', currencies, timeout=24 * 60 * 60)
     return currencies
 

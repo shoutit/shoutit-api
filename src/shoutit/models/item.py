@@ -53,9 +53,9 @@ class Item(UUIDModel):
 
 
 class Currency(UUIDModel):
-    Code = models.CharField(max_length=10)
+    code = models.CharField(max_length=10)
     country = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=64, null=True, blank=True)
 
     def __unicode__(self):
-        return '[' + self.Code + '] '
+        return '[' + self.code + '] '

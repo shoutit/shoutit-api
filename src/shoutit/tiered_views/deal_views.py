@@ -32,7 +32,7 @@ def deal_to_dict(deal):
         'min_buyers': deal.MinBuyers,
         'max_buyers': deal.MaxBuyers,
         'original_price': deal.OriginalPrice,
-        'currency': deal.item.Currency.Code,
+        'currency': deal.item.Currency.code,
         'country': deal.country,
         'city': deal.city,
     }

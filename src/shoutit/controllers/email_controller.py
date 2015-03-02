@@ -296,7 +296,7 @@ def SendUserDealCancel(user, deal):
         'deal_link': deal_link,
         'deal_name': deal_name,
         'price': deal.item.Price,
-        'currency': deal.item.Currency.Code,
+        'currency': deal.item.Currency.code,
     })
     html_message = html_template.render(html_context)
 
@@ -306,7 +306,7 @@ def SendUserDealCancel(user, deal):
         'deal_link': deal_link,
         'deal_name': deal_name,
         'price': deal.item.Price,
-        'currency': deal.item.Currency.Code,
+        'currency': deal.item.Currency.code,
     })
     text_message = text_template.render(text_context)
 

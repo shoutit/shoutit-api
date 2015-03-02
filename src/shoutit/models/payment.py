@@ -50,7 +50,7 @@ class Transaction(UUIDModel):
 
 class Voucher(UUIDModel):
     DealBuy = models.ForeignKey('shoutit.DealBuy', related_name='Vouchers')
-    Code = models.CharField(max_length=22)
+    code = models.CharField(max_length=22)
     DateGenerated = models.DateTimeField(auto_now_add=True)
     IsValidated = models.BooleanField(default=False)
     IsSent = models.BooleanField(default=False)
@@ -64,7 +64,7 @@ class DealBuy(UUIDModel):
 
 
 class Service(UUIDModel):
-    Code = models.CharField(max_length=256)
+    code = models.CharField(max_length=256)
     name = models.CharField(max_length=1024)
     Price = models.FloatField()
 
@@ -81,7 +81,7 @@ class ServiceManager(models.Manager):
                 'service_id': ServiceUsage._meta.get_field_by_name('Service')[0].column,
                 'sid': """SELECT "%(table)s"."id" FROM "%(table)s" WHERE "%(table)s"."%(code)s" = '%(service_code)s'""" % {
                     'table': Service._meta.db_table,
-                    'code': Service._meta.get_field_by_name('Code')[0].column,
+                    'code': Service._meta.get_field_by_name('code')[0].column,
                     'service_code': service_code
                 },
                 'amount': ServiceUsage._meta.get_field_by_name('Amount')[0].column,

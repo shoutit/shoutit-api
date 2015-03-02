@@ -27,7 +27,7 @@
     <span class="deal-description"> {{ deal.text }}</span>
 	<span class="deal-time">1 hour ago </span>...
 	{#ask nour what we need from here#}
-    <span class="deal-Price"> {{ deal.item.Price|price:deal.item.Currency.Code }}</span>
+    <span class="deal-Price"> {{ deal.item.Price|price:deal.item.Currency.code }}</span>
     {% if deal.MinBuyers %}
         <p><b>Min Buyers</b> {{ deal.MinBuyers }}</p>
     {% endif %}
@@ -39,7 +39,7 @@
     {% else %}
         <p>Open</p>
     {% endif %}
-    <p><b>Original Price</b> {{ deal.OriginalPrice|price:deal.item.Currency.Code }}</p>
+    <p><b>Original Price</b> {{ deal.OriginalPrice|price:deal.item.Currency.code }}</p>
     <p><b>Country Code</b> {{ deal.country }}</p>
     <p><b>Province Code</b> {{ deal.city }}</p>
     {% if deal.ValidFrom %}

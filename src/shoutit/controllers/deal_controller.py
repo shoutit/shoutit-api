@@ -70,7 +70,7 @@ def get_qr_for_voucher(voucher_band):
     from common.PyQRNative import QRErrorCorrectLevel
 
     qr = QRCode(3, QRErrorCorrectLevel.L)
-    qr.addData(voucher_band.instance.Code)
+    qr.addData(voucher_band.instance.code)
     qr.make()
     return qr.makeImage()
 
@@ -79,7 +79,7 @@ def get_barcode_for_voucher(voucher_band):
 
     buffer = StringIO.StringIO()
     buffer.write(
-        reportlab.graphics.barcode.createBarcodeImageInMemory('Code128', value=voucher_band.instance.Code, format='png', height=6 * cm,
+        reportlab.graphics.barcode.createBarcodeImageInMemory('Code128', value=voucher_band.instance.code, format='png', height=6 * cm,
                                                               width=24 * cm))
     buffer.seek(0)
     return image_open(buffer)
@@ -132,11 +132,11 @@ class VoucherReport(Report):
 
             Image(left=14.55 * cm, top=00.50 * cm, width=06.0 * cm, height=06.00 * cm, get_image=get_qr_for_voucher),  #QR
             Image(left=12.50 * cm, top=03.70 * cm, width=13.0 * cm, height=02.50 * cm, get_image=get_barcode_for_voucher),  #Barcode
-            Label(get_value=lambda widget, band: widget.instance.Code,
+            Label(get_value=lambda widget, band: widget.instance.code,
                   style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 18},
                   left=13.00 * cm, top=05.20 * cm, width=06.5 * cm, height=00.70 * cm),  #Code
             Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.item.Price,
-                                                       widget.instance.DealBuy.Deal.item.Currency.Code),
+                                                       widget.instance.DealBuy.Deal.item.Currency.code),
                   style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 24},
                   left=13.20 * cm, top=06.20 * cm, width=05.5 * cm, height=02.50 * cm, fill=True, stroke=False, fill_color=orange),  #Worth
             Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.text,
@@ -202,7 +202,7 @@ def GenerateVoucherDocument(deal_buy):
     for i in range(deal_buy.Amount):
         vouchers.append(Voucher.objects.create(
             DealBuy=deal_buy,
-            Code="%s-%s-%s" % (deal_buy.pk, i, deal_buy.Deal.pk),  # todo: check
+            code="%s-%s-%s" % (deal_buy.pk, i, deal_buy.Deal.pk),  # todo: check
         ))
     r = VoucherReport(queryset=vouchers)
     r.title = '[%s] deal vouchers' % deal_buy.Deal.item.name
@@ -261,7 +261,7 @@ def BuyDeal(user, deal, amount):
 
 
 def GetValidVoucher(code):
-    vouchers = Voucher.objects.filter(Code=code, IsValidated=False).select_related('DealBuy', 'DealBuy__Deal', 'DealBuy__Deal__item',
+    vouchers = Voucher.objects.filter(code=code, IsValidated=False).select_related('DealBuy', 'DealBuy__Deal', 'DealBuy__Deal__item',
                                                                                    'DealBuy__Deal__user',
                                                                                    'DealBuy__Deal__user__Profile')
     if vouchers and len(vouchers) == 1:

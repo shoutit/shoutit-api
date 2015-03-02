@@ -17,7 +17,8 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_T
 from common.utils import date_unix
 from shoutit.controllers import shout_controller, stream_controller
 
-from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification
+from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, \
+    Currency
 from shoutit.utils import cloud_upload_image, random_uuid_str
 
 
@@ -273,7 +274,7 @@ class TradeSerializer(serializers.ModelSerializer):
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
     price = serializers.FloatField(source='item.Price')
-    currency = serializers.CharField(source='item.Currency.Code')
+    currency = serializers.CharField(source='item.Currency.code')
     date_published = serializers.SerializerMethodField()
     user = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
@@ -333,7 +334,7 @@ class TradeDetailSerializer(TradeSerializer):
                                                 country=location_data['country'],
                                                 city=location_data['city'],
                                                 address=location_data.get('address', ""),
-                                                currency=validated_data['item']['Currency']['Code'],
+                                                currency=validated_data['item']['Currency']['code'],
                                                 images=images,
                                                 videos=videos)
         else:
@@ -347,7 +348,7 @@ class TradeDetailSerializer(TradeSerializer):
                                                   country=location_data['country'],
                                                   city=location_data['city'],
                                                   address=location_data.get('address', ""),
-                                                  currency=validated_data['item']['Currency']['Code'],
+                                                  currency=validated_data['item']['Currency']['code'],
                                                   images=images,
                                                   videos=videos)
 
@@ -504,3 +505,17 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_type(self, notification):
         return NotificationType.values[notification.type]
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    main_tag = TagSerializer()
+
+    class Meta:
+        model = Category
+        fields = ('name', 'main_tag')
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ('code', 'country', 'name')

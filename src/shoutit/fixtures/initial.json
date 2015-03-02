@@ -4,7 +4,7 @@
     "model": "shoutit.currency",
     "fields": {
       "country": "AE",
-      "Code": "AED",
+      "code": "AED",
       "name": "Dirham"
     }
   },
@@ -13,7 +13,7 @@
     "model": "shoutit.currency",
     "fields": {
       "country": "US",
-      "Code": "USD",
+      "code": "USD",
       "name": "Dollar"
     }
   },
@@ -22,7 +22,7 @@
     "model": "shoutit.currency",
     "fields": {
       "country": "EU",
-      "Code": "EUR",
+      "code": "EUR",
       "name": "Euro"
     }
   },
@@ -541,7 +541,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:01:59.320",
       "name": "autos",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -552,7 +552,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:01:05.156",
       "name": "electronics",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -563,7 +563,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:02:20.755",
       "name": "fashion",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -574,7 +574,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:03:10.394",
       "name": "household",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -585,7 +585,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:03:39.616",
       "name": "pets",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -596,7 +596,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:03:30.167",
       "name": "services",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -607,7 +607,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:04:40.137",
       "name": "jobs",
-      "TopTag": null
+      "main_tag": null
     }
   },
   {
@@ -618,7 +618,7 @@
       "tags": [],
       "modified_at": "2015-01-30T01:01:24.907",
       "name": "properties",
-      "TopTag": null
+      "main_tag": null
     }
   }
 ]

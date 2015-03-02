@@ -35,7 +35,7 @@ class Command(NoArgsCommand):
         give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, u1)
         try:
             p1 = u1.profile
-        except:
+        except AttributeError:
             s1 = Stream(type=0)
             s1.save()
             p1 = Profile(user=u1, Stream=s1)
@@ -66,7 +66,7 @@ class Command(NoArgsCommand):
         give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, u2)
         try:
             p2 = u2.profile
-        except:
+        except AttributeError:
             s2 = Stream(type=0)
             s2.save()
             p2 = Profile(user=u2, Stream=s2)
@@ -80,7 +80,15 @@ class Command(NoArgsCommand):
         p2.longitude = 55.2338326
         p2.save()
 
-        # todo: categories, tags, etc
+        # Tags, Categories
+        tag_category = {
+            'autos': "Autos",
+            'electronics': "Electronics",
+            'properties': "Properties",
+        }
+        for t, c in tag_category.iteritems():
+            tag, _ = Tag.objects.get_or_create(name=t)
+            category, _ = Category.objects.get_or_create(name=c, main_tag=tag)
 
         # oauth clients
         Client.objects.get_or_create(user=u1, name='shoutit-android', client_id='shoutit-android',

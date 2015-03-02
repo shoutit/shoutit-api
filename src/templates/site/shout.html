@@ -7,7 +7,7 @@
 	<meta property="og:type"   content="shoutitcom:{% if shout.type == 0 %}request{% else %}offer{% endif %}" />
 	<meta property="og:url"    content="{% shout_link shout %}" />
 	<meta property="og:title"  content="{{ shout.item.name|title }}" />
-	<meta property="shoutitcom:price"  content="{{ shout.item.Price|price:shout.item.Currency.Code }}" />
+	<meta property="shoutitcom:price"  content="{{ shout.item.Price|price:shout.item.Currency.code }}" />
 	{% if shout.get_images %}
 		{% with myimg=shout.get_images|key:0  %}
 			<meta property="og:image"  content="{{ myimg.image|secure_url }}" />
