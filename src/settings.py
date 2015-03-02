@@ -484,11 +484,6 @@ CONTACT_IMPORT_SETTINGS = {
     }
 }
 
-# SMS Service
-SMS_SERVICE_WSDL_URL = 'https://www.smsglobal.com/mobileworks/soapserver.php?wsdl'
-SMS_SERVICE_USERNAME = 'syrexme'
-SMS_SERVICE_PASSWORD = '25600696'
-
 
 # Filter
 PROFANITIES_LIST = (

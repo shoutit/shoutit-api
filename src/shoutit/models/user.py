@@ -59,7 +59,6 @@ class Profile(AbstractProfile):
     LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     isSSS = models.BooleanField(default=False, db_index=True)
-    isSMS = models.BooleanField(default=False, db_index=True)
 
     # State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
 

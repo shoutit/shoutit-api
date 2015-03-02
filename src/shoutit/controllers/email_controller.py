@@ -6,10 +6,8 @@ from django.core.mail import get_connection
 from django.conf import settings
 
 from shoutit import utils
-from shoutit.controllers import sms_controller
 from shoutit.models import DBCLConversation
 from shoutit.utils import get_shout_name_preview, remove_non_ascii
-from shoutit.controllers import sms_controller
 from common import constants
 
 
@@ -229,21 +227,6 @@ def send_message_email(message):
     from_user = message.FromUser
     shout = message.Conversation.AboutPost
     message_text = message.text
-
-    # old sms case
-    profile = to_user.profile
-    if not to_user.is_active and profile.Mobile:
-        content = remove_non_ascii(shout.item.name)
-        title = get_shout_name_preview(content, 25)
-        link = 'shoutit.com/' + profile.LastToken.Token
-        msg = get_shout_name_preview(remove_non_ascii(message_text), 30)
-
-        text = _(
-            'A Shouter has replied to your ad \'%(shout_title)s\' on Shoutit, visit %(link)s to make your deal happen.\n-\n"%(message)s"') % {
-                   'shout_title': title, 'link': link, 'message': msg}
-        mobile = profile.Mobile
-        sms_controller.SendSMS2('ShoutIt.com', mobile, text)
-        return
 
     to_name = to_user.name
     to_email = to_user.email
