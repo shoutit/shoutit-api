@@ -138,22 +138,3 @@ class BusinessConfirmation(UUIDModel):
     Files = models.ManyToManyField('shoutit.StoredFile', related_name='Confirmation')
     DateSent = models.DateTimeField(auto_now_add=True)
 
-
-class GalleryItem(UUIDModel):
-    item = models.ForeignKey('shoutit.Item', related_name='+')
-    Gallery = models.ForeignKey('shoutit.Gallery', related_name='GalleryItems')
-    IsDisable = models.BooleanField(default=False)
-    muted = models.BooleanField(default=False)
-    DateCreated = models.DateTimeField(auto_now_add=True)
-
-    class Meta(UUIDModel.Meta):
-        unique_together = ('item', 'Gallery',)
-
-
-class Gallery(UUIDModel):
-    Description = models.TextField(max_length=500, default='')
-    business = models.ForeignKey('shoutit.Business', related_name='Galleries')
-    Category = models.OneToOneField('shoutit.Category', related_name='+', null=True, blank=True)
-
-    def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.Description)

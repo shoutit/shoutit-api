@@ -365,24 +365,7 @@ def render_video(video):
     }
 
 
-def render_gallery(gallery):
-    if gallery is None:
-        return {}
-    return {
-        # 'url' : get_object_api_url(gallery),
-        #		'business' : render_business(gallery.business),
-    }
 
-
-def render_gallery_item(gallery_item):
-    if gallery_item is None:
-        return {}
-    return {
-        'url': '/gallery_items/%s/' % gallery_item.Gallery.business.user.username,
-        'item': render_item(gallery_item.item),
-        'gallery': render_gallery(gallery_item.Gallery),
-        'date_created': gallery_item.DateCreated.strftime('%s')
-    }
 
 
 def render_notification(notification):
@@ -434,8 +417,6 @@ def render_event(event):
             result['attached_object'] = render_shared_exp(event.attached_object)
         elif event.EventType == EVENT_TYPE_COMMENT:
             result['attached_object'] = render_comment(event.attached_object)
-        # elif event.EventType == EVENT_TYPE_GALLERY_ITEM :
-        #			result['attached_object'] = render_gallery_item(event.attached_object)
         #		elif event.EventType == EVENT_TYPE_POST_DEAL or event.EventType == EVENT_TYPE_BUY_DEAL :
         #			result['attached_object'] = render_deal(event.attached_object)
         return result

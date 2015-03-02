@@ -40,7 +40,6 @@ PERMISSION_SHOUT_DEAL = ConstantPermission("SHOUT_DEAL", _("You are not allowed 
 PERMISSION_POST_EXPERIENCE = ConstantPermission("POST_EXPERIENCE", _("You're not allowed to post experiences."))
 PERMISSION_SHARE_EXPERIENCE = ConstantPermission("SHARE_EXPERIENCE", _("You're not allowed to share experiences."))
 PERMISSION_COMMENT_ON_POST = ConstantPermission("COMMENT_ON_POST", _("You're not allowed to comment on posts."))
-PERMISSION_ADD_GALLERY_ITEM = ConstantPermission("ADD_GALLERY_ITEM", _("You're not allowed to add items."))
 PERMISSION_REPORT = ConstantPermission("REPORT", _("You're not allowed to use reporting."))
 
 INITIAL_USER_PERMISSIONS = [
@@ -67,7 +66,6 @@ ACTIVATED_BUSINESS_PERMISSIONS = [
     PERMISSION_SHOUT_MORE,
     PERMISSION_COMMENT_ON_POST,
     PERMISSION_SEND_MESSAGE,
-    PERMISSION_ADD_GALLERY_ITEM,
     PERMISSION_USE_SHOUT_IT,
     PERMISSION_SHOUT_MORE,
     PERMISSION_SHOUT_OFFER,

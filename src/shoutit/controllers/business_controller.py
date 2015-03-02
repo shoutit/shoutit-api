@@ -184,8 +184,6 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 
 #	bp.image = '/static/img/_user_male.png'
 #	bp.save()
-#	business_gallery = Gallery(Description = '', business = bp)
-#	business_gallery.save()
 
 #	TODO log the sign up activity
 #	Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME : username})

@@ -333,7 +333,6 @@ EVENT_TYPE_SHOUT_REQUEST = EventType('Shout Request')
 EVENT_TYPE_EXPERIENCE = EventType('Experience')
 EVENT_TYPE_SHARE_EXPERIENCE = EventType('Share Experience')
 EVENT_TYPE_COMMENT = EventType('Comment')  #x
-EVENT_TYPE_GALLERY_ITEM = EventType('Gallery item')  #x
 EVENT_TYPE_POST_DEAL = EventType('Post Deal')
 EVENT_TYPE_BUY_DEAL = EventType('Buy Deal')
 EVENT_TYPE_FOLLOW_BUSINESS = EventType('Follow Business')

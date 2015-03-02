@@ -63,7 +63,6 @@ CACHE_TAG_DEALS = CacheTag(text='Deals')
 CACHE_TAG_VOUCHERS = CacheTag(text='Vouchers')
 CACHE_TAG_EXPERIENCES = CacheTag(text='Experiences')
 CACHE_TAG_COMMENTS = CacheTag(text='Comments')
-CACHE_TAG_GALLERY = CacheTag(text='GALLERY')
 
 
 class ResponseResult(object):

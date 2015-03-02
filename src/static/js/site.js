@@ -271,17 +271,6 @@ function delete_event(id, clickedObject) {
   });
 }
 
-function delete_gallery_item(id, clickedObject) {
-  requestAjaxily({
-    url: '/xhr/delete_gallery_item/' + id + '/',
-    type: 'POST',
-    clickedObject: clickedObject,
-    successCallback: function (data) {
-      $(this.clickedObject).parent().first().remove()
-    }
-  });
-}
-
 function deleteMessage(conversationId, messageId, domObj) {
   requestAjaxily({
     url: '/xhr/delete_message/' + conversationId + '/' + messageId + '/',

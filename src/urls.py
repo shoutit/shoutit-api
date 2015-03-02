@@ -179,12 +179,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/post_comments/([-\w]+)/$', 'shoutit.tiered_views.comment_views.post_comments'),
                        url(r'^xhr/delete_comment/([-\w]+)/$', 'shoutit.tiered_views.comment_views.delete_comment'),
 
-                       url(r'^xhr/gallery_items_stream/(\w+)/(?:(\d+)/)?$', 'shoutit.tiered_views.gallery_views.galleryItems_stream'),
-                       url(r'^xhr/add_gallery_item/([-\w]+)/$', 'shoutit.tiered_views.gallery_views.add_gallery_item'),
-                       url(r'^xhr/delete_gallery_item/([-\w]+)/$', 'shoutit.tiered_views.gallery_views.delete_gallery_item'),
-                       url(r'^xhr/shout_item/([-\w]+)/$', 'shoutit.tiered_views.gallery_views.shout_item'),
-                       url(r'^xhr/edit_item/([-\w]+)/$', 'shoutit.tiered_views.gallery_views.edit_item'),
-
                        url(r'^xhr/report/(\d+)/([-\w]+)/$', 'shoutit.tiered_views.report_views.report'),
                        url(r'^xhr/delete_comment/([-\w]+)/$', 'shoutit.tiered_views.comment_views.delete_comment'),
                        url(r'^paypal/$', 'shoutit.tiered_views.deal_views.paypal'),

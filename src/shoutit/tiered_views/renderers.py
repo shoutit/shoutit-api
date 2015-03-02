@@ -904,18 +904,6 @@ def deals_stream_json(request, result):
         return get_initial_json_response(request, result)
 
 
-def gallery_items_stream_json(request, result):
-    if not result.errors:
-        variables = {
-            'items': result.data['items'],
-            'IsOwner': result.data['IsOwner']
-        }
-        variables = RequestContext(request, variables)
-        data = {'html': render_to_string('gallery_items_stream.html', variables)}
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
-    else:
-        return get_initial_json_response(request, result)
-
 
 def post_experience_json_renderer(request, result, message=_('Your experience was post successfully.')):
     if not result.errors:
@@ -979,20 +967,6 @@ def user_json_renderer(request, result):
         }
 
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
-    else:
-        return get_initial_json_response(request, result)
-
-
-def gallery_item_json_renderer(request, result, message=_('Your item was added successfully.')):
-    if not result.errors:
-        data = {
-            'name': result.data['item'].name,
-            'description': result.data['item'].Description,
-            'price': result.data['item'].Price,
-            'currency': result.data['item'].Currency.Code,
-            'images': [image.image for image in result.data['item'].get_images()]
-        }
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:
         return get_initial_json_response(request, result)
 

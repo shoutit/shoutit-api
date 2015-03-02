@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from common.constants import *
-from shoutit.models import ConfirmToken, Item, GalleryItem, Profile, Business, Trade
+from shoutit.models import ConfirmToken, Item, Profile, Business, Trade
 from shoutit.controllers import shout_controller, tag_controller, business_controller, event_controller, message_controller, \
     comment_controller, experience_controller
 from shoutit.controllers import tag_controller
@@ -418,39 +418,6 @@ def edit_experience_validator(request, exp_id, *args, **kwargs):
         experience = experience_controller.GetExperience(exp_id, request.user, detailed=True)
         if not experience.canEdit:
             return VR(False, messages=[('error', _('You can not edit this experience.'))])
-    return result
-
-
-def delete_gallery_item_validator(request, item_id, *args, **kwargs):
-    result = object_exists_validator(GalleryItem.objects.filter, True, _('Gallery item dose not exist.'), item=Item.objects.get(pk=item_id),
-                                     IsDisable=False)
-    if result:
-        gallery_item = GalleryItem.objects.filter(item=Item.objects.get(pk=item_id), IsDisable=False)[0]
-        try:
-            # galleries = request.user.Business.Galleries.all()
-            galleries = business_controller.GetBusiness('business').Galleries.all()
-            gallery = galleries[0] if galleries else None
-            if not gallery_item.Gallery == gallery:
-                VR(False, messages=[('error', _('You do not have permission to delete this item'))])
-        except ValueError, e:
-            return VR(False, messages=[('error', _('You do not have permission to delete this item'))])
-    return result
-
-
-def add_gallery_item_validator(request, business_name, *args, **kwargs):
-    result = form_validator(request, ItemForm)
-    if result:
-        business = business_controller.GetBusiness(business_name)
-        business_galleries = business.Galleries.all()
-        gallery = business_galleries[0] if business_galleries else None
-        try:
-            if request.user.Business != business:
-                return VR(False, messages=[('error', _('You do not have permission to add item.'))], )
-        except:
-            return VR(False, messages=[('error', _('You do not have permission to add item.'))], )
-
-        if not gallery:
-            return VR(False, messages=[('error', _('Gallery does not exist.'))], )
     return result
 
 
