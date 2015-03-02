@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 import django_filters
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import BaseFilterBackend
 from shoutit.controllers import stream_controller
 from shoutit.models import Trade, Category
 
@@ -24,7 +23,7 @@ class ShoutFilter(django_filters.FilterSet):
 
     class Meta:
         model = Trade
-        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags',
+        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags', 'category'
                   'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng', 'user']
         order_by = ['-date_published']
 
