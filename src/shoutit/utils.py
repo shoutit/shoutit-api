@@ -215,6 +215,7 @@ def make_cloud_thumbnails_for_image(image_url):
     make_image_thumbnail(image_url, 145, 'shout_image')
     make_image_thumbnail(image_url, 85, 'shout_image')
 
+
 def make_cloud_thumbnails_for_user_image(image_url):
     make_image_thumbnail(image_url, 95, 'user_image')
     make_image_thumbnail(image_url, 32, 'user_image')

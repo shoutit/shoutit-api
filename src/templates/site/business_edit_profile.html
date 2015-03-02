@@ -5,7 +5,7 @@
   {% csrf_token %}
 
   <div class="input-field">
-    <div class='user-image'><img src="{{ profile.image|thumbnail:95|secure_url }}"></div>
+    <div class='user-image'><img src="{{ profile.image|secure_url }}"></div>
     <div id="file-uploader">
       <noscript>
         <p>Please enable JavaScript to use file uploader.</p>

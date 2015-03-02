@@ -169,6 +169,7 @@ INSTALLED_APPS = (
 if LOCAL:
     INSTALLED_APPS += (
         'django_extensions',
+        'storages',
     )
 # apps only on server development
 if DEV:
@@ -255,14 +256,24 @@ DEFAULT_LANGUAGE_CODE = 'en'
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-STATIC_URL = '/static/'
+# todo: AWS
+# todo: no more static files needed after web app is ready
+if False:
+    AWS_STORAGE_BUCKET_NAME = 'man-static'
+    AWS_ACCESS_KEY_ID = 'AKIAJ7YQGDWLJVDUE3SA'
+    AWS_SECRET_ACCESS_KEY = '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'
+    AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+    STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
+    STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+else:
+    STATIC_URL = '/static/'
+
 MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(ENV_DIR, 'static')
 MEDIA_ROOT = os.path.join(ENV_DIR, 'media')
@@ -535,13 +546,13 @@ PROFANITIES_LIST = (
     'whore', 'wop',
 )
 
-## PayPal and Payment
 CLOUD_USERNAME = 'noorsyron'
 CLOUD_API_KEY = '3528746c5ca336ee6be4f293fdb66a57'
 CLOUD_IDENTITY = 'rackspace'
 CLOUD_FILES_SERVICE_NET = False  # True
 SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
+# PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
 PAYPAL_PRIVATE_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-private-key.pem')
@@ -570,6 +581,7 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
+# Rest FW
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',

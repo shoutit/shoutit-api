@@ -1,5 +1,4 @@
 from shoutit.models import Item, StoredImage, Video, Currency
-from shoutit.utils import make_cloud_thumbnails_for_image
 
 
 def get_item(item_id):
@@ -20,11 +19,6 @@ def create_item(name, price, currency, description, images=None, videos=None):
             stored_image.image = image
             stored_image.save()
 
-        try:
-            make_cloud_thumbnails_for_image(images[0])
-        except Exception, e:
-            print e
-
     if videos:
         for v in videos:
             if v:
@@ -36,16 +30,13 @@ def create_item(name, price, currency, description, images=None, videos=None):
 
 
 def edit_item(item, name=None, price=None, images=None, currency=None, description=None):
-    if isinstance(item, int):
-        item = get_item(item)
 
     if name:
         item.name = name
     if price:
         item.Price = price
     if currency:
-        shout_currency = get_currency(currency)
-        item.Currency = shout_currency
+        item.Currency = get_currency(currency)
     if description:
         item.Description = description
 
@@ -66,9 +57,6 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
             stored_image.save()
         except StoredImage.MultipleObjectsReturned, e:
             print e
-
-    if images:
-        make_cloud_thumbnails_for_image(images[0])
 
     item.save()
     return item

@@ -2,10 +2,6 @@
 <div class="shout{% if right %} shout-right{% endif %} {% if shout.featured %}featured{% endif %}">
 	<div class="shout-picture-contain pull-{% if right %}right{% else %}left{% endif %}">
 	<span class="user-icon-{% if shout.type == 0 %}requests{% else %}offers{% endif %}"><a {% if shout.user.is_active or shout.user == request.user %}href="/user/{{ shout.user.username }}/"{% endif %} title="{{ shout.user.name }}"></a></span>
-{#            <img class="round user-profile-image" src="{% if big_image %}{{ shout.user.profile.image|secure_url }}{% else %}{{ shout.user.profile.image|thumbnail:95|secure_url }}{% endif %}" alt="{{ shout.user.name }}'s profile picture">#}
-{#        </a>#}
-        <!--<img class="shout-type-icon" title='{% if shout.type == 0 %}Request{% else %}Offer{% endif %}' src='/static/img/shout_{% if shout.type == 0 %}request{% else %}offer{% endif %}.png' />-->
-{#		<img class="shout-type-icon" title='{% if shout.type == 0 %}Request{% else %}Offer{% endif %}' src='http://goo.gl/{% if shout.type == 0 %}djrt7{% else %}sZCBD{% endif %}' />#}
 	</div>
     <div class="pull-{% if right %}right{% else %}left{% endif %} shout-content {% if shout.get_images %}with-image{% endif %}">
         <div class="shout-head">
@@ -41,7 +37,7 @@
 			{% if shout.get_images %}
 				{% for image in shout.get_images %}
 					{% if forloop.counter0 == 0 %}
-						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|thumbnail:85|secure_url }}{% else %}{{ image.image|thumbnail:145|secure_url }}{% endif %}');">
+						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|secure_url }}{% else %}{{ image.image|secure_url }}{% endif %}');">
 					{% else %}
 						<a href="{{ image.image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 					{% endif %}
@@ -56,7 +52,7 @@
 	{% if shout.get_images %}
 		{% for image in shout.get_images %}
 			{% if forloop.counter0 == 0 %}
-				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|thumbnail:85|secure_url }}{% else %}{{ image.image|thumbnail:145|secure_url }}{% endif %}');">
+				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|secure_url }}{% else %}{{ image.image|secure_url }}{% endif %}');">
 			{% else %}
 				<a href="{{ image.image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 			{% endif %}

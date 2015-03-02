@@ -7,7 +7,7 @@
     {{ item.DateCreated }} <br/>
     {% for image in item.images %}
         {% if forloop.counter0 == 0 %}
-            <div class="round shout-images" rel="shout_{{ item.pk }}" href="{{ image|secure_url }}" style="background-image: url('{{ image|thumbnail:145|secure_url }}');">
+            <div class="round shout-images" rel="shout_{{ item.pk }}" href="{{ image|secure_url }}" style="background-image: url('{{ image|secure_url }}');">
             </div>
             <i class="icon-search"></i>
         {% else %}
