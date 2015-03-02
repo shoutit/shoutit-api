@@ -14,7 +14,6 @@ def mark_all_as_read(user):
 
 
 def mark_notifications_as_read_by_ids(notification_ids):
-    assert notification_ids and isinstance(notification_ids, list) and len(notification_ids)
     Notification.objects.filter(id__in=notification_ids).update(is_read=True)
 
 

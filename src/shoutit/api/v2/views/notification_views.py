@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, filters, status
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from shoutit.api.v2.serializers import NotificationSerializer
 from shoutit.controllers import notifications_controller
 
@@ -16,7 +16,6 @@ class NotificationViewSet(viewsets.GenericViewSet):
     Notification API Resource.
     """
     lookup_field = 'id'
-    # lookup_value_regex = '[0-9a-f-]{32,36}'
     serializer_class = NotificationSerializer
 
     filter_backends = (filters.DjangoFilterBackend,)
@@ -37,6 +36,19 @@ class NotificationViewSet(viewsets.GenericViewSet):
         notification_ids = [notification['id'] for notification in serializer.data['results']]
         notifications_controller.mark_notifications_as_read_by_ids(notification_ids)
         return Response(serializer.data)
+
+    @list_route(methods=['post'])
+    def reset(self, request, *args, **kwargs):
+        """
+        Mark all notification as read
+
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        notifications_controller.mark_all_as_read(request.user)
+        return Response(status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post', 'delete'])
     def read(self, request, *args, **kwargs):
