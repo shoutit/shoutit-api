@@ -320,13 +320,6 @@ NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
 
 
-class RealtimeType(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-REALTIME_TYPE_NOTIFICATION = RealtimeType('Notification')
-REALTIME_TYPE_EVENT = RealtimeType('Event')
-
-
 class EventType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 

@@ -21,7 +21,7 @@ from renderers import user_api, operation_api, profiles_api, shouts_api, stats_a
 from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, \
     resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
-from shoutit.controllers import stream_controller, realtime_controller, email_controller, user_controller, experience_controller
+from shoutit.controllers import stream_controller, email_controller, user_controller, experience_controller
 from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator, \
     push_validator, user_profile_edit_validator
 from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, \
@@ -477,10 +477,6 @@ def update_user_location(request):
     result.data['user_country'] = profile.country
     result.data['user_city'] = profile.city
     result.data['user_city_encoded'] = to_seo_friendly(unicode.lower(unicode(profile.city)))
-
-    if city != old_city:
-        realtime_controller.UnbindUserFromCity(request.user.username, old_city)
-        realtime_controller.BindUserToCity(request.user.username, city)
 
     return result
 

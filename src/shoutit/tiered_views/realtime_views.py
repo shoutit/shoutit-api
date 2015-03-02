@@ -12,7 +12,7 @@ from shoutit.tiers import non_cached_view, ResponseResult
 from shoutit.tiered_views.renderers import operation_api, json_renderer, notifications_html, notifications_json, notifications_api, \
     unread_notifications_api
 from shoutit.api.renderers import render_user
-from shoutit.controllers import realtime_controller, message_controller, notifications_controller, user_controller
+from shoutit.controllers import message_controller, notifications_controller, user_controller
 
 
 num = 0
@@ -160,5 +160,4 @@ def send_fake_notification(request, username):
     notification.DateCreated = datetime.now()
     notification.is_read = False
     notification.attached_object = notification.FromUser
-    realtime_controller.SendNotification(notification, username)
     return HttpResponse(content='Num: %d' % (num - 1,))

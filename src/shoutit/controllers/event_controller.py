@@ -19,9 +19,6 @@ def register_event(user, event_type, attached_object=None):
     profile.stream2.add_post(event)
 
 
-# realtime_message = realtime_controller.WrapRealtimeMessage(render_event(event),RealtimeType.values[REALTIME_TYPE_EVENT])
-#	realtime_controller.BroadcastRealtimeMessage(realtime_message,user_controller.GetProfile(user).city)
-
 def GetUserEvents(user, start_index=None, end_index=None):
     return Event.objects.get_valid_events().filter(user=user)
 

@@ -355,9 +355,7 @@ def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex
     if not sex:
         user.profile.image = '/static/img/_user_female.png'
     user.profile.save()
-    from shoutit.controllers import realtime_controller as realtime_controller
 
-    realtime_controller.BindUserToCity(user.username, user.profile.city)
     if token is not None and len(token) > 0:
         ActivateUser(token, user)
 

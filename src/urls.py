@@ -82,8 +82,6 @@ urlpatterns = patterns('',
                        url(r'^notifications/$', 'shoutit.tiered_views.realtime_views.notifications'),
                        url(r'^xhr/notifications/count/$', 'shoutit.tiered_views.realtime_views.notifications_count'),
 
-                       # url(r'pub_realtime/$', 'shoutit.views.redirect_to_node'),
-
                        # ## API ## #
 
                        url(r'^api/', include('shoutit.api.urls')),

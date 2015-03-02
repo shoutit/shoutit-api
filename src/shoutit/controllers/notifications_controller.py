@@ -6,8 +6,7 @@ from push_notifications.gcm import GCMError
 from shoutit.models import Notification, Message2
 from shoutit.api.renderers import render_notification, render_user, render_message, render_message2
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
-    NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, RealtimeType, REALTIME_TYPE_NOTIFICATION
-from shoutit.controllers import realtime_controller
+    NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT
 
 
 def mark_all_as_read(user):
@@ -23,13 +22,6 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     notification = Notification(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object)
     notification.save()
 
-    count = realtime_controller.GetUserConnectedClientsCount(user.username)
-    if count:
-        realtime_controller.SendNotification(notification, user.username, count)
-        realtime_message = realtime_controller.WrapRealtimeMessage(render_notification(notification),
-                                                                   RealtimeType.values[REALTIME_TYPE_NOTIFICATION])
-        realtime_controller.SendRealtimeMessage(realtime_message, user.username)
-
     if notification_type == NOTIFICATION_TYPE_LISTEN:
         message = _("You got a new listen")
         attached_object_dict = render_user(attached_object, 2)
@@ -43,7 +35,6 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
         message = None
         attached_object_dict = {}
 
-    # new apns / gcm
     if user.apns_device:
         try:
             user.apns_device.send_message(message, badge=get_user_notifications_count(user), extra={

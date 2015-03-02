@@ -17,7 +17,6 @@ def CommentOnPost(user, post_id, text):
             users.append(post.user)
         users.remove(user)
         notifications_controller.notify_users_of_comment(users, comment)
-        realtime_controller.BindUserToPost(user, post)
         return comment
     else:
         raise ObjectDoesNotExist()
@@ -54,5 +53,5 @@ def DeleteComment(comment_id):
         event_controller.delete_event_about_obj(comment)
 
 
-from shoutit.controllers import event_controller, shout_controller, notifications_controller, realtime_controller
+from shoutit.controllers import event_controller, shout_controller, notifications_controller
 from shoutit.models import Comment

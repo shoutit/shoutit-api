@@ -12,7 +12,7 @@ from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPER
 from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Post, PredefinedCity
-from shoutit.controllers import stream_controller, realtime_controller, event_controller, email_controller, item_controller
+from shoutit.controllers import stream_controller, event_controller, email_controller, item_controller
 from shoutit.utils import to_seo_friendly
 
 
@@ -260,7 +260,6 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
-    realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 
@@ -315,7 +314,6 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
-    realtime_controller.BindUserToPost(shouter, trade)
     return trade
 
 

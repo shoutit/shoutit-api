@@ -14,7 +14,6 @@ def PostExperience(user, state, text, businessProfile):
     user.profile.stream2.add_post(exp)
     event_controller.register_event(user, EVENT_TYPE_EXPERIENCE, exp)
     notifications_controller.notify_business_of_exp_posted(businessProfile.user, exp)
-    realtime_controller.BindUserToPost(user, exp)
     return exp
 
 
@@ -115,6 +114,5 @@ def getDetailedExperience(user, experience, sharedExperiences, comments):
     experience.isOwner = True if experience.user == user else False
 
 
-from shoutit.controllers import event_controller, shout_controller, notifications_controller, \
-    realtime_controller
+from shoutit.controllers import event_controller, shout_controller, notifications_controller
 from shoutit.models import Experience, Post, Business, SharedExperience, Comment, Profile

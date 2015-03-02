@@ -25,7 +25,6 @@ redis==2.8.0
 django-redis-cache==0.10.0
 django-redis-sessions==0.4.0
 suds==0.4
-pika==0.9.13
 apns==1.1.2
 twisted==11
 django-paypal==0.2
