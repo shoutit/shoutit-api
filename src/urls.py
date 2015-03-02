@@ -121,8 +121,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/update_location/$', 'shoutit.tiered_views.user_views.update_user_location'),
                        url(r'^xhr/setTagParent/$', 'shoutit.tiered_views.tag_views.set_tag_parent'),
 
-                       url(r'^sts/$', 'shoutit.tiered_views.general_views.admin_stats'),
-
                        url(r'^reactivate/$', 'shoutit.tiered_views.user_views.resend_activation'),
                        url(r'^xhr/reactivate/$', 'shoutit.tiered_views.user_views.resend_activation'),
                        url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png')),

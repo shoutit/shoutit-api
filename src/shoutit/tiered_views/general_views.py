@@ -19,7 +19,7 @@ from shoutit.controllers import tag_controller, business_controller, event_contr
     experience_controller
 
 
-@non_cached_view(html_renderer=index_html, mobile_renderer=index_mobile, api_renderer=shouts_api, methods=['GET'])
+@non_cached_view(html_renderer=index_html, api_renderer=shouts_api, methods=['GET'])
 def index(request, browse_type=None):
     result = ResponseResult()
     result.data['browse_type'] = browse_type or 'offers'
@@ -287,73 +287,6 @@ def modal(request, template=None):
         raise Http404()
 
     return render_to_response('modals/' + template + '_modal.html', variables)
-
-
-def admin_stats_mobile(request, result):
-    if request.user.is_authenticated():
-        if request.user.is_staff:
-            return page_html(request, result, 'mobile_stats.html')
-
-    return HttpResponseRedirect('/')
-
-
-@non_cached_view(html_renderer=admin_stats_mobile, mobile_renderer=admin_stats_mobile, methods=['GET'])
-def admin_stats(request):
-    result = ResponseResult()
-    if request.user.is_authenticated():
-        if request.user.is_staff:
-            result.data['users'] = Profile.objects.all().count()
-
-            users_a = Profile.objects.filter(user__is_active=True).values_list('user__pk')
-            result.data['users_a'] = len(users_a)
-
-            users_e = Profile.objects.filter(~Q(user__email__iexact='')).values_list('user_id')  # todo: check
-            result.data['users_e'] = len(users_e)
-
-            result.data['sss'] = Profile.objects.filter(user__is_active=True, isSSS=True).count()
-            result.data['fb'] = LinkedFacebookAccount.objects.all().values('facebook_id').distinct().count()
-            result.data['users_s'] = result.data['users_e'] - result.data['sss'] - result.data['fb']
-
-            result.data['shouts_req'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).count()
-            result.data['shouts_ofr'] = Trade.objects.get_valid_trades(types=[POST_TYPE_OFFER]).count()
-            result.data['shouts_exp'] = Post.objects.get_valid_posts().filter(type=POST_TYPE_EXPERIENCE).count()
-            result.data['shouts'] = result.data['shouts_req'] + result.data['shouts_ofr'] + result.data['shouts_exp']
-            result.data['shouts_a'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
-                user__pk__in=users_a).count()
-            result.data['shouts_e'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(
-                user__pk__in=users_e).count()
-            result.data['shouts_r'] = Trade.objects.get_valid_trades([POST_TYPE_REQUEST, POST_TYPE_OFFER]).filter(user__pk__in=users_e,
-                                                                                                                  is_sss=False).count()
-
-            result.data['mobiles'] = Profile.objects.filter(~Q(Mobile=None)).count()
-            result.data['changed_pic'] = Profile.objects.filter(~Q(
-                Image__in=['/static/img/_user_male.png',
-                           '/static/img/_user_female.png'])).count()
-            result.data['changed_bio'] = Profile.objects.filter(~Q(Bio__iexact='New Shouter!')).count()
-
-            result.data['msgs'] = Message.objects.all().count()
-            result.data['convs'] = Conversation.objects.all().count()
-
-            result.data['followships'] = FollowShip.objects.all().count()
-
-            result.data['countries'] = Profile.objects.filter(~Q(user__email__iexact='')).values(
-                'country').annotate(count=Count('country'))
-            for c in result.data['countries']:
-                c['country'] = constants.COUNTRY_ISO[c['country']]
-            result.data['countries'] = sorted(result.data['countries'], key=lambda k: k['country'])
-
-            # result.data['cities'] = Profile.objects.filter(~Q(user__email__iexact='')).values('city',
-            # 'country').annotate(count=Count('city'))
-            #			for c in result.data['cities']:
-            #				if c['city'] == '':
-            #					c['city'] = 'None'
-            #				c['country'] = constants.COUNTRY_ISO[c['country']]
-            #			result.data['cities'] = sorted(result.data['cities'], key=lambda k: k['country'])
-
-            #			result.data['fb_contest1_shares'] = FbContest.objects.all().count()
-            #			result.data['fb_contest1_users'] = FbContest.objects.all().values('FbId').distinct().count()
-
-    return result
 
 
 @non_cached_view(methods=['GET'], api_renderer=currencies_api)

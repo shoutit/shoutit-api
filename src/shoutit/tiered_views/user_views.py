@@ -15,7 +15,7 @@ from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, \
     UserEditProfileForm, ExtenedSignUp
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
-from renderers import page_html, activate_modal_html, activate_modal_mobile, object_page_html, user_location, push_user_api, \
+from renderers import page_html, activate_modal_html, object_page_html, user_location, push_user_api, \
     user_video_renderer
 from renderers import user_api, operation_api, profiles_api, shouts_api, stats_api, activities_api
 from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, \
@@ -72,8 +72,7 @@ def activate_api(request, token):
     return result
 
 
-@non_cached_view(html_renderer=activate_modal_html, mobile_renderer=activate_modal_mobile,
-                 methods=['GET'])
+@non_cached_view(html_renderer=activate_modal_html, methods=['GET'])
 def activate_modal(request, token):
     user = user_controller.GetUserByToken(token, False, False)
     result = ResponseResult()

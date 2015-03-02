@@ -152,22 +152,6 @@ def index_html(request, result, browse_type=None):
     return HttpResponseRedirect('/%s/%s/' % (result.data['browse_type'], result.data['browse_city']))
 
 
-def index_mobile(request, result, *args, **kwargs):
-    result.data['link'] = request.build_absolute_uri(request.get_full_path())
-    result.data['content'] = ''
-    return page_html(request, result, 'mobile_base.html')
-
-
-def activate_modal_mobile(request, result, token):
-    result.data['link'] = "shoutit.com%s" % '/' + token + '/'
-    shout = Trade.objects.get_valid_trades().filter(user=request.user).select_related('item')
-    content = ''
-    if len(shout):
-        content = shout[0].item.name
-    result.data['content'] = content
-    return page_html(request, result, 'mobile_activation.html')
-
-
 def browse_html(request, result, browse_type, url_encoded_city, browse_category=None):
     if 'redirect_category' in result.data:
         return HttpResponseRedirect('/%s/%s/' % (browse_type, url_encoded_city))

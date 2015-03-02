@@ -147,7 +147,6 @@ def tiered_view(
     html_renderer=None,
     json_renderer=None,
     api_renderer=None,
-    mobile_renderer=None,
     methods=None,
     validator=None,
     login_required=False,
@@ -245,9 +244,6 @@ def tiered_view(
                 response.content = json.dumps(pre_json_result)
                 output = response
 
-            elif mobile_renderer and getattr(request, 'flavour', '') == 'mobile':
-                output = mobile_renderer(request, result, *args, **kwargs)
-
             elif html_renderer and not request.is_ajax():
                 output = html_renderer(request, result, *args, **kwargs)
 
@@ -262,7 +258,7 @@ def tiered_view(
 
 
 def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=None, dynamic_tags=None, html_renderer=None, json_renderer=None, api_renderer=None,
-                mobile_renderer=None, methods=None, validator=None, login_required=False, post_login_required=False,
+                methods=None, validator=None, login_required=False, post_login_required=False,
                 activation_required=False, post_activation_required=False, permissions_required=None, business_subscription_required=False):
     if not methods:
         methods = ['GET', 'POST']
@@ -286,15 +282,15 @@ def cached_view(level=CACHE_LEVEL_USER, timeout=None, tags=None, dynamic_tags=No
         'level': level
     }
 
-    return tiered_view(html_renderer, json_renderer, api_renderer, mobile_renderer, methods, validator, login_required, post_login_required,
+    return tiered_view(html_renderer, json_renderer, api_renderer, methods, validator, login_required, post_login_required,
                        activation_required, post_activation_required, cache_settings, permissions_required=permissions_required,
                        business_subscription_required=business_subscription_required)
 
 
-def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, mobile_renderer=None, methods=None,
+def non_cached_view(html_renderer=None, json_renderer=None, api_renderer=None, methods=None,
                     validator=None, login_required=False, post_login_required=False, activation_required=False,
                     post_activation_required=False, permissions_required=None, business_subscription_required=False):
-    return tiered_view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,mobile_renderer=mobile_renderer,
+    return tiered_view(html_renderer=html_renderer, json_renderer=json_renderer, api_renderer=api_renderer,
                        methods=methods, validator=validator, login_required=login_required, post_login_required=post_login_required,
                        activation_required=activation_required, post_activation_required=post_activation_required,
                        permissions_required=permissions_required, business_subscription_required=business_subscription_required)

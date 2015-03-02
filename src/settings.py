@@ -136,7 +136,6 @@ INSTALLED_APPS = (
     'widget_tweaks',
     'piston3',
     'push_notifications',
-    'django_mobile',
     # 'paypal.standard.ipn',
     # 'paypal.standard.pdt',
     # 'keyedcache',
@@ -203,10 +202,6 @@ MIDDLEWARE_CLASSES = (
     'shoutit.middleware.FBMiddleware',
     # 'activity_logger.middleware.activity_logger',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
-
-    'django_mobile.middleware.MobileDetectionMiddleware',
-    'django_mobile.middleware.SetFlavourMiddleware',
-
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
 
