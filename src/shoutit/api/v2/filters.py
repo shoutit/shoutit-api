@@ -23,7 +23,7 @@ class ShoutFilter(django_filters.FilterSet):
 
     class Meta:
         model = Trade
-        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags', 'category'
+        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags', 'category',
                   'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng', 'user']
         order_by = ['-date_published']
 

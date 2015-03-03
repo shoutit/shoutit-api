@@ -304,10 +304,12 @@ class TradeDetailSerializer(TradeSerializer):
     images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout if possible, not set for shout owner.")
+    related_requests = TradeSerializer(many=True, required=False)
+    related_offers = TradeSerializer(many=True, required=False)
 
     class Meta(TradeSerializer.Meta):
         parent_fields = TradeSerializer.Meta.fields
-        fields = parent_fields + ('images', 'videos', 'reply_url')
+        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers')
 
     def get_reply_url(self, trade):
         return reverse('shout-reply', kwargs={'id': trade.id}, request=self.context['request'])

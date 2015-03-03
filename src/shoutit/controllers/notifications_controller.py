@@ -4,7 +4,7 @@ from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 
 from shoutit.models import Notification, Message2
-from shoutit.api.renderers import render_notification, render_user, render_message, render_message2
+from shoutit.api.renderers import render_user, render_message, render_message2
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
     NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT
 

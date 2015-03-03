@@ -9,20 +9,19 @@ from django.conf import settings
 from common.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, \
     POST_TYPE_REQUEST, POST_TYPE_OFFER, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, \
     EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
-from common.utils import process_tags
-from shoutit import utils
+from common.utils import process_tags, normalized_distance, mutual_followings, get_farest_point, safe_sql
 from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile, FollowShip, User
 
 
 def PublishShoutToShout(shout, other):
     rank = 0.0
-    distance = utils.normalized_distance(shout.latitude, shout.longitude, other.latitude, other.longitude)
+    distance = normalized_distance(shout.latitude, shout.longitude, other.latitude, other.longitude)
     if distance > other.MaxDistance:
         other.MaxDistance = distance
         other.save()
     rank += distance / other.MaxDistance
-    followings = utils.mutual_followings(shout.StreamsCode, other.StreamsCode)
+    followings = mutual_followings(shout.StreamsCode, other.StreamsCode)
     if followings > other.MaxFollowings:
         other.MaxFollowings = followings
         other.save()
@@ -62,9 +61,9 @@ def MaxDistance(points, lat, lng):
     if len(points) > 0:
         codes = [[float(point['latitude']), float(point['longitude'])] for point in points]
         observation = [float(lat), float(lng)]
-        farest_index = utils.get_farest_point(observation, codes)
+        farest_index = get_farest_point(observation, codes)
         farest_point = points[farest_index]
-        max_distance = utils.normalized_distance(farest_point['latitude'], farest_point['longitude'], lat, lng)
+        max_distance = normalized_distance(farest_point['latitude'], farest_point['longitude'], lat, lng)
 
     return max_distance
 
@@ -202,7 +201,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
         item_name_q = ''
         text_q = ''
         for keyword in filter_query.split(' '):
-            keyword = utils.safe_sql(keyword)
+            keyword = safe_sql(keyword)
             if item_name_q != '':
                 item_name_q += "AND UPPER(\"shoutit_item\".\"name\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
                 text_q += "AND UPPER(\"shoutit_post\".\"text\"::text) LIKE UPPER(E'%%%%%%%%%s%%%%%%%%')" % keyword
@@ -260,7 +259,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
     return [(str(row[1]), row[0]) for row in cursor.fetchall() if row and len(row)]
 
 
-def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_index=None, exclude_shouter=True):
+def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_index=None):
     filters = {}
 
     today = datetime.today()
@@ -306,8 +305,6 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
 
     shout_qs = Trade.objects.get_valid_trades(country=base_shout.country, city=base_shout.city).select_related(
         'item', 'item__Currency', 'user__Profile', 'tags').filter(**filters).filter(~Q(pk=base_shout.pk))
-    if exclude_shouter:
-        shout_qs = shout_qs.filter(~Q(user=base_shout.user))
     shout_qs = shout_qs.extra(select={'time_rank': '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
         now_timestamp_string, now_timestamp - base_timestamp)})
     shout_qs = shout_qs.extra(select={'rank': extra_order_bys}).extra(order_by=['rank'])[start_index:end_index]
@@ -357,7 +354,7 @@ def attach_related_to_shouts(shouts, rank_count=None):
     return list(shouts)
 
 
-def get_ranked_stream_shouts(stream):
+def get_ranked_stream_shouts(stream, limit=3):
     if not stream:
         return []
 
@@ -376,7 +373,7 @@ def get_ranked_stream_shouts(stream):
                                                                                           shout__date_published__lte=F(
                                                                                               'shout__expiry_date')),
         shout__muted=False, shout__is_disabled=False).extra(select={'overall_rank': '(("rank" * 2) + %s) / 3' % time_axis}).extra(
-        order_by=['overall_rank'])
+        order_by=['overall_rank'])[:limit]
     if not shout_wraps:
         return []
     return [shout_wrap.shout.trade for shout_wrap in shout_wraps]

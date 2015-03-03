@@ -3,7 +3,6 @@ import random
 import json
 import urlparse
 import uuid
-import math
 import base64
 import hashlib
 import hmac
@@ -13,7 +12,6 @@ import os
 import re
 from PIL import Image
 import pyrax
-import numpy as np
 from django.http import HttpResponse, Http404
 from django.conf import settings
 
@@ -29,51 +27,6 @@ def generate_password():
 
 def random_uuid_str():
     return str(uuid.uuid4())
-
-
-def get_farest_point(observation, points):
-    observation = np.array(observation)
-    points = np.array(points)
-
-    diff = points - observation
-    dist = np.sqrt(np.sum(diff ** 2, axis=-1))
-    farest_index = np.argmax(dist)
-    return farest_index
-
-
-def normalized_distance(lat1, long1, lat2, long2):
-    # Convert latitude and longitude to
-    # spherical coordinates in radians.
-    degrees_to_radians = math.pi / 180.0
-
-    # phi = 90 - latitude
-    phi1 = (90.0 - float(lat1)) * degrees_to_radians
-    phi2 = (90.0 - float(lat2)) * degrees_to_radians
-
-    # theta = longitude
-    theta1 = float(long1) * degrees_to_radians
-    theta2 = float(long2) * degrees_to_radians
-
-    # Compute spherical distance from spherical coordinates.
-
-    # For two locations in spherical coordinates
-    # (1, theta, phi) and (1, theta, phi)
-    # cosine( arc length ) =
-    # sin phi sin phi' cos(theta-theta') + cos phi cos phi'
-    # distance = rho * arc length
-
-    cos = (math.sin(phi1) * math.sin(phi2) * math.cos(theta1 - theta2) +
-           math.cos(phi1) * math.cos(phi2))
-    if cos >= 1.0:
-        return 0.0
-    arc = math.acos(cos)
-
-    # multiply the result by pi * radius of earth to get the actual distance(approx.)
-    return arc / math.pi
-
-
-def mutual_followings(streams_code1, streams_code2):
-    return len(set([x for x in streams_code1.split(',')]) & set([x for x in streams_code2.split(',')]))
 
 
 def get_ip(request):
@@ -159,10 +112,6 @@ def get_https_cdn(url):
 def safe_string(value):
     c = re.compile('\\b' + ('%s|%s' % ('\\b', '\\b')).join(settings.PROFANITIES_LIST) + '\\b', re.IGNORECASE)
     return c.findall(value)
-
-
-def safe_sql(value):
-    return value.replace('\'', '\'\'')
 
 
 def get_shout_name_preview(text, n):

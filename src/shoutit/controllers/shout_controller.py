@@ -184,7 +184,7 @@ def save_relocated_shouts(trade, stream_type):
     elif stream_type == STREAM_TYPE_RELATED:
         posts_type = trade.type
 
-    shouts = stream_controller.get_shout_recommended_shout_stream(trade, posts_type, 0, 10, stream_type == STREAM_TYPE_RECOMMENDED)
+    shouts = stream_controller.get_shout_recommended_shout_stream(trade, posts_type, 0, 10)
     stream = Stream(type=stream_type)
     stream.save()
     if stream_type == STREAM_TYPE_RECOMMENDED:

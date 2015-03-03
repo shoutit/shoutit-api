@@ -1,8 +1,9 @@
 from datetime import timedelta, datetime
+import time
 import json
 
 from django.db import models
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.conf import settings
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, \
@@ -254,6 +255,48 @@ class Trade(Shout):
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.item)
+
+    @property
+    def related_requests(self):
+        if self.type == POST_TYPE_REQUEST:
+            related_requests_stream = self.related_stream
+        else:
+            related_requests_stream = self.recommended_stream
+        return get_ranked_stream_shouts(related_requests_stream)
+
+    @property
+    def related_offers(self):
+        if self.type == POST_TYPE_OFFER:
+            related_offers_stream = self.related_stream
+        else:
+            related_offers_stream = self.recommended_stream
+        return get_ranked_stream_shouts(related_offers_stream)
+
+
+# todo: refactor
+def get_ranked_stream_shouts(stream, limit=3):
+    if not stream:
+        return []
+
+    today = datetime.today()
+    days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+    begin = today - days
+    base_timestamp = int(time.mktime(begin.utctimetuple()))
+    now_timestamp = int(time.mktime(datetime.now().utctimetuple()))
+    now_timestamp_string = str(datetime.now())
+
+    time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
+        now_timestamp_string, now_timestamp - base_timestamp)
+
+    shout_wraps = stream.ShoutWraps.select_related('shout', 'trade').filter(
+        Q(shout__expiry_date__isnull=True, shout__date_published__range=(begin, today)) | Q(shout__expiry_date__isnull=False,
+                                                                                          shout__date_published__lte=F(
+                                                                                              'shout__expiry_date')),
+        shout__muted=False, shout__is_disabled=False).extra(select={'overall_rank': '(("rank" * 2) + %s) / 3' % time_axis}).extra(
+        order_by=['overall_rank'])[:limit]
+    if not shout_wraps:
+        return []
+    return [shout_wrap.shout.trade for shout_wrap in shout_wraps]
 
 
 class Deal(Shout):
