@@ -401,7 +401,7 @@ class MessageDetailSerializer(MessageSerializer):
 
     class Meta(MessageSerializer.Meta):
         parent_fields = MessageSerializer.Meta.fields
-        fields = parent_fields + ('attachments')
+        fields = parent_fields + ('attachments',)
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
