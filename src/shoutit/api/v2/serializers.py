@@ -385,23 +385,23 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
+    conversation_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Message2
-        fields = ('id', 'created_at', 'read_url', 'user', 'text')
+        fields = ('id', 'created_at', 'read_url', 'user', 'text', 'conversation_url')
+
+    def get_conversation_url(self, message):
+        return reverse('conversation-detail', kwargs={'id': message.conversation.id}, request=self.context['request'])
 
 
 class MessageDetailSerializer(MessageSerializer):
     attachments = MessageAttachmentSerializer(many=True, required=False,
                                               help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
-    conversation_url = serializers.SerializerMethodField()
 
     class Meta(MessageSerializer.Meta):
         parent_fields = MessageSerializer.Meta.fields
-        fields = parent_fields + ('attachments', 'conversation_url')
-
-    def get_conversation_url(self, message):
-        return reverse('conversation-detail', kwargs={'id': message.conversation.id}, request=self.context['request'])
+        fields = parent_fields + ('attachments')
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
