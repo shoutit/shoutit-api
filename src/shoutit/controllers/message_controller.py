@@ -175,7 +175,7 @@ def hide_message_from_user(message, user):
     message.save()
 
     # future compatibility
-    hide_message2_from_user(message.Conversation, message, user)
+    hide_message2_from_user(message, user)
 
 
 def get_message(message_id):
@@ -249,29 +249,30 @@ def conversation2_exist(conversation_id=None, users=None, about=None):
 
 
 def hide_conversation2_from_user(conversation, user):
+    # todo: remove the user from conversation
     try:
         Conversation2Delete(user=user, conversation_id=conversation.id).save(True)
     except IntegrityError:
         pass
 
 
-def hide_message2_from_user(conversation, message, user):
+def hide_message2_from_user(message, user):
     try:
-        Message2Delete(user=user, message_id=message.id, conversation_id=conversation.id).save(True)
+        Message2Delete(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
     except IntegrityError:
         pass
 
 
-def mark_message2_as_read(conversation, message, user):
+def mark_message2_as_read(message, user):
     try:
-        Message2Read(user=user, message_id=message.id, conversation_id=conversation.id).save(True)
+        Message2Read(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
     except IntegrityError:
         pass
 
 
-def mark_message2_as_unread(conversation, message, user):
+def mark_message2_as_unread(message, user):
     try:
-        Message2Read.objects.get(user=user, message_id=message.id, conversation_id=conversation.id).delete()
+        Message2Read.objects.get(user=user, message_id=message.id, conversation_id=message.conversation.id).delete()
     except Message2Read.DoesNotExist:
         pass
 

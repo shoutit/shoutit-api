@@ -234,8 +234,7 @@ def delete_conversation2(request, conversation_id):
 def read_message2(request, conversation_id, message_id):
     result = ResponseResult()
     message = request.validation_result.data['message']
-    conversation = request.validation_result.data['conversation']
-    message_controller.mark_message2_as_read(conversation, message, request.user)
+    message_controller.mark_message2_as_read(message, request.user)
     return result
 
 
@@ -243,8 +242,7 @@ def read_message2(request, conversation_id, message_id):
 def unread_message2(request, conversation_id, message_id):
     result = ResponseResult()
     message = request.validation_result.data['message']
-    conversation = request.validation_result.data['conversation']
-    message_controller.mark_message2_as_unread(conversation, message, request.user)
+    message_controller.mark_message2_as_unread(message, request.user)
     return result
 
 
@@ -282,5 +280,5 @@ def delete_message2(request, conversation_id, message_id):
     result = ResponseResult()
     conversation = request.validation_result.data['conversation']
     message = request.validation_result.data['message']
-    message_controller.hide_message2_from_user(conversation, message, request.user)
+    message_controller.hide_message2_from_user(message, request.user)
     return result

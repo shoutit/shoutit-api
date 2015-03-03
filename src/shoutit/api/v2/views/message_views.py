@@ -82,13 +82,15 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
         omit_parameters:
             - form
         """
+        # conversation = self.get_object()
+        # message_controller.hide_conversation2_from_user(conversation, request.user)
+        # return Response(status.HTTP_204_NO_CONTENT)
         return Response()
 
     @detail_route(methods=['get'])
     def messages(self, request, *args, **kwargs):
         """
         Get conversation messages
-
         ---
         serializer: MessageDetailSerializer
         parameters:
@@ -170,30 +172,30 @@ class MessageViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         """
         Delete message
-
-        ```
-        NOT IMPLEMENTED
-        ```
-
         ---
         omit_serializer: true
         omit_parameters:
             - form
         """
-        return Response()
+        message = self.get_object()
+        message_controller.hide_message2_from_user(message, request.user)
+        return Response(status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post', 'delete'])
     def read(self, request, *args, **kwargs):
         """
         Read/unread message
-
-        ```
-        NOT IMPLEMENTED
-        ```
-
         ---
         omit_serializer: true
         omit_parameters:
             - form
         """
-        return Response()
+        message = self.get_object()
+        if request.method == 'POST':
+            message_controller.mark_message2_as_read(message, request.user)
+            return Response(status.HTTP_201_CREATED)
+
+        else:
+            message_controller.mark_message2_as_unread(message, request.user)
+            return Response(status.HTTP_204_NO_CONTENT)
+
