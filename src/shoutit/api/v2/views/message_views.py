@@ -101,6 +101,8 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
         conversation = self.get_object()
         instance = conversation.get_messages_qs()
         page = self.paginate_queryset(instance)
+        # reverse the messages order inside the page itself
+        page.object_list = page.object_list[::-1]
         serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
         return Response(serializer.data)
 
