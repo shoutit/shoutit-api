@@ -3,9 +3,10 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
 
-from shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
+from shoutit.models import User, Shout, Profile, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post
+    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream2, \
+    Listen, UserPermission, Permission, Conversation2, Message2, Message2Delete, Message2Read, Conversation2Delete
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -188,6 +189,8 @@ class ConversationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Conversation, ConversationAdmin)
+admin.site.register(Conversation2)
+admin.site.register(Conversation2Delete)
 
 
 # Message
@@ -197,11 +200,14 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Message, MessageAdmin)
+admin.site.register(Message2)
+admin.site.register(Message2Read)
+admin.site.register(Message2Delete)
 
 
 # Message Attachment
 class MessageAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'message', 'conversation', 'content_type', 'object_id', 'created_at')
+    list_display = ('pk', 'message', 'conversation', 'type', 'content_type', 'object_id', 'created_at')
     search_fields = ['message__id', 'conversation__id']
 
 admin.site.register(MessageAttachment, MessageAttachmentAdmin)
@@ -227,11 +233,16 @@ class ReportAdmin(admin.ModelAdmin):
 
 admin.site.register(Report)
 admin.site.register(StoredFile)
-admin.site.register(ConfirmToken)
 admin.site.register(ShoutWrap)
 admin.site.register(StoredImage)
+admin.site.register(Video)
 admin.site.register(Stream)
+admin.site.register(Stream2)
+admin.site.register(Listen)
 admin.site.register(Notification)
 admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
+admin.site.register(SharedLocation)
+admin.site.register(UserPermission)
+admin.site.register(Permission)

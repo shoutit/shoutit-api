@@ -326,17 +326,20 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
         if MESSAGE_ATTACHMENT_TYPE_SHOUT.text in attachment:
             object_id = attachment[MESSAGE_ATTACHMENT_TYPE_SHOUT.text]['id']
             content_type = ContentType.objects.get_for_model(Trade)
-            type = MESSAGE_ATTACHMENT_TYPE_SHOUT
-        elif MESSAGE_ATTACHMENT_TYPE_LOCATION.text in attachment:
+            ma_type = MESSAGE_ATTACHMENT_TYPE_SHOUT
+            MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
+                              type=ma_type).save()
+
+        if MESSAGE_ATTACHMENT_TYPE_LOCATION.text in attachment:
             location = attachment['location']
             sl = SharedLocation(latitude=location['latitude'], longitude=location['longitude'])
             sl.save()
             object_id = sl.id
             content_type = ContentType.objects.get_for_model(SharedLocation)
-            type = MESSAGE_ATTACHMENT_TYPE_LOCATION
+            ma_type = MESSAGE_ATTACHMENT_TYPE_LOCATION
+            MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
+                              type=ma_type).save()
 
-        if content_type and object_id and type:
-            MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id, type=type).save()
 
     for to_user in conversation.contributors:
         if user != to_user:
