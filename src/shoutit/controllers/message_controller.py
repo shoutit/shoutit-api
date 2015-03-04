@@ -340,7 +340,6 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
             MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
                               type=ma_type).save()
 
-
     for to_user in conversation.contributors:
         if user != to_user:
             notifications_controller.notify_user_of_message2(to_user, message)

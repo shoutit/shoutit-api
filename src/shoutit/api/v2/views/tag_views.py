@@ -8,6 +8,7 @@ from rest_framework import permissions, viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
+from shoutit.api.v2.filters import TagFilter
 
 from shoutit.api.v2.serializers import *
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
@@ -30,7 +31,7 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
     queryset = Tag.objects.all()
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('name',)
+    filter_class = TagFilter
     search_fields = ('=id', 'name')
 
     def list(self, request, *args, **kwargs):
@@ -65,14 +66,6 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
               description: only used when type is `featured` or `top`
               paramType: query
         """
-
-        tag_type = request.query_params.get('type', 'all')
-        if tag_type not in ['all', 'top', 'featured']:
-            raise ValidationError({'type': "should be `all`, `top` or `featured`."})
-
-        tag_country = request.query_params.get('country', None)
-        tag_city = request.query_params.get('city', None)
-        # todo: filter on country, city, top, featured
 
         instance = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(instance)

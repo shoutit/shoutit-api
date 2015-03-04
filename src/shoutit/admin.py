@@ -6,7 +6,7 @@ from django import forms
 from shoutit.models import User, Shout, Profile, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream2, \
-    Listen, UserPermission, Permission, Conversation2, Message2, Message2Delete, Message2Read, Conversation2Delete
+    Listen, UserPermission, Permission, Conversation2, Message2, Message2Delete, Message2Read, Conversation2Delete, FeaturedTag
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -168,18 +168,30 @@ admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 # FollowShip
 class FollowShipAdmin(admin.ModelAdmin):
     list_display = ('pk', 'follower', 'stream', 'date_followed', 'state')
-    search_fields = ['follower__user__username', 'stream__pk']
+    search_fields = ['follower__user__username', 'stream__id']
     readonly_fields = ('follower', 'stream',)
 
 admin.site.register(FollowShip, FollowShipAdmin)
 
 
 # Tag
+@admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'Stream')
-    search_fields = ['pk', 'name']
+    list_display = ('name', 'Stream', 'stream2')
+    search_fields = ('name',)
 
-admin.site.register(Tag, TagAdmin)
+
+@admin.register(FeaturedTag)
+class FeaturedTagAdmin(admin.ModelAdmin):
+    raw_id_fields = ('tag',)
+    list_display = ('tag_name', 'country', 'city', 'rank')
+    list_filter = ('country', 'city')
+    ordering = ('country', 'city', 'rank')
+    search_fields = ('tag__name', 'tag__country', 'tag__city')
+
+    def tag_name(self, featured_tag):
+        return featured_tag.tag.name
+    tag_name.short_description = 'Tag'
 
 
 # Conversation

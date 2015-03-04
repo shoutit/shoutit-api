@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core import validators
 from django.db import models
 from django.conf import settings
+from common.constants import DEFAULT_LOCATION
 
 from shoutit.models.base import UUIDModel, APIModelMixin
 from shoutit.models.stream import Stream2Mixin, Listen
@@ -35,3 +37,13 @@ class Category(UUIDModel):
 
     def __unicode__(self):
         return self.name
+
+
+class FeaturedTag(UUIDModel):
+    tag = models.ForeignKey('shoutit.Tag', related_name='featured_in')
+    country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
+    city = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)
+    rank = models.PositiveSmallIntegerField(validators=[validators.MinValueValidator(1)])
+
+    class Meta:
+        unique_together = ('country', 'city', 'rank')
