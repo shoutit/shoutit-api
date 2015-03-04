@@ -41,7 +41,9 @@ class ShoutFilter(django_filters.FilterSet):
         try:
             category = Category.objects.get(name=value)
             tags = category.tags.all()
-            return stream_controller.filter_shouts_qs_by_tags(queryset, tags)
+            if not tags:
+                return queryset
+            return queryset.filter(tags__in=tags)
         except Category.DoesNotExist:
             raise ValidationError({'category': "Category '%s' does not exist" % value})
 
