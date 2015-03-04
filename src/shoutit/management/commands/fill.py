@@ -4,7 +4,7 @@
 """
 from __future__ import unicode_literals
 
-from django.core.management.base import NoArgsCommand, CommandError
+from django.core.management.base import BaseCommand
 from common.constants import STREAM_TYPE_TAG
 from shoutit.models import *
 from rest_framework.authtoken.models import Token
@@ -13,10 +13,10 @@ from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISS
 from provider.oauth2.models import Client
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = 'Fill database with required initial data'
 
-    def handle_noargs(self, **options):
+    def handle(self, *args, **options):
 
         # users
         u1, c1 = User.objects.get_or_create(
