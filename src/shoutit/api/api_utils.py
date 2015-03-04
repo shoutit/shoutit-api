@@ -36,3 +36,7 @@ def get_api2_url(obj):
         return "{}api/v2/{}".format(SITE_LINK, url)
     else:
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
+
+
+def build_absolute_uri(url):
+    return SITE_LINK[:-1] + url

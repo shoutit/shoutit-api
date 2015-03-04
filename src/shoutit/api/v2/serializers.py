@@ -13,6 +13,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, NotificationType
 from common.utils import date_unix
+from shoutit.api.api_utils import build_absolute_uri
 
 from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, \
     Currency
@@ -396,7 +397,7 @@ class MessageDetailSerializer(MessageSerializer):
         fields = parent_fields + ('attachments', 'conversation_url')
 
     def get_conversation_url(self, message):
-        return reverse('conversation-detail', kwargs={'id': message.conversation.id}, request=self.context['request'])
+        return build_absolute_uri(reverse('conversation-detail', kwargs={'id': message.conversation.id}))
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
