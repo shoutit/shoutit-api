@@ -1,7 +1,5 @@
 import time
 
-from django.db.models.aggregates import Count
-from django.db.models.query_utils import Q
 from django.http import HttpResponseServerError, HttpResponseBadRequest
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
@@ -9,17 +7,16 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from shoutit.forms import *
-from shoutit.models import Category, StoredImage, LinkedFacebookAccount, Message, Conversation, FollowShip, Post
+from shoutit.models import Category, StoredImage
 from shoutit.utils import cloud_upload_file, get_size_url, generate_password, JsonResponse
 from shoutit.tiered_views.validators import *
 from shoutit.tiered_views.renderers import *
-from shoutit.tiered_views.views_utils import *
 from shoutit.tiers import *
 from shoutit.controllers import tag_controller, business_controller, event_controller, item_controller, user_controller, \
     experience_controller
 
 
-@non_cached_view(html_renderer=index_html, api_renderer=shouts_api, methods=['GET'])
+@non_cached_view(html_renderer=index_html, methods=['GET'])
 def index(request, browse_type=None):
     result = ResponseResult()
     result.data['browse_type'] = browse_type or 'offers'
@@ -99,7 +96,6 @@ def hovercard(request):
 # todo: better validation and sizing options
 @cache_control(public=True, must_revalidate=False)
 @non_cached_view(methods=['GET'], login_required=False, validator=profile_picture_validator,
-                 api_renderer=operation_api,
                  html_renderer=thumbnail_response)
 def profile_picture(request, profile_type='', size='', tag_name='', username=''):
     if profile_type == 'user' and username == 'me':
@@ -129,7 +125,6 @@ def profile_picture(request, profile_type='', size='', tag_name='', username='')
                  login_required=False,
                  validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get, True,
                                                                                    _('image does not exist.'), pk=image_id),
-                 api_renderer=thumbnail_response,
                  json_renderer=thumbnail_response,
                  html_renderer=thumbnail_response)
 def stored_image(request, image_id, size=32):
@@ -289,7 +284,7 @@ def modal(request, template=None):
     return render_to_response('modals/' + template + '_modal.html', variables)
 
 
-@non_cached_view(methods=['GET'], api_renderer=currencies_api)
+@non_cached_view(methods=['GET'])
 def currencies(request):
     result = ResponseResult()
     # todo: use the cache
@@ -297,7 +292,7 @@ def currencies(request):
     return result
 
 
-@non_cached_view(methods=['GET'], api_renderer=categories_list_api)
+@non_cached_view(methods=['GET'])
 def categories(request):
     result = ResponseResult()
     # todo: use the cache
@@ -308,27 +303,6 @@ def categories(request):
 @non_cached_view(methods=['GET'])
 def fake_error(request):
     raise Exception('FAKE ERROR')
-
-
-@non_cached_view(methods=['POST'], json_renderer=json_renderer)
-@csrf_exempt
-def set_perma(request):
-    if request.user.is_authenticated():
-        TaggedCache.set('perma|%s|%s' % (request.POST['perma'], request.user.pk), request.POST['value'],
-                        timeout=10 * 356 * 24 * 60 * 60)
-    elif hasattr(request, 'session'):
-        TaggedCache.set('perma|%s|%s' % (request.POST['perma'], request.session.session_key), request.POST['value'],
-                        timeout=10 * 356 * 24 * 60 * 60)
-    result = ResponseResult()
-    return result
-
-
-@non_cached_view(methods=['POST'], json_renderer=json_renderer)
-@csrf_exempt
-def set_language(request):
-    set_request_language(request, request.POST.get('language', settings.DEFAULT_LANGUAGE_CODE))
-    result = ResponseResult()
-    return result
 
 
 def handler500(request):

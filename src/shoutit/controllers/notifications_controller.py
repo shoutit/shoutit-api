@@ -3,10 +3,10 @@ from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 
-from shoutit.models import Notification, Message2
-from shoutit.api.renderers import render_user, render_message, render_message2
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
     NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT
+
+from shoutit.models import Notification, Message2
 
 
 def mark_all_as_read(user):
@@ -18,18 +18,20 @@ def mark_notifications_as_read_by_ids(notification_ids):
 
 
 def notify_user(user, notification_type, from_user=None, attached_object=None):
+    from shoutit.api.v2 import serializers
+
     notification = Notification(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object)
     notification.save()
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:
         message = _("You got a new listen")
-        attached_object_dict = render_user(attached_object, 2)
+        attached_object_dict = serializers.UserSerializer(attached_object).data
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")
         if isinstance(attached_object, Message2):
-            attached_object_dict = render_message2(attached_object)
+            attached_object_dict = serializers.MessageDetailSerializer(attached_object)
         else:
-            attached_object_dict = render_message(attached_object)
+            attached_object_dict = {}
     else:
         message = None
         attached_object_dict = {}

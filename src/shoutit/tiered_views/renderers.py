@@ -5,7 +5,6 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
-from piston3.utils import rc
 from django.conf import settings
 
 from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
@@ -15,7 +14,6 @@ from shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_E
     RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
 from shoutit.utils import shout_link
 from shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
-from shoutit.api.renderers import render_message, render_shout, render_tag, render_currency, render_conversation, render_conversation_full, render_user, render_notification, render_experience, render_post, render_comment, render_tag_dict, render_video, render_conversation2, render_message2
 from common import constants
 from shoutit.controllers import user_controller
 from shoutit.templatetags import template_filters
@@ -246,156 +244,6 @@ def notifications_html(request, result, *args, **kwargs):
     return page_html(request, result, 'notifications_page.html', _('Notifications'))
 
 
-def get_initial_api_result(request, result, *args, **kwargs):
-    response = None
-    if RESPONSE_RESULT_ERROR_404 in result.errors:
-        response = rc.NOT_FOUND
-    elif RESPONSE_RESULT_ERROR_FORBIDDEN in result.errors or RESPONSE_RESULT_ERROR_NOT_ACTIVATED in result.errors or RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors:
-        response = rc.FORBIDDEN
-        if RESPONSE_RESULT_ERROR_FORBIDDEN in result.errors:
-            response['X-SHOUTIT-CAUSE'] = 'forbidden'
-        elif RESPONSE_RESULT_ERROR_NOT_ACTIVATED in result.errors:
-            response['X-SHOUTIT-CAUSE'] = 'not-activated'
-        elif RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors:
-            response['X-SHOUTIT-CAUSE'] = 'permission-needed'
-        response.status_code = 403
-    elif RESPONSE_RESULT_ERROR_BAD_REQUEST in result.errors:
-        response = rc.BAD_REQUEST
-    elif RESPONSE_RESULT_ERROR_NOT_LOGGED_IN in result.errors:
-        response = rc.FORBIDDEN
-        response['X-SHOUTIT-CAUSE'] = 'not-logged-in'
-    elif not result.errors:
-        if request.method == 'POST':
-            response = rc.CREATED
-        elif request.method == 'DELETE':
-            response = rc.DELETED
-        else:
-            response = rc.ALL_OK
-
-    # needs to be dumped before returned with json.dumps in the called function
-    api_errors = result.form_errors.iteritems() if hasattr(result.form_errors, 'iteritems') else result.form_errors
-    pre_json_result = {
-        'api_messages': [{'type': error[0], 'message': unicode(error[1])} for error in result.messages],
-        'api_errors': [{'key': k, 'messages': v} for k, v in api_errors]
-    }
-
-    response['content-type'] = 'application/json'
-    return response, pre_json_result
-
-
-def operation_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors and 'url' in result.data:
-        pre_json_result['url'] = result.data['url']
-
-    return response, pre_json_result
-
-
-def reply_message_api_render(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result.update({
-            'message': render_message(result.data['message'])
-        })
-
-    return response, pre_json_result
-
-
-def reply_message2_api_render(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result.update({
-            'message': render_message2(result.data['message'])
-        })
-
-    return response, pre_json_result
-
-
-def shouts_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        shouts = [render_shout(shout) for shout in result.data['shouts']]
-
-        pre_json_result.update({
-            'shouts_count': len(shouts),
-            'shouts': shouts
-        })
-
-        if 'pages_count' in result.data:
-            pre_json_result['pages_count'] = result.data['pages_count']
-
-        if 'is_last_page' in result.data:
-            pre_json_result['is_last_page'] = result.data['is_last_page']
-
-        if 'city' in result.data:
-            pre_json_result['city'] = result.data['city']
-
-    return response, pre_json_result
-
-
-def tags_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        tags = [render_tag_dict(tag) for tag in result.data['tags']]
-        pre_json_result.update({
-            'count': len(tags),
-            'tags': tags
-        })
-
-    return response, pre_json_result
-
-
-def currencies_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        currencies = [render_currency(currency) for currency in result.data['currencies']]
-        pre_json_result.update({
-            'count': len(currencies),
-            'currencies': currencies
-        })
-
-    return response, pre_json_result
-
-
-def categories_list_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        categories = result.data['categories']
-        pre_json_result.update({
-            'categories': categories,
-        })
-
-    return response, pre_json_result
-
-
-def shout_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        shouts = [render_shout(shout) for shout in result.data['shouts']]
-        shout = render_shout(result.data['shout'])
-        if 'conversations' in result.data:
-            shout.update({'conversations': [render_conversation(conversation) for conversation in result.data['conversations']]})
-
-        if 'conversation' in result.data:
-            shout.update({'conversation': render_conversation_full(result.data['conversation'])})
-
-        pre_json_result.update({
-            'count': len(shouts),
-            'shout': shout,
-            'shouts': shouts
-        })
-
-    return response, pre_json_result
-
-
 def shout_brief_json(request, result, *args):
     if not result.errors:
         variables = {
@@ -406,222 +254,6 @@ def shout_brief_json(request, result, *args):
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
-
-
-def shout_xhr(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        shouts = [shout for shout in result.data['shouts']]
-
-        pre_json_result.update({
-            'count': len(shouts),
-            'shouts': shouts
-        })
-    else:
-        return get_initial_json_response(request, result)
-
-    response = xhr_respond(ENUM_XHR_RESULT.SUCCESS, "", data=pre_json_result)
-    return response
-
-
-def shouts_location_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['shouts'] = [render_shout(shout, 1) for shout in result.data['shouts']]
-
-        # for i in range(len(result.data['shout_pks'])):
-        # pre_json_result['shouts'].append({
-        #         'id': result.data['shout_pks'][i],
-        #         'location': {
-        #             'latitude': result.data['locations'][i].split(' ')[0],
-        #             'longitude': result.data['locations'][i].split(' ')[1],
-        #         },
-        #         'type': PostType.values[result.data['shout_types'][i]],
-        #         'name': result.data['shout_names'][i]
-        #     })
-
-        pre_json_result['count'] = len(pre_json_result['shouts'])
-
-    return response, pre_json_result
-
-
-def shout_form_renderer_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-    if 'shout' in result.data:
-        pre_json_result['shout'] = render_shout(result.data['shout'])
-
-    return response, pre_json_result
-
-
-def tag_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        tag = render_tag(result.data['tag'])
-
-        if 'shouts_count' in result.data:
-            tag['shouts_count'] = result.data['shouts_count']
-
-        if 'listeners_count' in result.data:
-            tag['listeners_count'] = result.data['listeners_count']
-
-        if 'is_listening' in result.data:
-            tag['is_listening'] = result.data['is_listening']
-
-    else:
-        tag = None
-
-    pre_json_result['tag'] = tag
-
-    return response, pre_json_result
-
-
-def user_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        is_owner = 'is_owner' in result.data and result.data['is_owner'] or False
-        user = render_user(result.data['profile'].user, level=5, owner=is_owner)
-
-        user['is_owner'] = is_owner
-
-        if 'shouts_count' in result.data:
-            user['shouts_count'] = result.data['shouts_count']
-
-        if 'listeners_count' in result.data:
-            user['listeners_count'] = result.data['listeners_count']
-
-        if 'listening_count' in result.data:
-            user['listening_count'] = result.data['listening_count']
-
-        if 'is_listening' in result.data:
-            user['is_listening'] = result.data['is_listening']
-
-    else:
-        user = None
-
-    pre_json_result['user'] = user
-
-    return response, pre_json_result
-
-
-def push_user_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        user = render_user(request.user, level=5, owner=True)
-
-    else:
-        user = None
-
-    pre_json_result['user'] = user
-
-    return response, pre_json_result
-
-
-def user_location(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        user = render_user(request.user, level=3, owner=True)
-    else:
-        user = None
-
-    pre_json_result['user'] = user
-
-    return response, pre_json_result
-
-
-def user_video_renderer(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['video'] = render_video(result.data['video'])
-
-    return response, pre_json_result
-
-
-def notifications_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['notifications'] = [render_notification(notification) for notification in result.data['notifications']]
-        pre_json_result['count'] = len(pre_json_result['notifications'])
-
-    return response, pre_json_result
-
-
-def unread_notifications_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['notifications_count_wo_messages'] = result.data['notifications_count_wo_messages']
-        pre_json_result['unread_conversations'] = result.data['unread_conversations']
-
-    return response, pre_json_result
-
-
-def conversations_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        if 'is_last_page' in result.data:
-            pre_json_result['is_last_page'] = result.data['is_last_page']
-        if 'is_owner' in result.data and result.data['is_owner']:
-            pre_json_result['conversations'] = [render_conversation(conversation) for conversation in result.data['conversations']]
-        else:
-            pre_json_result['conversations'] = [render_conversation_full(conversation) for conversation in result.data['conversations']]
-        pre_json_result['count'] = len(pre_json_result['conversations'])
-
-    return response, pre_json_result
-
-
-def conversations2_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['conversations'] = [render_conversation2(conversation) for conversation in result.data['conversations']]
-
-    return response, pre_json_result
-
-
-def conversation_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['conversation'] = render_conversation(result.data['conversation'])
-        pre_json_result['conversation_messages'] = [render_message(message) for message in result.data['conversation_messages']]
-
-    return response, pre_json_result
-
-
-def conversation2_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        pre_json_result['conversation'] = render_conversation2(result.data['conversation'])
-        pre_json_result['conversation_messages'] = [render_message2(message) for message in result.data['conversation_messages']]
-
-    return response, pre_json_result
-
-
-def stats_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        if 'listeners' in result.data:
-            pre_json_result['listeners'] = [render_user(listener, 2) for listener in result.data['listeners']]
-
-        if 'listening' in result.data:
-            pre_json_result['listening'] = {}
-            if 'users' in result.data['listening']:
-                pre_json_result['listening']['users'] = [render_user(following.user, 2) for following in result.data['listening']['users']]
-            if 'tags' in result.data['listening']:
-                pre_json_result['listening']['tags'] = [render_tag(tag) for tag in result.data['listening']['tags']]
-
-    return response, pre_json_result
 
 
 def create_tiny_business_renderer_json(request, result):
@@ -804,38 +436,6 @@ def experiences_stream_json(request, result):
         return get_initial_json_response(request, result)
 
 
-def experiences_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        experiences = [render_experience(experience) for experience in result.data['experiences']]
-
-        pre_json_result.update({
-            'count': len(experiences),
-            'experiences': experiences
-        })
-
-        if 'pages_count' in result.data:
-            pre_json_result['pages_count'] = result.data['pages_count']
-
-        if 'is_last_page' in result.data:
-            pre_json_result['is_last_page'] = result.data['is_last_page']
-
-    return response, pre_json_result
-
-
-def view_experience_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        experience = render_experience(result.data['experience'])
-        if 'timestamp' in result.data:
-            pre_json_result['timestamp'] = result.data['timestamp']
-        pre_json_result['experience'] = experience
-
-    return response, pre_json_result
-
-
 def activities_stream_json(request, result):
     if not result.errors:
         variables = {
@@ -853,24 +453,6 @@ def activities_stream_json(request, result):
         return get_initial_json_response(request, result)
 
 
-def activities_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        posts = [render_post(post) for post in result.data['posts']]
-
-        pre_json_result.update({
-            'count': len(posts),
-            'posts': posts
-        })
-
-        if 'pages_count' in result.data:
-            pre_json_result['pages_count'] = result.data['pages_count']
-
-        if 'is_last_page' in result.data:
-            pre_json_result['is_last_page'] = result.data['is_last_page']
-
-    return response, pre_json_result
 
 
 def deals_stream_json(request, result):
@@ -886,7 +468,6 @@ def deals_stream_json(request, result):
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
-
 
 
 def post_experience_json_renderer(request, result, message=_('Your experience was post successfully.')):
@@ -971,21 +552,6 @@ def post_comments_json_renderer(request, result):
         return get_initial_json_response(request, result)
 
 
-def api_post_comments(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result, *args, **kwargs)
-
-    if not result.errors:
-        comments = [render_comment(comment) for comment in result.data['comments']]
-
-        pre_json_result.update({
-            'count': len(comments),
-            'timestamp': result.data['timestamp'],
-            'comments': comments
-        })
-
-    return response, pre_json_result
-
-
 def live_events_json_renderer(request, result):
     if not result.errors:
         events_arr = []
@@ -1004,33 +570,3 @@ def live_events_json_renderer(request, result):
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
-
-
-def categories_api(request, result):
-    def _get_category_dict(category):
-        d = {'name': category.name, 'id': category.pk}
-        children = category.children.all().order_by('name')
-        d['children_count'] = len(children)
-        if children:
-            d['children'] = [_get_category_dict(child) for child in children]
-        return d
-
-    response, pre_json_result = get_initial_api_result(request, result)
-    if not result.errors:
-        if 'categories' in result.data:
-            categories = [_get_category_dict(c) for c in result.data['categories']]
-        else:
-            categories = []
-        pre_json_result['categories'] = categories
-        pre_json_result['count'] = len(categories)
-
-    return response, pre_json_result
-
-
-def profiles_api(request, result, *args, **kwargs):
-    response, pre_json_result = get_initial_api_result(request, result)
-
-    if not result.errors:
-        pre_json_result['users'] = [render_user(user, 2) for user in result.data['users']]
-
-    return response, pre_json_result

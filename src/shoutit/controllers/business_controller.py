@@ -185,8 +185,6 @@ def SignUpBusiness(request, user, name, phone, website, category, about = None,
 #	bp.image = '/static/img/_user_male.png'
 #	bp.save()
 
-#	TODO log the sign up activity
-#	Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME : username})
 
 	email_controller.SendBusinessSignupEmail(user, user.email, ba.name)
 	return ba
@@ -228,8 +226,6 @@ def EditBusiness(request, username = None, name = None, password = None, email =
 			encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
 			PredefinedCity(city = city, city_encoded = encoded_city, country = country, latitude = latitude, longitude = longitude).save()
 
-
-		# TODO log editing activity
 
 		return business
 	else:

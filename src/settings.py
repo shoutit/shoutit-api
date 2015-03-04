@@ -52,9 +52,6 @@ else:  # LOCAL
 
 info("DEBUG:", DEBUG)
 
-# PISTON
-PISTON_DISPLAY_ERRORS = False
-PISTON_EMAIL_ERRORS = False
 
 # URLs
 ROOT_URLCONF = 'urls'
@@ -132,9 +129,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'activity_logger',
     'widget_tweaks',
-    'piston3',
     'push_notifications',
     # 'paypal.standard.ipn',
     # 'paypal.standard.pdt',
@@ -197,10 +192,8 @@ MIDDLEWARE_CLASSES = (
     # Shoutit Custom Middleware
     'shoutit.middleware.APIDetectionMiddleware',
     'shoutit.middleware.JsonPostMiddleware',
-    'shoutit.middleware.SetLanguageMiddleware',
     'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
-    # 'activity_logger.middleware.activity_logger',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )

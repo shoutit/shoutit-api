@@ -9,8 +9,7 @@ from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, DEFAULT_PAGE_SI
     RankTypeFlag, DEFAULT_HOME_SHOUT_COUNT, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
 from shoutit.models import Category, PredefinedCity, Tag
 from shoutit.tiers import non_cached_view, ResponseResult
-from shoutit.tiered_views.renderers import browse_html, shouts_api, user_stream_json, shout_xhr
-from common.tagged_cache import TaggedCache
+from shoutit.tiered_views.renderers import browse_html, user_stream_json
 
 
 @non_cached_view(html_renderer=browse_html, methods=['GET'])
@@ -82,14 +81,8 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
             tag_ids = []
         tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__name__iexact=category)])
 
-    #TODO session
-    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
-        TaggedCache.delete(request.session.session_key + 'shout_ids')
-
     all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
                                                          DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
-    if request.session.session_key:
-        TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
 
     dict_shout_ids = dict(all_shout_ids)
     shout_ids = [k[0] for k in all_shout_ids if
@@ -109,11 +102,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     return result
 
 
-# todo: check cache!
-# @cached_view(tags=[CACHE_TAG_STREAMS], login_required=False, level=CACHE_LEVEL_SESSION, api_renderer=shouts_api,
-#              json_renderer=lambda request, result: user_stream_json(request, result), methods=['GET'])
-@non_cached_view(methods=['GET'], login_required=False, api_renderer=shouts_api,
-                 json_renderer=lambda request, result: user_stream_json(request, result))
+@non_cached_view(methods=['GET'], login_required=False, json_renderer=lambda request, result: user_stream_json(request, result))
 def index_stream(request):
     result = ResponseResult()
 
@@ -168,18 +157,9 @@ def index_stream(request):
             tag_ids = []
         tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__name__iexact=category)])
 
-    # TODO: session
-    if page_num == 1 and request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
-        TaggedCache.delete(request.session.session_key + 'shout_ids')
-
-    if request.session.session_key and (request.session.session_key + 'shout_ids') in TaggedCache:
-        all_shout_ids = TaggedCache.get(request.session.session_key + 'shout_ids')
-    else:
-        all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0, DEFAULT_HOME_SHOUT_COUNT,
-                                              shout_types, query, tag_ids, nearby_cities=user_nearby_cities)
-        result.data['browse_in'] = user_city
-        if request.session.session_key:
-            TaggedCache.set(request.session.session_key + 'shout_ids', all_shout_ids)
+    all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0, DEFAULT_HOME_SHOUT_COUNT,
+                                          shout_types, query, tag_ids, nearby_cities=user_nearby_cities)
+    result.data['browse_in'] = user_city
 
     dict_shout_ids = dict(all_shout_ids)
     shout_ids = [k[0] for k in all_shout_ids if k in all_shout_ids[DEFAULT_PAGE_SIZE * (page_num - 1): DEFAULT_PAGE_SIZE * page_num]]
@@ -199,46 +179,4 @@ def index_stream(request):
     result.data['pages_count'] = int(ceil(len(all_shout_ids) / float(DEFAULT_PAGE_SIZE)))
     result.data['is_last_page'] = page_num >= result.data['pages_count']
 
-    return result
-
-
-@non_cached_view(methods=['GET'], login_required=False, api_renderer=shouts_api, json_renderer=shout_xhr)
-def livetimeline(request, pk=None):
-    result = ResponseResult()
-
-    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(city=city)
-    user_country = pre_city.country
-    user_city = pre_city.city
-    user_lat = pre_city.latitude
-    user_lng = pre_city.longitude
-
-    if pk is not None:
-        index = GetShoutTimeOrder(pk, user_country, user_city)
-    else:
-        index = DEFAULT_PAGE_SIZE
-    order_by = TIME_RANK_TYPE
-
-    shouts = []
-    if index:
-        shout_ids = get_ranked_shouts_ids(None, order_by, user_country, user_city, user_lat, user_lng, 0, index)
-        if len(shout_ids):
-            shout_ranks = dict(shout_ids)
-            shout_ids = [k[0] for k in shout_ids]
-            shouts = get_trades_by_pks(shout_ids)
-            for shout in shouts:
-                shout.rank = shout_ranks[shout.pk]
-            shouts.sort(key=lambda _shout: _shout.rank)
-
-    shouts_arr = []
-
-    for shout in shouts:
-        variables = {
-            'shout': shout
-        }
-        variables = RequestContext(request, variables)
-
-        shouts_arr.append({'id': shout.pk, 'html': render_to_string("shout_brief.html", variables)})
-    result.data['shouts'] = shouts_arr
-    result.data['count'] = len(shouts_arr)
     return result

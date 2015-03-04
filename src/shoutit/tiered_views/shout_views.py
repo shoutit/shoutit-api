@@ -16,8 +16,7 @@ from shoutit.controllers.user_controller import sign_up_sss4, give_user_permissi
 from shoutit.controllers import shout_controller
 from shoutit.forms import ShoutForm, ReportForm, MessageForm
 from shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST, PERMISSION_SHOUT_OFFER, INITIAL_USER_PERMISSIONS
-from shoutit.tiered_views.renderers import json_renderer, shout_brief_json, shout_form_renderer_api, shout_api, object_page_html,\
-    operation_api, json_data_renderer, shouts_location_api
+from shoutit.tiered_views.renderers import json_renderer, shout_brief_json, object_page_html, json_data_renderer
 from shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, edit_shout_validator
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_BAD_REQUEST
 from shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
@@ -69,7 +68,7 @@ def upload_image(request, method=None):
 
 
 @csrf_exempt
-@non_cached_view(methods=['DELETE'], validator=modify_shout_validator, api_renderer=operation_api,
+@non_cached_view(methods=['DELETE'], validator=modify_shout_validator,
                  json_renderer=lambda request, result, *args, **kwargs: json_renderer(request, result, _('This shout was deleted.')))
 def delete_shout(request, shout_id):
     result = ResponseResult()
@@ -97,7 +96,6 @@ def renew_shout(request, shout_id):
 
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST],
-                 api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}))
@@ -184,7 +182,6 @@ def post_request(request):
 # TODO: better validation for api requests, using other form classes or another validation function
 @non_cached_view(post_login_required=True, validator=lambda request, *args, **kwargs: shout_form_validator(request, ShoutForm),
                  permissions_required=[PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_OFFER],
-                 api_renderer=shout_form_renderer_api,
                  json_renderer=lambda request, result, *args, **kwargs:
                  json_renderer(request, result, _('Your shout was shouted!'),
                                data='shout' in result.data and {'next': shout_link(result.data['shout'])} or {}))
@@ -315,7 +312,6 @@ def shout_edit(request, shout_id):
 
 
 @non_cached_view(methods=['GET'], validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id),
-                 api_renderer=shout_api,
                  html_renderer=lambda request, result, shout_id:
                  object_page_html(request, result, 'shout.html', 'title' in result.data and result.data['title'] or '',
                                   'desc' in result.data and result.data['desc'] or '')
@@ -368,7 +364,7 @@ def shout_view(request, shout_id):
 
 
 @csrf_exempt
-@non_cached_view(api_renderer=shouts_location_api, json_renderer=json_data_renderer)
+@non_cached_view(json_renderer=json_data_renderer)
 def nearby_shouts(request):
     result = ResponseResult()
 

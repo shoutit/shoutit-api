@@ -15,9 +15,7 @@ from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, \
     UserEditProfileForm, ExtenedSignUp
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404
-from renderers import page_html, activate_modal_html, object_page_html, user_location, push_user_api, \
-    user_video_renderer
-from renderers import user_api, operation_api, profiles_api, shouts_api, stats_api, activities_api
+from renderers import page_html, activate_modal_html, object_page_html
 from renderers import activate_renderer_json, signin_renderer_json, json_renderer, json_data_renderer, profile_json_renderer, \
     resend_activation_json, edit_profile_renderer_json, user_stream_json, activities_stream_json
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
@@ -40,7 +38,6 @@ def urldecode(s):
 
 
 @non_cached_view(methods=['POST'],
-                 api_renderer=operation_api,
                  validator=activate_api_validator,
                  login_required=True)
 def activate_api(request, token):
@@ -176,21 +173,8 @@ def activate_user(request):
     return result
 
 
-@non_cached_view(methods=['POST'], api_renderer=operation_api,
-                 validator=lambda request, *args, **kwargs: form_validator(request, APISignUpForm))
-def api_signup(request):
-    form = APISignUpForm(request.POST, request.FILES)
-    form.is_valid()
-    user = user_controller.SignUpUserFromAPI(request, username=form.cleaned_data['username'], email=form.cleaned_data['email'],
-                                             password=form.cleaned_data['password'], first_name='', last_name='', birthday=None, sex=True)
-    result = ResponseResult()
-    result.messages.append(('success', _('Congratulations! You are now a member of the Shout community.')))
-    user_controller.give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
-    return result
-
-
 @csrf_exempt
-@non_cached_view(methods=['POST'], api_renderer=user_api, json_renderer=signin_renderer_json)
+@non_cached_view(methods=['POST'], json_renderer=signin_renderer_json)
 def fb_auth(request):
     result = ResponseResult()
 
@@ -212,7 +196,7 @@ def fb_auth(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['POST'], api_renderer=user_api, json_renderer=signin_renderer_json)
+@non_cached_view(methods=['POST'], json_renderer=signin_renderer_json)
 def gplus_auth(request):
     result = ResponseResult()
 
@@ -285,7 +269,7 @@ def resend_activation(request):
 
 
 # todo: validator for @me and not to listen to your self
-@non_cached_view(methods=['GET', 'POST'], login_required=True, api_renderer=operation_api,
+@non_cached_view(methods=['GET', 'POST'], login_required=True,
                  permissions_required=[PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER],
                  json_renderer=lambda request, result, username:
                  json_renderer(request, result, _('You are now listening to %(name)s\'s shouts.') % {
@@ -301,7 +285,6 @@ def start_listening_to_user(request, username):
 
 # todo: validator for @me and not to listen to your self
 @non_cached_view(methods=['GET', 'DELETE'], login_required=True,
-                 api_renderer=operation_api,
                  json_renderer=lambda request, result, username: json_renderer(request,
                                                                                result,
                                                                                _('You are no longer listening to %(name)s\'s shouts.') % {
@@ -318,8 +301,7 @@ def stop_listening_to_user(request, username):
     return ResponseResult()
 
 
-@non_cached_view(methods=['GET'], api_renderer=profiles_api,
-                 json_renderer=lambda request, result, *args, **kwargs: profile_json_renderer(request, result))
+@non_cached_view(methods=['GET'], json_renderer=lambda request, result, *args, **kwargs: profile_json_renderer(request, result))
 def search_user(request):
     result = ResponseResult()
     limit = 6
@@ -370,7 +352,7 @@ def signin(request):
                                                                      result,
                                                                      success_message=_(
                                                                          'Congratulations! You are now a member of the Shout community.')),
-                 api_renderer=operation_api)
+                 )
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -447,7 +429,7 @@ def sss(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['PUT', 'POST'], login_required=True, json_renderer=json_data_renderer, api_renderer=user_location)
+@non_cached_view(methods=['PUT', 'POST'], login_required=True, json_renderer=json_data_renderer)
 def update_user_location(request):
     result = ResponseResult()
     profile = request.user.profile
@@ -481,9 +463,7 @@ def update_user_location(request):
 
 
 @csrf_exempt
-@non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True,
-                 json_renderer=json_data_renderer, api_renderer=user_video_renderer,
-                 validator=user_profile_validator)
+@non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True, json_renderer=json_data_renderer, validator=user_profile_validator)
 def user_video(request, username):
     result = ResponseResult()
     profile = request.validation_result.data['profile']
@@ -508,7 +488,7 @@ def user_video(request, username):
 
 
 @csrf_exempt
-@non_cached_view(methods=['PUT'], login_required=True, validator=user_profile_edit_validator, api_renderer=user_api)
+@non_cached_view(methods=['PUT'], login_required=True, validator=user_profile_edit_validator)
 def edit_profile(request, username):
     result = ResponseResult()
     profile = request.validation_result.data['profile']
@@ -573,7 +553,7 @@ def user_edit_profile(request, username):
     return result
 
 
-@non_cached_view(methods=['GET'], api_renderer=user_api, validator=user_profile_validator,
+@non_cached_view(methods=['GET'], validator=user_profile_validator,
                  html_renderer=lambda request, result, username, *args:
                  object_page_html(request, result, isinstance(user_controller.get_profile(username),
                                                               Profile) and 'user_profile.html' or 'business_profile.html',
@@ -624,7 +604,7 @@ def user_profile(request, username):
     return result
 
 
-@non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True, api_renderer=push_user_api, validator=push_validator)
+@non_cached_view(methods=['GET', 'POST', 'DELETE'], login_required=True, validator=push_validator)
 def push(request, username, push_type):
     result = ResponseResult()
 
@@ -676,7 +656,7 @@ def push(request, username, push_type):
     return result
 
 
-@non_cached_view(methods=['GET'], json_renderer=json_data_renderer, api_renderer=stats_api, validator=user_profile_validator)
+@non_cached_view(methods=['GET'], json_renderer=json_data_renderer, validator=user_profile_validator)
 def user_stats(request, username, stats_type, listening_type='all', period='recent'):
     result = ResponseResult()
     profile = request.validation_result.data['profile']
@@ -748,7 +728,6 @@ def send_invitations(request):
 
 @non_cached_view(methods=['GET'],
                  validator=user_profile_validator,
-                 api_renderer=shouts_api,
                  json_renderer=lambda request, result, *args, **kwargs: user_stream_json(request, result)
 )
 def user_stream(request, username):
@@ -772,7 +751,6 @@ def user_stream(request, username):
 
 @non_cached_view(methods=['GET'],
                  validator=user_profile_validator,
-                 api_renderer=activities_api,
                  json_renderer=lambda request, result, *args, **kwargs: activities_stream_json(request, result))
 def activities_stream(request, username):
     result = ResponseResult()

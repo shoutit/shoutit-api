@@ -13,14 +13,10 @@ from common.utils import validate_allowed_usernames
 from shoutit.models import User, Currency, Business, BusinessCategory, BusinessCreateApplication
 from shoutit.controllers import user_controller
 from shoutit.utils import safe_string
-from common.tagged_cache import TaggedCache
 
 
 def _get_currencies():
-    currencies = TaggedCache.get('perma|currencies')
-    if not currencies:
-        currencies = tuple((c.code, c.code) for c in Currency.objects.all())
-        TaggedCache.set('perma|currencies', currencies, timeout=24 * 60 * 60)
+    currencies = tuple((c.code, c.code) for c in Currency.objects.all())
     return currencies
 
 

@@ -9,8 +9,7 @@ from shoutit.forms import CommentForm
 from shoutit.controllers.comment_controller import CommentOnPost, GetPostComments, DeleteComment
 from shoutit.controllers.shout_controller import get_post
 from shoutit.permissions import PERMISSION_COMMENT_ON_POST
-from shoutit.tiered_views.renderers import comment_on_post_json_renderer, operation_api, api_post_comments, json_renderer, \
-    post_comments_json_renderer
+from shoutit.tiered_views.renderers import comment_on_post_json_renderer, json_renderer, post_comments_json_renderer
 from shoutit.tiered_views.validators import comment_on_post_validator, object_exists_validator, delete_comment_validator
 from shoutit.tiers import non_cached_view, ResponseResult
 
@@ -20,7 +19,6 @@ from shoutit.tiers import non_cached_view, ResponseResult
                  login_required=True,
                  json_renderer=lambda request, result, post_id: comment_on_post_json_renderer(request, result),
                  validator=lambda request, post_id: comment_on_post_validator(request, post_id, CommentForm),
-                 api_renderer=operation_api,
                  permissions_required=[PERMISSION_COMMENT_ON_POST]
 )
 def comment_on_post(request, post_id):
@@ -44,7 +42,6 @@ def delete_comment(request, comment_id):
 
 @non_cached_view(methods=['GET'],
                  json_renderer=lambda request, result, post_id: post_comments_json_renderer(request, result),
-                 api_renderer=api_post_comments,
                  validator=lambda request, post_id: object_exists_validator(get_post, True, _('post dose not exist.'), post_id),
 )
 def post_comments(request, post_id):

@@ -7,12 +7,10 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
 
-from shoutit.api.api_utils import get_object_api_url
 from shoutit.models import Message
 from shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_SEND_MESSAGE
-from shoutit.tiered_views.renderers import operation_api, json_data_renderer, conversations_api, json_renderer, conversation_json, \
-    page_html, conversation_api, json_send_message, reply_message_api_render, read_conversations_stream_json, conversations2_api, \
-    conversation2_api, reply_message2_api_render
+from shoutit.tiered_views.renderers import json_data_renderer, json_renderer, conversation_json, \
+    page_html, json_send_message, read_conversations_stream_json
 from shoutit.tiered_views.validators import *
 from shoutit.tiers import *
 from common.constants import *
@@ -22,7 +20,6 @@ from shoutit.xhr_utils import xhr_respond
 
 @non_cached_view(methods=['GET', 'DELETE'], login_required=True,
                  validator=delete_conversation_validator,
-                 api_renderer=operation_api,
                  json_renderer=json_data_renderer)
 def delete_conversation(request, conversation_id):
     result = ResponseResult()
@@ -33,7 +30,6 @@ def delete_conversation(request, conversation_id):
 
 @non_cached_view(methods=['GET', 'DELETE'], login_required=True,
                  validator=delete_message_validator,
-                 api_renderer=operation_api,
                  json_renderer=json_data_renderer)
 def delete_message(request, conversation_id, message_id):
     result = ResponseResult()
@@ -53,8 +49,7 @@ def get_html_message(request):
     return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
 
 
-@non_cached_view(methods=['GET'], login_required=True, validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id),
-                 api_renderer=conversations_api)
+@non_cached_view(methods=['GET'], login_required=True, validator=lambda request, shout_id: shout_owner_view_validator(request, shout_id))
 def get_shout_conversations(request, shout_id):
     result = ResponseResult()
     shout = shout_controller.get_post(shout_id, True, True)
@@ -65,7 +60,6 @@ def get_shout_conversations(request, shout_id):
 
 @csrf_exempt
 @non_cached_view(json_renderer=json_renderer,
-                 api_renderer=operation_api,
                  methods=['POST'],
                  login_required=True)
 def mark_message_as_read(request, message_id):
@@ -81,7 +75,6 @@ def mark_message_as_read(request, message_id):
 
 @non_cached_view(login_required=True,
                  methods=['GET'],
-                 api_renderer=conversation_api,
                  validator=read_conversation_validator,
                  json_renderer=lambda request, result, conversation_id: conversation_json(request, result),
                  html_renderer=lambda request, result, conversation_id: page_html(request, result, 'conversations.html',
@@ -133,7 +126,7 @@ def send_message(request, shout_id, conversation_id=None):
     return result
 
 
-@non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation_validator, api_renderer=reply_message_api_render)
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation_validator)
 def reply_in_conversation(request, conversation_id):
     """Reply in a Conversation."""
     result = ResponseResult()
@@ -150,26 +143,7 @@ def reply_in_conversation(request, conversation_id):
     return result
 
 
-@non_cached_view(login_required=True, methods=['POST'], validator=reply_to_shout_validator, api_renderer=reply_message_api_render)
-def reply_to_shout(request, shout_id):
-    """Reply to a Shout for first time. request.user shouldn't be the shout owner."""
-    result = ResponseResult()
-    validation_result = request.validation_result
-
-    shout = validation_result.data['shout']
-    text = validation_result.data['text']
-    attachments = validation_result.data['attachments']
-
-    message = message_controller.send_message(request.user, shout.user, shout, text)
-
-    result.messages.append(('success', _('Your message was sent successfully.')))
-    result.data['url'] = get_object_api_url(message.Conversation)
-    result.data['message'] = message
-    return result
-
-
 @non_cached_view(methods=['GET'], login_required=True,
-                 api_renderer=conversations_api,
                  json_renderer=lambda request, result, *args, **kwargs: read_conversations_stream_json(request, result))
 def read_conversations_stream(request):
     result = ResponseResult()
@@ -197,7 +171,7 @@ def read_conversations(request):
 
 
 # todo: before validator
-@non_cached_view(methods=['GET'], login_required=True, api_renderer=conversations2_api)
+@non_cached_view(methods=['GET'], login_required=True)
 def user_conversations(request):
     result = ResponseResult()
 
@@ -208,7 +182,7 @@ def user_conversations(request):
     return result
 
 
-@non_cached_view(methods=['GET'], login_required=True, api_renderer=conversation2_api, validator=conversation2_validator)
+@non_cached_view(methods=['GET'], login_required=True, validator=conversation2_validator)
 def read_conversation2(request, conversation_id):
     result = ResponseResult()
     conversation = request.validation_result.data['conversation']
@@ -221,7 +195,7 @@ def read_conversation2(request, conversation_id):
     return result
 
 
-@non_cached_view(methods=['DELETE'], login_required=True, validator=conversation2_validator, api_renderer=operation_api)
+@non_cached_view(methods=['DELETE'], login_required=True, validator=conversation2_validator)
 def delete_conversation2(request, conversation_id):
     result = ResponseResult()
     conversation = request.validation_result.data['conversation']
@@ -229,7 +203,7 @@ def delete_conversation2(request, conversation_id):
     return result
 
 
-@non_cached_view(methods=['POST'], login_required=True, validator=message2_validator, api_renderer=operation_api)
+@non_cached_view(methods=['POST'], login_required=True, validator=message2_validator)
 @csrf_exempt
 def read_message2(request, conversation_id, message_id):
     result = ResponseResult()
@@ -238,7 +212,7 @@ def read_message2(request, conversation_id, message_id):
     return result
 
 
-@non_cached_view(methods=['DELETE'], login_required=True, validator=message2_validator, api_renderer=operation_api)
+@non_cached_view(methods=['DELETE'], login_required=True, validator=message2_validator)
 def unread_message2(request, conversation_id, message_id):
     result = ResponseResult()
     message = request.validation_result.data['message']
@@ -246,7 +220,7 @@ def unread_message2(request, conversation_id, message_id):
     return result
 
 
-@non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation2_validator, api_renderer=reply_message2_api_render)
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_in_conversation2_validator)
 def reply_in_conversation2(request, conversation_id):
     result = ResponseResult()
     validation_result = request.validation_result
@@ -260,7 +234,7 @@ def reply_in_conversation2(request, conversation_id):
     return result
 
 
-@non_cached_view(login_required=True, methods=['POST'], validator=reply_to_shout_validator, api_renderer=reply_message2_api_render)
+@non_cached_view(login_required=True, methods=['POST'], validator=reply_to_shout_validator)
 def reply_to_shout2(request, shout_id):
     result = ResponseResult()
     validation_result = request.validation_result
@@ -275,7 +249,7 @@ def reply_to_shout2(request, shout_id):
     return result
 
 
-@non_cached_view(methods=['DELETE'], login_required=True, validator=message2_validator, api_renderer=operation_api)
+@non_cached_view(methods=['DELETE'], login_required=True, validator=message2_validator)
 def delete_message2(request, conversation_id, message_id):
     result = ResponseResult()
     conversation = request.validation_result.data['conversation']

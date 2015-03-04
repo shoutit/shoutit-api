@@ -275,41 +275,6 @@ POST_TYPE_EVENT = PostType('Event')
 TAGS_PER_POST = 20
 
 
-class ActivityType(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-
-ACTIVITY_TYPE_SIGN_IN_SUCCESS = ActivityType('Sign In Success')
-ACTIVITY_TYPE_SIGN_IN_FAILED = ActivityType('Sign In Failed')
-ACTIVITY_TYPE_SIGN_OUT = ActivityType('Sign Out')
-ACTIVITY_TYPE_SIGN_UP = ActivityType('Sign Up')
-ACTIVITY_TYPE_LISTEN_CREATED = ActivityType('Listen Created')
-ACTIVITY_TYPE_LISTEN_REMOVED = ActivityType('Listen Removed')
-ACTIVITY_TYPE_TAG_CREATED = ActivityType('Tag Created')
-ACTIVITY_TYPE_SHOUT_BUY_CREATED = ActivityType('Shout Buy Created')
-ACTIVITY_TYPE_SHOUT_SELL_CREATED = ActivityType('Shout Sell Created')
-ACTIVITY_TYPE_EXP_CREATED = ActivityType('Experience Created')
-ACTIVITY_TYPE_DEAL_CREATED = ActivityType('Deal Created')
-ACTIVITY_TYPE_EVENT_CREATED = ActivityType('Event Created')
-ACTIVITY_TYPE_TAG_INTEREST_ADDED = ActivityType('Tag Interest Added')
-ACTIVITY_TYPE_TAG_INTEREST_REMOVED = ActivityType('Tag Interest Removed')
-
-
-class ActivityData(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-ACTIVITY_DATA_CREDENTIAL = ActivityData('Credential')
-ACTIVITY_DATA_USERNAME = ActivityData('Username')
-ACTIVITY_DATA_EMAIL = ActivityData('Email')
-ACTIVITY_DATA_FOLLOWER = ActivityData('Follower')
-ACTIVITY_DATA_STREAM = ActivityData('Stream')
-ACTIVITY_DATA_TAG = ActivityData('Tag')
-ACTIVITY_DATA_SHOUT = ActivityData('Shout')
-ACTIVITY_DATA_DEAL = ActivityData('Deal')
-ACTIVITY_DATA_EXP = ActivityData('Experience')
-ACTIVITY_DATA_EVENT = ActivityData('Event')
-
-
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
@@ -720,8 +685,6 @@ NOT_ALLOWED_USERNAMES = [
     'sell',
     'sells',
     'send_invitations',
-    'set_language',
-    'set_perma',
     'shout_deal',
     'shout',
     'shouts',

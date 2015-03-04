@@ -10,11 +10,10 @@ from django.conf import settings
 
 from shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
     Listen, CLUser, DBCLUser
-from activity_logger.logger import Logger
 from common.constants import *
 from shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image
-from shoutit.permissions import ConstantPermission, permissions_changed, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
-from shoutit.controllers import event_controller, email_controller, notifications_controller
+from shoutit.permissions import ConstantPermission, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
+from shoutit.controllers import event_controller, email_controller
 
 
 def get_profile(username):
@@ -227,7 +226,6 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     if not predefined_city:
         PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
-    Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
     if email is not None and send_activation:
         email_controller.SendRegistrationActivationEmail(django_user, email, "http://%s%s" % (
@@ -267,7 +265,6 @@ def SignUpSSS(request, mobile, location, country, city):
         encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
         PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
-    Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     token = SetRegisterToken(django_user, '', token_length, token_type)
     django_user.token = token
 
@@ -389,7 +386,6 @@ def SignUpUserFromAPI(request, first_name, last_name, username, email, password,
     else:
         up.image = '/static/img/_user_male.png'
     up.save()
-    Logger.log(request, type=ACTIVITY_TYPE_SIGN_UP, data={ACTIVITY_DATA_USERNAME: username})
     return django_user
 
 
@@ -507,12 +503,10 @@ def SignInUser(request, password, credential=''):
                 login(request, user)
             else:
                 request.session['business_user_id'] = user.pk
-            Logger.log(request, type=ACTIVITY_TYPE_SIGN_IN_SUCCESS)
             return user
         else:
             return None
     else:
-        Logger.log(request, type=ACTIVITY_TYPE_SIGN_IN_FAILED, data={ACTIVITY_DATA_CREDENTIAL: credential})
         return None
 
 
@@ -526,7 +520,6 @@ def updatePassword(user, oldPassword, newPassword):
 
 def SignOut(request):
     logout(request)
-    Logger.log(request, type=ACTIVITY_TYPE_SIGN_OUT)
 
 
 def UserFollowing(username, type='all', period='recent'):
@@ -621,8 +614,6 @@ def give_user_permissions(request, permissions, user=None):
         if isinstance(permission, ConstantPermission):
             permission = permission.permission
         UserPermission.objects.get_or_create(user=user, permission=permission)
-    if request:
-        permissions_changed.send(sender=None, request=request, permissions=permissions)
 
 
 def take_permissions_from_user(request, permissions):
@@ -630,21 +621,18 @@ def take_permissions_from_user(request, permissions):
         if isinstance(permission, ConstantPermission):
             permission = permission.permission
         UserPermission.objects.filter(user=request.user, permission=permission).delete()
-    permissions_changed.send(sender=None, request=request, permissions=permissions)
 
 
 def give_user_permission(request, permission):
     if isinstance(permission, ConstantPermission):
         permission = permission.permission
     UserPermission.objects.get_or_create(user=request.user, permission=permission)
-    permissions_changed.send(sender=None, request=request, permissions=[permission])
 
 
 def take_permission_from_user(request, permission):
     if isinstance(permission, ConstantPermission):
         permission = permission.permission
     UserPermission.objects.filter(user=request.user, permission=permission).delete()
-    permissions_changed.send(sender=None, request=request, permissions=[permission])
 
 
 def get_notifications(profile):

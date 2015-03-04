@@ -14,17 +14,14 @@ from shoutit.controllers.user_controller import get_profile
 from shoutit.forms import ReportForm, CommentForm, CreateTinyBusinessForm, ExperienceForm
 from shoutit.models import Profile, Business
 from shoutit.permissions import PERMISSION_POST_EXPERIENCE, PERMISSION_SHARE_EXPERIENCE
-from shoutit.tiered_views.renderers import view_experience_api, page_html, experiences_stream_json, experiences_api, \
-    post_experience_json_renderer, json_renderer, operation_api, user_json_renderer
+from shoutit.tiered_views.renderers import page_html, experiences_stream_json, \
+    post_experience_json_renderer, json_renderer, user_json_renderer
 from shoutit.tiered_views.validators import experience_validator, share_experience_validator, edit_experience_validator, \
     object_exists_validator, experience_view_validator
 from shoutit.tiers import ResponseResult, non_cached_view
 
 
-
-# todo: validator
 @non_cached_view(methods=['GET'], validator=experience_view_validator,
-                 api_renderer=view_experience_api,
                  html_renderer=lambda request, result, *args: page_html(request, result, 'experience.html',
                                                                         result.data['page_title'] if result.data['page_title'] else '',
                                                                         result.data['page_desc'] if result.data['page_desc'] else ''))
@@ -54,7 +51,7 @@ def view_experience(request, exp_id):
 # html_renderer=lambda request, result, *args: page_html(request, result, 'experiences.html', _('Experiences')))
 # def experiences(request,business_name):
 # result = ResponseResult()
-#	result.data['timestamp'] = time.mktime(datetime.now().timetuple())
+# result.data['timestamp'] = time.mktime(datetime.now().timetuple())
 #	result.data['business_name'] = business_name
 #	result.data['experiences'] = experience_controller.GetExperiences(request.user, business_name, start_index=0, end_index= DEFAULT_PAGE_SIZE)
 #	result.data['experience_form'] = ExperienceForm()
@@ -62,9 +59,7 @@ def view_experience(request, exp_id):
 #	return result
 
 
-@non_cached_view(methods=['GET'],
-                 api_renderer=experiences_api,
-                 json_renderer=lambda request, result, *args: experiences_stream_json(request, result))
+@non_cached_view(methods=['GET'], json_renderer=lambda request, result, *args: experiences_stream_json(request, result))
 def experiences_stream(request, username, page_num=None):
     if username == 'me':
         username = request.user.username
@@ -107,7 +102,6 @@ def get_business_initials(username):
 @csrf_exempt
 @non_cached_view(methods=['POST'], login_required=True, permissions_required=[PERMISSION_POST_EXPERIENCE],
                  json_renderer=lambda request, result, username: post_experience_json_renderer(request, result),
-                 api_renderer=view_experience_api,
                  validator=lambda request, *args, **kwargs: experience_validator(request, initial=get_business_initials(
                      args and args[0] or ('username' in kwargs and kwargs['username'] or '')), *args, **kwargs)
                  # form_validator(request,ExperienceForm),
@@ -144,7 +138,6 @@ def post_exp(request, username=None):
 @csrf_exempt
 @non_cached_view(methods=['POST'], login_required=True, permissions_required=[PERMISSION_SHARE_EXPERIENCE],
                  validator=lambda request, exp_id: share_experience_validator(request, exp_id),
-                 api_renderer=operation_api,
                  json_renderer=lambda request, result, exp_id: json_renderer(request, result, success_message=_(
                      'You have shared the experience successfully.'))
 )

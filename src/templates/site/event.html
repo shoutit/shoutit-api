@@ -14,7 +14,7 @@
         <a href="/user/{{ event.user.username }}/">
             {{ event.user.profile.name }}        </a>
         {% trans "has started listening to" %}
-        <a href="/user/{{event.attached_object.username}}/">
+        <a href="/user/{{event.attached_object.user.username}}/">
             {{ event.attached_object.name }}
         </a>
 		</div>

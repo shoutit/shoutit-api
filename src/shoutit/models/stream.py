@@ -134,6 +134,9 @@ class Stream2Mixin(models.Model):
         """
         return Listen.objects.filter(listener=user, stream=self.stream2).exists()
 
+    @property
+    def listeners_count(self):
+        return Listen.objects.filter(stream=self).count()
 
 @receiver(post_save)
 def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs):

@@ -26,8 +26,6 @@ class ConstantPermission(Constant):
     def __eq__(self, other):
         return self.value.int == other.value.int
 
-permissions_changed = Signal(providing_args=["request", "permissions"])
-
 PERMISSION_USE_SHOUT_IT = ConstantPermission("USE_SHOUT_IT", _("You're not allowed to use Shoutit"))
 PERMISSION_SHOUT_MORE = ConstantPermission("SHOUT_MORE", _("Please, activate your account to add more shouts (check your email for activation link)"))
 PERMISSION_SHOUT_REQUEST = ConstantPermission("SHOUT_REQUEST", _("You're not allowed to use make request shouts."))

@@ -7,8 +7,6 @@ from shoutit.models import User, Shout, Profile, ConfirmToken, ShoutWrap, Stored
     FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post
 
-# from activity_logger.models import Activity, ActivityData, Request
-# from shoutit.controllers import business_controller
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -16,7 +14,6 @@ from django.utils.translation import ugettext_lazy as _
 class ShoutAdmin(admin.ModelAdmin):
     list_display = ('pk', 'date_published', 'user', 'text', 'country', 'city')
     readonly_fields = ('user', 'Streams', 'tags')
-
 
 admin.site.register(Shout, ShoutAdmin)
 
@@ -44,7 +41,6 @@ class TradeAdmin(admin.ModelAdmin):
     OwnerProfile.allow_tags = True
     OwnerProfile.short_description = 'Owner Profile/Business'
 
-
 admin.site.register(Trade, TradeAdmin)
 
 
@@ -53,7 +49,6 @@ class PostAdmin(admin.ModelAdmin):
     list_display = ('pk',  'user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
 
 admin.site.register(Post, PostAdmin)
-
 admin.site.register(Item)
 
 
@@ -62,7 +57,6 @@ class ExperienceAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'AboutBusiness', 'State', 'text')
     search_fields = ['AboutBusiness__name', 'text']
     readonly_fields = ('Streams', 'AboutBusiness')
-
 
 admin.site.register(Experience, ExperienceAdmin)
 
@@ -78,7 +72,6 @@ class CustomUserChangeForm(UserChangeForm):
 class CustomUserAdmin(UserAdmin):
     save_on_top = True
     list_display = ('pk', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
-    # list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login', 'request_count')
     list_per_page = 50
 
     form = CustomUserChangeForm
@@ -100,7 +93,6 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = ('user', 'Stream', 'LastToken')
     list_filter = ('country', 'city', 'Sex')
 
-
 admin.site.register(Profile, ProfileAdmin)
 
 
@@ -108,14 +100,12 @@ class LinkedFacebookAccountAdmin(admin.ModelAdmin):
     list_display = ('user', 'facebook_id', 'AccessToken', 'ExpiresIn')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
 
-
 admin.site.register(LinkedFacebookAccount, LinkedFacebookAccountAdmin)
 
 
 class LinkedGoogleAccountAdmin(admin.ModelAdmin):
     list_display = ('user', 'gplus_id')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
-
 
 admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
 
@@ -125,7 +115,6 @@ class BusinessProfileAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'user', 'country', 'city', 'Category', 'Confirmed', 'Stream')
     search_fields = ['name', 'user__email', 'Website', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
-
 
 admin.site.register(Business, BusinessProfileAdmin)
 
@@ -164,7 +153,6 @@ admin.site.register(Business, BusinessProfileAdmin)
 class BusinessConfirmationAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user')
 
-
 admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 
 
@@ -172,7 +160,6 @@ admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 class BusinessCategoryAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'Source', 'SourceID', 'Parent')
     search_fields = ['name', 'Parent__name']
-
 
 admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 
@@ -183,7 +170,6 @@ class FollowShipAdmin(admin.ModelAdmin):
     search_fields = ['follower__user__username', 'stream__pk']
     readonly_fields = ('follower', 'stream',)
 
-
 admin.site.register(FollowShip, FollowShipAdmin)
 
 
@@ -191,7 +177,6 @@ admin.site.register(FollowShip, FollowShipAdmin)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'Stream')
     search_fields = ['pk', 'name']
-
 
 admin.site.register(Tag, TagAdmin)
 
@@ -219,17 +204,7 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
     list_display = ('pk', 'message', 'conversation', 'content_type', 'object_id', 'created_at')
     search_fields = ['message__id', 'conversation__id']
 
-
 admin.site.register(MessageAttachment, MessageAttachmentAdmin)
-
-
-# Request
-class RequestAdmin(admin.ModelAdmin):
-    list_display = ('ip_address', 'plain_url', 'user', 'method', 'date_visited', 'referer')
-    search_fields = ['ip_address', 'plain_url', 'user__username', 'referer']
-
-
-# admin.site.register(Request, RequestAdmin)
 
 
 # Report
@@ -251,7 +226,6 @@ class ReportAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Report)
-
 admin.site.register(StoredFile)
 admin.site.register(ConfirmToken)
 admin.site.register(ShoutWrap)
@@ -261,5 +235,3 @@ admin.site.register(Notification)
 admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
-# admin.site.register(Activity)
-# admin.site.register(ActivityData)

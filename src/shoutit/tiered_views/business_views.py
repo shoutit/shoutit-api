@@ -8,10 +8,10 @@ from common.constants import TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION
 from shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditProfileForm, CreateTinyBusinessForm, RecoverForm, \
     BusinessTempSignUpForm
-from shoutit.models import ConfirmToken, Business, BusinessCategory
+from shoutit.models import ConfirmToken, Business
 from shoutit.permissions import PERMISSION_ACTIVATED, ANONYMOUS_USER_PERMISSIONS
 from shoutit.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, edit_profile_renderer_json, \
-    create_tiny_business_renderer_json, categories_api
+    create_tiny_business_renderer_json
 from shoutit.tiered_views.validators import form_validator, user_edit_profile_validator
 from shoutit.controllers import business_controller, payment_controller, email_controller, user_controller
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_REDIRECT, \
@@ -399,11 +399,4 @@ def subscribe(request):
 
     result.data['template'] = 'pay_business.html'
     result.data['subscription_form'] = payment_controller.GetPaypalFormForSubscription(user)
-    return result
-
-
-@non_cached_view(html_renderer=categories_api, api_renderer=categories_api, methods=['GET'])
-def business_categories(request):
-    result = ResponseResult()
-    result.data['categories'] = BusinessCategory.objects.get_top_level_categories().order_by('name')
     return result

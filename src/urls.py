@@ -30,7 +30,6 @@ urlpatterns = patterns('',
                        url(r'^rules/$', 'shoutit.tiered_views.general_views.rules'),
                        url(r'^learnmore/$', 'shoutit.tiered_views.general_views.learnmore'),
                        url(r'^xhr/shouts/stream/$', 'shoutit.tiered_views.stream_views.index_stream'),
-                       url(r'^xhr/shouts/livetimeline/(?:([-\w]+)/)?$', 'shoutit.tiered_views.stream_views.livetimeline'),
                        url(r'^xhr/live_events/$', 'shoutit.tiered_views.general_views.live_events'),
                        url(r'^xhr/delete_event/([-\w]+)/$', 'shoutit.tiered_views.general_views.delete_event'),
 
@@ -82,13 +81,8 @@ urlpatterns = patterns('',
                        url(r'^notifications/$', 'shoutit.tiered_views.realtime_views.notifications'),
                        url(r'^xhr/notifications/count/$', 'shoutit.tiered_views.realtime_views.notifications_count'),
 
-                       # ## API ## #
-
+                       # API
                        url(r'^api/', include('shoutit.api.urls')),
-
-                       url(r'^oauth/request_token/$', 'shoutit.api.authentication.get_request_token'),
-                       url(r'^oauth/access_token/(\w+)/$', 'shoutit.api.authentication.get_access_token_using_social_channel'),
-                       # url(r'^oauth/access_token/$', 'shoutit.api.authentication.get_basic_access_token'),
 
                        # ## XHR ## #
                        url(r'^xhr/user/$', 'shoutit.tiered_views.user_views.search_user'),
@@ -147,8 +141,6 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?deals/$', 'shoutit.tiered_views.deal_views.view_deals'),
                        url(r'^xhr/deals_stream/(\w+)/(?:(\d+)/)?$', 'shoutit.tiered_views.deal_views.deals_stream'),
 
-                       url(r'^set_perma/$', 'shoutit.tiered_views.general_views.set_perma'),
-
                        # Facebook Stuff
                        url(r'^fb_auth/$', 'shoutit.tiered_views.user_views.fb_auth'),
                        url(r'^fb/connect/$', 'shoutit.tiered_views.fb_views.fb_connect'),
@@ -162,7 +154,6 @@ urlpatterns = patterns('',
                        # Google Stuff
                        url(r'^gplus_auth/$', 'shoutit.tiered_views.user_views.gplus_auth'),
 
-                       url(r'^set_language/', 'shoutit.tiered_views.general_views.set_language'),
                        url(r'^jsi18n/$', 'django.views.i18n.javascript_catalog', {'packages': ('shoutit',)}),
 
                        url(r'^(?:bad-|good-)?experience/([-\w]+)/', 'shoutit.tiered_views.experience_views.view_experience'),

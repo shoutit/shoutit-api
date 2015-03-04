@@ -11,15 +11,13 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
-from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, \
-    CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_CHAT, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, NOTIFICATION_TYPE_MESSAGE, \
-    NOTIFICATION_TYPE_LISTEN, NotificationType
+from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, NotificationType
 from common.utils import date_unix
-from shoutit.controllers import shout_controller, stream_controller
 
 from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, \
     Currency
 from shoutit.utils import cloud_upload_image, random_uuid_str
+from shoutit.controllers import shout_controller
 
 
 class LocationSerializer(serializers.Serializer):
@@ -91,7 +89,6 @@ class UserDetailSerializer(UserSerializer):
     image_file = serializers.ImageField(required=False)
     is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
-    listeners_count = serializers.SerializerMethodField(help_text="Number of this user's listeners")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
     listening_count = serializers.DictField(child=serializers.IntegerField(), source='profile.listening_count',
         help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
@@ -129,9 +126,6 @@ class UserDetailSerializer(UserSerializer):
 
     def get_is_owner(self, user):
         return self.root.context['request'].user == user
-
-    def get_listeners_count(self, user):
-        return stream_controller.get_stream_listeners(stream=user.profile.stream2, count_only=True)
 
     def get_message_url(self, user):
         return reverse('user-message', kwargs={'username': user.id}, request=self.context['request'])

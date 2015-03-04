@@ -2,11 +2,8 @@ import difflib
 
 from django.db.models.aggregates import Count
 
-from activity_logger.logger import Logger
-from common.constants import STREAM_TYPE_TAG, ACTIVITY_DATA_TAG, ACTIVITY_TYPE_TAG_INTEREST_ADDED, \
-    ACTIVITY_DATA_USERNAME, ACTIVITY_TYPE_TAG_INTEREST_REMOVED, EVENT_TYPE_FOLLOW_TAG
-from shoutit.models import User, Tag, Stream
-from shoutit.controllers import event_controller, user_controller
+from common.constants import STREAM_TYPE_TAG
+from shoutit.models import Tag, Stream
 
 
 def get_tag(name):
