@@ -181,6 +181,17 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+@admin.register(Category)
+class FeaturedTagAdmin(admin.ModelAdmin):
+    raw_id_fields = ('main_tag',)
+    list_display = ('name', 'main_tag_name')
+    ordering = ('name',)
+
+    def main_tag_name(self, category):
+        return category.main_tag.name
+    main_tag_name.short_description = 'Main Tag'
+
+
 @admin.register(FeaturedTag)
 class FeaturedTagAdmin(admin.ModelAdmin):
     raw_id_fields = ('tag',)
@@ -252,7 +263,6 @@ admin.site.register(Stream)
 admin.site.register(Stream2)
 admin.site.register(Listen)
 admin.site.register(Notification)
-admin.site.register(Category)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
 admin.site.register(SharedLocation)
