@@ -89,6 +89,7 @@ class UserDetailSerializer(UserSerializer):
     image_file = serializers.ImageField(required=False)
     is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
+    listeners_count = serializers.IntegerField(source='profile.listeners_count', help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
     listening_count = serializers.DictField(child=serializers.IntegerField(), source='profile.listening_count',
         help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")

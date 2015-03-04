@@ -27,10 +27,6 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
     def is_category(self):
         return Category.objects.get(main_tag=self).exists()
 
-    @property
-    def listeners_count(self):
-        return self.stream2.listeners.count()
-
 
 class Category(UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
