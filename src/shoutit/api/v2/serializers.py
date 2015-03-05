@@ -385,7 +385,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message2
-        fields = ('id', 'created_at', 'read_url', 'user', 'text')
+        fields = ('id', 'created_at', 'user', 'text')
 
 
 class MessageDetailSerializer(MessageSerializer):
@@ -447,26 +447,23 @@ class ConversationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
+    unread_messages_count = serializers.SerializerMethodField(help_text="Number of unread messages in this conversation")
+    messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
+    reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
         model = Conversation2
-        fields = ('id', 'created_at', 'modified_at', 'api_url', 'web_url', 'type', 'users', 'last_message', 'about')
+        fields = ('id', 'created_at', 'modified_at', 'api_url', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'users',
+                  'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
         # todo: map types
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             return TradeSerializer(instance.attached_object, context=self.root.context).data
-
         return None
 
-
-class ConversationDetailSerializer(ConversationSerializer):
-    messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
-    reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
-
-    class Meta(ConversationSerializer.Meta):
-        parent_fields = ConversationSerializer.Meta.fields
-        fields = parent_fields + ('messages_url', 'reply_url')
+    def get_unread_messages_count(self, instance):
+        return instance.unread_messages_count(self.context['request'].user)
 
     def get_messages_url(self, conversation):
         return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])

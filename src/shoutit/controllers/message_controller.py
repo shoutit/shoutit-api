@@ -263,20 +263,6 @@ def hide_message2_from_user(message, user):
         pass
 
 
-def mark_message2_as_read(message, user):
-    try:
-        Message2Read(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
-    except IntegrityError:
-        pass
-
-
-def mark_message2_as_unread(message, user):
-    try:
-        Message2Read.objects.get(user=user, message_id=message.id, conversation_id=message.conversation.id).delete()
-    except Message2Read.DoesNotExist:
-        pass
-
-
 def get_user_conversations(user, before=None, after=None, limit=25):
     """
     Return list of user Conversations

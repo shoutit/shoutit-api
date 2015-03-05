@@ -10,7 +10,7 @@ from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
-from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, ConversationDetailSerializer, MessageDetailSerializer
+from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, MessageDetailSerializer
 
 from shoutit.controllers import message_controller
 
@@ -18,7 +18,7 @@ from shoutit.models import Message2
 from shoutit.api.v2.permissions import IsContributor
 
 
-class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
@@ -26,7 +26,6 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
     lookup_value_regex = '[0-9a-f-]{32,36}'
 
     serializer_class = ConversationSerializer
-    serializer_detail_class = ConversationDetailSerializer
 
     # todo: conversations search
     # filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
@@ -60,16 +59,6 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
         """
         return super(ConversationViewSet, self).list(request, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Get conversation
-        ---
-        serializer: ConversationDetailSerializer
-        omit_parameters:
-            - form
-        """
-        return super(ConversationViewSet, self).retrieve(request, *args, **kwargs)
-
     def destroy(self, request, *args, **kwargs):
         """
         Delete conversation
@@ -98,12 +87,35 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
               paramType: query
         """
         conversation = self.get_object()
-        instance = conversation.get_messages_qs()
-        page = self.paginate_queryset(instance)
+        messages_qs = conversation.get_messages_qs()
+        page = self.paginate_queryset(messages_qs)
         # reverse the messages order inside the page itself
         page.object_list = page.object_list[::-1]
         serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
+        conversation.mark_as_read(request.user)
         return Response(serializer.data)
+
+    @detail_route(methods=['post', 'delete'])
+    def read(self, request, *args, **kwargs):
+        """
+        Mark Conversation as read/unread
+
+        Marking as read will mark `all` messages as read
+
+        Marking as unread will mark only `last_message` as unread
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        conversation = self.get_object()
+        if request.method == 'POST':
+            conversation.mark_as_read(request.user)
+            return Response(status.HTTP_201_CREATED)
+
+        elif request.method == 'DELETE':
+            conversation.mark_as_unread(request.user)
+            return Response(status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post'])
     def reply(self, request, *args, **kwargs):
@@ -181,22 +193,3 @@ class MessageViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):
         message = self.get_object()
         message_controller.hide_message2_from_user(message, request.user)
         return Response(status.HTTP_204_NO_CONTENT)
-
-    @detail_route(methods=['post', 'delete'])
-    def read(self, request, *args, **kwargs):
-        """
-        Read/unread message
-        ---
-        omit_serializer: true
-        omit_parameters:
-            - form
-        """
-        message = self.get_object()
-        if request.method == 'POST':
-            message_controller.mark_message2_as_read(message, request.user)
-            return Response(status.HTTP_201_CREATED)
-
-        else:
-            message_controller.mark_message2_as_unread(message, request.user)
-            return Response(status.HTTP_204_NO_CONTENT)
-

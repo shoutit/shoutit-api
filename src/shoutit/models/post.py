@@ -105,7 +105,8 @@ class Post(UUIDModel, APIModelMixin):
     Streams = models.ManyToManyField('shoutit.Stream', related_name='Posts')
 
     # the uuid(s) of streams this post appears in. assuming uuid with hyphens size is 36 characters
-    streams2_ids = models.CharField(max_length=(TAGS_PER_POST * 36) + TAGS_PER_POST, blank=True, default="")
+    # json string that looks like: [user-uuid,tag1-uuid,tag2-uuid,...]
+    streams2_ids = models.CharField(max_length=2 + 36 + (TAGS_PER_POST * 36) + TAGS_PER_POST, blank=True, default="")
 
     text = models.TextField(max_length=2000, default='', db_index=True, blank=True)
     type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True, choices=PostType.choices)
@@ -249,7 +250,7 @@ class Trade(Shout):
     is_sss = models.BooleanField(default=False)
 
     base_date_published = models.DateTimeField(auto_now_add=True)
-    renewal_count = models.IntegerField(default=0)
+    renewal_count = models.PositiveSmallIntegerField(default=0)
 
     objects = TradeManager()
 

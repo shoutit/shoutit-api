@@ -45,6 +45,7 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     def owner(self):
         return self.user
 
+
 class Profile(AbstractProfile):
     Bio = models.TextField(null=True, blank=True, max_length=512, default='New Shouter!')
     Mobile = models.CharField(unique=True, null=True, blank=True, max_length=20)

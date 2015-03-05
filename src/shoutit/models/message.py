@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from django.db import models
+from django.db import models, IntegrityError
 from django.conf import settings
 
 from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
@@ -149,6 +149,27 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
         return ConversationType.values[self.type]
 
     @property
+    def messages_count(self):
+        return self.messages2.count()
+
+    def unread_messages_count(self, user):
+        return self.messages_count - user.read_messages2.filter(conversation=self).count()
+
+    def mark_as_read(self, user):
+        # todo: find more efficient way
+        for message in self.messages2.all():
+            try:
+                Message2Read(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
+            except IntegrityError:
+                pass
+
+    def mark_as_unread(self, user):
+        try:
+            Message2Read.objects.get(user=user, message_id=self.last_message.id, conversation_id=self.id).delete()
+        except Message2Read.DoesNotExist:
+            pass
+
+    @property
     def messages_attachments(self):
         return MessageAttachment.objects.filter(conversation_id=self.id)
 
@@ -189,10 +210,6 @@ class Message2(UUIDModel):
     @property
     def contributors(self):
         return self.conversation.contributors
-
-    @property
-    def read_url(self):
-        return ""
 
 
 class Message2Read(UUIDModel):
