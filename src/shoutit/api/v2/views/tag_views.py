@@ -14,16 +14,13 @@ from shoutit.api.v2.serializers import *
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
 from shoutit.controllers import stream_controller
 
-from shoutit.api.v2.permissions import IsOwnerOrReadOnly
-
 
 class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewsets.GenericViewSet):
     """
     Tag API Resource.
     """
     lookup_field = 'name'
-    # lookup_value_regex = '[a-z0-9-]{2,30}'
-    # paginate_by = 25
+    paginate_by = 25
 
     serializer_class = TagSerializer
     serializer_detail_class = TagDetailSerializer
@@ -33,6 +30,8 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = TagFilter
     search_fields = ('=id', 'name')
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def list(self, request, *args, **kwargs):
         """

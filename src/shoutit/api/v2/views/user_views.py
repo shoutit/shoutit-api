@@ -11,7 +11,6 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.controllers import stream_controller, message_controller
 
-from shoutit.models import User
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
 from shoutit.api.v2.serializers import *
 from shoutit.api.v2.permissions import IsOwnerModify
@@ -27,7 +26,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
     serializer_detail_class = UserDetailSerializer
 
     queryset = User.objects.all()
-    queryset_detail = queryset.prefetch_related('profile')
+    queryset_detail = User.objects.all().prefetch_related('profile')
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')

@@ -60,9 +60,9 @@ class TagDetailSerializer(TagSerializer):
         fields = parent_fields + ('web_url', 'listeners_count', 'listeners_url', 'is_listening', 'shouts_url')
 
     def get_is_listening(self, tag):
-        if 'request' in self.root.context:
+        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
             return tag.is_listening(self.root.context['request'].user)
-        return None
+        return False
 
     def get_listeners_url(self, tag):
         return reverse('tag-listeners', kwargs={'name': tag.name}, request=self.context['request'])
