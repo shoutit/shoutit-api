@@ -5,18 +5,16 @@
 from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, filters, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
-from rest_framework.settings import api_settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
-from shoutit.controllers import user_controller, stream_controller, message_controller
+from shoutit.controllers import stream_controller, message_controller
 
 from shoutit.models import User
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
 from shoutit.api.v2.serializers import *
-from shoutit.api.v2.permissions import IsOwnerOrReadOnly
+from shoutit.api.v2.permissions import IsOwnerModify
 
 
 class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewsets.GenericViewSet):
@@ -24,7 +22,6 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
     User API Resource.
     """
     lookup_field = 'username'
-    # lookup_value_regex = '[0-9a-zA-Z.]{2,30}'
 
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
@@ -35,6 +32,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')
     search_fields = ('=id', 'username', 'first_name', 'last_name', '=email')
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_object(self):
         username = self.kwargs.get('username')
@@ -171,6 +170,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
               required: true
               defaultValue: me
         """
+        user = self.get_object()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['put'])
@@ -207,7 +207,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         return self.partial_update(request, *args, **kwargs)
 
-    @detail_route(methods=['post', 'delete'])
+    @detail_route(methods=['post', 'delete'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to user

@@ -11,7 +11,8 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
-from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, NotificationType
+from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, \
+    NotificationType
 from common.utils import date_unix
 from shoutit.api.api_utils import build_absolute_uri
 
@@ -92,8 +93,8 @@ class UserDetailSerializer(UserSerializer):
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
     listeners_count = serializers.IntegerField(source='profile.listeners_count', help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
-    listening_count = serializers.DictField(child=serializers.IntegerField(), source='profile.listening_count',
-        help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
+    listening_count = serializers.DictField(read_only=True, child=serializers.IntegerField(), source='profile.listening_count',
+                                            help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
     is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
@@ -108,14 +109,14 @@ class UserDetailSerializer(UserSerializer):
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
 
     def get_is_listening(self, user):
-        if 'request' in self.root.context:
+        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
             return user.profile.is_listening(self.root.context['request'].user)
-        return None
+        return False
 
     def get_is_listener(self, user):
-        if 'request' in self.root.context:
+        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
             return user.profile.is_listener(self.root.context['request'].user.profile.stream2)
-        return None
+        return False
 
     def get_shouts_url(self, user):
         return reverse('user-shouts', kwargs={'username': user.username}, request=self.context['request'])
@@ -452,7 +453,6 @@ class ConversationSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'modified_at', 'api_url', 'web_url', 'type', 'users', 'last_message', 'about')
 
     def get_about(self, instance):
-
         # todo: map types
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             return TradeSerializer(instance.attached_object, context=self.root.context).data

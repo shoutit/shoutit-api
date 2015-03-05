@@ -112,6 +112,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     @property
+    def owner(self):
+        return self
+
+    @property
     def abstract_profile(self):
         if not hasattr(self, '_abstract_profile'):
             if hasattr(self, 'profile'):

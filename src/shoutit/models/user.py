@@ -41,6 +41,9 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
             'tags': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_TAG).count()
         }
 
+    @property
+    def owner(self):
+        return self.user
 
 class Profile(AbstractProfile):
     Bio = models.TextField(null=True, blank=True, max_length=512, default='New Shouter!')
