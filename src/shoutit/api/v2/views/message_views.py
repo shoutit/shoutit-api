@@ -62,18 +62,14 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
     def destroy(self, request, *args, **kwargs):
         """
         Delete conversation
-        ```
-        NOT IMPLEMENTED
-        ```
         ---
         omit_serializer: true
         omit_parameters:
             - form
         """
-        # conversation = self.get_object()
-        # message_controller.hide_conversation2_from_user(conversation, request.user)
-        # return Response(status.HTTP_204_NO_CONTENT)
-        return Response()
+        conversation = self.get_object()
+        conversation.mark_as_deleted(request.user)
+        return Response(status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['get'])
     def messages(self, request, *args, **kwargs):
@@ -91,6 +87,12 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         page = self.paginate_queryset(messages_qs)
         # reverse the messages order inside the page itself
         page.object_list = page.object_list[::-1]
+
+        # only keep the messages that were not deleted by this user
+        messages_ids = [message.id for message in page.object_list]
+        deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
+        [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
+
         serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
         conversation.mark_as_read(request.user)
         return Response(serializer.data)

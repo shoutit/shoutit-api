@@ -380,7 +380,7 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = UserSerializer(read_only=True, required=False)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
 
     class Meta:
