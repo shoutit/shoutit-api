@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
-from rest_framework.settings import api_settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
@@ -15,8 +14,8 @@ from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
 
 from shoutit.controllers import message_controller
 
-from shoutit.models import Message2, Conversation2
-from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwnerOrContributorsReadOnly
+from shoutit.models import Message2
+from shoutit.api.v2.permissions import IsContributor
 
 
 class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
@@ -109,7 +108,7 @@ class ConversationViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin
     @detail_route(methods=['post'])
     def reply(self, request, *args, **kwargs):
         """
-        Reply in a conversation
+        Reply in conversation
 
         ###Request
         <pre><code>

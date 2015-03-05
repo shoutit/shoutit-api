@@ -7,6 +7,9 @@ from __future__ import unicode_literals
 from rest_framework import permissions
 
 
+MODIFY_METHODS = ['PUT', 'PATCH', 'DELETE']
+
+
 class IsOwner(permissions.BasePermission):
     """
     Custom permission to only allow owners of an object to view or edit it.
@@ -63,4 +66,17 @@ class IsOwnerOrContributorsReadOnly(permissions.BasePermission):
 
         # Write permissions are only allowed to the owner of the object.
         return obj.owner == request.user
+
+
+class IsOwnerModify(permissions.BasePermission):
+    """
+    Custom permission to only allow owner of an object to modify it.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        assert hasattr(obj, 'owner'), "obj must have an `owner` attribute"
+
+        if request.method in MODIFY_METHODS:
+            return obj.owner == request.user
+        return True
 

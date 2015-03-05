@@ -16,7 +16,7 @@ from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
 from shoutit.controllers import message_controller
 
 from shoutit.models import Trade
-from shoutit.api.v2.permissions import IsContributor, IsOwnerOrReadOnly, IsOwnerOrContributorsReadOnly
+from shoutit.api.v2.permissions import IsOwnerModify
 
 
 class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
@@ -29,12 +29,14 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
     serializer_class = TradeSerializer
     serializer_detail_class = TradeDetailSerializer
 
-    def get_queryset(self):
-        return Trade.objects.get_valid_trades().all()
-
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = ShoutFilter
     search_fields = ('=id', 'item__name', 'text', 'tags__name')
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
+
+    def get_queryset(self):
+        return Trade.objects.get_valid_trades().all()
 
     def list(self, request, *args, **kwargs):
         """
