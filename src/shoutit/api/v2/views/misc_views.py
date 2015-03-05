@@ -16,6 +16,9 @@ class MiscViewSet(viewsets.ViewSet):
     """
     Other API Resources.
     """
+
+    permission_classes = ()
+
     @list_route(methods=['get'])
     def currencies(self, request):
         """
