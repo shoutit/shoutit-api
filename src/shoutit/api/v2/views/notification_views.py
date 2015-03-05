@@ -4,7 +4,7 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets, filters, status
+from rest_framework import permissions, viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from shoutit.api.v2.serializers import NotificationSerializer
@@ -16,10 +16,9 @@ class NotificationViewSet(viewsets.GenericViewSet):
     Notification API Resource.
     """
     lookup_field = 'id'
-    serializer_class = NotificationSerializer
+    lookup_value_regex = '[0-9a-f-]{32,36}'
 
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('id',)
+    serializer_class = NotificationSerializer
 
     permission_classes = (permissions.IsAuthenticated,)
 
