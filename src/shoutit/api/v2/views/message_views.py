@@ -7,9 +7,9 @@ from __future__ import unicode_literals
 from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
-from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
+from shoutit.api.v2.pagination import TimePaginationSerializer, PaginationByDateTimeMixin
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, MessageDetailSerializer
 
 from shoutit.controllers import message_controller
@@ -18,7 +18,7 @@ from shoutit.models import Message2
 from shoutit.api.v2.permissions import IsContributor
 
 
-class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
@@ -71,29 +71,58 @@ class ConversationViewSet(CustomPaginationSerializerMixin, mixins.ListModelMixin
         conversation.mark_as_deleted(request.user)
         return Response(status.HTTP_204_NO_CONTENT)
 
+    # @detail_route(methods=['get'])
+    # def messages(self, request, *args, **kwargs):
+    #     """
+    #     Get conversation messages
+    #     ---
+    #     serializer: MessageDetailSerializer
+    #     parameters:
+    #         - name: search
+    #           description: NOT ACTIVE
+    #           paramType: query
+    #     """
+    #     conversation = self.get_object()
+    #     messages_qs = conversation.get_messages_qs()
+    #     page = self.paginate_queryset(messages_qs)
+    #     # reverse the messages order inside the page itself
+    #     page.object_list = page.object_list[::-1]
+    #
+    #     # only keep the messages that were not deleted by this user
+    #     messages_ids = [message.id for message in page.object_list]
+    #     deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
+    #     [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
+    #
+    #     serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
+    #     conversation.mark_as_read(request.user)
+    #     return Response(serializer.data)
+
     @detail_route(methods=['get'])
     def messages(self, request, *args, **kwargs):
         """
         Get conversation messages
+
+        Using `before` and `after` query params together is not allowed.
         ---
         serializer: MessageDetailSerializer
         parameters:
-            - name: search
-              description: NOT ACTIVE
+            - name: before
+              description: timestamp to get messages before
+              paramType: query
+            - name: after
+              description: timestamp to get messages after
               paramType: query
         """
         conversation = self.get_object()
-        messages_qs = conversation.get_messages_qs()
-        page = self.paginate_queryset(messages_qs)
-        # reverse the messages order inside the page itself
-        page.object_list = page.object_list[::-1]
+        messages_qs = conversation.get_messages_qs2()
+        page = self.paginate_queryset_by_time(messages_qs)
 
         # only keep the messages that were not deleted by this user
         messages_ids = [message.id for message in page.object_list]
         deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
         [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
 
-        serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
+        serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer, TimePaginationSerializer)
         conversation.mark_as_read(request.user)
         return Response(serializer.data)
 

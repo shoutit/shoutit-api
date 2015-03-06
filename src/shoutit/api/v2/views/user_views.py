@@ -335,7 +335,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         }
         result_object_serializer = result_object_serializers[listening_type]
 
-        serializer = self.get_custom_pagination_serializer(page, result_object_serializer, listening_type)
+        serializer = self.get_custom_pagination_serializer(page, result_object_serializer, custom_results_field=listening_type)
         return Response(serializer.data)
 
     @detail_route(methods=['get'])

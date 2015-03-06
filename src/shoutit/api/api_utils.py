@@ -40,3 +40,10 @@ def get_api2_url(obj):
 
 def build_absolute_uri(url):
     return SITE_LINK[:-1] + url
+
+
+def get_current_uri(request):
+    """
+    Builds an absolute URI from the variables available in this request ignoring query params.
+    """
+    return '%s://%s%s' % (request.scheme, request.get_host(), request.path)

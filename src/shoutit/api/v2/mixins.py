@@ -8,11 +8,12 @@ from rest_framework.pagination import PaginationSerializer
 
 class CustomPaginationSerializerMixin(object):
 
-    def get_custom_pagination_serializer(self, page, custom_serializer_class, custom_results_field='results'):
+    def get_custom_pagination_serializer(self, page, custom_serializer_class, custom_pagination_serializer_class=PaginationSerializer,
+                                         custom_results_field='results'):
         """
         Return a serializer instance to use with paginated data using the `custom_serializer_class` and `custom_results_field`.
         """
-        class PaginationSerializerClass(PaginationSerializer):
+        class PaginationSerializerClass(custom_pagination_serializer_class):
             results_field = custom_results_field
 
         class SerializerClass(PaginationSerializerClass):

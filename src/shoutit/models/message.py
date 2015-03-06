@@ -140,6 +140,9 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
     def get_messages_qs(self, ):
         return self.messages2.order_by('-created_at')
 
+    def get_messages_qs2(self, ):
+        return self.messages2.all()
+
     @property
     def about(self):
         return self.attached_object
@@ -174,7 +177,6 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
         from shoutit.controllers import notifications_controller
         for to_user in self.contributors:
             notifications_controller.notify_user_of_message2(to_user, message)
-
 
     def mark_as_read(self, user):
         # todo: find more efficient way
