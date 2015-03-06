@@ -15,24 +15,6 @@ class NextPageByDateTimeField(serializers.Field):
     """
     Field that returns a link to the next page in time paginated results.
     """
-    before_field = 'before'
-
-    def to_representation(self, page):
-        view = self.context.get('view')
-        assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
-        first_object = len(page) and page[0]
-        if not first_object:
-            return None
-        first_object_timestamp = getattr(first_object, view.datetime_unix_attribute)
-        request = self.context.get('request')
-        url = request and get_current_uri(request) or ''
-        return replace_query_param(url, self.before_field, first_object_timestamp)
-
-
-class PreviousPageByDateTimeField(serializers.Field):
-    """
-    Field that returns a link to the previous page in time paginated results.
-    """
     after_field = 'after'
 
     def to_representation(self, page):
@@ -45,6 +27,24 @@ class PreviousPageByDateTimeField(serializers.Field):
         request = self.context.get('request')
         url = request and get_current_uri(request) or ''
         return replace_query_param(url, self.after_field, last_object_timestamp)
+
+
+class PreviousPageByDateTimeField(serializers.Field):
+    """
+    Field that returns a link to the previous page in time paginated results.
+    """
+    before_field = 'before'
+
+    def to_representation(self, page):
+        view = self.context.get('view')
+        assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
+        first_object = len(page) and page[0]
+        if not first_object:
+            return None
+        first_object_timestamp = getattr(first_object, view.datetime_unix_attribute)
+        request = self.context.get('request')
+        url = request and get_current_uri(request) or ''
+        return replace_query_param(url, self.before_field, first_object_timestamp)
 
 
 class TimePaginationSerializer(BasePaginationSerializer):
@@ -100,6 +100,9 @@ class PaginationByDateTimeMixin(object):
         page_number = 1
         page = paginator.page(page_number)
         # reverse the messages order inside the page itself if needed, so the results are always sorted from oldest to newest.
+        # in both cases the object_list queryset should be converted to a list to maintain consistency.
         if not after_query_param:
-            page.object_list = page.object_list[::-1]
+            page.object_list = list(page.object_list)[::-1]
+        else:
+            page.object_list = list(page.object_list)
         return page

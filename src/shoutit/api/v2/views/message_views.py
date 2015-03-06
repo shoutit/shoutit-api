@@ -103,6 +103,24 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
         Get conversation messages
 
         Using `before` and `after` query params together is not allowed.
+
+        First call returns the most recent messages in the following order:
+
+        * message 4
+        * message 5
+        * message 6 (most recent message)
+
+        ###Previous messages
+        set `before` to the timestamp of the first message in the current page eg.
+
+        <pre><code>GET /api/v2/conversations/{conversation_id}/messages?before={message4_timestamp}
+        </code></pre>
+
+        ###Later messages
+        set `after` to the timestamp of the last message in the current page
+
+        <pre><code>GET /api/v2/conversations/{conversation_id}/messages?after={message6_timestamp}
+        </code></pre>
         ---
         serializer: MessageDetailSerializer
         parameters:
