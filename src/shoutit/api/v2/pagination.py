@@ -15,36 +15,46 @@ class NextPageByDateTimeField(serializers.Field):
     """
     Field that returns a link to the next page in time paginated results.
     """
-    after_field = 'after'
 
     def to_representation(self, page):
         view = self.context.get('view')
         assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
+        assert hasattr(view, 'after_field'), "view '%s' has no 'after_field'" % view
+        assert hasattr(view, 'paginate_by_param'), "view '%s' has no 'paginate_by_param'" % view
+        assert hasattr(view, 'paginate_by'), "view '%s' has no 'paginate_by'" % view
+
         last_object = len(page) and page[-1]
         if not last_object:
             return None
         last_object_timestamp = getattr(last_object, view.datetime_unix_attribute)
         request = self.context.get('request')
         url = request and get_current_uri(request) or ''
-        return replace_query_param(url, self.after_field, last_object_timestamp)
+        url = replace_query_param(url, view.after_field, last_object_timestamp)
+        url = replace_query_param(url, view.paginate_by_param, view.paginate_by)
+        return url
 
 
 class PreviousPageByDateTimeField(serializers.Field):
     """
     Field that returns a link to the previous page in time paginated results.
     """
-    before_field = 'before'
 
     def to_representation(self, page):
         view = self.context.get('view')
         assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
+        assert hasattr(view, 'after_field'), "view '%s' has no 'after_field'" % view
+        assert hasattr(view, 'paginate_by_param'), "view '%s' has no 'paginate_by_param'" % view
+        assert hasattr(view, 'paginate_by'), "view '%s' has no 'paginate_by'" % view
+
         first_object = len(page) and page[0]
         if not first_object:
             return None
         first_object_timestamp = getattr(first_object, view.datetime_unix_attribute)
         request = self.context.get('request')
         url = request and get_current_uri(request) or ''
-        return replace_query_param(url, self.before_field, first_object_timestamp)
+        url = replace_query_param(url, view.before_field, first_object_timestamp)
+        url = replace_query_param(url, view.paginate_by_param, view.paginate_by)
+        return url
 
 
 class TimePaginationSerializer(BasePaginationSerializer):
@@ -60,14 +70,16 @@ class PaginationByDateTimeMixin(object):
     datetime_unix_attribute = 'created_at_unix'
     before_field = 'before'
     after_field = 'after'
+    paginate_by_param = 'page_size'
+    paginate_by = 10
 
     def paginate_queryset_by_time(self, queryset):
         """
-        Paginate a queryset using timestamps.
+        Paginate a queryset using unix timestamp query params.
         """
-        page_size = self.get_paginate_by()
+        page_size = self.paginate_by
         if not page_size:
-            return None
+            return queryset
 
         before_query_param = self.request.query_params.get(self.before_field)
         after_query_param = self.request.query_params.get(self.after_field)

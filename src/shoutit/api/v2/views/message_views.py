@@ -121,6 +121,10 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
 
         <pre><code>GET /api/v2/conversations/{conversation_id}/messages?after={message6_timestamp}
         </code></pre>
+
+
+        > Note that if `page_size` is specified in a request, it should be also specified with same value for next and previous requests, to return correct results.
+
         ---
         serializer: MessageDetailSerializer
         parameters:
