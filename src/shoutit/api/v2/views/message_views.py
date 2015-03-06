@@ -122,7 +122,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
         <pre><code>GET /api/v2/conversations/{conversation_id}/messages?after={message6_timestamp}
         </code></pre>
 
-        > `next` and `previous` attributes
+        > `next` and `previous` attributes contain the correct url to be used for next and previous pages based. They can be either used directly or parsed to extract query params and construct required url.
 
         > Note that if `page_size` is specified in a request, it should be also specified with same value for next and previous requests, to return correct results.
 
