@@ -97,7 +97,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
     #     conversation.mark_as_read(request.user)
     #     return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], suffix='Messages')
     def messages(self, request, *args, **kwargs):
         """
         Get conversation messages
@@ -122,6 +122,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
         <pre><code>GET /api/v2/conversations/{conversation_id}/messages?after={message6_timestamp}
         </code></pre>
 
+        > `next` and `previous` attributes
 
         > Note that if `page_size` is specified in a request, it should be also specified with same value for next and previous requests, to return correct results.
 
@@ -148,7 +149,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
         conversation.mark_as_read(request.user)
         return Response(serializer.data)
 
-    @detail_route(methods=['post', 'delete'])
+    @detail_route(methods=['post', 'delete'], suffix='Read')
     def read(self, request, *args, **kwargs):
         """
         Mark Conversation as read/unread
@@ -170,7 +171,7 @@ class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeM
             conversation.mark_as_unread(request.user)
             return Response(status.HTTP_204_NO_CONTENT)
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):
         """
         Reply in conversation

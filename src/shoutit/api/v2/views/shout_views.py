@@ -186,7 +186,7 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):
         """
         Reply to shout

@@ -81,7 +81,7 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @detail_route(methods=['post', 'delete'])
+    @detail_route(methods=['post', 'delete'], suffix='Listen')
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to tag
@@ -117,7 +117,7 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
 
         return Response(**ret)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
         Get tag listeners
@@ -147,7 +147,7 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
         serializer = self.get_custom_pagination_serializer(page, UserSerializer)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
         """
         Get tag shouts

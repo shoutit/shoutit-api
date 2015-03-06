@@ -19,7 +19,7 @@ class MiscViewSet(viewsets.ViewSet):
 
     permission_classes = ()
 
-    @list_route(methods=['get'])
+    @list_route(methods=['get'], suffix='Currencies')
     def currencies(self, request):
         """
         Get currencies
@@ -30,7 +30,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = CurrencySerializer(currencies, many=True)
         return Response(serializer.data)
 
-    @list_route(methods=['get'])
+    @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """
         Get categories

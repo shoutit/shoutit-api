@@ -172,7 +172,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         user = self.get_object()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @detail_route(methods=['put'])
+    @detail_route(methods=['put'], suffix='Image')
     def image(self, request, *args, **kwargs):
         """
         Modify user image
@@ -206,7 +206,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         return self.partial_update(request, *args, **kwargs)
 
-    @detail_route(methods=['post', 'delete'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to user
@@ -246,7 +246,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
 
         return Response(**ret)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
         Get user listeners
@@ -281,7 +281,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         serializer = self.get_custom_pagination_serializer(page, UserSerializer)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], suffix='Listening')
     def listening(self, request, *args, **kwargs):
         """
         Get user listening based on `type` query param. It could be either 'users' or 'tags', default is 'users'
@@ -338,7 +338,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         serializer = self.get_custom_pagination_serializer(page, result_object_serializer, custom_results_field=listening_type)
         return Response(serializer.data)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
         """
         Get user shouts
@@ -385,10 +385,10 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         serializer = self.get_custom_pagination_serializer(page, TradeSerializer)
         return Response(serializer.data)
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], suffix='Message')
     def message(self, request, *args, **kwargs):
         """
-        Reply in a conversation
+        Send user a message
 
         ###Request
         <pre><code>
