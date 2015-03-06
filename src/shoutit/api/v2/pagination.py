@@ -77,7 +77,7 @@ class PaginationByDateTimeMixin(object):
         """
         Paginate a queryset using unix timestamp query params.
         """
-        page_size = self.paginate_by
+        page_size = self.get_paginate_by()
         if not page_size:
             return queryset
 
