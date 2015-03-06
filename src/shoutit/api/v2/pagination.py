@@ -21,7 +21,6 @@ class NextPageByDateTimeField(serializers.Field):
         assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
         assert hasattr(view, 'after_field'), "view '%s' has no 'after_field'" % view
         assert hasattr(view, 'paginate_by_param'), "view '%s' has no 'paginate_by_param'" % view
-        assert hasattr(view, 'paginate_by'), "view '%s' has no 'paginate_by'" % view
 
         last_object = len(page) and page[-1]
         if not last_object:
@@ -30,7 +29,7 @@ class NextPageByDateTimeField(serializers.Field):
         request = self.context.get('request')
         url = request and get_current_uri(request) or ''
         url = replace_query_param(url, view.after_field, last_object_timestamp)
-        url = replace_query_param(url, view.paginate_by_param, view.paginate_by)
+        url = replace_query_param(url, view.paginate_by_param, view.get_paginate_by())
         return url
 
 
@@ -44,7 +43,6 @@ class PreviousPageByDateTimeField(serializers.Field):
         assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
         assert hasattr(view, 'after_field'), "view '%s' has no 'after_field'" % view
         assert hasattr(view, 'paginate_by_param'), "view '%s' has no 'paginate_by_param'" % view
-        assert hasattr(view, 'paginate_by'), "view '%s' has no 'paginate_by'" % view
 
         first_object = len(page) and page[0]
         if not first_object:
@@ -53,7 +51,7 @@ class PreviousPageByDateTimeField(serializers.Field):
         request = self.context.get('request')
         url = request and get_current_uri(request) or ''
         url = replace_query_param(url, view.before_field, first_object_timestamp)
-        url = replace_query_param(url, view.paginate_by_param, view.paginate_by)
+        url = replace_query_param(url, view.paginate_by_param, view.get_paginate_by())
         return url
 
 
