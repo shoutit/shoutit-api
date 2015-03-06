@@ -390,6 +390,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         """
         Send user a message
 
+        > A user can only message his Listeners, or someone whom he already have an existing conversation with.
+
         ###Request
         <pre><code>
         {
@@ -421,7 +423,9 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         user = self.get_object()
         if request.user == user:
             raise ValidationError({'error': "You can not start a conversation with your self"})
-        if not user.profile.is_listener(request.user.profile.stream2):
+        if not (
+            message_controller.conversation2_exist(users=[user, request.user]) or user.profile.is_listener(request.user.profile.stream2)
+        ):
             raise ValidationError({'error': "You can only start a conversation with your listeners"})
 
         serializer = MessageDetailSerializer(data=request.data, partial=True, context={'request': request})
