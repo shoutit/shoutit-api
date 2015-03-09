@@ -3,7 +3,7 @@
 
 """
 from __future__ import unicode_literals
-from django.db.models import Count
+from django.db.models import Count, Q
 import django_filters
 from rest_framework.exceptions import ValidationError
 from shoutit.controllers import stream_controller
@@ -53,6 +53,7 @@ class TagFilter(django_filters.FilterSet):
     type = django_filters.MethodFilter(action='filter_type')
     country = django_filters.MethodFilter(action='filter_country')
     city = django_filters.MethodFilter(action='filter_city')
+    category = django_filters.MethodFilter(action='filter_category')
 
     class Meta:
         model = Tag
@@ -83,3 +84,13 @@ class TagFilter(django_filters.FilterSet):
         if tag_type == 'featured':
             queryset = queryset.filter(featured_in__city=value)
         return queryset
+
+    def filter_category(self, queryset, value):
+        try:
+            category = Category.objects.get(name=value)
+            # return all tags that belong to the category except the main tag
+            # todo: check if we really need to exclude the main tag or not
+            # return queryset.filter(category=category).filter(~Q(id=category.main_tag_id))
+            return queryset.filter(category=category)
+        except Category.DoesNotExist:
+            raise ValidationError({'category': "Category '%s' does not exist" % value})

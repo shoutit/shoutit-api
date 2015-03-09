@@ -64,6 +64,9 @@ class TagViewSet(CustomPaginationSerializerMixin, DetailSerializerMixin, viewset
             - name: city
               description: only used when type is `featured` or `top`
               paramType: query
+            - name: category
+              description: return tags that belong to this category only
+              paramType: query
         """
 
         instance = self.filter_queryset(self.get_queryset())
