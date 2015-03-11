@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
+from common.utils import process_tags
 
 from shoutit.controllers.user_controller import get_profile
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
@@ -86,53 +87,6 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-# todo: check!
-def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
-              city=None, address=None, currency=None, images=[], date_published=None):
-    trade = Trade.objects.get(pk=shout_id)
-
-    if not trade:
-        raise ObjectDoesNotExist()
-    else:
-        if trade.type == POST_TYPE_REQUEST or trade.type == POST_TYPE_OFFER:
-
-            if text:
-                trade.text = text
-            if longitude:
-                trade.longitude = longitude
-            if latitude:
-                trade.latitude = latitude
-            if shouter:
-                trade.shouter = shouter
-            if city:
-                trade.city = city
-            if country:
-                trade.country = country
-            if address:
-                trade.address = address
-            if date_published:
-                trade.date_published = date_published
-
-            item_controller.edit_item(trade.trade.item, name, price, images, currency)
-
-            if len(tags) and shouter:
-                trade.user = shouter
-                trade.tags.clear()
-                for tag in tag_controller.get_or_create_tags(tags, shouter):
-                    try:
-                        trade.tags.add(tag)
-                        tag.Stream.PublishShout(trade)
-                        tag.stream2.add_post(trade)
-                    except IntegrityError:
-                        pass
-            trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
-            trade.save()
-
-            save_relocated_shouts(trade, STREAM_TYPE_RELATED)
-            return trade
-    return None
-
-
 def get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, trade_objects=False):
     filters = {
         'latitude__gte': down_left_lat,
@@ -207,6 +161,7 @@ def save_relocated_shouts(trade, stream_type):
     trade.save()
 
 
+# todo: handle exception on each step and in case of errors, rollback!
 def post_request(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
@@ -243,6 +198,8 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
             tags = [tag['name'] for tag in tags]
     # remove duplicates in case any
     tags = list(OrderedDict.fromkeys(tags))
+    # only pass valid tags
+    tags = process_tags(tags)
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
         try:
@@ -297,6 +254,8 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
             tags = [tag['name'] for tag in tags]
     # remove duplicates in case any
     tags = list(OrderedDict.fromkeys(tags))
+    # only pass valid tags
+    tags = process_tags(tags)
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
         try:
@@ -315,6 +274,53 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
     return trade
+
+
+# todo: check!
+def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
+              city=None, address=None, currency=None, images=[], date_published=None):
+    trade = Trade.objects.get(pk=shout_id)
+
+    if not trade:
+        raise ObjectDoesNotExist()
+    else:
+        if trade.type == POST_TYPE_REQUEST or trade.type == POST_TYPE_OFFER:
+
+            if text:
+                trade.text = text
+            if longitude:
+                trade.longitude = longitude
+            if latitude:
+                trade.latitude = latitude
+            if shouter:
+                trade.shouter = shouter
+            if city:
+                trade.city = city
+            if country:
+                trade.country = country
+            if address:
+                trade.address = address
+            if date_published:
+                trade.date_published = date_published
+
+            item_controller.edit_item(trade.trade.item, name, price, images, currency)
+
+            if len(tags) and shouter:
+                trade.user = shouter
+                trade.tags.clear()
+                for tag in tag_controller.get_or_create_tags(tags, shouter):
+                    try:
+                        trade.tags.add(tag)
+                        tag.Stream.PublishShout(trade)
+                        tag.stream2.add_post(trade)
+                    except IntegrityError:
+                        pass
+            trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
+            trade.save()
+
+            save_relocated_shouts(trade, STREAM_TYPE_RELATED)
+            return trade
+    return None
 
 
 def get_trade_images(trades):
