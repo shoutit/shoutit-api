@@ -12,19 +12,22 @@ def create_item(name, price, currency, description, images=None, videos=None):
 
     if images:
         images.sort()
-
         for image in images:
-            stored_image = StoredImage()
-            stored_image.item = item
-            stored_image.image = image
-            stored_image.save()
-
+            # todo: better handling
+            try:
+                stored_image = StoredImage(item=item, image=image)
+                stored_image.save()
+            except:
+                pass
     if videos:
         for v in videos:
-            if v:
+            # todo: better handling
+            try:
                 video = Video(item=item, url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
                               id_on_provider=v['id_on_provider'], duration=v['duration'])
                 video.save()
+            except:
+                pass
 
     return item
 
