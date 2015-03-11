@@ -48,7 +48,7 @@ def process_tags(tags):
     for tag in tags:
         if not isinstance(tag, basestring):
             continue
-        tag = tag.lower()
+        tag = tag.lower()[:30]
         tag = re.sub('[+&/\s]', '-', tag)
         tag = re.sub('[^a-z0-9-]', '', tag)
         tag = re.sub('([-]){2,}', '-', tag)
