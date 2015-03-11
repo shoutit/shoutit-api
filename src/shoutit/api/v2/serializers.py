@@ -12,7 +12,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, \
-    NotificationType
+    NotificationType, PostType
 from common.utils import date_unix
 from shoutit.api.api_utils import build_absolute_uri
 
@@ -267,11 +267,11 @@ class UserDetailSerializer(UserSerializer):
 
 
 class TradeSerializer(serializers.ModelSerializer):
-    type = serializers.CharField(source='type_name')
+    type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'], help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
     price = serializers.FloatField(source='item.Price')
-    currency = serializers.CharField(source='item.Currency.code')
+    currency = serializers.CharField(source='item.Currency.code', help_text='Currency code taken from list of available currencies')
     date_published = serializers.SerializerMethodField()
     user = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
