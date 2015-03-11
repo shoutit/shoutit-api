@@ -1,3 +1,4 @@
+import re
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core import validators
 from django.db import models
@@ -11,7 +12,11 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
-    name = models.CharField(max_length=100, unique=True, db_index=True)
+    name = models.CharField(max_length=30, unique=True, db_index=True,
+                            validators=[
+                                validators.MinLengthValidator(2),
+                                validators.RegexValidator(re.compile('[0-9a-z-]{2,30}'), "Enter a valid tag.", 'invalid'),
+                            ])
     Creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True, on_delete=models.SET_NULL)
     image = models.CharField(max_length=1024, null=True, blank=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
@@ -29,6 +34,7 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
     def is_category(self):
         return Category.objects.get(main_tag=self).exists()
 
+    # todo: filter the name before saving
 
 class Category(UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
