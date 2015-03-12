@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.filters import ShoutFilter
+from shoutit.api.v2.pagination import ReverseDateTimePagination
 from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageDetailSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
 from shoutit.controllers import message_controller
@@ -28,6 +29,8 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
 
     serializer_class = TradeSerializer
     serializer_detail_class = TradeDetailSerializer
+
+    pagination_class = ReverseDateTimePagination
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = ShoutFilter

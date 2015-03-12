@@ -14,6 +14,19 @@ from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile, FollowShip, User
 
 
+post_types = {
+    'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
+    None: [POST_TYPE_REQUEST, POST_TYPE_OFFER],
+
+    'requests': [POST_TYPE_REQUEST],
+    'request': [POST_TYPE_REQUEST],
+    POST_TYPE_REQUEST: [POST_TYPE_REQUEST],
+
+    'offers': [POST_TYPE_OFFER],
+    'offer': [POST_TYPE_OFFER],
+    POST_TYPE_OFFER: [POST_TYPE_OFFER],
+}
+
 def PublishShoutToShout(shout, other):
     rank = 0.0
     distance = normalized_distance(shout.latitude, shout.longitude, other.latitude, other.longitude)
@@ -394,16 +407,8 @@ def get_stream2_trades_qs(stream2, trade_type=None):
     """
     return the Trades Queryset (offers/requests) in a stream2
     """
-    trade_types = {
-        'requests': [POST_TYPE_REQUEST],
-        POST_TYPE_REQUEST: [POST_TYPE_REQUEST],
-        'offers': [POST_TYPE_OFFER],
-        POST_TYPE_OFFER: [POST_TYPE_OFFER],
-        'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
-        None: [POST_TYPE_REQUEST, POST_TYPE_OFFER],
-    }
-    post_types = trade_types[trade_type]
-    qs = Trade.objects.get_valid_trades(types=post_types).filter(streams2=stream2).order_by('-date_published')
+    types = post_types[trade_type]
+    qs = Trade.objects.get_valid_trades(types=types).filter(streams2=stream2).order_by('-date_published')
     return qs
 
 
@@ -537,14 +542,6 @@ def remove_listener_from_stream(listener, stream):
 
 
 def filter_posts_qs(qs, post_type=None):
-    post_types = {
-        'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
-        None: [POST_TYPE_REQUEST, POST_TYPE_OFFER],
-        'requests': [POST_TYPE_REQUEST],
-        POST_TYPE_REQUEST: [POST_TYPE_REQUEST],
-        'offers': [POST_TYPE_OFFER],
-        POST_TYPE_OFFER: [POST_TYPE_OFFER],
-    }
     types = post_types[post_type]
     return qs.filter(type__in=types)
 

@@ -4,19 +4,19 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets, filters, status
+from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
+from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination
 
 from shoutit.controllers import stream_controller, message_controller
 
-from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
 from shoutit.api.v2.serializers import *
 from shoutit.api.v2.permissions import IsOwnerModify
 
 
-class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewsets.GenericViewSet):
+class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     User API Resource.
     """
@@ -27,6 +27,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
 
     queryset = User.objects.all()
     queryset_detail = User.objects.all().prefetch_related('profile')
+
+    pagination_class = ShoutitPageNumberPagination
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')
@@ -61,11 +63,7 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
             - name: search
               paramType: query
         """
-
-        instance = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(instance)
-        serializer = self.get_pagination_serializer(page)
-        return Response(serializer.data)
+        return super(UserViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -278,8 +276,8 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
         user = self.get_object()
         listeners = stream_controller.get_stream_listeners(user.profile.stream2)
         page = self.paginate_queryset(listeners)
-        serializer = self.get_custom_pagination_serializer(page, UserSerializer)
-        return Response(serializer.data)
+        serializer = UserSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Listening')
     def listening(self, request, *args, **kwargs):
@@ -325,18 +323,20 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
             raise ValidationError({'type': "should be `users` or `tags`."})
 
         user = self.get_object()
-
         listening = stream_controller.get_user_listening_qs(user, listening_type)
-        page = self.paginate_queryset(listening)
+
+        # we do not use the view pagination class since we need one with custom results field
+        paginator = self.get_custom_shoutit_page_number_pagination(custom_results_field=listening_type)
+        page = self.paginate_queryset(listening, custom_paginator=paginator)
 
         result_object_serializers = {
             'users': UserSerializer,
             'tags': TagSerializer,
         }
         result_object_serializer = result_object_serializers[listening_type]
+        serializer = result_object_serializer(page, many=True)
 
-        serializer = self.get_custom_pagination_serializer(page, result_object_serializer, custom_results_field=listening_type)
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data, custom_paginator=paginator)
 
     @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
@@ -362,28 +362,29 @@ class UserViewSet(DetailSerializerMixin, CustomPaginationSerializerMixin, viewse
               paramType: path
               required: true
               defaultValue: me
-            - name: type
+            - name: shout_type
               paramType: query
               required: true
               defaultValue: all
               enum:
-                - requests
-                - offers
+                - request
+                - offer
                 - all
             - name: page
               paramType: query
             - name: page_size
               paramType: query
         """
-        shout_type = request.query_params.get('type', 'all')
-        if shout_type not in ['offers', 'requests', 'all']:
-            raise ValidationError({'type': "should be `offers`, `requests` or `all`."})
+        shout_type = request.query_params.get('shout_type', 'all')
+        if shout_type not in ['offer', 'request', 'all']:
+            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
         user = self.get_object()
         trades = stream_controller.get_stream2_trades_qs(user.profile.stream2, shout_type)
-        page = self.paginate_queryset(trades)
-        serializer = self.get_custom_pagination_serializer(page, TradeSerializer)
-        return Response(serializer.data)
+        paginator = ReverseDateTimePagination()
+        page = self.paginate_queryset(trades, custom_paginator=paginator)
+        serializer = TradeSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data, custom_paginator=paginator)
 
     @detail_route(methods=['post'], suffix='Message')
     def message(self, request, *args, **kwargs):

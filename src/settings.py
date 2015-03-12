@@ -79,7 +79,7 @@ MAX_REG_DAYS = 14
 MAX_SHOUTS_INACTIVE_USER = 5
 MAX_EXPIRY_DAYS_SSS = 7
 SHOUT_EXPIRY_NOTIFY = 2
-MAX_EXPIRY_DAYS = 30
+MAX_EXPIRY_DAYS = 60
 ACCOUNT_ACTIVATION_DAYS = 7
 
 RANK_COEFFICIENT_TIME = 0.7  # value should be between 0.0 ~ 1.0
@@ -140,12 +140,13 @@ INSTALLED_APPS = (
     # 'subscription',
     'shoutit',
 
-    'provider',
-    'provider.oauth2',
 
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
+
+    'provider',
+    'provider.oauth2',
 )
 # apps only on local development
 if LOCAL:
@@ -556,7 +557,7 @@ CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.OAuth2Authentication',
+        'rest_framework_oauth.authentication.OAuth2Authentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -567,9 +568,6 @@ REST_FRAMEWORK = {
         'shoutit.api.v2.renderers.ShoutitBrowsableAPIRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': [],
-    'PAGINATE_BY': 10,
-    'PAGINATE_BY_PARAM': 'page_size',
-    'MAX_PAGINATE_BY': 100,
     'URL_FIELD_NAME': 'api_url',
 }
 

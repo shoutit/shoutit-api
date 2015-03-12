@@ -8,8 +8,8 @@ from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 
-from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
-from shoutit.api.v2.pagination import TimePaginationSerializer, PaginationByDateTimeMixin
+# from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
+# from shoutit.api.v2.pagination import TimePaginationSerializer, PaginationByDateTimeMixin
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, MessageDetailSerializer
 
 from shoutit.controllers import message_controller
@@ -18,7 +18,7 @@ from shoutit.models import Message2
 from shoutit.api.v2.permissions import IsContributor
 
 
-class ConversationViewSet(CustomPaginationSerializerMixin, PaginationByDateTimeMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """

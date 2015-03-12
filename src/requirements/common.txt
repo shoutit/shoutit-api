@@ -12,6 +12,7 @@ django-grappelli>=2.6.3
 
 # django-rest-framework
 djangorestframework
+git+https://github.com/mochawich/django-rest-framework-oauth@drf-3.1
 markdown
 django-filter
 drf-extensions
