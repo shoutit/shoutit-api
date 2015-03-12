@@ -326,8 +326,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         listening = stream_controller.get_user_listening_qs(user, listening_type)
 
         # we do not use the view pagination class since we need one with custom results field
-        paginator = self.get_custom_shoutit_page_number_pagination(custom_results_field=listening_type)
-        page = self.paginate_queryset(listening, custom_paginator=paginator)
+        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(custom_results_field=listening_type)
+        page = self.paginate_queryset(listening)
 
         result_object_serializers = {
             'users': UserSerializer,
@@ -336,7 +336,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         result_object_serializer = result_object_serializers[listening_type]
         serializer = result_object_serializer(page, many=True)
 
-        return self.get_paginated_response(serializer.data, custom_paginator=paginator)
+        return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
@@ -381,10 +381,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         user = self.get_object()
         trades = stream_controller.get_stream2_trades_qs(user.profile.stream2, shout_type)
-        paginator = ReverseDateTimePagination()
-        page = self.paginate_queryset(trades, custom_paginator=paginator)
+        self.pagination_class = ReverseDateTimePagination
+        page = self.paginate_queryset(trades)
         serializer = TradeSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data, custom_paginator=paginator)
+        return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Message')
     def message(self, request, *args, **kwargs):

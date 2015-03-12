@@ -173,6 +173,11 @@ class ReverseDateTimePagination(DateTimePagination):
     recent_on_top = True
 
 
+class ReverseModifiedDateTimePagination(ReverseDateTimePagination):
+    datetime_attribute = 'modified_at'
+    datetime_unix_attribute = 'modified_at_unix'
+
+
 class ShoutitPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
@@ -190,23 +195,13 @@ class ShoutitPageNumberPagination(PageNumberPagination):
 
 class ShoutitPaginationMixin(object):
 
-    def paginate_queryset(self, queryset, custom_paginator=None):
-        if not custom_paginator:
-            return super(ShoutitPaginationMixin, self).paginate_queryset(queryset)
-        return custom_paginator.paginate_queryset(queryset, self.request, view=self)
-
-    def get_paginated_response(self, data, custom_paginator=None):
-        if not custom_paginator:
-            return super(ShoutitPaginationMixin, self).get_paginated_response(data)
-        return custom_paginator.get_paginated_response(data)
-
-    def get_custom_shoutit_page_number_pagination(self, custom_page_size=None, custom_results_field=None):
+    def get_custom_shoutit_page_number_pagination_class(self, custom_page_size=None, custom_results_field=None):
 
         class PageNumberPaginationClass(ShoutitPageNumberPagination):
             page_size = custom_page_size or ShoutitPageNumberPagination.page_size
             results_field = custom_results_field or ShoutitPageNumberPagination.results_field
 
-        return PageNumberPaginationClass()
+        return PageNumberPaginationClass
 
 
 # class CustomShoutitPageNumberPaginationMixin(object):

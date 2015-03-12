@@ -10,12 +10,12 @@ from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.filters import TagFilter
-from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination
+from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
 from shoutit.api.v2.serializers import *
 from shoutit.controllers import stream_controller
 
 
-class TagViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Tag API Resource.
     """
@@ -185,7 +185,7 @@ class TagViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModel
 
         tag = self.get_object()
         trades = stream_controller.get_stream2_trades_qs(tag.stream2, shout_type)
-        paginator = ReverseDateTimePagination()
-        page = self.paginate_queryset(trades, custom_paginator=paginator)
+        self.pagination_class = ReverseDateTimePagination
+        page = self.paginate_queryset(trades)
         serializer = TradeSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data, custom_paginator=paginator)
+        return self.get_paginated_response(serializer.data)

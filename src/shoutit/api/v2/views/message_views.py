@@ -8,8 +8,7 @@ from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 
-# from shoutit.api.v2.mixins import CustomPaginationSerializerMixin
-# from shoutit.api.v2.pagination import TimePaginationSerializer, PaginationByDateTimeMixin
+from shoutit.api.v2.pagination import DateTimePagination, ReverseModifiedDateTimePagination
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, MessageDetailSerializer
 
 from shoutit.controllers import message_controller
@@ -26,6 +25,8 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     lookup_value_regex = '[0-9a-f-]{32,36}'
 
     serializer_class = ConversationSerializer
+
+    pagination_class = ReverseModifiedDateTimePagination
 
     # todo: conversations search
     # filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
@@ -71,32 +72,6 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         conversation.mark_as_deleted(request.user)
         return Response(status.HTTP_204_NO_CONTENT)
 
-    # @detail_route(methods=['get'])
-    # def messages(self, request, *args, **kwargs):
-    #     """
-    #     Get conversation messages
-    #     ---
-    #     serializer: MessageDetailSerializer
-    #     parameters:
-    #         - name: search
-    #           description: NOT ACTIVE
-    #           paramType: query
-    #     """
-    #     conversation = self.get_object()
-    #     messages_qs = conversation.get_messages_qs()
-    #     page = self.paginate_queryset(messages_qs)
-    #     # reverse the messages order inside the page itself
-    #     page.object_list = page.object_list[::-1]
-    #
-    #     # only keep the messages that were not deleted by this user
-    #     messages_ids = [message.id for message in page.object_list]
-    #     deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
-    #     [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
-    #
-    #     serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer)
-    #     conversation.mark_as_read(request.user)
-    #     return Response(serializer.data)
-
     @detail_route(methods=['get'], suffix='Messages')
     def messages(self, request, *args, **kwargs):
         """
@@ -138,16 +113,17 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
         conversation = self.get_object()
         messages_qs = conversation.get_messages_qs2()
-        page = self.paginate_queryset_by_time(messages_qs)
+        self.pagination_class = DateTimePagination
+        page = self.paginate_queryset(messages_qs)
 
         # only keep the messages that were not deleted by this user
         messages_ids = [message.id for message in page.object_list]
         deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
         [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
 
-        serializer = self.get_custom_pagination_serializer(page, MessageDetailSerializer, TimePaginationSerializer)
+        serializer = MessageDetailSerializer(page, many=True)
         conversation.mark_as_read(request.user)
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post', 'delete'], suffix='Read')
     def read(self, request, *args, **kwargs):

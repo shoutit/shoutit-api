@@ -19,10 +19,10 @@ router = ShoutitRouter(trailing_slash=False)
 router.register('users', user_views.UserViewSet, 'user')
 router.register('tags', tag_views.TagViewSet, 'tag')
 router.register('shouts', shout_views.ShoutViewSet, 'shout')
-# router.register('conversations', message_views.ConversationViewSet, 'conversation')
-# router.register('messages', message_views.MessageViewSet, 'message')
-# router.register('notifications', notification_views.NotificationViewSet, 'notification')
-# router.register(r'misc', misc_views.MiscViewSet, 'misc')
+router.register('conversations', message_views.ConversationViewSet, 'conversation')
+router.register('messages', message_views.MessageViewSet, 'message')
+router.register('notifications', notification_views.NotificationViewSet, 'notification')
+router.register(r'misc', misc_views.MiscViewSet, 'misc')
 
 urlpatterns = (
     url(r'^oauth2/access_token$', AccessTokenView.as_view(), name='access_token'),
