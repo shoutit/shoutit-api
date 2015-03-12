@@ -12,7 +12,7 @@ from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.filters import ShoutFilter
 from shoutit.api.v2.pagination import ReverseDateTimePagination
-from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageDetailSerializer
+from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
 from shoutit.controllers import message_controller
 
@@ -43,20 +43,28 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Get shouts based on filters
+        Get shouts
+
+        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.26dyymkevc5m)
         ---
         serializer: TradeSerializer
         parameters:
+            - name: before
+              description: timestamp to get shouts before
+              paramType: query
+            - name: after
+              description: timestamp to get shouts after
+              paramType: query
             - name: search
               description: space or comma separated keywords to search in title, text, tags
               paramType: query
-            - name: type
+            - name: shout_type
               paramType: query
               defaultValue: all
               enum:
+                - request
+                - offer
                 - all
-                - offers
-                - requests
             - name: country
               paramType: query
             - name: city
@@ -215,7 +223,7 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
         </code></pre>
 
         ---
-        serializer: MessageDetailSerializer
+        serializer: MessageSerializer
         omit_parameters:
             - form
         parameters:
@@ -225,13 +233,13 @@ class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
         shout = self.get_object()
         if request.user == shout.owner:
             raise ValidationError({'error': "You can not start a conversation about your own shout"})
-        serializer = MessageDetailSerializer(data=request.data, partial=True, context={'request': request})
+        serializer = MessageSerializer(data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
                                                    attachments=attachments)
-        message = MessageDetailSerializer(instance=message, context={'request': request})
+        message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 

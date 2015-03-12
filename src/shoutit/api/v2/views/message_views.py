@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 
 from shoutit.api.v2.pagination import DateTimePagination, ReverseModifiedDateTimePagination
-from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer, MessageDetailSerializer
+from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
 
 from shoutit.controllers import message_controller
 
@@ -42,20 +42,18 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
         Get signed in user conversations
 
-        ###Response
-        <pre><code>
-        {
-          "count": 3, // number of results
-          "next": null, // next results page url
-          "previous": null, // previous results page url
-          "results": [] // list of `ConversationSerializer`
-        }
-        </code></pre>
+        [Conversations Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.abebl6lr97rm)
         ---
         serializer: ConversationSerializer
         parameters:
             - name: search
-              description: not yet active
+              description: NOT IMPLEMENTED
+              paramType: query
+            - name: before
+              description: timestamp to get messages before
+              paramType: query
+            - name: after
+              description: timestamp to get messages after
               paramType: query
         """
         return super(ConversationViewSet, self).list(request, *args, **kwargs)
@@ -77,38 +75,20 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         """
         Get conversation messages
 
-        Using `before` and `after` query params together is not allowed.
-
-        First call returns the most recent messages in the following order:
-
-        * message 4
-        * message 5
-        * message 6 (most recent message)
-
-        ###Previous messages
-        set `before` to the timestamp of the first message in the current page eg.
-
-        <pre><code>GET /api/v2/conversations/{conversation_id}/messages?before={message4_timestamp}
-        </code></pre>
-
-        ###Later messages
-        set `after` to the timestamp of the last message in the current page
-
-        <pre><code>GET /api/v2/conversations/{conversation_id}/messages?after={message6_timestamp}
-        </code></pre>
-
-        > `next` and `previous` attributes contain the correct url to be used for next and previous pages based. They can be either used directly or parsed to extract query params and construct required url.
-
-        > Note that if `page_size` is specified in a request, it should be also specified with same value for next and previous requests, to return correct results.
-
+        [Messages Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.xnc089w6znop)
         ---
-        serializer: MessageDetailSerializer
+        serializer: MessageSerializer
         parameters:
+            - name: search
+              description: NOT IMPLEMENTED
+              paramType: query
             - name: before
               description: timestamp to get messages before
               paramType: query
             - name: after
               description: timestamp to get messages after
+              paramType: query
+            - name: page_size
               paramType: query
         """
         conversation = self.get_object()
@@ -121,7 +101,7 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
         [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
 
-        serializer = MessageDetailSerializer(page, many=True)
+        serializer = MessageSerializer(page, many=True)
         conversation.mark_as_read(request.user)
         return self.get_paginated_response(serializer.data)
 
@@ -173,7 +153,7 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         </code></pre>
 
         ---
-        response_serializer: MessageDetailSerializer
+        response_serializer: MessageSerializer
         omit_parameters:
             - form
         parameters:
@@ -181,12 +161,12 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
               paramType: body
         """
         conversation = self.get_object()
-        serializer = MessageDetailSerializer(data=request.data, partial=True, context={'request': request})
+        serializer = MessageSerializer(data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation, request.user, text=text, attachments=attachments)
-        message = MessageDetailSerializer(instance=message, context={'request': request})
+        message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 

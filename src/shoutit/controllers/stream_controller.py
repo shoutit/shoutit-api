@@ -27,6 +27,7 @@ post_types = {
     POST_TYPE_OFFER: [POST_TYPE_OFFER],
 }
 
+
 def PublishShoutToShout(shout, other):
     rank = 0.0
     distance = normalized_distance(shout.latitude, shout.longitude, other.latitude, other.longitude)

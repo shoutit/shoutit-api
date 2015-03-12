@@ -152,15 +152,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         """
         Get tag shouts
 
-        ###Response
-        <pre><code>
-        {
-          "count": 4, // number of results
-          "next": null, // next results page url
-          "previous": null, // previous results page url
-          "results": [] // list of {TradeSerializer}
-        }
-        </code></pre>
+        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.26dyymkevc5m)
         ---
         serializer: TradeSerializer
         omit_parameters:
@@ -168,13 +160,16 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         parameters:
             - name: shout_type
               paramType: query
-              required: true
               defaultValue: all
               enum:
                 - request
                 - offer
                 - all
-            - name: page
+            - name: before
+              description: timestamp to get shouts before
+              paramType: query
+            - name: after
+              description: timestamp to get shouts after
               paramType: query
             - name: page_size
               paramType: query

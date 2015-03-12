@@ -380,25 +380,15 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    conversation_id = serializers.UUIDField(read_only=True)
     user = UserSerializer(read_only=True, required=False)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
+    attachments = MessageAttachmentSerializer(many=True, required=False,
+                                              help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
 
     class Meta:
         model = Message2
-        fields = ('id', 'created_at', 'user', 'text')
-
-
-class MessageDetailSerializer(MessageSerializer):
-    attachments = MessageAttachmentSerializer(many=True, required=False,
-                                              help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
-    conversation_url = serializers.SerializerMethodField()
-
-    class Meta(MessageSerializer.Meta):
-        parent_fields = MessageSerializer.Meta.fields
-        fields = parent_fields + ('attachments', 'conversation_url')
-
-    def get_conversation_url(self, message):
-        return build_absolute_uri(reverse('conversation-detail', kwargs={'id': message.conversation.id}))
+        fields = ('id', 'created_at', 'conversation_id', 'user', 'text', 'attachments')
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
@@ -474,7 +464,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 class AttachedObjectSerializer(serializers.Serializer):
     user = UserSerializer(source='attached_user', required=False)
-    message = MessageDetailSerializer(source='attached_message', required=False)
+    message = MessageSerializer(source='attached_message', required=False)
 
     def to_representation(self, attached_object):
         # create reference to the object inside itself with name based on its class

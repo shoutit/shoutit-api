@@ -11,7 +11,7 @@ from shoutit.models import Trade, Category, Tag
 
 
 class ShoutFilter(django_filters.FilterSet):
-    type = django_filters.MethodFilter(action='filter_type')
+    shout_type = django_filters.MethodFilter(action='filter_shout_type')
     min_price = django_filters.NumberFilter(name="item__Price", lookup_type='gte')
     max_price = django_filters.NumberFilter(name="item__Price", lookup_type='lte')
     tags = django_filters.MethodFilter(action='filter_tags')
@@ -24,13 +24,13 @@ class ShoutFilter(django_filters.FilterSet):
 
     class Meta:
         model = Trade
-        fields = ['id', 'country', 'city', 'type', 'min_price', 'max_price', 'tags', 'category',
+        fields = ['id', 'country', 'city', 'shout_type', 'min_price', 'max_price', 'tags', 'category',
                   'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng', 'user']
         order_by = ['-date_published']
 
-    def filter_type(self, queryset, value):
-        if value not in ['all', 'offers', 'requests']:
-            raise ValidationError({'type': "should be `all`, `requests` or `offers`."})
+    def filter_shout_type(self, queryset, value):
+        if value not in ['all', 'offer', 'request']:
+            raise ValidationError({'type': "should be `all`, `request` or `offer`."})
         return stream_controller.filter_posts_qs(queryset, value)
 
     def filter_tags(self, queryset, value):

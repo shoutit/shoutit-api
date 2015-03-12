@@ -31,6 +31,16 @@ class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def list(self, request, *args, **kwargs):
         """
         Get signed in user notifications
+
+        [Notifications Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.ix2g5tgh1m27)
+        ---
+        parameters:
+            - name: before
+              description: timestamp to get notifications before
+              paramType: query
+            - name: after
+              description: timestamp to get notifications after
+              paramType: query
         """
         notifications_controller.mark_all_as_read(request.user)
         return super(NotificationViewSet, self).list(request, *args, **kwargs)

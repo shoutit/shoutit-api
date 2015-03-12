@@ -343,15 +343,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         """
         Get user shouts
 
-        ###Response
-        <pre><code>
-        {
-          "count": 4, // number of results
-          "next": null, // next results page url
-          "previous": null, // previous results page url
-          "results": [] // list of {TradeSerializer}
-        }
-        </code></pre>
+        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.26dyymkevc5m)
         ---
         serializer: TradeSerializer
         omit_parameters:
@@ -364,13 +356,16 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               defaultValue: me
             - name: shout_type
               paramType: query
-              required: true
               defaultValue: all
               enum:
                 - request
                 - offer
                 - all
-            - name: page
+            - name: before
+              description: timestamp to get shouts before
+              paramType: query
+            - name: after
+              description: timestamp to get shouts after
               paramType: query
             - name: page_size
               paramType: query
@@ -414,7 +409,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         </code></pre>
 
         ---
-        response_serializer: MessageDetailSerializer
+        response_serializer: MessageSerializer
         omit_parameters:
             - form
         parameters:
@@ -429,13 +424,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         ):
             raise ValidationError({'error': "You can only start a conversation with your listeners"})
 
-        serializer = MessageDetailSerializer(data=request.data, partial=True, context={'request': request})
+        serializer = MessageSerializer(data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation=None, user=request.user,
                                                    to_users=[user], text=text, attachments=attachments)
-        message = MessageDetailSerializer(instance=message, context={'request': request})
+        message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 

@@ -29,7 +29,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")
         if isinstance(attached_object, Message2):
-            attached_object_dict = serializers.MessageDetailSerializer(attached_object).data
+            attached_object_dict = serializers.MessageSerializer(attached_object).data
         else:
             attached_object_dict = {}
     else:
