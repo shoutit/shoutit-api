@@ -16,5 +16,5 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += [
-    url(r'^v2/', include('shoutit.api.v2.urls')),
+    url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
 ]
