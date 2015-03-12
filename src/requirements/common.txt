@@ -17,7 +17,7 @@ markdown
 django-filter
 drf-extensions
 git+https://github.com/mapmyfitness/django-oauth2-provider
-django-rest-swagger
+git+https://github.com/mochawich/django-rest-swagger
 
 redis==2.8.0
 django-redis-cache==0.10.0
