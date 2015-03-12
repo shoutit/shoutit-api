@@ -555,7 +555,7 @@ CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
 
 # Rest FW
 REST_FRAMEWORK = {
-    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+    'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
     'DEFAULT_VERSION': 'v2',
     'ALLOWED_VERSIONS': ['v2'],
     'DEFAULT_AUTHENTICATION_CLASSES': (

@@ -16,5 +16,6 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += [
+    url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
 ]

@@ -370,6 +370,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: page_size
               paramType: query
         """
+        # from rest_framework.reverse import reverse
+        # reverse('user-list', request=request)
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
