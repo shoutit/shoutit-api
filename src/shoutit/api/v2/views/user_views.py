@@ -507,10 +507,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         else:
             if account == 'gplus':
-                unlink_gplus_user(request)
+                unlink_gplus_user(user)
 
             if account == 'facebook':
-                unlink_facebook_user(request)
+                unlink_facebook_user(user)
 
             msg = "{} unlinked successfully.".format(account)
 
