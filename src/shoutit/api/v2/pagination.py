@@ -136,7 +136,7 @@ class DateTimePagination(CursorPagination):
         return 0
 
     def get_next_link(self):
-        recent_object = len(self.page) and self.page[self.get_recent_index()]
+        recent_object = hasattr(self, 'page') and len(self.page) and self.page[self.get_recent_index()]
         if not recent_object:
             return None
         recent_object_timestamp = getattr(recent_object, self.datetime_unix_attribute)
@@ -146,7 +146,7 @@ class DateTimePagination(CursorPagination):
         return url
 
     def get_previous_link(self):
-        oldest_object = len(self.page) and self.page[self.get_oldest_index()]
+        oldest_object = hasattr(self, 'page') and len(self.page) and self.page[self.get_oldest_index()]
         if not oldest_object:
             return None
         oldest_object_timestamp = getattr(oldest_object, self.datetime_unix_attribute)
