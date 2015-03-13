@@ -14,6 +14,8 @@ from shoutit.controllers import stream_controller, message_controller
 
 from shoutit.api.v2.serializers import *
 from shoutit.api.v2.permissions import IsOwnerModify
+from shoutit.controllers.facebook_controller import link_facebook_account, unlink_facebook_user
+from shoutit.controllers.gplus_controller import link_gplus_account, unlink_gplus_user
 
 
 class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -370,8 +372,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: page_size
               paramType: query
         """
-        # from rest_framework.reverse import reverse
-        # reverse('user-list', request=request)
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
@@ -438,3 +438,85 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def get_success_message_headers(self, data):
         return {'Location': data['conversation_url']}
+
+    @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    def link(self, request, *args, **kwargs):
+        """
+        Link/Unlink external social accounts
+
+        ###Link Facebook
+        POST: /api/v2/users/{username}/link
+        <pre><code>
+        {
+            "account": "facebook",
+            "facebook_access_token": "facebook access token"
+        }
+        </code></pre>
+
+        ###Unlink Facebook
+        DELETE: /api/v2/users/{username}/link
+        <pre><code>
+        {
+            "account": "facebook"
+        }
+        </code></pre>
+
+        ###Link G+
+        POST: /api/v2/users/{username}/link
+        <pre><code>
+        {
+            "account": "gplus",
+            "gplus_code": "google grant code"
+        }
+        </code></pre>
+
+        ###Unlink G+
+        <pre><code>
+        DELETE: /api/v2/users/{username}/link
+        {
+            "account": "gplus"
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        user = self.get_object()
+        account = request.data.get('account')
+        if account not in ['facebook', 'gplus']:
+            raise ValidationError({'account': "unsupported account"})
+
+        if request.method == 'POST':
+            if account == 'gplus':
+                gplus_code = request.data.get('gplus_code')
+                if not gplus_code:
+                    raise ValidationError({'gplus_code': "please provide valid google plus code"})
+                link_gplus_account(user, gplus_code, hasattr(request.auth, 'client') and request.auth.client or None)
+
+            if account == 'facebook':
+                facebook_access_token = request.data.get('facebook_access_token')
+                if not facebook_access_token:
+                    raise ValidationError({'facebook_access_token': "please provide valid facebook access token"})
+                link_facebook_account(user, facebook_access_token)
+
+            msg = "{} linked successfully.".format(account)
+
+        else:
+            if account == 'gplus':
+                unlink_gplus_user(request)
+
+            if account == 'facebook':
+                unlink_facebook_user(request)
+
+            msg = "{} unlinked successfully.".format(account)
+
+        ret = {
+            'data': {'success': msg},
+            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
+        }
+
+        return Response(**ret)

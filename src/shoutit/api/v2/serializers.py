@@ -12,12 +12,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, \
-    NotificationType, PostType
+    NotificationType
 from common.utils import date_unix
-from shoutit.api.api_utils import build_absolute_uri
 
-from shoutit.models import User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, \
-    Currency
+from shoutit.models import (
+    User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency
+)
 from shoutit.utils import cloud_upload_image, random_uuid_str
 from shoutit.controllers import shout_controller
 
@@ -87,7 +87,7 @@ class UserDetailSerializer(UserSerializer):
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
     push_tokens = PushTokensSerializer(help_text="Only shown for owner")
-    social_channels = serializers.ReadOnlyField(help_text="only shown for owner")
+    linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     image_file = serializers.ImageField(required=False)
     is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
@@ -104,7 +104,7 @@ class UserDetailSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'social_channels', 'push_tokens', 'image_file',
+        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens', 'image_file',
                                   'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
 
@@ -142,7 +142,7 @@ class UserDetailSerializer(UserSerializer):
             del ret['location']['latitude']
             del ret['location']['longitude']
             del ret['push_tokens']
-            del ret['social_channels']
+            del ret['linked_accounts']
             if not ret['is_listener']:
                 del ret['message_url']
 

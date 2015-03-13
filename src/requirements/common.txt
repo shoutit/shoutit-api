@@ -17,7 +17,7 @@ git+https://github.com/jpadilla/django-rest-framework-oauth
 markdown
 django-filter
 drf-extensions
-git+https://github.com/mapmyfitness/django-oauth2-provider
+git+https://github.com/mochawich/django-oauth2-provider
 git+https://github.com/mochawich/django-rest-swagger
 
 redis==2.8.0

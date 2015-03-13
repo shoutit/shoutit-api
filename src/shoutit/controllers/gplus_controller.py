@@ -1,8 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+
+"""
+from __future__ import unicode_literals
+
 import httplib2
 from oauth2client.client import AccessTokenRefreshError, FlowExchangeError
 from oauth2client.client import credentials_from_clientsecrets_and_code, OOB_CALLBACK_URN
 from django.conf import settings
 from apiclient import discovery
+from rest_framework.exceptions import ValidationError
 
 from shoutit.models import LinkedGoogleAccount
 from shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_profile_location
@@ -62,42 +69,45 @@ def user_from_gplus_code(request, code, initial_user=None, client='other'):
         return Exception('Could not login the user'), None
 
 
-def link_gplus_user(request, code, client='other'):
-    redirect_uri = OOB_CALLBACK_URN
-    if (request.is_api and request.api_client == 'web') or client == 'shoutit-web':
-        redirect_uri = 'postmessage'
+def link_gplus_account(user, gplus_code, client=None):
+    """
+    Add LinkedGoogleAccount to user
+    """
+    redirect_uri = 'postmessage'
+    if client and client.name in ['shoutit-ios', 'shoutit-android']:
+        redirect_uri = OOB_CALLBACK_URN
 
     try:
         # Upgrade the authorization code into a credentials object
         google_api_client = settings.GOOGLE_API['CLIENTS']['web']
-        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'], scope='', code=code,
+        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'], scope='', code=gplus_code,
                                                               redirect_uri=redirect_uri)
-    except FlowExchangeError as flowError:
-        return flowError, False
+    except FlowExchangeError as flow_error:
+        raise ValidationError({'gplus_code': str(flow_error)})
     else:
         gplus_id = credentials.id_token['sub']
 
     # unlink first
-    unlink_gplus_user(request)
+    unlink_gplus_user(user, False)
 
     # link
     try:
-        la = LinkedGoogleAccount(user=request.user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
+        la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
         la.save()
-        return None, True
     except Exception, e:
-        return e, False
+        # todo: log_error
+        raise ValidationError({'error': "could not link gplus account"})
 
 
-def unlink_gplus_user(request):
+def unlink_gplus_user(user, strict=True):
     """
     Deleted the user's LinkedGoogleAccount
-    :param request:
-    :return:
     """
     try:
-        linked_account = LinkedGoogleAccount.objects.get(user=request.user)
+        linked_account = LinkedGoogleAccount.objects.get(user=user)
     except LinkedGoogleAccount.DoesNotExist:
-        pass
+        if strict:
+            raise ValidationError({'error': "no gplus account to unlink"})
     else:
+        # todo: unlink from google services
         linked_account.delete()

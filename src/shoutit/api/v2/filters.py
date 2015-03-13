@@ -30,7 +30,7 @@ class ShoutFilter(django_filters.FilterSet):
 
     def filter_shout_type(self, queryset, value):
         if value not in ['all', 'offer', 'request']:
-            raise ValidationError({'type': "should be `all`, `request` or `offer`."})
+            raise ValidationError({'shout_type': "should be `all`, `request` or `offer`."})
         return stream_controller.filter_posts_qs(queryset, value)
 
     def filter_tags(self, queryset, value):

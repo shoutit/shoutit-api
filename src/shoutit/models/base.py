@@ -196,13 +196,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 delattr(self, '_gcm_device')
 
     @property
-    def social_channels(self):
-        if not hasattr(self, '_social_channels'):
-            self._social_channels = {
+    def linked_accounts(self):
+        if not hasattr(self, '_linked_accounts'):
+            self._linked_accounts = {
                 'facebook': True if (hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
                 'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
             }
-        return self._social_channels
+        return self._linked_accounts
 
     @property
     def push_tokens(self):

@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+
+"""
+from __future__ import unicode_literals
+
 import json
 import urllib
 import urllib2
@@ -5,6 +11,7 @@ import urlparse
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+from rest_framework.exceptions import ValidationError
 
 from shoutit.models import LinkedFacebookAccount
 from shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_profile_location
@@ -87,6 +94,7 @@ def extend_token(short_lived_token):
             return None
     except Exception, e:
         print e.message
+        # todo: log_error
         return None
 
     long_lived_token = {
@@ -96,36 +104,41 @@ def extend_token(short_lived_token):
     return long_lived_token
 
 
-def link_facebook_user(request, auth_response):
+def link_facebook_account(user, facebook_access_token):
 
-    long_lived_token = extend_token(auth_response['accessToken'])
+    long_lived_token = extend_token(facebook_access_token)
     if not long_lived_token:
-        return Exception("could not extend the facebook short lived access_token with long lived one"), False
+        raise ValidationError({'facebook_access_token': "could not extend the facebook short lived access_token with long lived one"})
 
-    auth_response['accessToken'] = long_lived_token['access_token']
-    auth_response['expiresIn'] = long_lived_token['expires']
+    # todo: get info, pic, etc about user
+    try:
+        response = urllib2.urlopen('https://graph.facebook.com/me?access_token={}'.format(long_lived_token['access_token']), timeout=20)
+        fb_user = json.loads(response.read())
+    except urllib2.HTTPError, e:
+        raise ValidationError({'error': "could not link facebook account"})
 
     # unlink first
-    unlink_facebook_user(request)
+    unlink_facebook_user(user, False)
 
     # link
     try:
-        la = LinkedFacebookAccount(user=request.user, facebook_id=auth_response['userID'], AccessToken=auth_response['accessToken'], ExpiresIn=auth_response['expiresIn'])
+        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=long_lived_token['access_token'],
+                                   ExpiresIn=long_lived_token['expires'])
         la.save()
-        return None, True
     except Exception, e:
-        return e, False
+        # todo: log_error
+        raise ValidationError({'error': "could not link facebook account"})
 
 
-def unlink_facebook_user(request):
+def unlink_facebook_user(user, strict=True):
     """
     Deleted the user's LinkedFacebookAccount
-    :param request:
-    :return:
     """
     try:
-        linked_account = LinkedFacebookAccount.objects.get(user=request.user)
+        linked_account = LinkedFacebookAccount.objects.get(user=user)
     except LinkedFacebookAccount.DoesNotExist:
-        pass
+        if strict:
+            raise ValidationError({'error': "no facebook account to unlink"})
     else:
+        # todo: unlink from facebook services
         linked_account.delete()
