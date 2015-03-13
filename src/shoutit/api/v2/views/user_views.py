@@ -439,7 +439,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     def get_success_message_headers(self, data):
         return {'Location': data['conversation_url']}
 
-    @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    @detail_route(methods=['post', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
