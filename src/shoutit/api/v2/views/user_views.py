@@ -439,13 +439,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     def get_success_message_headers(self, data):
         return {'Location': data['conversation_url']}
 
-    @detail_route(methods=['post', 'delete'], suffix='Link / Unlink Accounts')
+    @detail_route(methods=['put', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
 
         ###Link Facebook
-        POST: /api/v2/users/{username}/link
+        PUT: /api/v2/users/{username}/link
         <pre><code>
         {
             "account": "facebook",
@@ -462,7 +462,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         </code></pre>
 
         ###Link G+
-        POST: /api/v2/users/{username}/link
+        PUT: /api/v2/users/{username}/link
         <pre><code>
         {
             "account": "gplus",
@@ -490,7 +490,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if account not in ['facebook', 'gplus']:
             raise ValidationError({'account': "unsupported account"})
 
-        if request.method == 'POST':
+        if request.method == 'PUT':
             if account == 'gplus':
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
@@ -516,7 +516,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ret = {
             'data': {'success': msg},
-            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
+            'status': status.HTTP_202_ACCEPTED
         }
 
         return Response(**ret)
