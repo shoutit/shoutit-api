@@ -445,8 +445,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         Link/Unlink external social accounts
 
         ###Link Facebook
-        PUT: /api/v2/users/{username}/link
         <pre><code>
+        PUT: /api/v2/users/{username}/link
         {
             "account": "facebook",
             "facebook_access_token": "facebook access token"
@@ -454,16 +454,16 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         </code></pre>
 
         ###Unlink Facebook
-        DELETE: /api/v2/users/{username}/link
         <pre><code>
+        DELETE: /api/v2/users/{username}/link
         {
             "account": "facebook"
         }
         </code></pre>
 
         ###Link G+
-        PUT: /api/v2/users/{username}/link
         <pre><code>
+        PUT: /api/v2/users/{username}/link
         {
             "account": "gplus",
             "gplus_code": "google grant code"
