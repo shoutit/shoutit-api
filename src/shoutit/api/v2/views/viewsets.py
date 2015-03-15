@@ -30,4 +30,4 @@ class UUIDViewSetMixin(object):
         except:
             raise ValidationError({'detail': "'%s' is not a valid id." % value})
 
-        return super(UUIDViewSetMixin, self).get_object(self)
+        return super(UUIDViewSetMixin, self).get_object()
