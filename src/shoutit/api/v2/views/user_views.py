@@ -437,7 +437,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {'Location': data['conversation_url']}
+        return {'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)}
 
     @detail_route(methods=['put', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):

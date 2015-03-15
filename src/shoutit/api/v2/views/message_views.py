@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from rest_framework import permissions, viewsets, filters, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
+from rest_framework.reverse import reverse
 
 from shoutit.api.v2.pagination import DateTimePagination, ReverseModifiedDateTimePagination
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
@@ -171,7 +172,7 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {'Location': data['conversation_url']}
+        return {'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)}
 
 
 class MessageViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):
