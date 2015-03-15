@@ -9,16 +9,14 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route, list_route
 from shoutit.api.v2.pagination import ReverseDateTimePagination
 from shoutit.api.v2.serializers import NotificationSerializer
+from shoutit.api.v2.views.viewsets import UUIDViewSetMixin
 from shoutit.controllers import notifications_controller
 
 
-class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Notification API Resource.
     """
-    lookup_field = 'id'
-    lookup_value_regex = '[0-9a-f-]{32,36}'
-
     serializer_class = NotificationSerializer
 
     pagination_class = ReverseDateTimePagination

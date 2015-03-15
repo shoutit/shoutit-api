@@ -39,9 +39,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_object(self):
-        username = self.kwargs.get('username')
+        username = self.kwargs.get(self.lookup_field)
         if username == 'me' and self.request.user.is_authenticated():
-            self.kwargs['username'] = self.request.user.username
+            self.kwargs[self.lookup_field] = self.request.user.username
 
         return super(UserViewSet, self).get_object()
 

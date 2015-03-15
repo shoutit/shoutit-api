@@ -4,13 +4,14 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import permissions, viewsets, filters, mixins, status
+from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 
 from shoutit.api.v2.pagination import DateTimePagination, ReverseModifiedDateTimePagination
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
+from shoutit.api.v2.views.viewsets import UUIDViewSetMixin
 
 from shoutit.controllers import message_controller
 
@@ -18,23 +19,17 @@ from shoutit.models import Message2
 from shoutit.api.v2.permissions import IsContributor
 
 
-class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
-    lookup_field = 'id'
-    lookup_value_regex = '[0-9a-f-]{32,36}'
-
     serializer_class = ConversationSerializer
 
     pagination_class = ReverseModifiedDateTimePagination
 
-    # todo: conversations search
-    # filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    # filter_fields = ('id',)
-    # search_fields = ('id',)
-
     permission_classes = (permissions.IsAuthenticated, IsContributor)
+
+    # todo: conversations / messages search
 
     def get_queryset(self):
         return self.request.user.conversations2.all().order_by('-modified_at')
@@ -175,18 +170,11 @@ class ConversationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return {'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)}
 
 
-class MessageViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     API endpoint that allows conversations/messages to be viewed or added.
     """
-    lookup_field = 'id'
-    lookup_value_regex = '[0-9a-f-]{32,36}'
-
     serializer_class = MessageSerializer
-
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('id',)
-    search_fields = ('id',)
 
     permission_classes = (permissions.IsAuthenticated, IsContributor)
 
@@ -201,6 +189,7 @@ class MessageViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):
         omit_parameters:
             - form
         """
-        message = self.get_object()
-        message_controller.hide_message2_from_user(message, request.user)
-        return Response(status.HTTP_204_NO_CONTENT)
+        return super(MessageViewSet, self).destroy(request, *args, **kwargs)
+
+    def perform_destroy(self, message):
+        message_controller.hide_message2_from_user(message, self.request.user)

@@ -14,19 +14,17 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.filters import ShoutFilter
 from shoutit.api.v2.pagination import ReverseDateTimePagination
 from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageSerializer
-from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet
+from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet, UUIDViewSetMixin
 from shoutit.controllers import message_controller
 
 from shoutit.models import Trade
 from shoutit.api.v2.permissions import IsOwnerModify
 
 
-class ShoutViewSet(DetailSerializerMixin, NoUpdateModelViewSet):
+class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet):
     """
     Shout API Resource
     """
-    lookup_field = 'id'
-    lookup_value_regex = '[0-9a-f-]{32,36}'
 
     serializer_class = TradeSerializer
     serializer_detail_class = TradeDetailSerializer
