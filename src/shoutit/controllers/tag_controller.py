@@ -3,6 +3,7 @@ import difflib
 from django.db.models.aggregates import Count
 
 from common.constants import STREAM_TYPE_TAG
+from common.utils import process_tag_name
 from shoutit.models import Tag, Stream
 
 
@@ -55,19 +56,27 @@ def GetSynonymParent(name):
         return None
 
 
-def get_or_create_tag(name, creator, is_parent):
+def get_or_create_tag(name, creator=None):
+    name = process_tag_name(name)
+    if not name or not isinstance(name, basestring):
+        return None
     tag, created = Tag.objects.get_or_create(name=name)
     if created:
         stream = Stream(type=STREAM_TYPE_TAG)
         stream.save()
         tag.Stream = stream
         tag.Creator = creator
-        tag.save(update_fields=['Stream', 'Creator'])
+        tag.save()
     return tag
 
 
-def get_or_create_tags(tags, creator):
-    return [get_or_create_tag(tag, creator, False) for tag in tags]
+def get_or_create_tags(names, creator=None):
+    tags = []
+    for name in names:
+        tag = get_or_create_tag(name, creator)
+        if tag:
+            tags.append(tag)
+    return tags
 
 
 def search_tags(query='', limit=10):

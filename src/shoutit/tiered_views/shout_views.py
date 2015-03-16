@@ -20,7 +20,6 @@ from shoutit.tiered_views.renderers import json_renderer, shout_brief_json, obje
 from shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, edit_shout_validator
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_BAD_REQUEST
 from shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
-from common.utils import process_tags
 
 
 @require_POST
@@ -148,7 +147,6 @@ def post_request(request):
         if isinstance(tags, basestring):
             tags = tags.split(' ')
 
-        tags = process_tags(tags)
         if not tags:
             result.messages.append(('error', _("tags are invalid")))
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -235,7 +233,6 @@ def post_offer(request):
         if isinstance(tags, basestring):
             tags = tags.split(' ')
 
-        tags = process_tags(tags)
         if not tags:
             result.messages.append(('error', _("tags are invalid")))
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -296,7 +293,6 @@ def shout_edit(request, shout_id):
     if isinstance(tags, basestring):
         tags = tags.split(' ')
 
-    tags = process_tags(tags)
     if not tags:
         result.messages.append(('error', _("tags are invalid")))
         result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -465,7 +461,6 @@ def shout_sss4(request):
     if isinstance(tags, basestring):
         tags = tags.split(' ')
 
-    tags = process_tags(tags)
     if not tags:
         return JsonResponseBadRequest({'error': "Invalid tags"})
 

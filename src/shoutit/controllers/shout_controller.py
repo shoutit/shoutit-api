@@ -6,7 +6,6 @@ from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
-from common.utils import process_tags
 
 from shoutit.controllers.user_controller import get_profile
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
@@ -198,8 +197,6 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
             tags = [tag['name'] for tag in tags]
     # remove duplicates in case any
     tags = list(OrderedDict.fromkeys(tags))
-    # only pass valid tags
-    tags = process_tags(tags)
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
         try:
@@ -254,8 +251,6 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
             tags = [tag['name'] for tag in tags]
     # remove duplicates in case any
     tags = list(OrderedDict.fromkeys(tags))
-    # only pass valid tags
-    tags = process_tags(tags)
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
         try:

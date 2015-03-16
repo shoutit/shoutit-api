@@ -13,7 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 
 # Shout
 class ShoutAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'date_published', 'user', 'text', 'country', 'city')
+    list_display = ('id', 'date_published', 'user', 'text', 'country', 'city')
     readonly_fields = ('user', 'Streams', 'tags')
 
 admin.site.register(Shout, ShoutAdmin)
@@ -22,32 +22,32 @@ admin.site.register(Shout, ShoutAdmin)
 # Trade
 class TradeAdmin(admin.ModelAdmin):
     list_display = (
-        'pk', 'base_date_published', 'Owner', 'OwnerProfile', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
+        'id', 'base_date_published', 'owner', 'owner_profile', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
     list_filter = ('type', 'is_sss', 'is_disabled')
     readonly_fields = ('user', 'Streams', 'tags', 'related_stream', 'recommended_stream', 'StreamsCode', 'item')
 
-    def Owner(self, obj):
+    def owner(self, obj):
         return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
             '/admin/auth/user/', obj.user.username, obj.user, obj.user.username)
 
-    Owner.allow_tags = True
-    Owner.short_description = 'Owner User'
+    owner.allow_tags = True
+    owner.short_description = 'User'
 
-    def OwnerProfile(self, obj):
+    def owner_profile(self, obj):
         if hasattr(obj.user, 'profile') and obj.user.profile:
             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/userprofile/', obj.user.profile.pk, obj.user.profile)
         elif hasattr(obj.user, 'Business') and obj.user.Business:
             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessprofile/', obj.user.Business.pk, obj.user.Business)
 
-    OwnerProfile.allow_tags = True
-    OwnerProfile.short_description = 'Owner Profile/Business'
+    owner_profile.allow_tags = True
+    owner_profile.short_description = 'User Profile/Business'
 
 admin.site.register(Trade, TradeAdmin)
 
 
 # Post
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('pk',  'user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
+    list_display = ('id',  'user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Item)
@@ -55,7 +55,7 @@ admin.site.register(Item)
 
 # Experience
 class ExperienceAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user', 'AboutBusiness', 'State', 'text')
+    list_display = ('id', 'user', 'AboutBusiness', 'State', 'text')
     search_fields = ['AboutBusiness__name', 'text']
     readonly_fields = ('Streams', 'AboutBusiness')
 
@@ -72,7 +72,7 @@ class CustomUserChangeForm(UserChangeForm):
 
 class CustomUserAdmin(UserAdmin):
     save_on_top = True
-    list_display = ('pk', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
+    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'last_login')
     list_per_page = 50
 
     form = CustomUserChangeForm
@@ -89,7 +89,7 @@ admin.site.register(User, CustomUserAdmin)
 
 # Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'user', 'country', 'city', 'Sex', 'image', 'Stream')
+    list_display = ('id', 'name', 'user', 'country', 'city', 'Sex', 'image', 'Stream')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
     list_filter = ('country', 'city', 'Sex')
@@ -113,7 +113,7 @@ admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
 
 # Business
 class BusinessProfileAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'user', 'country', 'city', 'Category', 'Confirmed', 'Stream')
+    list_display = ('id', 'name', 'user', 'country', 'city', 'Category', 'Confirmed', 'Stream')
     search_fields = ['name', 'user__email', 'Website', 'Mobile']
     readonly_fields = ('user', 'Stream', 'LastToken')
 
@@ -130,7 +130,7 @@ admin.site.register(Business, BusinessProfileAdmin)
 #
 #     def confirmation_url(self, obj):
 #         try:
-#             confirmation = obj.user.BusinessConfirmations.all().order_by('pk')[0]
+#             confirmation = obj.user.BusinessConfirmations.all().order_by('id')[0]
 #             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.pk, obj.user)
 #         except :
 #             return 'Docs not yet submitted'
@@ -152,14 +152,14 @@ admin.site.register(Business, BusinessProfileAdmin)
 
 # BusinessConfirmation
 class BusinessConfirmationAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user')
+    list_display = ('id', 'user')
 
 admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 
 
 # BusinessCategory
 class BusinessCategoryAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'Source', 'SourceID', 'Parent')
+    list_display = ('id', 'name', 'Source', 'SourceID', 'Parent')
     search_fields = ['name', 'Parent__name']
 
 admin.site.register(BusinessCategory, BusinessCategoryAdmin)
@@ -167,7 +167,7 @@ admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 
 # FollowShip
 class FollowShipAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'follower', 'stream', 'date_followed', 'state')
+    list_display = ('id', 'follower', 'stream', 'date_followed', 'state')
     search_fields = ['follower__user__username', 'stream__id']
     readonly_fields = ('follower', 'stream',)
 
@@ -184,12 +184,17 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class FeaturedTagAdmin(admin.ModelAdmin):
     raw_id_fields = ('main_tag',)
-    list_display = ('name', 'main_tag_name')
+    list_display = ('name', 'main_tag_name', 'tag_names')
     ordering = ('name',)
+    filter_horizontal = ('tags',)
 
     def main_tag_name(self, category):
         return category.main_tag.name
     main_tag_name.short_description = 'Main Tag'
+
+    def tag_names(self, category):
+        return ', '.join([tag.name for tag in category.tags.all().select_related('tags')])
+    tag_names.short_description = 'Tags'
 
 
 @admin.register(FeaturedTag)
@@ -206,19 +211,28 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 
 # Conversation
+@admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'FromUser', 'ToUser', 'AboutPost')
+    list_display = ('id', 'FromUser', 'ToUser', 'AboutPost')
     search_fields = ['FromUser__username', 'ToUser__username']
 
 
-admin.site.register(Conversation, ConversationAdmin)
-admin.site.register(Conversation2)
+@admin.register(Conversation2)
+class Conversation2Admin(admin.ModelAdmin):
+    list_display = ('id', 'type', 'usernames', 'object_id')
+    filter_horizontal = ('users',)
+    readonly_fields = ('last_message',)
+
+    def usernames(self, conversation):
+        return ', '.join([user.username for user in conversation.users.all()])
+    usernames.short_description = 'Users'
+
 admin.site.register(Conversation2Delete)
 
 
 # Message
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'Conversation', 'FromUser', 'ToUser', 'text', 'DateCreated', 'is_read')
+    list_display = ('id', 'Conversation', 'FromUser', 'ToUser', 'text', 'DateCreated', 'is_read')
     search_fields = ['FromUser__username', 'ToUser__username', 'text']
 
 
@@ -230,7 +244,7 @@ admin.site.register(Message2Delete)
 
 # Message Attachment
 class MessageAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'message', 'conversation', 'type', 'content_type', 'object_id', 'created_at')
+    list_display = ('id', 'message', 'conversation', 'type', 'content_type', 'object_id', 'created_at')
     search_fields = ['message__id', 'conversation__id']
 
 admin.site.register(MessageAttachment, MessageAttachmentAdmin)

@@ -9,7 +9,7 @@ from django.conf import settings
 from common.constants import STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED, DEFAULT_PAGE_SIZE, PRICE_RANK_TYPE, POST_TYPE_EXPERIENCE, \
     POST_TYPE_REQUEST, POST_TYPE_OFFER, FOLLOW_RANK_TYPE, DISTANCE_RANK_TYPE, TIME_RANK_TYPE, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, \
     EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
-from common.utils import process_tags, normalized_distance, mutual_followings, get_farest_point, safe_sql
+from common.utils import process_tag_names, normalized_distance, mutual_followings, get_farest_point, safe_sql
 from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Stream, ShoutWrap, Shout, Tag, StoredImage, Trade, Stream2, Listen, Profile, FollowShip, User
 
@@ -551,7 +551,7 @@ def filter_shouts_qs_by_tag_names(qs, tag_names=None):
     if not tag_names:
         return qs
 
-    tag_names = process_tags(tag_names)
+    tag_names = process_tag_names(tag_names)
     for tag_name in tag_names:
         qs = qs.filter(tags__name=tag_name)
     return qs

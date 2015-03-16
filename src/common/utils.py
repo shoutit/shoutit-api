@@ -43,21 +43,27 @@ def check_offline_mood():
         return True
 
 
-def process_tags(tags):
-    processed_tags = []
-    for tag in tags:
-        if not isinstance(tag, basestring):
-            continue
-        tag = tag.lower()[:30]
-        tag = re.sub('[+&/\s]', '-', tag)
-        tag = re.sub('[^a-z0-9-]', '', tag)
-        tag = re.sub('([-]){2,}', '-', tag)
-        tag = tag[1:] if tag.startswith('-') else tag
-        tag = tag[0:-1] if tag.endswith('-') else tag
+def process_tag_name(name):
+    if not isinstance(name, basestring):
+        return None
+    name = name.lower()[:30]
+    name = re.sub('[+&/\s]', '-', name)
+    name = re.sub('[^a-z0-9-]', '', name)
+    name = re.sub('([-]){2,}', '-', name)
+    name = name[1:] if name.startswith('-') else name
+    name = name[0:-1] if name.endswith('-') else name
+    if len(name) < 2:
+        return None
+    return name
 
-        if len(tag) >= 2:
-            processed_tags.append(tag)
-    return processed_tags
+
+def process_tag_names(names):
+    processed_tag_names = []
+    for name in names:
+        processed_tag_name = process_tag_name(name)
+        if processed_tag_name:
+            processed_tag_names.append(processed_tag_name)
+    return processed_tag_names
 
 
 def date_unix(date):
