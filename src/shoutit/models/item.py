@@ -23,6 +23,10 @@ class Item(UUIDModel):
         else:
             return None
 
+    @property
+    def video_url(self):
+        return self.get_first_video().url if self.get_first_video() else None
+
     def get_image_urls(self):
         return [image.image for image in self.get_images()]
 

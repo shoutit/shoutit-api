@@ -152,6 +152,13 @@ class Post(UUIDModel, APIModelMixin):
         else:
             return None
 
+    @property
+    def video_url(self):
+        if self.type in [POST_TYPE_REQUEST, POST_TYPE_OFFER]:
+            return self.item.video_url
+        else:
+            return None
+
     def refresh_streams2_ids(self):
         # save the ids of streams2 this post appears in as a json array, to be used in raw queries.
         self.streams2_ids = json.dumps(self.streams2.values_list('id', flat=True))

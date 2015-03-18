@@ -36,6 +36,7 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
 
     # todo: filter the name before saving
 
+
 class Category(UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
