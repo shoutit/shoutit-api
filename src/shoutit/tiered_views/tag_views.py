@@ -52,8 +52,8 @@ def search_tag(request):
     result.data['tags'] = tags
 
     if show_is_listening:
-        profile = request.user.abstract_profile
-        if request.user.is_authenticated() and isinstance(profile, Profile):
+        if request.user.is_authenticated() and isinstance(request.user.abstract_profile, Profile):
+            profile = request.user.abstract_profile
             user_interests = profile.Interests.all().values_list('name')
             for tag in result.data['tags']:
                 tag['is_listening'] = (tag['name'], ) in user_interests
@@ -87,9 +87,9 @@ def top_tags(request):
         user_country = None
         user_city = None
 
-    profile = request.user.abstract_profile
     result.data['tags'] = tag_controller.get_top_tags(10, user_country, user_city)
-    if request.user.is_authenticated() and isinstance(profile, Profile):
+    if request.user.is_authenticated() and isinstance(request.user.abstract_profile, Profile):
+        profile = request.user.abstract_profile
         user_interests = profile.Interests.all().values_list('name')
         for tag in result.data['tags']:
             tag['is_listening'] = (tag['name'], ) in user_interests

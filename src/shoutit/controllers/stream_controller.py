@@ -133,13 +133,6 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
         if int(rank_type_flag & PRICE_RANK_TYPE):
             filters['type__in'] = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
 
-    if filter_tags is not None and len(filter_tags) > 0:
-        filter_tags = [uuid.UUID(tag_id) for tag_id in filter_tags]
-        if 'tags__pk__in' in filters:
-            filters['tags__pk__in'].extend(filter_tags)
-        else:
-            filters['tags__pk__in'] = filter_tags
-
     # initializing current and base time variables
     today = datetime.today()
     days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
@@ -154,6 +147,10 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
 
     # building the queryset
     shout_qs = Shout.objects.select_related('item', 'item__Currency', 'user', 'user__Profile', 'tags').filter(**filters)
+
+    if filter_tags is not None and len(filter_tags) > 0:
+        filter_tags = ["'%s'" % t for t in filter_tags]
+        shout_qs = shout_qs.filter(tags__in=filter_tags)
 
     # Calculating the stream following rank attribute
     if int(rank_type_flag & FOLLOW_RANK_TYPE):
@@ -271,7 +268,8 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
 
     # executing query SQL & fetching shout IDs
     cursor = connection.cursor()
-    cursor.execute(' '' ' + query_string + ' '' ')
+    cursor.execute(query_string)
+    # cursor.execute(' '' ' + query_string + ' '' ')
     return [(str(row[1]), row[0]) for row in cursor.fetchall() if row and len(row)]
 
 

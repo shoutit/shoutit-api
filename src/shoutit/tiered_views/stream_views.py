@@ -41,8 +41,8 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
     # Category
     result.data['browse_category'] = browse_category
-    result.data['categories'] = Category.objects.all().order_by('name')
-    if browse_category and browse_category not in [unicode.lower(c.name) for c in result.data['categories']]:
+    result.data['categories'] = Category.objects.all().select_related('main_tag').order_by('name')
+    if browse_category and browse_category not in [unicode.lower(c.main_tag.name) for c in result.data['categories']]:
         result.data['redirect_category'] = True
         return result
 
@@ -79,7 +79,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.pk for tag in Tag.objects.filter(category__name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(category__main_tag__name__iexact=category)])
 
     all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
                                           DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
@@ -155,7 +155,7 @@ def index_stream(request):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.pk for tag in Tag.objects.filter(category__name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(category__main_tag__name__iexact=category)])
 
     all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0, DEFAULT_HOME_SHOUT_COUNT,
                                           shout_types, query, tag_ids, nearby_cities=user_nearby_cities)

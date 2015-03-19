@@ -22,7 +22,7 @@ urlpatterns = patterns('',
                        # ##  Shout Website ## #
                        url(r'^$', 'shoutit.tiered_views.general_views.index'),
                        url(r'^(requests|offers|experiences)/$', 'shoutit.tiered_views.general_views.index', ),
-                       url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z]+)/)?$', 'shoutit.tiered_views.stream_views.browse'),
+                       url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z0-9-]+)/)?$', 'shoutit.tiered_views.stream_views.browse'),
 
                        url(r'^tos/$', 'shoutit.tiered_views.general_views.tos'),
                        url(r'^tos/$', 'shoutit.tiered_views.general_views.tos'),

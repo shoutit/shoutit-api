@@ -70,8 +70,8 @@
                 <li><a class="btn {% if not browse_category %}selected_category{% endif %} all_categories"
                        href="/{{ browse_type }}/{{ browse_city_encoded }}/" data-category="All">{% trans "All" %}</a></li>
                 {% for category in categories %}
-                  <li><a class="btn {% if browse_category == category.name|lower %}selected_category{% endif %}"
-                         href="/{{ browse_type }}/{{ browse_city_encoded }}/{{ category.name|lower }}/"
+                  <li><a class="btn {% if browse_category == category.main_tag.name|lower %}selected_category{% endif %}"
+                         href="/{{ browse_type }}/{{ browse_city_encoded }}/{{ category.main_tag.name|lower }}/"
                          data-category="{{ category.name }}">{% trans category.name %}</a></li>
                 {% endfor %}
               </ul>
