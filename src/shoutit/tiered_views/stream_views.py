@@ -62,7 +62,7 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
 
     if browse_type == 'experiences':
         experiences = GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                           end_index=DEFAULT_PAGE_SIZE * page_num, detailed=False, city=user_city)
+                                     end_index=DEFAULT_PAGE_SIZE * page_num, detailed=False, city=user_city)
         result.data['count'] = len(experiences)
         result.data['experiences'] = experiences
         return result
@@ -79,10 +79,10 @@ def browse(request, browse_type, url_encoded_city, browse_category=None):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(category__name__iexact=category)])
 
     all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0,
-                                                         DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
+                                          DEFAULT_HOME_SHOUT_COUNT, types, query, tag_ids)
 
     dict_shout_ids = dict(all_shout_ids)
     shout_ids = [k[0] for k in all_shout_ids if
@@ -147,7 +147,7 @@ def index_stream(request):
 
     if POST_TYPE_EXPERIENCE in shout_types and len(shout_types) == 1:
         experiences = GetExperiences(user=user, owner_user=None, start_index=DEFAULT_PAGE_SIZE * (page_num - 1),
-                                                           end_index=DEFAULT_PAGE_SIZE * page_num, city=user_city)
+                                     end_index=DEFAULT_PAGE_SIZE * page_num, city=user_city)
         result.data['count'] = len(experiences)
         result.data['experiences'] = experiences
         return result
@@ -155,7 +155,7 @@ def index_stream(request):
     if category is not None:
         if tag_ids is None:
             tag_ids = []
-        tag_ids.extend([tag.pk for tag in Tag.objects.filter(Category__name__iexact=category)])
+        tag_ids.extend([tag.pk for tag in Tag.objects.filter(category__name__iexact=category)])
 
     all_shout_ids = get_ranked_shouts_ids(user, order_by, user_country, user_city, user_lat, user_lng, 0, DEFAULT_HOME_SHOUT_COUNT,
                                           shout_types, query, tag_ids, nearby_cities=user_nearby_cities)
