@@ -25,6 +25,8 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
     longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
 
+    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
+
     class Meta(UUIDModel.Meta):
         abstract = True
 
@@ -59,8 +61,6 @@ class Profile(AbstractProfile):
 
     birthday = models.DateField(null=True, blank=True)
     Sex = models.NullBooleanField()
-
-    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     isSSS = models.BooleanField(default=False, db_index=True)
 

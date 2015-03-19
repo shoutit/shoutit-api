@@ -8,7 +8,7 @@ from shoutit.controllers import email_controller
 from shoutit.models import User
 from common.constants import STREAM_TYPE_BUSINESS, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE
 from shoutit.models import Stream, Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, BusinessCreateApplication, PredefinedCity
-from shoutit.controllers.user_controller import GetProfile, SetRegisterToken, give_user_permissions
+from shoutit.controllers.user_controller import set_last_token, give_user_permissions
 from shoutit.controllers import email_controller
 from shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
 from shoutit import utils
@@ -241,7 +241,7 @@ def AcceptBusiness(request, username):
 	else:
 		user = username.user
 
-	profile = GetProfile(user)
+	profile = user.abstract_profile
 
 	if not user.BusinessCreateApplication.count():
 		return
@@ -289,5 +289,5 @@ def AcceptBusiness(request, username):
 
 	give_user_permissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
 
-	token = SetRegisterToken(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
+	token = set_last_token(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
 	email_controller.SendBusinessAcceptanceEmail(user.Business, user.email,"http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/'+ token +'/'))

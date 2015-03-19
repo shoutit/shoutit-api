@@ -34,7 +34,7 @@ class ConfirmToken(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name="Tokens")
     type = models.IntegerField(default=0)
     DateCreated = models.DateField(auto_now_add=True)
-    Email = models.CharField(max_length=128, blank=True)
+    Email = models.CharField(max_length=128, blank=True, null=True)
     is_disabled = models.BooleanField(default=False, null=False)
 
     def __unicode__(self):

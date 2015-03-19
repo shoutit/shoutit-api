@@ -85,7 +85,7 @@ def activate_modal(request, token):
         result.errors.append(RESPONSE_RESULT_ERROR_404)
         return result
 
-    if user_controller.GetProfile(user):
+    if user.abstract_profile:
         user_controller.login_without_password(request, user)
     return result
 

@@ -9,7 +9,7 @@ from django.db.models.query_utils import Q
 from django.conf import settings
 
 from shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
-    Listen, CLUser, DBCLUser
+    Listen, CLUser, DBUser
 from common.constants import *
 from shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image
 from shoutit.permissions import ConstantPermission, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
@@ -80,34 +80,10 @@ def search_users(query, flag=int(USER_TYPE_INDIVIDUAL | USER_TYPE_BUSINESS), sta
 
     user_profiles = []
     for user in users:
-        user = GetProfile(user)
+        user = user.abstract_profile
         if user:
             user_profiles.append(user)
     return user_profiles
-
-
-def GetProfile(user):
-    try:
-        if not isinstance(user, User):
-            return None
-        try:
-            try:
-                profile = user.profile
-                if not profile:
-                    raise ObjectDoesNotExist()
-                return profile
-            except ObjectDoesNotExist, e:
-                try:
-                    business = user.Business
-                    if not business:
-                        raise ObjectDoesNotExist()
-                    return business
-                except ObjectDoesNotExist, e:
-                    return None
-        except ValueError, e:
-            return None
-    except Exception, e:
-        return None
 
 
 def GetUserByEmail(email):
@@ -116,7 +92,7 @@ def GetUserByEmail(email):
     try:
         q = User.objects.filter(email__iexact=email).select_related()
         if q:
-            return GetProfile(q[0])
+            return q[0].abstract_profile
         else:
             return None
     except ValueError, e:
@@ -147,7 +123,7 @@ def SetRecoveryToken(user):
     return token
 
 
-def SetRegisterToken(user, email, token_length, token_type):
+def set_last_token(user, email, token_length, token_type):
     token = generate_confirm_token(token_length)
     db_token = ConfirmToken.getToken(token)
     while db_token is not None:
@@ -155,7 +131,7 @@ def SetRegisterToken(user, email, token_length, token_type):
         db_token = ConfirmToken.getToken(token)
     tok = ConfirmToken(Token=token, user=user, Email=email, type=token_type)
     tok.save()
-    profile = GetProfile(user)
+    profile = user.abstract_profile
     profile.LastToken = tok
     profile.save()
     return token
@@ -171,7 +147,7 @@ def GetUserByToken(token, get_disabled=True, case_sensitive=True):
 
 def ActivateUser(token, user):
     db_token = ConfirmToken.getToken(token)
-    profile = GetProfile(user)
+    profile = user.abstract_profile
     if not profile:
         return None
     if db_token:
@@ -226,7 +202,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     if not predefined_city:
         PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
-    token = SetRegisterToken(django_user, django_user.email, token_length, token_type)
+    token = set_last_token(django_user, django_user.email, token_length, token_type)
     if email is not None and send_activation:
         email_controller.SendRegistrationActivationEmail(django_user, email, "http://%s%s" % (
             settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
@@ -265,37 +241,29 @@ def SignUpSSS(request, mobile, location, country, city):
         encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
         PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
-    token = SetRegisterToken(django_user, '', token_length, token_type)
+    token = set_last_token(django_user, '', token_length, token_type)
     django_user.token = token
 
     return django_user
 
 
-def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
-    token_type = TOKEN_TYPE_HTML_NUM
-    token_length = TOKEN_SHORT_UPPER
-
+def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     username = generate_username()
     while len(User.objects.filter(username=username)):
         username = generate_username()
-
     password = generate_password()
-
     django_user = User.objects.create_user(username, email, password)
     django_user.is_active = False
     django_user.save()
 
     if dbcl_type == 'cl':
-        dbcl_model = CLUser
+        dbcl_user = CLUser(user=django_user, cl_email=email)
     else:
-        dbcl_model = DBCLUser
-
-    dbcl_user = dbcl_model(user=django_user)
+        dbcl_user = DBUser(user=django_user, db_link=db_link)
     dbcl_user.save()
 
     stream = Stream(type=STREAM_TYPE_USER)
     stream.save()
-
     up = Profile(
         user=django_user, Stream=stream, isSSS=True,
         latitude=lat, longitude=lng, city=city, country=country,
@@ -307,9 +275,10 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl'):
         encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
         PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
 
-    token = SetRegisterToken(django_user, email, token_length, token_type)
+    token_type = TOKEN_TYPE_HTML_NUM
+    token_length = TOKEN_SHORT_UPPER
+    token = set_last_token(django_user, email, token_length, token_type)
     django_user.token = token
-
     return django_user
 
 
@@ -334,7 +303,7 @@ def CompleteSignUpSSS(request, first_name, last_name, password, user, username, 
 
 # todo: links
 def ChangeEmailAndSendActivation(request, user, email):
-    token = SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
+    token = set_last_token(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
     email_controller.SendRegistrationActivationEmail(user, email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
 
 
@@ -499,7 +468,7 @@ def SignInUser(request, password, credential=''):
     if user:
         user = authenticate(username=user.username, password=password)
         if request:
-            if GetProfile(user):
+            if user.abstract_profile:
                 login(request, user)
             else:
                 request.session['business_user_id'] = user.pk

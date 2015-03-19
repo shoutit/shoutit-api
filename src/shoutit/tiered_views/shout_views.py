@@ -3,13 +3,14 @@ import json
 import os
 import re
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from django.http import HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from common.constants import LOCATION_ATTRIBUTES, POST_TYPE_EXPERIENCE
-from shoutit.models import Shout, User, DBCLConversation
+from shoutit.models import Shout, User, DBCLConversation, CLUser, DBUser
 from shoutit.controllers.message_controller import get_shout_conversations, ReadConversation, send_message
 from shoutit.controllers.stream_controller import get_ranked_stream_shouts
 from shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, take_permission_from_user
@@ -20,6 +21,9 @@ from shoutit.tiered_views.renderers import json_renderer, shout_brief_json, obje
 from shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, edit_shout_validator
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_BAD_REQUEST
 from shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
+
+import logging
+logger = logging.getLogger('shoutit.error')
 
 
 @require_POST
@@ -440,29 +444,47 @@ def inbound_email(request):
         return JsonResponse({'success': True, 'message_id': message.pk})
 
 
+@csrf_exempt
 def shout_sss4(request):
     data = request.json_data
     shout = data['shout']
 
     try:
-        users = User.objects.filter(email=shout['cl_email'])
-        if len(users):
-            raise Exception("Add already exits")
-    except Exception, e:
-        return JsonResponseBadRequest({'error': "Error: " + str(e)})
+        if shout['source'] == 'cl':
+            CLUser.objects.get(cl_email=shout['cl_email'])
+        elif shout['source'] == 'db':
+            DBUser.objects.get(db_link=shout['link'])
+        else:
+            msg = "Unknown add source: " + shout['source']
+            logger.warn(msg)
+            return JsonResponseBadRequest({'error': msg})
+        msg = "Add already exits. " + shout['link']
+        logger.warn(msg)
+        return JsonResponseBadRequest({'error': msg})
+    except ObjectDoesNotExist:
+        pass
 
     try:
-        user = sign_up_sss4(email=shout['cl_email'], lat=shout['lat'], lng=shout['lng'], city=shout['city'], country=shout['country'])
+        if shout['source'] == 'cl':
+            user = sign_up_sss4(email=shout['cl_email'], lat=shout['lat'], lng=shout['lng'], city=shout['city'], country=shout['country'],
+                                dbcl_type='cl')
+        if shout['source'] == 'db':
+            user = sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'], city=shout['city'], country=shout['country'], dbcl_type='db',
+                                db_link=shout['link'])
         give_user_permissions(None, INITIAL_USER_PERMISSIONS, user)
     except Exception, e:
-        return JsonResponseBadRequest({'error': "User Creation Error: " + str(e)})
+        msg = "User Creation Error: " + str(e)
+        logger.error(msg)
+        return JsonResponseBadRequest({'error': msg})
 
     tags = shout['tags']
     if isinstance(tags, basestring):
         tags = tags.split(' ')
 
     if not tags:
-        return JsonResponseBadRequest({'error': "Invalid tags"})
+        msg = "Invalid tags: " + shout['tags']
+        logger.error(msg)
+        return JsonResponseBadRequest({'error': msg})
 
     try:
         if shout['type'] == 'request':
@@ -479,6 +501,7 @@ def shout_sss4(request):
             )
 
     except Exception, e:
+        logger.error(str(e))
         return JsonResponseBadRequest({'error': "Shout Creation Error: " + str(e)})
 
     return JsonResponse({'success': True})

@@ -7,7 +7,7 @@ from shoutit.controllers import message_controller, notifications_controller, us
 @non_cached_view(methods=['GET'], login_required=True, html_renderer=notifications_html, json_renderer=notifications_json)
 def notifications(request):
     result = ResponseResult()
-    profile = user_controller.GetProfile(request.user)
+    profile = request.user.abstract_profile
     if request.is_ajax() or (hasattr(request, 'is_api') and request.is_api):
         result.data['notifications'] = user_controller.get_notifications(profile)
     else:
@@ -22,7 +22,7 @@ def notifications(request):
 )
 def notifications_count(request):
     result = ResponseResult()
-    result.data['notifications_count'] = user_controller.get_unread_notifications_count(user_controller.GetProfile(request.user))
+    result.data['notifications_count'] = user_controller.get_unread_notifications_count(request.user.abstract_profile)
     result.data['notifications_count_wo_messages'] = notifications_controller.get_user_notifications_without_messages_count(request.user)
     result.data['unread_conversations'] = message_controller.UnReadConversationsCount(request.user)
     return result

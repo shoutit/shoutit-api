@@ -86,7 +86,7 @@ def signup(request, token=None):
     if application.Status == BUSINESS_CONFIRMATION_STATUS_WAITING:
         result.data['template'] = 'signup_business.html'
         init = {'email': user.email}
-        if not user.is_authenticated() or (user.is_authenticated() and user_controller.GetProfile(user)):
+        if not user.is_authenticated() or (user.is_authenticated() and user.abstract_profile):
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
             result.data['next'] = '/'
             return result
@@ -207,7 +207,7 @@ def recover_activation(request):
         return result
     user = profile.user
     email = user.email
-    token = user_controller.SetRegisterToken(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
+    token = user_controller.set_last_token(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
     email_controller.SendEmail(email, {
         'name': profile.name,
         'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
@@ -256,7 +256,7 @@ def confirm_business(request):
         result.data['next'] = '/'
         return result
 
-    profile = user_controller.GetProfile(user)
+    profile = user.abstract_profile
     if profile is None or not isinstance(profile, Business):
         result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
         result.data['next'] = '/'
@@ -374,7 +374,7 @@ def subscribe(request):
         else:
             user = user[0]
     elif request.user.is_authenticated():
-        if isinstance(user_controller.GetProfile(request.user), Business) and request.user.BusinessCreateApplication.all():
+        if isinstance(request.user.abstract_profile, Business) and request.user.BusinessCreateApplication.all():
             user = request.user
         else:
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)

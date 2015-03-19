@@ -52,7 +52,7 @@ def search_tag(request):
     result.data['tags'] = tags
 
     if show_is_listening:
-        profile = user_controller.GetProfile(request.user)
+        profile = request.user.abstract_profile
         if request.user.is_authenticated() and isinstance(profile, Profile):
             user_interests = profile.Interests.all().values_list('name')
             for tag in result.data['tags']:
@@ -87,7 +87,7 @@ def top_tags(request):
         user_country = None
         user_city = None
 
-    profile = user_controller.GetProfile(request.user)
+    profile = request.user.abstract_profile
     result.data['tags'] = tag_controller.get_top_tags(10, user_country, user_city)
     if request.user.is_authenticated() and isinstance(profile, Profile):
         user_interests = profile.Interests.all().values_list('name')

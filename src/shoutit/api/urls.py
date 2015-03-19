@@ -4,15 +4,12 @@ from shoutit.tiered_views import general_views, shout_views
 
 
 urlpatterns = patterns('',
-
                        # sss
-                       url(r'^sss4/$', shout_views.shout_sss4),
-
+                       url(r'^sss4$', shout_views.shout_sss4),
                        # inbound
-                       url(r'^in/$', shout_views.inbound_email),
-
+                       url(r'^in$', shout_views.inbound_email),
                        # error
-                       url(r'^error/$', general_views.fake_error),
+                       url(r'^error$', general_views.fake_error),
 )
 
 urlpatterns += [

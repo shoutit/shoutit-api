@@ -15,6 +15,10 @@ class CLUser(DBCLUser):
     cl_email = models.EmailField(max_length=254)
 
 
+class DBUser(DBCLUser):
+    db_link = models.URLField(max_length=1000)
+
+
 @property
 def cl_user(self):
     if hasattr(self, '_cl_user') and self._cl_user:
@@ -23,7 +27,6 @@ def cl_user(self):
         self._cl_user = self.cluser
     except CLUser.DoesNotExist:
         self._cl_user = None
-
     return self._cl_user
 User.add_to_class('cl_user', cl_user)
 

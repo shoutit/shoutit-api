@@ -170,7 +170,7 @@ def browse_html(request, result, browse_type, url_encoded_city, browse_category=
                     'city': result.data['browse_city'], 'category': unicode.title(browse_category)}
 
     if request.user.is_authenticated():
-        profile = user_controller.GetProfile(request.user)
+        profile = request.user.abstract_profile
     if profile and isinstance(profile, Business):
         return page_html(request, result, 'business_browse.html', page_title, page_desc)
     return page_html(request, result, 'browse.html', page_title, page_desc)
@@ -333,7 +333,7 @@ def activate_modal_html(request, result, token):
     if not result.errors:
         t = ConfirmToken.getToken(token, True, False)
         user = t.user
-        profile = user_controller.GetProfile(user)
+        profile = user.abstract_profile
 
         if t and (isinstance(profile, Profile) and not request.user.profile.isSSS) or (isinstance(profile, Business)) or (
         user.BusinessCreateApplication.count()):
@@ -379,7 +379,7 @@ def edit_profile_renderer_json(request, result, username):
         if result.errors:
             return get_initial_json_response(request, result)
         variables = RequestContext(request, result.data)
-        profile = request.user.is_authenticated() and user_controller.GetProfile(request.user) or None
+        profile = request.user.is_authenticated() and request.user.abstract_profile or None
         if profile and isinstance(profile, Business):
             return render_to_response('business_edit_profile.html', variables)
         elif profile and isinstance(profile, Profile):
@@ -502,7 +502,7 @@ def profile_json_renderer(request, result):
                 {
                     'username': user.username,
                     'name': user.name,
-                    'category_id': isinstance(user_controller.GetProfile(user), Business) and user.profile.Category.pk or None,
+                    'category_id': isinstance(user.abstract_profile, Business) and user.profile.Category.pk or None,
                     'about': user.Bio,
                     'lat': user.latitude,
                     'lng': user.longitude,
@@ -526,7 +526,7 @@ def user_json_renderer(request, result):
                 {
                     'username': user.username,
                     'name': user.name,
-                    'image': template_filters.thumbnail(user_controller.GetProfile(user).image, 32)
+                    'image': template_filters.thumbnail(user.abstract_profile.image, 32)
                 } for user in result.data['users']
             ]
         }

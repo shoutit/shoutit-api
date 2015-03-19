@@ -8,5 +8,5 @@ from shoutit.models.user import Profile, LinkedFacebookAccount, LinkedGoogleAcco
 from shoutit.models.post import Comment, Deal, Event, Experience, Post, SharedExperience, Shout, ShoutWrap, StoredImage, Trade, Video
 from shoutit.models.message import Conversation, Message, MessageAttachment, Report, Notification
 from shoutit.models.payment import Payment, Transaction, Voucher, DealBuy, Service, ServiceBuy, ServiceUsage, Subscription
-from shoutit.models.dbcl import DBCLUser, CLUser, DBCLConversation
+from shoutit.models.dbcl import DBUser, CLUser, DBCLConversation
 from shoutit.models.message import Conversation2, Conversation2Delete, Message2, Message2Delete, Message2Read
