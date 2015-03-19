@@ -133,6 +133,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
             filters['type__in'] = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
 
     if filter_tags is not None and len(filter_tags) > 0:
+        filter_tags = ["'%s'" % tag_id for tag_id in filter_tags]
         if 'tags__pk__in' in filters:
             filters['tags__pk__in'].extend(filter_tags)
         else:
