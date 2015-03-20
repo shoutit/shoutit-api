@@ -23,6 +23,7 @@ git+https://github.com/mochawich/django-rest-swagger
 redis==2.8.0
 django-redis-cache==0.10.0
 django-redis-sessions==0.4.0
+django_rq
 
 Pillow
 geraldo==0.4.17

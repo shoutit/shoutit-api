@@ -52,7 +52,6 @@ else:  # LOCAL
 
 info("DEBUG:", DEBUG)
 
-
 # URLs
 ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
@@ -73,7 +72,6 @@ ADMINS = (
 )
 MANAGERS = ADMINS
 
-
 # Shoutit defaults
 MAX_REG_DAYS = 14
 MAX_SHOUTS_INACTIVE_USER = 5
@@ -86,37 +84,38 @@ RANK_COEFFICIENT_TIME = 0.7  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_FOLLOW = 0.014  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 
-
+"""
+=================================
+            Caching
+=================================
+"""
 # Redis
 SESSION_REDIS_HOST = 'localhost'
 SESSION_REDIS_PORT = 6379
-REDIS_SOCKET_TIMEOUT = 30
-SESSION_REDIS_DB = 0
-SESSION_REDIS_PASSWORD = 'password'
+SESSION_REDIS_DB = 1  # redis_db
 SESSION_REDIS_PREFIX = 'session'
 
-# to access session from JS, needed for realtime
-SESSION_COOKIE_HTTPONLY = False
-
-# Caching
-DEV_SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-DEV_CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'TIMEOUT': 240
-    }
-}
 REDIS_SESSION_ENGINE = 'redis_sessions.session'
 REDIS_CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'TIMEOUT': 12 * 60 * 60
+        'location': 'redis.shoutit.com:6379',
+        'TIMEOUT': 12 * 60 * 60,
+        'OPTIONS': {
+            'DB': 2,  # redis_db
+        }
     }
 }
+# todo: set passwords for redis
 
-SESSION_ENGINE = DEV_SESSION_ENGINE
-CACHES = DEV_CACHES
+SESSION_ENGINE = REDIS_SESSION_ENGINE
+CACHES = REDIS_CACHES
 
+RQ_QUEUES = {
+    'default': {
+        'USE_REDIS_CACHE': 'default',
+    },
+}
 AUTH_USER_MODEL = 'shoutit.User'
 
 # Application definition
@@ -147,6 +146,8 @@ INSTALLED_APPS = (
 
     'provider',
     'provider.oauth2',
+
+    'django_rq',
 )
 # apps only on local development
 if LOCAL:
@@ -168,7 +169,7 @@ if GUNICORN:
     )
 
 RAVEN_CONFIG = {
-    'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+    'dsn': 'requests+https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
 }
 
 APNS_SANDBOX = False
@@ -385,7 +386,7 @@ LOGGING = {
         },
         # 'requests': {
         # 'level': 'DEBUG',
-        #     'handlers': ['console_out', 'console_err', 'sentry'],
+        # 'handlers': ['console_out', 'console_err', 'sentry'],
         # },
 
         'SqlLogMiddleware': {
