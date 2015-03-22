@@ -16,8 +16,6 @@ Environment Dir: /opt/{env name}
     * src
     * fabfile.py
     * readme.md
-* static
-* media
 
 
 ##Requirements
@@ -26,12 +24,10 @@ Environment Dir: /opt/{env name}
 ###Debian Requirements
 * python-dev
 * libpq-dev
-* nginx
 * supervisor
 * python-pip
 * tcl8.5
 * libjpeg-dev
-* redis [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-redis]
 
 
 ###etc/hosts

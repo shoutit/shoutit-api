@@ -2,7 +2,7 @@
 numpy>=1.8.0
 
 # core
-Django=1.7.5
+Django==1.7.5
 django-uuidfield
 psycopg2
 
