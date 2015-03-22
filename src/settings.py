@@ -123,11 +123,11 @@ AUTH_USER_MODEL = 'shoutit.User'
 
 INSTALLED_APPS = (
     'grappelli',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.admin',
     'django.contrib.staticfiles',
     'widget_tweaks',
     'push_notifications',

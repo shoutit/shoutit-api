@@ -1,24 +1,32 @@
 from django.conf.urls import patterns, include, url, handler500
 from django.views.generic import TemplateView, RedirectView
-
 from django.contrib import admin
 from django.conf import settings
+from shoutit.tiered_views import shout_views, general_views
 
-admin.autodiscover()
-
-
-# import shoutit.controllers.payment_controller
 # handler500 = 'shoutit.tiered_views.general_views.handler500'
-
-# TODO: general reg ex for all user names, tag names, etc
-uuid_re = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-
 urlpatterns = patterns('',
-                       # ## Admin ## #
-                       url(r'^grappelli/', include('grappelli.urls')),  # grappelli URLS
+                       # admin
+                       url(r'^grappelli/', include('grappelli.urls')),
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
+                       # sss
+                       url(r'^sss4$', shout_views.shout_sss4),
+
+                       # inbound
+                       url(r'^in$', shout_views.inbound_email),
+
+                       # return fake error
+                       url(r'^error$', general_views.fake_error),
+
+                       # drf api auth
+                       url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+                       # api v2
+                       url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
+
+                       # todo: remove everything below!
                        # ##  Shout Website ## #
                        url(r'^$', 'shoutit.tiered_views.general_views.index'),
                        url(r'^(requests|offers|experiences)/$', 'shoutit.tiered_views.general_views.index', ),
@@ -182,11 +190,12 @@ urlpatterns = patterns('',
                        url(r'^([\w.]+)$', 'shoutit.tiered_views.user_views.user_profile'),
 
                        # url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$',
-                       #     'shoutit.tiered_views.user_views.activate_modal'),
+                       # 'shoutit.tiered_views.user_views.activate_modal'),
 
 )
 
 # serving static files while developing locally using gunicorn
 if settings.GUNICORN and settings.LOCAL:
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
     urlpatterns += staticfiles_urlpatterns()
