@@ -90,7 +90,7 @@ RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 =================================
 """
 # Redis
-SESSION_REDIS_HOST = 'localhost'
+SESSION_REDIS_HOST = 'redis.shoutit.com'
 SESSION_REDIS_PORT = 6379
 SESSION_REDIS_DB = 1  # redis_db
 SESSION_REDIS_PREFIX = 'session'
