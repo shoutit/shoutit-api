@@ -99,11 +99,12 @@ REDIS_SESSION_ENGINE = 'redis_sessions.session'
 REDIS_CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'location': 'redis.shoutit.com:6379',
+        'LOCATION': 'redis.shoutit.com:6379',
         'TIMEOUT': 12 * 60 * 60,
         'OPTIONS': {
             'DB': 2,  # redis_db
-        }
+        },
+        'KEY_PREFIX': ENV
     }
 }
 # todo: set passwords for redis
