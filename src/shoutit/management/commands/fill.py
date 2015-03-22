@@ -192,4 +192,17 @@ class Command(BaseCommand):
         Client.objects.get_or_create(user=u1, name='shoutit-test', client_id='shoutit-test',
                                      client_secret='d89339adda874f02810efddd7427ebd6', client_type=0)
 
+        # pre defined cities
+        PredefinedCity.objects.get_or_create(city='Dubai', city_encoded='dubai', country='AE',
+                                             latitude=25.1993957, longitude=55.2738326, Approved=True)
+        PredefinedCity.objects.get_or_create(city='Aachen', city_encoded='aachen', country='DE',
+                                             latitude=50.7738792, longitude=6.0844869, Approved=True)
+        PredefinedCity.objects.get_or_create(city='Berlin', city_encoded='berlin', country='DE',
+                                             latitude=52.522594, longitude=13.402388, Approved=True)
+
+        # currencies
+        Currency.objects.get_or_create(country='AE', code='AED', name='Dirham')
+        Currency.objects.get_or_create(country='US', code='USD', name='Dollar')
+        Currency.objects.get_or_create(country='DE', code='EUR', name='Euro')
+
         self.stdout.write('Successfully filled initial data')

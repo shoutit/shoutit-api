@@ -16,6 +16,7 @@ Environment Dir: /opt/{env name}
     * src
     * fabfile.py
     * readme.md
+* log
 
 
 ##Requirements
