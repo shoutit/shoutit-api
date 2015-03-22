@@ -28,11 +28,11 @@ server {
         access_log off;
 
         location /static/ {
-            alias /opt/shoutit_backend_prod/static/;
+            alias /opt/shoutit_api_prod/static/;
         }
 
         location /media/ {
-            alias /opt/shoutit_backend_prod/media/;
+            alias /opt/shoutit_api_prod/media/;
         }
 
         location / {

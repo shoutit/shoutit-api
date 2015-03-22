@@ -5,11 +5,11 @@ server {
         access_log off;
 
         location /static/ {
-            alias /opt/shoutit_backend_dev/static/;
+            alias /opt/shoutit_api_dev/static/;
         }
 
         location /media/ {
-            alias /opt/shoutit_backend_dev/media/;
+            alias /opt/shoutit_api_dev/media/;
         }
 
         location / {

@@ -1,4 +1,4 @@
-#Shoutit Backend
+#Shoutit API
 
 ##Structure
 
@@ -7,7 +7,7 @@ Environment Dir: /opt/{env name}
 * bin
 * lib
 * include
-* backend
+* api
     * assets
     * docs
     * etc
@@ -57,15 +57,15 @@ Environment Dir: /opt/{env name}
 
 
 ###virtualenv
-* env_name: shoutit_backend_[dev|prod|local]
+* env_name: shoutit_api_[dev|prod|local]
 * env_dir: /opt/{env_name}
 * log_dir: {env_dir}/log
-* backend_dir: {env_dir}/backend
+* api_dir: {env_dir}/api
 
 
-###backend_dir
-* git clone git@bitbucket.org:shoutitcom/shoutit_backend.git .
+###api_dir
+* git clone git@bitbucket.org:shoutitcom/shoutit_api.git .
 
 
-###backend python requirements
+###python requirements
 * pip install -r 

@@ -11,7 +11,7 @@ import sys
 def info(*args):
     print("[INFO]  ", *args, file=sys.stderr)
 
-# include the BACKEND_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
+# include the API_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from etc.env_settings import *
 from common.utils import get_address_port, check_offline_mood
@@ -139,7 +139,6 @@ INSTALLED_APPS = (
     # 'subscription',
     'shoutit',
 
-
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
@@ -175,7 +174,7 @@ RAVEN_CONFIG = {
 APNS_SANDBOX = False
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(BACKEND_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
+    'APNS_CERTIFICATE': os.path.join(API_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
                                      % ('dev' if APNS_SANDBOX else 'prod')),
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
@@ -205,7 +204,7 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': ENV,
+        'NAME': ENV.replace('_api', ''),  # eg. ENV is shoutit_api_pro, db should be shoutit_prod
         'USER': 'syron',
         'PASSWORD': '123',
         'HOST': 'db.shoutit.com',
@@ -453,9 +452,9 @@ FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
 # Google App
 GOOGLE_API = {
     'CLIENTS': {
-        'web': {'FILE': os.path.join(BACKEND_DIR, 'assets', 'googleapiclients', 'web.json')},
-        'android': {'FILE': os.path.join(BACKEND_DIR, 'assets', 'googleapiclients', 'android.json')},
-        'ios': {'FILE': os.path.join(BACKEND_DIR, 'assets', 'googleapiclients', 'ios.json')},
+        'web': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'web.json')},
+        'android': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'android.json')},
+        'ios': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'ios.json')},
     }
 }
 
@@ -528,9 +527,9 @@ SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 # PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-public-key.pem')
-PAYPAL_CERT = os.path.join(BACKEND_DIR, 'assets', 'certificates', 'paypal', 'paypal-cert.pem')
+PAYPAL_PRIVATE_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-public-key.pem')
+PAYPAL_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-cert.pem')
 PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
 PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
 PAYPAL_RETURN_URL = 'http://80.227.53.34/paypal_return/'
