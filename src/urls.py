@@ -26,6 +26,12 @@ urlpatterns = patterns('',
                        # api v2
                        url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
 
+                       # todo: move to web
+                       url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png')),
+                       url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
+                       url(r'^googlebc700f17ba42dd9f\.html$',
+                           TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),
+
                        # todo: remove everything below!
                        # ##  Shout Website ## #
                        url(r'^$', 'shoutit.tiered_views.general_views.index'),
@@ -37,6 +43,7 @@ urlpatterns = patterns('',
                        url(r'^privacy/$', 'shoutit.tiered_views.general_views.privacy'),
                        url(r'^rules/$', 'shoutit.tiered_views.general_views.rules'),
                        url(r'^learnmore/$', 'shoutit.tiered_views.general_views.learnmore'),
+
                        url(r'^xhr/shouts/stream/$', 'shoutit.tiered_views.stream_views.index_stream'),
                        url(r'^xhr/live_events/$', 'shoutit.tiered_views.general_views.live_events'),
                        url(r'^xhr/delete_event/([-\w]+)/$', 'shoutit.tiered_views.general_views.delete_event'),
@@ -46,7 +53,6 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?signout/$', 'shoutit.tiered_views.user_views.signout'),
                        url(r'^(?:xhr/)?recover/$', 'shoutit.tiered_views.user_views.recover'),
                        url(r'^(?:xhr/)?recover_business_activation/$', 'shoutit.tiered_views.business_views.recover_activation'),
-
 
                        # url(r'^^(?:xhr/)?bsignup/', 'shoutit.tiered_views.business_views.signup'),
                        url(r'^^(?:xhr/)?bsignup/(?:([-\w]+)/)?$', 'shoutit.tiered_views.business_views.signup'),
@@ -89,9 +95,6 @@ urlpatterns = patterns('',
                        url(r'^notifications/$', 'shoutit.tiered_views.realtime_views.notifications'),
                        url(r'^xhr/notifications/count/$', 'shoutit.tiered_views.realtime_views.notifications_count'),
 
-                       # API
-                       url(r'^api/', include('shoutit.api.urls')),
-
                        # ## XHR ## #
                        url(r'^xhr/user/$', 'shoutit.tiered_views.user_views.search_user'),
                        url(r'^xhr/user/(\w+)/start_listening/$', 'shoutit.tiered_views.user_views.start_listening_to_user'),
@@ -116,7 +119,6 @@ urlpatterns = patterns('',
 
                        url(r'^xhr/top_tags/$', 'shoutit.tiered_views.tag_views.top_tags'),
 
-
                        url(r'^xhr/hovercard/$', 'shoutit.tiered_views.general_views.hovercard'),
                        url(r'^xhr/shout/nearby/$', 'shoutit.tiered_views.shout_views.nearby_shouts'),
                        url(r'^xhr/loadShout/([-\w]+)/$', 'shoutit.tiered_views.shout_views.load_shout'),
@@ -125,11 +127,6 @@ urlpatterns = patterns('',
 
                        url(r'^reactivate/$', 'shoutit.tiered_views.user_views.resend_activation'),
                        url(r'^xhr/reactivate/$', 'shoutit.tiered_views.user_views.resend_activation'),
-                       url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png')),
-                       url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
-                       url(r'^googlebc700f17ba42dd9f\.html$',
-                           TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),
-
                        url(r'^activate/$', 'shoutit.tiered_views.user_views.activate_user'),
                        url(r'^xhr/activate/$', 'shoutit.tiered_views.user_views.activate_user'),
 
@@ -191,11 +188,9 @@ urlpatterns = patterns('',
 
                        # url(r'^([abcdefghklmnopqrstuvwxyzABCDEFGHKLMNPQRSTUVWXYZ23456789]+)/$',
                        # 'shoutit.tiered_views.user_views.activate_modal'),
-
 )
 
 # serving static files while developing locally using gunicorn
 if settings.GUNICORN and settings.LOCAL:
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
     urlpatterns += staticfiles_urlpatterns()
