@@ -55,14 +55,15 @@ info("DEBUG:", DEBUG)
 # URLs
 ROOT_URLCONF = 'urls'
 APPEND_SLASH = False
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+WSGI_APPLICATION = 'wsgi.application'
+
+# todo: remove usage of IS_SITE_SECURE, SCHEME, and SITE_LINK
 IS_SITE_SECURE = PROD
 SCHEME = 'https' if IS_SITE_SECURE else 'http'
 SITE_LINK = '%s://%s/' % (SCHEME, SHOUT_IT_DOMAIN)
-WSGI_APPLICATION = 'wsgi.application'
-
 info("SITE_LINK:", SITE_LINK)
-
-USE_X_FORWARDED_HOST = True
 
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com']
