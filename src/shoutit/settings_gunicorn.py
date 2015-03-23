@@ -1,12 +1,10 @@
 import sys
 import os
 
-# include current dir in sys.path a.k.a PYTHONPATH to be able to use env_settings.
-me = os.path.realpath(__file__)
-etc = os.path.dirname(me)
-sys.path.append(etc)
+# include src dir in sys.path a.k.a PYTHONPATH to be able to use env_settings.
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from env_settings import *
+from shoutit.settings_env import *
 
 if LOCAL:
     bind = '0.0.0.0:8000'
@@ -19,7 +17,7 @@ else:
 errorlog = accesslog = '-'
 loglevel = 'info'
 
-check_config = False
+preload_app = True
 proc_name = ENV
 
 # def when_ready(server):

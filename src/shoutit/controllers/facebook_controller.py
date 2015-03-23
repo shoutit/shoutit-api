@@ -3,7 +3,6 @@
 
 """
 from __future__ import unicode_literals
-
 import json
 import urllib
 import urllib2
@@ -15,7 +14,6 @@ from rest_framework.exceptions import ValidationError
 
 from shoutit.models import LinkedFacebookAccount
 from shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_profile_location
-from settings import SITE_LINK
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
@@ -59,7 +57,7 @@ def exchange_code(request, code):
     # Get Access Token using the Code then make an authResponse
     try:
         qs = request.META['QUERY_STRING'].split('&code')[0]
-        redirect_uri = urllib.quote('%s%s?%s' % (SITE_LINK, request.path[1:], qs))
+        redirect_uri = urllib.quote('%s%s?%s' % (settings.SITE_LINK, request.path[1:], qs))
         exchange_url = 'https://graph.facebook.com/oauth/access_token?client_id=%s&redirect_uri=%s&client_secret=%s&code=%s' % (
             settings.FACEBOOK_APP_ID,
             redirect_uri,

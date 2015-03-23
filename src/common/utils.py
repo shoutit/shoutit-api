@@ -14,7 +14,7 @@ from common.constants import NOT_ALLOWED_USERNAMES
 
 def get_address_port(using_gunicorn=False):
     if using_gunicorn:
-        from etc.gunicorn_settings import bind
+        from shoutit.settings_gunicorn import bind
         return bind.split(':')
 
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":

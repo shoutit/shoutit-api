@@ -13,12 +13,9 @@ import re
 from PIL import Image
 import pyrax
 from django.http import HttpResponse, Http404
-from django.conf import settings
-
+from shoutit import settings
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER, NOT_ALLOWED_USERNAMES
-
 from shoutit.models import Experience, Tag, User
-from settings import SITE_LINK
 
 
 def generate_password():
@@ -196,13 +193,13 @@ def shout_link(post):
 
         city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.city))) if experience.AboutBusiness.city else ''
         experience_type = 'bad' if experience.State == 0 else 'good'
-        link = '%s%s-experience/%s/%s%s/' % (SITE_LINK, experience_type, post_id, about, city)
+        link = '%s%s-experience/%s/%s%s/' % (settings.SITE_LINK, experience_type, post_id, about, city)
     else:
         shout = post
         shout_type = 'request' if shout.type == POST_TYPE_REQUEST else 'offer' if shout.type == POST_TYPE_OFFER else 'shout'
         etc = to_seo_friendly(shout.item.name if hasattr(shout, 'item') else shout.trade.item.name)
         city = to_seo_friendly(unicode.lower(shout.city))
-        link = '%s%s/%s/%s-%s/' % (SITE_LINK, shout_type, post_id, etc, city)
+        link = '%s%s/%s/%s-%s/' % (settings.SITE_LINK, shout_type, post_id, etc, city)
 
     return link
 
@@ -210,7 +207,7 @@ def shout_link(post):
 def user_link(user):
     if not user or not isinstance(user, User):
         return None
-    return "{0}{1}".format(SITE_LINK, user.username)
+    return "{0}{1}".format(settings.SITE_LINK, user.username)
 
 
 def tag_link(tag):
@@ -219,13 +216,13 @@ def tag_link(tag):
     tag_name = tag.name if hasattr(tag, 'name') else tag['name'] if 'name' in tag else None
     if not tag_name:
         return None
-    return "{0}tag/{1}/".format(SITE_LINK, tag_name)
+    return "{0}tag/{1}/".format(settings.SITE_LINK, tag_name)
 
 
 def full_url_path(url):
     if isinstance(url, basestring):
         if url.startswith('/'):
-            return SITE_LINK + url[1:]
+            return settings.SITE_LINK + url[1:]
     return url
 
 

@@ -1,11 +1,11 @@
 from django.db import models
 
 from shoutit.models.base import UUIDModel, User
-from settings import AUTH_USER_MODEL
+from django.conf import settings
 
 
 class DBCLUser(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True)
 
     class Meta(UUIDModel.Meta):
         abstract = True
@@ -46,7 +46,7 @@ User.add_to_class('cl_ad_id', cl_ad_id)
 
 class DBCLConversation(UUIDModel):
     in_email = models.EmailField(max_length=254, null=True, blank=True)
-    from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
-    to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
     shout = models.ForeignKey('shoutit.Trade')
     ref = models.CharField(max_length=100, null=True, blank=True)

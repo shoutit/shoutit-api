@@ -3,17 +3,7 @@
 
 """
 from __future__ import unicode_literals, print_function
-
-import os
-import sys
-
-
-def info(*args):
-    print("[INFO]  ", *args, file=sys.stderr)
-
-# include the API_DIR in sys.path a.k.a PYTHONPATH to be able to use etc.env_settings for example.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from etc.env_settings import *
+from .settings_env import *
 from common.utils import get_address_port, check_offline_mood
 
 OFFLINE_MODE = check_offline_mood()
@@ -53,11 +43,11 @@ else:  # LOCAL
 info("DEBUG:", DEBUG)
 
 # URLs
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-WSGI_APPLICATION = 'wsgi.application'
+WSGI_APPLICATION = 'shoutit.wsgi.application'
 
 # todo: remove usage of IS_SITE_SECURE, SCHEME, and SITE_LINK
 IS_SITE_SECURE = PROD

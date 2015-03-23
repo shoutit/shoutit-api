@@ -1,5 +1,5 @@
 from common.constants import Constant
-from settings import SITE_LINK
+from django.conf import settings
 
 
 class JSONUrl(Constant):
@@ -33,13 +33,13 @@ def get_api2_url(obj):
         url_tuple = api2_urls[class_name]
         obj_url, pk_field = url_tuple[0], url_tuple[1]
         url = obj_url.format(getattr(obj, pk_field))
-        return "{}api/v2/{}".format(SITE_LINK, url)
+        return "{}api/v2/{}".format(settings.SITE_LINK, url)
     else:
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
 
 
 def build_absolute_uri(url):
-    return SITE_LINK[:-1] + url
+    return settings.SITE_LINK[:-1] + url
 
 
 def get_current_uri(request):
