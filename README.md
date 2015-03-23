@@ -1,7 +1,7 @@
 
 ###Debian Requirements
 * tcl8.5
-* libjpeg-dev
+* libjpeg-dev #SBE-82 test
 
 ###virtualenv
 * env_name: shoutit_api_[dev|prod|local]
