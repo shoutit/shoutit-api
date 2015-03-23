@@ -84,7 +84,7 @@ RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 SESSION_REDIS_HOST = 'redis.shoutit.com'
 SESSION_REDIS_PORT = 6379
 SESSION_REDIS_DB = 1  # redis_db
-SESSION_REDIS_PREFIX = 'session'
+SESSION_REDIS_PREFIX = ENV + '_session'
 
 REDIS_SESSION_ENGINE = 'redis_sessions.session'
 REDIS_CACHES = {
@@ -95,7 +95,7 @@ REDIS_CACHES = {
         'OPTIONS': {
             'DB': 2,  # redis_db
         },
-        'KEY_PREFIX': ENV
+        'KEY_PREFIX': ENV + '_cache'
     }
 }
 # todo: set passwords for redis
