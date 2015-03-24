@@ -88,12 +88,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         ###Listen
         <pre><code>
-        POST: /api/v2/tags/{name}/listen
+        POST: /v2/tags/{name}/listen
         </code></pre>
 
         ###Stop listening
         <pre><code>
-        DELETE: /api/v2/tags/{name}/listen
+        DELETE: /v2/tags/{name}/listen
         </code></pre>
         ---
         omit_serializer: true

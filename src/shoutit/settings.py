@@ -85,7 +85,6 @@ SESSION_REDIS_HOST = 'redis.shoutit.com'
 SESSION_REDIS_PORT = 6379
 SESSION_REDIS_DB = 1  # redis_db
 SESSION_REDIS_PREFIX = ENV + '_session'
-
 REDIS_SESSION_ENGINE = 'redis_sessions.session'
 REDIS_CACHES = {
     'default': {

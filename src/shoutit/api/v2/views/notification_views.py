@@ -63,12 +63,12 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
 
         ###Read
         <pre><code>
-        POST: /api/v2/notifications/{id}/read
+        POST: /v2/notifications/{id}/read
         </code></pre>
 
         ###Unread
         <pre><code>
-        DELETE: /api/v2/notification/{id}/read
+        DELETE: /v2/notification/{id}/read
         </code></pre>
 
         ---

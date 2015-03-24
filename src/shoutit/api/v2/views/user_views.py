@@ -213,12 +213,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Listen
         <pre><code>
-        POST: /api/v2/users/{username}/listen
+        POST: /v2/users/{username}/listen
         </code></pre>
 
         ###Stop listening
         <pre><code>
-        DELETE: /api/v2/users/{username}/listen
+        DELETE: /v2/users/{username}/listen
         </code></pre>
         ---
         omit_serializer: true
@@ -446,7 +446,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Link Facebook
         <pre><code>
-        PUT: /api/v2/users/{username}/link
+        PUT: /v2/users/{username}/link
         {
             "account": "facebook",
             "facebook_access_token": "facebook access token"
@@ -455,7 +455,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Unlink Facebook
         <pre><code>
-        DELETE: /api/v2/users/{username}/link
+        DELETE: /v2/users/{username}/link
         {
             "account": "facebook"
         }
@@ -463,7 +463,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Link G+
         <pre><code>
-        PUT: /api/v2/users/{username}/link
+        PUT: /v2/users/{username}/link
         {
             "account": "gplus",
             "gplus_code": "google grant code"
@@ -472,7 +472,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Unlink G+
         <pre><code>
-        DELETE: /api/v2/users/{username}/link
+        DELETE: /v2/users/{username}/link
         {
             "account": "gplus"
         }

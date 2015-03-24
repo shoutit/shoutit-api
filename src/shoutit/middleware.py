@@ -13,7 +13,7 @@ class APIDetectionMiddleware(object):
     @staticmethod
     def process_request(request):
         # do not apply on api v2
-        if '/api/v2/' in request.META.get('PATH_INFO'):
+        if '/v2/' in request.META.get('PATH_INFO'):
             request.is_api = False
             request.api_client = 'other'
             return
@@ -52,7 +52,7 @@ class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
         # do not apply on api v2
-        if '/api/v2/' in request.META.get('PATH_INFO'):
+        if '/v2/' in request.META.get('PATH_INFO'):
             return
 
         # add the json_data attribute to all POST requests.

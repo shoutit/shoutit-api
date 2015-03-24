@@ -11,9 +11,8 @@ gunicorn>=19
 django-grappelli>=2.6.3
 
 # django-rest-framework
-git+https://github.com/tomchristie/django-rest-framework
+djangorestframework==3.1.1
 git+https://github.com/jpadilla/django-rest-framework-oauth
-
 markdown
 django-filter
 drf-extensions

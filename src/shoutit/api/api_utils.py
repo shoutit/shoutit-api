@@ -33,7 +33,7 @@ def get_api2_url(obj):
         url_tuple = api2_urls[class_name]
         obj_url, pk_field = url_tuple[0], url_tuple[1]
         url = obj_url.format(getattr(obj, pk_field))
-        return "{}api/v2/{}".format(settings.SITE_LINK, url)
+        return "{}v2/{}".format(settings.SITE_LINK, url)
     else:
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
 
