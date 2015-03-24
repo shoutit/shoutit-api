@@ -12,12 +12,12 @@ django-grappelli>=2.6.3
 
 # django-rest-framework
 djangorestframework==3.1.1
-git+https://github.com/jpadilla/django-rest-framework-oauth
-markdown
+djangorestframework-oauth==1.0.1
+git+https://github.com/mochawich/django-oauth2-provider
 django-filter
 drf-extensions
-git+https://github.com/mochawich/django-oauth2-provider
 git+https://github.com/mochawich/django-rest-swagger
+markdown
 
 redis==2.8.0
 django-redis-cache==0.10.0
