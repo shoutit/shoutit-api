@@ -237,7 +237,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
-                                                   attachments=attachments)
+                                                   attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)

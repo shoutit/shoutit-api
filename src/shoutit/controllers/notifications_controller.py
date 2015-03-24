@@ -17,7 +17,7 @@ def mark_notifications_as_read_by_ids(notification_ids):
     Notification.objects.filter(id__in=notification_ids).update(is_read=True)
 
 
-def notify_user(user, notification_type, from_user=None, attached_object=None):
+def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
     from shoutit.api.v2 import serializers
 
     notification = Notification(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object)
@@ -25,11 +25,11 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:
         message = _("You got a new listen")
-        attached_object_dict = serializers.UserSerializer(attached_object).data
+        attached_object_dict = serializers.UserSerializer(attached_object, context={'request': request}).data
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")
         if isinstance(attached_object, Message2):
-            attached_object_dict = serializers.MessageSerializer(attached_object).data
+            attached_object_dict = serializers.MessageSerializer(attached_object, context={'request': request}).data
         else:
             attached_object_dict = {}
     else:
@@ -57,16 +57,16 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
             print "GCMError:", e
 
 
-def notify_user_of_listen(user, listener):
-    notify_user(user, NOTIFICATION_TYPE_LISTEN, listener, listener)
+def notify_user_of_listen(user, listener, request=None):
+    notify_user(user, NOTIFICATION_TYPE_LISTEN, listener, listener, request)
 
 
 def notify_user_of_message(user, message):
     notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
 
 
-def notify_user_of_message2(user, message):
-    notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.user, message)
+def notify_user_of_message2(user, message, request=None):
+    notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, request)
 
 
 def notify_business_of_exp_posted(business, exp):

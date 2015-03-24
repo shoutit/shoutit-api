@@ -38,10 +38,6 @@ def get_api2_url(obj):
         raise Exception('URL for object %s of type %s was not found.' % (str(obj), class_name))
 
 
-def build_absolute_uri(url):
-    return settings.SITE_LINK[:-1] + url
-
-
 def get_current_uri(request):
     """
     Builds an absolute URI from the variables available in this request ignoring query params.

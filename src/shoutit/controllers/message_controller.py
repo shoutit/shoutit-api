@@ -280,7 +280,7 @@ def get_user_conversations(user, before=None, after=None, limit=25):
     return conversations.select_related('last_message')[:limit]
 
 
-def send_message2(conversation, user, to_users=None, about=None, text=None, attachments=None):
+def send_message2(conversation, user, to_users=None, about=None, text=None, attachments=None, request=None):
     assert conversation or to_users, "Either an existing conversation or a list of to_users should be provided to create a message."
 
     if to_users and isinstance(to_users, list):
@@ -328,7 +328,7 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
 
     for to_user in conversation.contributors:
         if user != to_user:
-            notifications_controller.notify_user_of_message2(to_user, message)
+            notifications_controller.notify_user_of_message2(to_user, message, request)
 
     return message
 

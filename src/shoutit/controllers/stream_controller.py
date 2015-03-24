@@ -489,7 +489,7 @@ def get_user_listening_qs(user, listening_type):
         return Tag.objects.filter(id__in=object_ids)
 
 
-def listen_to_stream(listener, stream):
+def listen_to_stream(listener, stream, request=None):
     """
     add a stream to user listening
     """
@@ -499,7 +499,7 @@ def listen_to_stream(listener, stream):
         listen = Listen(listener=listener, stream=stream)
         listen.save()
         if stream.type == STREAM2_TYPE_PROFILE:
-            notifications_controller.notify_user_of_listen(stream.owner.user, listener)
+            notifications_controller.notify_user_of_listen(stream.owner.user, listener, request)
             event_controller.register_event(listener, EVENT_TYPE_FOLLOW_USER, stream.owner)
         elif stream.type == STREAM2_TYPE_TAG:
             event_controller.register_event(listener, EVENT_TYPE_FOLLOW_TAG, stream.owner)

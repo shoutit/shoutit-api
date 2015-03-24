@@ -27,7 +27,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer: CurrencySerializer
         """
         currencies = Currency.objects.all()
-        serializer = CurrencySerializer(currencies, many=True)
+        serializer = CurrencySerializer(currencies, many=True, context={'request': request})
         return Response(serializer.data)
 
     @list_route(methods=['get'], suffix='Categories')
@@ -38,5 +38,5 @@ class MiscViewSet(viewsets.ViewSet):
         serializer: CategorySerializer
         """
         categories = Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
+        serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)

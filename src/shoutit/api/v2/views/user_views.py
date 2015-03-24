@@ -232,7 +232,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'error': "You can not listen to your self"})
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, profile.stream2)
+            stream_controller.listen_to_stream(request.user, profile.stream2, request)
             msg = "you started listening to {} shouts.".format(user.name)
 
         else:
@@ -278,7 +278,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         listeners = stream_controller.get_stream_listeners(user.profile.stream2)
         page = self.paginate_queryset(listeners)
-        serializer = UserSerializer(page, many=True)
+        serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Listening')
@@ -336,7 +336,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             'tags': TagSerializer,
         }
         result_object_serializer = result_object_serializers[listening_type]
-        serializer = result_object_serializer(page, many=True)
+        serializer = result_object_serializer(page, many=True, context={'request': request})
 
         return self.get_paginated_response(serializer.data)
 
@@ -380,7 +380,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         trades = stream_controller.get_stream2_trades_qs(user.profile.stream2, shout_type)
         self.pagination_class = ReverseDateTimePagination
         page = self.paginate_queryset(trades)
-        serializer = TradeSerializer(page, many=True)
+        serializer = TradeSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Message')
@@ -431,7 +431,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
         message = message_controller.send_message2(conversation=None, user=request.user,
-                                                   to_users=[user], text=text, attachments=attachments)
+                                                   to_users=[user], text=text, attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)

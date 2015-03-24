@@ -97,7 +97,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
         [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
 
-        serializer = MessageSerializer(page, many=True)
+        serializer = MessageSerializer(page, many=True, context={'request': request})
         conversation.mark_as_read(request.user)
         return self.get_paginated_response(serializer.data)
 
@@ -161,7 +161,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message2(conversation, request.user, text=text, attachments=attachments)
+        message = message_controller.send_message2(conversation, request.user, text=text, attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)

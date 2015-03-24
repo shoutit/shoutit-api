@@ -6,7 +6,7 @@ from django.conf import settings
 from common.constants import DEFAULT_LOCATION
 
 from shoutit.models.base import UUIDModel, APIModelMixin
-from shoutit.models.stream import Stream2Mixin, Listen
+from shoutit.models.stream import Stream2Mixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 

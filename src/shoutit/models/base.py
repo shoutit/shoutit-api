@@ -62,10 +62,6 @@ class AttachedObjectMixin(models.Model):
 
 class APIModelMixin(object):
     @property
-    def api_url(self):
-        return get_api2_url(self)
-
-    @property
     def web_url(self):
         return ''
 

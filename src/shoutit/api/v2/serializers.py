@@ -43,10 +43,14 @@ class VideoSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=30)
+    api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Tag
         fields = ('id', 'name', 'api_url')
+
+    def get_api_url(self, tag):
+        return reverse('tag-detail', kwargs={'name': tag.name}, request=self.context['request'])
 
 
 class TagDetailSerializer(TagSerializer):
@@ -73,10 +77,14 @@ class TagDetailSerializer(TagSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='profile.image')
+    api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_active', 'image')
+
+    def get_api_url(self, user):
+        return reverse('user-detail', kwargs={'username': user.username}, request=self.context['request'])
 
 
 class UserDetailSerializer(UserSerializer):
@@ -275,6 +283,7 @@ class TradeSerializer(serializers.ModelSerializer):
     date_published = serializers.SerializerMethodField()
     user = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
+    api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
@@ -283,6 +292,9 @@ class TradeSerializer(serializers.ModelSerializer):
 
     def get_date_published(self, trade):
         return date_unix(trade.date_published)
+
+    def get_api_url(self, shout):
+        return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def to_internal_value(self, data):
         ret = super(TradeSerializer, self).to_internal_value(data)
@@ -443,7 +455,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Conversation2
-        fields = ('id', 'created_at', 'modified_at', 'api_url', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'users',
+        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'users',
                   'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):

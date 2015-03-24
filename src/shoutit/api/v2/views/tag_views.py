@@ -103,7 +103,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tag = self.get_object()
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, tag.stream2)
+            stream_controller.listen_to_stream(request.user, tag.stream2, request)
             msg = "you started listening to {} shouts.".format(tag.name)
 
         else:
@@ -144,7 +144,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tag = self.get_object()
         listeners = stream_controller.get_stream_listeners(tag.stream2)
         page = self.paginate_queryset(listeners)
-        serializer = UserSerializer(page, many=True)
+        serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Shouts')
@@ -182,5 +182,5 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         trades = stream_controller.get_stream2_trades_qs(tag.stream2, shout_type)
         self.pagination_class = ReverseDateTimePagination
         page = self.paginate_queryset(trades)
-        serializer = TradeSerializer(page, many=True)
+        serializer = TradeSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
