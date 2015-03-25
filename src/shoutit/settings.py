@@ -143,18 +143,18 @@ INSTALLED_APPS = (
 if LOCAL:
     INSTALLED_APPS += (
         'django_extensions',
+    )
+# apps on on server [dev, prod]
+if ON_SERVER:
+    INSTALLED_APPS += (
         'storages',
     )
 # apps only on server development
 if DEV:
     INSTALLED_APPS += (
     )
-# apps only on production
+# apps only on server production
 if PROD:
-    INSTALLED_APPS += (
-    )
-# apps when gunicorn is on
-if GUNICORN:
     INSTALLED_APPS += (
     )
 
@@ -232,8 +232,8 @@ STATICFILES_FINDERS = (
 
 # todo: AWS
 # todo: no more static files needed after web app is ready
-if False:
-    AWS_STORAGE_BUCKET_NAME = 'man-static'
+if ON_SERVER:
+    AWS_STORAGE_BUCKET_NAME = 'shoutit-api-static'
     AWS_ACCESS_KEY_ID = 'AKIAJ7YQGDWLJVDUE3SA'
     AWS_SECRET_ACCESS_KEY = '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'
     AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME

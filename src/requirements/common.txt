@@ -38,3 +38,6 @@ django-widget-tweaks==1.3
 django-paypal==0.2
 
 jsonschema
+
+django-storages==1.1.8
+boto==2.36.0
