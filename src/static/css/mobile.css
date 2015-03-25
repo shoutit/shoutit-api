@@ -10,7 +10,7 @@ div#mobile-logo-cloud {
     margin-right: auto;
     height: 109px;
     width: 200px;
-    background-image: url('/static/img/mobile-logo-cloud.png');
+    background-image: url('../img/mobile-logo-cloud.png');
 }
 
 div#mobile-content {
