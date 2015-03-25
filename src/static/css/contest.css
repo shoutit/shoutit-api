@@ -2,27 +2,27 @@ div.box-container{min-height:20px;padding:19px;margin-bottom:20px;border:1px sol
 div.white-container{background-color:#fff}
 .round{-webkit-border-radius:10px;-moz-border-radius:10px;border-radius:10px}
 .shadow{-webkit-box-shadow:2px 2px 4px rgba(0,0,0,0.15);-moz-box-shadow:2px 2px 4px rgba(0,0,0,0.15);box-shadow:2px 2px 4px rgba(0,0,0,0.15)}
-.contest_bg{background: url("/static/img/contest_bg.jpg") no-repeat scroll 0 0 transparent;height: 1000px;margin: 0 auto;position:relative;width: 800px;text-align:center;}
+.contest_bg{background: url("../img/contest_bg.jpg") no-repeat scroll 0 0 transparent;height: 1000px;margin: 0 auto;position:relative;width: 800px;text-align:center;}
 div.contest{border: 1px solid #99CCFF;display: block;margin: 15px auto 0;max-height: 240px;padding-bottom: 39px;width: 610px;}
 .contest_taps{height: 35px;margin-left: auto;padding-left: 0;width: 310px;padding-top: 418px;margin-right:auto;}
 .contest_taps li{display: block;float: left;height: 35px;line-height: 35px;list-style: none outside none;margin-left: 35px;text-align: center;width: 110px;}
 .contest_taps a{color: #666666;display: inline-block;float: left;font-family: arial;margin-left: 5px;text-decoration: none;margin-left: 8px;width:100px;}
-.contest_taps .selected_tap{background: url("/static/img/small_icons.png") repeat scroll 156px 35px transparent;}
+.contest_taps .selected_tap{background: url("../img/small_icons.png") repeat scroll 156px 35px transparent;}
 .contest_taps .selected_tap a  {color:#fff;}
-.contest_taps li:hover{background: url("/static/img/small_icons.png") repeat scroll 156px 35px transparent;}
+.contest_taps li:hover{background: url("../img/small_icons.png") repeat scroll 156px 35px transparent;}
 .contest_taps a:hover {color:#fff;}
 .steps_title{display: block;font-size: 30px;margin: 0 auto 15px;text-align: center;color:#666;}
 .first_step{	padding: 9px;clear: both;display: inline-block;float: left;height: 90px;margin-left: 29px;width: 225px;}
 .second_step{	padding: 9px;display: inline-block;float: left;height: 90px;margin-left: 90px;width: 225px;}
 .third_step{	padding: 9px;display: inline-block;float: left;height: 90px;margin-left: 200px;width: 215px; margin-top: 25px;display: none;}
 .step_desc{color:#666;display: block;float: left;font-family: arial;padding-top: 9px;text-align: center;width: 165px;min-height: 30px;}
-.first_step .step_num{background: url("/static/img/small_icons.png") repeat scroll -96px 0 transparent;display: inline-block;height: 35px;width: 35px;float:left;}
-.second_step .step_num{background: url("/static/img/small_icons.png") repeat scroll -130px 0 transparent;display: inline-block;height: 35px;width: 35px;float:left;}
-.third_step .step_num{background: url("/static/img/small_icons.png") repeat scroll -196px 0 transparent;display: inline-block;height: 35px;width: 35px;float:left;}
+.first_step .step_num{background: url("../img/small_icons.png") repeat scroll -96px 0 transparent;display: inline-block;height: 35px;width: 35px;float:left;}
+.second_step .step_num{background: url("../img/small_icons.png") repeat scroll -130px 0 transparent;display: inline-block;height: 35px;width: 35px;float:left;}
+.third_step .step_num{background: url("../img/small_icons.png") repeat scroll -196px 0 transparent;display: inline-block;height: 35px;width: 35px;float:left;}
 .third_step a{display: inline-block;margin-left: 8px;margin-top: 13px;width: 115px;float:left;font-family: arial;}
-.step_arrow{background: url("/static/img/small_icons.png") repeat scroll 0 -50px transparent;display: inline-block;float: left;height: 37px;margin-left: 30px;width: 37px;}
-.step_connect{background: url("/static/img/small_icons.png") repeat scroll 0 0 transparent;cursor: pointer;display: inline-block;height: 25px;margin-left: 10px;margin-top: 13px;width: 95px;float:left}
-.step_share{background: url("/static/img/small_icons.png") repeat scroll 0 -25px transparent;cursor: pointer;display: inline-block;float: left;height: 25px;margin-left: 10px;margin-top: 13px;width: 80px;}
+.step_arrow{background: url("../img/small_icons.png") repeat scroll 0 -50px transparent;display: inline-block;float: left;height: 37px;margin-left: 30px;width: 37px;}
+.step_connect{background: url("../img/small_icons.png") repeat scroll 0 0 transparent;cursor: pointer;display: inline-block;height: 25px;margin-left: 10px;margin-top: 13px;width: 95px;float:left}
+.step_share{background: url("../img/small_icons.png") repeat scroll 0 -25px transparent;cursor: pointer;display: inline-block;float: left;height: 25px;margin-left: 10px;margin-top: 13px;width: 80px;}
 .step_share:hover{-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";filter: alpha(opacity=50);-moz-opacity: 0.5;-khtml-opacity: 0.5;opacity: 0.5;-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";}
 .step_connect:hover{-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";filter: alpha(opacity=50);-moz-opacity: 0.5;-khtml-opacity: 0.5;opacity: 0.5;-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";background-repeat:no-repeat;}
 ol li{color:#666;padding-top: 5px;}
@@ -40,10 +40,10 @@ ol li{color:#666;padding-top: 5px;}
 .user_pager{float: right;list-style: none outside none;margin: 0;padding-left: 0;}
 .user_pager li{float: left;height: 26px;list-style: none outside none;margin: 0;padding-left: 0;padding-top: 3px;text-align: center;width: 28px;}
 .user_pager li a{color:#666;}
-.user_pager li.selected_users_page{background: url("/static/img/small_icons.png") repeat scroll -166px 0 transparent;}
+.user_pager li.selected_users_page{background: url("../img/small_icons.png") repeat scroll -166px 0 transparent;}
 .user_pager li.selected_users_page a{color: #FFFFFF;}
-.user_pager .users_prev_page{background: url("/static/img/small_icons.png") repeat scroll -173px -29px transparent;cursor: pointer;float: left;height: 15px;margin: 6px 10px 0 0;width: 10px;}
-.user_pager .users_next_page{background: url("/static/img/small_icons.png") repeat scroll -182px -29px transparent;cursor: pointer;float: left;height: 15px;margin: 6px 0 0 10px;width: 10px;}
+.user_pager .users_prev_page{background: url("../img/small_icons.png") repeat scroll -173px -29px transparent;cursor: pointer;float: left;height: 15px;margin: 6px 10px 0 0;width: 10px;}
+.user_pager .users_next_page{background: url("../img/small_icons.png") repeat scroll -182px -29px transparent;cursor: pointer;float: left;height: 15px;margin: 6px 0 0 10px;width: 10px;}
 .win_title{color: #666666;display: block;font-family: Myriad Pro;font-size: 30px;margin-left: auto;margin-right: auto;margin-top: 25px;width: 180px;}
 .win_desc{color: #939598;display: block;font-family: Calibri;font-size: 18px;margin-left: auto;margin-right: auto;width: 610px;}
 .footer_copyright{bottom: 7px;color: #FFFFFF;display: block;position: absolute;text-align: center;text-decoration: none;width: 115px;left:338px;}

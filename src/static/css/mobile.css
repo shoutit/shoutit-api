@@ -43,10 +43,10 @@ a {
 .mobile_logos_container{margin:0 auto;height:100px}
 .mobile_logos_container span{width:70px;display:inline-block;float:left;padding-left:10px;font-size: 13px;}
 .mobile_logos_container a{width:80px;display:inline-block;float:left;}
-.mobile_apps .iphone_app_logo{background: url("/static/img/apps.png") repeat scroll 74px 0 transparent;height:85px;width: 66px;}
+.mobile_apps .iphone_app_logo{background: url("../img/apps.png") repeat scroll 74px 0 transparent;height:85px;width: 66px;}
 .mobile_apps .iphone_app_logo:hover{background-position: 74px 100px;}
-.mobile_apps .android_app_logo{background: url("/static/img/apps.png") repeat scroll 166px 0 transparent;height:85px;}
+.mobile_apps .android_app_logo{background: url("../img/apps.png") repeat scroll 166px 0 transparent;height:85px;}
 .mobile_apps .android_app_logo:hover{background-position: 166px 100px;}
-.mobile_apps .blackberry_app_logo{background: url("/static/img/apps.png") repeat scroll 0 0 transparent;height:85px;}
+.mobile_apps .blackberry_app_logo{background: url("../img/apps.png") repeat scroll 0 0 transparent;height:85px;}
 .mobile_apps .blackberry_app_logo:hover{background-position: 0 100px;}
 div.box-header {border-bottom: 2px solid #999999;color: #666666;font-size: 14px;font-weight: bold;height: 18px;line-height: 18px;margin-top: 5px;padding-bottom: 3px;margin-bottom:10px;text-align: center;}
