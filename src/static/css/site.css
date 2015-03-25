@@ -24,7 +24,7 @@ label, input, button, select, textarea {
 }
 
 .site-wrapper {
-    background: #FFFFFF url('/static/img/home-gradient.png') repeat-x;
+    background: #FFFFFF url('../img/home-gradient.png') repeat-x;
     min-height: 100%;
     height: auto !important;
     height: 100%;
