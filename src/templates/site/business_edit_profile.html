@@ -5,12 +5,7 @@
   {% csrf_token %}
 
   <div class="input-field">
-    <div class='user-image'><img src="{{ profile.image|secure_url }}"></div>
-    <div id="file-uploader">
-      <noscript>
-        <p>Please enable JavaScript to use file uploader.</p>
-      </noscript>
-    </div>
+    <div class='user-image'><img src="{{ profile.image }}"></div>
   </div>
   <div class="divs-inline">
     <div class="input-field">
@@ -76,30 +71,4 @@
     shout_map.CreateShoutMap("business_location_input_search", "city input", "country input", "address input", {{ profile.latitude }}, {{ profile.longitude }}, "sell");
   });
 
-  var uploader = new qq.FileUploader({
-    action: "/upload/user_image/",
-    element: $('#file-uploader')[0],
-    multiple: false,
-
-    onComplete: function (id, fileName, responseJSON) {
-      $('#ajax_loading').hide();
-      $('form#business_edit_form [type="submit"]').prop('disabled', false);
-      if (responseJSON.success) {
-        $('.input-field .user-image img').attr('src', responseJSON.url);
-      }
-    },
-    params: {
-      'csrf_token': '{% csrf_token_value %}',
-      'csrf_name': 'csrfmiddlewaretoken',
-      'csrf_xname': 'X-CSRFToken'
-    },
-    onSubmit: function (id, fileName) {
-      $('form#business_edit_form [type="submit"]').prop('disabled', true);
-      $('#ajax_loading').show();
-    },
-    allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
-    sizeLimit: 200 * 1024
-  });
-
-  $('.qq-upload-drop-area').remove();
 </script>

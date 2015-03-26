@@ -6,15 +6,11 @@ import uuid
 import base64
 import hashlib
 import hmac
-import StringIO
-import mimetypes
 import os
 import re
-from PIL import Image
-import pyrax
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from shoutit import settings
-from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER, NOT_ALLOWED_USERNAMES
+from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.models import Experience, Tag, User
 
 
@@ -95,17 +91,6 @@ def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECR
         return data
 
 
-https_cdn = re.compile(r'http://((?:[\w-]+\.)+)(r\d{2})\.(.*)', re.IGNORECASE)
-
-
-def get_https_cdn(url):
-    m = https_cdn.match(url)
-    if m:
-        return 'https://%sssl.%s' % (m.group(1), m.group(3))
-    else:
-        return url
-
-
 def safe_string(value):
     c = re.compile('\\b' + ('%s|%s' % ('\\b', '\\b')).join(settings.PROFANITIES_LIST) + '\\b', re.IGNORECASE)
     return c.findall(value)
@@ -116,55 +101,6 @@ def get_shout_name_preview(text, n):
         return text
     else:
         return text[0:n] + '...'
-
-
-def get_size_url(url, size):
-    if not url:
-        return url
-    scheme, netloc, path, p, q, f = urlparse.urlparse(url)
-    path = path.split('/')
-    filename, extension = os.path.splitext(path[-1])
-    filename = '%s_%d%s' % (filename, size, extension)
-    path[-1] = filename
-    return '%s%s%s' % (scheme and (scheme + '://') or '', netloc, '/'.join(path))
-
-
-def make_image_thumbnail(url, size, container_name):
-    from PIL.Image import open as image_open, ANTIALIAS
-    from mimetypes import guess_type
-    import StringIO
-    import pyrax
-    
-    from django.core.files.base import ContentFile
-
-    filename = os.path.basename(urlparse.urlparse(url)[2])
-    content_type = guess_type(filename)
-    name, extension = os.path.splitext(filename)
-
-    pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
-    pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
-    cf = pyrax.cloudfiles
-    container = cf.get_container(container_name)
-
-    obj = container.get_object(filename)
-    content_file = ContentFile(obj.get())
-    image = image_open(content_file)
-    thumb = image.copy()
-    thumb.thumbnail((size, size), ANTIALIAS)
-    buff = StringIO.StringIO()
-    thumb.save(buff, format=image.format)
-    buff.seek(0)
-    new_obj = container.store_object('%s_%d%s' % (name, size, extension), data=buff.buf, content_type=content_type)
-
-
-def make_cloud_thumbnails_for_image(image_url):
-    make_image_thumbnail(image_url, 145, 'shout_image')
-    make_image_thumbnail(image_url, 85, 'shout_image')
-
-
-def make_cloud_thumbnails_for_user_image(image_url):
-    make_image_thumbnail(image_url, 95, 'user_image')
-    make_image_thumbnail(image_url, 32, 'user_image')
 
 
 def to_seo_friendly(s, max_len=50):
@@ -240,73 +176,3 @@ class JsonResponse(HttpResponse):
 
 class JsonResponseBadRequest(JsonResponse):
     status_code = 400
-
-
-cloud_connection = None
-
-
-def get_cloud_connection():
-    global cloud_connection
-    if cloud_connection is None:
-        pyrax.set_setting('identity_type', settings.CLOUD_IDENTITY)
-        pyrax.set_credentials(username=settings.CLOUD_USERNAME, api_key=settings.CLOUD_API_KEY)
-        cloud_connection = pyrax
-    return cloud_connection
-
-
-def cloud_upload_image(uploaded, container_name, filename, is_raw=True):
-    try:
-        cf = get_cloud_connection().cloudfiles
-        container = cf.get_container(container_name)
-        data = ''
-        if is_raw:
-            data = uploaded.body if hasattr(uploaded, 'body') else uploaded
-        else:
-            for c in uploaded.chunks():
-                data += c
-        filename = os.path.splitext(filename)[0] + '.jpg'
-        buff = StringIO.StringIO()
-        buff.write(data)
-        buff.seek(0)
-        image = Image.open(buff)
-        if container.name == 'user_image':
-            width, height = image.size
-            if width != height:
-                box = (0, 0, min(width, height), min(width, height))
-                image = image.crop(box)
-                image.format = "JPEG"
-            image.thumbnail((220, 220), Image.ANTIALIAS)
-        else:
-            image.thumbnail((800, 600), Image.ANTIALIAS)
-        
-        buff = StringIO.StringIO()
-        image.save(buff, format="JPEG", quality=80)
-        buff.seek(0)
-        obj = container.store_object(obj_name=filename, data=buff.buf, content_type=mimetypes.guess_type(filename))
-
-        if container.name == 'user_image':
-            make_cloud_thumbnails_for_user_image(obj.container.cdn_uri + '/' + obj.name)
-
-        return obj
-
-    # todo: very bad error handling
-    except Exception as e:
-        print str(e)
-        return None
-
-
-def cloud_upload_file(uploaded, container, filename, is_raw):
-    try:
-        cf = get_cloud_connection().cloudfiles
-        container = cf.get_container(container)
-        data = ''
-        if is_raw:
-            data = uploaded.body
-        else:
-            for c in uploaded.chunks():
-                data += c
-        obj = container.store_object(obj_name=filename, data=data, content_type=mimetypes.guess_type(filename))
-        return obj
-    except Exception, e:
-        print e
-    return None

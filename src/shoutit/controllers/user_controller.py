@@ -11,7 +11,7 @@ from django.conf import settings
 from shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
     Listen, CLUser, DBUser
 from common.constants import *
-from shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password, cloud_upload_image
+from shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password
 from shoutit.permissions import ConstantPermission, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 from shoutit.controllers import event_controller, email_controller
 
@@ -404,8 +404,9 @@ def auth_with_gplus(request, gplus_user, credentials):
             response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
             data = response.read()
             filename = generate_password()
-            obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-            user.profile.image = obj.container.cdn_uri + '/' + obj.name
+            # upload to S3
+            s3_image = ''
+            user.profile.image = s3_image
             user.profile.save()
 
         except Exception, e:
@@ -452,12 +453,13 @@ def auth_with_facebook(request, fb_user, long_lived_token):
             if pic_file[0] not in no_pic and pic_file[1] != '.gif':  # todo: check if new changes to fb default profile pics
                 data = response.read()
                 filename = generate_password()
-                obj = cloud_upload_image(data, 'user_image', filename, True)  # todo: images names as username
-                user.profile.image = obj.container.cdn_uri + '/' + obj.name
+                # upload to S3
+                s3_image = ''
+                user.profile.image = s3_image
                 user.profile.save()
 
         except Exception, e:
-            print e.message
+            print e.message  # todo: log_error
             pass
 
     return user

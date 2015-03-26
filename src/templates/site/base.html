@@ -378,7 +378,7 @@
 </div>
 
 <div id='ajax_loading' style='position: fixed; bottom: 0px; right: 0px; display: none; z-index: 2050;'>
-  <img src='/static/img/loading.gif'/>
+  <img src="{% static "img/loading.gif" %}"/>
 </div>
 
 
@@ -390,7 +390,6 @@
 
 <script type="text/javascript" language="JavaScript" src="{% static "js/jquery.colorbox.js" %}"></script>
 <script type="text/javascript" language="JavaScript" src="{% static "js/jquery.placeholder.js" %}"></script>
-<script type="text/javascript" language="JavaScript" src="{% static "js/fileuploader.js" %}"></script>
 <script type="text/javascript" language="JavaScript" src="{% static "js/jquery.tagsinput.min.js" %}"></script>
 <script type="text/javascript" language="JavaScript"
         src="https://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
@@ -492,7 +491,7 @@
 {% endblock %}
 <script type="text/javascript" language="JavaScript">
   {% if request.user.is_authenticated %}
-    var notificationsPollUrl = '{{ settings.REALTIME_SERVER_URL|secure_url }}';
+    var notificationsPollUrl = '{{ settings.REALTIME_SERVER_URL }}';
     var currentTimeOut = 0;
     function poll() {
       $.ajax({

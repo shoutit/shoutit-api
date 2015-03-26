@@ -18,7 +18,6 @@ from common.utils import date_unix
 from shoutit.models import (
     User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency
 )
-from shoutit.utils import cloud_upload_image, random_uuid_str
 from shoutit.controllers import shout_controller
 
 
@@ -96,7 +95,6 @@ class UserDetailSerializer(UserSerializer):
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
     push_tokens = PushTokensSerializer(help_text="Only shown for owner")
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
-    image_file = serializers.ImageField(required=False)
     is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
     listeners_count = serializers.IntegerField(source='profile.listeners_count', help_text="Number of Listeners to this user")
@@ -112,7 +110,7 @@ class UserDetailSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens', 'image_file',
+        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens',
                                   'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
 
@@ -187,22 +185,6 @@ class UserDetailSerializer(UserSerializer):
 
         if errors:
             raise ValidationError(errors)
-
-        # todo: simplify, handle upload errors better
-        image_file = validated_data.pop('image_file', None)
-        if image_file:
-            filename = image_file.name
-            filename = random_uuid_str() + os.path.splitext(filename)[1]
-            cloud_image = cloud_upload_image(image_file, 'user_image', filename, is_raw=False)
-
-            if cloud_image:
-                validated_data.pop('image_file', None)
-                profile_data = validated_data.pop('profile', OrderedDict())
-                profile_data.pop('image', None)
-                profile_data['image'] = cloud_image.container.cdn_uri + '/' + cloud_image.name
-                validated_data['profile'] = profile_data
-            else:
-                raise ValidationError({'image_file': "could not upload this file"})
 
         return validated_data
 

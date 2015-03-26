@@ -9,7 +9,7 @@
 <div id="conversation_{{conversation.pk}}">
     <div class="user-image pull-{% if right %}right{% else %}left{% endif %} shadow round">
         <a href="/user/{{ conversation.With.username }}/" title="{{ conversation.With.name }}">
-            <img class="round" src="{{ conversation.With.image|secure_url }}" alt="{{ conversation.With.name }}'s profile picture">
+            <img class="round" src="{{ conversation.With.image }}" alt="{{ conversation.With.name }}'s profile picture">
         </a>
     </div>
 {#    <div class="arrow-{% if right %}right{% else %}left{% endif %} pull-{% if right %}right{% else %}left{% endif %}"></div>#}

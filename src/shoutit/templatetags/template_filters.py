@@ -10,9 +10,8 @@ from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse, NoReverseMatch
 from widget_tweaks.templatetags.widget_tweaks import _process_field_attributes
-from django.conf import settings
 
-from shoutit.utils import shout_link as _shout_link, get_size_url, get_https_cdn, to_seo_friendly
+from shoutit.utils import shout_link as _shout_link, to_seo_friendly
 
 
 register = template.Library()
@@ -54,27 +53,6 @@ def rangeToIndex(value, index):
 @register.filter
 def replacebr(v):
     return v.replace('<br />', '\n').replace('<br>', '\n').replace('<p></p>', '\n')
-
-
-@register.filter
-def thumbnail(url, size):
-    return get_size_url(url, size)
-
-
-cdn_re = re.compile(r'http://(([\w-]+)\.)+rackcdn\.(.*)')
-
-
-@register.filter
-def secure_url(url):
-    if not settings.IS_SITE_SECURE:
-        return url
-    if not url.startswith('https'):
-        if url.startswith('/'):
-            url = settings.SITE_LINK + url
-        if cdn_re.match(url):
-            return get_https_cdn(url)
-        url = url.replace('http://', 'https://')
-    return url
 
 
 @register.filter

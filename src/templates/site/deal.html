@@ -6,9 +6,9 @@
 	{% if deal.get_images %}
 		{% for image in deal.get_images %}
 			{% if forloop.counter0 == 0 %}
-				<div class="round shout-images shadow" rel="shout_{{ deal.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{{ image.image|secure_url }}');">
+				<div class="round shout-images shadow" rel="shout_{{ deal.pk }}" href="{{ image.image }}" style="background-image: url('{{ image.image }}');">
 			{% else %}
-				<a href="{{ image.image|secure_url }}" rel="shout_{{ deal.pk }}" style="display: none;"></a>
+				<a href="{{ image.image }}" rel="shout_{{ deal.pk }}" style="display: none;"></a>
 			{% endif %}
 		{% endfor %}
 	<i class="icon-search"></i>

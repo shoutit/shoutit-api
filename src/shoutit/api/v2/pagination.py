@@ -4,61 +4,14 @@
 """
 from __future__ import unicode_literals
 from collections import OrderedDict
-from django.core.paginator import InvalidPage, Paginator as DjangoPaginator
-from rest_framework import serializers
+from django.core.paginator import Paginator as DjangoPaginator
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import BasePagination, PageNumberPagination, _positive_int
+from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
 from rest_framework.templatetags.rest_framework import replace_query_param
+from rest_framework.pagination import CursorPagination
 from datetime import datetime
 from shoutit.api.api_utils import get_current_uri
-
-from rest_framework.pagination import CursorPagination
-
-# class NextPageByDateTimeField(serializers.Field):
-#     """
-#     Field that returns a link to the next page in time paginated results.
-#     """
-#
-#     def to_representation(self, page):
-#         view = self.context.get('view')
-#         assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
-#         assert hasattr(view, 'after_field'), "view '%s' has no 'after_field'" % view
-#         assert hasattr(view, 'paginate_by_param'), "view '%s' has no 'paginate_by_param'" % view
-#
-#         last_object = len(page) and page[-1]
-#         if not last_object:
-#             return None
-#         last_object_timestamp = getattr(last_object, view.datetime_unix_attribute)
-#         request = self.context.get('request')
-#         url = request and get_current_uri(request) or ''
-#         url = replace_query_param(url, view.after_field, last_object_timestamp)
-#         url = replace_query_param(url, view.paginate_by_param, view.get_paginate_by())
-#         return url
-#
-#
-# class PreviousPageByDateTimeField(serializers.Field):
-#     """
-#     Field that returns a link to the previous page in time paginated results.
-#     """
-#
-#     def to_representation(self, page):
-#         view = self.context.get('view')
-#         assert hasattr(view, 'datetime_unix_attribute'), "view '%s' has no 'datetime_unix_attribute'" % view
-#         assert hasattr(view, 'after_field'), "view '%s' has no 'after_field'" % view
-#         assert hasattr(view, 'paginate_by_param'), "view '%s' has no 'paginate_by_param'" % view
-#
-#         first_object = len(page) and page[0]
-#         if not first_object:
-#             return None
-#         first_object_timestamp = getattr(first_object, view.datetime_unix_attribute)
-#         request = self.context.get('request')
-#         url = request and get_current_uri(request) or ''
-#         url = replace_query_param(url, view.before_field, first_object_timestamp)
-#         url = replace_query_param(url, view.paginate_by_param, view.get_paginate_by())
-#         return url
-#
-#
 
 
 class DateTimePagination(CursorPagination):

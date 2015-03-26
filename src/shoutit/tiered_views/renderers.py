@@ -526,7 +526,7 @@ def user_json_renderer(request, result):
                 {
                     'username': user.username,
                     'name': user.name,
-                    'image': template_filters.thumbnail(user.abstract_profile.image, 32)
+                    'image': user.abstract_profile.image
                 } for user in result.data['users']
             ]
         }

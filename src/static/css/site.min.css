@@ -1486,20 +1486,6 @@ button.userprofile-button img{float:left;margin-right:5px}
 .ui-notify-cross{margin-top:-4px;float:right;cursor:pointer;text-decoration:none;font-size:12px;font-weight:bold;text-shadow:0 1px 1px #fff;padding:2px}
 .ui-notify-cross:hover{color:#ffffab}
 .ui-notify-cross:active{position:relative;top:1px}
-.qq-uploader{position:relative;width:100%}
-.qq-upload-button{display:block;width:105px;padding:7px 0;text-align:center;background:#800;border-bottom:1px solid #ddd;color:#fff}
-.qq-upload-button-hover{background:#c00}
-.qq-upload-button-focus{outline:1px dotted black}
-.qq-upload-drop-area{position:absolute;top:0;left:0;width:100%;height:100%;min-height:70px;z-index:2;background:#ff9797;text-align:center}
-.qq-upload-drop-area span{display:block;position:absolute;top:50%;width:100%;margin-top:-8px;font-size:16px}
-.qq-upload-drop-area-active{background:#ff7171}
-.qq-upload-list{margin:15px 35px;padding:0;list-style:disc}
-.qq-upload-list li{margin:0;padding:0;line-height:15px;font-size:12px}
-.qq-upload-file,.qq-upload-spinner,.qq-upload-size,.qq-upload-cancel,.qq-upload-failed-text{margin-right:7px}
-.qq-upload-spinner{display:inline-block;background:url("../img/uploading.gif");width:15px;height:15px;vertical-align:text-bottom}
-.qq-upload-size,.qq-upload-cancel{font-size:11px}
-.qq-upload-failed-text{display:none}
-.qq-upload-fail .qq-upload-failed-text{display:inline}
 div#notification_container{position:fixed;bottom:40px;left:10px;display:none;top:auto;right:auto;z-index:2050}
 .alert .close{top:-6px;right:-5px;color:black;text-decoration:none}
 .alert{border-color:#efb852}
@@ -1589,9 +1575,6 @@ div.modal-footer.modal-error{padding:6px 15px 6px;background-color:#fde2e2;borde
 #profile_edit_form .divs-inline>div.input-field.fifty:last-child,#activate_form .divs-inline>div.input-field.fifty:last-child{width:160px;margin-right:0}
 #profile_edit_form .divs-inline>div.input-field.fifty:last-child input,#activate_form .divs-inline>div.input-field.fifty:last-child input{width:150px}
 #profile_edit_form textarea{height:60px;width:320px}
-#profile_edit_form .qq-upload-list{display:none}
-#profile_edit_form #file-uploader{width:110px;display:inline-block;margin-left:5px}
-#profile_edit_form #file-uploader .qq-uploader{width:105px;margin-right:0;display:inline-block;height:32px}
 #profile_edit_form{margin-bottom:0}
 #profile_edit_form .user-image{float:left}
 #profile_edit_form .user-image img{width:95px;height:95px}
@@ -1600,13 +1583,8 @@ div.modal-footer.modal-error{padding:6px 15px 6px;background-color:#fde2e2;borde
 /*.shout_form div.tagsinput span.tag{margin-bottom:0}*/
 .shout_form #id_location{display:none}
 .shout_form #user_location{width:513px;height:146px;margin:0}
-.shout_form .qq-upload-button input{width:120px;height:35px}
-.shout_form div.qq-uploader .qq-upload-list{display:none}
-.shout_form div.qq-uploader img{height:35px;display:inline;margin-bottom:-14px;margin-left:5px}
 div.user-image.pull-left{text-align:right}
 div.user-image.pull-right{margin-right:0;margin-left:5px;text-align:left}
-.qq-upload-button{cursor:pointer;background-color:#88b536;background-image:-moz-linear-gradient(top,#b2d572,#88b536);background-image:-ms-linear-gradient(top,#b2d572,#88b536);background-image:-webkit-gradient(linear,0 0,0 100%,from(#b2d572),to(#88b536));background-image:-webkit-linear-gradient(top,#b2d572,#88b536);background-image:-o-linear-gradient(top,#b2d572,#88b536);background-image:linear-gradient(top,#b2d572,#88b536);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#B2D572',endColorstr='#88B536',GradientType=0);border-color:#88b536 #88b536 #88b536;border-color:rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);filter:progid:DXImageTransform.Microsoft.gradient(enabled = false);-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;width:120px;height:20px;display:inline-block}
-.shout_form .qq-upload-button:hover{background-position:0 -15px;-webkit-transition:background-position .1s linear;-moz-transition:background-position .1s linear;-ms-transition:background-position .1s linear;-o-transition:background-position .1s linear;transition:background-position .1s linear}
 .shout_form button.btn-primary,#send_message_form button.btn-primary{background-color:#88b536;background-image:-moz-linear-gradient(top,#b2d572,#88b536);background-image:-ms-linear-gradient(top,#b2d572,#88b536);background-image:-webkit-gradient(linear,0 0,0 100%,from(#b2d572),to(#88b536));background-image:-webkit-linear-gradient(top,#b2d572,#88b536);background-image:-o-linear-gradient(top,#b2d572,#88b536);background-image:linear-gradient(top,#b2d572,#88b536);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#B2D572',endColorstr='#88B536',GradientType=0);border-color:#88b536 #88b536 #88b536;border-color:rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);filter:progid:DXImageTransform.Microsoft.gradient(enabled = false);width:100px;height:35px;margin-left:209px}
 img{max-width:none}
 .searchbox-container .dropdown-menu{min-width:0;max-width:none}

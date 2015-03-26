@@ -20,54 +20,10 @@ from shoutit.permissions import PERMISSION_SHOUT_MORE, PERMISSION_SHOUT_REQUEST,
 from shoutit.tiered_views.renderers import json_renderer, shout_brief_json, object_page_html, json_data_renderer
 from shoutit.tiered_views.validators import modify_shout_validator, shout_form_validator, shout_owner_view_validator, edit_shout_validator
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_BAD_REQUEST
-from shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest, cloud_upload_image, random_uuid_str
+from shoutit.utils import shout_link, JsonResponse, JsonResponseBadRequest
 
 import logging
 logger = logging.getLogger('shoutit.error')
-
-
-@require_POST
-@csrf_exempt
-def upload_image(request, method=None):
-    if request.is_ajax():
-        upload = request
-        is_raw = True
-        try:
-            filename = request.GET['qqfile']
-        except KeyError:
-            return HttpResponseBadRequest("AJAX request not valid")
-
-    elif request.is_api:
-        upload = request
-        is_raw = True
-        filename = 'WHATEVER.jpg'
-
-    else:
-        is_raw = False
-        if len(request.FILES) >= 1:
-            upload = request.FILES.values()[0]
-        else:
-            return HttpResponseBadRequest("Bad Upload")
-        filename = upload.name
-
-    filename = random_uuid_str() + os.path.splitext(filename)[1]
-
-    if method.startswith('shout_'):
-        cloud_image = cloud_upload_image(upload, 'shout_image', filename, is_raw)
-    else:
-        # TODO: DELETE request.user.profile.image
-        cloud_image = cloud_upload_image(upload, method, filename, is_raw)
-
-    if cloud_image:
-        ret_json = {'success': True}
-        if method == 'user_image':
-            profile = request.user.abstract_profile
-            profile.image = cloud_image.container.cdn_uri + '/' + cloud_image.name
-            profile.save()
-        ret_json['url'] = cloud_image.container.cdn_uri + '/' + cloud_image.name
-        return JsonResponse(ret_json)
-    else:
-        return JsonResponseBadRequest({'success': False})
 
 
 @csrf_exempt

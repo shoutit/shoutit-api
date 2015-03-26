@@ -19,12 +19,6 @@
             <div class="input-field">
                 {{ form.description|trans_attr:"placeholder:description" }}
             </div>
-            <div class="input-field" id="file-uploader">
-                <noscript>
-                    <p>{% trans "Please enable JavaScript to use file uploader." %}</p>
-                </noscript>
-            </div>
-
            <button disabled="disabled" type="submit" class="btn btn-primary">{% trans "edit" %}</button>
         {% endif %}
     </form>
@@ -38,42 +32,6 @@
 	$(document).ready(function(){
         var id = 0;
         $('form#edit_item_form').submitAjaxily();
-        var uploader = new qq.FileUploader({
-            action: "/upload/shout_item/",
-            element: $('#file-uploader')[0],
-            multiple: true,
-            onComplete: function( id, fileName, responseJSON ) {
-                $('#ajax_loading').hide();
-                $('form#item_form [type="submit"]').prop('disabled', false);
-                if (responseJSON.success) {
-                    var img = $('<img id=img_'+id+' src="' + responseJSON.url + '" title="' + fileName + '" alt="' + fileName + '" />');
-                    $('#file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-                    $('form#edit_item_form').append('<input id=input_'+id+' type="hidden" value="' + responseJSON.url + '" name="item_images"/>');
-                    $(img).after('<a id=href_'+id+' onclick="delete_image(\''+id+'\')">x</a>');
-                    id++;
-                }
-            },
-            params: {
-                'csrf_token': '{% csrf_token_value %}',
-                'csrf_name': 'csrfmiddlewaretoken',
-                'csrf_xname': 'X-CSRFToken'
-            },
-            onSubmit: function(id, fileName){
-                $('#ajax_loading').show();
-                $('form#item_form [type="submit"]').prop('disabled', true);
-            },
-            allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
-            sizeLimit: 5 * 1024 * 1024
-        });
-
         var img = null;
-        {% for image in images %}
-            img = $('<img id=img_'+id+' src="{{ image }}" />');
-            $('form#edit_item_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-            $('form#edit_item_form').append('<input id=input_'+id+' type="hidden" value="{{ image }}" name="item_images"/>');
-            $(img).after('<a id=href_'+id+' onclick="delete_image(\''+id+'\')">x</a>');
-            id++;
-        {% endfor %}
-
     });
 </script>

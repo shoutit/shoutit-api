@@ -49,10 +49,8 @@ USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 WSGI_APPLICATION = 'shoutit.wsgi.application'
 
-# todo: remove usage of IS_SITE_SECURE, SCHEME, and SITE_LINK
-IS_SITE_SECURE = PROD
-SCHEME = 'https' if IS_SITE_SECURE else 'http'
-SITE_LINK = '%s://%s/' % (SCHEME, SHOUT_IT_DOMAIN)
+# todo: remove usage of SITE_LINK
+SITE_LINK = 'https://%s/' % SHOUT_IT_DOMAIN
 info("SITE_LINK:", SITE_LINK)
 
 TEMPLATE_DEBUG = DEBUG

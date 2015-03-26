@@ -22,12 +22,6 @@
       <div class="input-field">
         {{ form.tags }}
       </div>
-      <div class="input-field" id="file-uploader">
-        <noscript>
-          <p>{% trans "Please enable JavaScript to use file uploader." %}</p>
-        </noscript>
-      </div>
-
       <input type="text" id="input_search_{{ method }}" class="noSubmit" placeholder="{% trans "Enter a location" %}">
       <div class="input-field" id="{{ method }}_location">
         {{ form.location|attr:"style:display:none" }}
@@ -71,50 +65,13 @@
     $('form#shout_{{ method }}_form').submitAjaxilyAndRedirect();
 
     var id = 0;
-    var uploader = new qq.FileUploader({
-      action: "/upload/shout_{{ method }}/",
-      element: $('form#shout_{{ method }}_form #file-uploader')[0],
-      multiple: true,
-      onComplete: function (id, fileName, responseJSON) {
-        $('#ajax_loading').hide();
-        $('form#shout_{{ method }}_form [type="submit"]').prop('disabled', false);
-        if (responseJSON.success) {
-          var img = $('<img id=img_' + id + ' src="' + responseJSON.url + '" title="' + fileName + '" alt="' + fileName + '" />');
-          $('form#shout_{{ method }}_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
-          $('form#shout_{{ method }}_form').append('<input id=input_' + id + ' type="hidden" value="' + responseJSON.url + '" name="images"/>');
-          $(img).after('<a id=href_' + id + ' onclick="delete_image(\'' + id + '\')">x</a>');
-          id++;
-        }
-      },
-      params: {
-        'csrf_token': '{% csrf_token_value %}',
-        'csrf_name': 'csrfmiddlewaretoken',
-        'csrf_xname': 'X-CSRFToken'
-      },
-      onSubmit: function (id, fileName) {
-        $('#ajax_loading').show();
-        $('form#shout_{{ method }}_form [type="submit"]').prop('disabled', true);
-      },
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
-      sizeLimit: 5 * 1024 * 1024
-    });
-
     var img = null;
     {% for image in shout.get_images %}
       img = $('<img id=img_' + id + ' src="{{ image.image }}" />');
-      $('form#shout_{{ method }}_form #file-uploader').find('.qq-uploader .qq-upload-button').after(img);
       $('form#shout_{{ method }}_form').append('<input id=input_' + id + ' type="hidden" value="{{ image.image }}" name="images"/>');
       $(img).after('<a id=href_' + id + ' onclick="delete_image(\'' + id + '\')">x</a>');
       id++;
     {% endfor %}
-
-
-    $('form#shout_{{ method }}_form .qq-upload-drop-area').remove();
-
-    $('form#shout_{{ method }}_form .qq-upload-button').click(function () {
-      $('form#shout_{{ method }}_form .qq-upload-button input[type="file"]').click();
-      $('form#shout_{{ method }}_form .qq-upload-button input[type="file"]').show().focus().click().hide();
-    });
 
     $('form#shout_{{ method }}_form #id_tags').tagsInput({
       autocomplete_url: '/xhr/tag/',
@@ -146,7 +103,7 @@
       width: '',
       interactive: true,
       delimiter: ' ',
-{#      delimiter: [' ', ','],#}
+      {#      delimiter: [' ', ','],#}
       defaultText: '{% trans "Add a keyword" %}',
       onAddTag: function (tag) {
         $('form#shout_{{ method }}_form #id_tags_tag').qtip('reposition');

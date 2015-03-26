@@ -6,11 +6,6 @@
 {#    <div class="clearfix {% if form.image.errors %}error{% endif %}">#}
 {#        <div class="input">#}
 {#            <img width="160" height="160" id='user_image' src="{{ user_profile.image }}" alt="{{ user_profile.get_full_name }}">#}
-{#        <div id="file-uploader">#}
-{#            <noscript>#}
-{#                <p>Please enable JavaScript to use file uploader.</p>#}
-{#            </noscript>#}
-{#        </div>#}
 {#        <div align="left">Maximum size allowed is 150x150 and 90 KB.</div>#}
 {#        </div>#}
 {#    </div>#}
@@ -21,12 +16,7 @@
 {#        </div>#}
 {#    </div>#}
     <div class="input-field">
-        <div class='user-image'><img src="{{ user_profile.image|secure_url }}"></div>
-        <div id="file-uploader">
-            <noscript>
-                <p>{% trans "Please enable JavaScript to use file uploader." %}</p>
-            </noscript>
-        </div>
+        <div class='user-image'><img src="{{ user_profile.image }}"></div>
     </div>
     <div class="divs-inline">
         <div class="input-field">
@@ -113,7 +103,6 @@
     };
     $('select#id_birthday_month').bind('change', fix_date_issues);
     $('select#id_birthday_year').bind('change', fix_date_issues);
-
 	$('#id_birthday_day').attr('placeholder', '{% trans "birthday [Day]" %}');
 	$('#id_birthday_month').attr('placeholder', '{% trans "birthday [Month]" %}');
 	$('#id_birthday_year').attr('placeholder', '{%  trans "birthday [Year]" %}');
@@ -127,7 +116,6 @@
 	$('#id_birthday_month').attr('data-qtip-error-at', 'top center');
 	$('#id_birthday_year').attr('data-qtip-error-my', 'bottom center');
 	$('#id_birthday_year').attr('data-qtip-error-at', 'top center');
-
 	{% if LANGUAGE_BIDI %}
     $('#id_birthday_year').attr('data-qtip-my', 'right center');
     $('#id_birthday_year').attr('data-qtip-at', 'left center');
@@ -145,36 +133,8 @@
 	$('#id_birthday_month').attr('data-qtip-at', 'right center');
 	$('#id_birthday_day').attr('data-qtip-my', 'left center');
 	$('#id_birthday_day').attr('data-qtip-at', 'right center');
-
-
 	{% else %}
     $('#id_birthday_year').attr('data-qtip-my', 'left center');
     $('#id_birthday_year').attr('data-qtip-at', 'right center');
 	{% endif %}
-    var uploader = new qq.FileUploader({
-        action: "/upload/user_image/",
-        element: $('#file-uploader')[0],
-        multiple: false,
-
-        onComplete: function( id, fileName, responseJSON ) {
-            $('#ajax_loading').hide();
-            $('form#profile_edit_form [type="submit"]').prop('disabled', false);
-            if (responseJSON.success) {
-                $('.input-field .user-image img').attr('src', responseJSON.url);
-            }
-        },
-        params: {
-          'csrf_token': '{% csrf_token_value %}',
-          'csrf_name': 'csrfmiddlewaretoken',
-          'csrf_xname': 'X-CSRFToken'
-        },
-        onSubmit: function(id, fileName){
-            $('form#profile_edit_form [type="submit"]').prop('disabled', true);
-            $('#ajax_loading').show();
-        },
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
-        sizeLimit: 200 * 1024
-    });
-
-	$('.qq-upload-drop-area').remove();
 </script>

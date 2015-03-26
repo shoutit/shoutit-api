@@ -10,7 +10,7 @@
 	<meta property="shoutitcom:price"  content="{{ shout.item.Price|price:shout.item.Currency.code }}" />
 	{% if shout.get_images %}
 		{% with myimg=shout.get_images|key:0  %}
-			<meta property="og:image"  content="{{ myimg.image|secure_url }}" />
+			<meta property="og:image"  content="{{ myimg.image }}" />
 		{% endwith %}
 	{% else %}
 		<meta property="og:image"  content="{{ settings.SITE_LINK }}static/img/{% if shout.type == 0 %}fb_og_request.png{% else %}fb_og_offer.png{% endif %}" />

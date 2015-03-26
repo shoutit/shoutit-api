@@ -26,7 +26,6 @@ from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_T
     POST_TYPE_OFFER, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 from shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
 from shoutit.utils import to_seo_friendly, user_link
-from shoutit.templatetags.template_filters import thumbnail
 
 
 def urlencode(s):
@@ -668,7 +667,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
             result.data['listeners'] = listeners
         else:
             result.data['listeners'] = [
-                {'username': user.username, 'name': user.name, 'image': thumbnail(user.profile.image, 32)}
+                {'username': user.username, 'name': user.name, 'image': user.profile.image}
                 for user in listeners]
 
     elif stats_type == 'listening':
@@ -692,7 +691,7 @@ def user_stats(request, username, stats_type, listening_type='all', period='rece
                 result.data['listening']['tags'] = [tag.name for tag in listening_tags]
             if listening_profiles or listening_profiles == []:
                 result.data['listening']['users'] = [
-                    {'username': p.user.username, 'name': p.user.name, 'image': thumbnail(p.image, 32)}
+                    {'username': p.user.username, 'name': p.user.name, 'image': p.image}
                     for p in listening_profiles]
     return result
 

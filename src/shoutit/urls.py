@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, include, url, handler500
+from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView, RedirectView
 from django.contrib import admin
 from django.conf import settings
 from shoutit.tiered_views import shout_views, general_views
 
-# handler500 = 'shoutit.tiered_views.general_views.handler500'
 urlpatterns = patterns('',
                        # admin
                        url(r'^grappelli/', include('grappelli.urls')),
@@ -33,7 +32,7 @@ urlpatterns = patterns('',
                            TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),
 
                        # todo: remove everything below!
-                       # ##  Shout Website ## #
+                       # Old website
                        url(r'^$', 'shoutit.tiered_views.general_views.index'),
                        url(r'^(requests|offers|experiences)/$', 'shoutit.tiered_views.general_views.index', ),
                        url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z0-9-]+)/)?$', 'shoutit.tiered_views.stream_views.browse'),
@@ -53,8 +52,6 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?signout/$', 'shoutit.tiered_views.user_views.signout'),
                        url(r'^(?:xhr/)?recover/$', 'shoutit.tiered_views.user_views.recover'),
                        url(r'^(?:xhr/)?recover_business_activation/$', 'shoutit.tiered_views.business_views.recover_activation'),
-
-                       # url(r'^^(?:xhr/)?bsignup/', 'shoutit.tiered_views.business_views.signup'),
                        url(r'^^(?:xhr/)?bsignup/(?:([-\w]+)/)?$', 'shoutit.tiered_views.business_views.signup'),
                        url(r'^^(?:xhr/)?subscribe/$', 'shoutit.tiered_views.business_views.subscribe'),
                        url(r'^^(?:xhr/)?btempsignup/(?:([-\w]+)/)?$', 'shoutit.tiered_views.business_views.signup_temp'),
@@ -70,53 +67,33 @@ urlpatterns = patterns('',
                        url(r'^xhr/user/(\w+)/stream/?$', 'shoutit.tiered_views.user_views.user_stream'),
                        url(r'^xhr/user/(\w+)/activities_stream/?$', 'shoutit.tiered_views.user_views.activities_stream'),
                        url(r'^(?:xhr/)?user/(\w+)/editProfile/$', 'shoutit.tiered_views.user_views.user_edit_profile'),
-
                        url(r'^(?:xhr/)?user/(\w+)/editBusinessProfile/$', 'shoutit.tiered_views.business_views.business_edit_profile'),
 
                        url(r'^tag/([^/]+)/$', 'shoutit.tiered_views.tag_views.tag_profile'),
                        url(r'^xhr/tag/([^/]+)/stream/?$', 'shoutit.tiered_views.tag_views.tag_stream'),
 
                        url(r'^(?:xhr/)?reply/([-\w]+)/(?:([-\w]+)/)?$', 'shoutit.tiered_views.message_views.send_message'),
-
-
                        url(r'^xhr/delete_conversation/([-\w]+)/$', 'shoutit.tiered_views.message_views.delete_conversation'),
                        url(r'^xhr/delete_message/([-\w]+)/([-\w]+)/$', 'shoutit.tiered_views.message_views.delete_message'),
                        url(r'^xhr/getHtmlMessage/$', 'shoutit.tiered_views.message_views.get_html_message'),
-
                        url(r'^messages/$', 'shoutit.tiered_views.message_views.read_conversations'),
                        url(r'^(?:xhr/)?messages/stream/$', 'shoutit.tiered_views.message_views.read_conversations_stream'),
-
                        url(r'^(?:xhr/)?messages/([-\w]+)/$', 'shoutit.tiered_views.message_views.read_conversation'),
                        url(r'^xhr/message/([-\w]+)/read/$', 'shoutit.tiered_views.message_views.mark_message_as_read'),
-
-                       url(r'^upload/files/$', 'shoutit.tiered_views.general_views.upload_file'),
-                       url(r'^upload/([\w_-]+)/$', 'shoutit.tiered_views.shout_views.upload_image'),
 
                        url(r'^notifications/$', 'shoutit.tiered_views.realtime_views.notifications'),
                        url(r'^xhr/notifications/count/$', 'shoutit.tiered_views.realtime_views.notifications_count'),
 
-                       # ## XHR ## #
+                       # XHR
                        url(r'^xhr/user/$', 'shoutit.tiered_views.user_views.search_user'),
                        url(r'^xhr/user/(\w+)/start_listening/$', 'shoutit.tiered_views.user_views.start_listening_to_user'),
                        url(r'^xhr/user/(\w+)/stop_listening/$', 'shoutit.tiered_views.user_views.stop_listening_to_user'),
-                       url(r'^xhr/user/(\w+)/(listeners|listening)/(?:(\w+)/)?(?:(\w+)/)?$',
-                           'shoutit.tiered_views.user_views.user_stats'),
+                       url(r'^xhr/user/(\w+)/(listeners|listening)/(?:(\w+)/)?(?:(\w+)/)?$', 'shoutit.tiered_views.user_views.user_stats'),
 
                        url(r'^xhr/tag/$', 'shoutit.tiered_views.tag_views.search_tag'),
                        url(r'^xhr/tag/([^/]+)/start_listening/$', 'shoutit.tiered_views.tag_views.start_listening_to_tag'),
                        url(r'^xhr/tag/([^/]+)/stop_listening/$', 'shoutit.tiered_views.tag_views.stop_listening_to_tag'),
                        url(r'^xhr/tag/([^/]+)/listeners/$', 'shoutit.tiered_views.tag_views.tag_stats'),
-
-                       url(r'^xhr/user/(?P<username>[\.\w-]+)/picture/(?:(?P<size>\d+)/)?$',
-                           'shoutit.tiered_views.general_views.profile_picture'
-                           , {'profile_type': 'user'}),
-                       url(r'^xhr/tag/(?P<tag_name>[a-z0-9-]+)/picture/(?:(?P<size>\d+)/)?$',
-                           'shoutit.tiered_views.general_views.profile_picture'
-                           , {'profile_type': 'tag'}),
-
-                       url(r'^(?:xhr/)?image/([-\w]+)(?:/(\d+))?/(?:i\.png)?$',
-                           'shoutit.tiered_views.general_views.stored_image'),
-
                        url(r'^xhr/top_tags/$', 'shoutit.tiered_views.tag_views.top_tags'),
 
                        url(r'^xhr/hovercard/$', 'shoutit.tiered_views.general_views.hovercard'),
@@ -166,8 +143,7 @@ urlpatterns = patterns('',
                        url(r'^xhr/post_experience/(?:(\w+)/)?$', 'shoutit.tiered_views.experience_views.post_exp'),
                        url(r'^xhr/share_experience/([-\w]+)/$', 'shoutit.tiered_views.experience_views.share_experience'),
                        url(r'^xhr/edit_experience/([-\w]+)/$', 'shoutit.tiered_views.experience_views.edit_experience'),
-                       url(r'^xhr/users_shared_experience/([-\w]+)/$',
-                           'shoutit.tiered_views.experience_views.users_shared_experience'),
+                       url(r'^xhr/users_shared_experience/([-\w]+)/$', 'shoutit.tiered_views.experience_views.users_shared_experience'),
 
                        url(r'^xhr/comment_on_post/([-\w]+)/$', 'shoutit.tiered_views.comment_views.comment_on_post'),
                        url(r'^xhr/post_comments/([-\w]+)/$', 'shoutit.tiered_views.comment_views.post_comments'),
@@ -178,7 +154,6 @@ urlpatterns = patterns('',
                        url(r'^paypal/$', 'shoutit.tiered_views.deal_views.paypal'),
                        url(r'^paypal_return/$', 'shoutit.tiered_views.payment_views.pdt'),
                        url(r'^cpsp_(\w+)/$', 'shoutit.tiered_views.deal_views.cpsp_action'),
-
 
                        url(r'^contact-import/$', 'shoutit.tiered_views.user_views.import_contacts', name='import_contacts'),
                        url(r'^(?:xhr/)?send_invitations/$', 'shoutit.tiered_views.user_views.send_invitations'),

@@ -2,13 +2,12 @@ import math
 
 from django.utils.translation import ugettext_lazy as _
 
-from shoutit.controllers import stream_controller, tag_controller, user_controller
+from shoutit.controllers import stream_controller
 from shoutit.permissions import PERMISSION_FOLLOW_TAG
 from shoutit.tiered_views.renderers import *
 from shoutit.tiered_views.validators import *
 from shoutit.tiers import *
 from common.constants import *
-from shoutit.templatetags.template_filters import thumbnail
 
 
 @non_cached_view(methods=['GET', 'POST'], login_required=True, permissions_required=[PERMISSION_FOLLOW_TAG],
@@ -187,6 +186,6 @@ def tag_stats(request, tag_name):
         result.data['listeners'] = listeners
     else:
         result.data['listeners'] = [
-            {'username': listener.username, 'name': listener.name, 'image': thumbnail(listener.profile.image, 32)}
+            {'username': listener.username, 'name': listener.name, 'image': listener.profile.image}
             for listener in listeners]
     return result

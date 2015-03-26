@@ -26,7 +26,7 @@
                 {{ shout.text|safe|linebreaksbr }}
                 {% for video in shout.get_videos %}
                   <br><br>
-                  <iframe id="player" type="text/html" width="555" height="400" src="{{ settings.SCHEME }}://www.youtube.com/embed/{{ video.id_on_provider }}?enablejsapi=1&origin=http://shoutit.syrex:8000" frameborder="0"></iframe>
+                  <iframe id="player" type="text/html" width="555" height="400" src="//www.youtube.com/embed/{{ video.id_on_provider }}?enablejsapi=1&origin=http://shoutit.syrex:8000" frameborder="0"></iframe>
                 {% endfor %}
 
             {% endif %}
@@ -37,9 +37,9 @@
 			{% if shout.get_images %}
 				{% for image in shout.get_images %}
 					{% if forloop.counter0 == 0 %}
-						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|secure_url }}{% else %}{{ image.image|secure_url }}{% endif %}');">
+						<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image }}" style="background-image: url('{% if not detailed %}{{ image.image }}{% else %}{{ image.image }}{% endif %}');">
 					{% else %}
-						<a href="{{ image.image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
+						<a href="{{ image.image }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 					{% endif %}
 				{% endfor %}
 			</div>
@@ -52,9 +52,9 @@
 	{% if shout.get_images %}
 		{% for image in shout.get_images %}
 			{% if forloop.counter0 == 0 %}
-				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image|secure_url }}" style="background-image: url('{% if not detailed %}{{ image.image|secure_url }}{% else %}{{ image.image|secure_url }}{% endif %}');">
+				<div class="round shout-images pull-{% if right %}left{% else %}right{% endif %}" rel="shout_{{ shout.pk }}" href="{{ image.image }}" style="background-image: url('{% if not detailed %}{{ image.image }}{% else %}{{ image.image }}{% endif %}');">
 			{% else %}
-				<a href="{{ image.image|secure_url }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
+				<a href="{{ image.image }}" rel="shout_{{ shout.pk }}" style="display: none;"></a>
 			{% endif %}
 		{% endfor %}
 	</div>

@@ -2,10 +2,6 @@
 {% load template_filters %}
 {% load staticfiles %}
 
-{% block styles %}
-    <link rel="stylesheet" type="text/css" href="{% static "css/fileuploader.css"%}" />
-{% endblock %}
-
 {% block content %}
 	<input type="radio" name="shout_type" value="0" checked> I want
 	<input type="radio" name="shout_type" value="1"> I offer
@@ -35,8 +31,6 @@
 					</div>
 
 					<div class="clearfix">
-						<div class="shout_post_image" id="file-uploader" style="cursor: pointer;" >add picture</div>
-
 						<div class="shout_post_text">
 							{{ shout_form.description|attr:"class:span6"|attr:"rows:5"|attr:"placeholder:describe what you want here" }}
 						</div>

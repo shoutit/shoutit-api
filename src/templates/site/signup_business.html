@@ -55,17 +55,6 @@
         </div>
       {% endif %}
     <div>
-      <div class="input-field">
-        Please upload any document that verifies your ownership of this business
-        <div id="file-uploader">
-          <noscript>
-            <p>Please enable JavaScript to use file uploader.</p>
-          </noscript>
-        </div>
-        {#			<input type="hidden" value="" name="business_documents"/>#}
-
-      </div>
-
       <button class="btn btn-primary" type="submit">Sign up</button>
     </div>
     {#    <button class="btn primary" type="submit">Save Changes</button>#}
@@ -81,43 +70,6 @@
         redirect_after_login = true;
       }
     });
-
-    var uploader = new qq.FileUploader({
-      action: "/upload/files/",
-      element: $('#file-uploader')[0],
-      multiple: true,
-
-      onComplete: function (id, fileName, responseJSON) {
-        $('#ajax_loading').hide();
-        $('form#signup_business_form [type="submit"]').prop('disabled', false);
-        if (responseJSON.success) {
-//                    $('.input-field .user-image img').attr('src', responseJSON.url);
-          $('#file-uploader').append('<span>' + fileName + '</span>');
-          $('form#signup_business_form').append('<input type="hidden" value="' + responseJSON.url + '" name="business_documents"/>');
-//					$('form#signup_business_form #docs input').attr('value',responseJSON.url);
-        }
-      },
-      params: {
-        'csrf_token': '{% csrf_token_value %}',
-        'csrf_name': 'csrfmiddlewaretoken',
-        'csrf_xname': 'X-CSRFToken'
-      },
-      onSubmit: function (id, fileName) {
-        $('form#activate_business_form [type="submit"]').prop('disabled', true);
-        $('#ajax_loading').show();
-      },
-      allowedExtensions: ['zip', 'pdf', 'doc', 'png', 'jpg', 'jpeg', 'gif', 'tif'],
-      sizeLimit: 5 * 1024 * 1024,
-      template: '<div class="qq-uploader">' +
-          '<div class="qq-upload-drop-area"><span>Drop pictures here to upload</span></div>' +
-          '<div class="qq-upload-button">Upload</div>' +
-          '<ul class="qq-upload-list"></ul>' +
-          '</div>'
-
-    });
-
-    $('.qq-upload-drop-area').remove();
-
 
     $(document).ready(function () {
       var shout_map = new GoogleMap("#business_map", "location input");

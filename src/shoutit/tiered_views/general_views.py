@@ -1,14 +1,12 @@
 import time
 
-from django.http import HttpResponseServerError, HttpResponseBadRequest
+from django.http import HttpResponseServerError
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
-from django.views.decorators.http import require_POST
 
 from shoutit.forms import *
 from shoutit.models import Category, StoredImage
-from shoutit.utils import cloud_upload_file, get_size_url, generate_password, JsonResponse
 from shoutit.tiered_views.validators import *
 from shoutit.tiered_views.renderers import *
 from shoutit.tiers import *
@@ -90,64 +88,6 @@ def hovercard(request):
         data = {}
     result = ResponseResult()
     result.data = data
-    return result
-
-
-# todo: better validation and sizing options
-@cache_control(public=True, must_revalidate=False)
-@non_cached_view(methods=['GET'], login_required=False, validator=profile_picture_validator,
-                 html_renderer=thumbnail_response)
-def profile_picture(request, profile_type='', size='', tag_name='', username=''):
-    if profile_type == 'user' and username == 'me':
-        username = request.user.username
-
-    path = ''
-    if profile_type == 'user':
-        d = user_controller.get_profile(username)
-    elif profile_type == 'tag':
-        d = tag_controller.get_tag(tag_name)
-
-    if d.image:
-        path = d.image
-    else:
-        path = ''
-
-    result = ResponseResult()
-    if size:
-        path = get_size_url(path, size)
-    result.data['url'] = path
-
-    return result
-
-
-@cache_control(public=True, must_revalidate=False)
-@non_cached_view(methods=['GET'],
-                 login_required=False,
-                 validator=lambda request, image_id, size: object_exists_validator(StoredImage.objects.get, True,
-                                                                                   _('image does not exist.'), pk=image_id),
-                 json_renderer=thumbnail_response,
-                 html_renderer=thumbnail_response)
-def stored_image(request, image_id, size=32):
-    image_id = image_id
-    image = StoredImage.objects.get(pk=image_id)
-
-    result = ResponseResult()
-    path = image.image
-
-    import urlparse
-
-    netloc = urlparse.urlparse(path)[1]
-
-    if netloc != settings.SHOUT_IMAGES_CDN:
-        p = os.path.dirname(os.path.normpath(os.sys.modules[settings.SETTINGS_MODULE].__file__))
-        path = p + '/ShoutWebsite/' + path
-
-    result.data['picture'] = path
-
-    if size:
-        result.data['size'] = (int(size), int(size))
-    else:
-        result.data['size'] = None
     return result
 
 
@@ -311,34 +251,6 @@ def handler500(request):
     f.close()
     return HttpResponseServerError(content)
 
-
-@require_POST
-@csrf_exempt
-def upload_file(request):
-    if request.is_ajax():
-        upload = request
-        is_raw = True
-        try:
-            filename = request.GET['qqfile']
-        except KeyError:
-            return HttpResponseBadRequest("AJAX request not valid")
-    else:
-        is_raw = False
-        if len(request.FILES) == 1:
-            upload = request.FILES.values()[0]
-        else:
-            raise Http404("Bad Upload")
-        filename = upload.name
-    import os
-
-    filename = generate_password() + os.path.splitext(filename)[1]
-    cloud_file = cloud_upload_file(upload, 'files', filename, is_raw)
-
-    if cloud_file:
-        ret_json = {'success': True, 'url': cloud_file.public_uri()}
-    else:
-        ret_json = {'success': False}
-    return JsonResponse(data=ret_json)
 
 
 @non_cached_view(methods=['GET'], json_renderer=lambda request, result: live_events_json_renderer(request, result))
