@@ -50,7 +50,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 WSGI_APPLICATION = 'shoutit.wsgi.application'
 
 # todo: remove usage of SITE_LINK
-SITE_LINK = 'https://%s/' % SHOUT_IT_DOMAIN
+SITE_LINK = 'http%s://%s/' % ('s' if PROD else '', SHOUT_IT_DOMAIN)
 info("SITE_LINK:", SITE_LINK)
 
 TEMPLATE_DEBUG = DEBUG
@@ -108,7 +108,6 @@ RQ_QUEUES = {
 AUTH_USER_MODEL = 'shoutit.User'
 
 # Application definition
-
 INSTALLED_APPS = (
     'grappelli',
     'django.contrib.auth',
@@ -117,8 +116,6 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.admin',
     'django.contrib.staticfiles',
-    'widget_tweaks',
-    'push_notifications',
     # 'paypal.standard.ipn',
     # 'paypal.standard.pdt',
     # 'keyedcache',
@@ -131,11 +128,13 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
-
     'provider',
     'provider.oauth2',
 
+    'push_notifications',
+
     'django_rq',
+    'widget_tweaks',
 )
 # apps only on local development
 if LOCAL:
@@ -207,11 +206,8 @@ DATABASES = {
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = False
 
 ugettext = lambda s: s
@@ -222,7 +218,6 @@ DEFAULT_LANGUAGE_CODE = 'en'
 
 
 # Static files (CSS, JavaScript, Images)
-
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -230,19 +225,16 @@ STATICFILES_FINDERS = (
 
 # todo: AWS
 # todo: no more static files needed after web app is ready
+AWS_ACCESS_KEY_ID = 'AKIAJ7YQGDWLJVDUE3SA'
+AWS_SECRET_ACCESS_KEY = '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'
 if ON_SERVER:
+    STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     AWS_STORAGE_BUCKET_NAME = 'shoutit-api-static'
-    AWS_ACCESS_KEY_ID = 'AKIAJ7YQGDWLJVDUE3SA'
-    AWS_SECRET_ACCESS_KEY = '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'
     AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
     STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
-    STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 else:
     STATIC_URL = '/static/'
-
-MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(ENV_DIR, 'static')
-MEDIA_ROOT = os.path.join(ENV_DIR, 'media')
+    STATIC_ROOT = os.path.join(ENV_DIR, 'static')
 
 STATICFILES_DIRS = (
     os.path.join(DJANGO_DIR, 'static'),

@@ -1,8 +1,7 @@
 from itertools import chain
-
-import os
+import urllib2
+import boto
 from django.contrib.auth import login, authenticate, logout
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 from django.db.models.aggregates import Min
 from django.db.models.query_utils import Q
@@ -14,6 +13,8 @@ from common.constants import *
 from shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password
 from shoutit.permissions import ConstantPermission, ACTIVATED_USER_PERMISSIONS, INITIAL_USER_PERMISSIONS
 from shoutit.controllers import event_controller, email_controller
+import logging
+logger = logging.getLogger('shoutit.warnings')
 
 
 def get_profile(username):
@@ -304,7 +305,7 @@ def CompleteSignUpSSS(request, first_name, last_name, password, user, username, 
 # todo: links
 def ChangeEmailAndSendActivation(request, user, email):
     token = set_last_token(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL)
-    email_controller.SendRegistrationActivationEmail(user, email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
+    email_controller.SendRegistrationActivationEmail(user, email, "https://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'), token)
 
 
 def CompleteSignUp(request, user, token, tokenType, username, email, mobile, sex, birthday=None):
@@ -398,19 +399,22 @@ def auth_with_gplus(request, gplus_user, credentials):
         print 'LinkedGoogleAccount Error: ', str(e)
         return None
 
-    if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
-        try:
-            import urllib2
-            response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
-            data = response.read()
-            filename = generate_password()
-            # upload to S3
-            s3_image = ''
-            user.profile.image = s3_image
-            user.profile.save()
+    try:
+        response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
+        # todo: check when pic is the std pic
+        s3 = boto.connect_s3()
+        bucket = s3.get_bucket('shoutit-user-image-original')
+        img_data = response.read()
+        filename = user.pk + '.jpg'
+        key = bucket.new_key(filename)
+        key.set_metadata('Content-Type', 'image/jpg')
+        key.set_contents_from_string(img_data)
+        s3_image_url = key.generate_url(expires_in=0, query_auth=False)
+        user.profile.image = s3_image_url
+        user.profile.save()
+    except Exception, e:
+        logger.warn(str(e))
 
-        except Exception, e:
-            print 'auth_with_gplus profile.image error:', e.message
     return user
 
 
@@ -422,7 +426,7 @@ def auth_with_facebook(request, fb_user, long_lived_token):
 
     if not user:
         # todo: better email validation
-        if len(fb_user['email']) > 75:
+        if len(fb_user['email']) > 100:
             return None
         password = generate_password()
         user = SignUpUser(request, fname=fb_user['first_name'], lname=fb_user['last_name'], password=password, email=fb_user['email'],
@@ -439,28 +443,28 @@ def auth_with_facebook(request, fb_user, long_lived_token):
                                    ExpiresIn=long_lived_token['expires'])
         la.save()
     except Exception, e:
-        print str(e)
+        logger.warn(str(e))
         return None
 
-    if user.profile.image in ['/static/img/_user_male.png', '/static/img/_user_female.png']:
-        try:
-            import urllib2
-            response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + long_lived_token['accessToken'],
-                                       timeout=20)
-            no_pic = ['yDnr5YfbJCH', 'HsTZSDw4avx']
-            pic_file = os.path.splitext(response.geturl().split('/')[-1])
-
-            if pic_file[0] not in no_pic and pic_file[1] != '.gif':  # todo: check if new changes to fb default profile pics
-                data = response.read()
-                filename = generate_password()
-                # upload to S3
-                s3_image = ''
-                user.profile.image = s3_image
-                user.profile.save()
-
-        except Exception, e:
-            print e.message  # todo: log_error
-            pass
+    try:
+        response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + long_lived_token['access_token'],
+                                   timeout=20)
+        std_male = '10354686_10150004552801856_220367501106153455_n.jpg'
+        std_female = '1379841_10150004552801901_469209496895221757_n.jpg'
+        response_url = response.geturl()
+        if not (std_male in response_url or std_female in response_url or '.gif' in response_url):
+            s3 = boto.connect_s3()
+            bucket = s3.get_bucket('shoutit-user-image-original')
+            img_data = response.read()
+            filename = user.pk + '.jpg'
+            key = bucket.new_key(filename)
+            key.set_metadata('Content-Type', 'image/jpg')
+            key.set_contents_from_string(img_data)
+            s3_image_url = key.generate_url(expires_in=0, query_auth=False)
+            user.profile.image = s3_image_url
+            user.profile.save()
+    except Exception, e:
+        logger.warn(str(e))
 
     return user
 
