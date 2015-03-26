@@ -402,7 +402,7 @@ def auth_with_gplus(request, gplus_user, credentials):
     try:
         response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
         # todo: check when pic is the std pic
-        s3 = boto.connect_s3()
+        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
         bucket = s3.get_bucket('shoutit-user-image-original')
         img_data = response.read()
         filename = user.pk + '.jpg'
@@ -453,7 +453,7 @@ def auth_with_facebook(request, fb_user, long_lived_token):
         std_female = '1379841_10150004552801901_469209496895221757_n.jpg'
         response_url = response.geturl()
         if not (std_male in response_url or std_female in response_url or '.gif' in response_url):
-            s3 = boto.connect_s3()
+            s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
             bucket = s3.get_bucket('shoutit-user-image-original')
             img_data = response.read()
             filename = user.pk + '.jpg'
