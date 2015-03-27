@@ -359,6 +359,9 @@ LOGGING = {
             'handlers': ['console_out', 'console_err', 'sentry'],
             'propagate': False,
         },
+        'rq.worker': {
+            'propagate': False,
+        },
         '': {
             'handlers': ['console_out', 'console_err', 'sentry'],
         },
