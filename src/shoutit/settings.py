@@ -223,8 +223,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-# todo: AWS
-# todo: no more static files needed after web app is ready
 AWS_ACCESS_KEY_ID = 'AKIAJ7YQGDWLJVDUE3SA'
 AWS_SECRET_ACCESS_KEY = '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'
 if ON_SERVER:

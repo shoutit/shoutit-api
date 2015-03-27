@@ -2,6 +2,7 @@ from django.utils.translation import ugettext as _
 from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
+from django_rq import job
 
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
     NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT
@@ -17,6 +18,7 @@ def mark_notifications_as_read_by_ids(notification_ids):
     Notification.objects.filter(id__in=notification_ids).update(is_read=True)
 
 
+@job
 def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
     from shoutit.api.v2 import serializers
 
@@ -58,28 +60,28 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
 
 
 def notify_user_of_listen(user, listener, request=None):
-    notify_user(user, NOTIFICATION_TYPE_LISTEN, listener, listener, request)
+    notify_user.delay(user, NOTIFICATION_TYPE_LISTEN, listener, listener, request)
 
 
 def notify_user_of_message(user, message):
-    notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
+    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
 
 
 def notify_user_of_message2(user, message, request=None):
-    notify_user(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, request)
+    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, request)
 
 
 def notify_business_of_exp_posted(business, exp):
-    notify_user(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.user, attached_object=exp)
+    notify_user.delay(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.user, attached_object=exp)
 
 
 def notify_user_of_exp_shared(user, shared_exp):
-    notify_user(user, NOTIFICATION_TYPE_EXP_SHARED, from_user=shared_exp.user, attached_object=shared_exp)
+    notify_user.delay(user, NOTIFICATION_TYPE_EXP_SHARED, from_user=shared_exp.user, attached_object=shared_exp)
 
 
 def notify_users_of_comment(users, comment):
     for user in users:
-        notify_user(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.user, attached_object=comment)
+        notify_user.delay(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.user, attached_object=comment)
 
 
 def get_user_notifications(user):
