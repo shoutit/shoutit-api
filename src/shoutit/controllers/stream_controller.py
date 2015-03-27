@@ -519,11 +519,10 @@ def remove_listener_from_stream(listener, stream):
     """
     remove a stream from user listening
     """
-    listen = None
     try:
         listen = Listen.objects.get(listener=listener, stream=stream)
     except Listen.DoesNotExist:
-        pass
+        listen = None
 
     if listen:
         listen.delete()

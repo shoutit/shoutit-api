@@ -172,40 +172,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @detail_route(methods=['put'], suffix='Image')
-    def image(self, request, *args, **kwargs):
-        """
-        Modify user image
-
-        ###Request
-        image url in json body
-        <pre><code>
-        {
-            "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg"
-        }
-        </code></pre>
-
-        or
-
-        <pre><code>
-        PUT request with attached image file named `image_file`
-        </pre></code>
-
-        ---
-        serializer: UserDetailSerializer
-        omit_parameters:
-            - form
-        parameters:
-            - name: username
-              description: me for logged in user
-              paramType: path
-              required: true
-              defaultValue: me
-            - name: image_file
-              type: file
-        """
-        return self.partial_update(request, *args, **kwargs)
-
     @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
     def listen(self, request, *args, **kwargs):
         """
