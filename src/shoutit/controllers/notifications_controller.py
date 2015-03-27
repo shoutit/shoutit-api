@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
@@ -18,7 +19,7 @@ def mark_notifications_as_read_by_ids(notification_ids):
     Notification.objects.filter(id__in=notification_ids).update(is_read=True)
 
 
-@job
+@job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
     from shoutit.api.v2 import serializers
 

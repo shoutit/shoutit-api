@@ -100,10 +100,9 @@ REDIS_CACHES = {
 SESSION_ENGINE = REDIS_SESSION_ENGINE
 CACHES = REDIS_CACHES
 
+RQ_QUEUE = ENV
 RQ_QUEUES = {
-    'default': {
-        'USE_REDIS_CACHE': 'default',
-    },
+    RQ_QUEUE: {'USE_REDIS_CACHE': 'default'},
 }
 AUTH_USER_MODEL = 'shoutit.User'
 
