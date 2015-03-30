@@ -1,5 +1,6 @@
 import re
-from django.contrib.contenttypes.generic import GenericForeignKey
+import uuid
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core import validators
 from django.db import models
@@ -12,13 +13,11 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.authtoken.models import Token
-from uuidfield import UUIDField
 from common.utils import date_unix, AllowedUsernamesValidator
-from shoutit.api.api_utils import get_api2_url
 
 
 class UUIDModel(models.Model):
-    id = UUIDField(auto=True, hyphenate=True, version=4, primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True)
     modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True, null=True)
 
@@ -51,7 +50,7 @@ class AttachedObjectMixinManager(models.Manager):
 
 class AttachedObjectMixin(models.Model):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
-    object_id = UUIDField(hyphenate=False, version=4, null=True, blank=True)
+    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
     attached_object = GenericForeignKey('content_type', 'object_id')
 
     objects = AttachedObjectMixinManager()

@@ -263,7 +263,7 @@ def BuyDeal(user, deal, amount):
 def GetValidVoucher(code):
     vouchers = Voucher.objects.filter(code=code, IsValidated=False).select_related('DealBuy', 'DealBuy__Deal', 'DealBuy__Deal__item',
                                                                                    'DealBuy__Deal__user',
-                                                                                   'DealBuy__Deal__user__Profile')
+                                                                                   'DealBuy__Deal__user__profile')
     if vouchers and len(vouchers) == 1:
         return vouchers[0]
     else:
@@ -291,7 +291,7 @@ def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, cou
     now = datetime.now()
     qs = Deal.objects.filter(expiry_date__gt=now, is_disabled=False, muted=False, IsClosed=False).select_related('shout', 'post',
                                                                                                                  'user',
-                                                                                                                 'user__Profile',
+                                                                                                                 'user__profile',
                                                                                                                  'item', 'item__Currency')
     if country:
         qs = qs.filter(country=country)

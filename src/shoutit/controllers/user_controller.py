@@ -24,11 +24,11 @@ def get_profile(username):
     if not isinstance(username, basestring):
         return None
     try:
-        q = Profile.objects.filter(user__username__iexact=username).select_related()
+        q = Profile.objects.filter(user__username__iexact=username)
         if q:
             return q[0]
         else:
-            q = Business.objects.filter(user__username__iexact=username).select_related()
+            q = Business.objects.filter(user__username__iexact=username)
             if q:
                 return q[0]
             else:
@@ -91,7 +91,7 @@ def GetUserByEmail(email):
     if not isinstance(email, str) and not isinstance(email, unicode):
         return None
     try:
-        q = User.objects.filter(email__iexact=email).select_related()
+        q = User.objects.filter(email__iexact=email)
         if q:
             return q[0].abstract_profile
         else:
@@ -104,7 +104,7 @@ def GetUserByMobile(mobile):
     if not isinstance(mobile, str) and not isinstance(mobile, unicode):
         return None
     try:
-        q = Profile.objects.filter(Mobile__iexact=mobile).select_related()
+        q = Profile.objects.filter(Mobile__iexact=mobile)
         if q:
             return q[0]
         else:
@@ -178,7 +178,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
         token_length = TOKEN_LONG
 
     username = generate_username()
-    while len(User.objects.filter(username=username).select_related()):
+    while len(User.objects.filter(username=username)):
         username = generate_username()
 
     django_user = User.objects.create_user(username, email if email is not None else '', password)
@@ -217,7 +217,7 @@ def SignUpSSS(request, mobile, location, country, city):
     token_length = TOKEN_SHORT_UPPER
 
     username = generate_username()
-    while len(User.objects.filter(username=username).select_related()):
+    while len(User.objects.filter(username=username)):
         username = generate_username()
 
     password = generate_password()
@@ -657,10 +657,10 @@ def activities_stream(profile, start_index=None, end_index=None):
     post_count = stream_posts_query_set.count()
 
     post_ids = [post['pk'] for post in stream_posts_query_set[start_index:end_index].values('pk')]
-    #	trades = Trade.objects.get_valid_trades().filter(pk__in = post_ids).select_related('item','item__Currency','user','user__Profile','user__Business')
+    #	trades = Trade.objects.get_valid_trades().filter(pk__in = post_ids).select_related('item','item__Currency','user','user__profile','user__business')
     #	trades = shout_controller.get_trade_images(trades)
 
-    events = Event.objects.get_valid_events().filter(pk__in=post_ids).select_related('user', 'user__Profile').order_by(
+    events = Event.objects.get_valid_events().filter(pk__in=post_ids).select_related('user', 'user__profile').order_by(
         '-date_published')
     events = event_controller.GetDetailedEvents(events)
     #	stream_posts = sorted(chain( trades, events),key=lambda instance: instance.date_published,reverse = True)

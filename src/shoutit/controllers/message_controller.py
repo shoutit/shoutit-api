@@ -58,13 +58,13 @@ def getFullConversationDetails(conversations, user):
     conversation_ids = [conversation.pk for conversation in conversations]
     conversations_messages = Message.objects.filter(Q(Conversation__pk__in=conversation_ids) & (
         (Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))).select_related(
-        'Conversation', 'ToUser', 'ToUser__Profile', 'FromUser', 'FromUser__Profile').order_by('DateCreated')
+        'Conversation', 'ToUser', 'ToUser__profile', 'FromUser', 'FromUser__profile').order_by('DateCreated')
     shout_pks = [conversation.AboutPost.pk for conversation in conversations]
 
     if shout_pks:
-        tags = Tag.objects.select_related('Creator').prefetch_related('Shouts')
+        tags = Tag.objects.select_related('Creator').prefetch_related('shouts')
         tags = tags.extra(where=['shout_id IN (%s)' % ','.join(["'%s'" % str(shout_pk) for shout_pk in shout_pks])])
-        tags_with_shout_id = list(tags.values('pk', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__pk'))
+        tags_with_shout_id = list(tags.values('pk', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'shouts__pk'))
 
     else:
         tags_with_shout_id = []
@@ -82,7 +82,7 @@ def getFullConversationDetails(conversations, user):
                 empty_conversations_to.append(conversation.pk)
             continue
         conversation.AboutPost.set_images([image for image in images if image.item.pk == conversation.AboutPost.item.pk])
-        conversation.AboutPost.set_tags([tag for tag in tags_with_shout_id if str(tag['Shouts__pk']) == conversation.AboutPost.pk])
+        conversation.AboutPost.set_tags([tag for tag in tags_with_shout_id if str(tag['shouts__pk']) == conversation.AboutPost.pk])
         last_message = list(conversation.messages)[-1]
         conversation.text = last_message.text[0:256] if last_message.text else "attachment"
         conversation.DateCreated = list(conversation.messages)[-1].DateCreated
@@ -100,16 +100,14 @@ def ReadConversations(user, start_index=None, end_index=None):
     conversations = Conversation.objects.filter(
         ((Q(FromUser=user) & Q(VisibleToSender=True)) | (Q(ToUser=user) & Q(VisibleToRecivier=True)))
     ).select_related('FromUser',
-                     'FromUser__Profile',
+                     'FromUser__profile',
                      'ToUser',
-                     'ToUser__Profile',
+                     'ToUser__profile',
                      'AboutPost',
                      'AboutPost__item',
                      'AboutPost__item__Currency',
-                     'AboutPost__item__images',
-                     'AboutPost__shout',
                      'AboutPost__user',
-                     'AboutPost__user__Profile').annotate(max_date=Max('Messages__DateCreated')).order_by(
+                     'AboutPost__user__profile').annotate(max_date=Max('Messages__DateCreated')).order_by(
         '-max_date')[start_index:end_index]
     return getFullConversationDetails(conversations, user)
 
@@ -147,19 +145,17 @@ def get_shout_conversations(shout_id, user):
     shout = shout_controller.get_post(shout_id, True, True)
     if user.is_authenticated() and user.pk == shout.user.pk:
         conversations = Conversation.objects.filter(AboutPost=shout, ToUser=user, VisibleToRecivier=True).annotate(
-            max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__Profile', 'FromUser',
-                                                                  'FromUser__Profile', 'AboutPost', 'AboutPost__item',
-                                                                  'AboutPost__item__Currency', 'AboutPost__shout',
-                                                                  'AboutPost__shout__tags',
-                                                                  'AboutPost__shout__images').order_by('-max_date')
+            max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__profile', 'FromUser',
+                                                                  'FromUser__profile', 'AboutPost', 'AboutPost__item',
+                                                                  'AboutPost__item__Currency',
+                                                                  ).order_by('-max_date')
         conversations = getFullConversationDetails(conversations, user)
     elif user.is_authenticated():
         conversations = Conversation.objects.filter(AboutPost=shout, FromUser=user, VisibleToSender=True).annotate(
-            max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__Profile', 'FromUser',
-                                                                  'FromUser__Profile', 'AboutPost', 'AboutPost__item',
-                                                                  'AboutPost__item__Currency', 'AboutPost__shout',
-                                                                  'AboutPost__shout__tags',
-                                                                  'AboutPost__shout__images').order_by('-max_date')
+            max_date=Max('Messages__DateCreated')).select_related('ToUser', 'ToUser__profile', 'FromUser',
+                                                                  'FromUser__profile', 'AboutPost', 'AboutPost__item',
+                                                                  'AboutPost__item__Currency',
+                                                                  ).order_by('-max_date')
         conversations = getFullConversationDetails(conversations, user)
     else:
         conversations = []

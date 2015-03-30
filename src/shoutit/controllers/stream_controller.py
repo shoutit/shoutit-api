@@ -146,11 +146,7 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
     rank_count = 0
 
     # building the queryset
-    shout_qs = Shout.objects.select_related('item', 'item__Currency', 'user', 'user__Profile', 'tags').filter(**filters)
-
-    if filter_tags is not None and len(filter_tags) > 0:
-        filter_tags = ["'%s'" % t for t in filter_tags]
-        shout_qs = shout_qs.filter(tags__in=filter_tags)
+    shout_qs = Shout.objects.select_related('trade__item', 'trade__item__Currency', 'user', 'user__profile').prefetch_related('tags').filter(**filters)
 
     # Calculating the stream following rank attribute
     if int(rank_type_flag & FOLLOW_RANK_TYPE):
@@ -266,6 +262,15 @@ def get_ranked_shouts_ids(user, rank_type_flag, country='', city='', lat=0.0, ln
                 unicode(query_string[:index]) + ' and "shoutit_post_Streams"."stream_id" IN (%s) ' % unicode(user_followings_pks)[
                                                                                                      1:-1] + unicode(query_string[index:])
 
+    if filter_tags:
+        qp1 = 'LEFT OUTER JOIN "shoutit_shout_tags" ON ("shoutit_shout"."post_ptr_id" = "shoutit_shout_tags"."shout_id") '
+        where_index = query_string.find('WHERE')
+        query_string = unicode(query_string[:where_index]) + unicode(qp1) + unicode(query_string[where_index:])
+
+        qp2 = '"shoutit_shout_tags"."tag_id" IN (%s) and ' % unicode(filter_tags)[1:-1]
+        where_index = query_string.find('WHERE') + 7
+        query_string = unicode(query_string[:where_index]) + unicode(qp2) + unicode(query_string[where_index:])
+
     # executing query SQL & fetching shout IDs
     cursor = connection.cursor()
     cursor.execute(query_string)
@@ -318,7 +323,7 @@ def get_shout_recommended_shout_stream(base_shout, type, start_index=None, end_i
     extra_order_bys = '(|/(' + extra_order_bys.strip()[:-1] + ')) / |/(%d)' % rank_count
 
     shout_qs = Trade.objects.get_valid_trades(country=base_shout.country, city=base_shout.city).select_related(
-        'item', 'item__Currency', 'user__Profile', 'tags').filter(**filters).filter(~Q(pk=base_shout.pk))
+        'item', 'item__Currency', 'user__profile').prefetch_related('tags').filter(**filters).filter(~Q(pk=base_shout.pk))
     shout_qs = shout_qs.extra(select={'time_rank': '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
         now_timestamp_string, now_timestamp - base_timestamp)})
     shout_qs = shout_qs.extra(select={'rank': extra_order_bys}).extra(order_by=['rank'])[start_index:end_index]
@@ -335,9 +340,9 @@ def get_trades_by_pks(pks):
     if not pks:
         return []
     # todo: choose which statement with less queries and enough data
-    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').prefetch_related('tags','item__images').filter(pk__in = pks)
-    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile','tags').filter(pk__in = pks)
-    shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__Profile').filter(
+    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__profile').prefetch_related('tags','item__images').filter(pk__in = pks)
+    # shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__profile','tags').filter(pk__in = pks)
+    shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__profile').filter(
         pk__in=pks)
 
     return attach_related_to_shouts(shout_qs)
@@ -348,9 +353,9 @@ def attach_related_to_shouts(shouts, rank_count=None):
     attach tags and images to the shouts to minimize the database queries
     """
     if len(shouts):
-        tags_qs = Tag.objects.select_related('Creator').prefetch_related('Shouts')
+        tags_qs = Tag.objects.select_related('Creator').prefetch_related('shouts')
         tags_qs = tags_qs.extra(where=["shout_id IN ({0})".format(','.join(["'{0}'".format(shout.pk) for shout in shouts]))])
-        tags_with_shout_id = list(tags_qs.values('id', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'Shouts__id'))
+        tags_with_shout_id = list(tags_qs.values('id', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'shouts__id'))
 
         images = StoredImage.objects.filter(Q(shout__id__in=[shout.id for shout in shouts if shout.type == POST_TYPE_EXPERIENCE]) | Q(
             item__id__in=[shout.item.id for shout in shouts if shout.type != POST_TYPE_EXPERIENCE])).order_by('image')
@@ -359,8 +364,8 @@ def attach_related_to_shouts(shouts, rank_count=None):
             if rank_count:
                 shout.rank = ((shout.rank ** 2) * rank_count - shout.time_rank) / (rank_count - 1)
 
-            shout.set_tags([tag for tag in tags_with_shout_id if tag['Shouts__id'] == shout.id])
-            tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['Shouts__id'] != shout.id]
+            shout.set_tags([tag for tag in tags_with_shout_id if tag['shouts__id'] == shout.id])
+            tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['shouts__id'] != shout.id]
 
             shout.item.set_images([image for image in images if image.item_id == shout.item_id])
             images = [image for image in images if image.item_id != shout.item_id]
@@ -382,7 +387,7 @@ def get_ranked_stream_shouts(stream, limit=3):
     time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
         now_timestamp_string, now_timestamp - base_timestamp)
 
-    shout_wraps = stream.ShoutWraps.select_related('shout', 'trade').filter(
+    shout_wraps = stream.ShoutWraps.select_related('shout').filter(
         Q(shout__expiry_date__isnull=True, shout__date_published__range=(begin, today)) | Q(shout__expiry_date__isnull=False,
                                                                                           shout__date_published__lte=F(
                                                                                               'shout__expiry_date')),

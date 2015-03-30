@@ -21,7 +21,7 @@ from renderers import activate_renderer_json, signin_renderer_json, json_rendere
 from renderers import RESPONSE_RESULT_ERROR_REDIRECT
 from shoutit.controllers import stream_controller, email_controller, user_controller, experience_controller
 from validators import form_validator, object_exists_validator, user_edit_profile_validator, user_profile_validator, activate_api_validator, \
-    push_validator, user_profile_edit_validator
+    push_validator
 from common.constants import TOKEN_TYPE_HTML_EMAIL, TOKEN_TYPE_HTML_NUM, TOKEN_TYPE_API_EMAIL, DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, \
     POST_TYPE_OFFER, USER_TYPE_BUSINESS, USER_TYPE_INDIVIDUAL, STREAM2_TYPE_TAG, STREAM2_TYPE_PROFILE
 from shoutit.permissions import PERMISSION_ACTIVATED, PERMISSION_FOLLOW_USER, INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
@@ -483,18 +483,6 @@ def user_video(request, username):
             profile.video.delete()
 
     result.data['video'] = profile.video
-    return result
-
-
-@csrf_exempt
-@non_cached_view(methods=['PUT'], login_required=True, validator=user_profile_edit_validator)
-def edit_profile(request, username):
-    result = ResponseResult()
-    profile = request.validation_result.data['profile']
-    new_attributes = request.validation_result.data['new_attributes']
-    updated_profile = user_controller.update_profile_attributes(profile, new_attributes)
-    result.data['profile'] = updated_profile
-
     return result
 
 

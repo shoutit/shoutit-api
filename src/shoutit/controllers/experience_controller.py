@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 # from django.core.files.base import ContentFile
-#from django.db.models.query_utils import Q
+# from django.db.models.query_utils import Q
 from common.constants import *
 
 
@@ -38,21 +38,20 @@ def EditExperience(exp_id, state, text):
 
 def GetUsersSharedExperience(exp_id):
     experience_sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'user',
-                                                                                                         'user__Profile')
+                                                                                                         'user__profile')
     return [sharedExperience.user for sharedExperience in experience_sharedExperiences]
 
 
 def GetExperience(exp_id, user, detailed=False):
-    experience = Experience.objects.get_valid_experiences().filter(pk=exp_id).select_related('AboutBusiness', 'AboutBusiness__Profile',
-                                                                                           'user', 'user__Profile').order_by(
+    experience = Experience.objects.get_valid_experiences().filter(pk=exp_id).select_related('AboutBusiness', 'user',
+                                                                                             'user__profile').order_by(
         '-date_published')
     if experience:
         experience = experience[0]
         experience.detailed = detailed
         if detailed:
-            sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'user',
-                                                                                                      'user__Profile')
-            comments = Comment.objects.filter(AboutPost__pk=exp_id).select_related('AboutPost', 'user', 'user__Profile')
+            sharedExperiences = SharedExperience.objects.filter(Experience__pk=exp_id).select_related('Experience', 'user', 'user__profile')
+            comments = Comment.objects.filter(AboutPost__pk=exp_id).select_related('AboutPost', 'user', 'user__profile')
             getDetailedExperience(user, experience, sharedExperiences, comments)
         return experience
     else:
@@ -69,14 +68,12 @@ def GetExperiences(user, owner_user=None, about_business=None, start_index=None,
         experiences_posts = experiences_posts.filter(experience__AboutBusiness__city=city)
     experiences_post_ids = experiences_posts.values('pk')
 
-    experiences = Experience.objects.get_valid_experiences().filter(pk__in=experiences_post_ids).select_related('AboutBusiness',
-                                                                                                              'AboutBusiness__Profile',
-                                                                                                              'user',
-                                                                                                              'user__Profile').order_by(
+    experiences = Experience.objects.get_valid_experiences().filter(pk__in=experiences_post_ids).select_related('AboutBusiness', 'user',
+                                                                                                                'user__profile').order_by(
         '-date_published')[start_index:end_index]
     sharedExperiences = SharedExperience.objects.filter(Experience__pk__in=experiences_post_ids).select_related('Experience', 'user',
-                                                                                                                'user__Profile')
-    comments = Comment.objects.filter(AboutPost__pk__in=experiences_post_ids).select_related('AboutPost', 'user', 'user__Profile')
+                                                                                                                'user__profile')
+    comments = Comment.objects.filter(AboutPost__pk__in=experiences_post_ids).select_related('AboutPost', 'user', 'user__profile')
 
     for experience in experiences:
         experience.detailed = detailed
@@ -89,8 +86,8 @@ def GetBusinessThumbsCount(business):
     ups = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_UP.value).values('user').distinct().count()
     downs = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_DOWN.value).values('user').distinct().count()
     return {
-    'ups': ups,
-    'downs': downs
+        'ups': ups,
+        'downs': downs
     }
 
 

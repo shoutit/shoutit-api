@@ -193,7 +193,7 @@ class FeaturedTagAdmin(admin.ModelAdmin):
     main_tag_name.short_description = 'Main Tag'
 
     def tag_names(self, category):
-        return ', '.join([tag.name for tag in category.tags.all().select_related('tags')])
+        return ', '.join([tag.name for tag in category.tags.all()])
     tag_names.short_description = 'Tags'
 
 

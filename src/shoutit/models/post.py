@@ -165,7 +165,7 @@ class Post(UUIDModel, APIModelMixin):
 
 
 class Shout(Post):
-    tags = models.ManyToManyField('shoutit.Tag', related_name='Shouts')
+    tags = models.ManyToManyField('shoutit.Tag', related_name='shouts')
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
     expiry_notified = models.BooleanField(default=False)
 
@@ -296,7 +296,7 @@ def get_ranked_stream_shouts(stream, limit=3):
     time_axis = '(extract (epoch from age(\'%s\', "shoutit_post"."date_published"))/ %d)' % (
         now_timestamp_string, now_timestamp - base_timestamp)
 
-    shout_wraps = stream.ShoutWraps.select_related('shout', 'trade').filter(
+    shout_wraps = stream.ShoutWraps.select_related('shout', 'shout__trade').filter(
         Q(shout__expiry_date__isnull=True, shout__date_published__range=(begin, today)) | Q(shout__expiry_date__isnull=False,
                                                                                           shout__date_published__lte=F(
                                                                                               'shout__expiry_date')),

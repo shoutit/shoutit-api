@@ -19,7 +19,7 @@ def GetBusiness(username):
 	if not isinstance(username,str) and not isinstance(username, unicode):
 		return None
 	try:
-		q = Business.objects.filter(user__username__iexact = username).select_related(depth=1)
+		q = Business.objects.filter(user__username__iexact = username)
 		if q:
 			return q[0]
 		else:
@@ -29,7 +29,7 @@ def GetBusiness(username):
 
 def CreateTinyBusinessProfile(name, category, latitude = 0.0, longitude = 0.0, country = None, city = None, address = None, source_type = BUSINESS_SOURCE_TYPE_NONE, source_id = None):
 	username = utils.generate_username()
-	while len(User.objects.filter(username = username).select_related()):
+	while len(User.objects.filter(username = username)):
 		username = utils.generate_username()
 	password = utils.generate_confirm_token(TOKEN_LONG)
 	email = '%s@%s.com' % (username, 'shoutit')
@@ -99,7 +99,7 @@ def SignUpTempBusiness(request, email, password, send_activation = True, busines
 	if email is None or email == '':
 		return None
 	username = utils.generate_username()
-	while len(User.objects.filter(username = username).select_related()):
+	while len(User.objects.filter(username = username)):
 		username = utils.generate_username()
 	django_user = User.objects.create_user(username, email, password)
 	app = BusinessCreateApplication(user =  django_user, business = business)

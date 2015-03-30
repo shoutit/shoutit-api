@@ -25,8 +25,8 @@ def CommentOnPost(user, post_id, text):
 def GetPostComments(post_id, date=None, start_index=None, end_index=None):
     # post = shout_controller.get_post(post_id)
     #	if post:
-    comments = Comment.objects.filter(AboutPost__pk=post_id, is_disabled=False).select_related('user', 'user__Profile',
-                                                                                              'user__Business').order_by('DateCreated')
+    comments = Comment.objects.filter(AboutPost__pk=post_id, is_disabled=False).select_related('user', 'user__profile',
+                                                                                              'user__business').order_by('DateCreated')
     if date:
         comments = comments.filter(DateCreated__lte=date)
     if start_index:

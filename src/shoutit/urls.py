@@ -29,7 +29,7 @@ urlpatterns = patterns('',
                        (r'^rq/', include('django_rq.urls')),
 
                        # todo: move to web
-                       url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png')),
+                       url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png', permanent=True)),
                        url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
                        url(r'^googlebc700f17ba42dd9f\.html$',
                            TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),

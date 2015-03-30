@@ -1,4 +1,4 @@
-from django.forms.util import ErrorDict, ErrorList
+from django.forms.utils import ErrorDict, ErrorList
 from django.utils.translation import ugettext as _
 from django.conf import settings
 

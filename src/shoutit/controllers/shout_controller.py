@@ -17,7 +17,7 @@ from shoutit.utils import to_seo_friendly
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
-    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user', 'user__Business', 'business__Profile')
+    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user', 'user__business', 'user__profile')
     if not find_muted:
         post = post.filter(muted=False)
 

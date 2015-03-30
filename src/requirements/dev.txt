@@ -1,6 +1,5 @@
 # development requirements
 -r prod.txt
-django_extensions
 behave
 logging_tree
 mkdocs

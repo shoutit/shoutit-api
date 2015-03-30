@@ -1,6 +1,5 @@
 import uuid
 
-from jsonschema import Draft4Validator, FormatChecker
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -319,32 +318,6 @@ def user_profile_validator(request, username, *args, **kwargs):
             return VR(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
 
         return VR(True, data={'profile': profile})
-
-
-def user_profile_edit_validator(request, username, *args, **kwargs):
-    profile_validation = user_profile_validator(request, username, *args, **kwargs)
-    if not profile_validation:
-        return profile_validation
-
-    instance = request.json_data
-    schema = {
-        'type': 'object',
-        'properties': {
-            'username': {'type': 'string', 'minLength': 2, 'maxLength': 30, 'pattern': '^[\w.]+$'},
-            'first_name': {"type": "string", "minLength": 2, "maxLength": 30},
-            'last_name': {'type': 'string', 'minLength': 2, 'maxLength': 30},
-            'email': {'type': 'string', 'minLength': 2, 'maxLength': 254, 'format': 'email'},
-            'bio': {'type': 'string', 'maxLength': 512},
-            'sex': {'type': 'boolean'},
-        },
-        'additionalProperties': False,
-        'minProperties': 1
-    }
-    v = Draft4Validator(schema, format_checker=FormatChecker())
-    errors = [e for e in v.iter_errors(instance)]
-    if not errors:
-        return VR(True, data={'profile': profile_validation.data['profile'], 'new_attributes': instance})
-    return VR(False, form_errors=form_errors(errors))
 
 
 def push_validator(request, username, push_type, *args, **kwargs):

@@ -138,7 +138,6 @@ INSTALLED_APPS = (
 # apps only on local development
 if LOCAL:
     INSTALLED_APPS += (
-        'django_extensions',
     )
 # apps on on server [dev, prod]
 if ON_SERVER:

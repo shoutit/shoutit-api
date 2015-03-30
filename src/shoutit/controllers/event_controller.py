@@ -46,11 +46,9 @@ def GetPublicEventsByLocation(country=None, city=None, date=None):
     #	extra_events = Event.objects.filter( object_id__in=extra_ids)
     #	extra_events += events
     if date:
-        events = events.filter(date_published__gte=date).order_by('-date_published').select_related('user', 'user__Profile',
-                                                                                                  'user__Business', 'attached_object')
+        events = events.filter(date_published__gte=date).order_by('-date_published').select_related('user', 'user__profile', 'user__business')
     else:
-        events = events.order_by('-date_published')[0:DEFAULT_PAGE_SIZE].select_related('user', 'user__Profile',
-                                                                                       'user__Business', 'attached_object')
+        events = events.order_by('-date_published')[0:DEFAULT_PAGE_SIZE].select_related('user', 'user__profile', 'user__business',)
     return events
 
 
@@ -111,32 +109,32 @@ def GetDetailedEvents(events):
 
     related = {'users': [], 'businesses': [], 'tags': [], 'trades': [], 'experiences': [], 'shared_exps': [], 'comments': [], 'deals': []}
     if related_ids['user_ids']:
-        related['users'] = list(Profile.objects.filter(pk__in=related_ids['user_ids']).select_related('User'))
+        related['users'] = list(Profile.objects.filter(pk__in=related_ids['user_ids']).select_related('user'))
     if related_ids['business_ids']:
-        related['businesses'] = list(Business.objects.filter(pk__in=related_ids['user_ids']).select_related('User'))
+        related['businesses'] = list(Business.objects.filter(pk__in=related_ids['user_ids']).select_related('user'))
     if related_ids['tag_ids']:
         related['tags'] = list(Tag.objects.filter(pk__in=related_ids['tag_ids']))
     if related_ids['trade_ids']:
-        trades = Trade.objects.filter(pk__in=related_ids['trade_ids']).select_related('user', 'user__Profile',
-                                                                                      'user__Business', 'item', 'item__Currency')
+        trades = Trade.objects.filter(pk__in=related_ids['trade_ids']).select_related('user', 'user__profile',
+                                                                                      'user__business', 'item', 'item__Currency')
         trades = get_trade_images(trades)
         related['trades'] = list(trades)
     if related_ids['experience_ids']:
         related['experiences'] = list(
-            Experience.objects.filter(pk__in=related_ids['experience_ids']).select_related('user', 'user__Profile',
-                                                                                           'AboutBusiness__User'))
+            Experience.objects.filter(pk__in=related_ids['experience_ids']).select_related('user', 'user__profile',
+                                                                                           'AboutBusiness__user'))
     if related_ids['shared_exp_ids']:
         related['shared_exps'] = list(
-            SharedExperience.objects.filter(pk__in=related_ids['shared_exp_ids']).select_related('user', 'user__Profile',
+            SharedExperience.objects.filter(pk__in=related_ids['shared_exp_ids']).select_related('user', 'user__profile',
                                                                                                  'Experience', 'Experience__AboutBusiness',
-                                                                                                 'Experience__AboutBusiness__User'))
+                                                                                                 'Experience__AboutBusiness__user'))
     if related_ids['comment_ids']:
         related['comments'] = list(
-            Comment.objects.filter(pk__in=related_ids['comment_ids']).select_related('user', 'user__Profile',
-                                                                                     'user__Business', 'AboutPost'))
+            Comment.objects.filter(pk__in=related_ids['comment_ids']).select_related('user', 'user__profile',
+                                                                                     'user__business', 'AboutPost'))
     if related_ids['deal_ids']:
         related['deals'] = list(
-            Deal.objects.filter(pk__in=related_ids['deal_ids']).select_related('user', 'user__Business', 'item',
+            Deal.objects.filter(pk__in=related_ids['deal_ids']).select_related('user', 'user__business', 'item',
                                                                                'item__Currency'))
 
     for event in events:
