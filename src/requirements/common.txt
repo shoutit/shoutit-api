@@ -21,7 +21,7 @@ markdown==2.6.1
 redis==2.10.3
 django-redis-cache==0.13.0
 django-redis-sessions==0.4.0
-django_rq=0.7.0
+django_rq==0.7.0
 
 Pillow==2.7.0
 geraldo==0.4.17
