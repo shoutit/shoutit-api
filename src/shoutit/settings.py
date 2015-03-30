@@ -221,8 +221,8 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-AWS_ACCESS_KEY_ID = 'AKIAJ7YQGDWLJVDUE3SA'
-AWS_SECRET_ACCESS_KEY = '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'
+AWS_ACCESS_KEY_ID = 'AKIAIWBSACXFWBQ3MGWA'
+AWS_SECRET_ACCESS_KEY = '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'
 if ON_SERVER:
     STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     AWS_STORAGE_BUCKET_NAME = 'shoutit-api-static'
