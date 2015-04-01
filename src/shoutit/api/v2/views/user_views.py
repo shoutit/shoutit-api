@@ -452,7 +452,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               paramType: body
         """
         user = self.get_object()
-        account = request.data.get('account')
+        account = request.data.get('account') or request.query_params.get('account')
         if account not in ['facebook', 'gplus']:
             raise ValidationError({'account': "unsupported account"})
 
