@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.db import models, IntegrityError
 from django.conf import settings
 
@@ -13,7 +14,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 class Stream(UUIDModel):
     type = models.IntegerField(default=0, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
 
     def GetOwner(self):
@@ -64,7 +65,7 @@ class FollowShip(UUIDModel):
     date_followed = models.DateTimeField(auto_now_add=True)
     state = models.IntegerField(default=0, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
 
 # ######## experiment new stream ######### #
@@ -80,7 +81,7 @@ class Stream2(UUIDModel, AttachedObjectMixin):
     class Meta(UUIDModel.Meta):
         unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ':' + StreamType2.values[self.type] + ' (' + unicode(self.attached_object) + ')'
 
     def __init__(self, *args, **kwargs):

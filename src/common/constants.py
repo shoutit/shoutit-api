@@ -1,5 +1,6 @@
-# URLS
+from __future__ import unicode_literals
 
+# URLS
 LOGIN_URL = '/signin/'
 LOGOUT_URL = '/signout/'
 PROFILE_URL = '/user/%s/'
@@ -21,7 +22,7 @@ DEFAULT_HOME_SHOUT_COUNT = 1000
 
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
+    return type(str('Enum'), (), enums)
 
 
 ENUM_XHR_RESULT = enum('SUCCESS',
@@ -80,9 +81,6 @@ class Constant(object):
     def __hash__(self):
         return self.value
 
-    def __unicode__(self):
-        return self.get_text()
-
     def __str__(self):
         return self.get_text()
 
@@ -105,7 +103,7 @@ class Flag(object):
     def __hash__(self):
         return self.value
 
-    def __unicode__(self):
+    def __str__(self):
         return self.__class__.values[self.value]
 
     def __and__(self, other):
@@ -117,9 +115,6 @@ class Flag(object):
         flag = self.__class__()
         flag.value = self.value | other.value
         return flag
-
-    def __str__(self):
-        return self.__class__.values[self.value]
 
 
 TOKEN_LONG = ('abcdefghkmnopqrstuvwxyzABCDEFGHKMNPQRSTUVWXYZ23456789', 24)  # for emails

@@ -4,7 +4,7 @@ numpy>=1.9.2
 # core
 gunicorn==19.3.0
 raven==5.2.0
-Django==1.8rc1
+Django==1.8
 psycopg2==2.6
 
 django-grappelli==2.6.4

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -27,7 +28,7 @@ class BusinessCategory(UUIDModel):
 
     objects = BusinessCategoryManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.PrintHierarchy()
 
     def PrintHierarchy(self):
@@ -58,7 +59,7 @@ class Business(UUIDModel, Stream2Mixin):
 
     _stream2 = GenericRelation('shoutit.Stream2', related_query_name='business')
 
-    def __unicode__(self):
+    def __str__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.name), unicode(self.user))
 
     # def __getattribute__(self, name):

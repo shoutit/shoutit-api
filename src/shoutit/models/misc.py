@@ -1,10 +1,10 @@
+from __future__ import unicode_literals
 from datetime import timedelta, datetime
 
 from django.db import models
 from django.conf import settings
 
 from shoutit.models.base import UUIDModel, LocationMixin
-
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
@@ -16,7 +16,7 @@ class PredefinedCity(UUIDModel):
     longitude = models.FloatField(default=0.0)
     Approved = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.country + ':' + self.city)
 
 
@@ -25,7 +25,7 @@ class StoredFile(UUIDModel):
     File = models.CharField(max_length=1024)
     type = models.IntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return "(" + unicode(self.pk) + ") " + unicode(self.File)
 
 
@@ -37,7 +37,7 @@ class ConfirmToken(UUIDModel):
     Email = models.CharField(max_length=128, blank=True, null=True)
     is_disabled = models.BooleanField(default=False, null=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + unicode(self.user) + "::" + self.Token
 
     def disable(self):

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import urlparse
 import json
 
@@ -17,11 +18,11 @@ class XHRResult(object):
     form_errors = {}
     data = []
 
-    def __init__(self, code=ENUM_XHR_RESULT.SUCCESS, message='', form_errors={}, data={}, message_type='success'):
+    def __init__(self, code=ENUM_XHR_RESULT.SUCCESS, message='', form_errors=None, data=None, message_type='success'):
         self.code = code
         self.message = message
-        self.form_errors = form_errors
-        self.data = data
+        self.form_errors = form_errors or {}
+        self.data = data or {}
         self.message_type = message_type
 
         self.response = {
@@ -34,12 +35,9 @@ class XHRResult(object):
     def __str__(self):
         return self.json
 
-    def __unicode__(self):
-        return self.json
 
-
-def xhr_respond(code, message, errors={}, data={}, message_type='success'):
-    return HttpResponse(content=XHRResult(code, message, errors, data, message_type=message_type),
+def xhr_respond(code, message, errors=None, data=None, message_type='success'):
+    return HttpResponse(content=XHRResult(code, message, errors or {}, data or {}, message_type=message_type),
                         content_type='application/json')
 
 

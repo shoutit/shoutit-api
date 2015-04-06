@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.db import models
 
 from shoutit.models.base import UUIDModel
@@ -11,7 +12,7 @@ class Item(UUIDModel):
     State = models.IntegerField(default=0, db_index=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + self.name
 
     @property
@@ -61,5 +62,5 @@ class Currency(UUIDModel):
     country = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=64, null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '[' + self.code + '] '

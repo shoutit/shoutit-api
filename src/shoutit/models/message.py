@@ -3,7 +3,6 @@
 
 """
 from __future__ import unicode_literals
-
 from datetime import datetime
 
 from django.db import models, IntegrityError
@@ -25,7 +24,7 @@ class Conversation(UUIDModel):
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk)
 
     @property
@@ -43,7 +42,7 @@ class Message(UUIDModel):
     VisibleToSender = models.BooleanField(default=True)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         try:
             return unicode(self.pk) + ": " + "(" + unicode(self.FromUser) + " => " + unicode(self.ToUser) + "):" + (self.text[:50] if self.text else '')
         except AttributeError:
@@ -59,7 +58,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     message = models.ForeignKey('shoutit.Message2', related_name='attachments')
     conversation = models.ForeignKey('shoutit.Conversation2', related_name='messages_attachments')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.pk + " for message: " + self.message.pk
 
     def type_name(self):
@@ -87,7 +86,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
     type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.pk + ": " + self.text
 
     @property
@@ -107,7 +106,7 @@ class Report(UUIDModel, AttachedObjectMixin):
     is_disabled = models.BooleanField(default=False)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "From user:%s about: %s:%s" % (self.user.pk, self.type(), self.attached_object.pk)
 
     @property
@@ -126,7 +125,7 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Conversation2Delete', related_name='deleted_conversations2')
     last_message = models.OneToOneField('shoutit.Message2', related_name='+', null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
 
     def get_messages(self, before=None, after=None, limit=25):
@@ -224,7 +223,7 @@ class Message2(UUIDModel):
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s c at:%s" % (self.text[:30] + '...' if self.text else '<attachment>', self.created_at_unix)
 
     @property

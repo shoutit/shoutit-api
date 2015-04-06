@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from datetime import timedelta, datetime
 import time
 import json
@@ -171,7 +172,7 @@ class Shout(Post):
 
     objects = ShoutManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + self.get_text()
 
     def set_tags(self, tags):
@@ -240,7 +241,7 @@ class ShoutWrap(UUIDModel):
     Stream = models.ForeignKey('shoutit.Stream', related_name='ShoutWraps')
     rank = models.FloatField(default=1.0)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + unicode(self.shout) + " # " + unicode(self.rank)
 
 
@@ -261,7 +262,7 @@ class Trade(Shout):
 
     objects = TradeManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + unicode(self.item)
 
     @property
@@ -331,7 +332,7 @@ class Experience(Post):
 
     objects = ExperienceManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk)
 
 
@@ -355,7 +356,7 @@ class Video(UUIDModel):
     id_on_provider = models.CharField(max_length=256)
     duration = models.IntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
 
 
@@ -365,7 +366,7 @@ class StoredImage(UUIDModel):
     item = models.ForeignKey('shoutit.Item', related_name='images', null=True, blank=True)
     image = models.CharField(max_length=1024)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.image)
 
 
@@ -376,7 +377,7 @@ class Comment(UUIDModel):
     text = models.TextField(max_length=300)
     DateCreated = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + unicode(self.text)
 
 
@@ -385,5 +386,5 @@ class Event(Post, AttachedObjectMixin):
 
     objects = EventManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(EventType.values[self.EventType])

@@ -68,7 +68,7 @@ class Profile(AbstractProfile):
 
     _stream2 = GenericRelation('shoutit.Stream2', related_query_name='profile')
 
-    def __unicode__(self):
+    def __str__(self):
         return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())
 
     def get_notifications(self):
@@ -173,7 +173,7 @@ class Permission(UUIDModel):
     name = models.CharField(max_length=512, unique=True, db_index=True)
     users = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.UserPermission', related_name='permissions')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 

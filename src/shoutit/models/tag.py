@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import re
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core import validators
@@ -27,7 +28,7 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
 
     _stream2 = GenericRelation('shoutit.Stream2', related_query_name='tag')
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.pk) + ": " + self.name
 
     @property
@@ -42,7 +43,7 @@ class Category(UUIDModel):
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
     tags = models.ManyToManyField('shoutit.Tag', related_name='category')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
