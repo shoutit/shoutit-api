@@ -379,10 +379,16 @@ class MessageSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     attachments = MessageAttachmentSerializer(many=True, required=False,
                                               help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
+    is_read = serializers.SerializerMethodField()
 
     class Meta:
         model = Message2
-        fields = ('id', 'created_at', 'conversation_id', 'user', 'text', 'attachments')
+        fields = ('id', 'created_at', 'conversation_id', 'user', 'text', 'attachments', 'is_read')
+
+    def get_is_read(self, message):
+        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
+            return message.is_read(self.root.context['request'].user)
+        return False
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)

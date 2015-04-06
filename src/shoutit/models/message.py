@@ -160,7 +160,7 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
     def mark_as_deleted(self, user):
         # 1 - record the deletion
         try:
-            Conversation2Delete(user=user, conversation_id=self.id).save(True)
+            Conversation2Delete.objects.create(user=user, conversation_id=self.id)
         except IntegrityError:
             pass
 
@@ -170,8 +170,7 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
 
         # 3 - send a system message saying the user has left the conversation
         text = "{} has left the conversation".format(user.name)
-        message = Message2(user=None, text=text, conversation=self)
-        message.save()
+        message = Message2.objects.create(user=None, text=text, conversation=self)
 
         from shoutit.controllers import notifications_controller
         for to_user in self.contributors:
@@ -181,7 +180,7 @@ class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):
         # todo: find more efficient way
         for message in self.messages2.all():
             try:
-                Message2Read(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
+                Message2Read.objects.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
             except IntegrityError:
                 pass
 
@@ -234,6 +233,9 @@ class Message2(UUIDModel):
     def contributors(self):
         return self.conversation.contributors
 
+    def is_read(self, user):
+        return Message2Read.objects.filter(user=user, message=self, conversation=self.conversation).exists()
+
 
 class Message2Read(UUIDModel):
     """
@@ -250,7 +252,7 @@ class Message2Read(UUIDModel):
 
 class Message2Delete(UUIDModel):
     """
-    Message2Read is to record a user deleting a Message2
+    Message2Delete is to record a user deleting a Message2
     """
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_messages2_set')
     message = models.ForeignKey(Message2, related_name='deleted_set')

@@ -288,15 +288,18 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
 
     if not conversation:
         if about:
-            conversation = Conversation2(attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)
+            conversation = Conversation2.objects.create(attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)
         else:
-            conversation = Conversation2(type=CONVERSATION_TYPE_CHAT)
-        conversation.save()
+            conversation = Conversation2.objects.create(type=CONVERSATION_TYPE_CHAT)
         conversation.users = to_users
 
-    message = Message2(conversation=conversation, user=user, text=text)
-    message.save()
+    # add the new message
+    message = Message2.objects.create(conversation=conversation, user=user, text=text)
 
+    # read it
+    Message2Read.objects.create(user=user, message=message, conversation=conversation)
+
+    # update the conversation
     conversation.last_message = message
     conversation.save()
 
@@ -356,11 +359,12 @@ def message2_from_message(message):
 
 
 # todo: update to take date range and add it to messaging2
+# todo: deprecate and move functionality to conversation2 model method `mark_as_read`
 def read_conversation2(user, conversation):
     read_messages2_pks = [str(pk) for pk in user.read_messages2_set.filter(conversation_id=conversation.id).values_list('message__pk', flat=True)]
-    other_messages2 = Message2.objects.filter(Q(conversation_id=conversation.id) & ~Q(pk__in=read_messages2_pks))
-    for message2 in other_messages2:
+    unread_messages2 = Message2.objects.filter(Q(conversation_id=conversation.id) & ~Q(pk__in=read_messages2_pks))
+    for message2 in unread_messages2:
         try:
-            Message2Read(user=user, message=message2, conversation_id=conversation.id).save()
+            Message2Read.objects.create(user=user, message=message2, conversation_id=conversation.id)
         except IntegrityError:
             pass
