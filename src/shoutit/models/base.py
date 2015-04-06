@@ -51,7 +51,7 @@ class AttachedObjectMixinManager(models.Manager):
 
 class AttachedObjectMixin(models.Model):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
-    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    object_id = models.UUIDField(null=True, blank=True)
     attached_object = GenericForeignKey('content_type', 'object_id')
 
     objects = AttachedObjectMixinManager()
