@@ -29,11 +29,10 @@ urlpatterns = patterns('',
                        (r'^rq/', include('django_rq.urls')),
 
                        # todo: move to web
-                       url(r'^favicon\.ico$', RedirectView.as_view(url='static/img/icon.png', permanent=True)),
-                       url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
-                       url(r'^googlebc700f17ba42dd9f\.html$',
-                           TemplateView.as_view(template_name='googlebc700f17ba42dd9f.html', content_type='text/plain')),
-
+                       url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL + 'img/icon.png', permanent=True)),
+                       url(r'^robots\.txt$', RedirectView.as_view(url=settings.STATIC_URL + 'robots.txt', permanent=True)),
+                       url(r'^googlebc700f17ba42dd9f\.html$', RedirectView.as_view(url=settings.STATIC_URL + 'googlebc700f17ba42dd9f.html',
+                                                                                   permanent=True)),
                        # todo: remove everything below!
                        # Old website
                        url(r'^$', 'shoutit.tiered_views.general_views.index'),
