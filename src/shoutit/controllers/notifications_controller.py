@@ -41,7 +41,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
 
     if user.apns_device:
         try:
-            user.apns_device.send_message(message, badge=get_user_notifications_count(user), extra={
+            user.apns_device.send_message(message, sound='default', badge=get_user_notifications_count(user), extra={
                 'notification_type': int(notification_type),
                 'object': attached_object_dict
             })
