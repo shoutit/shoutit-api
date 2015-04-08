@@ -184,17 +184,16 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         """
         Delete shout
 
-        ```
-        NOT IMPLEMENTED!
-        ```
         ---
         omit_serializer: true
         omit_parameters:
             - form
         """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return super(ShoutViewSet, self).destroy(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        instance.is_disabled = True
+        instance.save()
 
     @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):

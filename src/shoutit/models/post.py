@@ -35,6 +35,7 @@ class PostManager(models.Manager):
         if not get_expired:
             qs = self.filter_expired_out(qs)
 
+        # todo: filter out posts by disabled / deactivated users
         return qs
 
     def filter_expired_out(self, qs):
