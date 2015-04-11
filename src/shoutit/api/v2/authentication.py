@@ -83,8 +83,10 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
 
     def get_facebook_access_token_grant(self, request, data, client):
 
-        facebook_access_token = data['facebook_access_token']
-        initial_user = 'user' in data and data['user'] or None
+        facebook_access_token = data.get('facebook_access_token')
+        if not facebook_access_token:
+            raise OAuthError({'invalid_request': "Missing required parameter: facebook_access_token"})
+        initial_user = data.get('user')
 
         error, user = user_from_facebook_auth_response(request, facebook_access_token, initial_user)
         if error:
@@ -117,8 +119,10 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
 
     def get_gplus_code_grant(self, request, data, client):
 
-        gplus_code = data['gplus_code']
-        initial_user = 'user' in data and data['user'] or None
+        gplus_code = data.get('gplus_code')
+        if not gplus_code:
+            raise OAuthError({'invalid_request': "Missing required parameter: gplus_code"})
+        initial_user = data.get('user')
 
         error, user = user_from_gplus_code(request, gplus_code, initial_user, client.name)
         if error:
@@ -239,7 +243,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
                 'error_description': "No 'grant_type' included in the request."
             })
 
-        grant_type = request.data['grant_type']
+        grant_type = request.data.get('grant_type')
 
         if grant_type not in self.grant_types:
             return self.error_response({'error': 'unsupported_grant_type'})

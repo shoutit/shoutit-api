@@ -155,7 +155,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         Delete user and everything attached to him
 
         ```
-        NOT YET IMPLEMENTED
+        NOT IMPLEMENTED
         ```
 
         ---
