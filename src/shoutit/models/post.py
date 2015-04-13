@@ -248,6 +248,7 @@ class ShoutWrap(UUIDModel):
 
 class Trade(Shout):
     item = models.OneToOneField('shoutit.Item', related_name='shout', db_index=True, null=True, blank=True)
+
     related_stream = models.OneToOneField('shoutit.Stream', related_name='init_shout_related', null=True, blank=True)
     recommended_stream = models.OneToOneField('shoutit.Stream', related_name='init_shout_recommended', null=True, blank=True)
 
