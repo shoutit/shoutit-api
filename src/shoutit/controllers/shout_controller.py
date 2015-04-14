@@ -6,6 +6,10 @@ from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
+import logging
+from shoutit.models.post import TradeIndex
+
+logger = logging.getLogger('shoutit.debug')
 
 from shoutit.controllers.user_controller import get_profile
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
@@ -125,6 +129,7 @@ def GetStreamAffectedByShout(shout):
 
 
 def save_relocated_shouts(trade, stream_type):
+    return
     if not trade or stream_type not in [STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED]:
         return
 
@@ -214,6 +219,8 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
+
+    create_trade_index(trade)
     return trade
 
 
@@ -268,7 +275,48 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
+
+    create_trade_index(trade)
     return trade
+
+
+def create_trade_index(trade):
+    trade_index = TradeIndex()
+    trade_index.id = trade.pk
+    trade_index.type = trade.type_name
+    trade_index.country = trade.country
+    trade_index.city = trade.city
+    trade_index.latitude = trade.latitude
+    trade_index.longitude = trade.longitude
+    trade_index.title = trade.item.name
+    trade_index.text = trade.text
+    trade_index.price = trade.item.Price
+    trade_index.uid = trade.user.pk
+    trade_index.username = trade.user.username
+    trade_index.date_published = trade.date_published
+    trade_index.tags = list(trade.tags.values_list('name', flat=True))
+
+    if trade_index.save():
+        logger.debug('created trade index {}'.format(trade.pk))
+    else:
+        logger.debug('updated trade index {}'.format(trade.pk))
+
+    # data = {
+    #     "id": trade.pk,
+    #     "type": trade.type_name,
+    #     "country": trade.country,
+    #     "city": trade.city,
+    #     "latitude": trade.latitude,
+    #     "longitude": trade.longitude,
+    #     "title": trade.item.name,
+    #     "text": trade.text,
+    #     "price": trade.item.Price,
+    #     "uid": trade.user.pk,
+    #     "username": trade.user.username,
+    #     "date_published": trade.date_published,
+    #     "tags": list(trade.tags.values_list('name', flat=True)),
+    # }
+    # es.create(settings.ENV, 'trade', id=trade.pk, body=data, ignore=409)
 
 
 # todo: check!

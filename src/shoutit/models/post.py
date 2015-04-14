@@ -6,6 +6,7 @@ import json
 from django.db import models
 from django.db.models import Q, Sum, F
 from django.conf import settings
+from elasticsearch_dsl import DocType, String, Date, Double
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, \
     TAGS_PER_POST
@@ -282,6 +283,31 @@ class Trade(Shout):
         else:
             related_offers_stream = self.recommended_stream
         return get_ranked_stream_shouts(related_offers_stream)
+
+
+class TradeIndex(DocType):
+    id = String(index='not_analyzed')
+
+    type = String(index='not_analyzed')
+    title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
+    text = String(analyzer='snowball')
+    tags = String(index='not_analyzed')
+
+    country = String(index='not_analyzed')
+    city = String(index='not_analyzed')
+    latitude = Double()
+    longitude = Double()
+
+    date_published = Date()
+    price = Double()
+
+    username = String(index='not_analyzed')
+    uid = String(index='not_analyzed')
+
+    class Meta:
+        index = settings.ENV
+
+# s.query('match', city='dubai').filter('range', **{'date_published': {'lte':'now'}})[:50]
 
 
 # todo: refactor

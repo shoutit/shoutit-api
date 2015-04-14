@@ -104,6 +104,17 @@ RQ_QUEUE = ENV
 RQ_QUEUES = {
     RQ_QUEUE: {'USE_REDIS_CACHE': 'default'},
 }
+
+"""
+=================================
+          Elasticsearch
+=================================
+"""
+from elasticsearch_dsl.connections import connections
+# Define a default global Elasticsearch client
+ES = connections.create_connection(hosts=['localhost'])
+
+
 AUTH_USER_MODEL = 'shoutit.User'
 
 # Application definition
@@ -182,7 +193,7 @@ MIDDLEWARE_CLASSES = (
     'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
-    # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
+    'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
 
 # Database
@@ -268,7 +279,7 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '[%(levelname)s]: %(message)s'
         },
         'message_only': {
             'format': '%(message)s'
@@ -290,6 +301,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
+            'formatter': 'simple'
         },
         'console_err': {
             'level': 'WARNING',
@@ -360,9 +372,6 @@ LOGGING = {
         'rq.worker': {
             'propagate': False,
         },
-        '': {
-            'handlers': ['console_out', 'console_err', 'sentry'],
-        },
         # 'requests': {
         # 'level': 'DEBUG',
         # 'handlers': ['console_out', 'console_err', 'sentry'],
@@ -377,6 +386,14 @@ LOGGING = {
             'handlers': ['sql_console'],
             'level': 'INFO',
             'propagate': False
+        },
+        'shoutit': {
+            'handlers': ['console', 'console_err', 'sentry'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        '': {
+            'handlers': ['console_out', 'console_err', 'sentry'],
         },
     }
 }

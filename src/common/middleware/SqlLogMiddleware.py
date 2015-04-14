@@ -15,10 +15,9 @@ class SQLLogToConsoleMiddleware(object):
     def print_queries(self, request=None):
         if settings.DEBUG and connection.queries:
             time = sum([float(q['time']) for q in connection.queries])
-            t = Template(
-                "*************\n{{url}}\n{{count}} quer{{count|pluralize:\"y,ies\"}} in {{time}} seconds:\n{% for sql in sqllog %}[{{forloop.counter}}] {{sql.time}}s: {{sql.sql|safe}}{% if not forloop.last %}\n\n{% endif %}{% endfor %}\n*************")
-            self.logger.info(t.render(Context({'sqllog': connection.queries, 'count': len(connection.queries), 'time': time,
-                                               'url': request and request.get_full_path() or ''})))
+            t = Template("*************\n{{url}}\n{{count}} quer{{count|pluralize:\"y,ies\"}} in {{time}} seconds:\n{% for sql in sqllog %}[{{forloop.counter}}] {{sql.time}}s: {{sql.sql|safe}}{% if not forloop.last %}\n\n{% endif %}{% endfor %}\n*************")
+            # self.logger.info(t.render(Context({'sqllog': connection.queries, 'count': len(connection.queries), 'time': time,
+            #                                    'url': request and request.get_full_path() or ''})))
             try:
                 self.console_logger.info(t.render(Context({'sqllog': connection.queries, 'count': len(connection.queries), 'time': time,
                                                            'url': request and request.get_full_path() or ''})))

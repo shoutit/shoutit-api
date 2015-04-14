@@ -38,7 +38,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        return Trade.objects.get_valid_trades().all()
+        return Trade.objects.get_valid_trades().all()\
+            .select_related('item__Currency', 'user__profile')\
+            .prefetch_related('tags', 'item__images', 'item__videos')\
+            .defer('StreamsCode', 'streams2_ids')
 
     def list(self, request, *args, **kwargs):
         """

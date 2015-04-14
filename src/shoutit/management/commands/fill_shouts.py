@@ -50,8 +50,8 @@ class Command(BaseCommand):
                 self.stdout.write('city: {}, lat: {}, lng: {}'.format(user.profile.city, user.profile.latitude, user.profile.longitude))
                 users.append(user)
 
-        # for i in range(options.get('num_shouts')[0]):
-        for i in range(1000):
+        for i in range(options.get('num_shouts')[0]):
+        # for i in range(1000):
             user = random.choice(users)
             type = random.choice(['offer', 'request'])
             category = random.choice(categories)
