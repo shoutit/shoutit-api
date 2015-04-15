@@ -16,7 +16,7 @@ from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISS
 
 
 class Command(BaseCommand):
-    help = 'Fill database with required initial data'
+    help = 'Fill database with test shouts'
 
     def add_arguments(self, parser):
         # Positional arguments

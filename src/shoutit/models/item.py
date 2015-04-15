@@ -17,16 +17,16 @@ class Item(UUIDModel):
 
     @property
     def thumbnail(self):
-        if self.get_videos():
-            return self.get_videos()[0].thumbnail_url
-        elif self.get_images():
-            return self.get_images()[0].image
+        if self.videos.all():
+            return self.videos.all()[0].thumbnail_url
+        elif self.images.all():
+            return self.images.all()[0].image
         else:
             return None
 
     @property
     def video_url(self):
-        return self.get_first_video().url if self.get_first_video() else None
+        return self.videos.all()[0].url if self.videos.all() else None
 
     def get_image_urls(self):
         return [image.image for image in self.get_images()]

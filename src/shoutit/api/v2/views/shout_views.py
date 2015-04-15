@@ -11,37 +11,46 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
-from shoutit.api.v2.filters import ShoutFilter
-from shoutit.api.v2.pagination import ReverseDateTimePagination
+from shoutit.api.v2.filters import ShoutFilter, TradeIndexFilterBackend
+from shoutit.api.v2.pagination import ReverseDateTimeIndexPagination
 from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet, UUIDViewSetMixin
 from shoutit.controllers import message_controller
 
 from shoutit.models import Trade
 from shoutit.api.v2.permissions import IsOwnerModify
+from shoutit.models.post import TradeIndex
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet):
     """
     Shout API Resource
     """
-
     serializer_class = TradeSerializer
     serializer_detail_class = TradeDetailSerializer
 
-    pagination_class = ReverseDateTimePagination
+    pagination_class = ReverseDateTimeIndexPagination
 
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_class = ShoutFilter
-    search_fields = ('=id', 'item__name', 'text', 'tags__name')
+    filter_backends = (TradeIndexFilterBackend,)
+    # filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    # filter_class = ShoutFilter
+    # search_fields = ('=id', 'item__name', 'text', 'tags__name')
+    model = Trade
+    select_related = ('item__Currency', 'user__profile')
+    prefetch_related = ('tags', 'item__images', 'item__videos', 'images')
+    defer = ('StreamsCode', 'streams2_ids')
+    index_model = TradeIndex
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
         return Trade.objects.get_valid_trades().all()\
             .select_related('item__Currency', 'user__profile')\
-            .prefetch_related('tags', 'item__images', 'item__videos')\
+            .prefetch_related('tags', 'item__images', 'item__videos', 'images')\
             .defer('StreamsCode', 'streams2_ids')
+
+    def get_index_search(self):
+        return TradeIndex.search()
 
     def list(self, request, *args, **kwargs):
         """
@@ -116,7 +125,14 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         if errors:
             raise ValidationError(errors)
 
-        return super(ShoutViewSet, self).list(request, *args, **kwargs)
+        indexed_trades = self.filter_queryset(self.get_index_search())
+        # indexed_trades = self.get_index_search()
+
+
+
+        page = self.paginate_queryset(indexed_trades)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         """

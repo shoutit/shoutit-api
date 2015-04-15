@@ -284,39 +284,29 @@ def create_trade_index(trade):
     trade_index = TradeIndex()
     trade_index.id = trade.pk
     trade_index.type = trade.type_name
+    trade_index.title = trade.item.name
+    trade_index.text = trade.text
+    trade_index.tags = list(trade.tags.values_list('name', flat=True))
+    # todo!
+    # trade_index.category = trade.category.name
     trade_index.country = trade.country
     trade_index.city = trade.city
     trade_index.latitude = trade.latitude
     trade_index.longitude = trade.longitude
-    trade_index.title = trade.item.name
-    trade_index.text = trade.text
     trade_index.price = trade.item.Price
     trade_index.uid = trade.user.pk
     trade_index.username = trade.user.username
     trade_index.date_published = trade.date_published
-    trade_index.tags = list(trade.tags.values_list('name', flat=True))
+
+    trade_index.currency = trade.item.Currency.code
+    trade_index.address = trade.address
+    trade_index.thumbnail = trade.thumbnail
+    trade_index.video_url = trade.video_url
 
     if trade_index.save():
         logger.debug('created trade index {}'.format(trade.pk))
     else:
         logger.debug('updated trade index {}'.format(trade.pk))
-
-    # data = {
-    #     "id": trade.pk,
-    #     "type": trade.type_name,
-    #     "country": trade.country,
-    #     "city": trade.city,
-    #     "latitude": trade.latitude,
-    #     "longitude": trade.longitude,
-    #     "title": trade.item.name,
-    #     "text": trade.text,
-    #     "price": trade.item.Price,
-    #     "uid": trade.user.pk,
-    #     "username": trade.user.username,
-    #     "date_published": trade.date_published,
-    #     "tags": list(trade.tags.values_list('name', flat=True)),
-    # }
-    # es.create(settings.ENV, 'trade', id=trade.pk, body=data, ignore=409)
 
 
 # todo: check!

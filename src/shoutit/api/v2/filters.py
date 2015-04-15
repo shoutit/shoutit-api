@@ -5,7 +5,9 @@
 from __future__ import unicode_literals
 from django.db.models import Count, Q
 import django_filters
+from rest_framework import filters
 from rest_framework.exceptions import ValidationError
+from common.utils import process_tag_names
 from shoutit.controllers import stream_controller
 from shoutit.models import Trade, Category, Tag
 
@@ -46,6 +48,59 @@ class ShoutFilter(django_filters.FilterSet):
             return queryset.filter(tags__in=tags)
         except Category.DoesNotExist:
             raise ValidationError({'category': "Category '%s' does not exist" % value})
+
+
+class TradeIndexFilterBackend(filters.BaseFilterBackend):
+
+    def filter_queryset(self, request, index_queryset, view):
+        data = request.query_params
+
+        search = data.get('search')
+        if search:
+            index_queryset = index_queryset.query('fuzzy_like_this', like_text=search, fields=['title', 'text', 'tags'])
+
+        tags = data.get('tags')
+        if tags:
+            tags = tags.replace(',', ' ').split()
+            tag_names = process_tag_names(tags)
+            for tag_name in tag_names:
+                index_queryset = index_queryset.query('match', tags=tag_name)
+
+        country = data.get('country')
+        if country:
+            index_queryset = index_queryset.query('match', country=country)
+
+        city = data.get('city')
+        if city:
+            index_queryset = index_queryset.query('match', city=city)
+
+        category = data.get('category')
+        if category:
+            exists = Category.objects.filter(name=category).exists()
+            if not exists:
+                raise ValidationError({'category': "Category '%s' does not exist" % category})
+            index_queryset = index_queryset.query('match', category=category)
+
+        shout_type = data.get('shout_type')
+        if shout_type:
+            if shout_type not in ['all', 'offer', 'request']:
+                raise ValidationError({'shout_type': "should be `all`, `request` or `offer`."})
+            index_queryset = index_queryset.query('match', type=shout_type)
+
+        min_price = data.get('min_price')
+        if min_price:
+            index_queryset = index_queryset.filter('range', **{'price': {'gte': min_price}})
+
+        max_price = data.get('max_price')
+        if max_price:
+            index_queryset = index_queryset.filter('range', **{'price': {'lte': max_price}})
+
+        return index_queryset
+
+    # down_left_lat = django_filters.NumberFilter(name='latitude', lookup_type='gte')
+    # down_left_lng = django_filters.NumberFilter(name='longitude', lookup_type='gte')
+    # up_right_lat = django_filters.NumberFilter(name='latitude', lookup_type='lte')
+    # up_right_lng = django_filters.NumberFilter(name='longitude', lookup_type='lte')
 
 
 class TagFilter(django_filters.FilterSet):

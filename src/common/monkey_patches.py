@@ -7,6 +7,8 @@ import uuid
 from json import JSONEncoder
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
+from elasticsearch_dsl import DocType
+from elasticsearch_dsl.result import Response
 from rest_framework.request import Request
 
 default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
@@ -22,6 +24,12 @@ class ShoutitCustomJSONEncoder(JSONEncoder):
 
         if isinstance(obj, QuerySet):
             return list(obj)
+
+        if isinstance(obj, Response):
+            return list(obj)
+
+        if isinstance(obj, DocType):
+            return dict(obj)
 
         # case: Class
         # if isinstance(obj, Class):

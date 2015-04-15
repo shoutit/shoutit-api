@@ -10,6 +10,7 @@ from elasticsearch_dsl import DocType, String, Date, Double
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, \
     TAGS_PER_POST
+from common.utils import date_unix
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -149,6 +150,10 @@ class Post(UUIDModel, APIModelMixin):
         }
 
     @property
+    def date_published_unix(self):
+        return date_unix(self.date_published)
+
+    @property
     def thumbnail(self):
         if self.type in [POST_TYPE_REQUEST, POST_TYPE_OFFER]:
             return self.item.thumbnail
@@ -165,6 +170,8 @@ class Post(UUIDModel, APIModelMixin):
     def refresh_streams2_ids(self):
         # save the ids of streams2 this post appears in as a json array, to be used in raw queries.
         self.streams2_ids = json.dumps(self.streams2.values_list('id', flat=True))
+        # todo: check!
+        self.save()
 
 
 class Shout(Post):
@@ -286,28 +293,34 @@ class Trade(Shout):
 
 
 class TradeIndex(DocType):
+    # indexed
     id = String(index='not_analyzed')
-
     type = String(index='not_analyzed')
     title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
     text = String(analyzer='snowball')
     tags = String(index='not_analyzed')
-
+    category = String(index='not_analyzed')
     country = String(index='not_analyzed')
     city = String(index='not_analyzed')
     latitude = Double()
     longitude = Double()
-
-    date_published = Date()
     price = Double()
-
-    username = String(index='not_analyzed')
     uid = String(index='not_analyzed')
+    username = String(index='not_analyzed')
+    date_published = Date()
+
+    # todo: should not be analysed or indexed
+    currency = String(index='not_analyzed')
+    address = String(index='not_analyzed')
+    thumbnail = String(index='not_analyzed')
+    video_url = String(index='not_analyzed')
 
     class Meta:
         index = settings.ENV
 
-# s.query('match', city='dubai').filter('range', **{'date_published': {'lte':'now'}})[:50]
+    @property
+    def date_published_unix(self):
+        return date_unix(self.date_published)
 
 
 # todo: refactor
