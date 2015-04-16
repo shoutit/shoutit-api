@@ -145,7 +145,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/post_comments/([-\w]+)/$', 'shoutit.tiered_views.comment_views.post_comments'),
                        url(r'^xhr/delete_comment/([-\w]+)/$', 'shoutit.tiered_views.comment_views.delete_comment'),
 
-                       url(r'^xhr/report/(\d+)/([-\w]+)/$', 'shoutit.tiered_views.report_views.report'),
                        url(r'^xhr/delete_comment/([-\w]+)/$', 'shoutit.tiered_views.comment_views.delete_comment'),
                        url(r'^paypal/$', 'shoutit.tiered_views.deal_views.paypal'),
                        url(r'^paypal_return/$', 'shoutit.tiered_views.payment_views.pdt'),

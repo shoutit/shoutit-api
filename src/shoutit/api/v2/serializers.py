@@ -4,7 +4,6 @@
 """
 from __future__ import unicode_literals
 from collections import OrderedDict
-import os
 import uuid
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -12,12 +11,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, \
-    NotificationType
-from common.utils import date_unix
+     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT
 
 from shoutit.models import (
-    User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency
-)
+    User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency,
+    Report)
 from shoutit.controllers import shout_controller
 
 
@@ -84,6 +82,25 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_api_url(self, user):
         return reverse('user-detail', kwargs={'username': user.username}, request=self.context['request'])
+
+    def to_internal_value(self, data):
+        ret = super(UserSerializer, self).to_internal_value(data)
+
+        user_id = data.get('id')
+        if user_id == '':
+            raise ValidationError({'id': 'This field can not be empty.'})
+        if user_id:
+            try:
+                uuid.UUID(user_id)
+                if not User.objects.filter(id=user_id).exists():
+                    raise ValidationError("user with id '{}' does not exist".format(user_id))
+                ret['id'] = user_id
+            except (ValueError, TypeError):
+                raise ValidationError({'id': "'%s' is not a valid id." % user_id})
+        else:
+            raise ValidationError({'id': "This field is required."})
+
+        return ret
 
 
 class UserDetailSerializer(UserSerializer):
@@ -262,7 +279,7 @@ class TradeSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='item.name')
     price = serializers.FloatField(source='item.Price')
     currency = serializers.CharField(source='item.Currency.code', help_text='Currency code taken from list of available currencies')
-    date_published = serializers.SerializerMethodField()
+    date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
     api_url = serializers.SerializerMethodField()
@@ -272,9 +289,6 @@ class TradeSerializer(serializers.ModelSerializer):
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'video_url', 'user',
                   'date_published', 'tags')
 
-    def get_date_published(self, trade):
-        return date_unix(trade.date_published)
-
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
@@ -282,12 +296,18 @@ class TradeSerializer(serializers.ModelSerializer):
         ret = super(TradeSerializer, self).to_internal_value(data)
 
         trade_id = data.get('id', None)
+        if trade_id == '':
+            raise ValidationError({'id': 'This field can not be empty.'})
         if trade_id:
             try:
                 uuid.UUID(trade_id)
+                if not Trade.objects.filter(id=trade_id).exists():
+                    raise ValidationError("shout with id '{}' does not exist".format(trade_id))
                 ret['id'] = trade_id
-            except:
-                raise ValidationError("'%s' is not a valid id." % trade_id)
+            except (ValueError, TypeError):
+                raise ValidationError({'id': "'%s' is not a valid id." % trade_id})
+        else:
+            raise ValidationError({'id': "This field is required."})
         return ret
 
 
@@ -465,6 +485,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 class AttachedObjectSerializer(serializers.Serializer):
     user = UserSerializer(source='attached_user', required=False)
     message = MessageSerializer(source='attached_message', required=False)
+    shout = TradeSerializer(source='attached_shout', required=False)
 
     def to_representation(self, attached_object):
         # create reference to the object inside itself with name based on its class
@@ -472,24 +493,25 @@ class AttachedObjectSerializer(serializers.Serializer):
         class_name = attached_object.__class__.__name__
         if class_name == 'User':
             setattr(attached_object, 'attached_user', attached_object)
+        if class_name == 'Profile':
+            setattr(attached_object, 'attached_user', attached_object.user)
         if class_name == 'Message2':
             setattr(attached_object, 'attached_message', attached_object)
+        if class_name == 'Trade':
+            setattr(attached_object, 'attached_shout', attached_object)
 
         return super(AttachedObjectSerializer, self).to_representation(attached_object)
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix')
-    type = serializers.SerializerMethodField(help_text="Currently, either 'listen' or 'message'")
+    type = serializers.CharField(source='type_name', help_text="Currently, either 'listen' or 'message'")
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'message' objects depending on notification type")
 
     class Meta:
         model = Notification
         fields = ('id', 'type', 'created_at', 'is_read', 'attached_object')
-
-    def get_type(self, notification):
-        return NotificationType.values[notification.type]
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -504,3 +526,48 @@ class CurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Currency
         fields = ('code', 'country', 'name')
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
+    type = serializers.CharField(source='type_name', help_text="Currently, either 'user' or 'shout'", read_only=True)
+    user = UserSerializer(read_only=True)
+    attached_object = AttachedObjectSerializer(
+        help_text="Attached Object that contain either 'user' or 'shout' objects depending on report type")
+
+    class Meta:
+        model = Report
+        fields = ('id', 'created_at', 'type', 'user', 'text', 'attached_object')
+
+    def to_internal_value(self, data):
+        validated_data = super(ReportSerializer, self).to_internal_value(data)
+
+        errors = OrderedDict()
+        if 'attached_object' in validated_data:
+            attached_object = validated_data['attached_object']
+            if not ('attached_user' in attached_object or 'attached_shout' in attached_object):
+                errors['attached_object'] = "attached_object should have either 'user' or 'shout'"
+
+            if 'attached_shout' in attached_object:
+                validated_data['type'] = 'shout'
+
+            if 'attached_user' in attached_object:
+                validated_data['type'] = 'user'
+        else:
+            errors['attached_object'] = ["This field is required."]
+        if errors:
+            raise ValidationError(errors)
+
+        return validated_data
+
+    def create(self, validated_data):
+        attached_object = None
+        report_type = ReportType.texts[validated_data['type']]
+
+        if report_type == REPORT_TYPE_USER:
+            attached_object = User.objects.get(id=validated_data['attached_object']['attached_user']['id'])
+        if report_type == REPORT_TYPE_SHOUT:
+            attached_object = Trade.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
+        text = validated_data['text'] if 'text' in validated_data else None
+        report = Report.objects.create(user=self.root.context['request'].user, text=text, attached_object=attached_object, type=report_type)
+        return report

@@ -242,14 +242,15 @@ admin.site.register(MessageAttachment, MessageAttachmentAdmin)
 
 
 # Report
+@admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('user', 'attached_object', 'content_type', 'text', 'IsSolved', 'is_disabled')
-    list_filter = ('IsSolved', 'is_disabled')
+    list_display = ('type_name', 'user', 'text', 'attached_object', 'content_type', 'object_id', 'is_solved', 'is_disabled')
+    list_filter = ('is_solved', 'is_disabled')
     actions = ['mark_as_solved', 'mark_as_disabled']
     readonly_fields = ('user', 'attached_object', 'content_type')
 
     def mark_as_solved(self, request, queryset):
-        queryset.update(IsSolved=True)
+        queryset.update(is_solved=True)
 
     mark_as_solved.short_description = "Mark selected reports as solved"
 
@@ -259,7 +260,6 @@ class ReportAdmin(admin.ModelAdmin):
     mark_as_disabled.short_description = "Mark selected reports as disabled"
 
 
-admin.site.register(Report)
 admin.site.register(StoredFile)
 admin.site.register(StoredImage)
 admin.site.register(Video)

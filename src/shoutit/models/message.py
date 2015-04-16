@@ -9,7 +9,7 @@ from django.db import models, IntegrityError
 from django.conf import settings
 
 from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
-    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION
+    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 
@@ -82,37 +82,34 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 class Notification(UUIDModel, AttachedObjectMixin):
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
-    is_read = models.BooleanField(default=False)
     type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
-    DateCreated = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.pk + ": " + self.text
+        return self.pk + ": " + self.type_name
 
     @property
-    def text(self):
+    def type_name(self):
         return NotificationType.values[self.type]
 
-    def MarkAsRead(self):
+    def mark_as_read(self):
         self.is_read = True
         self.save()
 
 
 class Report(UUIDModel, AttachedObjectMixin):
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Reports')
-    text = models.TextField(default='', blank=True, max_length=300)
-    type = models.IntegerField(default=0)
-    IsSolved = models.BooleanField(default=False)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='reports')
+    text = models.TextField(null=True, blank=True, max_length=300)
+    type = models.IntegerField(default=REPORT_TYPE_GENERAL.value, choices=ReportType.choices)
+    is_solved = models.BooleanField(default=False)
     is_disabled = models.BooleanField(default=False)
-    DateCreated = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "From user:%s about: %s:%s" % (self.user.pk, self.type(), self.attached_object.pk)
+        return "From user:%s about: %s:%s" % (self.user.pk, self.type_name, self.attached_object.pk)
 
     @property
-    def type(self):
+    def type_name(self):
         return ReportType.values[self.type]
-
 
 ########## M2 ###########
 class Conversation2(UUIDModel, AttachedObjectMixin, APIModelMixin):

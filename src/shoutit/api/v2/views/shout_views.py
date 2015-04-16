@@ -46,7 +46,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     def get_queryset(self):
         return Trade.objects.get_valid_trades().all()\
             .select_related('item__Currency', 'user__profile')\
-            .prefetch_related('tags', 'item__images', 'item__videos', 'images')\
+            .prefetch_related('tags', 'item__images', 'item__videos', 'images')
 
     def get_index_search(self):
         return TradeIndex.search()
@@ -125,10 +125,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
             raise ValidationError(errors)
 
         indexed_trades = self.filter_queryset(self.get_index_search())
-        # indexed_trades = self.get_index_search()
-
-
-
         page = self.paginate_queryset(indexed_trades)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)

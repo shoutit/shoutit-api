@@ -297,12 +297,16 @@ class ReportType(Constant):
         Constant.__init__(self, text)
         report_types[text] = self.value
 
-REPORT_TYPE_USER = ReportType('User')
-REPORT_TYPE_BUSINESS = ReportType('Business')
+REPORT_TYPE_GENERAL = ReportType('general')
+REPORT_TYPE_WEB_APP = ReportType('web_app')
+REPORT_TYPE_IPHONE_APP = ReportType('iphone_app')
+REPORT_TYPE_ANDROID_APP = ReportType('android_app')
+REPORT_TYPE_USER = ReportType('user')
+REPORT_TYPE_SHOUT = ReportType('shout')
+REPORT_TYPE_BUSINESS = ReportType('business')
 REPORT_TYPE_ITEM = ReportType('item')
-REPORT_TYPE_EXPERIENCE = ReportType('Experience')
-REPORT_TYPE_COMMENT = ReportType('Comment')
-REPORT_TYPE_TRADE = ReportType('Trade')
+REPORT_TYPE_EXPERIENCE = ReportType('experience')
+REPORT_TYPE_COMMENT = ReportType('comment')
 
 DEFAULT_LOCATIONS_LATLNG = {
     'Dubai': [25.1993957, 55.2738326],
