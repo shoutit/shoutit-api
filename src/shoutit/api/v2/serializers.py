@@ -72,6 +72,17 @@ class TagDetailSerializer(TagSerializer):
         return reverse('tag-shouts', kwargs={'name': tag.name}, request=self.context['request'])
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    main_tag = TagSerializer(read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ('name', 'main_tag')
+
+    def to_internal_value(self, data):
+        # todo: check!
+        return data
+
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='profile.image')
     api_url = serializers.SerializerMethodField()
@@ -281,13 +292,14 @@ class TradeSerializer(serializers.ModelSerializer):
     currency = serializers.CharField(source='item.Currency.code', help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
+    category = CategorySerializer()
     tags = TagSerializer(many=True)
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Trade
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'video_url', 'user',
-                  'date_published', 'tags')
+                  'date_published', 'category', 'tags')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -295,7 +307,21 @@ class TradeSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         ret = super(TradeSerializer, self).to_internal_value(data)
 
-        trade_id = data.get('id', None)
+        # todo: better refactoring
+        # if creating new shout no need to validate the id, which will not be passed anyway
+        if not self.parent:
+
+            category = ret.get('category')
+            if category:
+                try:
+                    category = Category.objects.get(name=category['name'])
+                    ret['category'] = category
+                except Category.DoesNotExist:
+                    raise ValidationError({'category': ["Category '{}' does not exist.".format(category['name'])]})
+
+            return ret
+
+        trade_id = data.get('id')
         if trade_id == '':
             raise ValidationError({'id': 'This field can not be empty.'})
         if trade_id:
@@ -342,6 +368,7 @@ class TradeDetailSerializer(TradeSerializer):
                                                 price=validated_data['item']['Price'],
                                                 latitude=location_data['latitude'],
                                                 longitude=location_data['longitude'],
+                                                category=validated_data['category'],
                                                 tags=validated_data['tags'],
                                                 shouter=self.root.context['request'].user,
                                                 country=location_data['country'],
@@ -356,6 +383,7 @@ class TradeDetailSerializer(TradeSerializer):
                                                   price=validated_data['item']['Price'],
                                                   latitude=location_data['latitude'],
                                                   longitude=location_data['longitude'],
+                                                  category=validated_data['category'],
                                                   tags=validated_data['tags'],
                                                   shouter=self.root.context['request'].user,
                                                   country=location_data['country'],
@@ -512,14 +540,6 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ('id', 'type', 'created_at', 'is_read', 'attached_object')
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    main_tag = TagSerializer()
-
-    class Meta:
-        model = Category
-        fields = ('name', 'main_tag')
 
 
 class CurrencySerializer(serializers.ModelSerializer):

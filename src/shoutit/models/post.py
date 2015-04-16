@@ -163,6 +163,8 @@ class Post(UUIDModel, APIModelMixin):
 
 class Shout(Post):
     tags = models.ManyToManyField('shoutit.Tag', related_name='shouts')
+    category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
+
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
     expiry_notified = models.BooleanField(default=False)
 

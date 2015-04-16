@@ -120,13 +120,13 @@ def get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_la
 
 
 # todo: handle exception on each step and in case of errors, rollback!
-def post_request(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
     stream2 = shouter_profile.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
-    trade = Trade(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_REQUEST, item=item,
+    trade = Trade(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_REQUEST, item=item, category=category,
                   country=country, city=city, address=address, is_sss=is_sss)
     trade.save()
 
@@ -170,13 +170,13 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
 
 
 # todo: handle exception on each step and in case of errors, rollback!
-def post_offer(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
+def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
     stream2 = shouter_profile.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
-    trade = Trade(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_OFFER,
+    trade = Trade(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_OFFER, category=category,
                   item=item, country=country, city=city, address=address, is_sss=is_sss)
 
     if date_published:
@@ -223,8 +223,7 @@ def create_trade_index(trade):
     trade_index.title = trade.item.name
     trade_index.text = trade.text
     trade_index.tags = list(trade.tags.values_list('name', flat=True))
-    # todo!
-    # trade_index.category = trade.category.name
+    trade_index.category = trade.category.name
     trade_index.country = trade.country
     trade_index.city = trade.city
     trade_index.latitude = trade.latitude

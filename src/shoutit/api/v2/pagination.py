@@ -201,7 +201,8 @@ class DateTimeIndexPagination(DateTimePagination):
         page = view.model.objects.filter(id__in=object_ids)\
             .select_related(*view.select_related)\
             .prefetch_related(*view.prefetch_related)\
-            .defer(*view.defer)
+            .defer(*view.defer)\
+            .order_by('-date_published')
 
         # reverse the objects order if needed, so the results are always sorted from oldest to newest.
         if not after_query_param:

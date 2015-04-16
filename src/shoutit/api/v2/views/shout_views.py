@@ -143,6 +143,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
           "currency": "EUR",
           "images": [], // image urls
           "videos": [], // {Video Object}
+          "category": {"name": "Computers & Networking"}
           "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
           "location": {
             "country": "AE",

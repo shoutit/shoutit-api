@@ -112,7 +112,7 @@ RQ_QUEUES = {
 """
 from elasticsearch_dsl.connections import connections
 # Define a default global Elasticsearch client
-ES = connections.create_connection(hosts=['localhost'])
+ES = connections.create_connection(hosts=['es.shoutit.com'])
 
 
 AUTH_USER_MODEL = 'shoutit.User'

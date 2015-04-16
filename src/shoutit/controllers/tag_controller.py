@@ -59,7 +59,10 @@ def get_or_create_tag(name, creator=None):
     name = process_tag_name(name)
     if not name or not isinstance(name, basestring):
         return None
-    tag, created = Tag.objects.get_or_create(name=name, Creator=creator)
+    tag, created = Tag.objects.get_or_create(name=name)
+    if created:
+        tag.Creator = creator
+        tag.save()
     return tag
 
 
