@@ -16,19 +16,19 @@ drf-extensions
 git+https://github.com/mochawich/django-rest-swagger
 markdown==2.6.1
 
-# cache, search, queues
+# cache search queues
 redis==2.10.3
 django-redis-cache==0.13.0
 django-redis-sessions==0.4.0
 elasticsearch-dsl
 django_rq==0.7.0
 
-# AWS, imaging
+# AWS imaging
 Pillow==2.7.0
 geraldo==0.4.17
 boto==2.36.0
 
-# google, push
+# google push
 httplib2==0.9
 google-api-python-client==1.4.0
 git+https://github.com/mochawich/django-push-notifications
