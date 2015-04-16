@@ -33,7 +33,7 @@ class Command(BaseCommand):
         t1, c = Token.objects.get_or_create(user=u1)
         t1.delete()
         Token.objects.get_or_create(user=u1, key="1-5fbb04817861540553ca6ecc6d8fb6569f3adb")
-        give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, u1)
+        give_user_permissions(u1, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS)
         try:
             p1 = u1.profile
         except AttributeError:
@@ -62,7 +62,7 @@ class Command(BaseCommand):
         t2, c = Token.objects.get_or_create(user=u2)
         t2.delete()
         Token.objects.get_or_create(user=u2, key="2-5fbb04817861540553ca6ecc6d8fb6569f3adb")
-        give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, u2)
+        give_user_permissions(u2, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS)
         try:
             p2 = u2.profile
         except AttributeError:

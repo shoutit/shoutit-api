@@ -1,27 +1,12 @@
 import uuid
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
 
-from common.constants import *
-from shoutit.models import ConfirmToken, Profile, Business, Shout
-from shoutit.controllers import shout_controller, event_controller, \
-    comment_controller, experience_controller
-from shoutit.controllers import tag_controller
+from shoutit.models import Profile, Business
+from shoutit.controllers import shout_controller, comment_controller, experience_controller
 from shoutit.controllers.user_controller import get_profile
-from shoutit.controllers import message_controller
-from shoutit.forms import MessageForm, UserEditProfileForm, ShoutForm, ExtenedSignUp, ExperienceForm, ItemForm, \
-    BusinessEditProfileForm, CreateTinyBusinessForm, CommentForm
-from shoutit.tiers import ValidationResult as VR, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, \
-    RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN
-
-
-def form_errors(schema_errors):
-    f_errors = []
-    for se in schema_errors:
-        f_errors.append(('.'.join(list(se.path)), se.message))
-    return f_errors
+from shoutit.forms import BusinessEditProfileForm, CreateTinyBusinessForm
+from shoutit.tiers import ValidationResult as VR, RESPONSE_RESULT_ERROR_404
 
 
 def uuid_validator(uuid_string):
@@ -49,17 +34,6 @@ def object_exists_validator(function, using_uuid, error_message='object does not
         return VR(False, messages=[('error', error_message)], errors=[RESPONSE_RESULT_ERROR_404])
 
 
-# todo: use this function, add possibility of more owners
-def access_validator(request, obj, owner, extras=None):
-    if request.method in ['POST', 'PUT', 'DELETE'] and request.user != owner:
-        return VR(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
-    else:
-        data = {obj.__class__.__name__: obj}
-        if isinstance(extras, dict):
-            data.update(extras)
-        return VR(True, data=data)
-
-
 def form_validator(request, form_class, message='You have entered some invalid input.', initial=None):
     initial = initial or {}
     if request.method == 'POST':
@@ -69,58 +43,6 @@ def form_validator(request, form_class, message='You have entered some invalid i
         else:
             return VR(False, messages=[('error', _(message))], form_errors=form.errors)
     return VR(True)
-
-
-def shout_form_validator(request, form_class, message='You have entered some invalid input.', initial=None):
-    initial = initial or {}
-    validation_result = form_validator(request, form_class, _(message), initial)
-    if validation_result.valid:
-        if not request.user.is_active and Shout.objects.get_valid_shouts().filter(
-                user=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
-            return VR(False, messages=[
-                ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],
-                      errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
-    return validation_result
-
-
-def send_message_validator(request, shout_id, conversation_id):
-    # 1 - validating the form
-    result = form_validator(request, MessageForm)
-    if result.valid:
-
-        # 2 - validating the shout
-        result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, True, True)
-        if result.valid:
-            shout = result.data
-            conversation = None
-
-            # 3 - if there is no conversation_id, make sure user is not sending to himself
-            if not conversation_id and request.user.pk == shout.user.pk:
-                return VR(False, messages=[('error', _("You can't start a conversation about your own shout."))])
-
-            # 4 - if there is conversation_id, make sure the conversation exists
-            if conversation_id:
-                result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'),
-                                                 conversation_id, request.user)
-                if result.valid:
-                    conversation = result.data
-
-            result.data = {'shout': shout, 'conversation': conversation}
-
-    return result
-
-
-def profile_picture_validator(request, profile_type='', size='', tag_name='', username=''):
-    result = VR(valid=False)
-
-    if profile_type == 'user':
-        result = user_profile_validator(request, username)
-
-    elif profile_type == 'tag':
-        result = object_exists_validator(tag_controller.get_tag, False, _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
-                                         tag_name)
-
-    return result
 
 
 def user_edit_profile_validator(request, username, email):
@@ -140,226 +62,6 @@ def user_edit_profile_validator(request, username, email):
         else:
             return VR(False, messages=[('error', _("You don't have permissions to edit this profile."))])
     return result
-
-
-def read_conversation_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id,
-                                     request.user)
-    if not result:
-        return result
-    conversation = result.data
-    if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
-        return VR(False, errors=[RESPONSE_RESULT_ERROR_FORBIDDEN],
-                  messages=[('error', _("You don't have permissions to view this conversation."))])
-    return VR(True, data={'conversation': conversation})
-
-
-def conversation2_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.get_conversation2, True, _('Conversation does not exist.'), conversation_id)
-    if not result:
-        return result
-    conversation = result.data
-    if request.user not in conversation.contributors:
-        return VR(False, messages=[('error', _("You don't have permissions to view this conversation."))])
-
-    return VR(True, data={'conversation': conversation})
-
-
-def message_validator(message):
-    result = VR(True)
-    if not ('text' in message and unicode(message['text']).strip()):
-        result = VR(False, form_errors={"text": ["This field is required and can't be empty."]})
-
-    return result
-
-
-def reply_in_conversation_validator(request, conversation_id):
-    message = request.json_data
-    result = message_validator(message)
-    if not result:
-        return result
-
-    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id,
-                                     request.user)
-    if result:
-        conversation = result.data
-        if request.user.pk != conversation.FromUser.pk and request.user.pk != conversation.ToUser.pk:
-            return VR(False, messages=[('error', _("You don't have permissions to view this conversation."))])
-        result.data = {
-            'conversation': conversation,
-            'text': 'text' in message and unicode(message['text']).strip() or None,
-            'attachments': 'attachments' in message and message['attachments'] or None
-        }
-    return result
-
-
-def reply_in_conversation2_validator(request, conversation_id):
-    message = request.json_data
-    result = message_validator(message)
-    if not result:
-        return result
-
-    conversation2_validation = conversation2_validator(request, conversation_id)
-    if not conversation2_validation:
-        return conversation2_validation
-    conversation = conversation2_validation.data['conversation']
-
-    result.data = {
-        'conversation': conversation,
-        'text': 'text' in message and unicode(message['text']).strip() or None,
-        'attachments': 'attachments' in message and message['attachments'] or None
-    }
-    return result
-
-
-def reply_to_shout_validator(request, shout_id):
-    message = request.json_data
-    result = message_validator(message)
-    if not result:
-        return result
-
-    result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id)
-    if result:
-        shout = result.data
-        if request.user.pk == shout.user.pk:
-            return VR(False, messages=[('error', _("You can't start a conversation about your own shout."))])
-        result.data = {
-            'shout': shout,
-            'text': 'text' in message and message['text'] or None,
-            'attachments': 'attachments' in message and message['attachments'] or None
-        }
-    return result
-
-
-def modify_shout_validator(request, shout_id):
-    if not request.user.is_authenticated():
-        return VR(False, errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN], messages=[('error', _('You are not signed in.'))])
-
-    result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, True, True)
-    if result:
-        shout = result.data
-        if shout.user == request.user or request.user.is_staff:
-            return VR(True, data={'shout': shout})
-        else:
-            return VR(False, errors=[RESPONSE_RESULT_ERROR_FORBIDDEN],
-                      messages=[('error', _('You are not allowed to modify this shout.'))])
-    else:
-        return result
-
-
-def edit_shout_validator(request, shout_id):
-    modify_validation = modify_shout_validator(request, shout_id)
-    if not modify_validation:
-        return modify_validation
-    shout = modify_validation.data['shout']
-
-    form_validation = form_validator(request, ShoutForm)
-    if not form_validation:
-        return form_validation
-    form = form_validation.data['form']
-
-    # this contains the shout in its data to be used
-    return VR(True, data={'shout': shout, 'form': form})
-
-
-def delete_message_validator(request, conversation_id, message_id):
-    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id)
-    if not result:
-        return result
-
-    conversation = result.data
-    if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
-        return VR(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
-
-    return object_exists_validator(message_controller.get_message, True, _('Message does not exist.'), message_id)
-
-
-def message2_validator(request, conversation_id, message_id):
-    conversation2_validation = conversation2_validator(request, conversation_id)
-    if not conversation2_validation:
-        return conversation2_validation
-    conversation = conversation2_validation.data['conversation']
-
-    result = object_exists_validator(message_controller.get_message2, True, _('Message does not exist.'), message_id)
-    if not result:
-        return result
-    message = result.data
-    if message.conversation != conversation:
-        return VR(False, messages=[('error', _("the message doesn't belong to the conversation."))])
-
-    return VR(True, data={'conversation': conversation, 'message': message})
-
-
-def delete_conversation_validator(request, conversation_id):
-    result = object_exists_validator(message_controller.get_conversation, True, _('Conversation does not exist.'), conversation_id)
-    conversation = result.data
-    if not (request.user == conversation.FromUser or request.user == conversation.ToUser):
-        return VR(False, messages=[('error', _("You don't have permissions to delete this conversation."))])
-
-    return result
-
-
-def user_profile_validator(request, username, *args, **kwargs):
-    if username == 'me':
-        if request.user.is_authenticated():
-            username = request.user.username
-        else:
-            return VR(False, messages=[('error', _('You are not signed in.'))], errors=[RESPONSE_RESULT_ERROR_NOT_LOGGED_IN])
-
-    result = object_exists_validator(get_profile, False, _('User %(username)s does not exist.') % {'username': username}, username)
-    if not result:
-        return result
-    else:
-        profile = result.data
-        if not profile.user.is_active and profile.user != request.user and not request.user.is_staff:
-            return VR(False, messages=[('error', _('User %(username)s is not active yet.') % {'username': username})],
-                      errors=[RESPONSE_RESULT_ERROR_NOT_ACTIVATED])
-        if request.method in ['POST', 'PUT', 'DELETE'] and request.user != profile.user:
-            return VR(False, messages=[('error', _('Not allowed.'))], errors=[RESPONSE_RESULT_ERROR_FORBIDDEN])
-
-        return VR(True, data={'profile': profile})
-
-
-def push_validator(request, username, push_type, *args, **kwargs):
-    if request.method == 'POST':
-        token = 'token' in request.json_data and request.json_data['token'] or None
-        if not token:
-            return VR(False, messages=[('error', _('Invalid Push token'))], errors=[RESPONSE_RESULT_ERROR_BAD_REQUEST])
-        return VR(True, data={'token': token})
-    else:
-        return VR(True)
-
-
-def activate_api_validator(request, token, *args, **kwargs):
-    if not token:
-        return VR(False, {'token': [_('This field is required.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
-                  [('error', _('You have entered some invalid input.'))])
-    t = ConfirmToken.getToken(token, False, False)
-    if not t:
-        return VR(False, {'token': [_('Invalid activation token.')]}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
-                  [('error', _('You have entered some invalid input.'))])
-    return form_validator(request, ExtenedSignUp, initial={'email': request.user.email, 'tokentype': TOKEN_TYPE_API_EMAIL.value})
-
-
-def shout_owner_view_validator(request, shout_id):
-    find_muted = find_expired = request.user.is_authenticated()
-    result = object_exists_validator(shout_controller.get_post, True, _('Shout does not exist.'), shout_id, find_muted, find_expired)
-
-    if result:
-        shout = shout_controller.get_post(shout_id, True, True)
-        if shout.is_expired:
-            if shout.user != request.user and not request.user.is_staff:
-                return VR(False, messages=[('error', _('Shout does not exist.'))], errors=[RESPONSE_RESULT_ERROR_404])
-    return result
-
-
-# def post_experience_validator(request,business_name,*args,**kwargs):
-# result = form_validator(request, ExperienceForm)
-# if result:
-# business = business_controller.GetBusiness(business_name)
-# if not business:
-# return VR(False, messages=[('error', _('Business dose not exist.'))],)
-#	return result
 
 
 def share_experience_validator(request, exp_id, *args, **kwargs):
@@ -407,13 +109,4 @@ def delete_comment_validator(request, comment_id):
         comment = comment_controller.GetCommentByID(comment_id)
         if comment.user != request.user:
             return VR(False, messages=[('error', _('You do not have permission to delete this comment'))])
-    return result
-
-
-def delete_event_validator(request, event_id):
-    result = object_exists_validator(event_controller.get_event, True, _('Activity dose not exist.'), event_id)
-    if result:
-        event = event_controller.get_event(event_id)
-        if event.user != request.user:
-            return VR(False, messages=[('error', _('You do not have permission to delete this activity'))])
     return result

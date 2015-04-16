@@ -6,7 +6,7 @@ from django.conf import settings
 
 from common.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from shoutit.models.base import UUIDModel
-from shoutit.models.stream import Stream2Mixin
+from shoutit.models.stream import StreamMixin
 
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -35,7 +35,7 @@ class BusinessCategory(UUIDModel):
         return unicode('%s > %s' % (self.Parent.PrintHierarchy(), self.name)) if self.Parent else unicode(self.name)
 
 
-class Business(UUIDModel, Stream2Mixin):
+class Business(UUIDModel, StreamMixin):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='business', db_index=True)
 
     name = models.CharField(max_length=1024, db_index=True, null=False)
@@ -56,7 +56,7 @@ class Business(UUIDModel, Stream2Mixin):
 
     Confirmed = models.BooleanField(default=False)
 
-    _stream2 = GenericRelation('shoutit.Stream2', related_query_name='business')
+    _stream = GenericRelation('shoutit.Stream', related_query_name='business')
 
     def __str__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.name), unicode(self.user))

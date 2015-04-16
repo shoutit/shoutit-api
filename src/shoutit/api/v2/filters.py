@@ -3,7 +3,7 @@
 
 """
 from __future__ import unicode_literals
-from django.db.models import Count, Q
+from django.db.models import Count
 import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError

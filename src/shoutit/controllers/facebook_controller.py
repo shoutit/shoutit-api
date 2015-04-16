@@ -13,7 +13,7 @@ from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
 from shoutit.models import LinkedFacebookAccount
-from shoutit.controllers.user_controller import login_without_password, auth_with_facebook, update_profile_location
+from shoutit.controllers.user_controller import auth_with_facebook, update_profile_location
 
 
 def user_from_facebook_auth_response(request, auth_response, initial_user=None):
@@ -47,7 +47,6 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
         if initial_user and initial_user['location']:
             update_profile_location(user.profile, initial_user['location'])
 
-        login_without_password(request, user)
         return None, user
     else:
         return Exception('Could not login the user'), None

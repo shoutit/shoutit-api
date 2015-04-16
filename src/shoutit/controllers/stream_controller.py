@@ -1,11 +1,11 @@
 from django.db.models.query_utils import Q
 
 from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \
-    POST_TYPE_REQUEST, POST_TYPE_OFFER, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG, \
+    POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE, Stream_TYPE_TAG, \
     EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
 from common.utils import process_tag_names
 from shoutit.controllers import notifications_controller, event_controller
-from shoutit.models import Tag, StoredImage, Shout, Stream2, Listen, Profile, User
+from shoutit.models import Tag, StoredImage, Shout, Stream, Listen, Profile, User
 
 
 post_types = {
@@ -70,12 +70,12 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     return attach_related_to_shouts(shouts)
 
 
-def get_stream2_shouts_qs(stream2, shout_type=None):
+def get_stream_shouts_qs(stream, shout_type=None):
     """
-    return the Shouts Queryset (offers/requests) in a stream2
+    return the Shouts Queryset (offers/requests) in a stream
     """
     types = post_types[shout_type]
-    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream2).order_by('-date_published')
+    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream).order_by('-date_published')
     return qs
 
 
@@ -102,11 +102,11 @@ def get_user_listening(user, listening_type=None, count_only=False):
     return the objects (Profiles, tags, etc) that the users are listening to their streams
     """
     stream_types = {
-        'users': STREAM2_TYPE_PROFILE,
-        'profiles': STREAM2_TYPE_PROFILE,
-        'tags': STREAM2_TYPE_TAG,
-        STREAM2_TYPE_PROFILE: STREAM2_TYPE_PROFILE,
-        STREAM2_TYPE_TAG: STREAM2_TYPE_TAG,
+        'users': Stream_TYPE_PROFILE,
+        'profiles': Stream_TYPE_PROFILE,
+        'tags': Stream_TYPE_TAG,
+        Stream_TYPE_PROFILE: Stream_TYPE_PROFILE,
+        Stream_TYPE_TAG: Stream_TYPE_TAG,
     }
     assert listening_type in stream_types.keys(), "invalid listening type {}".format(listening_type)
     stream_type = stream_types[listening_type]
@@ -121,12 +121,12 @@ def get_user_listening(user, listening_type=None, count_only=False):
     else:
         listens = qs.all()
         stream_pks = [listen.stream_id for listen in listens]
-        streams = Stream2.objects.filter(pk__in=stream_pks)
+        streams = Stream.objects.filter(pk__in=stream_pks)
         object_ids = [stream.object_id for stream in streams]
 
-        if stream_type == STREAM2_TYPE_PROFILE:
+        if stream_type == Stream_TYPE_PROFILE:
             return list(Profile.objects.filter(pk__in=object_ids))
-        elif stream_type == STREAM2_TYPE_TAG:
+        elif stream_type == Stream_TYPE_TAG:
             return list(Tag.objects.filter(pk__in=object_ids))
         else:
             return listens
@@ -138,10 +138,10 @@ def get_user_listening_qs(user, listening_type):
     normally the user listens to a profile stream, but for ease we return the User classes with Profile pre-fetched.
     """
     stream_types = {
-        'users': STREAM2_TYPE_PROFILE,
-        'tags': STREAM2_TYPE_TAG,
-        STREAM2_TYPE_PROFILE: STREAM2_TYPE_PROFILE,
-        STREAM2_TYPE_TAG: STREAM2_TYPE_TAG,
+        'users': Stream_TYPE_PROFILE,
+        'tags': Stream_TYPE_TAG,
+        Stream_TYPE_PROFILE: Stream_TYPE_PROFILE,
+        Stream_TYPE_TAG: Stream_TYPE_TAG,
     }
     assert listening_type in stream_types.keys(), "invalid listening type {}".format(listening_type)
     stream_type = stream_types[listening_type]
@@ -149,9 +149,9 @@ def get_user_listening_qs(user, listening_type):
     # todo: find way with only one query to get the listening
     object_ids = user.listening.filter(type=stream_type).values_list('object_id', flat=True)
 
-    if stream_type == STREAM2_TYPE_PROFILE:
+    if stream_type == Stream_TYPE_PROFILE:
         return User.objects.filter(profile__id__in=object_ids).prefetch_related('profile')
-    if stream_type == STREAM2_TYPE_TAG:
+    if stream_type == Stream_TYPE_TAG:
         return Tag.objects.filter(id__in=object_ids)
 
 
@@ -164,10 +164,10 @@ def listen_to_stream(listener, stream, request=None):
     except Listen.DoesNotExist:
         listen = Listen(listener=listener, stream=stream)
         listen.save()
-        if stream.type == STREAM2_TYPE_PROFILE:
+        if stream.type == Stream_TYPE_PROFILE:
             notifications_controller.notify_user_of_listen(stream.owner.user, listener, request)
             event_controller.register_event(listener, EVENT_TYPE_FOLLOW_USER, stream.owner)
-        elif stream.type == STREAM2_TYPE_TAG:
+        elif stream.type == Stream_TYPE_TAG:
             event_controller.register_event(listener, EVENT_TYPE_FOLLOW_TAG, stream.owner)
 
 

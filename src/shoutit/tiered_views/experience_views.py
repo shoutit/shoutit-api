@@ -11,7 +11,7 @@ from shoutit.controllers.experience_controller import GetExperience, GetBusiness
     PostExperience, EditExperience, GetUsersSharedExperience, ShareExperience
 from shoutit.controllers.shout_controller import get_post
 from shoutit.controllers.user_controller import get_profile
-from shoutit.forms import ReportForm, CommentForm, CreateTinyBusinessForm, ExperienceForm
+from shoutit.forms import CreateTinyBusinessForm
 from shoutit.models import Profile, Business
 from shoutit.permissions import PERMISSION_POST_EXPERIENCE, PERMISSION_SHARE_EXPERIENCE
 from shoutit.tiered_views.renderers import page_html, experiences_stream_json, \
@@ -40,8 +40,6 @@ def view_experience(request, exp_id):
         result.data['page_title'] = '%s Experience with %s' % ('Bad' if experience.State == 0 else 'Good', experience.AboutBusiness.name)
         result.data['page_desc'] = experience.text
         result.data['is_fb_og'] = True
-    result.data['report_form'] = ReportForm()
-    result.data['comment_form'] = CommentForm()
     return result
 
 

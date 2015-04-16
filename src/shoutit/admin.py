@@ -3,10 +3,10 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
 
-from shoutit.models import User, Shout, Profile, StoredImage, Item, Experience, \
-    Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream2, \
-    Listen, UserPermission, Permission, Conversation2, Message2, Message2Delete, Message2Read, Conversation2Delete, FeaturedTag
+from shoutit.models import User, Shout, Profile, StoredImage, Item,\
+    Tag, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
+    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream, \
+    Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead, ConversationDelete, FeaturedTag
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -42,15 +42,6 @@ class PostAdmin(admin.ModelAdmin):
 
 admin.site.register(Post, PostAdmin)
 admin.site.register(Item)
-
-
-# Experience
-class ExperienceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'AboutBusiness', 'State', 'text')
-    search_fields = ['AboutBusiness__name', 'text']
-    readonly_fields = ('AboutBusiness',)
-
-admin.site.register(Experience, ExperienceAdmin)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -159,7 +150,7 @@ admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 # Tag
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stream2')
+    list_display = ('name', 'stream')
     search_fields = ('name',)
 
 
@@ -192,15 +183,8 @@ class FeaturedTagAdmin(admin.ModelAdmin):
     tag_name.short_description = 'Tag'
 
 
-# Conversation
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'FromUser', 'ToUser', 'AboutPost')
-    search_fields = ['FromUser__username', 'ToUser__username']
-
-
-@admin.register(Conversation2)
-class Conversation2Admin(admin.ModelAdmin):
     list_display = ('id', 'type', 'usernames', 'object_id')
     filter_horizontal = ('users',)
     readonly_fields = ('last_message',)
@@ -209,19 +193,12 @@ class Conversation2Admin(admin.ModelAdmin):
         return ', '.join([user.username for user in conversation.users.all()])
     usernames.short_description = 'Users'
 
-admin.site.register(Conversation2Delete)
+admin.site.register(ConversationDelete)
 
 
-# Message
-class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'Conversation', 'FromUser', 'ToUser', 'text', 'DateCreated', 'is_read')
-    search_fields = ['FromUser__username', 'ToUser__username', 'text']
-
-
-admin.site.register(Message, MessageAdmin)
-admin.site.register(Message2)
-admin.site.register(Message2Read)
-admin.site.register(Message2Delete)
+admin.site.register(Message)
+admin.site.register(MessageRead)
+admin.site.register(MessageDelete)
 
 
 # Message Attachment
@@ -254,7 +231,7 @@ class ReportAdmin(admin.ModelAdmin):
 admin.site.register(StoredFile)
 admin.site.register(StoredImage)
 admin.site.register(Video)
-admin.site.register(Stream2)
+admin.site.register(Stream)
 admin.site.register(Listen)
 admin.site.register(Notification)
 admin.site.register(Currency)

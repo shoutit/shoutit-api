@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 # URLS
+# todo: rebase on web app
 LOGIN_URL = '/signin/'
 LOGOUT_URL = '/signout/'
 PROFILE_URL = '/user/%s/'
@@ -140,11 +141,13 @@ TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM = TokenType("Business Html Confirm")
 class FileType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
+
 FILE_TYPE_BUSINESS_DOCUMENT = FileType("Business Document")
 
 
 class BusinessConfirmationState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 BUSINESS_CONFIRMATION_STATUS_WAITING = BusinessConfirmationState("Waiting")
 BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT = BusinessConfirmationState("Waiting Payment")
@@ -162,6 +165,7 @@ class BusinessSourceType(Constant):
     def __init__(self, text=''):
         Constant.__init__(self, text)
         business_source_types[text] = self.value
+
 
 BUSINESS_SOURCE_TYPE_NONE = BusinessSourceType('None')
 BUSINESS_SOURCE_TYPE_FOURSQUARE = BusinessSourceType('Foursquare')
@@ -185,18 +189,20 @@ class UserTypeFlag(Flag):
         Flag.__init__(self, text)
         user_type_flags[text] = self.value
 
+
 USER_TYPE_INDIVIDUAL = UserTypeFlag('Individual')
 USER_TYPE_BUSINESS = UserTypeFlag('Business')
 
 
-class StreamType2(Constant):
+class StreamType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-STREAM2_TYPE_PROFILE = StreamType2('Profile')
-STREAM2_TYPE_TAG = StreamType2('Tag')
-STREAM2_TYPE_BUSINESS = StreamType2('Business')
-STREAM2_TYPE_RELATED = StreamType2('Related')
-STREAM2_TYPE_RECOMMENDED = StreamType2('Recommended')
+
+Stream_TYPE_PROFILE = StreamType('Profile')
+Stream_TYPE_TAG = StreamType('Tag')
+Stream_TYPE_BUSINESS = StreamType('Business')
+Stream_TYPE_RELATED = StreamType('Related')
+Stream_TYPE_RECOMMENDED = StreamType('Recommended')
 
 rank_flags = {}
 
@@ -209,6 +215,7 @@ class RankTypeFlag(Flag):
         Flag.__init__(self, text)
         rank_flags[text] = self.value
 
+
 TIME_RANK_TYPE = RankTypeFlag('Time')
 DISTANCE_RANK_TYPE = RankTypeFlag('Distance')
 PRICE_RANK_TYPE = RankTypeFlag('Price')
@@ -217,6 +224,7 @@ FOLLOW_RANK_TYPE = RankTypeFlag('Follow')
 
 class ItemState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 ITEM_STATE_AVAILABLE = ItemState('Available')
 ITEM_STATE_SOLD_OUT = ItemState('Sold Out')
@@ -227,6 +235,7 @@ ITEM_STATE_EXPIRED = ItemState('Expired')
 class ExperienceState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
+
 EXPERIENCE_DOWN = ExperienceState('Thumbs down')
 EXPERIENCE_UP = ExperienceState('Thumbs up')
 
@@ -234,12 +243,14 @@ EXPERIENCE_UP = ExperienceState('Thumbs up')
 class ConversationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
+
 CONVERSATION_TYPE_CHAT = ConversationType('chat')
 CONVERSATION_TYPE_ABOUT_SHOUT = ConversationType('about_shout')
 
 
 class MessageAttachmentType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 MESSAGE_ATTACHMENT_TYPE_SHOUT = MessageAttachmentType('shout')
 MESSAGE_ATTACHMENT_TYPE_LOCATION = MessageAttachmentType('location')
@@ -250,6 +261,7 @@ class PostType(Constant):
 
     def __init__(self, text=''):
         Constant.__init__(self, text)
+
 
 POST_TYPE_REQUEST = PostType('request')
 POST_TYPE_OFFER = PostType('offer')
@@ -262,6 +274,7 @@ TAGS_PER_POST = 20
 
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 NOTIFICATION_TYPE_LISTEN = NotificationType('listen')
 NOTIFICATION_TYPE_MESSAGE = NotificationType('message')
@@ -276,13 +289,14 @@ class EventType(Constant):
     def __init__(self, text=''):
         Constant.__init__(self, text)
 
+
 EVENT_TYPE_FOLLOW_USER = EventType('Follow User')
-EVENT_TYPE_FOLLOW_TAG = EventType('Follow Tag')  #x
+EVENT_TYPE_FOLLOW_TAG = EventType('Follow Tag')  # x
 EVENT_TYPE_SHOUT_OFFER = EventType('Shout Offer')
 EVENT_TYPE_SHOUT_REQUEST = EventType('Shout Request')
 EVENT_TYPE_EXPERIENCE = EventType('Experience')
 EVENT_TYPE_SHARE_EXPERIENCE = EventType('Share Experience')
-EVENT_TYPE_COMMENT = EventType('Comment')  #x
+EVENT_TYPE_COMMENT = EventType('Comment')  # x
 EVENT_TYPE_POST_DEAL = EventType('Post Deal')
 EVENT_TYPE_BUY_DEAL = EventType('Buy Deal')
 EVENT_TYPE_FOLLOW_BUSINESS = EventType('Follow Business')
@@ -296,6 +310,7 @@ class ReportType(Constant):
     def __init__(self, text=''):
         Constant.__init__(self, text)
         report_types[text] = self.value
+
 
 REPORT_TYPE_GENERAL = ReportType('general')
 REPORT_TYPE_WEB_APP = ReportType('web_app')
@@ -331,6 +346,7 @@ DEFAULT_CURRENCY_CODE = 'USD'
 class PaymentStatus(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
+
 PAYMENT_AUTHORIZED = PaymentStatus('Authorized')
 PAYMENT_SETTLING = PaymentStatus('Settling')
 PAYMENT_SETTLED = PaymentStatus('Settled')
@@ -341,11 +357,13 @@ PAYMENT_REFUNDED = PaymentStatus('Refunded')
 class SubscriptionType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
+
 SUBSCRIPE_BUSINESS = SubscriptionType('Business')
 
 
 class SubscriptionStatus(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 SUBSCRIPTION_TRAIL = SubscriptionStatus('Trail')
 SUBSCRIPTION_ACTIVE = SubscriptionStatus('Active')

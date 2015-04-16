@@ -12,7 +12,6 @@ import reportlab.graphics.barcode
 from PIL.Image import open as image_open
 
 from shoutit.models import DealBuy, Voucher, Shout
-from shoutit.templatetags.template_filters import price
 from shoutit.controllers import event_controller, item_controller
 
 
@@ -37,13 +36,13 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
     deal.ValidTo = valid_to
     deal.save()
 
-    stream2 = business_profile.stream2
+    stream = business_profile.stream
 
-    stream2.add_post(deal)
+    stream.add_post(deal)
 
     for tag in shoutit.controllers.tag_controller.get_or_create_tags(tags, deal.user):
         deal.tags.add(tag)
-        tag.stream2.add_post(deal)
+        tag.stream.add_post(deal)
 
     event_controller.register_event(business_profile.user, EVENT_TYPE_POST_DEAL, deal)
     return deal
@@ -132,10 +131,11 @@ class VoucherReport(Report):
             Label(get_value=lambda widget, band: widget.instance.code,
                   style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 18},
                   left=13.00 * cm, top=05.20 * cm, width=06.5 * cm, height=00.70 * cm),  #Code
-            Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.item.Price,
-                                                       widget.instance.DealBuy.Deal.item.Currency.code),
-                  style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 24},
-                  left=13.20 * cm, top=06.20 * cm, width=05.5 * cm, height=02.50 * cm, fill=True, stroke=False, fill_color=orange),  #Worth
+            # price
+            # Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.item.Price,
+            #                                            widget.instance.DealBuy.Deal.item.Currency.code),
+            #       style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 24},
+            #       left=13.20 * cm, top=06.20 * cm, width=05.5 * cm, height=02.50 * cm, fill=True, stroke=False, fill_color=orange),  #Worth
             Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.text,
                   style={'wordWrap': True, 'alignment': TA_JUSTIFY, 'fontName': 'Helvetica', 'fontSize': 14},
                   left=06.95 * cm, top=09.00 * cm, width=11.5 * cm, height=10.50 * cm),  #Description

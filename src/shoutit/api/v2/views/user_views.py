@@ -198,11 +198,11 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'error': "You can not listen to your self"})
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, profile.stream2, request)
+            stream_controller.listen_to_stream(request.user, profile.stream, request)
             msg = "you started listening to {} shouts.".format(user.name)
 
         else:
-            stream_controller.remove_listener_from_stream(request.user, profile.stream2)
+            stream_controller.remove_listener_from_stream(request.user, profile.stream)
             msg = "you stopped listening to {} shouts.".format(user.name)
 
         ret = {
@@ -242,7 +242,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               paramType: query
         """
         user = self.get_object()
-        listeners = stream_controller.get_stream_listeners(user.profile.stream2)
+        listeners = stream_controller.get_stream_listeners(user.profile.stream)
         page = self.paginate_queryset(listeners)
         serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
@@ -343,7 +343,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
         user = self.get_object()
-        shouts = stream_controller.get_stream2_shouts_qs(user.profile.stream2, shout_type)
+        shouts = stream_controller.get_stream_shouts_qs(user.profile.stream, shout_type)
         self.pagination_class = ReverseDateTimePagination
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
@@ -388,7 +388,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if request.user == user:
             raise ValidationError({'error': "You can not start a conversation with your self"})
         if not (
-            message_controller.conversation2_exist(users=[user, request.user]) or user.profile.is_listener(request.user.profile.stream2)
+            message_controller.conversation_exist(users=[user, request.user]) or user.profile.is_listener(request.user.profile.stream)
         ):
             raise ValidationError({'error': "You can only start a conversation with your listeners"})
 
@@ -396,7 +396,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message2(conversation=None, user=request.user,
+        message = message_controller.send_message(conversation=None, user=request.user,
                                                    to_users=[user], text=text, attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)

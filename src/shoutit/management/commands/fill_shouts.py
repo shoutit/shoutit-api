@@ -17,6 +17,9 @@ from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISS
 
 class Command(BaseCommand):
     help = 'Fill database with test shouts'
+    max_users = 100
+    min_shouts = 10
+    max_shouts = 10000
 
     def add_arguments(self, parser):
         # Positional arguments
@@ -28,13 +31,13 @@ class Command(BaseCommand):
         categories = list(Category.objects.all().prefetch_related('tags'))
         cities = PredefinedCity.objects.all()
 
-        # adding 100 test users if we don't have them
-        if not len(users) == 1000:
-            for i in range(1000):
+        # adding test users if we don't have them
+        if not len(users) == self.max_users:
+            for i in range(self.max_users):
                 username = 'test_' + str(1000000 + i)
                 email = username + '@shoutit.com'
-                user, _ = User.objects.get_or_create(username=username, first_name='User', last_name=username, email=email)
-                give_user_permissions(None, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS, user)
+                user, _ = User.objects.get_or_create(username=username, first_name='user', last_name=username, email=email)
+                give_user_permissions(user, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS)
                 try:
                     user.profile
                 except AttributeError:
@@ -49,7 +52,7 @@ class Command(BaseCommand):
                 self.stdout.write('city: {}, lat: {}, lng: {}'.format(user.profile.city, user.profile.latitude, user.profile.longitude))
                 users.append(user)
 
-        for i in range(options.get('num_shouts')[0]):
+        for i in range(max(options.get('num_shouts')[0], self.min_shouts)):
             # for i in range(1000):
             user = random.choice(users)
             type = random.choice(['offer', 'request'])

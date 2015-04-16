@@ -197,22 +197,6 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('is_read', models.BooleanField(default=False)),
-                ('VisibleToRecivier', models.BooleanField(default=True)),
-                ('VisibleToSender', models.BooleanField(default=True)),
-                ('FromUser', models.ForeignKey(related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('ToUser', models.ForeignKey(related_name='+', to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='Conversation2',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
                 ('object_id', models.UUIDField(null=True, blank=True)),
                 ('type', models.SmallIntegerField(choices=[(0, 'chat'), (1, 'about_shout')])),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
@@ -223,12 +207,12 @@ class Migration(migrations.Migration):
             bases=(models.Model, shoutit.models.base.APIModelMixin),
         ),
         migrations.CreateModel(
-            name='Conversation2Delete',
+            name='ConversationDelete',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('conversation', models.ForeignKey(related_name='deleted_set', to='shoutit.Conversation2')),
+                ('conversation', models.ForeignKey(related_name='deleted_set', to='shoutit.Conversation')),
                 ('user', models.ForeignKey(related_name='deleted_conversations2_set', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -382,55 +366,8 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('text', models.TextField(null=True, blank=True)),
-                ('is_read', models.BooleanField(default=False)),
-                ('VisibleToRecivier', models.BooleanField(default=True)),
-                ('VisibleToSender', models.BooleanField(default=True)),
-                ('DateCreated', models.DateTimeField(auto_now_add=True)),
-                ('Conversation', models.ForeignKey(related_name='Messages', to='shoutit.Conversation')),
-                ('FromUser', models.ForeignKey(related_name='received_messages', to=settings.AUTH_USER_MODEL)),
-                ('ToUser', models.ForeignKey(related_name='sent_messages', to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='Message2',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
                 ('text', models.CharField(help_text='The text body of this message, could be None if the message has attachments', max_length=2000, null=True, blank=True)),
-                ('conversation', models.ForeignKey(related_name='messages2', to='shoutit.Conversation2')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='Message2Delete',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('conversation', models.ForeignKey(related_name='messages2_deleted_set', to='shoutit.Conversation2')),
-                ('message', models.ForeignKey(related_name='deleted_set', to='shoutit.Message2')),
-                ('user', models.ForeignKey(related_name='deleted_messages2_set', to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
-            name='Message2Read',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('conversation', models.ForeignKey(related_name='messages2_read_set', to='shoutit.Conversation2')),
-                ('message', models.ForeignKey(related_name='read_set', to='shoutit.Message2')),
-                ('user', models.ForeignKey(related_name='read_messages2_set', to=settings.AUTH_USER_MODEL)),
+                ('conversation', models.ForeignKey(related_name='messages2', to='shoutit.Conversation')),
             ],
             options={
                 'abstract': False,
@@ -445,8 +382,36 @@ class Migration(migrations.Migration):
                 ('object_id', models.UUIDField(null=True, blank=True)),
                 ('type', models.SmallIntegerField(choices=[(0, 'shout'), (1, 'location')])),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
-                ('conversation', models.ForeignKey(related_name='messages_attachments', to='shoutit.Conversation2')),
-                ('message', models.ForeignKey(related_name='attachments', to='shoutit.Message2')),
+                ('conversation', models.ForeignKey(related_name='messages_attachments', to='shoutit.Conversation')),
+                ('message', models.ForeignKey(related_name='attachments', to='shoutit.Message')),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='MessageDelete',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('conversation', models.ForeignKey(related_name='messages2_deleted_set', to='shoutit.Conversation')),
+                ('message', models.ForeignKey(related_name='deleted_set', to='shoutit.Message')),
+                ('user', models.ForeignKey(related_name='deleted_messages2_set', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='MessageRead',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('conversation', models.ForeignKey(related_name='messages2_read_set', to='shoutit.Conversation')),
+                ('message', models.ForeignKey(related_name='read_set', to='shoutit.Message')),
+                ('user', models.ForeignKey(related_name='read_messages2_set', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'abstract': False,
@@ -676,7 +641,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Stream2',
+            name='Stream',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
@@ -827,7 +792,7 @@ class Migration(migrations.Migration):
             bases=('shoutit.post',),
         ),
         migrations.AddField(
-            model_name='stream2',
+            model_name='stream',
             name='posts',
             field=models.ManyToManyField(related_name='streams2', to='shoutit.Post'),
         ),
@@ -862,24 +827,24 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='Payments', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name='message2',
+            model_name='message',
             name='deleted_by',
-            field=models.ManyToManyField(related_name='deleted_messages2', through='shoutit.Message2Delete', to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(related_name='deleted_messages2', through='shoutit.MessageDelete', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name='message2',
+            model_name='message',
             name='read_by',
-            field=models.ManyToManyField(related_name='read_messages2', through='shoutit.Message2Read', to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(related_name='read_messages2', through='shoutit.MessageRead', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name='message2',
+            model_name='message',
             name='user',
             field=models.ForeignKey(related_name='+', default=None, blank=True, to=settings.AUTH_USER_MODEL, null=True),
         ),
         migrations.AddField(
             model_name='listen',
             name='stream',
-            field=models.ForeignKey(to='shoutit.Stream2'),
+            field=models.ForeignKey(to='shoutit.Stream'),
         ),
         migrations.AddField(
             model_name='featuredtag',
@@ -887,17 +852,17 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='featured_in', to='shoutit.Tag'),
         ),
         migrations.AddField(
-            model_name='conversation2',
+            model_name='conversation',
             name='deleted_by',
-            field=models.ManyToManyField(related_name='deleted_conversations2', through='shoutit.Conversation2Delete', to=settings.AUTH_USER_MODEL),
+            field=models.ManyToManyField(related_name='deleted_conversations2', through='shoutit.ConversationDelete', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
-            model_name='conversation2',
+            model_name='conversation',
             name='last_message',
-            field=models.OneToOneField(related_name='+', null=True, blank=True, to='shoutit.Message2'),
+            field=models.OneToOneField(related_name='+', null=True, blank=True, to='shoutit.Message'),
         ),
         migrations.AddField(
-            model_name='conversation2',
+            model_name='conversation',
             name='users',
             field=models.ManyToManyField(related_name='conversations2', to=settings.AUTH_USER_MODEL),
         ),
@@ -988,7 +953,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='videos', blank=True, to='shoutit.Shout', null=True),
         ),
         migrations.AlterUniqueTogether(
-            name='stream2',
+            name='stream',
             unique_together=set([('content_type', 'object_id', 'type')]),
         ),
         migrations.AddField(
@@ -1017,11 +982,11 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='SharedExperiences', to='shoutit.Experience'),
         ),
         migrations.AlterUniqueTogether(
-            name='message2read',
+            name='messageread',
             unique_together=set([('user', 'message', 'conversation')]),
         ),
         migrations.AlterUniqueTogether(
-            name='message2delete',
+            name='messagedelete',
             unique_together=set([('user', 'message', 'conversation')]),
         ),
         migrations.AlterUniqueTogether(
@@ -1043,13 +1008,8 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to='shoutit.Shout'),
         ),
         migrations.AlterUniqueTogether(
-            name='conversation2delete',
+            name='conversationdelete',
             unique_together=set([('user', 'conversation')]),
-        ),
-        migrations.AddField(
-            model_name='conversation',
-            name='AboutPost',
-            field=models.ForeignKey(related_name='+', to='shoutit.Shout'),
         ),
         migrations.AlterUniqueTogether(
             name='sharedexperience',

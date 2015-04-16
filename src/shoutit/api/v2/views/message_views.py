@@ -15,7 +15,7 @@ from shoutit.api.v2.views.viewsets import UUIDViewSetMixin
 
 from shoutit.controllers import message_controller
 
-from shoutit.models import Message2
+from shoutit.models import Message
 from shoutit.api.v2.permissions import IsContributor
 
 
@@ -161,7 +161,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message2(conversation, request.user, text=text, attachments=attachments, request=request)
+        message = message_controller.send_message(conversation, request.user, text=text, attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -179,7 +179,7 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
     permission_classes = (permissions.IsAuthenticated, IsContributor)
 
     def get_queryset(self):
-        return Message2.objects.all()
+        return Message.objects.all()
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -192,4 +192,4 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
         return super(MessageViewSet, self).destroy(request, *args, **kwargs)
 
     def perform_destroy(self, message):
-        message_controller.hide_message2_from_user(message, self.request.user)
+        message_controller.hide_message_from_user(message, self.request.user)

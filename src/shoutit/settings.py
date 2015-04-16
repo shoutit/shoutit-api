@@ -249,8 +249,7 @@ STATICFILES_DIRS = (
 
 # Templates
 TEMPLATE_DIRS = (
-    os.path.join(DJANGO_DIR, 'templates', 'site'),
-    os.path.join(DJANGO_DIR, 'templates', 'ajax_templates'),
+    os.path.join(DJANGO_DIR, 'templates', 'api_site'),
     os.path.join(DJANGO_DIR, 'templates', 'text_messages'),
     os.path.join(DJANGO_DIR, 'templates', 'html_messages'),
 )
@@ -435,13 +434,6 @@ else:
 
 info("EMAIL_HOST:", EMAIL_HOST)
 
-# Auth Settings
-LOGIN_URL = '/signin/'
-LOGIN_URL_MODAL = '/#signin/'
-LOGOUT_URL = '/signout/'
-ACTIVATE_URL = '/activate/'
-ACTIVATE_URL_MODAL = '/#activate/'
-
 # Facebook App
 FACEBOOK_APP_ID = '353625811317277'
 FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
@@ -452,21 +444,6 @@ GOOGLE_API = {
         'web': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'web.json')},
         'android': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'android.json')},
         'ios': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'ios.json')},
-    }
-}
-
-
-# Contact Import
-CONTACT_IMPORT_SETTINGS = {
-    'google': {'consumer_key': '572868510623.apps.googleusercontent.com', 'consumer_secret': 'GkQnvuCaAzgdIn6V1wZ70DW8'},
-    'yahoo': {
-        'consumer_key': 'dj0yJmk9akptTldFWW1qd1F1JmQ9WVdrOWVWZzRkbTVGTmpJbWNHbzlOak13T0RNNU5qSS0mcz1jb25zdW1lcnNlY3JldCZ4PTE2',
-        'consumer_secret': 'c3d0cd060d1085000f7b5d1698f2c9e65632a4e6'
-    },
-    'hotmail': {
-        'consumer_key': '00000000480C4181',
-        'consumer_secret': 'XpebWKeFBR28I4JV9vAsJjg85gAIqASk',
-        'policy_url': 'https://www.shoutit.com/privacy/?lang=en'
     }
 }
 

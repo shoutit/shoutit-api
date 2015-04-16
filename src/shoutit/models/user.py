@@ -7,14 +7,14 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.dispatch import receiver
 from django.conf import settings
 
-from common.constants import DEFAULT_LOCATION, STREAM2_TYPE_PROFILE, STREAM2_TYPE_TAG
+from common.constants import DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG
 from shoutit.models.base import UUIDModel
-from shoutit.models.stream import Stream2Mixin, Listen
+from shoutit.models.stream import StreamMixin, Listen
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class AbstractProfile(UUIDModel, Stream2Mixin):
+class AbstractProfile(UUIDModel, StreamMixin):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True, blank=True)
     image = models.CharField(max_length=1024, null=True, blank=True)
     video = models.OneToOneField('shoutit.Video', null=True, blank=True, default=None, on_delete=models.SET_NULL)
@@ -30,17 +30,17 @@ class AbstractProfile(UUIDModel, Stream2Mixin):
     class Meta(UUIDModel.Meta):
         abstract = True
 
-    def is_listener(self, stream2):
+    def is_listener(self, stream):
         """
-        Check whether the user of this profile is listening to this stream2 or not
+        Check whether the user of this profile is listening to this stream or not
         """
-        return Listen.objects.filter(listener=self.user, stream=stream2).exists()
+        return Listen.objects.filter(listener=self.user, stream=stream).exists()
 
     @property
     def listening_count(self):
         return {
-            'users': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_PROFILE).count(),
-            'tags': Listen.objects.filter(listener=self.user, stream__type=STREAM2_TYPE_TAG).count()
+            'users': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_PROFILE).count(),
+            'tags': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_TAG).count()
         }
 
     @property
@@ -61,7 +61,7 @@ class Profile(AbstractProfile):
 
     # State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
 
-    _stream2 = GenericRelation('shoutit.Stream2', related_query_name='profile')
+    _stream = GenericRelation('shoutit.Stream', related_query_name='profile')
 
     def __str__(self):
         return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())

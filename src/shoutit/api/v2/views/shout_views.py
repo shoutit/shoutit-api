@@ -20,6 +20,7 @@ from shoutit.controllers import message_controller
 from shoutit.models import Shout
 from shoutit.api.v2.permissions import IsOwnerModify
 from shoutit.models.post import ShoutIndex
+from shoutit.controllers import shout_controller
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet):
@@ -204,8 +205,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         return super(ShoutViewSet, self).destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
-        instance.is_disabled = True
-        instance.save()
+        shout_controller.delete_post(instance)
 
     @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):
@@ -247,7 +247,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message2(conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
+        message = message_controller.send_message(conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
                                                    attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)

@@ -14,7 +14,7 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_T
      ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT
 
 from shoutit.models import (
-    User, Video, Tag, Shout, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency,
+    User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification, Category, Currency,
     Report)
 from shoutit.controllers import shout_controller
 
@@ -149,7 +149,7 @@ class UserDetailSerializer(UserSerializer):
 
     def get_is_listener(self, user):
         if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.profile.is_listener(self.root.context['request'].user.profile.stream2)
+            return user.profile.is_listener(self.root.context['request'].user.profile.stream)
         return False
 
     def get_shouts_url(self, user):
@@ -430,7 +430,7 @@ class MessageSerializer(serializers.ModelSerializer):
     is_read = serializers.SerializerMethodField()
 
     class Meta:
-        model = Message2
+        model = Message
         fields = ('id', 'created_at', 'conversation_id', 'user', 'text', 'attachments', 'is_read')
 
     def get_is_read(self, message):
@@ -490,7 +490,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
-        model = Conversation2
+        model = Conversation
         fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'users',
                   'last_message', 'about', 'messages_url', 'reply_url')
 
@@ -523,7 +523,7 @@ class AttachedObjectSerializer(serializers.Serializer):
             setattr(attached_object, 'attached_user', attached_object)
         if class_name == 'Profile':
             setattr(attached_object, 'attached_user', attached_object.user)
-        if class_name == 'Message2':
+        if class_name == 'Message':
             setattr(attached_object, 'attached_message', attached_object)
         if class_name == 'Shout':
             setattr(attached_object, 'attached_shout', attached_object)

@@ -103,11 +103,11 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tag = self.get_object()
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, tag.stream2, request)
+            stream_controller.listen_to_stream(request.user, tag.stream, request)
             msg = "you started listening to {} shouts.".format(tag.name)
 
         else:
-            stream_controller.remove_listener_from_stream(request.user, tag.stream2)
+            stream_controller.remove_listener_from_stream(request.user, tag.stream)
             msg = "you stopped listening to {} shouts.".format(tag.name)
 
         ret = {
@@ -142,7 +142,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
               paramType: query
         """
         tag = self.get_object()
-        listeners = stream_controller.get_stream_listeners(tag.stream2)
+        listeners = stream_controller.get_stream_listeners(tag.stream)
         page = self.paginate_queryset(listeners)
         serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
@@ -179,7 +179,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
         tag = self.get_object()
-        shouts = stream_controller.get_stream2_shouts_qs(tag.stream2, shout_type)
+        shouts = stream_controller.get_stream_shouts_qs(tag.stream, shout_type)
         self.pagination_class = ReverseDateTimePagination
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})

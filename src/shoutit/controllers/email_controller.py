@@ -7,7 +7,6 @@ from django.conf import settings
 
 from shoutit import utils
 from shoutit.models import DBCLConversation
-from shoutit.utils import get_shout_name_preview, remove_non_ascii
 from common import constants
 
 

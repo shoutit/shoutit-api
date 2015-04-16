@@ -1,10 +1,6 @@
 from shoutit.models import Item, StoredImage, Video, Currency
 
 
-def get_item(item_id):
-    return Item.objects.get(pk=item_id)
-
-
 def create_item(name, price, currency, description, images=None, videos=None):
     currency = get_currency(currency)
     item = Item(name=name, Price=price, Currency=currency, Description=description)

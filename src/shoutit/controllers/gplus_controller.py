@@ -12,7 +12,7 @@ from apiclient import discovery
 from rest_framework.exceptions import ValidationError
 
 from shoutit.models import LinkedGoogleAccount
-from shoutit.controllers.user_controller import auth_with_gplus, login_without_password, update_profile_location
+from shoutit.controllers.user_controller import auth_with_gplus, update_profile_location
 
 
 def user_from_gplus_code(request, code, initial_user=None, client='other'):
@@ -63,7 +63,6 @@ def user_from_gplus_code(request, code, initial_user=None, client='other'):
         if initial_user and initial_user['location']:
             update_profile_location(user.profile, initial_user['location'])
 
-        login_without_password(request, user)
         return None, user
     else:
         return Exception('Could not login the user'), None

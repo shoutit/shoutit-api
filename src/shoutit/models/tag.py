@@ -7,12 +7,12 @@ from django.conf import settings
 from common.constants import DEFAULT_LOCATION
 
 from shoutit.models.base import UUIDModel, APIModelMixin
-from shoutit.models.stream import Stream2Mixin
+from shoutit.models.stream import StreamMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
+class Tag(UUIDModel, StreamMixin, APIModelMixin):
     name = models.CharField(max_length=30, unique=True, db_index=True,
                             validators=[
                                 validators.MinLengthValidator(2),
@@ -25,7 +25,7 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
 
     Definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')
 
-    _stream2 = GenericRelation('shoutit.Stream2', related_query_name='tag')
+    _stream = GenericRelation('shoutit.Stream', related_query_name='tag')
 
     def __str__(self):
         return unicode(self.pk) + ": " + self.name

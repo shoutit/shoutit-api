@@ -285,7 +285,7 @@ def AcceptBusiness(request, username):
     ba.Status = BUSINESS_CONFIRMATION_STATUS_ACCEPTED
     ba.save()
 
-    give_user_permissions(None, ACTIVATED_BUSINESS_PERMISSIONS, user)
+    give_user_permissions(user, ACTIVATED_BUSINESS_PERMISSIONS)
 
     token = set_last_token(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
     email_controller.SendBusinessAcceptanceEmail(user.Business, user.email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'))

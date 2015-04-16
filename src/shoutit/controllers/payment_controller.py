@@ -6,8 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from paypal.standard.forms import PayPalEncryptedPaymentsForm
 from django.conf import settings
 
-from shoutit import utils
-
 from shoutit.models import User
 from shoutit import utils
 from shoutit.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency

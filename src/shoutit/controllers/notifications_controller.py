@@ -8,7 +8,7 @@ from django_rq import job
 from common.constants import NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED, \
     NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT
 
-from shoutit.models import Notification, Message2
+from shoutit.models import Notification
 
 
 def mark_all_as_read(user):
@@ -31,10 +31,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
         attached_object_dict = serializers.UserSerializer(attached_object, context={'request': request}).data
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
         message = _("You got a new message")
-        if isinstance(attached_object, Message2):
-            attached_object_dict = serializers.MessageSerializer(attached_object, context={'request': request}).data
-        else:
-            attached_object_dict = {}
+        attached_object_dict = serializers.MessageSerializer(attached_object, context={'request': request}).data
     else:
         message = None
         attached_object_dict = {}
@@ -64,11 +61,7 @@ def notify_user_of_listen(user, listener, request=None):
     notify_user.delay(user, NOTIFICATION_TYPE_LISTEN, listener, listener, request)
 
 
-def notify_user_of_message(user, message):
-    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.FromUser, message)
-
-
-def notify_user_of_message2(user, message, request=None):
+def notify_user_of_message(user, message, request=None):
     notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, request)
 
 
@@ -83,10 +76,6 @@ def notify_user_of_exp_shared(user, shared_exp):
 def notify_users_of_comment(users, comment):
     for user in users:
         notify_user.delay(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.user, attached_object=comment)
-
-
-def get_user_notifications(user):
-    return Notification.objects.filter(is_read=False, ToUser=user)
 
 
 def get_user_notifications_count(user):

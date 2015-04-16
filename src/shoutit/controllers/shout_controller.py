@@ -8,15 +8,13 @@ from django.db.models.query_utils import Q
 from django.conf import settings
 import logging
 from shoutit.models.post import ShoutIndex
-
-logger = logging.getLogger('shoutit.debug')
-
 from shoutit.controllers.user_controller import get_profile
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
-from shoutit.models import StoredImage, Shout, Post, PredefinedCity
+from shoutit.models import Shout, Post, PredefinedCity
 from shoutit.controllers import event_controller, email_controller, item_controller
 from shoutit.utils import to_seo_friendly
+logger = logging.getLogger('shoutit.debug')
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
@@ -62,6 +60,7 @@ def delete_post(post):
         pass
 
 
+# todo: make api for renewing shouts
 def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
     shout = Shout.objects.get(pk=shout_id)
     if not shout:
@@ -75,6 +74,7 @@ def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
         shout.save()
 
 
+# todo: implement better method
 def NotifyPreExpiry():
     shouts = Shout.objects.all()
     for shout in shouts:
@@ -89,41 +89,11 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, shout_objects=False):
-    filters = {
-        'latitude__gte': down_left_lat,
-        'latitude__lte': up_right_lat,
-        'longitude__gte': down_left_lng,
-        'longitude__lte': up_right_lng,
-    }
-    if shout_objects:
-        return Shout.objects.get_valid_shouts().filter(**filters).select_related('item__Currency', 'user__profile')[:100]
-    else:
-        return Shout.objects.get_valid_shouts().filter(**filters).values('pk', 'type', 'longitude', 'latitude', 'item__name')[:10000]
-
-
-def get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, shouts_only=False):
-    if down_left_lng > up_right_lng:
-        right_shouts = get_shouts_in_view_port(down_left_lat, -180.0, up_right_lat, up_right_lng, shouts_only)
-        left_shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, 180.0, shouts_only)
-        from itertools import chain
-
-        # todo: check!
-        shouts = chain(right_shouts, left_shouts) if shouts_only else list(chain(right_shouts, left_shouts))
-    else:
-        shouts = get_shouts_in_view_port(down_left_lat, down_left_lng, up_right_lat, up_right_lng, shouts_only)
-
-    if shouts_only:
-        return shouts
-    else:
-        return shouts, [[shout['latitude'], shout['longitude']] for shout in shouts]
-
-
 # todo: handle exception on each step and in case of errors, rollback!
 def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
-    stream2 = shouter_profile.stream2
+    stream = shouter_profile.stream
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
     shout = Shout(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_REQUEST, item=item, category=category,
@@ -146,7 +116,7 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
         shout.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
         shout.save()
 
-    stream2.add_post(shout)
+    stream.add_post(shout)
 
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -159,7 +129,7 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
         # todo: optimize
         try:
             shout.tags.add(tag)
-            tag.stream2.add_post(shout)
+            tag.stream.add_post(shout)
         except IntegrityError:
             pass
 
@@ -173,7 +143,7 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
 def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
-    stream2 = shouter_profile.stream2
+    stream = shouter_profile.stream
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
     shout = Shout(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_OFFER, category=category,
@@ -193,7 +163,7 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
     if not predefined_city:
         PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
 
-    stream2.add_post(shout)
+    stream.add_post(shout)
 
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -206,7 +176,7 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
         # todo: optimize
         try:
             shout.tags.add(tag)
-            tag.stream2.add_post(shout)
+            tag.stream.add_post(shout)
         except IntegrityError:
             pass
 
@@ -280,20 +250,12 @@ def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitu
                     # todo: optimize
                     try:
                         shout.tags.add(tag)
-                        tag.stream2.add_post(shout)
+                        tag.stream.add_post(shout)
                     except IntegrityError:
                         pass
 
             return shout
     return None
-
-
-def get_shout_images(shouts):
-    images = StoredImage.objects.filter(shout__pk__in=[shout.pk for shout in shouts]).order_by('image').select_related('item')
-    for i in range(len(shouts)):
-        shouts[i].item.set_images([image for image in images if image.item_id == shouts[i].item.pk])
-        images = [image for image in images if image.item_id != shouts[i].item.pk]
-    return shouts
 
 
 from shoutit.controllers import tag_controller

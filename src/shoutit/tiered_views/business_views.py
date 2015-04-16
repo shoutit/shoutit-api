@@ -41,7 +41,7 @@ def signup_temp(request, tiny_username=None):
         form.is_valid()
 
         user = business_controller.SignUpTempBusiness(request, form.cleaned_data['email'], form.cleaned_data['password'], True, business)
-        user_controller.give_user_permissions(None, ANONYMOUS_USER_PERMISSIONS, user)
+        user_controller.give_user_permissions(user, ANONYMOUS_USER_PERMISSIONS)
     else:
         form = BusinessTempSignUpForm(initial=init)
 

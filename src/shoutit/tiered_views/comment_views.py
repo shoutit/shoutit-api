@@ -5,7 +5,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.translation import ugettext_lazy as _
 
 from common.constants import DEFAULT_PAGE_SIZE
-from shoutit.forms import CommentForm
 from shoutit.controllers.comment_controller import CommentOnPost, GetPostComments, DeleteComment
 from shoutit.controllers.shout_controller import get_post
 from shoutit.permissions import PERMISSION_COMMENT_ON_POST
