@@ -7,7 +7,7 @@ from django.db.models.query_utils import Q
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT
 from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
 
-from shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Trade, Conversation2, Message2, \
+from shoutit.models import Conversation, Message, MessageAttachment, Tag, StoredImage, Shout, Conversation2, Message2, \
     Conversation2Delete, Message2Delete, Message2Read, SharedLocation
 from shoutit.controllers import shout_controller, email_controller, notifications_controller
 
@@ -310,7 +310,7 @@ def send_message2(conversation, user, to_users=None, about=None, text=None, atta
         # todo: map the content types to models
         if MESSAGE_ATTACHMENT_TYPE_SHOUT.text in attachment:
             object_id = attachment[MESSAGE_ATTACHMENT_TYPE_SHOUT.text]['id']
-            content_type = ContentType.objects.get_for_model(Trade)
+            content_type = ContentType.objects.get_for_model(Shout)
             ma_type = MESSAGE_ATTACHMENT_TYPE_SHOUT
             MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
                               type=ma_type).save()

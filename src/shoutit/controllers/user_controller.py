@@ -625,13 +625,13 @@ def activities_stream(profile, start_index=None, end_index=None):
     post_count = stream_posts_query_set.count()
 
     post_ids = [post['pk'] for post in stream_posts_query_set[start_index:end_index].values('pk')]
-    #	trades = Trade.objects.get_valid_trades().filter(pk__in = post_ids).select_related('item','item__Currency','user','user__profile','user__business')
-    #	trades = shout_controller.get_trade_images(trades)
+    #	shouts = Shout.objects.get_valid_shouts().filter(pk__in = post_ids).select_related('item','item__Currency','user','user__profile','user__business')
+    #	shouts = shout_controller.get_shout_images(shouts)
 
     events = Event.objects.get_valid_events().filter(pk__in=post_ids).select_related('user', 'user__profile').order_by(
         '-date_published')
     events = event_controller.GetDetailedEvents(events)
-    #	stream_posts = sorted(chain( trades, events),key=lambda instance: instance.date_published,reverse = True)
+    #	stream_posts = sorted(chain( shouts, events),key=lambda instance: instance.date_published,reverse = True)
     stream_posts = events
 
     return post_count, stream_posts

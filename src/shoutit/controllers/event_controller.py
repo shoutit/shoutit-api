@@ -4,7 +4,7 @@ from django.db.models.query_utils import Q
 from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EVENT, EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG, \
     EVENT_TYPE_SHOUT_REQUEST, EVENT_TYPE_EXPERIENCE, EVENT_TYPE_SHARE_EXPERIENCE, EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_POST_DEAL, \
     EVENT_TYPE_BUY_DEAL, EVENT_TYPE_COMMENT, EVENT_TYPE_FOLLOW_BUSINESS
-from shoutit.models import Event, Tag, Trade, Experience, Deal, Comment, Profile, Business, SharedExperience
+from shoutit.models import Event, Tag, Shout, Experience, Deal, Comment, Profile, Business, SharedExperience
 
 
 def register_event(user, event_type, attached_object=None):
@@ -84,9 +84,9 @@ def get_event(event_id):
 
 
 def GetDetailedEvents(events):
-    from shoutit.controllers.shout_controller import get_trade_images
+    from shoutit.controllers.shout_controller import get_shout_images
 
-    related_ids = {'user_ids': [], 'business_ids': [], 'tag_ids': [], 'trade_ids': [], 'experience_ids': [], 'shared_exp_ids': [],
+    related_ids = {'user_ids': [], 'business_ids': [], 'tag_ids': [], 'shout_ids': [], 'experience_ids': [], 'shared_exp_ids': [],
                    'comment_ids': [], 'deal_ids': []}
     for event in events:
         if event.EventType == EVENT_TYPE_FOLLOW_USER:
@@ -96,7 +96,7 @@ def GetDetailedEvents(events):
         elif event.EventType == EVENT_TYPE_FOLLOW_TAG:
             related_ids['tag_ids'].append(event.object_id)
         elif event.EventType == EVENT_TYPE_SHOUT_OFFER or event.EventType == EVENT_TYPE_SHOUT_REQUEST:
-            related_ids['trade_ids'].append(event.object_id)
+            related_ids['shout_ids'].append(event.object_id)
         elif event.EventType == EVENT_TYPE_EXPERIENCE:
             related_ids['experience_ids'].append(event.object_id)
         elif event.EventType == EVENT_TYPE_SHARE_EXPERIENCE:
@@ -106,18 +106,18 @@ def GetDetailedEvents(events):
         elif event.EventType == EVENT_TYPE_POST_DEAL or event.EventType == EVENT_TYPE_BUY_DEAL:
             related_ids['deal_ids'].append(event.object_id)
 
-    related = {'users': [], 'businesses': [], 'tags': [], 'trades': [], 'experiences': [], 'shared_exps': [], 'comments': [], 'deals': []}
+    related = {'users': [], 'businesses': [], 'tags': [], 'shouts': [], 'experiences': [], 'shared_exps': [], 'comments': [], 'deals': []}
     if related_ids['user_ids']:
         related['users'] = list(Profile.objects.filter(pk__in=related_ids['user_ids']).select_related('user'))
     if related_ids['business_ids']:
         related['businesses'] = list(Business.objects.filter(pk__in=related_ids['user_ids']).select_related('user'))
     if related_ids['tag_ids']:
         related['tags'] = list(Tag.objects.filter(pk__in=related_ids['tag_ids']))
-    if related_ids['trade_ids']:
-        trades = Trade.objects.filter(pk__in=related_ids['trade_ids']).select_related('user', 'user__profile',
+    if related_ids['shout_ids']:
+        shouts = Shout.objects.filter(pk__in=related_ids['shout_ids']).select_related('user', 'user__profile',
                                                                                       'user__business', 'item', 'item__Currency')
-        trades = get_trade_images(trades)
-        related['trades'] = list(trades)
+        shouts = get_shout_images(shouts)
+        related['shouts'] = list(shouts)
     if related_ids['experience_ids']:
         related['experiences'] = list(
             Experience.objects.filter(pk__in=related_ids['experience_ids']).select_related('user', 'user__profile',
@@ -156,10 +156,10 @@ def GetDetailedEvents(events):
                     #					related['tags'].remove(tag)
                     break
         elif event.EventType == EVENT_TYPE_SHOUT_OFFER or event.EventType == EVENT_TYPE_SHOUT_REQUEST:
-            for trade in related['trades']:
-                if trade.pk == event.object_id:
-                    event.attached_object = trade
-                    #					related['trades'].remove(trade)
+            for shout in related['shouts']:
+                if shout.pk == event.object_id:
+                    event.attached_object = shout
+                    #					related['shouts'].remove(shout)
                     break
         elif event.EventType == EVENT_TYPE_EXPERIENCE:
             for experience in related['experiences']:

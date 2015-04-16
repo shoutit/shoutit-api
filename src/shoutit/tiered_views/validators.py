@@ -5,8 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from common.constants import *
-from shoutit.models import ConfirmToken, Item, Profile, Business, Trade
-from shoutit.controllers import shout_controller, tag_controller, business_controller, event_controller, message_controller, \
+from shoutit.models import ConfirmToken, Profile, Business, Shout
+from shoutit.controllers import shout_controller, event_controller, \
     comment_controller, experience_controller
 from shoutit.controllers import tag_controller
 from shoutit.controllers.user_controller import get_profile
@@ -75,7 +75,7 @@ def shout_form_validator(request, form_class, message='You have entered some inv
     initial = initial or {}
     validation_result = form_validator(request, form_class, _(message), initial)
     if validation_result.valid:
-        if not request.user.is_active and Trade.objects.get_valid_trades().filter(
+        if not request.user.is_active and Shout.objects.get_valid_shouts().filter(
                 user=request.user).count() >= settings.MAX_SHOUTS_INACTIVE_USER:
             return VR(False, messages=[
                 ('error', _('Please, activate your account to add more shouts (check your email for activation link)'))],

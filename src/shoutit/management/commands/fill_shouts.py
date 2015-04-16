@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from rest_framework.request import Request
 import time
-from shoutit.api.v2.serializers import TradeDetailSerializer
+from shoutit.api.v2.serializers import ShoutDetailSerializer
 from shoutit.models import *
 from shoutit.controllers.user_controller import give_user_permissions
 from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
@@ -50,12 +50,12 @@ class Command(BaseCommand):
                 users.append(user)
 
         for i in range(options.get('num_shouts')[0]):
-        # for i in range(1000):
+            # for i in range(1000):
             user = random.choice(users)
             type = random.choice(['offer', 'request'])
             category = random.choice(categories)
             city = random.choice(cities)
-            tags = [category.main_tag.name] + random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
+            tags = random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
             shout_data = {
                 "type": type,
                 "title": "Test {0} {1:06d}_{2:0.0f} by {3}".format(type, i, time.time(), user.username),
@@ -64,6 +64,7 @@ class Command(BaseCommand):
                 "currency": "EUR",
                 "images": [],
                 "videos": [],
+                "category": {"name": category.name},
                 "tags": [{'name': t} for t in tags],
                 "location": {
                     "country": city.country,
@@ -74,7 +75,7 @@ class Command(BaseCommand):
             }
             request = Request(HttpRequest())
             request._user = user
-            shout = TradeDetailSerializer(data=shout_data, context={'request': request})
+            shout = ShoutDetailSerializer(data=shout_data, context={'request': request})
             shout.is_valid(True)
             shout.save()
             self.stdout.write('shout: {}, city: {}'.format(shout_data.get('title'), shout_data.get('location')['city']))

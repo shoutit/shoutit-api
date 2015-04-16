@@ -1,13 +1,10 @@
-import math
-
 from django.utils.translation import ugettext_lazy as _
 
-from shoutit.controllers import stream_controller
+from shoutit.controllers import stream_controller, user_controller
 from shoutit.permissions import PERMISSION_FOLLOW_TAG
 from shoutit.tiered_views.renderers import *
 from shoutit.tiered_views.validators import *
 from shoutit.tiers import *
-from common.constants import *
 
 
 @non_cached_view(methods=['GET', 'POST'], login_required=True, permissions_required=[PERMISSION_FOLLOW_TAG],
@@ -110,7 +107,7 @@ def tag_profile_brief(request, tag_name):
     result = ResponseResult()
     result.data['tag'] = tag
 
-    result.data['shouts_count'] = Trade.objects.get_valid_trades().filter(tags=tag).count()
+    result.data['shouts_count'] = Shout.objects.get_valid_shouts().filter(tags=tag).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)

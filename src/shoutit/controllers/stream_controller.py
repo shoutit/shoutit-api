@@ -5,7 +5,7 @@ from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \
     EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
 from common.utils import process_tag_names
 from shoutit.controllers import notifications_controller, event_controller
-from shoutit.models import Tag, StoredImage, Trade, Stream2, Listen, Profile, User
+from shoutit.models import Tag, StoredImage, Shout, Stream2, Listen, Profile, User
 
 
 post_types = {
@@ -22,7 +22,7 @@ post_types = {
 }
 
 
-def get_trades_by_pks(pks):
+def get_shouts_by_pks(pks):
     """
     Select shouts from database according to their IDs, including other objects related to every shout.
     pks: array of shout IDs
@@ -31,7 +31,7 @@ def get_trades_by_pks(pks):
     if not pks:
         return []
     # todo: optimize
-    shout_qs = Trade.objects.get_valid_trades().select_related('item', 'item__Currency', 'user', 'user__profile').filter(pk__in=pks)
+    shout_qs = Shout.objects.get_valid_shouts().select_related('item', 'item__Currency', 'user', 'user__profile').filter(pk__in=pks)
 
     return attach_related_to_shouts(shout_qs)
 
@@ -65,17 +65,17 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     return the shouts (offers/requests) in a stream
     """
     shout_types = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
-    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-date_published').values_list('id', flat=Trade)[start_index:end_index]
-    trades = list(Trade.objects.filter(id__in=list(post_ids_qs)).order_by('-date_published'))
-    return attach_related_to_shouts(trades)
+    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-date_published').values_list('id', flat=Shout)[start_index:end_index]
+    shouts = list(Shout.objects.filter(id__in=list(post_ids_qs)).order_by('-date_published'))
+    return attach_related_to_shouts(shouts)
 
 
-def get_stream2_trades_qs(stream2, trade_type=None):
+def get_stream2_shouts_qs(stream2, shout_type=None):
     """
-    return the Trades Queryset (offers/requests) in a stream2
+    return the Shouts Queryset (offers/requests) in a stream2
     """
-    types = post_types[trade_type]
-    qs = Trade.objects.get_valid_trades(types=types).filter(streams2=stream2).order_by('-date_published')
+    types = post_types[shout_type]
+    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream2).order_by('-date_published')
     return qs
 
 

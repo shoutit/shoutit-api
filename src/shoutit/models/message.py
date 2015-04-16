@@ -19,7 +19,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 class Conversation(UUIDModel):
     FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
-    AboutPost = models.ForeignKey('shoutit.Trade', related_name='+')
+    AboutPost = models.ForeignKey('shoutit.Shout', related_name='+')
     is_read = models.BooleanField(default=False)
     VisibleToRecivier = models.BooleanField(default=True)
     VisibleToSender = models.BooleanField(default=True)

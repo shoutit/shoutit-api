@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
 
-from shoutit.models import User, Shout, Profile, StoredImage, Trade, Item, Experience, \
+from shoutit.models import User, Shout, Profile, StoredImage, Item, Experience, \
     Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream2, \
     Listen, UserPermission, Permission, Conversation2, Message2, Message2Delete, Message2Read, Conversation2Delete, FeaturedTag
@@ -12,15 +12,8 @@ from django.utils.translation import ugettext_lazy as _
 
 
 # Shout
+@admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date_published', 'user', 'text', 'country', 'city')
-    readonly_fields = ('user', 'tags')
-
-admin.site.register(Shout, ShoutAdmin)
-
-
-# Trade
-class TradeAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'owner', 'owner_profile', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
     list_filter = ('type', 'is_sss', 'is_disabled')
@@ -41,8 +34,6 @@ class TradeAdmin(admin.ModelAdmin):
 
     owner_profile.allow_tags = True
     owner_profile.short_description = 'User Profile/Business'
-
-admin.site.register(Trade, TradeAdmin)
 
 
 # Post

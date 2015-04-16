@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from push_notifications.models import GCMDevice, APNSDevice
 
-from shoutit.models import ConfirmToken, Business, Profile, Trade, Video
+from shoutit.models import ConfirmToken, Business, Profile, Shout, Video
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.forms import ExtenedSignUpSSS, APISignUpForm, ReActivate, SignUpForm, RecoverForm, LoginForm, ReportForm, ItemForm, \
@@ -554,14 +554,14 @@ def user_profile(request, username):
     result.data['profile'] = profile
     result.data['is_owner'] = request.user.is_authenticated() and request.user.pk == profile.user.pk
 
-    result.data['offers_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_OFFER]).filter(user=profile.user).count()
+    result.data['offers_count'] = Shout.objects.get_valid_shouts(types=[POST_TYPE_OFFER]).filter(user=profile.user).count()
     result.data['listeners_count'] = stream_controller.get_stream_listeners(stream=profile.stream2, count_only=True)
 
     if request.user.is_authenticated():
         result.data['is_listening'] = user_controller.is_listening(request.user, profile.stream2)
 
     if isinstance(profile, Profile):
-        result.data['requests_count'] = Trade.objects.get_valid_trades(types=[POST_TYPE_REQUEST]).filter(user=profile.user).count()
+        result.data['requests_count'] = Shout.objects.get_valid_shouts(types=[POST_TYPE_REQUEST]).filter(user=profile.user).count()
         result.data['experiences_count'] = experience_controller.GetExperiencesCount(profile)
         result.data['listening_count'] = {
             'users': stream_controller.get_user_listening(user=profile.user, listening_type=STREAM2_TYPE_PROFILE, count_only=True),

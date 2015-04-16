@@ -5,51 +5,48 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 
-from rest_framework import permissions, filters, status
+from rest_framework import permissions, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
-from shoutit.api.v2.filters import ShoutFilter, TradeIndexFilterBackend
+from shoutit.api.v2.filters import ShoutIndexFilterBackend
 from shoutit.api.v2.pagination import ReverseDateTimeIndexPagination
-from shoutit.api.v2.serializers import TradeSerializer, TradeDetailSerializer, MessageSerializer
+from shoutit.api.v2.serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet, UUIDViewSetMixin
 from shoutit.controllers import message_controller
 
-from shoutit.models import Trade
+from shoutit.models import Shout
 from shoutit.api.v2.permissions import IsOwnerModify
-from shoutit.models.post import TradeIndex
+from shoutit.models.post import ShoutIndex
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet):
     """
     Shout API Resource
     """
-    serializer_class = TradeSerializer
-    serializer_detail_class = TradeDetailSerializer
+    serializer_class = ShoutSerializer
+    serializer_detail_class = ShoutDetailSerializer
 
     pagination_class = ReverseDateTimeIndexPagination
 
-    filter_backends = (TradeIndexFilterBackend,)
-    # filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    # filter_class = ShoutFilter
-    # search_fields = ('=id', 'item__name', 'text', 'tags__name')
-    model = Trade
+    filter_backends = (ShoutIndexFilterBackend,)
+    model = Shout
     select_related = ('item__Currency', 'user__profile')
     prefetch_related = ('tags', 'item__images', 'item__videos', 'images')
     defer = ()
-    index_model = TradeIndex
+    index_model = ShoutIndex
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        return Trade.objects.get_valid_trades().all()\
+        return Shout.objects.get_valid_shouts().all()\
             .select_related('item__Currency', 'user__profile')\
             .prefetch_related('tags', 'item__images', 'item__videos', 'images')
 
     def get_index_search(self):
-        return TradeIndex.search()
+        return ShoutIndex.search()
 
     def list(self, request, *args, **kwargs):
         """
@@ -57,7 +54,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.26dyymkevc5m)
         ---
-        serializer: TradeSerializer
+        serializer: ShoutSerializer
         parameters:
             - name: before
               description: timestamp to get shouts before
@@ -124,8 +121,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         if errors:
             raise ValidationError(errors)
 
-        indexed_trades = self.filter_queryset(self.get_index_search())
-        page = self.paginate_queryset(indexed_trades)
+        indexed_shouts = self.filter_queryset(self.get_index_search())
+        page = self.paginate_queryset(indexed_shouts)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -154,14 +151,14 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         }
         </code></pre>
         ---
-        serializer: TradeDetailSerializer
+        serializer: ShoutDetailSerializer
         omit_parameters:
             - form
         parameters:
             - name: body
               paramType: body
         """
-        serializer = TradeDetailSerializer(data=request.data, context={'request': request})
+        serializer = ShoutDetailSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         headers = self.get_success_headers(serializer.data)
@@ -172,7 +169,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         Get shout
 
         ---
-        serializer: TradeDetailSerializer
+        serializer: ShoutDetailSerializer
         """
         return super(ShoutViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -184,7 +181,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         NOT IMPLEMENTED!
         ```
         ---
-        serializer: TradeDetailSerializer
+        serializer: ShoutDetailSerializer
         omit_parameters:
             - form
         parameters:

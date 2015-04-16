@@ -8,15 +8,13 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 
 from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, POST_TYPE_EXPERIENCE, DEFAULT_LOCATION
-from shoutit.models import ConfirmToken, Profile, Business, Trade, PredefinedCity
+from shoutit.models import ConfirmToken, Profile, Business, Shout, PredefinedCity
 from shoutit.permissions import PERMISSION_ACTIVATED
 from shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, \
-    RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_404, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
+    RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
 from shoutit.utils import shout_link
 from shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from common import constants
-from shoutit.controllers import user_controller
-from shoutit.templatetags import template_filters
 
 
 def render_in_master_page(request, template, variables, page_title='', page_desc=''):
@@ -352,7 +350,7 @@ def activate_modal_html(request, result, token):
             response.set_cookie('bc_t_' + request.session.session_key, token)
             return response
 
-        shout = Trade.objects.get_valid_trades().filter(user=t.user)
+        shout = Shout.objects.get_valid_shouts().filter(user=t.user)
         if len(shout):
             url = shout_link(shout[0])
         else:

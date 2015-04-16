@@ -9,7 +9,7 @@ from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 from common.utils import process_tag_names
 from shoutit.controllers import stream_controller
-from shoutit.models import Trade, Category, Tag
+from shoutit.models import Shout, Category, Tag
 
 
 class ShoutFilter(django_filters.FilterSet):
@@ -25,7 +25,7 @@ class ShoutFilter(django_filters.FilterSet):
     user = django_filters.CharFilter(name='user__username')
 
     class Meta:
-        model = Trade
+        model = Shout
         fields = ['id', 'country', 'city', 'shout_type', 'min_price', 'max_price', 'tags', 'category',
                   'down_left_lat', 'down_left_lng', 'up_right_lat', 'up_right_lng', 'user']
         order_by = ['-date_published']
@@ -50,7 +50,7 @@ class ShoutFilter(django_filters.FilterSet):
             raise ValidationError({'category': "Category '%s' does not exist" % value})
 
 
-class TradeIndexFilterBackend(filters.BaseFilterBackend):
+class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, index_queryset, view):
         data = request.query_params

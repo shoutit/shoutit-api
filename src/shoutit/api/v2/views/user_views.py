@@ -313,7 +313,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.26dyymkevc5m)
         ---
-        serializer: TradeSerializer
+        serializer: ShoutSerializer
         omit_parameters:
             - form
         parameters:
@@ -343,10 +343,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
         user = self.get_object()
-        trades = stream_controller.get_stream2_trades_qs(user.profile.stream2, shout_type)
+        shouts = stream_controller.get_stream2_shouts_qs(user.profile.stream2, shout_type)
         self.pagination_class = ReverseDateTimePagination
-        page = self.paginate_queryset(trades)
-        serializer = TradeSerializer(page, many=True, context={'request': request})
+        page = self.paginate_queryset(shouts)
+        serializer = ShoutSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Message')

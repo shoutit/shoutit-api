@@ -70,21 +70,13 @@ class ShoutManager(PostManager):
         day = today - days
         return qs.filter(Q(expiry_date__isnull=True, date_published__range=(day, today)) | Q(expiry_date__isnull=False, expiry_date__gte=today))
 
-
-class TradeManager(ShoutManager):
-    def get_valid_trades(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
-        if not types:
-            types = [POST_TYPE_OFFER, POST_TYPE_REQUEST]
-        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST]))
-        return ShoutManager.get_valid_shouts(self, types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
-
     def get_valid_requests(self, country=None, city=None, get_expired=False, get_muted=False):
         types = [POST_TYPE_REQUEST]
-        return self.get_valid_trades(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
 
     def get_valid_offers(self, country=None, city=None, get_expired=False, get_muted=False):
         types = [POST_TYPE_OFFER]
-        return self.get_valid_trades(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
 
 
 class DealManager(ShoutManager):
@@ -165,13 +157,18 @@ class Shout(Post):
     tags = models.ManyToManyField('shoutit.Tag', related_name='shouts')
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
+    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
+    renewal_count = models.PositiveSmallIntegerField(default=0)
+
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
     expiry_notified = models.BooleanField(default=False)
+
+    is_sss = models.BooleanField(default=False)
 
     objects = ShoutManager()
 
     def __str__(self):
-        return unicode(self.pk) + ": " + self.get_text()
+        return unicode(self.pk) + ": " + unicode(self.item)
 
     def set_tags(self, tags):
         self._tags = tags
@@ -218,7 +215,7 @@ class Shout(Post):
         text = ''
         if self.type == POST_TYPE_REQUEST or self.type == POST_TYPE_OFFER:
             try:
-                text = self.trade.item.name + ' ' + self.text
+                text = self.shout.item.name + ' ' + self.text
             except Exception, e:
                 print e
         else:
@@ -232,17 +229,6 @@ class Shout(Post):
         if (not self.expiry_date and now > self.date_published + timedelta(days=int(settings.MAX_EXPIRY_DAYS))) or (
             self.expiry_date and now > self.expiry_date):
             return True
-
-
-class Trade(Shout):
-    item = models.OneToOneField('shoutit.Item', related_name='shout', db_index=True, null=True, blank=True)
-    renewal_count = models.PositiveSmallIntegerField(default=0)
-    is_sss = models.BooleanField(default=False)
-
-    objects = TradeManager()
-
-    def __str__(self):
-        return unicode(self.pk) + ": " + unicode(self.item)
 
     @property
     def related_requests(self):
@@ -259,7 +245,7 @@ class Trade(Shout):
             return []
 
 
-class TradeIndex(DocType):
+class ShoutIndex(DocType):
     # indexed
     id = String(index='not_analyzed')
     type = String(index='not_analyzed')
@@ -289,13 +275,15 @@ class TradeIndex(DocType):
     def date_published_unix(self):
         return date_unix(self.date_published)
 
+# initiate the index if not initiated
+ShoutIndex.init()
+
 
 class Deal(Shout):
     MinBuyers = models.IntegerField(default=0)
     MaxBuyers = models.IntegerField(null=True, blank=True)
     OriginalPrice = models.FloatField()
     IsClosed = models.BooleanField(default=False)
-    item = models.ForeignKey('shoutit.Item', related_name='Deals', on_delete=models.SET_NULL, null=True, blank=True)
     ValidFrom = models.DateTimeField(null=True, blank=True)
     ValidTo = models.DateTimeField(null=True, blank=True)
 

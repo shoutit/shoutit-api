@@ -1,12 +1,10 @@
 from datetime import datetime
 import random
 import json
-import urlparse
 import uuid
 import base64
 import hashlib
 import hmac
-import os
 import re
 from django.http import HttpResponse
 from shoutit import settings
@@ -133,7 +131,7 @@ def shout_link(post):
     else:
         shout = post
         shout_type = 'request' if shout.type == POST_TYPE_REQUEST else 'offer' if shout.type == POST_TYPE_OFFER else 'shout'
-        etc = to_seo_friendly(shout.item.name if hasattr(shout, 'item') else shout.trade.item.name)
+        etc = to_seo_friendly(shout.item.name if hasattr(shout, 'item') else shout.shout.item.name)
         city = to_seo_friendly(unicode.lower(shout.city))
         link = '%s%s/%s/%s-%s/' % (settings.SITE_LINK, shout_type, post_id, etc, city)
 

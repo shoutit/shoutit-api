@@ -14,7 +14,7 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_T
      ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT
 
 from shoutit.models import (
-    User, Video, Tag, Trade, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency,
+    User, Video, Tag, Shout, Conversation2, MessageAttachment, Message2, SharedLocation, Notification, Category, Currency,
     Report)
 from shoutit.controllers import shout_controller
 
@@ -284,7 +284,7 @@ class UserDetailSerializer(UserSerializer):
         return user
 
 
-class TradeSerializer(serializers.ModelSerializer):
+class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'], help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
@@ -297,7 +297,7 @@ class TradeSerializer(serializers.ModelSerializer):
     api_url = serializers.SerializerMethodField()
 
     class Meta:
-        model = Trade
+        model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'video_url', 'user',
                   'date_published', 'category', 'tags')
 
@@ -305,7 +305,7 @@ class TradeSerializer(serializers.ModelSerializer):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def to_internal_value(self, data):
-        ret = super(TradeSerializer, self).to_internal_value(data)
+        ret = super(ShoutSerializer, self).to_internal_value(data)
 
         # todo: better refactoring
         # if creating new shout no need to validate the id, which will not be passed anyway
@@ -321,38 +321,38 @@ class TradeSerializer(serializers.ModelSerializer):
 
             return ret
 
-        trade_id = data.get('id')
-        if trade_id == '':
+        shout_id = data.get('id')
+        if shout_id == '':
             raise ValidationError({'id': 'This field can not be empty.'})
-        if trade_id:
+        if shout_id:
             try:
-                uuid.UUID(trade_id)
-                if not Trade.objects.filter(id=trade_id).exists():
-                    raise ValidationError("shout with id '{}' does not exist".format(trade_id))
-                ret['id'] = trade_id
+                uuid.UUID(shout_id)
+                if not Shout.objects.filter(id=shout_id).exists():
+                    raise ValidationError("shout with id '{}' does not exist".format(shout_id))
+                ret['id'] = shout_id
             except (ValueError, TypeError):
-                raise ValidationError({'id': "'%s' is not a valid id." % trade_id})
+                raise ValidationError({'id': "'%s' is not a valid id." % shout_id})
         else:
             raise ValidationError({'id': "This field is required."})
         return ret
 
 
-class TradeDetailSerializer(TradeSerializer):
+class ShoutDetailSerializer(ShoutSerializer):
     images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout if possible, not set for shout owner.")
-    related_requests = TradeSerializer(many=True, required=False)
-    related_offers = TradeSerializer(many=True, required=False)
+    related_requests = ShoutSerializer(many=True, required=False)
+    related_offers = ShoutSerializer(many=True, required=False)
 
-    class Meta(TradeSerializer.Meta):
-        parent_fields = TradeSerializer.Meta.fields
+    class Meta(ShoutSerializer.Meta):
+        parent_fields = ShoutSerializer.Meta.fields
         fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers')
 
-    def get_reply_url(self, trade):
-        return reverse('shout-reply', kwargs={'id': trade.id}, request=self.context['request'])
+    def get_reply_url(self, shout):
+        return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
 
     def to_representation(self, instance):
-        ret = super(TradeDetailSerializer, self).to_representation(instance)
+        ret = super(ShoutDetailSerializer, self).to_representation(instance)
         if self.root.context['request'].user == instance.owner:
             del ret['reply_url']
         return ret
@@ -403,7 +403,7 @@ class SharedLocationSerializer(serializers.ModelSerializer):
 
 
 class MessageAttachmentSerializer(serializers.ModelSerializer):
-    shout = TradeSerializer(required=False)
+    shout = ShoutSerializer(required=False)
     location = SharedLocationSerializer(required=False)
 
     class Meta:
@@ -461,7 +461,7 @@ class MessageSerializer(serializers.ModelSerializer):
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
-                        elif not Trade.objects.filter(id=attachment['shout']['id']).exists():
+                        elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
                             errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
@@ -497,7 +497,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     def get_about(self, instance):
         # todo: map types
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
-            return TradeSerializer(instance.attached_object, context=self.root.context).data
+            return ShoutSerializer(instance.attached_object, context=self.root.context).data
         return None
 
     def get_unread_messages_count(self, instance):
@@ -513,7 +513,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 class AttachedObjectSerializer(serializers.Serializer):
     user = UserSerializer(source='attached_user', required=False)
     message = MessageSerializer(source='attached_message', required=False)
-    shout = TradeSerializer(source='attached_shout', required=False)
+    shout = ShoutSerializer(source='attached_shout', required=False)
 
     def to_representation(self, attached_object):
         # create reference to the object inside itself with name based on its class
@@ -525,7 +525,7 @@ class AttachedObjectSerializer(serializers.Serializer):
             setattr(attached_object, 'attached_user', attached_object.user)
         if class_name == 'Message2':
             setattr(attached_object, 'attached_message', attached_object)
-        if class_name == 'Trade':
+        if class_name == 'Shout':
             setattr(attached_object, 'attached_shout', attached_object)
 
         return super(AttachedObjectSerializer, self).to_representation(attached_object)
@@ -587,7 +587,7 @@ class ReportSerializer(serializers.ModelSerializer):
         if report_type == REPORT_TYPE_USER:
             attached_object = User.objects.get(id=validated_data['attached_object']['attached_user']['id'])
         if report_type == REPORT_TYPE_SHOUT:
-            attached_object = Trade.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
+            attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
         text = validated_data['text'] if 'text' in validated_data else None
         report = Report.objects.create(user=self.root.context['request'].user, text=text, attached_object=attached_object, type=report_type)
         return report

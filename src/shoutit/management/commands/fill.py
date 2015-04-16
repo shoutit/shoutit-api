@@ -155,7 +155,8 @@ class Command(BaseCommand):
              'restaurant-delivery', 'grocery-delivery'),
             ('Restaurants', 'restaurants', 'breakfast', 'lunch', 'dinner', 'buffet', 'fine-dining', 'american', 'arabic', 'asian', 'bakery',
              'chinese', 'continental', 'fast-food', 'French', 'indian', 'international', 'iranian', 'italian', 'lebanese', 'pakistani',
-             'pizza', 'seafood', 'steaks', 'sushi', 'thai', 'turkish', 'vegetarian')
+             'pizza', 'seafood', 'steaks', 'sushi', 'thai', 'turkish', 'vegetarian'),
+            ('Other', 'other')
         ]
 
         for item in categories:
