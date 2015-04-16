@@ -45,6 +45,31 @@ class MiscViewSet(viewsets.ViewSet):
     def reports(self, request):
         """
         Report
+
+        ###Reporting Shout
+        <pre><code>
+        {
+            "text": "the reason of this report, any text.",
+            "attached_object": {
+                "shout": {
+                    "id": ""
+                }
+            }
+        }
+        </code></pre>
+
+        ###Reporting User
+        <pre><code>
+        {
+            "text": "the reason of this report, any text.",
+            "attached_object": {
+                "user": {
+                    "id": ""
+                }
+            }
+        }
+        </code></pre>
+
         ---
         serializer: ReportSerializer
         omit_parameters:
