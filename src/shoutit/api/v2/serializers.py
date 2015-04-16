@@ -83,6 +83,7 @@ class CategorySerializer(serializers.ModelSerializer):
         # todo: check!
         return data
 
+
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='profile.image')
     api_url = serializers.SerializerMethodField()
@@ -305,6 +306,11 @@ class ShoutSerializer(serializers.ModelSerializer):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def to_internal_value(self, data):
+        # todo: hack!
+        category = data.get('category')
+        if not category:
+            data['category'] = {'name': 'Other'}
+
         ret = super(ShoutSerializer, self).to_internal_value(data)
 
         # todo: better refactoring
@@ -318,7 +324,6 @@ class ShoutSerializer(serializers.ModelSerializer):
                     ret['category'] = category
                 except Category.DoesNotExist:
                     raise ValidationError({'category': ["Category '{}' does not exist.".format(category['name'])]})
-
             return ret
 
         shout_id = data.get('id')
