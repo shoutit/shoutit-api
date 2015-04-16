@@ -715,29 +715,6 @@ def send_invitations(request):
 
 @non_cached_view(methods=['GET'],
                  validator=user_profile_validator,
-                 json_renderer=lambda request, result, *args, **kwargs: user_stream_json(request, result)
-)
-def user_stream(request, username):
-    result = ResponseResult()
-    profile = request.validation_result.data['profile']
-    page_num = int(request.GET.get('page', 1))
-    start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
-    end_index = DEFAULT_PAGE_SIZE * page_num
-
-    # result.data['shouts_count2'] = profile.Stream.Posts.filter(Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)).count()
-    # result.data['shouts2'] = stream_controller.GetStreamShouts(profile.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num)
-
-    result.data['shouts_count'] = stream_controller.get_stream_shouts_count(profile.Stream)
-    result.data['shouts'] = stream_controller.get_stream_shouts(profile.Stream, start_index, end_index)
-
-    result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
-    result.data['is_last_page'] = page_num == result.data['pages_count']
-
-    return result
-
-
-@non_cached_view(methods=['GET'],
-                 validator=user_profile_validator,
                  json_renderer=lambda request, result, *args, **kwargs: activities_stream_json(request, result))
 def activities_stream(request, username):
     result = ResponseResult()

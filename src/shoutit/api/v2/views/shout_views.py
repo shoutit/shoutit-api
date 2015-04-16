@@ -38,7 +38,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     model = Trade
     select_related = ('item__Currency', 'user__profile')
     prefetch_related = ('tags', 'item__images', 'item__videos', 'images')
-    defer = ('StreamsCode', 'streams2_ids')
+    defer = ()
     index_model = TradeIndex
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
@@ -47,7 +47,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         return Trade.objects.get_valid_trades().all()\
             .select_related('item__Currency', 'user__profile')\
             .prefetch_related('tags', 'item__images', 'item__videos', 'images')\
-            .defer('StreamsCode', 'streams2_ids')
 
     def get_index_search(self):
         return TradeIndex.search()

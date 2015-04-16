@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, include, url
-from django.views.generic import TemplateView, RedirectView
+from django.views.generic import RedirectView
 from django.contrib import admin
 from django.conf import settings
 from shoutit.tiered_views import shout_views, general_views
@@ -35,9 +35,8 @@ urlpatterns = patterns('',
                                                                                    permanent=True)),
                        # todo: remove everything below!
                        # Old website
-                       url(r'^$', 'shoutit.tiered_views.general_views.index'),
+                       url(r'^$', RedirectView.as_view(url='/v2/')),
                        url(r'^(requests|offers|experiences)/$', 'shoutit.tiered_views.general_views.index', ),
-                       url(r'^(requests|offers|experiences)/([-\w]+)/(?:([a-z0-9-]+)/)?$', 'shoutit.tiered_views.stream_views.browse'),
 
                        url(r'^tos/$', 'shoutit.tiered_views.general_views.tos'),
                        url(r'^tos/$', 'shoutit.tiered_views.general_views.tos'),
@@ -45,7 +44,6 @@ urlpatterns = patterns('',
                        url(r'^rules/$', 'shoutit.tiered_views.general_views.rules'),
                        url(r'^learnmore/$', 'shoutit.tiered_views.general_views.learnmore'),
 
-                       url(r'^xhr/shouts/stream/$', 'shoutit.tiered_views.stream_views.index_stream'),
                        url(r'^xhr/live_events/$', 'shoutit.tiered_views.general_views.live_events'),
                        url(r'^xhr/delete_event/([-\w]+)/$', 'shoutit.tiered_views.general_views.delete_event'),
 
@@ -66,13 +64,10 @@ urlpatterns = patterns('',
                        url(r'^(?:xhr/)?shout/([-\w]+)/delete/$', 'shoutit.tiered_views.shout_views.delete_shout'),
 
                        url(r'^user/(\w+)/$', 'shoutit.tiered_views.user_views.user_profile'),
-                       url(r'^xhr/user/(\w+)/stream/?$', 'shoutit.tiered_views.user_views.user_stream'),
                        url(r'^xhr/user/(\w+)/activities_stream/?$', 'shoutit.tiered_views.user_views.activities_stream'),
                        url(r'^(?:xhr/)?user/(\w+)/editProfile/$', 'shoutit.tiered_views.user_views.user_edit_profile'),
                        url(r'^(?:xhr/)?user/(\w+)/editBusinessProfile/$', 'shoutit.tiered_views.business_views.business_edit_profile'),
 
-                       url(r'^tag/([^/]+)/$', 'shoutit.tiered_views.tag_views.tag_profile'),
-                       url(r'^xhr/tag/([^/]+)/stream/?$', 'shoutit.tiered_views.tag_views.tag_stream'),
 
                        url(r'^(?:xhr/)?reply/([-\w]+)/(?:([-\w]+)/)?$', 'shoutit.tiered_views.message_views.send_message'),
                        url(r'^xhr/delete_conversation/([-\w]+)/$', 'shoutit.tiered_views.message_views.delete_conversation'),
@@ -98,7 +93,6 @@ urlpatterns = patterns('',
                        url(r'^xhr/tag/([^/]+)/listeners/$', 'shoutit.tiered_views.tag_views.tag_stats'),
                        url(r'^xhr/top_tags/$', 'shoutit.tiered_views.tag_views.top_tags'),
 
-                       url(r'^xhr/hovercard/$', 'shoutit.tiered_views.general_views.hovercard'),
                        url(r'^xhr/shout/nearby/$', 'shoutit.tiered_views.shout_views.nearby_shouts'),
                        url(r'^xhr/loadShout/([-\w]+)/$', 'shoutit.tiered_views.shout_views.load_shout'),
                        url(r'^xhr/update_location/$', 'shoutit.tiered_views.user_views.update_user_location'),

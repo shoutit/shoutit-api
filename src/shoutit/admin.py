@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
 
-from shoutit.models import User, Shout, Profile, ShoutWrap, StoredImage, Trade, Item, Experience, Stream, \
-    FollowShip, Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
+from shoutit.models import User, Shout, Profile, StoredImage, Trade, Item, Experience, \
+    Tag, Conversation, Message, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream2, \
     Listen, UserPermission, Permission, Conversation2, Message2, Message2Delete, Message2Read, Conversation2Delete, FeaturedTag
 
@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 # Shout
 class ShoutAdmin(admin.ModelAdmin):
     list_display = ('id', 'date_published', 'user', 'text', 'country', 'city')
-    readonly_fields = ('user', 'Streams', 'tags')
+    readonly_fields = ('user', 'tags')
 
 admin.site.register(Shout, ShoutAdmin)
 
@@ -22,9 +22,9 @@ admin.site.register(Shout, ShoutAdmin)
 # Trade
 class TradeAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'base_date_published', 'owner', 'owner_profile', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
+        'id', 'owner', 'owner_profile', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
     list_filter = ('type', 'is_sss', 'is_disabled')
-    readonly_fields = ('user', 'Streams', 'tags', 'related_stream', 'recommended_stream', 'StreamsCode', 'item')
+    readonly_fields = ('user', 'tags', 'item')
 
     def owner(self, obj):
         return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
@@ -57,7 +57,7 @@ admin.site.register(Item)
 class ExperienceAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'AboutBusiness', 'State', 'text')
     search_fields = ['AboutBusiness__name', 'text']
-    readonly_fields = ('Streams', 'AboutBusiness')
+    readonly_fields = ('AboutBusiness',)
 
 admin.site.register(Experience, ExperienceAdmin)
 
@@ -89,9 +89,9 @@ admin.site.register(User, CustomUserAdmin)
 
 # Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'country', 'city', 'Sex', 'image', 'Stream')
+    list_display = ('id', 'name', 'user', 'country', 'city', 'Sex', 'image')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
-    readonly_fields = ('user', 'Stream', 'LastToken')
+    readonly_fields = ('user', 'LastToken')
     list_filter = ('country', 'city', 'Sex')
 
 admin.site.register(Profile, ProfileAdmin)
@@ -113,9 +113,9 @@ admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
 
 # Business
 class BusinessProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'country', 'city', 'Category', 'Confirmed', 'Stream')
+    list_display = ('id', 'name', 'user', 'country', 'city', 'Category', 'Confirmed')
     search_fields = ['name', 'user__email', 'Website', 'Mobile']
-    readonly_fields = ('user', 'Stream', 'LastToken')
+    readonly_fields = ('user', 'LastToken')
 
 admin.site.register(Business, BusinessProfileAdmin)
 
@@ -165,19 +165,10 @@ class BusinessCategoryAdmin(admin.ModelAdmin):
 admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 
 
-# FollowShip
-class FollowShipAdmin(admin.ModelAdmin):
-    list_display = ('id', 'follower', 'stream', 'date_followed', 'state')
-    search_fields = ['follower__user__username', 'stream__id']
-    readonly_fields = ('follower', 'stream',)
-
-admin.site.register(FollowShip, FollowShipAdmin)
-
-
 # Tag
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'Stream', 'stream2')
+    list_display = ('name', 'stream2')
     search_fields = ('name',)
 
 
@@ -270,10 +261,8 @@ class ReportAdmin(admin.ModelAdmin):
 
 admin.site.register(Report)
 admin.site.register(StoredFile)
-admin.site.register(ShoutWrap)
 admin.site.register(StoredImage)
 admin.site.register(Video)
-admin.site.register(Stream)
 admin.site.register(Stream2)
 admin.site.register(Listen)
 admin.site.register(Notification)

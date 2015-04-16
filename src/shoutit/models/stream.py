@@ -1,76 +1,15 @@
 from __future__ import unicode_literals
 from django.db import models, IntegrityError
 from django.conf import settings
-
 from common.constants import StreamType2
-from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_BUSINESS, STREAM_TYPE_TAG, STREAM_TYPE_USER, STREAM_TYPE_RELATED
 import shoutit
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
 
-
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
-
-
-class Stream(UUIDModel):
-    type = models.IntegerField(default=0, db_index=True)
-
-    def __str__(self):
-        return unicode(self.pk) + ' ' + self.GetTypeText() + ' (' + unicode(self.GetOwner()) + ')'
-
-    def GetOwner(self):
-        owner = None
-        try:
-            if self.type == STREAM_TYPE_TAG:
-                owner = self.tag
-            elif self.type == STREAM_TYPE_USER:
-                owner = self.user
-            elif self.type == STREAM_TYPE_BUSINESS:
-                owner = self.business
-            elif self.type == STREAM_TYPE_RECOMMENDED:
-                owner = self.init_shout_recommended
-            elif self.type == STREAM_TYPE_RELATED:
-                owner = self.init_shout_related
-        except AttributeError, e:
-            print e.message
-            return None
-        return owner
-
-    def GetTypeText(self):
-        stream_type = u'None'
-        if self.type == STREAM_TYPE_TAG:
-            stream_type = unicode(STREAM_TYPE_TAG)
-        elif self.type == STREAM_TYPE_USER:
-            stream_type = unicode(STREAM_TYPE_USER)
-        elif self.type == STREAM_TYPE_BUSINESS:
-            stream_type = unicode(STREAM_TYPE_BUSINESS)
-        elif self.type == STREAM_TYPE_RECOMMENDED:
-            stream_type = unicode(STREAM_TYPE_RECOMMENDED)
-        elif self.type == STREAM_TYPE_RELATED:
-            stream_type = unicode(STREAM_TYPE_RELATED)
-        return stream_type
-
-    def PublishShout(self, shout):
-        self.Posts.add(shout)
-        self.save()
-
-    def UnPublishShout(self, shout):
-        self.Posts.remove(shout)
-        self.save()
-
-
-# todo: remove in favor of Listen
-class FollowShip(UUIDModel):
-    follower = models.ForeignKey('shoutit.Profile')
-    stream = models.ForeignKey('shoutit.Stream')
-    date_followed = models.DateTimeField(auto_now_add=True)
-    state = models.IntegerField(default=0, db_index=True)
-
-    def __str__(self):
-        return unicode(self.pk) + ": " + unicode(self.follower) + " @ " + unicode(self.stream)
-
-# ######## experiment new stream ######### #
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+
+
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Stream2(UUIDModel, AttachedObjectMixin):
@@ -95,7 +34,6 @@ class Stream2(UUIDModel, AttachedObjectMixin):
         assert isinstance(post, shoutit.models.Post)
         try:
             self.posts.add(post)
-            post.refresh_streams2_ids()
         except IntegrityError:
             # the post exists already in this stream2
             pass
@@ -103,7 +41,6 @@ class Stream2(UUIDModel, AttachedObjectMixin):
     def remove_post(self, post):
         assert isinstance(post, shoutit.models.Post)
         self.posts.remove(post)
-        post.refresh_streams2_ids()
 
     @property
     def owner(self):

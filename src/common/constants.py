@@ -189,16 +189,6 @@ USER_TYPE_INDIVIDUAL = UserTypeFlag('Individual')
 USER_TYPE_BUSINESS = UserTypeFlag('Business')
 
 
-class StreamType(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-STREAM_TYPE_USER = StreamType('User')
-STREAM_TYPE_TAG = StreamType('Tag')
-STREAM_TYPE_RELATED = StreamType('Related')
-STREAM_TYPE_RECOMMENDED = StreamType('Recommended')
-STREAM_TYPE_BUSINESS = StreamType('Business')
-
-
 class StreamType2(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 

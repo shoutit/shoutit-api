@@ -5,12 +5,11 @@ from django.db import connection
 from django.conf import settings
 
 
-# todo: remove and use data migrations instead
 def custom_sql(sender, **kwargs):
     if sender.name == 'shoutit':
         print "Adding Shoutit custom SQL functions (deploy.sql) ..."
         cursor = connection.cursor()
-        cursor.execute(open(os.path.join(settings.DJANGO_DIR, 'deploy_scripts', 'deploy.sql'), 'r').read())
+        cursor.execute(open(os.path.join(settings.DJANGO_DIR, 'sql_scripts', 'scripts.sql'), 'r').read())
 
 
 class ShoutitConfig(AppConfig):
@@ -19,4 +18,6 @@ class ShoutitConfig(AppConfig):
     verbose_name = "Shoutit"
 
     def ready(self):
-        post_migrate.connect(custom_sql, sender=self)
+        # scripts.sql is empty finally! :)
+        # post_migrate.connect(custom_sql, sender=self)
+        pass

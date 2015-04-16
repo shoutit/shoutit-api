@@ -7,9 +7,7 @@ from common.constants import *
 def PostExperience(user, state, text, businessProfile):
     exp = Experience(State=state, text=text, AboutBusiness=businessProfile, user=user, type=int(POST_TYPE_EXPERIENCE))
     exp.save()
-    businessProfile.Stream.PublishShout(exp)
     businessProfile.stream2.add_post(exp)
-    user.profile.Stream.PublishShout(exp)
     user.profile.stream2.add_post(exp)
     event_controller.register_event(user, EVENT_TYPE_EXPERIENCE, exp)
     notifications_controller.notify_business_of_exp_posted(businessProfile.user, exp)
@@ -93,7 +91,7 @@ def GetBusinessThumbsCount(business):
 
 def GetExperiencesCount(profile):
     if profile and isinstance(profile, Profile):
-        return profile.Stream.Posts.filter(type=POST_TYPE_EXPERIENCE).count()
+        return profile.stream2.posts.filter(type=POST_TYPE_EXPERIENCE).count()
     elif profile and isinstance(profile, Business):
         return Post.objects.filter(type=POST_TYPE_EXPERIENCE, experience__AboutBusiness=profile).count()
 

@@ -13,10 +13,9 @@ logger = logging.getLogger('shoutit.debug')
 
 from shoutit.controllers.user_controller import get_profile
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
-from common.constants import STREAM_TYPE_RECOMMENDED, STREAM_TYPE_RELATED
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
-from shoutit.models import Shout, StoredImage, Stream, ShoutWrap, Trade, Post, PredefinedCity
-from shoutit.controllers import stream_controller, event_controller, email_controller, item_controller
+from shoutit.models import Shout, StoredImage, Trade, Post, PredefinedCity
+from shoutit.controllers import event_controller, email_controller, item_controller
 from shoutit.utils import to_seo_friendly
 
 
@@ -120,56 +119,10 @@ def get_shouts_and_points_in_view_port(down_left_lat, down_left_lng, up_right_la
         return shouts, [[shout['latitude'], shout['longitude']] for shout in shouts]
 
 
-def GetStreamAffectedByShout(shout):
-    if isinstance(shout, int):
-        shout = Shout.objects.get(pk=shout)
-    if shout:
-        return shout.Streams.all()
-    return []
-
-
-def save_relocated_shouts(trade, stream_type):
-    return
-    if not trade or stream_type not in [STREAM_TYPE_RELATED, STREAM_TYPE_RECOMMENDED]:
-        return
-
-    posts_type = POST_TYPE_REQUEST
-    if stream_type == STREAM_TYPE_RECOMMENDED:
-        if trade.type == POST_TYPE_REQUEST:
-            posts_type = POST_TYPE_OFFER
-        elif trade.type == POST_TYPE_OFFER:
-            posts_type = POST_TYPE_REQUEST
-    elif stream_type == STREAM_TYPE_RELATED:
-        posts_type = trade.type
-
-    shouts = stream_controller.get_shout_recommended_shout_stream(trade, posts_type, 0, 10)
-    stream = Stream(type=stream_type)
-    stream.save()
-    if stream_type == STREAM_TYPE_RECOMMENDED:
-        old_recommended = trade.recommended_stream
-        trade.recommended_stream = stream
-        trade.save()
-        if old_recommended:
-            old_recommended.delete()
-    elif stream_type == STREAM_TYPE_RELATED:
-        old_related = trade.related_stream
-        trade.related_stream = stream
-        trade.save()
-        if old_related:
-            old_related.delete()
-    for shout in shouts:
-        shout_wrap = ShoutWrap(shout=shout, Stream=stream, rank=shout.rank)
-        shout_wrap.save()
-        stream_controller.PublishShoutToShout(trade, shout)
-
-    trade.save()
-
-
 # todo: handle exception on each step and in case of errors, rollback!
 def post_request(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
-    stream = shouter_profile.Stream
     stream2 = shouter_profile.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
@@ -193,7 +146,6 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
         trade.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
         trade.save()
 
-    stream.PublishShout(trade)
     stream2.add_post(trade)
 
     # if passed as [{'name': 'tag-x'},...]
@@ -204,19 +156,12 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
     tags = list(OrderedDict.fromkeys(tags))
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
+        # todo: optimize
         try:
             trade.tags.add(tag)
-            tag.Stream.PublishShout(trade)
             tag.stream2.add_post(trade)
         except IntegrityError:
             pass
-
-    if trade:
-        trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
-        trade.save()
-
-    save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
-    save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_REQUEST, trade)
 
@@ -228,7 +173,6 @@ def post_request(name, text, price, latitude, longitude, tags, shouter, country,
 def post_offer(name, text, price, latitude, longitude, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
     shouter_profile = get_profile(shouter.username)
-    stream = shouter_profile.Stream
     stream2 = shouter_profile.stream2
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
@@ -249,7 +193,6 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     if not predefined_city:
         PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
 
-    stream.PublishShout(trade)
     stream2.add_post(trade)
 
     # if passed as [{'name': 'tag-x'},...]
@@ -260,19 +203,12 @@ def post_offer(name, text, price, latitude, longitude, tags, shouter, country, c
     tags = list(OrderedDict.fromkeys(tags))
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
+        # todo: optimize
         try:
             trade.tags.add(tag)
-            tag.Stream.PublishShout(trade)
             tag.stream2.add_post(trade)
         except IntegrityError:
             pass
-
-    if trade:
-        trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
-        trade.save()
-
-    save_relocated_shouts(trade, STREAM_TYPE_RECOMMENDED)
-    save_relocated_shouts(trade, STREAM_TYPE_RELATED)
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, trade)
 
@@ -342,16 +278,13 @@ def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitu
                 trade.user = shouter
                 trade.tags.clear()
                 for tag in tag_controller.get_or_create_tags(tags, shouter):
+                    # todo: optimize
                     try:
                         trade.tags.add(tag)
-                        tag.Stream.PublishShout(trade)
                         tag.stream2.add_post(trade)
                     except IntegrityError:
                         pass
-            trade.StreamsCode = ','.join([str(f.pk) for f in trade.Streams.all()])
-            trade.save()
 
-            save_relocated_shouts(trade, STREAM_TYPE_RELATED)
             return trade
     return None
 

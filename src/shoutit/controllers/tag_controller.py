@@ -2,9 +2,8 @@ import difflib
 
 from django.db.models.aggregates import Count
 
-from common.constants import STREAM_TYPE_TAG
 from common.utils import process_tag_name
-from shoutit.models import Tag, Stream
+from shoutit.models import Tag
 
 
 def get_tag(name):
@@ -60,13 +59,7 @@ def get_or_create_tag(name, creator=None):
     name = process_tag_name(name)
     if not name or not isinstance(name, basestring):
         return None
-    tag, created = Tag.objects.get_or_create(name=name)
-    if created:
-        stream = Stream(type=STREAM_TYPE_TAG)
-        stream.save()
-        tag.Stream = stream
-        tag.Creator = creator
-        tag.save()
+    tag, created = Tag.objects.get_or_create(name=name, Creator=creator)
     return tag
 
 

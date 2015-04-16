@@ -52,11 +52,6 @@ class Profile(AbstractProfile):
     Bio = models.TextField(null=True, blank=True, max_length=512, default='New Shouter!')
     Mobile = models.CharField(unique=True, null=True, blank=True, max_length=20)
 
-    # todo: [listen] remove
-    Following = models.ManyToManyField('shoutit.Stream', through='shoutit.FollowShip')
-    Interests = models.ManyToManyField('shoutit.Tag', related_name='Followers')
-    Stream = models.OneToOneField('shoutit.Stream', related_name='user', db_index=True)
-
     # isBlocked = models.BooleanField(default=False)
 
     birthday = models.DateField(null=True, blank=True)

@@ -98,62 +98,6 @@ def top_tags(request):
     return result
 
 
-@non_cached_view(methods=['GET'],
-                 json_renderer=lambda request, result, tag_name, *args: user_stream_json(request, result),
-                 validator=lambda request, tag_name, *args, **kwargs: object_exists_validator(tag_controller.get_tag, False,
-                                                                                              _('Tag %(tag_name)s does not exist.') % {
-                                                                                                  'tag_name': tag_name}, tag_name))
-def tag_stream(request, tag_name):
-    result = ResponseResult()
-    tag = request.validation_result.data
-
-    page_num = int(request.GET.get('page', 1))
-    start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
-    end_index = DEFAULT_PAGE_SIZE * page_num
-
-    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(city=city)
-    user_country = pre_city.country
-    user_city = pre_city.city
-
-    result.data['shouts_count'] = stream_controller.get_stream_shouts_count(tag.Stream)
-    result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream, start_index, end_index, country=user_country, city=user_city)
-
-    result.data['pages_count'] = int(math.ceil(result.data['shouts_count'] / float(DEFAULT_PAGE_SIZE)))
-
-    result.data['is_last_page'] = page_num >= result.data['pages_count']
-    result.data['browse_in'] = user_city
-    return result
-
-
-@non_cached_view(methods=['GET'],
-                 html_renderer=lambda request, result, tag_name: object_page_html(request, result, 'tag_profile.html', tag_name),
-
-                 validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,
-                                                                             _('Tag %(tag_name)s does not exist.') % {'tag_name': tag_name},
-                                                                             tag_name))
-def tag_profile(request, tag_name):
-    result = ResponseResult()
-    tag = request.validation_result.data
-    result.data['tag'] = tag
-
-    city = request.user.profile.city if request.user.is_authenticated() else DEFAULT_LOCATION['city']
-    pre_city = PredefinedCity.objects.get(city=city)
-    user_country = pre_city.country
-    user_city = pre_city.city
-
-    # result.data['shouts2'] = stream_controller.GetStreamShouts(tag.Stream, DEFAULT_PAGE_SIZE * (page_num - 1), DEFAULT_PAGE_SIZE * page_num, False, user_country, user_city)
-    # result.data['shouts_count2'] = len(result.data['shouts2'])
-
-    result.data['shouts_count'] = stream_controller.get_stream_shouts_count(tag.Stream)
-    result.data['shouts'] = stream_controller.get_stream_shouts(tag.Stream)
-
-    result.data['listeners_count'] = stream_controller.get_stream_listeners(tag.stream2, count_only=True)
-    if request.user.is_authenticated():
-        result.data['is_listening'] = user_controller.is_listening(request.user, tag.stream2)
-
-    return result
-
 
 @non_cached_view(methods=['GET'],
                  validator=lambda request, tag_name: object_exists_validator(tag_controller.get_tag, False,

@@ -15,7 +15,6 @@ def register_event(user, event_type, attached_object=None):
     event.save()
 
     profile = user.abstract_profile
-    profile.Stream.PublishShout(event)
     profile.stream2.add_post(event)
 
 

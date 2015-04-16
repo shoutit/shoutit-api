@@ -23,7 +23,6 @@ class Tag(UUIDModel, Stream2Mixin, APIModelMixin):
     DateCreated = models.DateTimeField(auto_now_add=True)
     Parent = models.ForeignKey('shoutit.Tag', related_name='ChildTags', null=True, blank=True, db_index=True)
 
-    Stream = models.OneToOneField('shoutit.Stream', related_name='tag', null=True, blank=True, db_index=True)
     Definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')
 
     _stream2 = GenericRelation('shoutit.Stream2', related_query_name='tag')

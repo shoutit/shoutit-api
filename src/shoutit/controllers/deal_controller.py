@@ -37,15 +37,12 @@ def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min
     deal.ValidTo = valid_to
     deal.save()
 
-    stream = business_profile.Stream
     stream2 = business_profile.stream2
 
-    stream.PublishShout(deal)
     stream2.add_post(deal)
 
     for tag in shoutit.controllers.tag_controller.get_or_create_tags(tags, deal.user):
         deal.tags.add(tag)
-        tag.Stream.PublishShout(deal)
         tag.stream2.add_post(deal)
 
     event_controller.register_event(business_profile.user, EVENT_TYPE_POST_DEAL, deal)

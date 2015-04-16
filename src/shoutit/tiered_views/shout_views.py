@@ -12,7 +12,6 @@ from django.views.decorators.http import require_POST
 from common.constants import LOCATION_ATTRIBUTES, POST_TYPE_EXPERIENCE
 from shoutit.models import Shout, User, DBCLConversation, CLUser, DBUser
 from shoutit.controllers.message_controller import get_shout_conversations, ReadConversation, send_message
-from shoutit.controllers.stream_controller import get_ranked_stream_shouts
 from shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions, take_permission_from_user
 from shoutit.controllers import shout_controller
 from shoutit.forms import ShoutForm, ReportForm, MessageForm
@@ -283,14 +282,6 @@ def shout_view(request, shout_id):
     result.data['shout'] = shout
     result.data['owner'] = (shout.user == request.user or request.user.is_staff)
 
-    if request.user == shout.user:
-        shouts = get_ranked_stream_shouts(shout.recommended_stream)
-        result.data['shouts_type'] = 'Recommended'
-    else:
-        shouts = get_ranked_stream_shouts(shout.related_stream)
-        result.data['shouts_type'] = 'Related'
-
-    result.data['shouts'] = shouts
 
     if shout.type == POST_TYPE_EXPERIENCE:
         result.data['title'] = shout.user.username + "'s experience with " + shout.AboutStore.name

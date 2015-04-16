@@ -37,9 +37,7 @@ class Command(BaseCommand):
         try:
             p1 = u1.profile
         except AttributeError:
-            s1 = Stream(type=0)
-            s1.save()
-            p1 = Profile(user=u1, Stream=s1)
+            p1 = Profile(user=u1)
 
         p1.Bio = 'Shoutit Master!'
         p1.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
@@ -68,9 +66,7 @@ class Command(BaseCommand):
         try:
             p2 = u2.profile
         except AttributeError:
-            s2 = Stream(type=0)
-            s2.save()
-            p2 = Profile(user=u2, Stream=s2)
+            p2 = Profile(user=u2)
 
         p2.Bio = 'Shoutit Master 2!'
         p2.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'

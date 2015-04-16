@@ -58,39 +58,6 @@ def learnmore(request):
     return result
 
 
-@non_cached_view(methods=['GET'], json_renderer=json_data_renderer)
-def hovercard(request):
-    type = request.REQUEST['type'] if 'type' in request.REQUEST else None
-    name = request.REQUEST['name'] if 'name' in request.REQUEST else None
-    data = None
-    if name is not None:
-        if type == 'user':
-            data = user_controller.get_profile(name)
-            data.name = data.username
-            if request.user.is_authenticated() and request.user.profile == data:
-                data.isFollowing = 0
-            elif request.user.is_authenticated() and data in request.user.profile.Following.all():
-                data.isFollowing = 1
-            else:
-                data.isFollowing = -1
-        elif type == 'tag':
-            data = tag_controller.get_tag(name)
-            if request.user.is_authenticated() and data in request.user.profile.Interests.all():
-                data.isFollowing = 1
-            else:
-                data.isFollowing = -1
-
-    if data:
-        data = {'type': type, 'name': data.name, 'id': data.pk, 'image': str(data.image),
-                'listeners': data.Stream.userprofile_set.count(), 'shouts': data.Stream.shouts.count(),
-                'isFollowing': data.isFollowing}
-    else:
-        data = {}
-    result = ResponseResult()
-    result.data = data
-    return result
-
-
 def modal(request, template=None):
     if not template:
         template = ''

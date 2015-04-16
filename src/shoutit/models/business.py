@@ -52,7 +52,6 @@ class Business(UUIDModel, Stream2Mixin):
     longitude = models.FloatField(default=0.0)
     address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
-    Stream = models.OneToOneField('shoutit.Stream', related_name='business', null=True, blank=True, db_index=True)
     LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     Confirmed = models.BooleanField(default=False)

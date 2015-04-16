@@ -38,8 +38,7 @@ class Command(BaseCommand):
                 try:
                     user.profile
                 except AttributeError:
-                    stream = Stream.objects.create(type=0)
-                    profile = Profile(user=user, Stream=stream)
+                    profile = Profile(user=user)
                     profile.image = 'https://s3-eu-west-1.amazonaws.com/shoutit-user-image-original/9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg'
                     city = random.choice(cities)
                     profile.city = city.city

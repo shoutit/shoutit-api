@@ -7,7 +7,7 @@ from django.db.models.aggregates import Min
 from django.db.models.query_utils import Q
 from django.conf import settings
 
-from shoutit.models import User, Event, Profile, ConfirmToken, Stream, LinkedFacebookAccount, FollowShip, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
+from shoutit.models import User, Event, Profile, ConfirmToken, LinkedFacebookAccount, UserPermission, Business, PredefinedCity, LinkedGoogleAccount, \
     Listen, CLUser, DBUser
 from common.constants import *
 from shoutit.utils import to_seo_friendly, generate_confirm_token, generate_username, generate_password
@@ -188,10 +188,7 @@ def SignUpUser(request, fname, lname, password, email=None, mobile=None, send_ac
     django_user.is_active = False
     django_user.save()
 
-    stream = Stream(type=STREAM_TYPE_USER)
-    stream.save()
-
-    up = Profile(user=django_user, Stream=stream, Mobile=mobile)
+    up = Profile(user=django_user, Mobile=mobile)
 
     up.image = '/static/img/_user_male.png'
     up.save()
@@ -225,10 +222,8 @@ def SignUpSSS(request, mobile, location, country, city):
     django_user = User.objects.create_user(username, "", password)
     django_user.is_active = False
     django_user.save()
-    stream = Stream(type=STREAM_TYPE_USER)
-    stream.save()
 
-    up = Profile(user=django_user, Stream=stream, Mobile=mobile, isSSS=True)
+    up = Profile(user=django_user, Mobile=mobile, isSSS=True)
     up.save()
 
     up.latitude = location[0]
@@ -263,10 +258,8 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
         dbcl_user = DBUser(user=django_user, db_link=db_link)
     dbcl_user.save()
 
-    stream = Stream(type=STREAM_TYPE_USER)
-    stream.save()
     up = Profile(
-        user=django_user, Stream=stream, isSSS=True,
+        user=django_user, isSSS=True,
         latitude=lat, longitude=lng, city=city, country=country,
         image='/static/img/_user_male.png'
     )
@@ -346,9 +339,7 @@ def SignUpUserFromAPI(request, first_name, last_name, username, email, password,
     django_user.last_name = last_name
     django_user.is_active = False
     django_user.save()
-    stream = Stream(type=STREAM_TYPE_USER)
-    stream.save()
-    up = Profile(user=django_user, Stream=stream, Mobile=mobile)
+    up = Profile(user=django_user, Mobile=mobile)
     up.birthday = birthday
     up.Sex = sex
     if not sex:
@@ -497,29 +488,6 @@ def SignOut(request):
     logout(request)
 
 
-def UserFollowing(username, type='all', period='recent'):
-    user = get_profile(username)
-    result = {'users': [], 'tags': []}
-    if period == 'recent':
-        limit = 5
-    elif period == 'all':
-        limit = None
-    else:
-        limit = 0
-
-    if type == 'users' or type == 'all':
-        users = [f[0] for f in
-                 FollowShip.objects.filter(follower__pk=user.pk, stream__type=STREAM_TYPE_USER).values_list('stream__user').order_by(
-                     '-date_followed')[:limit]]
-        result['users'] = [u for u in Profile.objects.all().filter(pk__in=users)]
-
-    if type == 'tags' or type == 'all':
-        result['tags'] = [f[0] for f in FollowShip.objects.filter(follower__pk=user.pk, stream__type=STREAM_TYPE_TAG).values_list(
-            'stream__tag__name').order_by('-date_followed')[:limit]]
-
-    return result
-
-
 def is_listening(user, stream):
     try:
         Listen.objects.get(listener=user, stream=stream)
@@ -644,7 +612,7 @@ def get_unread_notifications_count(profile):
 
 
 def activities_stream(profile, start_index=None, end_index=None):
-    stream_posts_query_set = profile.Stream.Posts.get_valid_posts([POST_TYPE_EVENT]).filter(
+    stream_posts_query_set = profile.stream2.posts.get_valid_posts([POST_TYPE_EVENT]).filter(
         ~Q(type=POST_TYPE_EVENT) |
         (Q(type=POST_TYPE_EVENT)
          & Q(event__is_disabled=False)
