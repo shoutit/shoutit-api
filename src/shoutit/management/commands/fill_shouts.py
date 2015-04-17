@@ -59,17 +59,19 @@ class Command(BaseCommand):
             category = random.choice(categories)
             city = random.choice(cities)
             tags = random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
+            images = [
+                "http://www.spacetelescope.org/static/archives/images/screen/opo0928a.jpg",
+                "http://www.spacetelescope.org/static/archives/images/screen/heic1501a.jpg",
+                "http://www.spacetelescope.org/static/archives/images/screen/heic0702a.jpg"
+            ]
+            random.shuffle(images)
             shout_data = {
                 "type": type,
                 "title": "Test {0} {1:06d}_{2:0.0f} by {3}".format(type, i, time.time(), user.username),
                 "text": "This is a test {} from user {}.".format(type, user.username),
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
-                "images": random.shuffle([
-                    "http://www.spacetelescope.org/static/archives/images/screen/opo0928a.jpg",
-                    "http://www.spacetelescope.org/static/archives/images/screen/heic1501a.jpg",
-                    "http://www.spacetelescope.org/static/archives/images/screen/heic0702a.jpg"
-                ]),
+                "images": images,
                 "videos": [
                     {
                         "url": "https://www.youtube.com/watch?v=ib-lvhJnV0Q",
