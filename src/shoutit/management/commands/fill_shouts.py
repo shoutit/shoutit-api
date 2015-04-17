@@ -60,12 +60,11 @@ class Command(BaseCommand):
             city = random.choice(cities)
             tags = random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
             images = [
-                "http://www.spacetelescope.org/static/archives/images/screen/opo0928a.jpg",
-                "http://www.spacetelescope.org/static/archives/images/screen/heic1501a.jpg",
-                "http://www.spacetelescope.org/static/archives/images/screen/heic0702a.jpg"
+                "https://s3-eu-west-1.amazonaws.com/shoutit-shout-image-original/opo0928a.jpg",
+                "https://s3-eu-west-1.amazonaws.com/shoutit-shout-image-original/heic1501a.jpg",
+                "https://s3-eu-west-1.amazonaws.com/shoutit-shout-image-original/heic0702a.jpg"
             ]
             random.shuffle(images)
-
             videos = [
                 {
                     "url": "https://www.youtube.com/watch?v=ib-lvhJnV0Q",
@@ -81,8 +80,8 @@ class Command(BaseCommand):
                 "text": "This is a test {} from user {}.".format(type, user.username),
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
-                # "images": images,
-                # "videos": [random.choice(videos)],
+                "images": images,
+                "videos": [random.choice(videos)],
                 "category": {"name": category.name},
                 "tags": [{'name': t} for t in tags],
                 "location": {
