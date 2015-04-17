@@ -98,6 +98,11 @@ class UserSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         ret = super(UserSerializer, self).to_internal_value(data)
 
+        # if creating new shout no need to validate the id, which will not be passed anyway
+        if not self.parent:
+            return ret
+
+        # todo: refactor
         user_id = data.get('id')
         if user_id == '':
             raise ValidationError({'id': 'This field can not be empty.'})
