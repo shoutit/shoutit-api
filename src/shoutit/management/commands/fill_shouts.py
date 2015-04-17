@@ -65,22 +65,24 @@ class Command(BaseCommand):
                 "http://www.spacetelescope.org/static/archives/images/screen/heic0702a.jpg"
             ]
             random.shuffle(images)
+
+            videos = [
+                {
+                    "url": "https://www.youtube.com/watch?v=ib-lvhJnV0Q",
+                    "thumbnail_url": "https://i.ytimg.com/vi/ib-lvhJnV0Q/hqdefault.jpg",
+                    "provider": "youtube",
+                    "id_on_provider": "ib-lvhJnV0Q",
+                    "duration": 240
+                }
+            ]
             shout_data = {
                 "type": type,
                 "title": "Test {0} {1:06d}_{2:0.0f} by {3}".format(type, i, time.time(), user.username),
                 "text": "This is a test {} from user {}.".format(type, user.username),
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
-                "images": images,
-                "videos": [
-                    {
-                        "url": "https://www.youtube.com/watch?v=ib-lvhJnV0Q",
-                        "thumbnail_url": "https://i.ytimg.com/vi/ib-lvhJnV0Q/hqdefault.jpg",
-                        "provider": "youtube",
-                        "id_on_provider": "ib-lvhJnV0Q",
-                        "duration": 240
-                    }
-                ],
+                # "images": images,
+                # "videos": [random.choice(videos)],
                 "category": {"name": category.name},
                 "tags": [{'name': t} for t in tags],
                 "location": {
