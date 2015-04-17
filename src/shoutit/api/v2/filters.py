@@ -67,11 +67,11 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                 index_queryset = index_queryset.query('match', tags=tag_name)
 
         country = data.get('country')
-        if country:
+        if country and country != 'all':
             index_queryset = index_queryset.query('match', country=country)
 
         city = data.get('city')
-        if city:
+        if city and city != 'all':
             index_queryset = index_queryset.query('match', city=city)
 
         category = data.get('category')
@@ -79,13 +79,15 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             exists = Category.objects.filter(name=category).exists()
             if not exists:
                 raise ValidationError({'category': "Category '%s' does not exist" % category})
-            index_queryset = index_queryset.query('match', category=category)
+            if category != 'all':
+                index_queryset = index_queryset.query('match', category=category)
 
         shout_type = data.get('shout_type')
         if shout_type:
             if shout_type not in ['all', 'offer', 'request']:
                 raise ValidationError({'shout_type': "should be `all`, `request` or `offer`."})
-            index_queryset = index_queryset.query('match', type=shout_type)
+            if shout_type != 'all':
+                index_queryset = index_queryset.query('match', type=shout_type)
 
         min_price = data.get('min_price')
         if min_price:
@@ -95,12 +97,27 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if max_price:
             index_queryset = index_queryset.filter('range', **{'price': {'lte': max_price}})
 
-        return index_queryset
+        # down_left_lat = django_filters.NumberFilter(name='latitude', lookup_type='gte')
+        down_left_lat = data.get('down_left_lat')
+        if down_left_lat:
+            index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
 
-    # down_left_lat = django_filters.NumberFilter(name='latitude', lookup_type='gte')
-    # down_left_lng = django_filters.NumberFilter(name='longitude', lookup_type='gte')
-    # up_right_lat = django_filters.NumberFilter(name='latitude', lookup_type='lte')
-    # up_right_lng = django_filters.NumberFilter(name='longitude', lookup_type='lte')
+        # down_left_lng = django_filters.NumberFilter(name='longitude', lookup_type='gte')
+        down_left_lng = data.get('down_left_lng')
+        if down_left_lng:
+            index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
+
+        # up_right_lat = django_filters.NumberFilter(name='latitude', lookup_type='lte')
+        up_right_lat = data.get('up_right_lat')
+        if up_right_lat:
+            index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
+
+        # up_right_lng = django_filters.NumberFilter(name='longitude', lookup_type='lte')
+        up_right_lng = data.get('up_right_lng')
+        if up_right_lng:
+            index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
+
+        return index_queryset
 
 
 class TagFilter(django_filters.FilterSet):
