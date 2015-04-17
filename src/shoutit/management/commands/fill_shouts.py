@@ -65,8 +65,20 @@ class Command(BaseCommand):
                 "text": "This is a test {} from user {}.".format(type, user.username),
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
-                "images": [],
-                "videos": [],
+                "images": random.shuffle([
+                    "http://www.spacetelescope.org/static/archives/images/screen/opo0928a.jpg",
+                    "http://www.spacetelescope.org/static/archives/images/screen/heic1501a.jpg",
+                    "http://www.spacetelescope.org/static/archives/images/screen/heic0702a.jpg"
+                ]),
+                "videos": [
+                    {
+                        "url": "https://www.youtube.com/watch?v=ib-lvhJnV0Q",
+                        "thumbnail_url": "https://i.ytimg.com/vi/ib-lvhJnV0Q/hqdefault.jpg",
+                        "provider": "youtube",
+                        "id_on_provider": "ib-lvhJnV0Q",
+                        "duration": 240
+                    }
+                ],
                 "category": {"name": category.name},
                 "tags": [{'name': t} for t in tags],
                 "location": {
