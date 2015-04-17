@@ -3,7 +3,7 @@ from shoutit.models import Item, Video, Currency
 
 def create_item(name, price, currency, description, images=None, videos=None):
     currency = get_currency(currency)
-    item = Item(name=name, price=price, Currency=currency, description=description, images=images)
+    item = Item(name=name, price=price, currency=currency, description=description, images=images)
     item.save()
 
     if videos:

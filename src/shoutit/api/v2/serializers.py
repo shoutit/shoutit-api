@@ -379,7 +379,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                 country=location_data['country'],
                                                 city=location_data['city'],
                                                 address=location_data.get('address', ""),
-                                                currency=validated_data['item']['Currency']['code'],
+                                                currency=validated_data['item']['currency']['code'],
                                                 images=images,
                                                 videos=videos)
         else:
@@ -394,7 +394,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                   country=location_data['country'],
                                                   city=location_data['city'],
                                                   address=location_data.get('address', ""),
-                                                  currency=validated_data['item']['Currency']['code'],
+                                                  currency=validated_data['item']['currency']['code'],
                                                   images=images,
                                                   videos=videos)
 

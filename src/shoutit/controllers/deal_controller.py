@@ -278,7 +278,7 @@ def InvalidateVoucher(voucher=None, code=''):
 
 
 def GetDeal(deal_id):
-    deals = Deal.objects.filter(pk=deal_id).select_related('shout', 'post', 'user', 'user__profile', 'item', 'item__Currency')
+    deals = Deal.objects.filter(pk=deal_id).select_related('shout', 'post', 'user', 'user__profile', 'item', 'item__currency')
     if deals:
         return deals[0]
     raise ObjectDoesNotExist
@@ -289,7 +289,7 @@ def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, cou
     qs = Deal.objects.filter(expiry_date__gt=now, is_disabled=False, muted=False, IsClosed=False).select_related('shout', 'post',
                                                                                                                  'user',
                                                                                                                  'user__profile',
-                                                                                                                 'item', 'item__Currency')
+                                                                                                                 'item', 'item__currency')
     if country:
         qs = qs.filter(country=country)
     if city:

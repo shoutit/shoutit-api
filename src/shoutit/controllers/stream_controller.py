@@ -31,7 +31,7 @@ def get_shouts_by_pks(pks):
     if not pks:
         return []
     # todo: optimize
-    shout_qs = Shout.objects.get_valid_shouts().select_related('item', 'item__Currency', 'user', 'user__profile').filter(pk__in=pks)
+    shout_qs = Shout.objects.get_valid_shouts().select_related('item', 'item__currency', 'user', 'user__profile').filter(pk__in=pks)
 
     return attach_related_to_shouts(shout_qs)
 
