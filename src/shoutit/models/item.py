@@ -19,10 +19,10 @@ class Item(UUIDModel):
 
     @property
     def thumbnail(self):
-        if self.videos.all():
-            return self.videos.all()[0].thumbnail_url
-        elif self.images:
+        if self.images:
             return self.images[0]
+        elif self.videos.all():
+            return self.videos.all()[0].thumbnail_url
         else:
             return None
 
