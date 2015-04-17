@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
 
-from shoutit.models import User, Shout, Profile, StoredImage, Item,\
+from shoutit.models import User, Shout, Profile, Item,\
     Tag, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
     StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream, \
     Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead, ConversationDelete, FeaturedTag
@@ -229,7 +229,6 @@ class ReportAdmin(admin.ModelAdmin):
 
 
 admin.site.register(StoredFile)
-admin.site.register(StoredImage)
 admin.site.register(Video)
 admin.site.register(Stream)
 admin.site.register(Listen)

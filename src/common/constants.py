@@ -218,7 +218,7 @@ class RankTypeFlag(Flag):
 
 TIME_RANK_TYPE = RankTypeFlag('Time')
 DISTANCE_RANK_TYPE = RankTypeFlag('Distance')
-PRICE_RANK_TYPE = RankTypeFlag('Price')
+PRICE_RANK_TYPE = RankTypeFlag('price')
 FOLLOW_RANK_TYPE = RankTypeFlag('Follow')
 
 

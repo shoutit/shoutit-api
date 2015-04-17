@@ -37,7 +37,7 @@ def view_experience(request, exp_id):
         thumps_count = GetBusinessThumbsCount(result.data['experience'].AboutBusiness)
         result.data['thumb_up_count'] = thumps_count['ups']
         result.data['thumb_down_count'] = thumps_count['downs']
-        result.data['page_title'] = '%s Experience with %s' % ('Bad' if experience.State == 0 else 'Good', experience.AboutBusiness.name)
+        result.data['page_title'] = '%s Experience with %s' % ('Bad' if experience.state == 0 else 'Good', experience.AboutBusiness.name)
         result.data['page_desc'] = experience.text
         result.data['is_fb_og'] = True
     return result

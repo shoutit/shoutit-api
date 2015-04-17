@@ -126,7 +126,7 @@ def shout_link(post):
         about = to_seo_friendly(experience.AboutBusiness.name)
 
         city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.city))) if experience.AboutBusiness.city else ''
-        experience_type = 'bad' if experience.State == 0 else 'good'
+        experience_type = 'bad' if experience.state == 0 else 'good'
         link = '%s%s-experience/%s/%s%s/' % (settings.SITE_LINK, experience_type, post_id, about, city)
     else:
         shout = post

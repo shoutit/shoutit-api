@@ -198,12 +198,12 @@ def create_shout_index(shout):
     shout_index.city = shout.city
     shout_index.latitude = shout.latitude
     shout_index.longitude = shout.longitude
-    shout_index.price = shout.item.Price
+    shout_index.price = shout.item.price
     shout_index.uid = shout.user.pk
     shout_index.username = shout.user.username
     shout_index.date_published = shout.date_published
 
-    shout_index.currency = shout.item.Currency.code
+    shout_index.currency = shout.item.currency.code
     shout_index.address = shout.address
     shout_index.thumbnail = shout.thumbnail
     shout_index.video_url = shout.video_url

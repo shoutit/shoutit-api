@@ -15,7 +15,6 @@ api2_urls = {
     'Profile': ('users/{}', 'username'),
     'Business': ('users/{}', 'username'),
     'Shout': ('shouts/{}', 'pk'),
-    'StoredImage': ('images/{}', 'pk'),
     'item': ('items/{}', 'pk'),
     'Tag': ('tags/{}', 'name'),
     'Conversation': ('conversations/{}', 'pk'),

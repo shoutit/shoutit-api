@@ -20,7 +20,6 @@ class Tag(UUIDModel, StreamMixin, APIModelMixin):
                             ])
     Creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True, on_delete=models.SET_NULL)
     image = models.CharField(max_length=1024, null=True, blank=True)
-    DateCreated = models.DateTimeField(auto_now_add=True)
     Parent = models.ForeignKey('shoutit.Tag', related_name='ChildTags', null=True, blank=True, db_index=True)
 
     Definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')

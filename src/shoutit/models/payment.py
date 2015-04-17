@@ -30,10 +30,8 @@ class PaymentsManager(models.Manager):
 
 class Payment(UUIDModel, AttachedObjectMixin):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Payments')
-    DateCreated = models.DateTimeField(auto_now_add=True)
-    DateUpdated = models.DateTimeField(auto_now=True)
     Amount = models.FloatField()
-    Currency = models.ForeignKey('shoutit.Currency', related_name='+')
+    currency = models.ForeignKey('shoutit.Currency', related_name='+')
     Status = models.IntegerField()
     Transaction = models.ForeignKey('shoutit.Transaction', related_name='Payment')
 
@@ -44,8 +42,6 @@ class Transaction(UUIDModel):
     RemoteIdentifier = models.CharField(max_length=1024)
     RemoteData = models.CharField(max_length=1024)
     RemoteStatus = models.CharField(max_length=1024)
-    DateCreated = models.DateTimeField(auto_now_add=True)
-    DateUpdated = models.DateTimeField(auto_now=True)
 
 
 class Voucher(UUIDModel):
@@ -66,7 +62,7 @@ class DealBuy(UUIDModel):
 class Service(UUIDModel):
     code = models.CharField(max_length=256)
     name = models.CharField(max_length=1024)
-    Price = models.FloatField()
+    price = models.FloatField()
 
 
 class ServiceManager(models.Manager):
@@ -107,7 +103,7 @@ class ServiceUsage(UUIDModel):
 
 class Subscription(UUIDModel):
     type = models.IntegerField(default=0)
-    State = models.IntegerField(default=0)
+    state = models.IntegerField(default=0)
     SignUpDate = models.DateTimeField(null=True, blank=True)
     DeactivateDate = models.DateTimeField(null=True, blank=True)
     UserName = models.CharField(max_length=64)

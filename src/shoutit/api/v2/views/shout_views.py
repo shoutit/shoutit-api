@@ -34,8 +34,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
-    select_related = ('item__Currency', 'user__profile')
-    prefetch_related = ('tags', 'item__images', 'item__videos', 'images')
+    select_related = ('item', 'category__main_tag', 'item__Currency', 'user__profile')
+    prefetch_related = ('tags', 'images', 'videos')
     defer = ()
     index_model = ShoutIndex
 
@@ -43,8 +43,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     def get_queryset(self):
         return Shout.objects.get_valid_shouts().all()\
-            .select_related('item__Currency', 'user__profile')\
-            .prefetch_related('tags', 'item__images', 'item__videos', 'images')
+            .select_related(*self.select_related)\
+            .prefetch_related(*self.prefetch_related)\
+            .defer(*self.defer)
 
     def get_index_search(self):
         return ShoutIndex.search()

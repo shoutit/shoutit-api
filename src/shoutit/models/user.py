@@ -59,7 +59,7 @@ class Profile(AbstractProfile):
 
     isSSS = models.BooleanField(default=False, db_index=True)
 
-    # State = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
+    # state = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
 
     _stream = GenericRelation('shoutit.Stream', related_query_name='profile')
 
@@ -68,24 +68,24 @@ class Profile(AbstractProfile):
 
     def get_notifications(self):
         if not hasattr(self, 'notifications'):
-            min_date = self.user.notifications.filter(ToUser=self.user, is_read=False).aggregate(min_date=Min('DateCreated'))['min_date']
+            min_date = self.user.notifications.filter(ToUser=self.user, is_read=False).aggregate(min_date=Min('created_at'))['min_date']
             if min_date:
-                notifications = list(self.user.notifications.filter(DateCreated__gte=min_date).order_by('-DateCreated'))
+                notifications = list(self.user.notifications.filter(created_at__gte=min_date).order_by('-created_at'))
                 if len(notifications) < 5:
                     notifications = sorted(
                         chain(notifications, list(
-                            self.user.notifications.filter(DateCreated__lt=min_date).order_by('-DateCreated')[:5 - len(notifications)])),
-                        key=lambda n: n.DateCreated,
+                            self.user.notifications.filter(created_at__lt=min_date).order_by('-created_at')[:5 - len(notifications)])),
+                        key=lambda n: n.created_at,
                         reverse=True
                     )
             else:
-                notifications = list(self.user.notifications.filter(is_read=True).order_by('-DateCreated')[:5])
+                notifications = list(self.user.notifications.filter(is_read=True).order_by('-created_at')[:5])
             self.notifications = notifications
         return self.notifications
 
     def get_all_notifications(self):
         if not hasattr(self, 'all_notifications'):
-            self.all_notifications = list(self.user.notifications.order_by('-DateCreated'))
+            self.all_notifications = list(self.user.notifications.order_by('-created_at'))
         return self.all_notifications
 
     def get_unread_notifications_count(self):

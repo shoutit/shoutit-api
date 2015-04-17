@@ -132,8 +132,8 @@ class VoucherReport(Report):
                   style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 18},
                   left=13.00 * cm, top=05.20 * cm, width=06.5 * cm, height=00.70 * cm),  #Code
             # price
-            # Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.item.Price,
-            #                                            widget.instance.DealBuy.Deal.item.Currency.code),
+            # Label(get_value=lambda widget, band: price(widget.instance.DealBuy.Deal.item.price,
+            #                                            widget.instance.DealBuy.Deal.item.currency.code),
             #       style={'wordWrap': True, 'alignment': TA_CENTER, 'fontName': 'Helvetica-Bold', 'fontSize': 24},
             #       left=13.20 * cm, top=06.20 * cm, width=05.5 * cm, height=02.50 * cm, fill=True, stroke=False, fill_color=orange),  #Worth
             Label(get_value=lambda widget, band: widget.instance.DealBuy.Deal.text,

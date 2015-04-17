@@ -233,7 +233,7 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
     if not result.errors:
         data = {
             'text': result.data['experience'].text,
-            'state': int(result.data['experience'].State),
+            'state': int(result.data['experience'].state),
             'date': result.data['experience'].date_published.strftime('%d/%m/%Y %H:%M:%S%z'),
             'next': shout_link(result.data['experience'])
         }
@@ -247,7 +247,7 @@ def comment_on_post_json_renderer(request, result, message=_('Your comment was p
         data = {
             'id': result.data['comment'].pk,
             'text': result.data['comment'].text,
-            'date': result.data['comment'].DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+            'date': result.data['comment'].created_at.strftime('%d/%m/%Y %H:%M:%S%z')
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:
@@ -279,7 +279,7 @@ def post_comments_json_renderer(request, result):
                     'id': comment.pk,
                     'isOwner': comment.isOwner,
                     'text': comment.text,
-                    'date': comment.DateCreated.strftime('%d/%m/%Y %H:%M:%S%z')
+                    'date': comment.created_at.strftime('%d/%m/%Y %H:%M:%S%z')
                 } for comment in result.data['comments']]
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)

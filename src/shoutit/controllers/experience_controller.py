@@ -5,7 +5,7 @@ from common.constants import *
 
 
 def PostExperience(user, state, text, businessProfile):
-    exp = Experience(State=state, text=text, AboutBusiness=businessProfile, user=user, type=int(POST_TYPE_EXPERIENCE))
+    exp = Experience(state=state, text=text, AboutBusiness=businessProfile, user=user, type=int(POST_TYPE_EXPERIENCE))
     exp.save()
     businessProfile.stream.add_post(exp)
     user.profile.stream.add_post(exp)
@@ -28,7 +28,7 @@ def ShareExperience(user, exp_id):
 
 def EditExperience(exp_id, state, text):
     experience = shout_controller.get_post(exp_id)
-    experience.State = state
+    experience.state = state
     experience.text = text
     experience.save()
     return experience
@@ -81,8 +81,8 @@ def GetExperiences(user, owner_user=None, about_business=None, start_index=None,
 
 
 def GetBusinessThumbsCount(business):
-    ups = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_UP.value).values('user').distinct().count()
-    downs = Experience.objects.filter(AboutBusiness=business, State=EXPERIENCE_DOWN.value).values('user').distinct().count()
+    ups = Experience.objects.filter(AboutBusiness=business, state=EXPERIENCE_UP.value).values('user').distinct().count()
+    downs = Experience.objects.filter(AboutBusiness=business, state=EXPERIENCE_DOWN.value).values('user').distinct().count()
     return {
         'ups': ups,
         'downs': downs

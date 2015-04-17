@@ -27,12 +27,12 @@ def deal_to_dict(deal):
     result = {
         'name': deal.item.name,
         'text': deal.text,
-        'pirce': deal.item.Price,
+        'pirce': deal.item.price,
         'expiry_date': deal.expiry_date.strftime('%d/%m/%Y %H:%M:%S%z'),
         'min_buyers': deal.MinBuyers,
         'max_buyers': deal.MaxBuyers,
         'original_price': deal.OriginalPrice,
-        'currency': deal.item.Currency.code,
+        'currency': deal.item.currency.code,
         'country': deal.country,
         'city': deal.city,
     }

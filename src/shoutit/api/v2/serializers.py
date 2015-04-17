@@ -289,8 +289,8 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'], help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
-    price = serializers.FloatField(source='item.Price')
-    currency = serializers.CharField(source='item.Currency.code', help_text='Currency code taken from list of available currencies')
+    price = serializers.FloatField(source='item.price')
+    currency = serializers.CharField(source='item.currency.code', help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
@@ -343,7 +343,7 @@ class ShoutSerializer(serializers.ModelSerializer):
 
 
 class ShoutDetailSerializer(ShoutSerializer):
-    images = serializers.ListField(source='item.images.all', child=serializers.URLField(), required=False)
+    images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout if possible, not set for shout owner.")
     related_requests = ShoutSerializer(many=True, required=False)
@@ -364,13 +364,13 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     def create(self, validated_data):
         location_data = validated_data.get('location')
-        images = validated_data['item'].get('images', {'all': []})['all']
+        images = validated_data['item'].get('images', [])
         videos = validated_data['item'].get('videos', {'all': []})['all']
 
         if validated_data['type_name'] == 'offer':
             shout = shout_controller.post_offer(name=validated_data['item']['name'],
                                                 text=validated_data['text'],
-                                                price=validated_data['item']['Price'],
+                                                price=validated_data['item']['price'],
                                                 latitude=location_data['latitude'],
                                                 longitude=location_data['longitude'],
                                                 category=validated_data['category'],
@@ -385,7 +385,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         else:
             shout = shout_controller.post_request(name=validated_data['item']['name'],
                                                   text=validated_data['text'],
-                                                  price=validated_data['item']['Price'],
+                                                  price=validated_data['item']['price'],
                                                   latitude=location_data['latitude'],
                                                   longitude=location_data['longitude'],
                                                   category=validated_data['category'],

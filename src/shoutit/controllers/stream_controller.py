@@ -5,7 +5,7 @@ from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \
     EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
 from common.utils import process_tag_names
 from shoutit.controllers import notifications_controller, event_controller
-from shoutit.models import Tag, StoredImage, Shout, Stream, Listen, Profile, User
+from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
 
 
 post_types = {
@@ -43,18 +43,12 @@ def attach_related_to_shouts(shouts):
     if len(shouts):
         tags_qs = Tag.objects.select_related('Creator').prefetch_related('shouts')
         tags_qs = tags_qs.extra(where=["shout_id IN ({0})".format(','.join(["'{0}'".format(shout.pk) for shout in shouts]))])
-        tags_with_shout_id = list(tags_qs.values('id', 'name', 'Creator', 'image', 'DateCreated', 'Definition', 'shouts__id'))
-
-        images = StoredImage.objects.filter(Q(shout__id__in=[shout.id for shout in shouts if shout.type == POST_TYPE_EXPERIENCE]) | Q(
-            item__id__in=[shout.item.id for shout in shouts if shout.type != POST_TYPE_EXPERIENCE])).order_by('image')
+        tags_with_shout_id = list(tags_qs.values('id', 'name', 'Creator', 'image', 'created_at', 'Definition', 'shouts__id'))
 
         for shout in shouts:
 
             shout.set_tags([tag for tag in tags_with_shout_id if tag['shouts__id'] == shout.id])
             tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['shouts__id'] != shout.id]
-
-            shout.item.set_images([image for image in images if image.item_id == shout.item_id])
-            images = [image for image in images if image.item_id != shout.item_id]
 
     return list(shouts)
 

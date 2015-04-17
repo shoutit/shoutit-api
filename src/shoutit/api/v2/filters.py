@@ -14,8 +14,8 @@ from shoutit.models import Shout, Category, Tag
 
 class ShoutFilter(django_filters.FilterSet):
     shout_type = django_filters.MethodFilter(action='filter_shout_type')
-    min_price = django_filters.NumberFilter(name="item__Price", lookup_type='gte')
-    max_price = django_filters.NumberFilter(name="item__Price", lookup_type='lte')
+    min_price = django_filters.NumberFilter(name="item__price", lookup_type='gte')
+    max_price = django_filters.NumberFilter(name="item__price", lookup_type='lte')
     tags = django_filters.MethodFilter(action='filter_tags')
     category = django_filters.MethodFilter(action='filter_category')
     down_left_lat = django_filters.NumberFilter(name='latitude', lookup_type='gte')

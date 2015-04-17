@@ -33,7 +33,6 @@ class ConfirmToken(UUIDModel):
     Token = models.CharField(max_length=24, db_index=True, unique=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name="Tokens")
     type = models.IntegerField(default=0)
-    DateCreated = models.DateField(auto_now_add=True)
     Email = models.CharField(max_length=128, blank=True, null=True)
     is_disabled = models.BooleanField(default=False, null=False)
 
@@ -50,9 +49,9 @@ class ConfirmToken(UUIDModel):
         days = timedelta(days=int(settings.MAX_REG_DAYS))
         begin = today - days
         if case_sensitive:
-            t = ConfirmToken.objects.filter(Token__exact=token, DateCreated__gte=begin, DateCreated__lte=today)
+            t = ConfirmToken.objects.filter(Token__exact=token, created_at__gte=begin, created_at__lte=today)
         else:
-            t = ConfirmToken.objects.filter(Token__iexact=token, DateCreated__gte=begin, DateCreated__lte=today)
+            t = ConfirmToken.objects.filter(Token__iexact=token, created_at__gte=begin, created_at__lte=today)
         if not get_disabled:
             t = t.filter(is_disabled=False)
         if len(t) > 0:

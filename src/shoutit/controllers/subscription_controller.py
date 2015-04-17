@@ -13,7 +13,7 @@ def SignUp(sender, **kwargs):
 			#TODO check state Canceled-->Forbidden | Trail-->pass
 			pass
 		else:
-			subscription = Subscription(Id = sender.subscr_id,type = SUBSCRIPE_BUSINESS,State = SUBSCRIPTION_TRAIL,SignUpDate = sender.subscr_date)
+			subscription = Subscription(Id = sender.subscr_id,type = SUBSCRIPE_BUSINESS, state = SUBSCRIPTION_TRAIL,SignUpDate = sender.subscr_date)
 			subscription.save()
 			business.Subscription = subscription
 			business.save()
@@ -24,7 +24,7 @@ def Expire(sender, **kwargs):
 	if business:
 		if business.Subscription:
 			subscription = business.Subscription
-			subscription.State = SUBSCRIPTION_EXPIRED
+			subscription.state = SUBSCRIPTION_EXPIRED
 			subscription.DeactivateDate = sender.subscr_date
 			subscription.save()
 
@@ -35,7 +35,7 @@ def Cancel(sender, **kwargs):
 		if business.Subscription:
 			subscription = business.Subscription
 			subscription.DeactivateDate = sender.subscr_date
-			subscription.State = SUBSCRIPTION_CANCELED
+			subscription.state = SUBSCRIPTION_CANCELED
 			subscription.save()
 
 

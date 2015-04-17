@@ -178,22 +178,12 @@ class Shout(Post):
             self._tags = list(self.tags.all())
         return self._tags
 
-    def get_images(self):
-        if not hasattr(self, '_images'):
-            if self.type == POST_TYPE_EXPERIENCE:
-                self._images = list(self.images.all().order_by('image'))
-            else:
-                self._images = self.item.get_images()
-        return self._images
-
-    def get_first_image(self):
-        return self.item.get_first_image()
-
-    def set_images(self, images):
-        images = sorted(images, key=lambda img: img.image)
-        self._images = images
-        if hasattr(self, 'item'):
-            self.item.set_images(images)
+    @property
+    def images(self):
+        if self.type == POST_TYPE_EXPERIENCE:
+            return self.images
+        if self.type in [POST_TYPE_OFFER, POST_TYPE_REQUEST]:
+            return self.item.images
 
     def get_videos(self):
         if not hasattr(self, '_videos'):
@@ -298,7 +288,7 @@ class Deal(Shout):
 
 class Experience(Post):
     AboutBusiness = models.ForeignKey('shoutit.Business', related_name='Experiences')
-    State = models.IntegerField(null=False)
+    state = models.IntegerField(null=False)
 
     objects = ExperienceManager()
 
@@ -309,7 +299,6 @@ class Experience(Post):
 class SharedExperience(UUIDModel):
     Experience = models.ForeignKey('shoutit.Experience', related_name='SharedExperiences')
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='SharedExperiences')
-    DateCreated = models.DateTimeField(auto_now_add=True)
 
     class Meta(UUIDModel.Meta):
         unique_together = ('Experience', 'user',)
@@ -330,22 +319,11 @@ class Video(UUIDModel):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
 
 
-# todo: use attached object mixin
-class StoredImage(UUIDModel):
-    shout = models.ForeignKey('shoutit.Shout', related_name='images', null=True, blank=True)
-    item = models.ForeignKey('shoutit.Item', related_name='images', null=True, blank=True)
-    image = models.CharField(max_length=1024)
-
-    def __str__(self):
-        return unicode(self.image)
-
-
 class Comment(UUIDModel):
     AboutPost = models.ForeignKey('shoutit.Post', related_name='Comments', null=True, blank=True)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
     is_disabled = models.BooleanField(default=False)
     text = models.TextField(max_length=300)
-    DateCreated = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return unicode(self.pk) + ": " + unicode(self.text)

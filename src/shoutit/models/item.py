@@ -1,16 +1,17 @@
 from __future__ import unicode_literals
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
-
+from common.constants import ITEM_STATE_AVAILABLE
 from shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
     name = models.CharField(max_length=512, default='', blank=True)
-    Description = models.CharField(max_length=1000)
-    Price = models.FloatField(default=0.0)
-    Currency = models.ForeignKey('shoutit.Currency', related_name='Items')
-    State = models.IntegerField(default=0, db_index=True)
-    DateCreated = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=1000)
+    price = models.FloatField(default=0.0)
+    currency = models.ForeignKey('shoutit.Currency', related_name='Items')
+    state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)
+    images = ArrayField(models.URLField(), null=True, blank=True)
 
     def __str__(self):
         return unicode(self.pk) + ": " + self.name
@@ -19,30 +20,14 @@ class Item(UUIDModel):
     def thumbnail(self):
         if self.videos.all():
             return self.videos.all()[0].thumbnail_url
-        elif self.images.all():
-            return self.images.all()[0].image
+        elif self.images:
+            return self.images[0]
         else:
             return None
 
     @property
     def video_url(self):
         return self.videos.all()[0].url if self.videos.all() else None
-
-    def get_image_urls(self):
-        return [image.image for image in self.get_images()]
-
-    def get_images(self):
-        if not hasattr(self, '_images'):
-            self._images = list(self.images.all().order_by('image'))
-        return self._images
-
-    def set_images(self, images):
-        images = sorted(images, key=lambda img: img.image)
-        self._images = images
-
-    def get_first_image(self):
-        images = self.get_images()
-        return images and images[0] or None
 
     def get_videos(self):
         if not hasattr(self, '_videos'):

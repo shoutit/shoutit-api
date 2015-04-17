@@ -1,20 +1,11 @@
-from shoutit.models import Item, StoredImage, Video, Currency
+from shoutit.models import Item, Video, Currency
 
 
 def create_item(name, price, currency, description, images=None, videos=None):
     currency = get_currency(currency)
-    item = Item(name=name, Price=price, Currency=currency, Description=description)
+    item = Item(name=name, price=price, Currency=currency, description=description, images=images)
     item.save()
 
-    if images:
-        images.sort()
-        for image in images:
-            # todo: better handling
-            try:
-                stored_image = StoredImage(item=item, image=image)
-                stored_image.save()
-            except:
-                pass
     if videos:
         for v in videos:
             # todo: better handling
@@ -33,29 +24,13 @@ def edit_item(item, name=None, price=None, images=None, currency=None, descripti
     if name:
         item.name = name
     if price:
-        item.Price = price
+        item.price = price
     if currency:
-        item.Currency = get_currency(currency)
+        item.currency = get_currency(currency)
     if description:
-        item.Description = description
-
+        item.description = description
     if images:
-        images.sort()
-        old_images = item.get_images()
-        if len(old_images):
-            for old_img in old_images:
-                old_img.delete()
-
-    for image in images:
-        try:
-            existed = StoredImage.objects.get(image__exact=image)
-        except StoredImage.DoesNotExist:
-            stored_image = StoredImage()
-            stored_image.item = item
-            stored_image.image = image
-            stored_image.save()
-        except StoredImage.MultipleObjectsReturned, e:
-            print e
+        item.images = images
 
     item.save()
     return item
