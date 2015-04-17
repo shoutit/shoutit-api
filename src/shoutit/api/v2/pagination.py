@@ -200,6 +200,9 @@ class DateTimeIndexPagination(DateTimePagination):
         object_ids = [object_index.id for object_index in index_response]
         page = view.model.objects.filter(id__in=object_ids)\
             .order_by('-date_published')
+        print view.select_related
+        print view.prefetch_related
+        print view.defer
             # .select_related(*view.select_related)\
             # .prefetch_related(*view.prefetch_related)\
             # .defer(*view.defer)\
