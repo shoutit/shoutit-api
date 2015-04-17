@@ -12,6 +12,7 @@ class Item(UUIDModel):
     currency = models.ForeignKey('shoutit.Currency', related_name='Items')
     state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)
     images = ArrayField(models.URLField(), null=True, blank=True)
+    videos = models.ManyToManyField('shoutit.Video',  blank=True)
 
     def __str__(self):
         return unicode(self.pk) + ": " + self.name
@@ -28,18 +29,6 @@ class Item(UUIDModel):
     @property
     def video_url(self):
         return self.videos.all()[0].url if self.videos.all() else None
-
-    def get_videos(self):
-        if not hasattr(self, '_videos'):
-            self._videos = list(self.videos.all())
-        return self._videos
-
-    def set_videos(self, videos):
-        self._videos = videos
-
-    def get_first_video(self):
-        videos = self.get_videos()
-        return videos and videos[0] or None
 
 
 class Currency(UUIDModel):

@@ -3,16 +3,15 @@ from shoutit.models import Item, Video, Currency
 
 def create_item(name, price, currency, description, images=None, videos=None):
     currency = get_currency(currency)
-    item = Item(name=name, price=price, currency=currency, description=description, images=images)
-    item.save()
+    item = Item.objects.create(name=name, price=price, currency=currency, description=description, images=images)
 
     if videos:
         for v in videos:
             # todo: better handling
             try:
-                video = Video(item=item, url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
-                              id_on_provider=v['id_on_provider'], duration=v['duration'])
-                video.save()
+                video = Video.objects.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
+                                             id_on_provider=v['id_on_provider'], duration=v['duration'])
+                item.videos.add(video)
             except:
                 pass
 
@@ -20,7 +19,6 @@ def create_item(name, price, currency, description, images=None, videos=None):
 
 
 def edit_item(item, name=None, price=None, images=None, currency=None, description=None):
-
     if name:
         item.name = name
     if price:

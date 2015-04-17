@@ -185,21 +185,12 @@ class Shout(Post):
         if self.type in [POST_TYPE_OFFER, POST_TYPE_REQUEST]:
             return self.item.images
 
-    def get_videos(self):
-        if not hasattr(self, '_videos'):
-            if self.type == POST_TYPE_EXPERIENCE:
-                self._videos = list(self.videos.all())
-            else:
-                self._videos = self.item.get_videos()
-        return self._videos
-
-    def set_videos(self, videos):
-        self._videos = videos
-        if hasattr(self, 'item'):
-            self.item.set_videos(videos)
-
-    def get_first_video(self):
-        return self.item.get_first_video()
+    @property
+    def videos(self):
+        if self.type == POST_TYPE_EXPERIENCE:
+            return self.videos.all()
+        else:
+            return self.item.videos.all()
 
     def get_text(self):
         text = ''
@@ -304,11 +295,7 @@ class SharedExperience(UUIDModel):
         unique_together = ('Experience', 'user',)
 
 
-# todo: use attached object mixin
 class Video(UUIDModel):
-    shout = models.ForeignKey('shoutit.Shout', related_name='videos', null=True, blank=True)
-    item = models.ForeignKey('shoutit.Item', related_name='videos', null=True, blank=True)
-
     url = models.URLField(max_length=1024)
     thumbnail_url = models.URLField(max_length=1024)
     provider = models.CharField(max_length=1024)
@@ -316,7 +303,7 @@ class Video(UUIDModel):
     duration = models.IntegerField()
 
     def __str__(self):
-        return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider) + " for: " + unicode(self.item)
+        return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
 
 
 class Comment(UUIDModel):
