@@ -22,6 +22,7 @@ django-redis-cache==0.13.0
 django-redis-sessions==0.4.0
 elasticsearch-dsl==0.0.3
 django_rq==0.7.0
+django-widget-tweaks
 
 # AWS imaging
 Pillow==2.7.0
