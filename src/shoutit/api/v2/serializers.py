@@ -123,7 +123,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(UserSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    gender = serializers.BooleanField(source='profile.gender')
+    gender = serializers.CharField(source='profile.gender')
     bio = serializers.CharField(source='profile.bio')
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
