@@ -90,7 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_active', 'image')
+        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated', 'image')
 
     def get_api_url(self, user):
         return reverse('user-detail', kwargs={'username': user.username}, request=self.context['request'])
