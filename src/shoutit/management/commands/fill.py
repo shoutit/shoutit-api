@@ -36,7 +36,7 @@ class Command(BaseCommand):
         p1 = u1.profile
         p1.bio = 'Shoutit Master!'
         p1.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
-        p1.gender = True
+        p1.gender = 'male'
         p1.city = 'Dubai'
         p1.country = 'AE'
         p1.latitude = 25.1993957
@@ -63,7 +63,7 @@ class Command(BaseCommand):
         p2 = u2.profile
         p2.bio = 'Shoutit Master 2!'
         p2.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
-        p2.gender = True
+        p2.gender = 'male'
         p2.city = 'Dubai'
         p2.country = 'AE'
         p2.latitude = 25.1593957
