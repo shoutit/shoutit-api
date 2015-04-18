@@ -74,20 +74,12 @@ class Business(UUIDModel, StreamMixin):
     #         object.__setattr__(self, name, value)
 
     @property
-    def Bio(self):
+    def bio(self):
         return self.About
 
-    @Bio.setter
-    def Bio(self, value):
+    @bio.setter
+    def bio(self, value):
         self.About = value
-
-    @property
-    def Mobile(self):
-        return self.Phone
-
-    @Mobile.setter
-    def Mobile(self, value):
-        self.Phone = value
 
     @property
     def name(self):

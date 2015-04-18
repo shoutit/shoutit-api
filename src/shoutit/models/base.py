@@ -7,13 +7,10 @@ from django.core import validators
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.core.mail import send_mail
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
-from rest_framework.authtoken.models import Token
 from common.utils import date_unix, AllowedUsernamesValidator
 
 
@@ -96,7 +93,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     is_active = models.BooleanField(_('active'), default=True,
                                     help_text=_('Designates whether this user should be treated as '
                                                 'active. Unselect this instead of deleting accounts.'))
+    is_activated = models.BooleanField(_('activated'), default=False,
+                                       help_text=_('Designates whether this user have a verified email.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+
+    permissions = models.ManyToManyField('shoutit.Permission', through='shoutit.UserPermission')
 
     objects = UserManager()
 
@@ -107,36 +108,28 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
+    def __str__(self):
+        return "{} [{}]".format(self.name, self.username)
+
     @property
     def owner(self):
         return self
 
     @property
-    def abstract_profile(self):
-        if not hasattr(self, '_abstract_profile'):
-            if hasattr(self, 'profile'):
-                self._abstract_profile = self.profile
-            elif hasattr(self, 'business'):
-                self._abstract_profile = self.business
-            else:
-                raise AttributeError("user has neither 'profile' nor 'business'")
-        return self._abstract_profile
-
-    @property
     def latitude(self):
-        return self.abstract_profile.latitude
+        return self.profile.latitude
 
     @property
     def longitude(self):
-        return self.abstract_profile.longitude
+        return self.profile.longitude
 
     @property
     def city(self):
-        return self.abstract_profile.city
+        return self.profile.city
 
     @property
     def country(self):
-        return self.abstract_profile.country
+        return self.profile.country
 
     @property
     def location(self):
@@ -149,15 +142,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name(self):
-        if hasattr(self, 'profile'):
-            return self.get_full_name()
-        elif hasattr(self, 'business'):
-            return self.Business.name
-        else:
-            return None
-
-    # def request_count(self):
-    # return Request.objects.filter(user__pk=self.pk).count()
+        return self.get_full_name()
 
     @property
     def apns_device(self):
@@ -219,7 +204,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         """
         full_name = '%s %s' % (self.first_name, self.last_name)
         full_name = full_name.strip()
-        return full_name if full_name != '' else self.username
+        return full_name or self.username
 
     def get_short_name(self):
         "Returns the short name for the user."
@@ -231,8 +216,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         """
         send_mail(subject, message, from_email, [self.email])
 
-
-@receiver(post_save, sender=User)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+    def activate(self):
+        from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
+        self.is_activated = True
+        self.save(update_fields=['is_activated'])
+        give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)

@@ -8,7 +8,6 @@ from django.db.models.query_utils import Q
 from django.conf import settings
 import logging
 from shoutit.models.post import ShoutIndex
-from shoutit.controllers.user_controller import get_profile
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post, PredefinedCity
@@ -50,8 +49,7 @@ def delete_post(post):
     post.save()
     try:
         if post.type == POST_TYPE_REQUEST or post.type == POST_TYPE_OFFER:
-            event_controller.delete_event_about_obj(post)
-            # todo: check!
+            event_controller.delete_event_about_obj(post.shout)
             # elif post.type == POST_TYPE_DEAL:
             # event_controller.delete_event_about_obj(post.shout.deal)
             # elif post.type == POST_TYPE_EXPERIENCE:
@@ -92,7 +90,7 @@ def NotifyPreExpiry():
 # todo: handle exception on each step and in case of errors, rollback!
 def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-    shouter_profile = get_profile(shouter.username)
+    shouter_profile = shouter.profile
     stream = shouter_profile.stream
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
@@ -142,7 +140,7 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
 # todo: handle exception on each step and in case of errors, rollback!
 def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-    shouter_profile = get_profile(shouter.username)
+    shouter_profile = shouter.profile
     stream = shouter_profile.stream
 
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)

@@ -1,8 +1,6 @@
-from django.dispatch import Signal
 from django.utils.translation import ugettext_lazy as _
-
 from common.constants import Constant
-from shoutit.models import Permission
+from shoutit.models import Permission, UserPermission
 
 
 class ConstantPermission(Constant):
@@ -11,8 +9,8 @@ class ConstantPermission(Constant):
     reversed_instances = {}
 
     def __init__(self, text, message):
-        self.message = message
         self.permission, created = Permission.objects.get_or_create(name=text)
+        self.message = message
         self.value = self.permission.id
         self.__class__.reversed_instances[self.permission] = self
         Constant.__init__(self, text, self.value)
@@ -73,3 +71,17 @@ ACTIVATED_BUSINESS_PERMISSIONS = [
 ANONYMOUS_USER_PERMISSIONS = [
     PERMISSION_USE_SHOUT_IT,
 ]
+
+
+def give_user_permissions(user, permissions):
+    for permission in permissions:
+        if isinstance(permission, ConstantPermission):
+            permission = permission.permission
+        UserPermission.objects.get_or_create(user=user, permission=permission)
+
+
+def take_permissions_from_user(user, permissions):
+    for permission in permissions:
+        if isinstance(permission, ConstantPermission):
+            permission = permission.permission
+        UserPermission.objects.filter(user=user, permission=permission).delete()

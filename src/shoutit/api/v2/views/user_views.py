@@ -98,7 +98,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             "first_name": "Mo",
             "last_name": "Chawich",
             "bio": "I'm a good shouter",
-            "sex": 1,
+            "gender": 1,
             "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
             "location": {
                 "latitude": 25.1593957,

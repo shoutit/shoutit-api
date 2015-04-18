@@ -16,7 +16,7 @@ from shoutit.models import LinkedFacebookAccount
 from shoutit.controllers.user_controller import auth_with_facebook, update_profile_location
 
 
-def user_from_facebook_auth_response(request, auth_response, initial_user=None):
+def user_from_facebook_auth_response(auth_response, initial_user=None):
     try:
         access_token = auth_response['accessToken']
     except (KeyError, TypeError):
@@ -41,7 +41,7 @@ def user_from_facebook_auth_response(request, auth_response, initial_user=None):
         if not long_lived_token:
             return Exception("could not extend the facebook short lived access_token with long lived one"), None
 
-        user = auth_with_facebook(request, fb_user, long_lived_token)
+        user = auth_with_facebook(fb_user, long_lived_token)
 
     if user:
         if initial_user and initial_user['location']:
@@ -119,8 +119,8 @@ def link_facebook_account(user, facebook_access_token):
 
     # link
     try:
-        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], AccessToken=long_lived_token['access_token'],
-                                   ExpiresIn=long_lived_token['expires'])
+        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], access_token=long_lived_token['access_token'],
+                                   expires=long_lived_token['expires'])
         la.save()
     except Exception, e:
         # todo: log_error

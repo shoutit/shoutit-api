@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from shoutit.models import DBCLConversation, CLUser, DBUser, Category
 from shoutit.controllers.message_controller import send_message
-from shoutit.controllers.user_controller import sign_up_sss4, give_user_permissions
+from shoutit.controllers.user_controller import sign_up_sss4
 from shoutit.controllers import shout_controller
 from shoutit.permissions import INITIAL_USER_PERMISSIONS
 from shoutit.utils import JsonResponse, JsonResponseBadRequest
@@ -78,7 +78,6 @@ def shout_sss4(request):
         if shout['source'] == 'db':
             user = sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'], city=shout['city'], country=shout['country'], dbcl_type='db',
                                 db_link=shout['link'])
-        give_user_permissions(user, INITIAL_USER_PERMISSIONS)
     except Exception, e:
         msg = "User Creation Error: " + str(e)
         logger.error(msg)

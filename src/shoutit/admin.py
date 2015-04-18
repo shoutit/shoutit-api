@@ -4,12 +4,13 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 
 from shoutit.models import User, Shout, Profile, Item,\
-    Tag, Notification, Category, Currency, Business, BusinessConfirmation, BusinessCategory, \
-    StoredFile, Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream, \
+    Tag, Notification, Category, Currency, \
+    Report, PredefinedCity, LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video, Stream, \
     Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead, ConversationDelete, FeaturedTag
 
 from django.utils.translation import ugettext_lazy as _
 
+# from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
 # Shout
 @admin.register(Shout)
@@ -71,16 +72,16 @@ admin.site.register(User, CustomUserAdmin)
 
 # Profile
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'country', 'city', 'Sex', 'image')
-    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'Bio', 'Mobile']
-    readonly_fields = ('user', 'LastToken')
-    list_filter = ('country', 'city', 'Sex')
+    list_display = ('id', 'user', 'country', 'city', 'gender', 'image')
+    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
+    readonly_fields = ('user',)
+    list_filter = ('country', 'city', 'gender')
 
 admin.site.register(Profile, ProfileAdmin)
 
 
 class LinkedFacebookAccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'facebook_id', 'AccessToken', 'ExpiresIn')
+    list_display = ('user', 'facebook_id', 'access_token', 'expires')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id']
 
 admin.site.register(LinkedFacebookAccount, LinkedFacebookAccountAdmin)
@@ -93,13 +94,12 @@ class LinkedGoogleAccountAdmin(admin.ModelAdmin):
 admin.site.register(LinkedGoogleAccount, LinkedGoogleAccountAdmin)
 
 
-# Business
-class BusinessProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'user', 'country', 'city', 'Category', 'Confirmed')
-    search_fields = ['name', 'user__email', 'Website', 'Mobile']
-    readonly_fields = ('user', 'LastToken')
-
-admin.site.register(Business, BusinessProfileAdmin)
+# # Business
+# @admin.register(Business)
+# class BusinessProfileAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'name', 'user', 'country', 'city', 'Category', 'Confirmed')
+#     search_fields = ['name', 'user__email', 'Website']
+#     readonly_fields = ('user', 'LastToken')
 
 
 # BusinessCreateApplication
@@ -133,18 +133,18 @@ admin.site.register(Business, BusinessProfileAdmin)
 
 
 # BusinessConfirmation
-class BusinessConfirmationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user')
+# class BusinessConfirmationAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'user')
+#
+# admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 
-admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
 
-
-# BusinessCategory
-class BusinessCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'Source', 'SourceID', 'Parent')
-    search_fields = ['name', 'Parent__name']
-
-admin.site.register(BusinessCategory, BusinessCategoryAdmin)
+# # BusinessCategory
+# class BusinessCategoryAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'name', 'Source', 'SourceID', 'Parent')
+#     search_fields = ['name', 'Parent__name']
+#
+# admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 
 
 # Tag
@@ -228,7 +228,7 @@ class ReportAdmin(admin.ModelAdmin):
     mark_as_disabled.short_description = "Mark selected reports as disabled"
 
 
-admin.site.register(StoredFile)
+# admin.site.register(StoredFile)
 admin.site.register(Video)
 admin.site.register(Stream)
 admin.site.register(Listen)

@@ -8,8 +8,7 @@ from django.core.management.base import BaseCommand
 from shoutit.controllers import tag_controller
 from shoutit.models import *
 from rest_framework.authtoken.models import Token
-from shoutit.controllers.user_controller import give_user_permissions
-from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
+from shoutit.permissions import ACTIVATED_USER_PERMISSIONS
 from provider.oauth2.models import Client
 
 
@@ -30,18 +29,14 @@ class Command(BaseCommand):
         u1.last_name = 'Chawich'
         u1.password = "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg="
         u1.save()
-        t1, c = Token.objects.get_or_create(user=u1)
-        t1.delete()
-        Token.objects.get_or_create(user=u1, key="1-5fbb04817861540553ca6ecc6d8fb6569f3adb")
-        give_user_permissions(u1, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS)
-        try:
-            p1 = u1.profile
-        except AttributeError:
-            p1 = Profile(user=u1)
+        Token.objects.filter(user=u1).delete()
+        Token.objects.create(user=u1, key="1-5fbb04817861540553ca6ecc6d8fb6569f3adb")
+        u1.activate()
 
-        p1.Bio = 'Shoutit Master!'
+        p1 = u1.profile
+        p1.bio = 'Shoutit Master!'
         p1.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
-        p1.Sex = True
+        p1.gender = True
         p1.city = 'Dubai'
         p1.country = 'AE'
         p1.latitude = 25.1993957
@@ -59,18 +54,16 @@ class Command(BaseCommand):
         u2.last_name = 'Chawich'
         u2.password = "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg="
         u2.save()
-        t2, c = Token.objects.get_or_create(user=u2)
-        t2.delete()
-        Token.objects.get_or_create(user=u2, key="2-5fbb04817861540553ca6ecc6d8fb6569f3adb")
-        give_user_permissions(u2, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS)
-        try:
-            p2 = u2.profile
-        except AttributeError:
-            p2 = Profile(user=u2)
 
-        p2.Bio = 'Shoutit Master 2!'
+        Token.objects.filter(user=u2).delete()
+        Token.objects.create(user=u2, key="2-5fbb04817861540553ca6ecc6d8fb6569f3adb")
+
+        u2.activate()
+
+        p2 = u2.profile
+        p2.bio = 'Shoutit Master 2!'
         p2.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
-        p2.Sex = True
+        p2.gender = True
         p2.city = 'Dubai'
         p2.country = 'AE'
         p2.latitude = 25.1593957

@@ -11,8 +11,8 @@ from rest_framework.request import Request
 import time
 from shoutit.api.v2.serializers import ShoutDetailSerializer
 from shoutit.models import *
-from shoutit.controllers.user_controller import give_user_permissions
 from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
+from shoutit.utils import generate_password
 
 
 class Command(BaseCommand):
@@ -37,7 +37,10 @@ class Command(BaseCommand):
                 username = 'test_' + str(1000000 + i)
                 email = username + '@shoutit.com'
                 user, _ = User.objects.get_or_create(username=username, first_name='user', last_name=username, email=email)
-                give_user_permissions(user, INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS)
+                if _:
+                    user.password = generate_password()
+                    user.save()
+                    user.activate()
                 try:
                     user.profile
                 except AttributeError:

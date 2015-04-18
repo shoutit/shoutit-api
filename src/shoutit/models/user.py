@@ -1,13 +1,9 @@
-from itertools import chain
-
 from django.db import models
-from django.db.models import Min
-from django.db.models.signals import post_delete, post_save
 from django.contrib.contenttypes.fields import GenericRelation
-from django.dispatch import receiver
 from django.conf import settings
 
 from common.constants import DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG
+from shoutit.models import ConfirmToken
 from shoutit.models.base import UUIDModel
 from shoutit.models.stream import StreamMixin, Listen
 
@@ -15,17 +11,14 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class AbstractProfile(UUIDModel, StreamMixin):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True, null=True, blank=True)
-    image = models.CharField(max_length=1024, null=True, blank=True)
-    video = models.OneToOneField('shoutit.Video', null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    image = models.URLField(max_length=1024, default='https://s3-eu-west-1.amazonaws.com/shoutit-user-image-original/9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg', blank=True)
+    video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
 
     # Location attributes
     country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
     city = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)
     latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
     longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
-
-    LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     class Meta(UUIDModel.Meta):
         abstract = True
@@ -49,107 +42,35 @@ class AbstractProfile(UUIDModel, StreamMixin):
 
 
 class Profile(AbstractProfile):
-    Bio = models.TextField(null=True, blank=True, max_length=512, default='New Shouter!')
-    Mobile = models.CharField(unique=True, null=True, blank=True, max_length=20)
-
-    # isBlocked = models.BooleanField(default=False)
-
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='profile', db_index=True)
+    gender = models.CharField(max_length=10, null=True)
     birthday = models.DateField(null=True, blank=True)
-    Sex = models.NullBooleanField()
-
-    isSSS = models.BooleanField(default=False, db_index=True)
-
-    # state = models.IntegerField(default = USER_STATE_ACTIVE, db_index=True)
+    bio = models.TextField(blank=True, max_length=512, default='New Shouter!')
 
     _stream = GenericRelation('shoutit.Stream', related_query_name='profile')
 
     def __str__(self):
-        return '[UP_' + unicode(self.pk) + "] " + unicode(self.user.get_full_name())
+        return "{}".format(self.user)
 
-    def get_notifications(self):
-        if not hasattr(self, 'notifications'):
-            min_date = self.user.notifications.filter(ToUser=self.user, is_read=False).aggregate(min_date=Min('created_at'))['min_date']
-            if min_date:
-                notifications = list(self.user.notifications.filter(created_at__gte=min_date).order_by('-created_at'))
-                if len(notifications) < 5:
-                    notifications = sorted(
-                        chain(notifications, list(
-                            self.user.notifications.filter(created_at__lt=min_date).order_by('-created_at')[:5 - len(notifications)])),
-                        key=lambda n: n.created_at,
-                        reverse=True
-                    )
-            else:
-                notifications = list(self.user.notifications.filter(is_read=True).order_by('-created_at')[:5])
-            self.notifications = notifications
-        return self.notifications
-
-    def get_all_notifications(self):
-        if not hasattr(self, 'all_notifications'):
-            self.all_notifications = list(self.user.notifications.order_by('-created_at'))
-        return self.all_notifications
-
-    def get_unread_notifications_count(self):
-        notifications = hasattr(self, 'notifications') and self.notifications
-        if not notifications:
-            notifications = hasattr(self, 'all_notifications') and self.all_notifications
-        if not notifications:
-            notifications = self.get_notifications()
-        return len(filter(lambda n: not n.is_read, notifications))
-
-    @property
-    def name(self):
-        return self.user.get_full_name()
-
-    # def __getattribute__(self, name):
-    #     if name in ['username', 'first_name', 'last_name', 'email', 'tagsCreated', 'Shouts', 'get_full_name']:
-    #         return getattr(self.user, name)
-    #     else:
-    #         # return getattr(self, name) < this can't be used here and will cause exit code 138 without any error message!
-    #         return object.__getattribute__(self, name)
-    #
-    # def __setattr__(self, name, value):
-    #     if name in ['username', 'first_name', 'last_name', 'email', 'tagsCreated', 'Shouts', 'get_full_name']:
-    #         setattr(self.user, name, value)
-    #     else:
-    #         object.__setattr__(self, name, value)
-
-    def save(self, *args, **kwargs):
-        # todo: check! do we really need to save the user on profile save?
-        # self.user.save(*args, **kwargs)
-        # self.user = self.user
-        super(Profile, self).save(*args, **kwargs)
-
-
-@receiver(post_save)
-def attach_user(sender, instance, created, raw, using, update_fields, **kwargs):
-    if not issubclass(sender, AbstractProfile):
-        return
-    # on new profile create stream and attach it
-    if created:
-        # print 'post save on first time'
-        # creating the user and attaching it to profile
-        # todo: activate it
-        # user = User(username=str(random.randint(1000000000, 1999999999)))
-        # user.save()
-        # instance.user = user
-        # instance.save()
-        pass
-
-
-@receiver(post_delete)
-def delete_attached_user(sender, instance, using, **kwargs):
-    if not issubclass(sender, AbstractProfile):
-        return
-
-    print 'Deleting User for: <%s: %s>' % (sender.__name__, instance)
-    instance.user.delete()
+    def update(self, gender=None, birthday=None, bio=None):
+        update_fields = []
+        if gender:
+            self.gender = gender
+            update_fields.append('gender')
+        if birthday:
+            self.birthday = birthday
+            update_fields.append('birthday')
+        if bio:
+            self.birthday = bio
+            update_fields.append('bio')
+        self.save(update_fields=update_fields)
 
 
 class LinkedFacebookAccount(UUIDModel):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')
     facebook_id = models.CharField(max_length=24, db_index=True)
-    AccessToken = models.CharField(max_length=512)
-    ExpiresIn = models.BigIntegerField(default=0)
+    access_token = models.CharField(max_length=512)
+    expires = models.BigIntegerField(default=0)
 
 
 class LinkedGoogleAccount(UUIDModel):
@@ -158,15 +79,8 @@ class LinkedGoogleAccount(UUIDModel):
     gplus_id = models.CharField(max_length=64, db_index=True)
 
 
-class PermissionsManager(models.Manager):
-    @staticmethod
-    def get_user_permissions(user):
-        return Permission.objects.filter(users=user)
-
-
 class Permission(UUIDModel):
     name = models.CharField(max_length=512, unique=True, db_index=True)
-    users = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.UserPermission', related_name='permissions')
 
     def __str__(self):
         return self.name
@@ -177,4 +91,24 @@ class UserPermission(UUIDModel):
     permission = models.ForeignKey('shoutit.Permission', on_delete=models.CASCADE)
     date_given = models.DateTimeField(auto_now_add=True)
 
-    objects = PermissionsManager()
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+
+
+@receiver(post_save, sender='shoutit.User')
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        # create email confirmation token
+        ConfirmToken.objects.create(user=instance)
+
+        # create auth token
+        Token.objects.create(user=instance)
+
+        # create profile
+        Profile.objects.create(user=instance)
+
+        # give user initial permissions
+        from shoutit.permissions import give_user_permissions, INITIAL_USER_PERMISSIONS
+        give_user_permissions(user=instance, permissions=INITIAL_USER_PERMISSIONS)

@@ -9,7 +9,7 @@ import re
 from django.http import HttpResponse
 from shoutit import settings
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
-from shoutit.models import Experience, Tag, User
+from shoutit.models import Tag, User
 
 
 def generate_password():
@@ -120,8 +120,8 @@ def shout_link(post):
 
     if post.type == POST_TYPE_EXPERIENCE:
         # todo: make sure the actual exp is passed so no need for using the model here
-        if post.__class__.__name__ == 'Post':
-            post = Experience.objects.get(pk=post.pk)
+        # if post.__class__.__name__ == 'Post':
+        #     post = Experience.objects.get(pk=post.pk)
         experience = post
         about = to_seo_friendly(experience.AboutBusiness.name)
 

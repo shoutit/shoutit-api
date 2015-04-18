@@ -25,7 +25,7 @@ class RecoverForm(forms.Form):
         return self.cleaned_data
 
 
-sex_choices = (
+gender_choices = (
     (1, _('Male')),
     (0, _('Female')),
 )
@@ -41,7 +41,7 @@ class BusinessEditProfileForm(forms.Form):
     password = forms.CharField(label=_('New password'), widget=forms.PasswordInput(), required=False)
     password_confirm = forms.CharField(label=_('Confirm new password'), widget=forms.PasswordInput(), required=False)
 
-    bio = forms.CharField(label=_('Bio'), widget=forms.Textarea(), max_length=512, required=False)
+    bio = forms.CharField(label=_('bio'), widget=forms.Textarea(), max_length=512, required=False)
 
     location = forms.CharField(label=_('Location'))
     country = forms.CharField(label=_('Country'))

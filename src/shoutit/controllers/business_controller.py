@@ -2,8 +2,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
 from shoutit.models import User
-from common.constants import TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, \
-    TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE
+from common.constants import TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, \
+    TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE
 from shoutit.models import Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, \
     BusinessCreateApplication, PredefinedCity
 from shoutit.controllers.user_controller import set_last_token, give_user_permissions
@@ -104,7 +104,7 @@ def SignUpTempBusiness(request, email, password, send_activation=True, business=
     app = BusinessCreateApplication(user=django_user, business=business)
     app.save()
 
-    token = SetTempRegisterToken(django_user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
+    token = SetTempRegisterToken(django_user, email, TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE)
 
     if email is not None and send_activation:
         email_controller.SendEmail(email, {
@@ -287,5 +287,5 @@ def AcceptBusiness(request, username):
 
     give_user_permissions(user, ACTIVATED_BUSINESS_PERMISSIONS)
 
-    token = set_last_token(user, user.email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM)
+    token = set_last_token(user, user.email, TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM)
     email_controller.SendBusinessAcceptanceEmail(user.Business, user.email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'))

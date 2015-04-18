@@ -3,7 +3,7 @@ from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from shoutit.models import User
-from common.constants import TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE, BUSINESS_CONFIRMATION_STATUS_WAITING, \
+from common.constants import TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE, BUSINESS_CONFIRMATION_STATUS_WAITING, \
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT, BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION, \
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION
 from shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditProfileForm, CreateTinyBusinessForm, RecoverForm, \
@@ -207,7 +207,7 @@ def recover_activation(request):
         return result
     user = profile.user
     email = user.email
-    token = user_controller.set_last_token(user, email, TOKEN_LONG, TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE)
+    token = user_controller.set_last_token(user, email, TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE)
     email_controller.SendEmail(email, {
         'name': profile.name,
         'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
@@ -224,9 +224,9 @@ def create_tiny_business(request):
 
         business_controller.CreateTinyBusinessProfile(form.cleaned_data['name'],
                                                       'category' in form.cleaned_data and form.cleaned_data['category'] or None,
-                                                      'latitude'in form.cleaned_data and form.cleaned_data['latitude'] or 0.0,
+                                                      'latitude' in form.cleaned_data and form.cleaned_data['latitude'] or 0.0,
                                                       'longitude' in form.cleaned_data and form.cleaned_data['longitude'] or 0.0,
-                                                      'country'in form.cleaned_data and form.cleaned_data['country'] or None,
+                                                      'country' in form.cleaned_data and form.cleaned_data['country'] or None,
                                                       'city' in form.cleaned_data and form.cleaned_data['city'] or None,
                                                       'address' in form.cleaned_data and form.cleaned_data['address'] or None)
     else:
@@ -317,15 +317,13 @@ def business_edit_profile(request, username):
                                        initial={'username': username, 'email': profile.user.email})
         form.is_valid()
 
-        if 'username'in form.cleaned_data and form.cleaned_data['username']:
+        if 'username' in form.cleaned_data and form.cleaned_data['username']:
             profile.user.username = form.cleaned_data['username']
             result.data['next'] = '/user/' + form.cleaned_data['username'] + '/'
         if 'email' in form.cleaned_data and form.cleaned_data['email']:
             profile.user.email = form.cleaned_data['email']
         if 'name' in form.cleaned_data and form.cleaned_data['name']:
             profile.user.first_name = form.cleaned_data['name']
-        if 'mobile'in form.cleaned_data and form.cleaned_data['mobile']:
-            profile.Mobile = form.cleaned_data['mobile']
         if 'website' in form.cleaned_data and form.cleaned_data['website']:
             profile.Website = form.cleaned_data['website']
 
@@ -343,7 +341,7 @@ def business_edit_profile(request, username):
             profile.country = country
             profile.address = address
 
-        profile.Bio = form.cleaned_data['bio']
+        profile.bio = form.cleaned_data['bio']
         if 'password' in form.cleaned_data and form.cleaned_data['password']:
             profile.user.set_password(form.cleaned_data['password'])
 
@@ -352,9 +350,9 @@ def business_edit_profile(request, username):
         result.messages.append(('success', _('Your profile was updated successfully.')))
     else:
         form = BusinessEditProfileForm(
-            initial={'email': profile.email, 'bio': profile.Bio, 'username': profile.username,
+            initial={'email': profile.email, 'bio': profile.bio, 'username': profile.username,
                      'name': profile.name,
-                     'mobile': profile.Mobile, 'website': profile.Website})
+                     'website': profile.Website})
     result.data['form'] = form
     return result
 

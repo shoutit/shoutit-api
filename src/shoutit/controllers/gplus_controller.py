@@ -15,14 +15,13 @@ from shoutit.models import LinkedGoogleAccount
 from shoutit.controllers.user_controller import auth_with_gplus, update_profile_location
 
 
-def user_from_gplus_code(request, code, initial_user=None, client='other'):
+def user_from_gplus_code(code, initial_user=None, client='shoutit-test'):
     print 'user_from_gplus_code'
-
     redirect_uri = OOB_CALLBACK_URN
-    if (request.is_api and request.api_client == 'web') or client == 'shoutit-web':
+    if client == 'shoutit-web':
         redirect_uri = 'postmessage'
-
-    print 'request.api_client', request.api_client
+    if client == 'shoutit-test':
+        redirect_uri = 'https://developers.google.com/oauthplayground'
     print 'redirect_uri', redirect_uri
 
     try:
@@ -57,7 +56,7 @@ def user_from_gplus_code(request, code, initial_user=None, client='other'):
             print "calling service.people() error: ", str(e)
             return e, None
 
-        user = auth_with_gplus(request, gplus_user, credentials)
+        user = auth_with_gplus(gplus_user, credentials)
 
     if user:
         if initial_user and initial_user['location']:

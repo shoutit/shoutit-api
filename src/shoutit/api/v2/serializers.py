@@ -16,7 +16,7 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_T
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification, Category, Currency,
     Report)
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller, user_controller
 
 
 class LocationSerializer(serializers.Serializer):
@@ -123,8 +123,8 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(UserSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    sex = serializers.BooleanField(source='profile.Sex')
-    bio = serializers.CharField(source='profile.Bio')
+    gender = serializers.BooleanField(source='profile.gender')
+    bio = serializers.CharField(source='profile.bio')
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
     push_tokens = PushTokensSerializer(help_text="Only shown for owner")
@@ -144,7 +144,7 @@ class UserDetailSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('sex', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens',
+        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens',
                                   'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
 
@@ -259,8 +259,8 @@ class UserDetailSerializer(UserSerializer):
                 profile.video.delete()
                 profile.video = None
 
-            profile.Bio = profile_data.get('Bio', profile.Bio)
-            profile.Sex = profile_data.get('Sex', profile.Sex)
+            profile.bio = profile_data.get('bio', profile.bio)
+            profile.gender = profile_data.get('gender', profile.gender)
             profile.image = profile_data.get('image', profile.image)
             profile.save()
 
@@ -601,3 +601,32 @@ class ReportSerializer(serializers.ModelSerializer):
         text = validated_data['text'] if 'text' in validated_data else None
         report = Report.objects.create(user=self.root.context['request'].user, text=text, attached_object=attached_object, type=report_type)
         return report
+
+
+class ShoutitSignupSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=70)
+    first_name = serializers.CharField(min_length=2, max_length=30, required=False)
+    last_name = serializers.CharField(min_length=1, max_length=30, required=False)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=6, max_length=30)
+    # todo
+    # initial_user = UserDetailSerializer(required=False)
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitSignupSerializer, self).to_internal_value(data)
+        name = ret.get('name')
+        names = name.split()
+        if len(names) < 2:
+            raise ValidationError({'name': ['Please enter your full name.']})
+        ret['first_name'] = " ".join(names[0:-1])
+        ret['last_name'] = names[-1]
+        return ret
+
+    def validate_email(self, email):
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValidationError({'email': ['Email is already used by another user.']})
+        return email
+
+    def create(self, validated_data):
+        user = user_controller.user_from_shoutit_signup_data(validated_data)
+        return user

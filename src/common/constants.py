@@ -128,14 +128,11 @@ class TokenType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
 
-TOKEN_TYPE_HTML_EMAIL = TokenType("Html Email")
-TOKEN_TYPE_API_EMAIL = TokenType("Api Email")
-TOKEN_TYPE_HTML_NUM = TokenType("Html Num")
-TOKEN_TYPE_API_NUM = TokenType("Api Num")
-
+TOKEN_TYPE_EMAIL = TokenType("Email Token")
+TOKEN_TYPE_NUM = TokenType("Number Token")
 TOKEN_TYPE_RECOVER_PASSWORD = TokenType("Recover Password")
-TOKEN_TYPE_HTML_EMAIL_BUSINESS_ACTIVATE = TokenType("Business Html Email Activate")
-TOKEN_TYPE_HTML_EMAIL_BUSINESS_CONFIRM = TokenType("Business Html Confirm")
+TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE = TokenType("Business Html Email Activate")
+TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM = TokenType("Business Html Confirm")
 
 
 class FileType(Constant):

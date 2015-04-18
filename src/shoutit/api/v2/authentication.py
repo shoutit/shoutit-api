@@ -13,6 +13,7 @@ from provider.views import OAuthError
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from shoutit.api.v2.serializers import ShoutitSignupSerializer
 
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
@@ -49,7 +50,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     authentication_classes = ()
     permission_classes = ()
 
-    grant_types = ['authorization_code', 'refresh_token', 'password', 'client_credentials', 'facebook_access_token', 'gplus_code']
+    grant_types = ['authorization_code', 'refresh_token', 'password', 'client_credentials',
+                   'facebook_access_token', 'gplus_code', 'shoutit_signup']
 
     def error_response(self, error, content_type='application/json', status=400, **kwargs):
         """
@@ -88,7 +90,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             raise OAuthError({'invalid_request': "Missing required parameter: facebook_access_token"})
         initial_user = data.get('user')
 
-        error, user = user_from_facebook_auth_response(request, facebook_access_token, initial_user)
+        error, user = user_from_facebook_auth_response(facebook_access_token, initial_user)
         if error:
             raise OAuthError({'error': str(error)})
         return user
@@ -124,7 +126,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             raise OAuthError({'invalid_request': "Missing required parameter: gplus_code"})
         initial_user = data.get('user')
 
-        error, user = user_from_gplus_code(request, gplus_code, initial_user, client.name)
+        error, user = user_from_gplus_code(gplus_code, initial_user, client.name)
         if error:
             raise OAuthError({'error': str(error)})
         return user
@@ -141,6 +143,39 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         user = self.get_gplus_code_grant(request, data, client)
+        scope = provider_scope.to_int('read', 'write')
+
+        if provider_constants.SINGLE_ACCESS_TOKEN:
+            at = self.get_access_token(request, user, scope, client)
+        else:
+            at = self.create_access_token(request, user, scope, client)
+            # Public clients don't get refresh tokens
+            if client.client_type == provider_constants.CONFIDENTIAL:
+                rt = self.create_refresh_token(request, user, scope, at, client)
+
+        return self.access_token_response(at)
+
+    def get_shoutit_signup_grant(self, request, signup_data, client):
+
+        serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return user
+
+    def shoutit_signup(self, request, data, client):
+        """
+        Handle ``grant_type=gplus_code`` requests.
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_signup",
+            "name": "Barack Hussein Obama",
+            "email": "i.also.shout@whitehouse.gov",
+            "password": "iW@ntToPl*YaGam3"
+        }
+        """
+
+        user = self.get_shoutit_signup_grant(request, data, client)
         scope = provider_scope.to_int('read', 'write')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
@@ -171,6 +206,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return self.facebook_access_token
         elif grant_type == 'gplus_code':
             return self.gplus_code
+        elif grant_type == 'shoutit_signup':
+            return self.shoutit_signup
         return None
 
     # override get, not to be documented or listed in urls.
@@ -197,6 +234,18 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "facebook_access_token",
             "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy"
+        }
+        </code></pre>
+
+        ###Creating Shoutit Account
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_signup",
+            "name": "Barack Hussein Obama",
+            "email": "i.also.shout@whitehouse.gov",
+            "password": "iW@ntToPl*YaGam3"
         }
         </code></pre>
 

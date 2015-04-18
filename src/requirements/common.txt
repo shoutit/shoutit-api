@@ -33,5 +33,4 @@ httplib2==0.9
 google-api-python-client==1.4.0
 git+https://github.com/mochawich/django-push-notifications
 
-django-widget-tweaks==1.3
-django-paypal==0.2
+# django-paypal==0.2
