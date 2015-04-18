@@ -63,14 +63,14 @@ def user_from_shoutit_signup_data(signup_data):
 
 
 def auth_with_gplus(gplus_user, credentials):
-    email = gplus_user.get('emails')[0].get('value')
+    email = gplus_user.get('emails')[0].get('value').lower()
     password = generate_password()
     name = gplus_user.get('name')
     first_name = name.get('givenName')
     last_name = name.get('familyName')
 
     try:
-        user = User.objects.get(email__iexact=email)
+        user = User.objects.get(email=email)
     except User.DoesNotExist:
         user = signup_user(email=email, password=password, first_name=first_name, last_name=last_name)
 
@@ -107,13 +107,13 @@ def auth_with_gplus(gplus_user, credentials):
 
 
 def auth_with_facebook(fb_user, long_lived_token):
-    email = fb_user.get('email')
+    email = fb_user.get('email').lower
     password = generate_password()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
 
     try:
-        user = User.objects.get(email__iexact=email)
+        user = User.objects.get(email=email)
     except User.DoesNotExist:
         user = signup_user(email=email, password=password, first_name=first_name, last_name=last_name)
 

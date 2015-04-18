@@ -221,3 +221,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         self.is_activated = True
         self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
+
+    def clean(self):
+        self.email = self.email.lower()
+

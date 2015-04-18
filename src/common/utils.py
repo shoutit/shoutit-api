@@ -1,6 +1,7 @@
 """
 Utils that are independent of Apps and their models
 """
+from __future__ import unicode_literals
 import sys
 import re
 from datetime import datetime
@@ -8,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 import httplib2
 import uuid
-import math
 from common.constants import NOT_ALLOWED_USERNAMES
 
 
