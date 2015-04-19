@@ -43,8 +43,8 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     return django_user
 
 
-def signup_user(email, password, first_name='', last_name=''):
-    username = generate_username()
+def signup_user(email, password, first_name='', last_name='', username=None):
+    username = username or generate_username()
     while User.objects.filter(username=username).exists():
         username = generate_username()
     user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
@@ -107,15 +107,16 @@ def auth_with_gplus(gplus_user, credentials):
 
 
 def auth_with_facebook(fb_user, long_lived_token):
-    email = fb_user.get('email').lower
+    email = fb_user.get('email').lower()
     password = generate_password()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
+    username = fb_user.get('username')
 
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        user = signup_user(email=email, password=password, first_name=first_name, last_name=last_name)
+        user = signup_user(email=email, password=password, first_name=first_name, last_name=last_name, username=username)
 
     if not user.is_activated:
         user.activate()
