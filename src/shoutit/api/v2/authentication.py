@@ -283,6 +283,17 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         }
         </code></pre>
 
+        ###Signin with Shoutit Account
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_signin",
+            "email": "i.also.shout@whitehouse.gov",  // email or username
+            "password": "iW@ntToPl*YaGam3"
+        }
+        </code></pre>
+
         ###Refreshing the Token
         <pre><code>
         {
