@@ -3,11 +3,25 @@
 
 """
 from __future__ import unicode_literals
+from django.conf import settings
 
 from rest_framework import permissions
-
+from rest_framework.exceptions import ValidationError
 
 MODIFY_METHODS = ['PUT', 'PATCH', 'DELETE']
+
+
+class IsSecure(permissions.BasePermission):
+    """
+    Custom permission to only allow secure connections.
+    """
+
+    def has_permission(self, request, view):
+        if settings.ENFORCE_SECURE and not request.is_secure():
+            raise ValidationError({
+                'error': 'invalid_request',
+                'error_description': "A secure connection is required."})
+        return True
 
 
 class IsOwner(permissions.BasePermission):

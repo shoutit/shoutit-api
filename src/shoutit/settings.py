@@ -538,6 +538,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
+        'shoutit.api.v2.permissions.IsSecure',
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_RENDERER_CLASSES': (
@@ -548,11 +549,13 @@ REST_FRAMEWORK = {
     'URL_FIELD_NAME': 'api_url',
 }
 
+ENFORCE_SECURE = PROD and not DEBUG
+
 # oauth2 settings
 OAUTH_SINGLE_ACCESS_TOKEN = True
-ENFORCE_SECURE = False
-ENFORCE_CLIENT_SECURE = True
-DELETE_EXPIRED = True
+OAUTH_ENFORCE_SECURE = PROD and not DEBUG
+OAUTH_ENFORCE_CLIENT_SECURE = True
+OAUTH_DELETE_EXPIRED = True
 
 SWAGGER_SETTINGS = {
     'exclude_namespaces': [],

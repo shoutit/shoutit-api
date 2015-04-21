@@ -11,9 +11,12 @@ from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.views import OAuthError
 
+from rest_framework import viewsets
+from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from shoutit.api.v2.serializers import ShoutitSignupSerializer
+from shoutit.api.v2.serializers import ShoutitSignupSerializer, ShoutitSigninSerializer, ShoutitVerifyEmailSerializer, \
+    ShoutitResetPasswordSerializer, ShoutitChangePasswordSerializer
 
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
@@ -50,8 +53,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     authentication_classes = ()
     permission_classes = ()
 
-    grant_types = ['authorization_code', 'refresh_token', 'password', 'client_credentials',
-                   'facebook_access_token', 'gplus_code', 'shoutit_signup']
+    grant_types = ['authorization_code', 'refresh_token', 'client_credentials',
+                   'facebook_access_token', 'gplus_code', 'shoutit_signup', 'shoutit_signin']
 
     def error_response(self, error, content_type='application/json', status=400, **kwargs):
         """
@@ -156,7 +159,6 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         return self.access_token_response(at)
 
     def get_shoutit_signup_grant(self, request, signup_data, client):
-
         serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -164,7 +166,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
 
     def shoutit_signup(self, request, data, client):
         """
-        Handle ``grant_type=gplus_code`` requests.
+        Handle ``grant_type=shoutit_signup`` requests.
         {
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
@@ -176,6 +178,36 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         user = self.get_shoutit_signup_grant(request, data, client)
+        scope = provider_scope.to_int('read', 'write')
+
+        if provider_constants.SINGLE_ACCESS_TOKEN:
+            at = self.get_access_token(request, user, scope, client)
+        else:
+            at = self.create_access_token(request, user, scope, client)
+            # Public clients don't get refresh tokens
+            if client.client_type == provider_constants.CONFIDENTIAL:
+                rt = self.create_refresh_token(request, user, scope, at, client)
+
+        return self.access_token_response(at)
+
+    def get_shoutit_signin_grant(self, request, signin_data, client):
+        serializer = ShoutitSigninSerializer(data=signin_data)
+        serializer.is_valid(raise_exception=True)
+        return serializer.instance
+
+    def shoutit_signin(self, request, data, client):
+        """
+        Handle ``grant_type=shoutit_signin`` requests.
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_signin",
+            "email": "i.also.shout@whitehouse.gov",  // email or username
+            "password": "iW@ntToPl*YaGam3"
+        }
+        """
+
+        user = self.get_shoutit_signin_grant(request, data, client)
         scope = provider_scope.to_int('read', 'write')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
@@ -208,6 +240,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return self.gplus_code
         elif grant_type == 'shoutit_signup':
             return self.shoutit_signup
+        elif grant_type == 'shoutit_signin':
+            return self.shoutit_signin
         return None
 
     # override get, not to be documented or listed in urls.
@@ -308,3 +342,94 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return handler(request, request.data, client)
         except OAuthError, e:
             return self.error_response(e.args[0])
+
+
+class ShoutitAuthView(viewsets.ViewSet):
+    """
+    ShoutitAuth Resource
+    """
+
+    def error_response(self, error):
+        """
+        Return an error response to the client with default status code of
+        *400* stating the error as outlined in :rfc:`5.2`.
+        """
+        return Response(error, status=400)
+
+    def success_response(self, success):
+        """
+        Returns a successful response.
+        """
+        response_data = {
+            'success': success,
+        }
+        return Response(response_data)
+
+    @list_route(methods=['post'], suffix='Verify Email')
+    def verify_email(self, request):
+        """
+        ###Verify email
+        This sends the user a verification email.
+        <pre><code>
+        {
+            "email": "email@example.com"  // optional to change the email before sending new verification email
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
+        """
+        if request.user.is_activated:
+            return self.success_response("Your email '{}' is already verified.".format(request.user.email))
+        serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return self.success_response("A verification email will be soon sent to {}.".format(request.user.email))
+
+    @list_route(methods=['post'], suffix='Change Password')
+    def change_password(self, request):
+        """
+        ###Change password
+        This changes the current user's password.
+        <pre><code>
+        {
+            "old_password": "easypass",
+            "new_password": "HarD3r0n#",
+            "new_password2": "HarD3r0n#"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
+        """
+        serializer = ShoutitChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return self.success_response("Password changed.")
+
+    @list_route(methods=['post'], permission_classes=(), suffix='Reset Password')
+    def reset_password(self, request):
+        """
+        ###Reset password
+        This sends the user a password reset email. It can be used when user forgets his password.
+        <pre><code>
+        {
+            "email": "email@example.com"  // email or username
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
+        """
+        serializer = ShoutitResetPasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        # todo
+        # serializer.instance.reset_password()
+        return self.success_response("Password recovery email will be sent soon.")

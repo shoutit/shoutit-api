@@ -5,6 +5,8 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 import uuid
+from django.contrib.auth import login
+from django.db.models import Q
 from push_notifications.models import APNSDevice, GCMDevice
 
 from rest_framework import serializers
@@ -631,3 +633,81 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = user_controller.user_from_shoutit_signup_data(validated_data)
         return user
+
+
+class ShoutitSigninSerializer(serializers.Serializer):
+    email = serializers.CharField()
+    password = serializers.CharField()
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitSigninSerializer, self).to_internal_value(data)
+        email = ret.get('email').lower()
+        password = ret.get('password')
+        try:
+            user = User.objects.get(Q(email=email) | Q(username=email))
+        except User.DoesNotExist:
+            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+        if not user.check_password(password):
+            raise ValidationError({'password': ['The password you entered is incorrect.']})
+        self.instance = user
+        return ret
+
+
+class ShoutitVerifyEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+
+    def validate_email(self, email):
+        user = self.context.get('request').user
+        email = email.lower()
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            raise ValidationError({'email': ['Email is already used by another user.']})
+        return email
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitVerifyEmailSerializer, self).to_internal_value(data)
+        user = self.context.get('request').user
+        email = ret.get('email')
+        if email:
+            user.email = email.lower()
+            user.save(update_fields=['email'])
+        return ret
+
+
+class ShoutitResetPasswordSerializer(serializers.Serializer):
+    email = serializers.CharField()
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitResetPasswordSerializer, self).to_internal_value(data)
+        email = ret.get('email').lower()
+        try:
+            user = User.objects.get(Q(email=email) | Q(username=email))
+        except User.DoesNotExist:
+            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+        self.instance = user
+        return ret
+
+
+class ShoutitChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField(min_length=6, max_length=30)
+    new_password2 = serializers.CharField(min_length=6, max_length=30)
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitChangePasswordSerializer, self).to_internal_value(data)
+        new_password = ret.get('new_password')
+        new_password2 = ret.get('new_password2')
+
+        if new_password != new_password2:
+            raise ValidationError({'new_password': ['New passwords did not match.']})
+
+        user = self.context.get('request').user
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(self.context.get('request'), user)
+        return ret
+
+    def validate_old_password(self, value):
+        user = self.context.get('request').user
+        if not user.check_password(value):
+            raise ValidationError(['Old password does not match.'])
