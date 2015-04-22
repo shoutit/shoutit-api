@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 from django.core.paginator import Paginator as DjangoPaginator
+from elasticsearch import ElasticsearchException
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
@@ -196,7 +197,16 @@ class DateTimeIndexPagination(DateTimePagination):
         else:
             index_queryset = index_queryset.sort({self.datetime_attribute: 'desc'})
 
-        index_response = index_queryset[:page_size].execute()
+        try:
+            index_response = index_queryset[:page_size].execute()
+        except ElasticsearchException:
+            # todo: log!
+            # possible errors
+            # SerializationError: returned data was corrupted
+            # ConnectionTimeout
+            # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
+            index_response = []
+
         object_ids = [object_index.id for object_index in index_response]
         page = view.model.objects.filter(id__in=object_ids)\
             .select_related(*view.select_related)\
