@@ -31,6 +31,14 @@ class MiscViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @list_route(methods=['get'], suffix='Categories')
+    def shouts_sort_types(self, request):
+        """
+        Get shouts sort types
+        ---
+        """
+        return Response([{'type': 'time', 'name': 'Latest'}, {'type': 'distance', 'name': 'Nearest'}])
+
+    @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """
         Get categories
