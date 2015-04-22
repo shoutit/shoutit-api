@@ -248,7 +248,9 @@ class PageNumberIndexPagination(PageNumberPagination):
         if not page_size:
             return None
 
-        page_number = int(request.query_params.get(self.page_query_param, 1))
+        page_number = request.query_params.get(self.page_query_param, 1)
+        page_number = self.get_valid_page_number(page_number)
+
         _from = (page_number - 1) * page_size
         _to = page_number * page_size
         try:
@@ -277,6 +279,15 @@ class PageNumberIndexPagination(PageNumberPagination):
         self.page = page
         self.request = request
         return list(self.page)
+
+    def get_valid_page_number(self, page_number):
+        try:
+            page_number = int(page_number)
+            if not page_number:
+                raise ValueError
+        except:
+            page_number = 1
+        return page_number
 
     def get_paginated_response(self, data):
         return Response(OrderedDict([
