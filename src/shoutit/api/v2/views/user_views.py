@@ -23,6 +23,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     User API Resource.
     """
     lookup_field = 'username'
+    lookup_value_regex = '[0-9a-zA-Z._]+'
 
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer

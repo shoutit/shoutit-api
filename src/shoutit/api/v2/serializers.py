@@ -173,7 +173,7 @@ class UserDetailSerializer(UserSerializer):
         return self.root.context['request'].user == user
 
     def get_message_url(self, user):
-        return reverse('user-message', kwargs={'username': user.id}, request=self.context['request'])
+        return reverse('user-message', kwargs={'username': user.username}, request=self.context['request'])
 
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
