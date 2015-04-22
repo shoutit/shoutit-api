@@ -117,6 +117,11 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if up_right_lng:
             index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
 
+        # sort
+        sort = data.get('sort', 'time')
+
+        index_queryset = index_queryset.sort({'date_published': 'desc'})
+
         return index_queryset
 
 

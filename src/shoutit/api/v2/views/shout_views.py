@@ -12,7 +12,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.filters import ShoutIndexFilterBackend
-from shoutit.api.v2.pagination import ReverseDateTimeIndexPagination
+from shoutit.api.v2.pagination import ReverseDateTimeIndexPagination, PageNumberIndexPagination
 from shoutit.api.v2.serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet, UUIDViewSetMixin
 from shoutit.controllers import message_controller
@@ -30,7 +30,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     serializer_class = ShoutSerializer
     serializer_detail_class = ShoutDetailSerializer
 
-    pagination_class = ReverseDateTimeIndexPagination
+    pagination_class = PageNumberIndexPagination
 
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
@@ -122,6 +122,12 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
             errors['up_right_lng'] = "should be between -180 and 180"
         if errors:
             raise ValidationError(errors)
+
+        # temp compatibility for 'before' and 'after'
+        before_query_param = request.query_params.get('before')
+        after_query_param = request.query_params.get('after')
+        if before_query_param or after_query_param:
+            self.pagination_class = ReverseDateTimeIndexPagination
 
         indexed_shouts = self.filter_queryset(self.get_index_search())
         page = self.paginate_queryset(indexed_shouts)

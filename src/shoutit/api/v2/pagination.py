@@ -231,3 +231,70 @@ class DateTimeIndexPagination(DateTimePagination):
 
 class ReverseDateTimeIndexPagination(DateTimeIndexPagination):
     recent_on_top = True
+
+
+class PageNumberIndexPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+    results_field = 'results'
+
+    def paginate_queryset(self, index_queryset, request, view=None):
+        """
+        Paginate a queryset using Elasticsearch index.
+        """
+
+        page_size = self.get_page_size(request)
+        if not page_size:
+            return None
+
+        page_number = int(request.query_params.get(self.page_query_param, 1))
+        _from = (page_number - 1) * page_size
+        _to = page_number * page_size
+        try:
+            index_response = index_queryset[_from:_to].execute()
+        except ElasticsearchException:
+            # todo: log!
+            # possible errors
+            # SerializationError: returned data was corrupted
+            # ConnectionTimeout
+            # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
+            index_response = []
+
+        object_ids = [object_index.id for object_index in index_response]
+        page = view.model.objects.filter(id__in=object_ids)\
+            .select_related(*view.select_related)\
+            .prefetch_related(*view.prefetch_related)\
+            .defer(*view.defer)
+
+        # todo: order based on index_response order
+
+        if page.count() > 1 and self.template is not None:
+            # The browsable API should display pagination controls.
+            self.display_page_controls = True
+
+        self.index_response = index_response
+        self.page = page
+        self.request = request
+        return list(self.page)
+
+    def get_paginated_response(self, data):
+        return Response(OrderedDict([
+            ('count', self.index_response.hits.total if data else 0),
+            # ('next', self.get_next_link()),
+            # ('previous', self.get_previous_link()),
+            (self.results_field, data)
+        ]))
+
+    def get_page_size(self, request):
+        if self.page_size_query_param:
+            try:
+                return _positive_int(
+                    request.query_params[self.page_size_query_param],
+                    strict=True,
+                    cutoff=self.max_page_size
+                )
+            except (KeyError, ValueError):
+                pass
+
+        return self.page_size
