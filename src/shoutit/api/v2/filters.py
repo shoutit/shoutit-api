@@ -122,8 +122,18 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         # sort
         sort = data.get('sort')
-        if sort:
-            index_queryset = index_queryset.sort({'date_published': 'desc'})
+        sort_types = {
+            None: ('-date_published',),
+            'time': ('-date_published',),
+            'price_asc': ('price',),
+            'price_desc': ('-price',),
+        }
+        if sort and sort not in sort_types:
+                raise ValidationError({'sort': "Invalid sort."})
+        selected_sort = sort_types[sort]
+        if search:
+            selected_sort = selected_sort + ('-_score',)
+        index_queryset = index_queryset.sort(*selected_sort)
 
         return index_queryset
 

@@ -265,15 +265,23 @@ class PageNumberIndexPagination(PageNumberPagination):
             # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
             index_response = []
 
+        # todo: better order!!!
+
         object_ids = [object_index.id for object_index in index_response]
-        page = view.model.objects.filter(id__in=object_ids)\
+        _page_dic = OrderedDict()
+        for object_id in object_ids:
+            _page_dic[object_id] = None
+
+        _page = view.model.objects.filter(id__in=object_ids)\
             .select_related(*view.select_related)\
             .prefetch_related(*view.prefetch_related)\
             .defer(*view.defer)
 
-        # todo: order based on index_response order
+        for shout in _page:
+            _page_dic[shout.pk] = shout
+        page = [item for key, item in _page_dic.items()]
 
-        if page.count() > 1 and self.template is not None:
+        if _page.count() > 1 and self.template is not None:
             # The browsable API should display pagination controls.
             self.display_page_controls = True
 

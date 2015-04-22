@@ -36,7 +36,13 @@ class MiscViewSet(viewsets.ViewSet):
         Get shouts sort types
         ---
         """
-        return Response([{'type': 'time', 'name': 'Latest'}, {'type': 'distance', 'name': 'Nearest'}])
+        return Response([
+            {'type': 'time', 'name': 'Latest'},
+            {'type': 'distance', 'name': 'Nearest'},
+            {'type': 'price_asc', 'name': 'Price Increasing'},
+            {'type': 'price_desc', 'name': 'Price Decreasing'},
+            {'type': 'recommended', 'name': 'Recommended'},
+        ])
 
     @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
