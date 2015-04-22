@@ -44,7 +44,7 @@ class AbstractProfile(UUIDModel, StreamMixin):
 
 class Profile(AbstractProfile):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='profile', db_index=True)
-    gender = models.CharField(max_length=10, null=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     bio = models.TextField(blank=True, max_length=512, default='New Shouter!')
 
