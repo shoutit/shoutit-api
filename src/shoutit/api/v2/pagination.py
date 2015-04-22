@@ -49,7 +49,7 @@ class DateTimePagination(CursorPagination):
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 
             except (TypeError, ValueError):
-                raise ValidationError({self.before_field: "shout be a valid timestamp"})
+                raise ValidationError({self.before_field: "should be a valid timestamp"})
         elif after_query_param:
             try:
                 filters = {
@@ -57,7 +57,7 @@ class DateTimePagination(CursorPagination):
                 }
                 queryset = queryset.filter(**filters).order_by(self.datetime_attribute)
             except (TypeError, ValueError) as e:
-                raise ValidationError({self.after_field: "shout be a valid timestamp"})
+                raise ValidationError({self.after_field: "should be a valid timestamp"})
         else:
             queryset = queryset.order_by('-' + self.datetime_attribute)
 
@@ -185,7 +185,7 @@ class DateTimeIndexPagination(DateTimePagination):
                 index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'desc'})
 
             except (TypeError, ValueError):
-                raise ValidationError({self.before_field: "shout be a valid timestamp"})
+                raise ValidationError({self.before_field: "should be a valid timestamp"})
         elif after_query_param:
             try:
                 filters = {
@@ -193,7 +193,7 @@ class DateTimeIndexPagination(DateTimePagination):
                 }
                 index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'asc'})
             except (TypeError, ValueError) as e:
-                raise ValidationError({self.after_field: "shout be a valid timestamp"})
+                raise ValidationError({self.after_field: "should be a valid timestamp"})
         else:
             index_queryset = index_queryset.sort({self.datetime_attribute: 'desc'})
 

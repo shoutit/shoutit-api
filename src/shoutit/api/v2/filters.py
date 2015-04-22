@@ -53,6 +53,9 @@ class ShoutFilter(django_filters.FilterSet):
 class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
     def filter_queryset(self, request, index_queryset, view):
+        if view.action == 'retrieve':
+            return index_queryset
+
         data = request.query_params
 
         search = data.get('search')
