@@ -17,7 +17,7 @@ from shoutit.api.api_utils import get_current_uri
 
 
 class DateTimePagination(CursorPagination):
-    recent_on_top = False 
+    recent_on_top = False
     datetime_attribute = 'created_at'
     datetime_unix_attribute = 'created_at_unix'
     before_field = 'before'
@@ -45,7 +45,7 @@ class DateTimePagination(CursorPagination):
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__lt': datetime.fromtimestamp(int(before_query_param)-1)
+                    self.datetime_attribute + '__lt': datetime.fromtimestamp(int(before_query_param) - 1)
                 }
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 
@@ -54,7 +54,7 @@ class DateTimePagination(CursorPagination):
         elif after_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__gt': datetime.fromtimestamp(int(after_query_param)+1)
+                    self.datetime_attribute + '__gt': datetime.fromtimestamp(int(after_query_param) + 1)
                 }
                 queryset = queryset.filter(**filters).order_by(self.datetime_attribute)
             except (TypeError, ValueError) as e:
@@ -149,9 +149,7 @@ class ShoutitPageNumberPagination(PageNumberPagination):
 
 
 class ShoutitPaginationMixin(object):
-
     def get_custom_shoutit_page_number_pagination_class(self, custom_page_size=None, custom_results_field=None):
-
         class PageNumberPaginationClass(ShoutitPageNumberPagination):
             page_size = custom_page_size or ShoutitPageNumberPagination.page_size
             results_field = custom_results_field or ShoutitPageNumberPagination.results_field
@@ -181,7 +179,7 @@ class DateTimeIndexPagination(DateTimePagination):
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute: {'lt': datetime.fromtimestamp(int(before_query_param)-1)}
+                    self.datetime_attribute: {'lt': datetime.fromtimestamp(int(before_query_param) - 1)}
                 }
                 index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'desc'})
 
@@ -190,7 +188,7 @@ class DateTimeIndexPagination(DateTimePagination):
         elif after_query_param:
             try:
                 filters = {
-                    self.datetime_attribute: {'gt': datetime.fromtimestamp(int(after_query_param)+1)}
+                    self.datetime_attribute: {'gt': datetime.fromtimestamp(int(after_query_param) + 1)}
                 }
                 index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'asc'})
             except (TypeError, ValueError) as e:
@@ -209,10 +207,10 @@ class DateTimeIndexPagination(DateTimePagination):
             index_response = []
 
         object_ids = [object_index.id for object_index in index_response]
-        page = view.model.objects.filter(id__in=object_ids)\
-            .select_related(*view.select_related)\
-            .prefetch_related(*view.prefetch_related)\
-            .defer(*view.defer)\
+        page = view.model.objects.filter(id__in=object_ids) \
+            .select_related(*view.select_related) \
+            .prefetch_related(*view.prefetch_related) \
+            .defer(*view.defer) \
             .order_by('-date_published')
 
         # reverse the objects order if needed, so the results are always sorted from oldest to newest.
@@ -237,7 +235,8 @@ class ReverseDateTimeIndexPagination(DateTimeIndexPagination):
 class PageNumberIndexPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 50
+    max_page_size = 100
+    max_results = 1000
     results_field = 'results'
     template = 'rest_framework/pagination/previous_and_next.html'
 
@@ -249,9 +248,12 @@ class PageNumberIndexPagination(PageNumberPagination):
         page_size = self.get_page_size(request)
         if not page_size:
             return None
-
+        max_page_number = self.max_results / page_size
         page_number = request.query_params.get(self.page_query_param, 1)
         page_number = self.get_valid_page_number(page_number)
+        if page_number > max_page_number:
+            self.max_page_number_exceeded = True
+            return None
 
         _from = (page_number - 1) * page_size
         _to = page_number * page_size
@@ -265,45 +267,58 @@ class PageNumberIndexPagination(PageNumberPagination):
             # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
             index_response = []
 
-        # todo: better order!!!
+        # save the order
+        objects_dict = OrderedDict()
+        for object_index in index_response:
+            objects_dict[object_index.id] = None
 
-        object_ids = [object_index.id for object_index in index_response]
-        _page_dic = OrderedDict()
-        for object_id in object_ids:
-            _page_dic[object_id] = None
-
-        _page = view.model.objects.filter(id__in=object_ids)\
-            .select_related(*view.select_related)\
-            .prefetch_related(*view.prefetch_related)\
+        # populate from database
+        qs = view.model.objects.filter(id__in=objects_dict.keys()) \
+            .select_related(*view.select_related) \
+            .prefetch_related(*view.prefetch_related) \
             .defer(*view.defer)
 
-        for shout in _page:
-            _page_dic[shout.pk] = shout
-        page = [item for key, item in _page_dic.items()]
+        # sort populated objects according to saved order
+        for shout in qs:
+            objects_dict[shout.pk] = shout
+        page = [item for key, item in objects_dict.items() if item]
 
-        if _page.count() > 1 and self.template is not None:
+        if len(page) > 1 and self.template is not None:
             # The browsable API should display pagination controls.
             self.display_page_controls = True
 
-        self.index_response = index_response
         self.page = page
+        self.index_response = index_response
+        self.num_results = index_response.hits.total if self.page else 0
+        self.num_pages = (index_response.hits.total / page_size) if page else 0
+        self.page_number = page_number
+        self.page_size = page_size
         self.request = request
-        return list(self.page)
+        return self.page
 
     def get_valid_page_number(self, page_number):
         try:
             page_number = int(page_number)
-            if not page_number:
+            if page_number == 0:
                 raise ValueError
-        except:
+        except ValueError:
             page_number = 1
         return page_number
 
     def get_paginated_response(self, data):
+        if getattr(self, 'max_page_number_exceeded', False):
+            return Response(OrderedDict([
+                ('error', 'We do not return more than 1000 results for any query.'),
+                ('count', None),
+                ('next', None),
+                ('previous', None),
+                (self.results_field, [])
+            ]))
+
         return Response(OrderedDict([
-            ('count', self.index_response.hits.total if data else 0),
-            # ('next', self.get_next_link()),
-            # ('previous', self.get_previous_link()),
+            ('count', self.num_results),
+            ('next', self.get_next_link()),
+            ('previous', self.get_previous_link()),
             (self.results_field, data)
         ]))
 
@@ -327,19 +342,25 @@ class PageNumberIndexPagination(PageNumberPagination):
         }
 
     def get_next_link(self):
-        return ""
-        # if not self.page.has_next():
-        #     return None
-        # url = self.request.build_absolute_uri()
-        # page_number = self.page.next_page_number()
-        # return replace_query_param(url, self.page_query_param, page_number)
+        if not self.page_has_next():
+            return None
+        url = self.request.build_absolute_uri()
+        return replace_query_param(url, self.page_query_param, self.page_number + 1)
+
+    def page_has_next(self):
+        if not self.page:
+            return None
+        return self.page_number < self.num_pages
+
+    def page_has_previous(self):
+        if not self.page:
+            return None
+        return self.page_number > 1
 
     def get_previous_link(self):
-        return ""
-        # if not self.page.has_previous():
-        #     return None
-        # url = self.request.build_absolute_uri()
-        # page_number = self.page.previous_page_number()
-        # if page_number == 1:
-        #     return remove_query_param(url, self.page_query_param)
-        # return replace_query_param(url, self.page_query_param, page_number)
+        if not self.page_has_previous():
+            return None
+        url = self.request.build_absolute_uri()
+        if self.page_number == 2:
+            return remove_query_param(url, self.page_query_param)
+        return replace_query_param(url, self.page_query_param, self.page_number - 1)
