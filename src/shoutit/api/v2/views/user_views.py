@@ -43,8 +43,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def get_object(self):
         username = self.kwargs.get(self.lookup_field)
-        if username == 'me' and self.request.user.is_authenticated():
-            self.kwargs[self.lookup_field] = self.request.user.username
+        if self.request.user.is_authenticated():
+            if username == 'me' or username == self.request.user.username:
+                return self.request.user
 
         return super(UserViewSet, self).get_object()
 
