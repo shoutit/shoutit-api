@@ -79,8 +79,8 @@ class Command(BaseCommand):
             ]
             shout_data = {
                 "type": type,
-                "title": "Test {0} {1:06d}_{2:0.0f} by {3}".format(type, i, time.time(), user.username),
-                "text": "This is a test {} from user {}.".format(type, user.username),
+                "title": "{0} {1} in {2} at {3:0.0f}".format(category.name, type, city.city, time.time()),
+                "text": "".format(" ".join(tags)),
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
                 "images": images,

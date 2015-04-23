@@ -60,7 +60,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         search = data.get('search')
         if search:
-            index_queryset = index_queryset.query('fuzzy_like_this', like_text=search, fields=['title', 'text', 'tags'])
+            index_queryset = index_queryset.query('fuzzy_like_this', like_text=search, fields=['title', 'text', 'tags'], fuzziness=1)
 
         tags = data.get('tags')
         if tags:
