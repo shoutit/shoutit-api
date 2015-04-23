@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.conf.urls import patterns, include, url
 from django.views.generic import RedirectView
 from django.contrib import admin
@@ -6,7 +7,7 @@ from shoutit.tiered_views import shout_views, general_views
 
 urlpatterns = patterns('',
                        # current api root
-                       url(r'^$', RedirectView.as_view(url='/v2/')),
+                       url(r'^$', RedirectView.as_view(url='/v2/', permanent=False)),
 
                        # admin
                        url(r'^grappelli/', include('grappelli.urls')),
