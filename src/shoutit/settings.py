@@ -398,6 +398,9 @@ LOGGING = {
 }
 
 # Mail Settings
+MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
+MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
+
 SERVER_EMAIL = 'Shoutit <info@shoutit.com>'
 USE_GOOGLE = False
 USE_MANDRILL = False

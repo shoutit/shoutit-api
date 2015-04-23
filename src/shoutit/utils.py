@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from shoutit import settings
 from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.models import Tag, User
+import mailchimp
 
 
 def generate_password():
@@ -174,3 +175,7 @@ class JsonResponse(HttpResponse):
 
 class JsonResponseBadRequest(JsonResponse):
     status_code = 400
+
+
+def get_mailchimp_api():
+    return mailchimp.Mailchimp(settings.MAILCHIMP_API_KEY)

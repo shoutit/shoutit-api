@@ -34,4 +34,7 @@ httplib2==0.9.1
 google-api-python-client==1.4.0
 git+https://github.com/mochawich/django-push-notifications
 
+# email
+mailchimp==2.0.9
+
 # django-paypal==0.2
