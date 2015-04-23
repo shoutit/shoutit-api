@@ -1,6 +1,8 @@
 from django.http import HttpResponseServerError
+from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
 def fake_error(request):
     raise Exception('FAKE ERROR')
 
