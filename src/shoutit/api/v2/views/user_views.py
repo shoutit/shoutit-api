@@ -8,7 +8,8 @@ from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
-from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination
+from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination, \
+    PageNumberIndexPagination
 
 from shoutit.controllers import stream_controller, message_controller
 
@@ -16,6 +17,7 @@ from shoutit.api.v2.serializers import *
 from shoutit.api.v2.permissions import IsOwnerModify
 from shoutit.controllers.facebook_controller import link_facebook_account, unlink_facebook_user
 from shoutit.controllers.gplus_controller import link_gplus_account, unlink_gplus_user
+from shoutit.models import ShoutIndex
 
 
 class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -339,13 +341,31 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: page_size
               paramType: query
         """
+        user = self.get_object()
+
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
-        user = self.get_object()
-        shouts = stream_controller.get_stream_shouts_qs(user.profile.stream, shout_type)
-        self.pagination_class = ReverseDateTimePagination
+        # todo: deprecate old method?
+        # todo: refactor to use shout index filter
+        # temp compatibility for 'before' and 'after'
+        before_query_param = request.query_params.get('before')
+        after_query_param = request.query_params.get('after')
+        if before_query_param or after_query_param:
+            self.pagination_class = ReverseDateTimePagination
+            shouts = stream_controller.get_stream_shouts_qs(user.profile.stream, shout_type)
+        else:
+            self.pagination_class = PageNumberIndexPagination
+            self.model = Shout
+            self.index_model = ShoutIndex
+            self.select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
+            self.prefetch_related = ('tags', 'item__videos')
+            self.defer = ()
+            shouts = ShoutIndex.search().query('match', uid=user.pk)
+            if shout_type != 'all':
+                shouts = shouts.query('match', type=shout_type)
+
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)

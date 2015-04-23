@@ -34,10 +34,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
+    index_model = ShoutIndex
     select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
     prefetch_related = ('tags', 'item__videos')
     defer = ()
-    index_model = ShoutIndex
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
@@ -129,8 +129,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         if before_query_param or after_query_param:
             self.pagination_class = ReverseDateTimeIndexPagination
 
-        indexed_shouts = self.filter_queryset(self.get_index_search())
-        page = self.paginate_queryset(indexed_shouts)
+        shouts = self.filter_queryset(self.get_index_search())
+        page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 

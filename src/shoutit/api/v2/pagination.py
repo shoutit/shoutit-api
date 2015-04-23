@@ -14,7 +14,7 @@ from rest_framework.pagination import CursorPagination
 from datetime import datetime
 from rest_framework.utils.urls import remove_query_param
 from shoutit.api.api_utils import get_current_uri
-
+import math
 
 class DateTimePagination(CursorPagination):
     recent_on_top = False
@@ -290,7 +290,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         self.page = page
         self.index_response = index_response
         self.num_results = index_response.hits.total if self.page else 0
-        self.num_pages = (index_response.hits.total / page_size) if page else 0
+        self.num_pages = math.ceil(index_response.hits.total / (page_size * 1.0)) if page else 0
         self.page_number = page_number
         self.page_size = page_size
         self.request = request

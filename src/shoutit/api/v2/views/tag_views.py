@@ -10,9 +10,10 @@ from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.filters import TagFilter
-from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
+from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination, PageNumberIndexPagination
 from shoutit.api.v2.serializers import *
 from shoutit.controllers import stream_controller
+from shoutit.models import ShoutIndex
 
 
 class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -174,13 +175,31 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             - name: page_size
               paramType: query
         """
+        tag = self.get_object()
+
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
-        tag = self.get_object()
-        shouts = stream_controller.get_stream_shouts_qs(tag.stream, shout_type)
-        self.pagination_class = ReverseDateTimePagination
+        # todo: deprecate old method?
+        # todo: refactor to use shout index filter
+        # temp compatibility for 'before' and 'after'
+        before_query_param = request.query_params.get('before')
+        after_query_param = request.query_params.get('after')
+        if before_query_param or after_query_param:
+            self.pagination_class = ReverseDateTimePagination
+            shouts = stream_controller.get_stream_shouts_qs(tag.stream, shout_type)
+        else:
+            self.pagination_class = PageNumberIndexPagination
+            self.model = Shout
+            self.index_model = ShoutIndex
+            self.select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
+            self.prefetch_related = ('tags', 'item__videos')
+            self.defer = ()
+            shouts = ShoutIndex.search().query('match', tags=tag.name)
+            if shout_type != 'all':
+                shouts = shouts.query('match', type=shout_type)
+
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
