@@ -2,7 +2,7 @@ from django.db.models.query_utils import Q
 
 from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \
     POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE, Stream_TYPE_TAG, \
-    EVENT_TYPE_FOLLOW_USER, EVENT_TYPE_FOLLOW_TAG
+    EVENT_TYPE_LISTEN_TO_USER, EVENT_TYPE_LISTEN_TO_TAG
 from common.utils import process_tag_names
 from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
@@ -160,9 +160,9 @@ def listen_to_stream(listener, stream, request=None):
         listen.save()
         if stream.type == Stream_TYPE_PROFILE:
             notifications_controller.notify_user_of_listen(stream.owner.user, listener, request)
-            event_controller.register_event(listener, EVENT_TYPE_FOLLOW_USER, stream.owner)
+            event_controller.register_event(listener, EVENT_TYPE_LISTEN_TO_USER, stream.owner)
         elif stream.type == Stream_TYPE_TAG:
-            event_controller.register_event(listener, EVENT_TYPE_FOLLOW_TAG, stream.owner)
+            event_controller.register_event(listener, EVENT_TYPE_LISTEN_TO_TAG, stream.owner)
 
 
 def remove_listener_from_stream(listener, stream):

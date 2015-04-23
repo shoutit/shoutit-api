@@ -204,7 +204,7 @@ Stream_TYPE_RECOMMENDED = StreamType('Recommended')
 rank_flags = {}
 
 
-class RankTypeFlag(Flag):
+class ShoutsSortTypeFlag(Flag):
     counter = 1
     values = {}
 
@@ -213,10 +213,11 @@ class RankTypeFlag(Flag):
         rank_flags[text] = self.value
 
 
-TIME_RANK_TYPE = RankTypeFlag('Time')
-DISTANCE_RANK_TYPE = RankTypeFlag('Distance')
-PRICE_RANK_TYPE = RankTypeFlag('price')
-FOLLOW_RANK_TYPE = RankTypeFlag('Follow')
+SORT_TYPE_TIME = ShoutsSortTypeFlag('time')
+SORT_TYPE_DISTANCE = ShoutsSortTypeFlag('distance')
+SORT_TYPE_PRICE_ASC = ShoutsSortTypeFlag('price_asc')
+SORT_TYPE_PRICE_DESC = ShoutsSortTypeFlag('price_desc')
+SORT_TYPE_RECOMMENDED = ShoutsSortTypeFlag('recommended')
 
 
 class ItemState(Constant):
@@ -287,16 +288,16 @@ class EventType(Constant):
         Constant.__init__(self, text)
 
 
-EVENT_TYPE_FOLLOW_USER = EventType('Follow User')
-EVENT_TYPE_FOLLOW_TAG = EventType('Follow Tag')  # x
+EVENT_TYPE_LISTEN_TO_USER = EventType('Listen to User')
+EVENT_TYPE_LISTEN_TO_TAG = EventType('Listen to Tag')  # x
 EVENT_TYPE_SHOUT_OFFER = EventType('Shout Offer')
 EVENT_TYPE_SHOUT_REQUEST = EventType('Shout Request')
-EVENT_TYPE_EXPERIENCE = EventType('Experience')
+EVENT_TYPE_SHOUT_EXPERIENCE = EventType('Shout Experience')
 EVENT_TYPE_SHARE_EXPERIENCE = EventType('Share Experience')
 EVENT_TYPE_COMMENT = EventType('Comment')  # x
 EVENT_TYPE_POST_DEAL = EventType('Post Deal')
 EVENT_TYPE_BUY_DEAL = EventType('Buy Deal')
-EVENT_TYPE_FOLLOW_BUSINESS = EventType('Follow Business')
+EVENT_TYPE_LISTEN_TO_PAGE = EventType('Listen to Page')
 
 report_types = {}
 

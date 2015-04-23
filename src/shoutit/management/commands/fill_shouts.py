@@ -40,7 +40,6 @@ class Command(BaseCommand):
                 if _:
                     user.password = generate_password()
                     user.save()
-                    user.activate()
                 try:
                     user.profile
                 except AttributeError:

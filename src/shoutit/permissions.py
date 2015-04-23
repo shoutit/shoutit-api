@@ -24,52 +24,49 @@ class ConstantPermission(Constant):
     def __eq__(self, other):
         return self.value.int == other.value.int
 
-PERMISSION_USE_SHOUT_IT = ConstantPermission("USE_SHOUT_IT", _("You're not allowed to use Shoutit"))
+PERMISSION_USE_SHOUTIT = ConstantPermission("USE_SHOUT_IT", _("You're not allowed to use Shoutit"))
 PERMISSION_SHOUT_MORE = ConstantPermission("SHOUT_MORE", _("Please, activate your account to add more shouts (check your email for activation link)"))
 PERMISSION_SHOUT_REQUEST = ConstantPermission("SHOUT_REQUEST", _("You're not allowed to use make request shouts."))
 PERMISSION_SHOUT_OFFER = ConstantPermission("SHOUT_OFFER", _("You're not allowed to use make offer shouts."))
-PERMISSION_FOLLOW_TAG = ConstantPermission("FOLLOW_TAG", _("You're not allowed to listen to tags."))
-PERMISSION_FOLLOW_USER = ConstantPermission("FOLLOW_USER", _("You're not allowed to listen to users."))
-PERMISSION_ACTIVATED = ConstantPermission("ACTIVATED", _("You are not activated yet"))
+PERMISSION_LISTEN_TO_TAG = ConstantPermission("LISTEN_TO_TAG", _("You're not allowed to listen to tags."))
+PERMISSION_LISTEN_TO_USER = ConstantPermission("LISTEN_TO_USER", _("You're not allowed to listen to users."))
 PERMISSION_SEND_MESSAGE = ConstantPermission("SEND_MESSAGE", _("You are not allowed to send messages."))
-PERMISSION_SHOUT_DEAL = ConstantPermission("SHOUT_DEAL", _("You are not allowed to make deal shouts."))
-PERMISSION_POST_EXPERIENCE = ConstantPermission("POST_EXPERIENCE", _("You're not allowed to post experiences."))
+PERMISSION_SHOUT_EXPERIENCE = ConstantPermission("SHOUT_EXPERIENCE", _("You're not allowed to shout experiences."))
 PERMISSION_SHARE_EXPERIENCE = ConstantPermission("SHARE_EXPERIENCE", _("You're not allowed to share experiences."))
 PERMISSION_COMMENT_ON_POST = ConstantPermission("COMMENT_ON_POST", _("You're not allowed to comment on posts."))
 PERMISSION_REPORT = ConstantPermission("REPORT", _("You're not allowed to use reporting."))
+PERMISSION_SHOUT_DEAL = ConstantPermission("SHOUT_DEAL", _("You are not allowed to make deal shouts."))
 
 INITIAL_USER_PERMISSIONS = [
-    PERMISSION_USE_SHOUT_IT,
+    PERMISSION_USE_SHOUTIT,
     PERMISSION_SHOUT_MORE,
     PERMISSION_SHOUT_REQUEST,
     PERMISSION_SHOUT_OFFER,
-    PERMISSION_FOLLOW_TAG
+    PERMISSION_LISTEN_TO_TAG
 ]
 
 ACTIVATED_USER_PERMISSIONS = [
-    PERMISSION_ACTIVATED,
     PERMISSION_SHOUT_MORE,
-    PERMISSION_FOLLOW_USER,
+    PERMISSION_LISTEN_TO_USER,
     PERMISSION_SEND_MESSAGE,
-    PERMISSION_POST_EXPERIENCE,
+    PERMISSION_SHOUT_EXPERIENCE,
     PERMISSION_SHARE_EXPERIENCE,
     PERMISSION_COMMENT_ON_POST,
     PERMISSION_REPORT,
 ]
 
 ACTIVATED_BUSINESS_PERMISSIONS = [
-    PERMISSION_ACTIVATED,
     PERMISSION_SHOUT_MORE,
     PERMISSION_COMMENT_ON_POST,
     PERMISSION_SEND_MESSAGE,
-    PERMISSION_USE_SHOUT_IT,
+    PERMISSION_USE_SHOUTIT,
     PERMISSION_SHOUT_MORE,
     PERMISSION_SHOUT_OFFER,
     PERMISSION_SHOUT_DEAL,
 ]
 
 ANONYMOUS_USER_PERMISSIONS = [
-    PERMISSION_USE_SHOUT_IT,
+    PERMISSION_USE_SHOUTIT,
 ]
 
 

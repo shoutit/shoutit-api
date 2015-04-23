@@ -9,7 +9,7 @@ def PostExperience(user, state, text, businessProfile):
     exp.save()
     businessProfile.stream.add_post(exp)
     user.profile.stream.add_post(exp)
-    event_controller.register_event(user, EVENT_TYPE_EXPERIENCE, exp)
+    event_controller.register_event(user, EVENT_TYPE_SHOUT_EXPERIENCE, exp)
     notifications_controller.notify_business_of_exp_posted(businessProfile.user, exp)
     return exp
 

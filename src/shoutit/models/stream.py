@@ -109,5 +109,5 @@ class Listen(UUIDModel):
     date_listened = models.DateTimeField(auto_now_add=True)
 
     class Meta(UUIDModel.Meta):
-        unique_together = ('listener', 'stream')  # so the user can follow the stream only once
+        unique_together = ('listener', 'stream')  # so the user can listen to the stream only once
 

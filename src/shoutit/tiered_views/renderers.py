@@ -8,7 +8,6 @@ from django.conf import settings
 
 from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, DEFAULT_LOCATION
 from shoutit.models import Profile, Business, PredefinedCity
-from shoutit.permissions import PERMISSION_ACTIVATED
 from shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, \
     RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
 from shoutit.utils import shout_link
@@ -50,7 +49,7 @@ def get_initial_json_response(request, result, bad_request_message=''):
     if RESPONSE_RESULT_ERROR_NOT_LOGGED_IN in result.errors:
         return redirect_to_modal_xhr(request, '/signin/', _("You are not signed in."), 'signin')
     elif RESPONSE_RESULT_ERROR_NOT_ACTIVATED in result.errors or (
-            RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors and PERMISSION_ACTIVATED in result.missing_permissions):
+            RESPONSE_RESULT_ERROR_PERMISSION_NEEDED in result.errors and result.missing_permissions):
         return redirect_to_modal_xhr(request, '/reactivate/', _("You are not activated yet"), 'reactivate')
     elif RESPONSE_RESULT_ERROR_REDIRECT in result.errors:
         return xhr_respond(code=ENUM_XHR_RESULT.REDIRECT, message=result.messages and result.messages[0][1] or '', data={

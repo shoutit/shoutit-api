@@ -9,7 +9,7 @@ from common.constants import TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE, BUS
 from shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditProfileForm, CreateTinyBusinessForm, RecoverForm, \
     BusinessTempSignUpForm
 from shoutit.models import ConfirmToken, Business
-from shoutit.permissions import PERMISSION_ACTIVATED, ANONYMOUS_USER_PERMISSIONS
+from shoutit.permissions import ANONYMOUS_USER_PERMISSIONS
 from shoutit.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, edit_profile_renderer_json, \
     create_tiny_business_renderer_json
 from shoutit.tiered_views.validators import form_validator, user_edit_profile_validator
@@ -307,7 +307,7 @@ def confirm_business(request):
     json_renderer=edit_profile_renderer_json,
     login_required=True,
     validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.get_profile(username).user.email),
-    permissions_required=[PERMISSION_ACTIVATED])
+    )
 def business_edit_profile(request, username):
     profile = user_controller.get_profile(username)
     result = ResponseResult()

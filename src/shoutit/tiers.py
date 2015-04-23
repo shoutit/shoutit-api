@@ -6,7 +6,7 @@ from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
 
 from common.constants import Constant
-from shoutit.permissions import PERMISSION_USE_SHOUT_IT
+from shoutit.permissions import PERMISSION_USE_SHOUTIT
 from shoutit.middleware import JsonPostMiddleware
 
 
@@ -89,8 +89,8 @@ def tiered_view(
                 JsonPostMiddleware.fill_request_post(request)
             result = ResponseResult()
 
-            if PERMISSION_USE_SHOUT_IT not in permissions_required:
-                permissions_required.append(PERMISSION_USE_SHOUT_IT)
+            if PERMISSION_USE_SHOUTIT not in permissions_required:
+                permissions_required.append(PERMISSION_USE_SHOUTIT)
 
             if not hasattr(request.user, 'constant_permissions'):
                 from shoutit.middleware import UserPermissionsMiddleware
