@@ -154,7 +154,7 @@ class Shout(Post):
 
     objects = ShoutManager()
 
-    def __str__(self):
+    def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.item)
 
     def set_tags(self, tags):
@@ -252,7 +252,7 @@ class Event(Post, AttachedObjectMixin):
 
     objects = EventManager()
 
-    def __str__(self):
+    def __unicode__(self):
         return unicode(EventType.values[self.event_type])
 
 
@@ -263,7 +263,7 @@ class Video(UUIDModel):
     id_on_provider = models.CharField(max_length=256)
     duration = models.IntegerField()
 
-    def __str__(self):
+    def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
 
 
@@ -299,7 +299,7 @@ class Video(UUIDModel):
 #
 #     objects = ExperienceManager()
 #
-#     def __str__(self):
+#     def __unicode__(self):
 #         return unicode(self.pk)
 #
 #
@@ -317,5 +317,5 @@ class Video(UUIDModel):
 #     is_disabled = models.BooleanField(default=False)
 #     text = models.TextField(max_length=300)
 #
-#     def __str__(self):
+#     def __unicode__(self):
 #         return unicode(self.pk) + ": " + unicode(self.text)

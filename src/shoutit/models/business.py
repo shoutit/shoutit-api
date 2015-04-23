@@ -28,7 +28,7 @@ class BusinessCategory(UUIDModel):
 
     objects = BusinessCategoryManager()
 
-    def __str__(self):
+    def __unicode__(self):
         return self.PrintHierarchy()
 
     def PrintHierarchy(self):
@@ -58,7 +58,7 @@ class Business(UUIDModel, StreamMixin):
 
     _stream = GenericRelation('shoutit.Stream', related_query_name='business')
 
-    def __str__(self):
+    def __unicode__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.name), unicode(self.user))
 
     # def __getattribute__(self, name):

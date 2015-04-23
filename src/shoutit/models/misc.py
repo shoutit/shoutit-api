@@ -17,7 +17,7 @@ class PredefinedCity(UUIDModel):
     longitude = models.FloatField(default=0.0)
     approved = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __unicode__(self):
         return unicode(self.country + ':' + self.city)
 
 
@@ -32,7 +32,7 @@ class ConfirmToken(UUIDModel):
     email = models.EmailField(blank=True, null=True)
     is_disabled = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __unicode__(self):
         return "{}: {}: {}".format(self.type_name, self.user, self.token)
 
     @property
@@ -53,5 +53,5 @@ class SharedLocation(LocationMixin, UUIDModel):
 #     File = models.CharField(max_length=1024)
 #     type = models.IntegerField()
 #
-#     def __str__(self):
+#     def __unicode__(self):
 #         return "(" + unicode(self.pk) + ") " + unicode(self.File)

@@ -20,7 +20,7 @@ class Stream(UUIDModel, AttachedObjectMixin):
     class Meta(UUIDModel.Meta):
         unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
 
-    def __str__(self):
+    def __unicode__(self):
         return unicode(self.pk) + ':' + StreamType.values[self.type] + ' (' + unicode(self.attached_object) + ')'
 
     def __init__(self, *args, **kwargs):

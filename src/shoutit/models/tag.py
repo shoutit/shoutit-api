@@ -26,7 +26,7 @@ class Tag(UUIDModel, StreamMixin, APIModelMixin):
 
     _stream = GenericRelation('shoutit.Stream', related_query_name='tag')
 
-    def __str__(self):
+    def __unicode__(self):
         return unicode(self.pk) + ": " + self.name
 
     @property
@@ -41,7 +41,7 @@ class Category(UUIDModel):
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
     tags = models.ManyToManyField('shoutit.Tag', related_name='category')
 
-    def __str__(self):
+    def __unicode__(self):
         return self.name
 
 

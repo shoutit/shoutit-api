@@ -50,7 +50,7 @@ class Profile(AbstractProfile):
 
     _stream = GenericRelation('shoutit.Stream', related_query_name='profile')
 
-    def __str__(self):
+    def __unicode__(self):
         return "{}".format(self.user)
 
     def update(self, gender=None, birthday=None, bio=None):
@@ -83,7 +83,7 @@ class LinkedGoogleAccount(UUIDModel):
 class Permission(UUIDModel):
     name = models.CharField(max_length=512, unique=True, db_index=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.name
 
 

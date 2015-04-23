@@ -25,7 +25,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.ConversationDelete', related_name='deleted_conversations2')
     last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True)
 
-    def __str__(self):
+    def __unicode__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
 
     def get_messages(self, before=None, after=None, limit=25):
@@ -123,8 +123,8 @@ class Message(UUIDModel):
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")
 
-    def __str__(self):
-        return "%s c at:%s" % (unicode(self.text[:30]) + '...' if self.text else '<attachment>', self.created_at_unix)
+    def __unicode__(self):
+        return "%s c at:%s" % (st(self.text[:30]) + '...' if self.text else '<attachment>', self.created_at_unix)
 
     @property
     def attachments(self):
@@ -169,7 +169,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     message = models.ForeignKey('shoutit.Message', related_name='attachments')
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
 
-    def __str__(self):
+    def __unicode__(self):
         return self.pk + " for message: " + self.message.pk
 
     def type_name(self):
@@ -196,7 +196,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
     type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
     is_read = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.pk + ": " + self.type_name
 
     @property
@@ -215,7 +215,7 @@ class Report(UUIDModel, AttachedObjectMixin):
     is_solved = models.BooleanField(default=False)
     is_disabled = models.BooleanField(default=False)
 
-    def __str__(self):
+    def __unicode__(self):
         return "From user:%s about: %s:%s" % (self.user.pk, self.type_name, self.attached_object.pk)
 
     @property
