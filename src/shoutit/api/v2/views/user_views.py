@@ -31,7 +31,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     serializer_detail_class = UserDetailSerializer
 
     queryset = User.objects.filter(is_activated=True)
-    queryset_detail = User.objects.all().prefetch_related('profile')
+    queryset_detail = User.objects.filter(is_activated=True).prefetch_related('profile')
 
     pagination_class = ShoutitPageNumberPagination
 
