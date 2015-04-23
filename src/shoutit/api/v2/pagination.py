@@ -341,16 +341,17 @@ class PageNumberIndexPagination(PageNumberPagination):
             'next_url': self.get_next_link()
         }
 
-    def get_next_link(self):
-        if not self.page_has_next():
-            return None
-        url = self.request.build_absolute_uri()
-        return replace_query_param(url, self.page_query_param, self.page_number + 1)
-
     def page_has_next(self):
         if not self.page:
             return None
         return self.page_number < self.num_pages
+
+    def get_next_link(self):
+        if not self.page_has_next():
+            return None
+        url = self.request.build_absolute_uri()
+        url = replace_query_param(url, self.page_size_query_param, self.page_size)
+        return replace_query_param(url, self.page_query_param, self.page_number + 1)
 
     def page_has_previous(self):
         if not self.page:
@@ -363,4 +364,5 @@ class PageNumberIndexPagination(PageNumberPagination):
         url = self.request.build_absolute_uri()
         if self.page_number == 2:
             return remove_query_param(url, self.page_query_param)
+        url = replace_query_param(url, self.page_size_query_param, self.page_size)
         return replace_query_param(url, self.page_query_param, self.page_number - 1)
