@@ -8,8 +8,8 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
 
-from shoutit.api.v2.serializers import CategorySerializer, CurrencySerializer, ReportSerializer
-from shoutit.models import Currency, Category
+from shoutit.api.v2.serializers import CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer
+from shoutit.models import Currency, Category, PredefinedCity
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -28,6 +28,17 @@ class MiscViewSet(viewsets.ViewSet):
         """
         currencies = Currency.objects.all()
         serializer = CurrencySerializer(currencies, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @list_route(methods=['get'], suffix='Cities')
+    def cities(self, request):
+        """
+        Get cities
+        ---
+        serializer: PredefinedCitySerializer
+        """
+        cities = PredefinedCity.objects.filter(approved=True)
+        serializer = PredefinedCitySerializer(cities, many=True, context={'request': request})
         return Response(serializer.data)
 
     @list_route(methods=['get'], suffix='Categories')

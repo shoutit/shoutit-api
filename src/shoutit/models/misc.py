@@ -15,7 +15,7 @@ class PredefinedCity(UUIDModel):
     country = models.CharField(max_length=2, default='', blank=True, db_index=True)
     latitude = models.FloatField(default=0.0)
     longitude = models.FloatField(default=0.0)
-    Approved = models.BooleanField(default=False)
+    approved = models.BooleanField(default=False)
 
     def __str__(self):
         return unicode(self.country + ':' + self.city)

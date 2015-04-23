@@ -17,7 +17,7 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_T
 
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification, Category, Currency,
-    Report)
+    Report, PredefinedCity)
 from shoutit.controllers import shout_controller, user_controller
 
 
@@ -711,3 +711,9 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         user = self.context.get('request').user
         if not user.check_password(value):
             raise ValidationError(['Old password does not match.'])
+
+
+class PredefinedCitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PredefinedCity
+        fields = ('city', 'city_encoded', 'country', 'latitude', 'longitude')

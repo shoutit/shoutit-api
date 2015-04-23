@@ -184,11 +184,11 @@ class Command(BaseCommand):
 
         # pre defined cities
         PredefinedCity.objects.get_or_create(city='Dubai', city_encoded='dubai', country='AE',
-                                             latitude=25.1993957, longitude=55.2738326, Approved=True)
+                                             latitude=25.1993957, longitude=55.2738326, approved=True)
         PredefinedCity.objects.get_or_create(city='Aachen', city_encoded='aachen', country='DE',
-                                             latitude=50.7738792, longitude=6.0844869, Approved=True)
+                                             latitude=50.7738792, longitude=6.0844869, approved=True)
         PredefinedCity.objects.get_or_create(city='Berlin', city_encoded='berlin', country='DE',
-                                             latitude=52.522594, longitude=13.402388, Approved=True)
+                                             latitude=52.522594, longitude=13.402388, approved=True)
 
         # currencies
         Currency.objects.get_or_create(country='AE', code='AED', name='Dirham')
