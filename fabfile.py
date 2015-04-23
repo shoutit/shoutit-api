@@ -27,7 +27,7 @@ def pull():
         run('git pull')
         # run('/opt/shoutit_api_prod/bin/python src/manage.py test')
         run('/opt/shoutit_api_prod/bin/python src/manage.py migrate')
-        run('/opt/shoutit_api_prod/bin/pip install -U -r src/requirements/prod.txt')
+        # run('/opt/shoutit_api_prod/bin/pip install -U -r src/requirements/prod.txt')
         run('supervisorctl restart all')
 
 
