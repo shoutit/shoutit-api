@@ -124,7 +124,7 @@ class Message(UUIDModel):
                             help_text="The text body of this message, could be None if the message has attachments")
 
     def __str__(self):
-        return "%s c at:%s" % (self.text[:30] + '...' if self.text else '<attachment>', self.created_at_unix)
+        return "%s c at:%s" % (unicode(self.text[:30]) + '...' if self.text else '<attachment>', self.created_at_unix)
 
     @property
     def attachments(self):

@@ -2,29 +2,16 @@ from __future__ import unicode_literals, with_statement
 
 from fabric.api import *
 from fabric.contrib.console import confirm
-from contextlib import contextmanager as _contextmanager
-from fabric.contrib import django
 
-env.hosts = ['shoutit_local_api']
-env.user = 'deploy'
-env.keyfile = ['$HOME/.ssh/deploy_rsa']
-env.directory = '/Volumes/MAC2/dev/shoutit_api_local'
-env.activate = 'source /Volumes/MAC2/dev/shoutit_api_local/bin/activate'
-
-
-@_contextmanager
-def virtualenv():
-    with cd(env.directory):
-        with prefix(env.activate):
-            yield
+env.hosts = ['node-01.api.shoutit.com']
+env.user = 'root'
 
 
 def test():
-    local('python src/manage.py test')
-    # with settings(warn_only=True):
-    #     result = local('python src/manage.py test', capture=True)
-    # if result.failed and not confirm("Tests failed. Continue anyway?"):
-    #     abort("Aborting at user request.")
+    with settings(warn_only=True):
+        result = local('python src/manage.py test', capture=True)
+    if result.failed and not confirm("Tests failed. Continue anyway?"):
+        abort("Aborting at user request.")
 
 
 def commit():
@@ -35,21 +22,24 @@ def push():
     local("git push")
 
 
+def pull():
+    with cd('/opt/shoutit_api_prod/api'):
+        run('git pull')
+        # run('/opt/shoutit_api_prod/bin/python src/manage.py test')
+        run('/opt/shoutit_api_prod/bin/python src/manage.py migrate')
+        run('/opt/shoutit_api_prod/bin/pip install -U -r src/requirements/prod.txt')
+        run('supervisorctl restart all')
+
+
 def prepare_deploy():
     test()
     # commit()
     # push()
 
 
-def run():
-    with virtualenv():
-        local('ls')
-        django.settings_module('shoutit.settings')
-        from django.conf import settings
-        print(settings.LOCATION_ATTRIBUTES)
+def deploy_prod():
+    # with virtualenv():
+    #     prepare_deploy()
+    # with virtualenv():
+    pull()
 
-        # prepare_deploy()
-
-
-def hello():
-    print("Hello world!")
