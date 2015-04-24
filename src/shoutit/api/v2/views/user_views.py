@@ -485,7 +485,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
                     raise ValidationError({'gplus_code': "please provide valid google plus code"})
-                link_gplus_account(user, gplus_code, hasattr(request.auth, 'client') and request.auth.client or None)
+                client = hasattr(request.auth, 'client') and request.auth.client.name or None
+                link_gplus_account(user, gplus_code, client)
 
             if account == 'facebook':
                 facebook_access_token = request.data.get('facebook_access_token')

@@ -56,9 +56,9 @@ class Command(BaseCommand):
             city = random.choice(cities)
             tags = random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
             images = [
-                "https://s3-eu-west-1.amazonaws.com/shoutit-shout-image-original/opo0928a.jpg",
-                "https://s3-eu-west-1.amazonaws.com/shoutit-shout-image-original/heic1501a.jpg",
-                "https://s3-eu-west-1.amazonaws.com/shoutit-shout-image-original/heic0702a.jpg"
+                "https://shout-image.static.shoutit.com/opo0928a.jpg",
+                "https://shout-image.static.shoutit.com/heic1501a.jpg",
+                "https://shout-image.static.shoutit.com/heic0702a.jpg"
             ]
             random.shuffle(images)
             videos = [
