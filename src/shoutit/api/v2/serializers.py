@@ -315,6 +315,8 @@ class ShoutSerializer(serializers.ModelSerializer):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def to_internal_value(self, data):
+        if not data:
+            data = {}
         # todo: hack!
         category = data.get('category')
         if not category:
@@ -617,6 +619,8 @@ class ShoutitSignupSerializer(serializers.Serializer):
     # initial_user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
+        if not data:
+            data = {}
         name = data.get('name')
         names = name.split()
         if len(names) < 2:
@@ -697,6 +701,11 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
     new_password2 = serializers.CharField(min_length=6, max_length=30)
 
     def to_internal_value(self, data):
+        if not data:
+            data = {}
+        user = self.context.get('request').user
+        if not user.is_password_set:
+            data['old_password'] = 'ANYTHING'
         ret = super(ShoutitChangePasswordSerializer, self).to_internal_value(data)
         new_password = ret.get('new_password')
         new_password2 = ret.get('new_password2')
@@ -704,7 +713,6 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         if new_password != new_password2:
             raise ValidationError({'new_password': ['New passwords did not match.']})
 
-        user = self.context.get('request').user
         user.set_password(new_password)
         user.save(update_fields=['password'])
         user.backend = 'django.contrib.auth.backends.ModelBackend'
@@ -713,8 +721,9 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
 
     def validate_old_password(self, value):
         user = self.context.get('request').user
-        if not user.check_password(value):
-            raise ValidationError(['Old password does not match.'])
+        if user.is_password_set:
+            if not user.check_password(value):
+                raise ValidationError(['Old password does not match.'])
 
 
 class PredefinedCitySerializer(serializers.ModelSerializer):

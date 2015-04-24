@@ -403,7 +403,7 @@ class ShoutitAuthView(viewsets.ViewSet):
         This changes the current user's password.
         <pre><code>
         {
-            "old_password": "easypass",
+            "old_password": "easypass", // only required if set before. check user.is_set_password
             "new_password": "HarD3r0n#",
             "new_password2": "HarD3r0n#"
         }
