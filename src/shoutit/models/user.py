@@ -101,15 +101,22 @@ from rest_framework.authtoken.models import Token
 @receiver(post_save, sender='shoutit.User')
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
-        # create email confirmation token
-        ConfirmToken.objects.create(user=instance)
-
         # create auth token
         Token.objects.create(user=instance)
 
         # create profile
         Profile.objects.create(user=instance)
 
-        # give user initial permissions
-        from shoutit.permissions import give_user_permissions, INITIAL_USER_PERMISSIONS
-        give_user_permissions(user=instance, permissions=INITIAL_USER_PERMISSIONS)
+        # give appropriate permissions
+        from shoutit.permissions import (give_user_permissions, INITIAL_USER_PERMISSIONS,
+                                         FULL_USER_PERMISSIONS)
+        permissions = INITIAL_USER_PERMISSIONS
+        if instance.is_activated:
+            permissions = FULL_USER_PERMISSIONS
+        give_user_permissions(user=instance, permissions=permissions)
+
+        # send verification email
+        if not instance.is_activated:
+            # create email confirmation token and send verification email
+            ConfirmToken.objects.create(user=instance)
+            instance.send_verification_email()

@@ -222,6 +222,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
 
+    def send_verification_email(self):
+        # todo: send using Mandrill SMTP
+        pass
+
+    def send_reset_password_email(self):
+        # todo: send using Mandrill SMTP
+        pass
+
     def clean(self):
         self.email = self.email.lower()
 

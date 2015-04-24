@@ -98,7 +98,7 @@ def auth_with_gplus(gplus_user, credentials):
         key = bucket.new_key(filename)
         key.set_metadata('Content-Type', 'image/jpg')
         key.set_contents_from_string(img_data)
-        s3_image_url = key.generate_url(expires_in=0, query_auth=False)
+        s3_image_url = 'https://user-image.static.shoutit.com/%s' % filename
         user.profile.image = s3_image_url
         user.profile.save()
     except Exception, e:
@@ -147,7 +147,7 @@ def auth_with_facebook(fb_user, long_lived_token):
             key = bucket.new_key(filename)
             key.set_metadata('Content-Type', 'image/jpg')
             key.set_contents_from_string(img_data)
-            s3_image_url = key.generate_url(expires_in=0, query_auth=False)
+            s3_image_url = 'https://user-image.static.shoutit.com/%s' % filename
             user.profile.image = s3_image_url
             user.profile.save()
     except Exception, e:

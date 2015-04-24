@@ -397,7 +397,8 @@ class ShoutitAuthView(viewsets.ViewSet):
             return self.success_response("Your email '{}' is already verified.".format(request.user.email))
         serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response("A verification email will be soon sent to {}.".format(request.user.email))
+        serializer.instance.send_verification_email()
+        return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
 
     @list_route(methods=['post'], suffix='Change Password')
     def change_password(self, request):
@@ -441,6 +442,5 @@ class ShoutitAuthView(viewsets.ViewSet):
         """
         serializer = ShoutitResetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        # todo
-        # serializer.instance.reset_password()
+        serializer.instance.send_reset_password_email()
         return self.success_response("Password recovery email will be sent soon.")

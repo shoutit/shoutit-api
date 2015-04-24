@@ -670,6 +670,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         if email:
             user.email = email.lower()
             user.save(update_fields=['email'])
+        self.instance = user
         return ret
 
 

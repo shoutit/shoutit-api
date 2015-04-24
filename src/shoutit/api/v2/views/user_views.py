@@ -475,6 +475,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         """
         user = self.get_object()
         account = request.data.get('account') or request.query_params.get('account')
+        account = account.lower()
         if account not in ['facebook', 'gplus']:
             raise ValidationError({'account': "unsupported account"})
 
@@ -491,7 +492,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                     raise ValidationError({'facebook_access_token': "please provide valid facebook access token"})
                 link_facebook_account(user, facebook_access_token)
 
-            msg = "{} linked successfully.".format(account)
+            msg = "{} linked successfully.".format(account.capitalize())
 
         else:
             if account == 'gplus':
@@ -500,7 +501,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             if account == 'facebook':
                 unlink_facebook_user(user)
 
-            msg = "{} unlinked successfully.".format(account)
+            msg = "{} unlinked successfully.".format(account.capitalize())
 
         ret = {
             'data': {'success': msg},

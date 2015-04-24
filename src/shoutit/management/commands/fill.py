@@ -8,7 +8,6 @@ from django.core.management.base import BaseCommand
 from shoutit.controllers import tag_controller
 from shoutit.models import *
 from rest_framework.authtoken.models import Token
-from shoutit.permissions import ACTIVATED_USER_PERMISSIONS
 from provider.oauth2.models import Client
 
 
@@ -18,39 +17,27 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         # users
-        u1, c1 = User.objects.get_or_create(
-            username='syron',
-            email='noor.syron@gmail.com',
-            is_active=True,
-            is_superuser=True,
-            is_staff=True,
-        )
-        u1.first_name = 'Mo'
-        u1.last_name = 'Chawich'
+        u0, _ = User.objects.get_or_create(username='shoutit', email='admin@shoutit.com',
+                                           is_activated=True, is_superuser=True, is_staff=True)
+
+        u1, _ = User.objects.get_or_create(username='syron', email='noor.syron@gmail.com',
+                                           is_activated=True, is_superuser=True, is_staff=True)
+        u1.first_name = 'Nour'
+        u1.last_name = 'Syron'
         u1.password = "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg="
         u1.save()
         Token.objects.filter(user=u1).delete()
         Token.objects.create(user=u1, key="1-5fbb04817861540553ca6ecc6d8fb6569f3adb")
-        u1.activate()
 
         p1 = u1.profile
         p1.bio = 'Shoutit Master!'
         p1.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
         p1.gender = 'male'
-        p1.city = 'Dubai'
-        p1.country = 'AE'
-        p1.latitude = 25.1993957
-        p1.longitude = 55.2738326
         p1.save()
 
-        u2, c2 = User.objects.get_or_create(
-            username='mo',
-            email='mo.chawich@gmail.com',
-            is_active=True,
-            is_superuser=True,
-            is_staff=True,
-        )
-        u2.first_name = 'Mohamad Nour'
+        u2, _ = User.objects.get_or_create(username='mo', email='mo.chawich@gmail.com',
+                                           is_activated=True, is_superuser=True, is_staff=True)
+        u2.first_name = 'Mo'
         u2.last_name = 'Chawich'
         u2.password = "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg="
         u2.save()
@@ -58,16 +45,10 @@ class Command(BaseCommand):
         Token.objects.filter(user=u2).delete()
         Token.objects.create(user=u2, key="2-5fbb04817861540553ca6ecc6d8fb6569f3adb")
 
-        u2.activate()
-
         p2 = u2.profile
         p2.bio = 'Shoutit Master 2!'
         p2.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
         p2.gender = 'male'
-        p2.city = 'Dubai'
-        p2.country = 'AE'
-        p2.latitude = 25.1593957
-        p2.longitude = 55.2338326
         p2.save()
 
         # Tags, Categories
@@ -170,16 +151,16 @@ class Command(BaseCommand):
                         pass
 
         # oauth clients
-        Client.objects.get_or_create(user=u1, name='shoutit-android', client_id='shoutit-android',
+        Client.objects.get_or_create(user=u0, name='shoutit-android', client_id='shoutit-android',
                                      client_secret='319d412a371643ccaa9166163c34387f', client_type=0)
 
-        Client.objects.get_or_create(user=u1, name='shoutit-ios', client_id='shoutit-ios',
+        Client.objects.get_or_create(user=u0, name='shoutit-ios', client_id='shoutit-ios',
                                      client_secret='209b7e713eca4774b5b2d8c20b779d91', client_type=0)
 
-        Client.objects.get_or_create(user=u1, name='shoutit-web', client_id='shoutit-web',
+        Client.objects.get_or_create(user=u0, name='shoutit-web', client_id='shoutit-web',
                                      client_secret='0db3faf807534d1eb944a1a004f9cee3', client_type=0)
 
-        Client.objects.get_or_create(user=u1, name='shoutit-test', client_id='shoutit-test',
+        Client.objects.get_or_create(user=u0, name='shoutit-test', client_id='shoutit-test',
                                      client_secret='d89339adda874f02810efddd7427ebd6', client_type=0)
 
         # pre defined cities
