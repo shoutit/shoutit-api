@@ -2,7 +2,8 @@ import urllib2
 import boto
 from django.conf import settings
 
-from shoutit.models import User, Profile, LinkedFacebookAccount, PredefinedCity, LinkedGoogleAccount, CLUser, DBUser
+from shoutit.models import (User, Profile, LinkedFacebookAccount, PredefinedCity,
+                            LinkedGoogleAccount, CLUser, DBUser)
 from common.constants import *
 from shoutit.utils import to_seo_friendly, generate_username, generate_password
 import logging
@@ -43,14 +44,13 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     return django_user
 
 
-def signup_user(email, password, first_name='', last_name='', username=None):
+def signup_user(email, password, first_name='', last_name='', username=None, **kwargs):
     username = username or generate_username()
     while User.objects.filter(username=username).exists():
         username = generate_username()
-    user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+    user = User.objects.create_user(username=username, email=email, password=password,
+                                    first_name=first_name, last_name=last_name, **kwargs)
 
-    # todo: email verification
-    # email_controller.SendRegistrationActivationEmail()
     return user
 
 
@@ -72,7 +72,8 @@ def auth_with_gplus(gplus_user, credentials):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        user = signup_user(email=email, password=password, first_name=first_name, last_name=last_name)
+        user = signup_user(email=email, password=password, first_name=first_name,
+                           last_name=last_name, is_activated=True)
 
     if not user.is_activated:
         user.activate()
@@ -116,7 +117,8 @@ def auth_with_facebook(fb_user, long_lived_token):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        user = signup_user(email=email, password=password, first_name=first_name, last_name=last_name, username=username)
+        user = signup_user(email=email, password=password, first_name=first_name,
+                           last_name=last_name, username=username, is_activated=True)
 
     if not user.is_activated:
         user.activate()

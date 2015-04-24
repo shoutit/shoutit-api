@@ -31,7 +31,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         return Exception("Invalid facebook accessToken"), None
 
     try:
-        linked_account = LinkedFacebookAccount.objects.get(facebook_id=fb_user['id'])
+        linked_account = LinkedFacebookAccount.objects.get(facebook_id=fb_user.get('id'))
         user = linked_account.user
     except ObjectDoesNotExist:
         user = None
@@ -102,29 +102,47 @@ def extend_token(short_lived_token):
 
 
 def link_facebook_account(user, facebook_access_token):
-
+    """
+    Add LinkedFacebookAccount to user
+    """
     long_lived_token = extend_token(facebook_access_token)
     if not long_lived_token:
-        raise ValidationError({'facebook_access_token': "could not extend the facebook short lived access_token with long lived one"})
+        raise ValidationError({'facebook_access_token': "Could not extend the Facebook short lived "
+                                                        "access_token with long lived one"})
+    access_token = long_lived_token.get('access_token')
+    expires = long_lived_token.get('expires')
 
     # todo: get info, pic, etc about user
     try:
-        response = urllib2.urlopen('https://graph.facebook.com/me?access_token={}'.format(long_lived_token['access_token']), timeout=20)
+        graph_url = 'https://graph.facebook.com/me?access_token={}'.format(access_token)
+        response = urllib2.urlopen(graph_url, timeout=20)
         fb_user = json.loads(response.read())
     except urllib2.HTTPError, e:
-        raise ValidationError({'error': "could not link facebook account"})
+        raise ValidationError({'error': "Could not link facebook account."})
+    else:
+        facebook_id = fb_user.get('id')
 
-    # unlink first
+    # check if the facebook account is already linked
+    try:
+        la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
+        if la.user == user:
+            raise ValidationError({'error': "Facebook account is already linked to your profile."})
+        raise ValidationError({'error': "Facebook account is already linked to somebody else's "
+                                        "profile."})
+
+    except LinkedFacebookAccount.DoesNotExist:
+        pass
+
+    # unlink previous facebook account
     unlink_facebook_user(user, False)
 
     # link
     try:
-        la = LinkedFacebookAccount(user=user, facebook_id=fb_user['id'], access_token=long_lived_token['access_token'],
-                                   expires=long_lived_token['expires'])
-        la.save()
+        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, expires=expires,
+                                             access_token=access_token)
     except Exception, e:
         # todo: log_error
-        raise ValidationError({'error': "could not link facebook account"})
+        raise ValidationError({'error': "Could not link Facebook account."})
 
 
 def unlink_facebook_user(user, strict=True):
@@ -135,7 +153,7 @@ def unlink_facebook_user(user, strict=True):
         linked_account = LinkedFacebookAccount.objects.get(user=user)
     except LinkedFacebookAccount.DoesNotExist:
         if strict:
-            raise ValidationError({'error': "no facebook account to unlink"})
+            raise ValidationError({'error': "No Facebook account to unlink."})
     else:
         # todo: unlink from facebook services
         linked_account.delete()

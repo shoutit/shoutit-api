@@ -78,20 +78,33 @@ def link_gplus_account(user, gplus_code, client=None):
     try:
         # Upgrade the authorization code into a credentials object
         google_api_client = settings.GOOGLE_API['CLIENTS']['web']
-        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'], scope='', code=gplus_code,
+        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'],
+                                                              scope='', code=gplus_code,
                                                               redirect_uri=redirect_uri)
     except FlowExchangeError as flow_error:
         raise ValidationError({'gplus_code': str(flow_error)})
     else:
-        gplus_id = credentials.id_token['sub']
+        gplus_id = credentials.id_token.get('sub')
 
-    # unlink first
+    # check if the gplus account is already linked
+    try:
+        la = LinkedGoogleAccount.objects.get(gplus_id=gplus_code)
+        if la.user == user:
+            raise ValidationError({'error': "G+ account is already linked to your profile."})
+        raise ValidationError(
+            {'error': "This gplus account is already linked to somebody else's profile."})
+
+    except LinkedGoogleAccount.DoesNotExist:
+        pass
+
+    # unlink previous gplus account
     unlink_gplus_user(user, False)
 
     # link
+    # todo: get info, pic, etc about user
     try:
-        la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
-        la.save()
+        LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials.to_json(),
+                                           gplus_id=gplus_id)
     except Exception, e:
         # todo: log_error
         raise ValidationError({'error': "could not link gplus account"})
