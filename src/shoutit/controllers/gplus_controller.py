@@ -16,17 +16,19 @@ from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERR
 
 from shoutit.models import LinkedGoogleAccount
 from shoutit.controllers.user_controller import auth_with_gplus, update_profile_location
+import logging
+logger = logging.getLogger('shoutit')
 
 
 def user_from_gplus_code(gplus_code, initial_user=None, client=None):
-    print 'user_from_gplus_code'
+    logger.debug('user_from_gplus_code')
     credentials = credentials_from_code_and_client(gplus_code, client)
     gplus_id = credentials.id_token.get('sub')
     try:
         linked_account = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         user = linked_account.user
     except LinkedGoogleAccount.DoesNotExist:
-        print 'LinkedGoogleAccount.DoesNotExist for gplus_id', gplus_id, 'creating new user'
+        logger.debug('LinkedGoogleAccount.DoesNotExist for gplus_id %s creating new user.' % gplus_id)
         try:
             # Create a new authorized API client.
             http = httplib2.Http()
@@ -36,16 +38,15 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None):
             gplus_user = service.people().get(userId='me').execute()
             email = gplus_user.get('emails')[0].get('value')
             if not email:
-                print 'g+ login error: no email in ', json.dumps(gplus_user)
+                logger.error('G+ user has no email: %s' % json.dumps(gplus_user))
                 raise GPLUS_LINK_ERROR_EMAIL
         except AccessTokenRefreshError as e:
-            print "calling service.people() error: AccessTokenRefreshError"
+            logger.error("Calling service.people() error: AccessTokenRefreshError")
             error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
             error.update({'error_description': str(e)})
             raise ValidationError(error)
-
         except Exception as e:
-            print "calling service.people() error: ", str(e)
+            logger.error("Calling service.people() error: %s" % str(e))
             error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
             error.update({'error_description': str(e)})
             raise ValidationError(error)
@@ -66,6 +67,7 @@ def link_gplus_account(user, gplus_code, client=None):
     # check if the gplus account is already linked
     try:
         la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
+        logger.error('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
         if la.user == user:
             raise ValidationError({'error': "G+ account is already linked to your profile."})
         raise ValidationError(
@@ -82,7 +84,7 @@ def link_gplus_account(user, gplus_code, client=None):
         la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
         la.save()
     except (ValidationError, IntegrityError) as e:
-        print "create gplus la error", str(e)
+        logger.error("LinkedGoogleAccount creation error: %s." % str(e))
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 
 
@@ -94,6 +96,7 @@ def unlink_gplus_user(user, strict=True):
         linked_account = LinkedGoogleAccount.objects.get(user=user)
     except LinkedGoogleAccount.DoesNotExist:
         if strict:
+            logger.error("User: %s, tried to unlink non-existing gplus account." % user)
             raise GPLUS_LINK_ERROR_NO_LINK
     else:
         # todo: unlink from google services
@@ -106,7 +109,7 @@ def redirect_uri_from_client(client='shoutit-test'):
         redirect_uri = OOB_CALLBACK_URN
     if client == 'shoutit-web':
         redirect_uri = 'postmessage'
-    print 'redirect_uri', redirect_uri
+    logger.debug("client: %s, redirect_uri: %s" % (client, redirect_uri))
     return redirect_uri
 
 
@@ -120,6 +123,7 @@ def credentials_from_code_and_client(code, client):
                                                               redirect_uri=redirect_uri)
         return credentials
     except FlowExchangeError as e:
+        logger.error("FlowExchangeError: %s" % str(e))
         error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
         error.update({'error_description': str(e)})
         raise ValidationError(error)

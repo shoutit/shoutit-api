@@ -404,7 +404,7 @@ LOGGING = {
             'propagate': False
         },
         'shoutit': {
-            'handlers': ['console_out_all', 'sentry'],
+            'handlers': ['console_out_all'],
             'level': 'DEBUG',
             'propagate': False
         },

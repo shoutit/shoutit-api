@@ -690,7 +690,8 @@ class ShoutitResetPasswordSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+            raise ValidationError({'email': ['The email or username you entered do not belong to '
+                                             'any account.']})
         self.instance = user
         return ret
 

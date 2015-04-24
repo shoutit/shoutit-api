@@ -17,6 +17,8 @@ from shoutit.api.v2.exceptions import (FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EM
 
 from shoutit.models import LinkedFacebookAccount
 from shoutit.controllers.user_controller import auth_with_facebook, update_profile_location
+import logging
+logger = logging.getLogger('shoutit')
 
 
 def user_from_facebook_auth_response(auth_response, initial_user=None):
@@ -31,9 +33,9 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         linked_account = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
         user = linked_account.user
     except ObjectDoesNotExist:
-        print 'LinkedFacebookAccount.DoesNotExist for facebook_id', facebook_id, 'creating new user'
+        logger.debug('LinkedGoogleAccount.DoesNotExist for facebook_id %s creating new user.' % facebook_id)
         if 'email' not in fb_user:
-            print 'fb login error: no email in ', json.dumps(fb_user)
+            logger.error('Facebook user has no email: %s' % json.dumps(fb_user))
             raise FB_LINK_ERROR_EMAIL
         long_lived_token = extend_token(access_token)
         user = auth_with_facebook(fb_user, long_lived_token)
@@ -78,7 +80,7 @@ def extend_token(short_lived_token):
         if not ('access_token' in params and 'expires' in params):
             raise Exception('access_token or expires not in params: {}'.format(json.dumps(params)))
     except Exception, e:
-        print "Facebook token extend error:", str(e)
+        logger.error("Facebook token extend error: %s" % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
     return {'access_token': params.get('access_token'), 'expires': params.get('expires')}
@@ -94,6 +96,7 @@ def link_facebook_account(user, facebook_access_token):
     # check if the facebook account is already linked
     try:
         la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
+        logger.error('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
         if la.user == user:
             raise ValidationError({'error': "Facebook account is already linked to your profile."})
         raise ValidationError({'error': "Facebook account is already linked to somebody else's "
@@ -114,7 +117,7 @@ def link_facebook_account(user, facebook_access_token):
                                    access_token=access_token)
         la.save()
     except (ValidationError, IntegrityError) as e:
-        print "create fb la error", str(e)
+        logger.error("LinkedFacebookAccount creation error: %s." % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
 
@@ -126,6 +129,7 @@ def unlink_facebook_user(user, strict=True):
         linked_account = LinkedFacebookAccount.objects.get(user=user)
     except LinkedFacebookAccount.DoesNotExist:
         if strict:
+            logger.error("User: %s, tried to unlink non-existing facebook account." % user)
             raise FB_LINK_ERROR_NO_LINK
     else:
         # todo: unlink from facebook services
@@ -139,5 +143,5 @@ def fb_user_from_facebook_access_token(facebook_access_token):
         fb_user = json.loads(response.read())
         return fb_user
     except (urllib2.HTTPError, ValueError) as e:
-        print 'fb link error: ' + str(e)
+        logger.error("Facebook Graph error: %s" % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN

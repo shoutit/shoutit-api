@@ -109,7 +109,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
-        return "{} [{}]".format(self.name, self.username)
+        return "{} [{}:{}]".format(self.name, self.username, self.pk)
 
     @property
     def owner(self):
