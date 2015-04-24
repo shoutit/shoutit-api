@@ -93,9 +93,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             raise OAuthError({'invalid_request': "Missing required parameter: facebook_access_token"})
         initial_user = data.get('user')
 
-        error, user = user_from_facebook_auth_response(facebook_access_token, initial_user)
-        if error:
-            raise OAuthError({'error': str(error)})
+        user = user_from_facebook_auth_response(facebook_access_token, initial_user)
         return user
 
     def facebook_access_token(self, request, data, client):
@@ -129,9 +127,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             raise OAuthError({'invalid_request': "Missing required parameter: gplus_code"})
         initial_user = data.get('user')
 
-        error, user = user_from_gplus_code(gplus_code, initial_user, client.name)
-        if error:
-            raise OAuthError({'error': str(error)})
+        user = user_from_gplus_code(gplus_code, initial_user, client.name)
         return user
 
     def gplus_code(self, request, data, client):

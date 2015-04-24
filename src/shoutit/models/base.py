@@ -233,3 +233,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def clean(self):
         self.email = self.email.lower()
 
+    @property
+    def is_password_set(self):
+        return self.has_usable_password()

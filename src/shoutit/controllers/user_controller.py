@@ -1,6 +1,9 @@
 import urllib2
 import boto
 from django.conf import settings
+from django.db import IntegrityError
+from rest_framework.exceptions import ValidationError
+from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
 
 from shoutit.models import (User, Profile, LinkedFacebookAccount, PredefinedCity,
                             LinkedGoogleAccount, CLUser, DBUser)
@@ -44,14 +47,18 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     return django_user
 
 
-def signup_user(email, password, first_name='', last_name='', username=None, **kwargs):
+def signup_user(email=None, password=None, first_name='', last_name='', username=None, **kwargs):
+    if email and User.objects.filter(email=email.lower()).exists():
+        raise ValidationError({'email': "User with same email exists."})
     username = username or generate_username()
-    while User.objects.filter(username=username).exists():
+    while len(username) < 2 and User.objects.filter(username=username).exists():
         username = generate_username()
-    user = User.objects.create_user(username=username, email=email, password=password,
+    if len(first_name) < 2:
+        first_name = ''
+    if len(last_name) < 1:
+        last_name = ''
+    return User.objects.create_user(username=username, email=email, password=password,
                                     first_name=first_name, last_name=last_name, **kwargs)
-
-    return user
 
 
 def user_from_shoutit_signup_data(signup_data):
@@ -64,7 +71,6 @@ def user_from_shoutit_signup_data(signup_data):
 
 def auth_with_gplus(gplus_user, credentials):
     email = gplus_user.get('emails')[0].get('value').lower()
-    password = generate_password()
     name = gplus_user.get('name')
     first_name = name.get('givenName')
     last_name = name.get('familyName')
@@ -72,8 +78,7 @@ def auth_with_gplus(gplus_user, credentials):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        user = signup_user(email=email, password=password, first_name=first_name,
-                           last_name=last_name, is_activated=True)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True)
 
     if not user.is_activated:
         user.activate()
@@ -83,10 +88,11 @@ def auth_with_gplus(gplus_user, credentials):
     gplus_id = gplus_user.get('id')
     credentials_json = credentials.to_json()
     try:
-        LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
-    except Exception, e:
-        print 'LinkedGoogleAccount Error: ', str(e)
-        return None
+        la = LinkedGoogleAccount(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
+        la.save()
+    except (ValidationError, IntegrityError) as e:
+        print "create g+ la error", str(e)
+        raise GPLUS_LINK_ERROR_TRY_AGAIN
 
     try:
         response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
@@ -109,7 +115,6 @@ def auth_with_gplus(gplus_user, credentials):
 
 def auth_with_facebook(fb_user, long_lived_token):
     email = fb_user.get('email').lower()
-    password = generate_password()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
     username = fb_user.get('username')
@@ -117,8 +122,8 @@ def auth_with_facebook(fb_user, long_lived_token):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        user = signup_user(email=email, password=password, first_name=first_name,
-                           last_name=last_name, username=username, is_activated=True)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name,
+                           username=username, is_activated=True)
 
     if not user.is_activated:
         user.activate()
@@ -129,10 +134,12 @@ def auth_with_facebook(fb_user, long_lived_token):
     access_token = long_lived_token.get('access_token')
     expires = long_lived_token.get('expires')
     try:
-        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, access_token=access_token, expires=expires)
-    except Exception, e:
+        la = LinkedFacebookAccount(user=user, facebook_id=facebook_id, access_token=access_token,
+                                   expires=expires)
+        la.save()
+    except (ValidationError, IntegrityError) as e:
         logger.warn(str(e))
-        return None
+        raise FB_LINK_ERROR_TRY_AGAIN
 
     try:
         response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + access_token, timeout=20)

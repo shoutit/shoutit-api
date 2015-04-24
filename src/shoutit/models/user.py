@@ -68,16 +68,22 @@ class Profile(AbstractProfile):
 
 
 class LinkedFacebookAccount(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook')
-    facebook_id = models.CharField(max_length=24, db_index=True)
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook', db_index=True)
+    facebook_id = models.CharField(max_length=24, db_index=True, unique=True)
     access_token = models.CharField(max_length=512)
     expires = models.BigIntegerField(default=0)
 
+    def __unicode__(self):
+        return unicode(self.user)
+
 
 class LinkedGoogleAccount(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus')
+    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus', db_index=True)
+    gplus_id = models.CharField(max_length=64, db_index=True, unique=True)
     credentials_json = models.CharField(max_length=4096)
-    gplus_id = models.CharField(max_length=64, db_index=True)
+
+    def __unicode__(self):
+        return unicode(self.user)
 
 
 class Permission(UUIDModel):

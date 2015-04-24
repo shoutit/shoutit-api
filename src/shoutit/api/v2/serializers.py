@@ -124,6 +124,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(UserSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
+    is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender')
     bio = serializers.CharField(source='profile.bio')
@@ -146,7 +147,8 @@ class UserDetailSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens',
+        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email',
+                                  'linked_accounts', 'push_tokens', 'is_password_set',
                                   'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
 
@@ -615,13 +617,14 @@ class ShoutitSignupSerializer(serializers.Serializer):
     # initial_user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
-        ret = super(ShoutitSignupSerializer, self).to_internal_value(data)
-        name = ret.get('name')
+        name = data.get('name')
         names = name.split()
         if len(names) < 2:
             raise ValidationError({'name': ['Please enter your full name.']})
-        ret['first_name'] = " ".join(names[0:-1])
-        ret['last_name'] = names[-1]
+        data['first_name'] = " ".join(names[0:-1])
+        data['last_name'] = names[-1]
+
+        ret = super(ShoutitSignupSerializer, self).to_internal_value(data)
         return ret
 
     def validate_email(self, email):

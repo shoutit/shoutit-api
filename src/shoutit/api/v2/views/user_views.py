@@ -475,9 +475,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         """
         user = self.get_object()
         account = request.data.get('account') or request.query_params.get('account')
-        account = account.lower()
+        if not account:
+            raise ValidationError({'account': "This field is required."})
         if account not in ['facebook', 'gplus']:
-            raise ValidationError({'account': "unsupported account"})
+            raise ValidationError({'account': "Unsupported account."})
 
         if request.method == 'PUT':
             if account == 'gplus':

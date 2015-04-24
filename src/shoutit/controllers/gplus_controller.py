@@ -3,45 +3,30 @@
 
 """
 from __future__ import unicode_literals
-
+import json
+from django.db import IntegrityError
 import httplib2
 from oauth2client.client import AccessTokenRefreshError, FlowExchangeError
 from oauth2client.client import credentials_from_clientsecrets_and_code, OOB_CALLBACK_URN
 from django.conf import settings
 from apiclient import discovery
 from rest_framework.exceptions import ValidationError
+from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_NO_LINK, \
+    GPLUS_LINK_ERROR_EMAIL
 
 from shoutit.models import LinkedGoogleAccount
 from shoutit.controllers.user_controller import auth_with_gplus, update_profile_location
 
 
-def user_from_gplus_code(code, initial_user=None, client='shoutit-test'):
+def user_from_gplus_code(gplus_code, initial_user=None, client=None):
     print 'user_from_gplus_code'
-    redirect_uri = OOB_CALLBACK_URN
-    if client == 'shoutit-web':
-        redirect_uri = 'postmessage'
-    if client == 'shoutit-test':
-        redirect_uri = 'https://developers.google.com/oauthplayground'
-    print 'redirect_uri', redirect_uri
-
-    try:
-        # Upgrade the authorization code into a credentials object
-        google_api_client = settings.GOOGLE_API['CLIENTS']['web']
-        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'], scope='', code=code,
-                                                              redirect_uri=redirect_uri)
-    except FlowExchangeError as flowError:
-        return flowError, None
-
-    gplus_id = credentials.id_token['sub']
-
+    credentials = credentials_from_code_and_client(gplus_code, client)
+    gplus_id = credentials.id_token.get('sub')
     try:
         linked_account = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         user = linked_account.user
     except LinkedGoogleAccount.DoesNotExist:
         print 'LinkedGoogleAccount.DoesNotExist for gplus_id', gplus_id, 'creating new user'
-        user = None
-
-    if not user:
         try:
             # Create a new authorized API client.
             http = httplib2.Http()
@@ -49,51 +34,42 @@ def user_from_gplus_code(code, initial_user=None, client='shoutit-test'):
             # Get the logged gplus user.
             service = discovery.build("plus", "v1", http=http)
             gplus_user = service.people().get(userId='me').execute()
+            email = gplus_user.get('emails')[0].get('value')
+            if not email:
+                print 'g+ login error: no email in ', json.dumps(gplus_user)
+                raise GPLUS_LINK_ERROR_EMAIL
         except AccessTokenRefreshError as e:
             print "calling service.people() error: AccessTokenRefreshError"
-            return e, None
+            error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
+            error.update({'error_description': str(e)})
+            raise ValidationError(error)
+
         except Exception as e:
             print "calling service.people() error: ", str(e)
-            return e, None
-
+            error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
+            error.update({'error_description': str(e)})
+            raise ValidationError(error)
         user = auth_with_gplus(gplus_user, credentials)
 
-    if user:
-        if initial_user and initial_user['location']:
-            update_profile_location(user.profile, initial_user['location'])
-
-        return None, user
-    else:
-        return Exception('Could not login the user'), None
+    if initial_user and initial_user.get('location'):
+        update_profile_location(user.profile, initial_user['location'])
+    return user
 
 
 def link_gplus_account(user, gplus_code, client=None):
     """
     Add LinkedGoogleAccount to user
     """
-    redirect_uri = 'postmessage'
-    if client and client.name in ['shoutit-ios', 'shoutit-android']:
-        redirect_uri = OOB_CALLBACK_URN
-
-    try:
-        # Upgrade the authorization code into a credentials object
-        google_api_client = settings.GOOGLE_API['CLIENTS']['web']
-        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'],
-                                                              scope='', code=gplus_code,
-                                                              redirect_uri=redirect_uri)
-    except FlowExchangeError as flow_error:
-        raise ValidationError({'gplus_code': str(flow_error)})
-    else:
-        gplus_id = credentials.id_token.get('sub')
+    credentials = credentials_from_code_and_client(gplus_code, client)
+    gplus_id = credentials.id_token.get('sub')
 
     # check if the gplus account is already linked
     try:
-        la = LinkedGoogleAccount.objects.get(gplus_id=gplus_code)
+        la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         if la.user == user:
             raise ValidationError({'error': "G+ account is already linked to your profile."})
         raise ValidationError(
             {'error': "This gplus account is already linked to somebody else's profile."})
-
     except LinkedGoogleAccount.DoesNotExist:
         pass
 
@@ -103,11 +79,11 @@ def link_gplus_account(user, gplus_code, client=None):
     # link
     # todo: get info, pic, etc about user
     try:
-        LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials.to_json(),
-                                           gplus_id=gplus_id)
-    except Exception, e:
-        # todo: log_error
-        raise ValidationError({'error': "could not link gplus account"})
+        la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
+        la.save()
+    except (ValidationError, IntegrityError) as e:
+        print "create gplus la error", str(e)
+        raise GPLUS_LINK_ERROR_TRY_AGAIN
 
 
 def unlink_gplus_user(user, strict=True):
@@ -118,7 +94,32 @@ def unlink_gplus_user(user, strict=True):
         linked_account = LinkedGoogleAccount.objects.get(user=user)
     except LinkedGoogleAccount.DoesNotExist:
         if strict:
-            raise ValidationError({'error': "no gplus account to unlink"})
+            raise GPLUS_LINK_ERROR_NO_LINK
     else:
         # todo: unlink from google services
         linked_account.delete()
+
+
+def redirect_uri_from_client(client='shoutit-test'):
+    redirect_uri = 'https://developers.google.com/oauthplayground'
+    if client in ['shoutit-android', 'shoutit-ios']:
+        redirect_uri = OOB_CALLBACK_URN
+    if client == 'shoutit-web':
+        redirect_uri = 'postmessage'
+    print 'redirect_uri', redirect_uri
+    return redirect_uri
+
+
+def credentials_from_code_and_client(code, client):
+    redirect_uri = redirect_uri_from_client(client)
+    try:
+        # Upgrade the authorization code into a credentials object
+        google_api_client = settings.GOOGLE_API['CLIENTS']['web']
+        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'],
+                                                              scope='', code=code,
+                                                              redirect_uri=redirect_uri)
+        return credentials
+    except FlowExchangeError as e:
+        error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
+        error.update({'error_description': str(e)})
+        raise ValidationError(error)

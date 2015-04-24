@@ -278,7 +278,10 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '[%(levelname)s]: %(message)s'
+            'format': '[%(levelname)s] [%(asctime)s]: %(message)s'
+        },
+        'detailed': {
+            'format': '[%(levelname)s] [%(asctime)s] in %(pathname)s:%(lineno)s:%(funcName)s: %(message)s'
         },
         'message_only': {
             'format': '%(message)s'
@@ -300,18 +303,20 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
-            'formatter': 'simple'
+            'formatter': 'detailed'
         },
         'console_err': {
             'level': 'WARNING',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
+            'formatter': 'detailed'
         },
         'console_out': {
             'level': 'DEBUG' if LOCAL and LOG_SQL else 'INFO',
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
             'filters': ['level_below_warning'],
+            'formatter': 'simple'
         },
         'sentry': {
             'level': 'ERROR',
@@ -387,7 +392,7 @@ LOGGING = {
             'propagate': False
         },
         'shoutit': {
-            'handlers': ['console', 'console_err', 'sentry'],
+            'handlers': ['console', 'sentry'],
             'level': 'DEBUG',
             'propagate': False
         },
