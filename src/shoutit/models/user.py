@@ -12,7 +12,10 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class AbstractProfile(UUIDModel, StreamMixin):
-    image = models.URLField(max_length=1024, default='https://s3-eu-west-1.amazonaws.com/shoutit-user-image-original/9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg', blank=True)
+    image = models.URLField(max_length=1024,
+                            default='https://user-image.static.shoutit.com/'
+                                    '9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg',
+                            blank=True)
     video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
 
     # Location attributes
@@ -33,7 +36,8 @@ class AbstractProfile(UUIDModel, StreamMixin):
     @property
     def listening_count(self):
         return {
-            'users': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_PROFILE).count(),
+            'users': Listen.objects.filter(listener=self.user,
+                                           stream__type=Stream_TYPE_PROFILE).count(),
             'tags': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_TAG).count()
         }
 
@@ -116,6 +120,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         # give appropriate permissions
         from shoutit.permissions import (give_user_permissions, INITIAL_USER_PERMISSIONS,
                                          FULL_USER_PERMISSIONS)
+
         permissions = INITIAL_USER_PERMISSIONS
         if instance.is_activated:
             permissions = FULL_USER_PERMISSIONS
