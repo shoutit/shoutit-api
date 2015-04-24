@@ -36,15 +36,9 @@ class Command(BaseCommand):
             for i in range(self.max_users):
                 username = 'test_' + str(1000000 + i)
                 email = username + '@shoutit.com'
-                user, _ = User.objects.get_or_create(username=username, first_name='user', last_name=username, email=email)
-                if _:
-                    user.password = generate_password()
-                    user.save()
-                try:
-                    user.profile
-                except AttributeError:
-                    profile = Profile(user=user)
-                    profile.image = 'https://s3-eu-west-1.amazonaws.com/shoutit-user-image-original/9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg'
+                user, created = User.objects.get_or_create(username=username, first_name='user', last_name=username, email=email)
+                if created:
+                    profile = user.profile
                     city = random.choice(cities)
                     profile.city = city.city
                     profile.country = city.country
