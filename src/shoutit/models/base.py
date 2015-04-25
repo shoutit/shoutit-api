@@ -17,7 +17,8 @@ from common.utils import date_unix, AllowedUsernamesValidator
 class UUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True)
-    modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True, null=True)
+    modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True,
+                                       null=True)
 
     class Meta:
         abstract = True
@@ -43,7 +44,8 @@ class UUIDModel(models.Model):
 class AttachedObjectMixinManager(models.Manager):
     def with_attached_object(self, attached_object):
         ct = ContentType.objects.get_for_model(attached_object)
-        return super(AttachedObjectMixinManager, self).get_queryset().filter(content_type=ct, object_id=attached_object.id)
+        return super(AttachedObjectMixinManager, self).get_queryset().filter(content_type=ct,
+                                                                             object_id=attached_object.id)
 
 
 class AttachedObjectMixin(models.Model):
@@ -64,8 +66,10 @@ class APIModelMixin(object):
 
 
 class LocationMixin(models.Model):
-    latitude = models.FloatField(validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
-    longitude = models.FloatField(validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
+    latitude = models.FloatField(
+        validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
+    longitude = models.FloatField(
+        validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
 
     class Meta:
         abstract = True
@@ -79,22 +83,29 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     Username, password and email are required. Other fields are optional.
     """
     username = models.CharField(_('username'), max_length=30, unique=True,
-                                help_text=_('Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
+                                help_text=_(
+                                    'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
                                 validators=[
-                                    validators.RegexValidator(re.compile('[0-9a-zA-Z.]{2,30}'), _('Enter a valid username.'), 'invalid'),
+                                    validators.RegexValidator(re.compile('[0-9a-zA-Z.]{2,30}'),
+                                                              _('Enter a valid username.'),
+                                                              'invalid'),
                                     validators.MinLengthValidator(2),
                                     AllowedUsernamesValidator()
                                 ])
-    first_name = models.CharField(_('first name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
-    last_name = models.CharField(_('last name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(1)])
+    first_name = models.CharField(_('first name'), max_length=30, blank=True,
+                                  validators=[validators.MinLengthValidator(2)])
+    last_name = models.CharField(_('last name'), max_length=30, blank=True,
+                                 validators=[validators.MinLengthValidator(1)])
     email = models.EmailField(_('email address'), blank=True)
     is_staff = models.BooleanField(_('staff status'), default=False,
-                                   help_text=_('Designates whether the user can log into this admin site.'))
+                                   help_text=_(
+                                       'Designates whether the user can log into this admin site.'))
     is_active = models.BooleanField(_('active'), default=True,
                                     help_text=_('Designates whether this user should be treated as '
                                                 'active. Unselect this instead of deleting accounts.'))
     is_activated = models.BooleanField(_('activated'), default=False,
-                                       help_text=_('Designates whether this user have a verified email.'))
+                                       help_text=_(
+                                           'Designates whether this user have a verified email.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
     permissions = models.ManyToManyField('shoutit.Permission', through='shoutit.UserPermission')
@@ -180,7 +191,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def linked_accounts(self):
         if not hasattr(self, '_linked_accounts'):
             self._linked_accounts = {
-                'facebook': True if (hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
+                'facebook': True if (
+                hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
                 'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
             }
         return self._linked_accounts
@@ -220,6 +232,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if self.is_activated:
             return
         from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
+
         self.is_activated = True
         self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
