@@ -87,6 +87,9 @@ def link_gplus_account(user, gplus_code, client=None):
         logger.error("LinkedGoogleAccount creation error: %s." % str(e))
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 
+    # activate the user
+    user.activate()
+
 
 def unlink_gplus_user(user, strict=True):
     """

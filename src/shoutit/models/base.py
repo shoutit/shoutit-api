@@ -217,6 +217,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         send_mail(subject, message, from_email, [self.email])
 
     def activate(self):
+        if self.is_activated:
+            return
         from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
         self.is_activated = True
         self.save(update_fields=['is_activated'])

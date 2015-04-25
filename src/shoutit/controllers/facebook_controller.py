@@ -120,6 +120,9 @@ def link_facebook_account(user, facebook_access_token):
         logger.error("LinkedFacebookAccount creation error: %s." % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
+    # activate the user
+    user.activate()
+
 
 def unlink_facebook_user(user, strict=True):
     """
