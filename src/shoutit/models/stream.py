@@ -84,7 +84,7 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
     if not issubclass(sender, StreamMixin):
         return
     if created:
-        print 'Creating Stream for: <%s: %s>' % (sender.__name__, instance)
+        print unicode('Creating Stream for: <%s: %s>' % (sender.__name__, instance))
         stream = Stream(attached_object=instance)
         stream.save()
 
@@ -97,7 +97,7 @@ def delete_attached_stream(sender, instance, using, **kwargs):
     if not issubclass(sender, StreamMixin):
         return
 
-    print 'Deleting Stream for: <%s: %s>' % (sender.__name__, instance)
+    print unicode('Deleting Stream for: <%s: %s>' % (sender.__name__, instance))
     # GenericRelation in StreamMixin makes sure that Stream is being deleted when deleting the instance itself
     # so no need for us to explicitly do that
     # instance.stream.delete()
