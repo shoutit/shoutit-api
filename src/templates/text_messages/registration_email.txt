@@ -1,13 +1,13 @@
-Hello {{ name }}, welcome to Shoutit, your account details are:
-Name: {{ name }}
+Hello {{ name }},
+
+Welcome to Shoutit, your account details are:
 Username: {{ username }}
-
-
-Go to this url in your browser to activate your account: {{ link }}
-If you are using your mobile copy this code and paste it inside the activiation form: {{ token }}
+{% if not is_activated %}
+Please go to this url in your browser to verify your email: {{ link }}
+{% else %}
+{% endif %}
 -------------------------------------------------------------------------------------
 Please do not reply to this email, your message won't be read or processed.
 
 
-Shoutit [http://www.shoutit.com]
-info@shout.com
+Shoutit [https://www.shoutit.com]

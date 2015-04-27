@@ -56,28 +56,18 @@ def SendPasswordRecoveryEmail(user, email, link):
 def send_signup_email(user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
-
+    context = Context({
+        'username': user.username,
+        'name': user.name if user.name != user.username else '',
+        'link': user.verification_link,
+        'is_activated': user.is_activated
+    })
     html_template = get_template('registration_email.html')
-    html_context = Context({
-        'username': user.username,
-        'name': user.name,
-        'link': user.activation_link,
-        'is_activated': user.is_activated
-    })
-    html_message = html_template.render(html_context)
-
+    html_message = html_template.render(context)
     text_template = get_template('registration_email.txt')
-    text_context = Context({
-        'username': user.username,
-        'name': user.name,
-        'link': user.activation_link,
-        'is_activated': user.is_activated
-    })
-    text_message = text_template.render(text_context)
-
+    text_message = text_template.render(context)
     msg = EmailMultiAlternatives(subject, text_message, from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
-
     msg.send()
 
 

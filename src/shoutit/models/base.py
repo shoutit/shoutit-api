@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import re
 import uuid
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core import validators
@@ -237,6 +238,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         self.is_activated = True
         self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
+
+    @property
+    def verification_link(self):
+        try:
+            return settings.API_LINK + 'auth/verify_email?token=' + self.confirmation_tokens.filter()[0].token
+        except IndexError:
+            return settings.API_LINK
 
     def send_verification_email(self):
         email_controller.send_signup_email(self)

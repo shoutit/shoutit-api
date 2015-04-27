@@ -11,15 +11,18 @@ from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.views import OAuthError
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+from common.constants import TOKEN_TYPE_EMAIL
 from shoutit.api.v2.serializers import ShoutitSignupSerializer, ShoutitSigninSerializer, ShoutitVerifyEmailSerializer, \
     ShoutitResetPasswordSerializer, ShoutitChangePasswordSerializer
 
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
+from shoutit.models import ConfirmToken
 
 
 class RequestParamsClientBackend(object):
@@ -361,7 +364,10 @@ class ShoutitAuthView(viewsets.ViewSet):
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
         """
-        return Response(error, status=400)
+        response_data = {
+            'error': error,
+        }
+        return Response(response_data, status=400)
 
     def success_response(self, success):
         """
@@ -372,11 +378,17 @@ class ShoutitAuthView(viewsets.ViewSet):
         }
         return Response(response_data)
 
-    @list_route(methods=['post'], suffix='Verify Email')
+    @list_route(methods=['get', 'post'], permission_classes=(), suffix='Verify Email')
     def verify_email(self, request):
         """
         ###Verify email
-        This sends the user a verification email.
+        GET:
+        <pre><code>
+        GET: /auth/verify_email?token=39097c224b0f4ffb8923fc92337ec90bd71d294092aa4bbaa2e8c91854fd891e
+        </code></pre>
+
+        ###Resend email verification
+        POST:
         <pre><code>
         {
             "email": "email@example.com"  // optional to change the email before sending new verification email
@@ -388,13 +400,33 @@ class ShoutitAuthView(viewsets.ViewSet):
         parameters:
             - name: body
               paramType: body
+            - name: token
+              paramType: query
         """
-        if request.user.is_activated:
-            return self.success_response("Your email '{}' is already verified.".format(request.user.email))
-        serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.instance.send_verification_email()
-        return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
+        if request.method == 'GET':
+            token = request.query_params.get('token')
+            if not token:
+                raise ValidationError({'token': "This parameter is required."})
+            try:
+                cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token, is_disabled=False)
+                user = cf.user
+                user.activate()
+                cf.is_disabled = True
+                cf.save(update_fields=['is_disabled'])
+                return self.success_response("Your email has been verified.")
+            except ConfirmToken.DoesNotExist:
+                return self.error_response("Token does not exist.")
+
+        if request.method == 'POST':
+            if request.user.is_anonymous():
+                return Response({"detail": "Authentication credentials were not provided."},
+                                status=status.HTTP_401_UNAUTHORIZED)
+            if request.user.is_activated:
+                return self.success_response("Your email '{}' is already verified.".format(request.user.email))
+            serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            serializer.instance.send_verification_email()
+            return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
 
     @list_route(methods=['post'], suffix='Change Password')
     def change_password(self, request):

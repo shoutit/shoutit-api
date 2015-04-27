@@ -29,18 +29,26 @@ if PROD:
     DEBUG = False
     SHOUT_IT_DOMAIN = 'www.shoutit.com'
     SHOUT_IT_HOST = 'shoutit.com'
+    SITE_LINK = 'https://www.shoutit.com/'
+    API_LINK = 'https://api.shoutit.com/v2/'
 
 elif DEV:
     DEBUG = True
     SHOUT_IT_DOMAIN = 'dev.shoutit.com'
     SHOUT_IT_HOST = 'dev.shoutit.com'
+    SITE_LINK = 'http://dev.www.shoutit.com/'
+    API_LINK = 'http://dev.api.shoutit.com/v2/'
 
 else:  # LOCAL
     DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = 'shoutit.dev'
+    SITE_LINK = 'http://shoutit.dev:3000/'
+    API_LINK = 'http://shoutit.dev:8000/v2/'
 
 info("DEBUG:", DEBUG)
+info("SITE_LINK:", SITE_LINK)
+info("API_LINK:", API_LINK)
 
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
@@ -48,10 +56,6 @@ APPEND_SLASH = False
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 WSGI_APPLICATION = 'shoutit.wsgi.application'
-
-# todo: remove usage of SITE_LINK
-SITE_LINK = 'http%s://%s/' % ('s' if PROD else '', SHOUT_IT_DOMAIN)
-info("SITE_LINK:", SITE_LINK)
 
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com']
@@ -423,7 +427,7 @@ LOGGING = {
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
 
-SERVER_EMAIL = 'Shoutit <info@shoutit.com>'
+DEFAULT_FROM_EMAIL = 'Shoutit <noreply@shoutit.com>'
 USE_GOOGLE = False
 USE_MANDRILL = True
 
@@ -437,7 +441,6 @@ if USE_GOOGLE:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 elif USE_MANDRILL:
-    DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = 'smtp.mandrillapp.com'
     EMAIL_PORT = 587
     EMAIL_HOST_USER = 'info@shoutit.com'
@@ -445,7 +448,6 @@ elif USE_MANDRILL:
     EMAIL_USE_TLS = True
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
-    DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = SHOUT_IT_HOST
     EMAIL_PORT = '25'
     EMAIL_HOST_USER = 'admin'

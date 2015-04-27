@@ -1,10 +1,11 @@
 <p>
-  Hello {{ name }}, welcome to Shoutit, your account details are:<br/>
-  <b>Name</b>: {{ name }}<br/>
+  Hello {{ name }},<br/><br/>
+
+  Welcome to Shoutit, your account details are:<br/>
   <b>Username</b>: {{ username }}<br/><br/>
 
   {% if not is_activated %}
-  <a href='{{ link }}'>Please lick here to confirm your email.</a><br/>
+  <a href='{{ link }}'>Please click here to verify your email.</a><br/>
   {% else %}
 
   {% endif %}
@@ -13,7 +14,5 @@
 <p>
   Please do not reply to this email, your message will not be read or processed.<br/>
   <br/>
-  <br/>
   <a href="https://www.shoutit.com">Shoutit</a><br/>
-  <a href='mailto:info@shout.com'>info@shout.com</a>
 </p>
