@@ -130,7 +130,7 @@ class TokenType(Constant):
 
 TOKEN_TYPE_EMAIL = TokenType("Email Token")
 TOKEN_TYPE_NUM = TokenType("Number Token")
-TOKEN_TYPE_RECOVER_PASSWORD = TokenType("Recover Password")
+TOKEN_TYPE_RESET_PASSWORD = TokenType("Reset Password")
 TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE = TokenType("Business Html Email Activate")
 TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM = TokenType("Business Html Confirm")
 

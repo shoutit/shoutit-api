@@ -26,30 +26,20 @@ def SendEmail(email, variables, html_template, text_template):
     msg.send()
 
 
-def SendPasswordRecoveryEmail(user, email, link):
-    subject = _('[ShoutIt] Welcome to ShoutIt!')
+def send_password_reset_email(user):
+    subject = _('Password Reset')
     from_email = settings.DEFAULT_FROM_EMAIL
-    to = email
-
+    context = Context({
+        'username': user.username,
+        'name': user.name if user.name != user.username else '',
+        'link': user.password_reset_link
+    })
     html_template = get_template('password_recovery_email.html')
-    html_context = Context({
-        'username': user.username,
-        'name': user.name,
-        'link': link
-    })
-    html_message = html_template.render(html_context)
-
+    html_message = html_template.render(context)
     text_template = get_template('password_recovery_email.txt')
-    text_context = Context({
-        'username': user.username,
-        'name': user.name,
-        'link': link
-    })
-    text_message = text_template.render(text_context)
-
-    msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
+    text_message = text_template.render(context)
+    msg = EmailMultiAlternatives(subject, text_message, from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
-
     msg.send()
 
 

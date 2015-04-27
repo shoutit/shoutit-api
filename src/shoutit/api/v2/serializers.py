@@ -12,12 +12,12 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.reverse import reverse
-from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT, \
-     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT
-
+from common.constants import (
+    MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
+    ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
 from shoutit.models import (
-    User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification, Category, Currency,
-    Report, PredefinedCity)
+    User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
+    Category, Currency, Report, PredefinedCity, ConfirmToken)
 from shoutit.controllers import shout_controller, user_controller
 
 
@@ -725,6 +725,33 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         if user.is_password_set:
             if not user.check_password(value):
                 raise ValidationError(['Old password does not match.'])
+
+
+class ShoutitSetPasswordSerializer(serializers.Serializer):
+    reset_token = serializers.CharField()
+    new_password = serializers.CharField(min_length=6, max_length=30)
+    new_password2 = serializers.CharField(min_length=6, max_length=30)
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitSetPasswordSerializer, self).to_internal_value(data)
+        new_password = ret.get('new_password')
+        new_password2 = ret.get('new_password2')
+        if new_password != new_password2:
+            raise ValidationError({'new_password': ['New passwords did not match.']})
+        user = self.instance
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(self.context.get('request'), user)
+        return ret
+
+    def validate_reset_token(self, value):
+        try:
+            cf = ConfirmToken.objects.get(type=TOKEN_TYPE_RESET_PASSWORD, token=value,
+                                          is_disabled=False)
+            self.instance = cf.user
+        except ConfirmToken.DoesNotExist:
+            raise ValidationError(['Reset token is invalid.'])
 
 
 class PredefinedCitySerializer(serializers.ModelSerializer):

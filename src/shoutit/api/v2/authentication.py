@@ -17,9 +17,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from common.constants import TOKEN_TYPE_EMAIL
-from shoutit.api.v2.serializers import ShoutitSignupSerializer, ShoutitSigninSerializer, ShoutitVerifyEmailSerializer, \
-    ShoutitResetPasswordSerializer, ShoutitChangePasswordSerializer
-
+from shoutit.api.v2.serializers import (
+    ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
+    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer)
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import ConfirmToken
@@ -470,5 +470,28 @@ class ShoutitAuthView(viewsets.ViewSet):
         """
         serializer = ShoutitResetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.instance.send_reset_password_email()
-        return self.success_response("Password recovery email will be sent soon.")
+        serializer.instance.reset_password()
+        return self.success_response("Password reset email will be sent soon.")
+
+    @list_route(methods=['post'], permission_classes=(), suffix='Set Password')
+    def set_password(self, request):
+        """
+        ###Set password using reset token
+        This changes the current user's password.
+        <pre><code>
+        {
+            "reset_token": "23456789876543245678987654", // the WebApp should extract this from url send to user's email
+            "new_password": "HarD3r0n#",
+            "new_password2": "HarD3r0n#"
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
+        """
+        serializer = ShoutitSetPasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return self.success_response("New password set.")

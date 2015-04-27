@@ -13,6 +13,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from common.utils import date_unix, AllowedUsernamesValidator
+from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL
 from shoutit.controllers import email_controller
 
 
@@ -239,22 +240,43 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
 
+    def send_signup_email(self):
+        email_controller.send_signup_email(self)
+
     @property
     def verification_link(self):
         try:
-            return settings.API_LINK + 'auth/verify_email?token=' + self.confirmation_tokens.filter()[0].token
+            cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL, is_disabled=False)[0]
+            return settings.API_LINK + 'auth/verify_email?token=' + cf.token
         except IndexError:
             return settings.API_LINK
 
     def send_verification_email(self):
+        from shoutit.models import ConfirmToken
+        # invalidate other reset tokens
+        self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL).update(is_disabled=True)
+        # create new reset token
+        ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_RESET_PASSWORD)
+        # email the user
         email_controller.send_signup_email(self)
 
-    def send_signup_email(self):
-        email_controller.send_signup_email(self)
+    @property
+    def password_reset_link(self):
+        try:
+            cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD,
+                                                 is_disabled=False)[0]
+            return settings.API_LINK + 'auth/set_password?token=' + cf.token
+        except IndexError:
+            return settings.API_LINK
 
-    def send_reset_password_email(self):
-        # todo: send using Mandrill SMTP
-        pass
+    def reset_password(self):
+        from shoutit.models import ConfirmToken
+        # invalidate other reset tokens
+        self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD).update(is_disabled=True)
+        # create new reset token
+        ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_RESET_PASSWORD)
+        # email the user
+        email_controller.send_password_reset_email(self)
 
     def clean(self):
         self.email = self.email.lower()

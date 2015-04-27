@@ -3,7 +3,8 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 
-from common.constants import DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG
+from common.constants import (
+    DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG,TOKEN_TYPE_EMAIL)
 from shoutit.models import ConfirmToken
 from shoutit.models.base import UUIDModel
 from shoutit.models.stream import StreamMixin, Listen
@@ -129,5 +130,5 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         # send signup email
         if not instance.is_activated:
             # create email confirmation token and send verification email
-            ConfirmToken.objects.create(user=instance)
+            ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
         instance.send_signup_email()
