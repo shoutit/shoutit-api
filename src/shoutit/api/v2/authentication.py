@@ -119,7 +119,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             at = self.create_access_token(request, user, scope, client)
             # Public clients don't get refresh tokens
             if client.client_type == provider_constants.CONFIDENTIAL:
-                rt = self.create_refresh_token(request, user, scope, at, client)
+                self.create_refresh_token(request, user, scope, at, client)
 
         return self.access_token_response(at)
 
@@ -153,7 +153,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             at = self.create_access_token(request, user, scope, client)
             # Public clients don't get refresh tokens
             if client.client_type == provider_constants.CONFIDENTIAL:
-                rt = self.create_refresh_token(request, user, scope, at, client)
+                self.create_refresh_token(request, user, scope, at, client)
 
         return self.access_token_response(at)
 
@@ -185,7 +185,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             at = self.create_access_token(request, user, scope, client)
             # Public clients don't get refresh tokens
             if client.client_type == provider_constants.CONFIDENTIAL:
-                rt = self.create_refresh_token(request, user, scope, at, client)
+                self.create_refresh_token(request, user, scope, at, client)
 
         return self.access_token_response(at)
 
@@ -215,7 +215,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             at = self.create_access_token(request, user, scope, client)
             # Public clients don't get refresh tokens
             if client.client_type == provider_constants.CONFIDENTIAL:
-                rt = self.create_refresh_token(request, user, scope, at, client)
+                self.create_refresh_token(request, user, scope, at, client)
 
         return self.access_token_response(at)
 

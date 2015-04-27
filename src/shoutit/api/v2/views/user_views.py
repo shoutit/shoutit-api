@@ -8,12 +8,12 @@ from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
-from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination, \
-    PageNumberIndexPagination
-
+from shoutit.api.v2.pagination import (
+    ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination,
+    PageNumberIndexPagination)
 from shoutit.controllers import stream_controller, message_controller
 
-from shoutit.api.v2.serializers import *
+from shoutit.api.v2.serializers import *  # NOQA
 from shoutit.api.v2.permissions import IsOwnerModify
 from shoutit.controllers.facebook_controller import link_facebook_account, unlink_facebook_user
 from shoutit.controllers.gplus_controller import link_gplus_account, unlink_gplus_user
@@ -161,7 +161,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         ```
         NOT IMPLEMENTED
         ```
-
         ---
         omit_serializer: true
         omit_parameters:
@@ -173,7 +172,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               required: true
               defaultValue: me
         """
-        user = self.get_object()
+        # user = self.get_object()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
@@ -418,14 +417,18 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message(conversation=None, user=request.user,
-                                                   to_users=[user], text=text, attachments=attachments, request=request)
+        message = message_controller.send_message(
+            conversation=None, user=request.user, to_users=[user], text=text,
+            attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)}
+        return {
+            'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']},
+                                request=self.request)
+        }
 
     @detail_route(methods=['put', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):

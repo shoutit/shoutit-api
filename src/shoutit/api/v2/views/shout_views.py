@@ -254,11 +254,15 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message(conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
-                                                   attachments=attachments, request=request)
+        message = message_controller.send_message(
+            conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
+            attachments=attachments, request=request)
         message = MessageSerializer(instance=message, context={'request': request})
         headers = self.get_success_message_headers(message.data)
         return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)}
+        return {
+            'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']},
+                                request=self.request)
+        }

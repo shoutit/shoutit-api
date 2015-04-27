@@ -10,8 +10,9 @@ from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.filters import TagFilter
-from shoutit.api.v2.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination, PageNumberIndexPagination
-from shoutit.api.v2.serializers import *
+from shoutit.api.v2.pagination import (
+    ShoutitPageNumberPagination, ReverseDateTimePagination, PageNumberIndexPagination)
+from shoutit.api.v2.serializers import *  # NOQA
 from shoutit.controllers import stream_controller
 from shoutit.models import ShoutIndex
 

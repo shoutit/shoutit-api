@@ -93,4 +93,3 @@ class IsOwnerModify(permissions.BasePermission):
         if request.method in MODIFY_METHODS:
             return obj.owner == request.user
         return True
-
