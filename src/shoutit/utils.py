@@ -8,8 +8,6 @@ import hmac
 import re
 from django.http import HttpResponse
 from shoutit import settings
-from common.constants import POST_TYPE_EXPERIENCE, POST_TYPE_REQUEST, POST_TYPE_OFFER
-from shoutit.models import Tag, User
 import mailchimp
 
 
@@ -111,47 +109,6 @@ def to_seo_friendly(s, max_len=50):
     u = u[:max_len].rstrip(''.join(allowed_chars)).lower()  # clip to max_len
     u = re.sub(r'([' + r','.join(allowed_chars) + r'])\1+', r'\1', u)  # keep one occurrence of allowed chars
     return u
-
-
-# todo: check who calls this method
-def shout_link(post):
-    if not post:
-        return None
-    post_id = post.pk
-
-    if post.type == POST_TYPE_EXPERIENCE:
-        # todo: make sure the actual exp is passed so no need for using the model here
-        # if post.__class__.__name__ == 'Post':
-        #     post = Experience.objects.get(pk=post.pk)
-        experience = post
-        about = to_seo_friendly(experience.AboutBusiness.name)
-
-        city = ('-' + to_seo_friendly(unicode.lower(experience.AboutBusiness.city))) if experience.AboutBusiness.city else ''
-        experience_type = 'bad' if experience.state == 0 else 'good'
-        link = '%s%s-experience/%s/%s%s/' % (settings.SITE_LINK, experience_type, post_id, about, city)
-    else:
-        shout = post
-        shout_type = 'request' if shout.type == POST_TYPE_REQUEST else 'offer' if shout.type == POST_TYPE_OFFER else 'shout'
-        etc = to_seo_friendly(shout.item.name if hasattr(shout, 'item') else shout.shout.item.name)
-        city = to_seo_friendly(unicode.lower(shout.city))
-        link = '%s%s/%s/%s-%s/' % (settings.SITE_LINK, shout_type, post_id, etc, city)
-
-    return link
-
-
-def user_link(user):
-    if not user or not isinstance(user, User):
-        return None
-    return "{0}{1}".format(settings.SITE_LINK, user.username)
-
-
-def tag_link(tag):
-    if not isinstance(tag, (Tag, dict)):
-        return None
-    tag_name = tag.name if hasattr(tag, 'name') else tag['name'] if 'name' in tag else None
-    if not tag_name:
-        return None
-    return "{0}tag/{1}/".format(settings.SITE_LINK, tag_name)
 
 
 def full_url_path(url):

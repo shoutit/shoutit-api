@@ -425,7 +425,7 @@ MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
 
 SERVER_EMAIL = 'Shoutit <info@shoutit.com>'
 USE_GOOGLE = False
-USE_MANDRILL = False
+USE_MANDRILL = True
 
 if USE_GOOGLE:
     DEFAULT_FROM_EMAIL = 'Nour <nour@syrex.me>'
@@ -439,13 +439,10 @@ if USE_GOOGLE:
 elif USE_MANDRILL:
     DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'
     EMAIL_HOST = 'smtp.mandrillapp.com'
-    EMAIL_PORT = '587'
-    # EMAIL_HOST_USER = 'noor.syron@gmail.com'
-    # EMAIL_HOST_PASSWORD = 'xb-lOrXsVGILf91XsS0hgw'
-    EMAIL_HOST_USER = 'nour@syrex.com'
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = 'info@shoutit.com'
     EMAIL_HOST_PASSWORD = 'bneGVmK5BHC5B9pyLUEj_w'
     EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = True
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     DEFAULT_FROM_EMAIL = 'Shoutit <info@shoutit.com>'

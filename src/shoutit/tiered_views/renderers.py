@@ -10,7 +10,6 @@ from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, DEFAULT_LOCATION
 from shoutit.models import Profile, Business, PredefinedCity
 from shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, \
     RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
-from shoutit.utils import shout_link
 from shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from common import constants
 
@@ -234,7 +233,7 @@ def post_experience_json_renderer(request, result, message=_('Your experience wa
             'text': result.data['experience'].text,
             'state': int(result.data['experience'].state),
             'date': result.data['experience'].date_published.strftime('%d/%m/%Y %H:%M:%S%z'),
-            'next': shout_link(result.data['experience'])
+            # 'next': shout_link(result.data['experience'])
         }
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, message=message, data=data)
     else:

@@ -12,6 +12,7 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from common.utils import date_unix, AllowedUsernamesValidator
+from shoutit.controllers import email_controller
 
 
 class UUIDModel(models.Model):
@@ -238,8 +239,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
 
     def send_verification_email(self):
-        # todo: send using Mandrill SMTP
-        pass
+        email_controller.send_signup_email(self)
+
+    def send_signup_email(self):
+        email_controller.send_signup_email(self)
 
     def send_reset_password_email(self):
         # todo: send using Mandrill SMTP

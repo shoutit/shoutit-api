@@ -6,8 +6,11 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 import codecs
+
+# very important when printing unicode strings
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+
 
 DJANGO_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 API_DIR = os.path.dirname(DJANGO_DIR)

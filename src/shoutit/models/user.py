@@ -126,8 +126,8 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
             permissions = FULL_USER_PERMISSIONS
         give_user_permissions(user=instance, permissions=permissions)
 
-        # send verification email
+        # send signup email
         if not instance.is_activated:
             # create email confirmation token and send verification email
             ConfirmToken.objects.create(user=instance)
-            instance.send_verification_email()
+        instance.send_signup_email()

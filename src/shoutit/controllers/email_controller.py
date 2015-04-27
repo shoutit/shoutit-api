@@ -4,9 +4,6 @@ from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from django.conf import settings
-
-from shoutit import utils
-from shoutit.models import DBCLConversation
 from common import constants
 
 
@@ -56,17 +53,16 @@ def SendPasswordRecoveryEmail(user, email, link):
     msg.send()
 
 
-def SendRegistrationActivationEmail(user, email, link, token):
-    subject = _('[ShoutIt] Welcome to ShoutIt!')
+def send_signup_email(user):
+    subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
-    to = email
 
     html_template = get_template('registration_email.html')
     html_context = Context({
         'username': user.username,
         'name': user.name,
-        'link': link,
-        'token': token
+        'link': user.activation_link,
+        'is_activated': user.is_activated
     })
     html_message = html_template.render(html_context)
 
@@ -74,12 +70,12 @@ def SendRegistrationActivationEmail(user, email, link, token):
     text_context = Context({
         'username': user.username,
         'name': user.name,
-        'link': link,
-        'token': token
+        'link': user.activation_link,
+        'is_activated': user.is_activated
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
+    msg = EmailMultiAlternatives(subject, text_message, from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
 
     msg.send()
@@ -224,16 +220,17 @@ def send_message_email(message):
 
     from_name = from_user.name
     from_email = settings.DEFAULT_FROM_EMAIL
-    from_link = utils.user_link(from_user)
+    from_link = "" #utils.user_link(from_user)
 
     shout_name = shout.item.name
-    shout_link = utils.shout_link(shout)
+    shout_link = "" #utils.shout_link(shout)
 
     subject = _('[Shoutit] %(name)s sent you a message regarding: %(about)s') % {'name': from_user.first_name, 'about': shout_name}
 
     reply_to_email = from_user.email
 
     if to_user.cl_user:
+        from shoutit.models import DBCLConversation
         subject = shout_name
         ref = "%s-%s" % (to_user.cl_ad_id, from_user.pk)
         try:

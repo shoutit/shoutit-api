@@ -1,15 +1,19 @@
 <p>
-    Hello {{ name }}, welcome to Shoutit, your account details are:<br />
-    <b>Name</b>: {{ name }}<br />
-    <b>Username</b>: {{ username }}<br /><br />
-    <a href='{{ link }}'>Click here to activate your account on Shoutit</a>.<br />
-    If you are using your mobile copy this code and paste it inside the activiation form: {{ token }}<br />
+  Hello {{ name }}, welcome to Shoutit, your account details are:<br/>
+  <b>Name</b>: {{ name }}<br/>
+  <b>Username</b>: {{ username }}<br/><br/>
+
+  {% if not is_activated %}
+  <a href='{{ link }}'>Please lick here to confirm your email.</a><br/>
+  {% else %}
+
+  {% endif %}
 </p>
-<hr />
+<hr/>
 <p>
-    Please do not reply to this email, your message won't be read or processed.<br />
-    <br />
-    <br />
-    <a href="http://www.shoutit.com">Shoutit</a><br />
-    <a href='mailto:info@shout.com'>info@shout.com</a>
+  Please do not reply to this email, your message will not be read or processed.<br/>
+  <br/>
+  <br/>
+  <a href="https://www.shoutit.com">Shoutit</a><br/>
+  <a href='mailto:info@shout.com'>info@shout.com</a>
 </p>
