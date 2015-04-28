@@ -76,7 +76,7 @@ ACCOUNT_ACTIVATION_DAYS = 7
 RANK_COEFFICIENT_TIME = 0.7  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_FOLLOW = 0.014  # value should be between 0.0 ~ 1.0
 RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
-NEARBY_CITIES_RADIUS_KM = 600
+NEARBY_CITIES_RADIUS_KM = 65
 """
 =================================
             Caching
