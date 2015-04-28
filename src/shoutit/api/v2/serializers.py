@@ -233,7 +233,6 @@ class UserDetailSerializer(UserSerializer):
         video_data = profile_data.get('video', {})
 
         profile = user.profile
-
         user.username = validated_data.get('username', user.username)
         user.first_name = validated_data.get('first_name', user.first_name)
         user.last_name = validated_data.get('last_name', user.last_name)
@@ -241,11 +240,7 @@ class UserDetailSerializer(UserSerializer):
         user.save()
 
         if location_data:
-            profile.country = location_data['country']
-            profile.city = location_data['city']
-            profile.latitude = location_data['latitude']
-            profile.longitude = location_data['longitude']
-            profile.save()
+            profile = user_controller.update_profile_location(profile, location_data)
 
         if profile_data:
 
@@ -266,7 +261,8 @@ class UserDetailSerializer(UserSerializer):
             profile.bio = profile_data.get('bio', profile.bio)
             profile.gender = profile_data.get('gender', profile.gender)
             profile.image = profile_data.get('image', profile.image)
-            profile.save()
+            # todo: optimize
+            profile.save(update_fields=['bio', 'gender', 'image', 'video'])
 
         if push_tokens_data:
             if 'apns' in push_tokens_data:
