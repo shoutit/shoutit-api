@@ -197,7 +197,7 @@ MIDDLEWARE_CLASSES = (
     'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
-    'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
+    # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
 
 # Database

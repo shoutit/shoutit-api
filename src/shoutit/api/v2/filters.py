@@ -79,16 +79,16 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         city = data.get('city')
         if city and city != 'all':
-            q = Q('match', city=city)
+            q = [Q('match', city=city)]
             try:
                 pd_city = PredefinedCity.objects.get(city=city)
                 cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
                 for nearby_city in cities:
-                    q |= Q('match', city=nearby_city.city)
+                    q.append(Q('match', city=nearby_city.city))
             except PredefinedCity.DoesNotExist:
                 pass
-            logger.debug(q)
-            index_queryset = index_queryset.query(q)
+            city_q = Q('bool', should=q, minimum_should_match=1)
+            index_queryset = index_queryset.query(city_q)
 
         category = data.get('category')
         if category:
@@ -148,6 +148,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             selected_sort = selected_sort + ('-_score',)
         index_queryset = index_queryset.sort(*selected_sort)
 
+        logger.debug(index_queryset.to_dict())
         return index_queryset
 
 
