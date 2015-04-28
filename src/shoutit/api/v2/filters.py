@@ -12,6 +12,8 @@ from common.utils import process_tag_names
 from shoutit.controllers import stream_controller
 from shoutit.models import Shout, Category, Tag, PredefinedCity
 from elasticsearch_dsl import Q
+import logging
+logger = logging.getLogger('shoutit.debug')
 
 
 class ShoutFilter(django_filters.FilterSet):
@@ -85,6 +87,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     q |= Q('match', city=nearby_city.city)
             except PredefinedCity.DoesNotExist:
                 pass
+            logger.debug(q)
             index_queryset = index_queryset.query(q)
 
         category = data.get('category')
