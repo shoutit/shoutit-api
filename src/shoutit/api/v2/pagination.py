@@ -40,7 +40,8 @@ class DateTimePagination(CursorPagination):
         after_query_param = request.query_params.get(self.after_field)
         if before_query_param and after_query_param:
             raise ValidationError({
-                'detail': "Using '{}' and '{}' query params together is not allowed".format(self.before_field, self.after_field)
+                'detail': "Using '{}' and '{}' query params together is not allowed".format(
+                    self.before_field, self.after_field)
             })
 
         if before_query_param:
@@ -150,7 +151,8 @@ class ShoutitPageNumberPagination(PageNumberPagination):
 
 
 class ShoutitPaginationMixin(object):
-    def get_custom_shoutit_page_number_pagination_class(self, custom_page_size=None, custom_results_field=None):
+    def get_custom_shoutit_page_number_pagination_class(self, custom_page_size=None,
+                                                        custom_results_field=None):
         class PageNumberPaginationClass(ShoutitPageNumberPagination):
             page_size = custom_page_size or ShoutitPageNumberPagination.page_size
             results_field = custom_results_field or ShoutitPageNumberPagination.results_field
@@ -174,7 +176,8 @@ class DateTimeIndexPagination(DateTimePagination):
         after_query_param = request.query_params.get(self.after_field)
         if before_query_param and after_query_param:
             raise ValidationError({
-                'detail': "Using '{}' and '{}' query params together is not allowed".format(self.before_field, self.after_field)
+                'detail': "Using '{}' and '{}' query params together is not allowed".format(
+                    self.before_field, self.after_field)
             })
 
         if before_query_param:

@@ -6,12 +6,14 @@ from django.conf import settings
 from common.constants import TOKEN_TYPE_EMAIL, TokenType
 
 from shoutit.models.base import UUIDModel, LocationMixin
+
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel):
     city = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
-    city_encoded = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
+    city_encoded = models.CharField(max_length=200, default='', blank=True, db_index=True,
+                                    unique=True)
     country = models.CharField(max_length=2, default='', blank=True, db_index=True)
     latitude = models.FloatField(default=0.0)
     longitude = models.FloatField(default=0.0)
@@ -19,6 +21,17 @@ class PredefinedCity(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.country + ':' + self.city)
+
+    def get_cities_within(self, dist_km):
+        distance = {
+            'distance': """(6371 * acos( cos( radians(%s) ) * cos( radians( latitude ) ) *
+                    cos( radians( longitude ) - radians(%s) ) + sin( radians(%s) ) *
+                    sin( radians( latitude ) ) ) )""" % (self.latitude, self.longitude, self.latitude)
+        }
+        cities = PredefinedCity.objects.filter(country=self.country).exclude(id=self.id)\
+            .extra(select=distance).values('id', 'distance')
+        ids = [c['id'] for c in cities if float(c['distance']) < dist_km]
+        return PredefinedCity.objects.filter(id__in=ids)
 
 
 def generate_email_confirm_token():
@@ -50,7 +63,7 @@ class SharedLocation(LocationMixin, UUIDModel):
 
 
 # class StoredFile(UUIDModel):
-#     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True, blank=True)
+# user = models.ForeignKey(AUTH_USER_MODEL, related_name='Documents', null=True, blank=True)
 #     File = models.CharField(max_length=1024)
 #     type = models.IntegerField()
 #

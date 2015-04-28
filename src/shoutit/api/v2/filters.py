@@ -3,13 +3,15 @@
 
 """
 from __future__ import unicode_literals
+from django.conf import settings
 from django.db.models import Count
 import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 from common.utils import process_tag_names
 from shoutit.controllers import stream_controller
-from shoutit.models import Shout, Category, Tag
+from shoutit.models import Shout, Category, Tag, PredefinedCity
+from elasticsearch_dsl import Q
 
 
 class ShoutFilter(django_filters.FilterSet):
@@ -75,7 +77,15 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         city = data.get('city')
         if city and city != 'all':
-            index_queryset = index_queryset.query('match', city=city)
+            q = Q('match', city=city)
+            try:
+                pd_city = PredefinedCity.objects.get(city=city)
+                cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
+                for nearby_city in cities:
+                    q |= Q('match', city=nearby_city.city)
+            except PredefinedCity.DoesNotExist:
+                pass
+            index_queryset = index_queryset.query(q)
 
         category = data.get('category')
         if category:

@@ -20,7 +20,8 @@ from shoutit.controllers.gplus_controller import link_gplus_account, unlink_gplu
 from shoutit.models import ShoutIndex
 
 
-class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin,
+                  viewsets.GenericViewSet):
     """
     User API Resource.
     """
@@ -175,7 +176,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         # user = self.get_object()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    @detail_route(methods=['post', 'delete'], suffix='Listen',
+                  permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to user
@@ -203,16 +205,15 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if request.method == 'POST':
             stream_controller.listen_to_stream(request.user, profile.stream, request)
             msg = "you started listening to {} shouts.".format(user.name)
-
+            _status = status.HTTP_201_CREATED
         else:
             stream_controller.remove_listener_from_stream(request.user, profile.stream)
             msg = "you stopped listening to {} shouts.".format(user.name)
-
+            _status = status.HTTP_202_ACCEPTED
         ret = {
             'data': {'success': msg},
-            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
+            'status': _status
         }
-
         return Response(**ret)
 
     @detail_route(methods=['get'], suffix='Listeners')
@@ -297,7 +298,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         listening = stream_controller.get_user_listening_qs(user, listening_type)
 
         # we do not use the view pagination class since we need one with custom results field
-        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(custom_results_field=listening_type)
+        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(
+            custom_results_field=listening_type)
         page = self.paginate_queryset(listening)
 
         result_object_serializers = {
