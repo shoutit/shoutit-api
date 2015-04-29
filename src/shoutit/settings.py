@@ -206,8 +206,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': ENV.replace('_api', ''),  # eg. ENV is shoutit_api_pro, db should be shoutit_prod
-        'USER': 'syron',
-        'PASSWORD': '123',
+        'USER': 'shoutit',
+        'PASSWORD': '#a\_Y9>uw<.5;_=/kUwK',
         'HOST': 'db.shoutit.com',
         'PORT': '5432',
     }
