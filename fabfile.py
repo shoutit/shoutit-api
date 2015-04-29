@@ -25,9 +25,10 @@ def push():
 def pull():
     with cd('/opt/shoutit_api_prod/api'):
         run('git pull')
+        run('/opt/shoutit_api_prod/bin/pip install    -r src/requirements/common_noupdate.txt')
+        run('/opt/shoutit_api_prod/bin/pip install -U -r src/requirements/prod.txt')
         # run('/opt/shoutit_api_prod/bin/python src/manage.py test')
         run('/opt/shoutit_api_prod/bin/python src/manage.py migrate')
-        run('/opt/shoutit_api_prod/bin/pip install -U -r src/requirements/prod.txt')
         run('supervisorctl restart all')
 
 
