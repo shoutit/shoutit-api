@@ -187,7 +187,7 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
 
 def create_shout_index(shout):
     shout_index = ShoutIndex()
-    shout_index.id = shout.pk
+    shout_index._id = shout.pk
     shout_index.type = shout.type_name
     shout_index.title = shout.item.name
     shout_index.text = shout.text

@@ -274,7 +274,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         # save the order
         objects_dict = OrderedDict()
         for object_index in index_response:
-            objects_dict[object_index.id] = None
+            objects_dict[object_index._id] = None
 
         # populate from database
         qs = view.model.objects.filter(id__in=objects_dict.keys()) \

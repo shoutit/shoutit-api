@@ -215,7 +215,6 @@ class Shout(Post):
 
 class ShoutIndex(DocType):
     # indexed
-    id = String(index='not_analyzed')
     type = String(index='not_analyzed')
     title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
     text = String(analyzer='snowball')
