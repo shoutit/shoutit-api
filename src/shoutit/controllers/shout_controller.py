@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
@@ -7,6 +9,7 @@ from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
 import logging
+from elasticsearch import NotFoundError, ConflictError
 from shoutit.models.post import ShoutIndex
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
@@ -47,15 +50,13 @@ def get_post(post_id, find_muted=False, find_expired=False):
 def delete_post(post):
     post.is_disabled = True
     post.save()
-    try:
-        if post.type == POST_TYPE_REQUEST or post.type == POST_TYPE_OFFER:
-            event_controller.delete_event_about_obj(post.shout)
-            # elif post.type == POST_TYPE_DEAL:
-            # event_controller.delete_event_about_obj(post.shout.deal)
-            # elif post.type == POST_TYPE_EXPERIENCE:
-            # event_controller.delete_event_about_obj(post.experience)
-    except:
-        pass
+    event_controller.delete_event_about_obj(post)
+    if isinstance(post, Shout):
+        delete_shout_index(post)
+        # elif post.type == POST_TYPE_DEAL:
+        # event_controller.delete_event_about_obj(post.shout.deal)
+        # elif post.type == POST_TYPE_EXPERIENCE:
+        # event_controller.delete_event_about_obj(post.experience)
 
 
 # todo: make api for renewing shouts
@@ -207,9 +208,20 @@ def create_shout_index(shout):
     shout_index.video_url = shout.video_url
 
     if shout_index.save():
-        logger.debug('created shout index {}'.format(shout.pk))
+        logger.debug('Created ShoutIndex: %s.' % shout.pk)
     else:
-        logger.debug('updated shout index {}'.format(shout.pk))
+        logger.debug('Updated ShoutIndex: %s.' % shout.pk)
+
+
+def delete_shout_index(shout):
+    try:
+        shout_index = ShoutIndex.get(shout.pk)
+        shout_index.delete()
+        logger.debug('Deleted ShoutIndex: %s.' % shout.pk)
+    except NotFoundError:
+        logger.debug('ShoutIndex: %s not found.' % shout.pk)
+    except ConflictError:
+        logger.debug('ShoutIndex: %s already deleted.' % shout.pk)
 
 
 # todo: check!
