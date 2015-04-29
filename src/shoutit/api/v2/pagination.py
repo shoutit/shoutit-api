@@ -239,7 +239,7 @@ class ReverseDateTimeIndexPagination(DateTimeIndexPagination):
 class PageNumberIndexPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = 50
     max_results = 1000
     results_field = 'results'
     template = 'rest_framework/pagination/previous_and_next.html'
@@ -255,21 +255,23 @@ class PageNumberIndexPagination(PageNumberPagination):
         max_page_number = self.max_results / page_size
         page_number = request.query_params.get(self.page_query_param, 1)
         page_number = self.get_valid_page_number(page_number)
+
         if page_number > max_page_number:
             self.max_page_number_exceeded = True
-            return None
-
-        _from = (page_number - 1) * page_size
-        _to = page_number * page_size
-        try:
-            index_response = index_queryset[_from:_to].execute()
-        except ElasticsearchException:
-            # todo: log!
-            # possible errors
-            # SerializationError: returned data was corrupted
-            # ConnectionTimeout
-            # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
+            self.num_results = index_queryset.count()
             index_response = []
+        else:
+            _from = (page_number - 1) * page_size
+            _to = page_number * page_size
+            try:
+                index_response = index_queryset[_from:_to].execute()
+            except ElasticsearchException:
+                # todo: log!
+                # possible errors
+                # SerializationError: returned data was corrupted
+                # ConnectionTimeout
+                # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
+                index_response = []
 
         # save the order
         objects_dict = OrderedDict()
@@ -277,25 +279,32 @@ class PageNumberIndexPagination(PageNumberPagination):
             objects_dict[object_index._id] = None
 
         # populate from database
-        qs = view.model.objects.filter(id__in=objects_dict.keys()) \
-            .select_related(*view.select_related) \
-            .prefetch_related(*view.prefetch_related) \
-            .defer(*view.defer)
+        ids = objects_dict.keys()
+        if ids:
+            qs = view.model.objects.filter(id__in=ids) \
+                .select_related(*view.select_related) \
+                .prefetch_related(*view.prefetch_related) \
+                .defer(*view.defer)
+        else:
+            qs = []
 
         # sort populated objects according to saved order
         for shout in qs:
             objects_dict[shout.pk] = shout
         page = [item for key, item in objects_dict.items() if item]
 
-        if len(page) > 1 and self.template is not None:
+        if (len(page) > 1 or (getattr(self, 'num_results', 0))) and self.template is not None:
             # The browsable API should display pagination controls.
             self.display_page_controls = True
 
         self.page = page
-        self.index_response = index_response
-        self.num_results = index_response.hits.total if self.page else 0
-        self.num_pages = math.ceil(index_response.hits.total / (page_size * 1.0)) if page else 0
-        self.page_number = page_number
+        if not hasattr(self, 'num_results'):
+            self.num_results = index_response.hits.total if self.page else 0
+        self.num_pages = int(math.ceil(self.num_results / (page_size * 1.0)))
+        if getattr(self, 'max_page_number_exceeded', False):
+            self.page_number = self.num_pages + 1
+        else:
+            self.page_number = page_number
         self.page_size = page_size
         self.request = request
         return self.page
@@ -310,21 +319,15 @@ class PageNumberIndexPagination(PageNumberPagination):
         return page_number
 
     def get_paginated_response(self, data):
-        if getattr(self, 'max_page_number_exceeded', False):
-            return Response(OrderedDict([
-                ('error', 'We do not return more than 1000 results for any query.'),
-                ('count', None),
-                ('next', None),
-                ('previous', None),
-                (self.results_field, [])
-            ]))
-
-        return Response(OrderedDict([
+        res = [
             ('count', self.num_results),
             ('next', self.get_next_link()),
             ('previous', self.get_previous_link()),
             (self.results_field, data)
-        ]))
+        ]
+        if getattr(self, 'max_page_number_exceeded', False):
+            res.insert(0, ('error', 'We do not return more than 1000 results for any query.'))
+        return Response(OrderedDict(res))
 
     def get_page_size(self, request):
         if self.page_size_query_param:
@@ -358,7 +361,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         return replace_query_param(url, self.page_query_param, self.page_number + 1)
 
     def page_has_previous(self):
-        if not self.page:
+        if not (self.page or self.num_results):
             return None
         return self.page_number > 1
 
