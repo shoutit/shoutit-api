@@ -4,6 +4,7 @@ from datetime import timedelta, datetime
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
+from elasticsearch import RequestError
 from elasticsearch_dsl import DocType, String, Date, Double
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
@@ -243,7 +244,10 @@ class ShoutIndex(DocType):
         return date_unix(self.date_published)
 
 # initiate the index if not initiated
-ShoutIndex.init()
+try:
+    ShoutIndex.init()
+except RequestError:
+    pass
 
 
 class Event(Post, AttachedObjectMixin):
