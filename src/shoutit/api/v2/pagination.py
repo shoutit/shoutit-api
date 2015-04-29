@@ -302,7 +302,7 @@ class PageNumberIndexPagination(PageNumberPagination):
             self.num_results = index_response.hits.total if self.page else 0
         self.num_pages = int(math.ceil(self.num_results / (page_size * 1.0)))
         if getattr(self, 'max_page_number_exceeded', False):
-            self.page_number = min(self.num_pages + 1, max_page_number)
+            self.page_number = min(self.num_pages + 1, max_page_number + 1)
         else:
             self.page_number = page_number
         self.page_size = page_size
