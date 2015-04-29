@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        for shout in Shout.objects.all():
+        for shout in Shout.objects.filter(is_disabled=False, muted=False):
             create_shout_index(shout)
 
-        self.stdout.write('Successfully indexed all shouts')
+        self.stdout.write('Successfully indexed all shouts.')
