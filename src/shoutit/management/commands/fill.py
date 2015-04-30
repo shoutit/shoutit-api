@@ -237,14 +237,18 @@ class Command(BaseCommand):
                                      client_type=0)
 
         # pre defined cities
-        PredefinedCity.objects.get_or_create(city='Dubai', city_encoded='dubai', country='AE',
-                                             latitude=25.1993957, longitude=55.2738326,
-                                             approved=True)
-        PredefinedCity.objects.get_or_create(city='Aachen', city_encoded='aachen', country='DE',
-                                             latitude=50.7738792, longitude=6.0844869,
-                                             approved=True)
-        PredefinedCity.objects.get_or_create(city='Berlin', city_encoded='berlin', country='DE',
-                                             latitude=52.522594, longitude=13.402388, approved=True)
+        cities = [
+            ('Abu Dhabi', 'abu-dhabi', 'AE', 24.3865481, 54.5599079, True),
+            ('Dubai', 'dubai', 'AE', 25.1993957, 55.2738326, True),
+            ('Sharjah', 'sharjah', 'AE', 25.328435, 55.512258, True),
+            ('Ajman', 'ajman', 'AE', 25.3994029, 55.5305745, True),
+
+            ('Berlin', 'berlin', 'DE', 52.522594, 13.402388, True),
+            ('Aachen', 'aachen', 'DE', 50.7738792, 6.0844869, True),
+        ]
+        for t in cities:
+            PredefinedCity.objects.get_or_create(city=t[0], city_encoded=t[1], country=t[2],
+                                                 latitude=t[3], longitude=t[4], approved=t[5])
 
         # currencies
         Currency.objects.get_or_create(country='AE', code='AED', name='Dirham')
