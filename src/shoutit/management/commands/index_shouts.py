@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 
 from django.core.management.base import BaseCommand
-from shoutit.controllers.shout_controller import create_shout_index
+from shoutit.controllers.shout_controller import save_shout_index
 from shoutit.models import Shout
 
 
@@ -15,6 +15,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         for shout in Shout.objects.filter(is_disabled=False, muted=False):
-            create_shout_index(shout)
+            save_shout_index(shout)
 
         self.stdout.write('Successfully indexed all shouts.')

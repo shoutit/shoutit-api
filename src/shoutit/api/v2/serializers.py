@@ -19,6 +19,9 @@ from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken)
 from shoutit.controllers import shout_controller, user_controller
+import logging
+logger = logging.getLogger('shoutit.debug')
+error_logger = logging.getLogger('shoutit.error')
 
 
 class LocationSerializer(serializers.Serializer):
@@ -404,7 +407,6 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                   currency=validated_data['item']['currency']['code'],
                                                   images=images,
                                                   videos=videos)
-
         return shout
 
 

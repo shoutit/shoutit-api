@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-
+Fill database with test shouts from test users
 """
 from __future__ import unicode_literals
 import random
-
+import time
+import logging
 from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from rest_framework.request import Request
-import time
 from shoutit.api.v2.serializers import ShoutDetailSerializer
-from shoutit.models import *
-from shoutit.permissions import INITIAL_USER_PERMISSIONS, ACTIVATED_USER_PERMISSIONS
-from shoutit.utils import generate_password
+from shoutit.models import User, Category, PredefinedCity
+logger = logging.getLogger('shoutit.debug')
 
 
 class Command(BaseCommand):
     help = 'Fill database with test shouts'
-    max_users = 100
+    max_users = 500
     min_shouts = 10
-    max_shouts = 10000
+    max_shouts = 100000
 
     def add_arguments(self, parser):
         # Positional arguments
@@ -45,11 +44,10 @@ class Command(BaseCommand):
                     profile.latitude = city.latitude + random.uniform(-3, 3) / 100.0
                     profile.longitude = city.longitude + random.uniform(-3, 3) / 100.0
                     profile.save()
-                self.stdout.write('city: {}, lat: {}, lng: {}'.format(user.profile.city, user.profile.latitude, user.profile.longitude))
+                logger.debug('Created test user in: {}, lat: {}, lng: {}'.format(user.profile.city, user.profile.latitude, user.profile.longitude))
                 users.append(user)
 
-        for i in range(max(options.get('num_shouts')[0], self.min_shouts)):
-            # for i in range(1000):
+        for i in range(min(max(options.get('num_shouts')[0], self.min_shouts), self.max_shouts)):
             user = random.choice(users)
             type = random.choice(['offer', 'request'])
             category = random.choice(categories)
@@ -61,15 +59,6 @@ class Command(BaseCommand):
                 "https://shout-image.static.shoutit.com/heic0702a.jpg"
             ]
             random.shuffle(images)
-            videos = [
-                {
-                    "url": "https://www.youtube.com/watch?v=ib-lvhJnV0Q",
-                    "thumbnail_url": "https://i.ytimg.com/vi/ib-lvhJnV0Q/hqdefault.jpg",
-                    "provider": "youtube",
-                    "id_on_provider": "ib-lvhJnV0Q",
-                    "duration": 240
-                }
-            ]
             shout_data = {
                 "type": type,
                 "title": "{0} {1} in {2} at {3:0.0f}".format(category.name, type, city.city, time.time()),
@@ -77,7 +66,6 @@ class Command(BaseCommand):
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
                 "images": images,
-                "videos": [random.choice(videos)],
                 "category": {"name": category.name},
                 "tags": [{'name': t} for t in tags],
                 "location": {
@@ -92,6 +80,5 @@ class Command(BaseCommand):
             shout = ShoutDetailSerializer(data=shout_data, context={'request': request})
             shout.is_valid(True)
             shout.save()
-            self.stdout.write('shout: {}, city: {}'.format(shout_data.get('title'), shout_data.get('location')['city']))
 
         self.stdout.write('Successfully filled shouts')

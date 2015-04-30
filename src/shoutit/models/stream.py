@@ -1,14 +1,12 @@
 from __future__ import unicode_literals
+from django.db.models.signals import post_save, pre_delete
 from django.db import models, IntegrityError
+from django.dispatch import receiver
 from django.conf import settings
 from common.constants import StreamType
-import shoutit
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
-
-from django.db.models.signals import post_save, pre_delete
-from django.dispatch import receiver
-
-
+import logging
+logger = logging.getLogger('shoutit.debug')
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
@@ -31,7 +29,8 @@ class Stream(UUIDModel, AttachedObjectMixin):
         super(Stream, self).__init__(*args, **kwargs)
 
     def add_post(self, post):
-        assert isinstance(post, shoutit.models.Post)
+        from shoutit.models import Post
+        assert isinstance(post, Post)
         try:
             self.posts.add(post)
         except IntegrityError:
@@ -39,7 +38,8 @@ class Stream(UUIDModel, AttachedObjectMixin):
             pass
 
     def remove_post(self, post):
-        assert isinstance(post, shoutit.models.Post)
+        from shoutit.models import Post
+        assert isinstance(post, Post)
         self.posts.remove(post)
 
     @property
@@ -84,9 +84,9 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
     if not issubclass(sender, StreamMixin):
         return
     if created:
-        print unicode('Creating Stream for: <%s: %s>' % (sender.__name__, instance))
         stream = Stream(attached_object=instance)
         stream.save()
+        logger.debug('Created Stream for: <%s: %s>' % (sender.__name__, instance))
 
 
 @receiver(pre_delete)
@@ -97,7 +97,7 @@ def delete_attached_stream(sender, instance, using, **kwargs):
     if not issubclass(sender, StreamMixin):
         return
 
-    print unicode('Deleting Stream for: <%s: %s>' % (sender.__name__, instance))
+    logger.debug('Deleted Stream for: <%s: %s>' % (sender.__name__, instance))
     # GenericRelation in StreamMixin makes sure that Stream is being deleted when deleting the instance itself
     # so no need for us to explicitly do that
     # instance.stream.delete()

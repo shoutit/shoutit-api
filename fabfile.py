@@ -33,6 +33,8 @@ def pull(env_name):
         run('/opt/shoutit_api_{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(env_name))
         # run('/opt/shoutit_api_{}/bin/python src/manage.py test'.format(env))
         run('/opt/shoutit_api_{}/bin/python src/manage.py migrate'.format(env_name))
+        if confirm("Clear all logs?"):
+            run("find /opt/shoutit_api_{}/log/. -type f -exec cp /dev/null {{}} \;".format(env_name))
         run('supervisorctl restart all')
 
 

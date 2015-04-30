@@ -9,6 +9,8 @@ from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
 import logging
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from elasticsearch import NotFoundError, ConflictError
 from shoutit.models.post import ShoutIndex
 from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
@@ -97,7 +99,6 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
     item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
     shout = Shout(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_REQUEST, item=item, category=category,
                   country=country, city=city, address=address, is_sss=is_sss)
-    shout.save()
 
     # todo: check which to save encoded city or just normal. expectations are to get normal city from user
     encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
@@ -110,11 +111,10 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
     if date_published:
         shout.date_published = date_published
         shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
-        shout.save()
     else:
         shout.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
-        shout.save()
 
+    shout.save()
     stream.add_post(shout)
 
     # if passed as [{'name': 'tag-x'},...]
@@ -133,8 +133,6 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
             pass
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_REQUEST, shout)
-
-    create_shout_index(shout)
     return shout
 
 
@@ -153,7 +151,6 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
         shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
     else:
         shout.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
-    shout.save()
 
     encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
     predefined_city = PredefinedCity.objects.filter(city=city)
@@ -162,6 +159,7 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
     if not predefined_city:
         PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
 
+    shout.save()
     stream.add_post(shout)
 
     # if passed as [{'name': 'tag-x'},...]
@@ -180,14 +178,21 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
             pass
 
     event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, shout)
-
-    create_shout_index(shout)
     return shout
 
 
-def create_shout_index(shout):
-    shout_index = ShoutIndex()
-    shout_index._id = shout.pk
+@receiver(post_save, sender=Shout)
+def save_shout_index(sender, instance=None, created=False, **kwargs):
+    shout = instance
+    action = 'Created' if created else 'Updated'
+    logger.debug('{} Shout: {}: {}, city: {}'.format(action, shout.pk, shout.item.name, shout.city))
+    try:
+        if created:
+            raise NotFoundError()
+        shout_index = ShoutIndex.get(shout.pk)
+    except NotFoundError:
+        shout_index = ShoutIndex()
+        shout_index._id = shout.pk
     shout_index.type = shout.type_name
     shout_index.title = shout.item.name
     shout_index.text = shout.text
@@ -201,12 +206,10 @@ def create_shout_index(shout):
     shout_index.uid = shout.user.pk
     shout_index.username = shout.user.username
     shout_index.date_published = shout.date_published
-
     shout_index.currency = shout.item.currency.code
     shout_index.address = shout.address
     shout_index.thumbnail = shout.thumbnail
     shout_index.video_url = shout.video_url
-
     if shout_index.save():
         logger.debug('Created ShoutIndex: %s.' % shout.pk)
     else:
