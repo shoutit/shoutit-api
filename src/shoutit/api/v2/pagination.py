@@ -265,6 +265,12 @@ class PageNumberIndexPagination(PageNumberPagination):
             _to = page_number * page_size
             try:
                 index_response = index_queryset[_from:_to].execute()
+                # if there are no results for this [_from:_to], check if there are ones at all
+                if not index_response:
+                    self.num_results = index_queryset.count()
+                    if self.num_results:
+                        # there are results meaning provided page number exceeded max possible one
+                        self.max_possible_page_number_exceeded = True
             except ElasticsearchException:
                 # todo: log!
                 # possible errors
@@ -301,7 +307,8 @@ class PageNumberIndexPagination(PageNumberPagination):
         if not hasattr(self, 'num_results'):
             self.num_results = index_response.hits.total if self.page else 0
         self.num_pages = int(math.ceil(self.num_results / (page_size * 1.0)))
-        if getattr(self, 'max_page_number_exceeded', False):
+        if getattr(self, 'max_page_number_exceeded', False) \
+                or getattr(self, 'max_possible_page_number_exceeded', False):
             self.page_number = min(self.num_pages + 1, max_page_number + 1)
         else:
             self.page_number = page_number

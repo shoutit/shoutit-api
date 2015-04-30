@@ -85,30 +85,30 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     Username, password and email are required. Other fields are optional.
     """
-    username = models.CharField(_('username'), max_length=30, unique=True,
-                                help_text=_(
-                                    'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
-                                validators=[
-                                    validators.RegexValidator(re.compile('[0-9a-zA-Z.]{2,30}'),
-                                                              _('Enter a valid username.'),
-                                                              'invalid'),
-                                    validators.MinLengthValidator(2),
-                                    AllowedUsernamesValidator()
-                                ])
-    first_name = models.CharField(_('first name'), max_length=30, blank=True,
-                                  validators=[validators.MinLengthValidator(2)])
-    last_name = models.CharField(_('last name'), max_length=30, blank=True,
-                                 validators=[validators.MinLengthValidator(1)])
+    username = models.CharField(
+        _('username'), max_length=30, unique=True,help_text=_(
+            'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
+        validators=[
+            validators.RegexValidator(
+                re.compile('[0-9a-zA-Z.]{2,30}'),_('Enter a valid username.'),'invalid'),
+            validators.MinLengthValidator(2),
+            AllowedUsernamesValidator()
+        ])
+    first_name = models.CharField(
+        _('first name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
+    last_name = models.CharField(
+        _('last name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(1)])
     email = models.EmailField(_('email address'), blank=True)
-    is_staff = models.BooleanField(_('staff status'), default=False,
-                                   help_text=_(
-                                       'Designates whether the user can log into this admin site.'))
-    is_active = models.BooleanField(_('active'), default=True,
-                                    help_text=_('Designates whether this user should be treated as '
-                                                'active. Unselect this instead of deleting accounts.'))
-    is_activated = models.BooleanField(_('activated'), default=False,
-                                       help_text=_(
-                                           'Designates whether this user have a verified email.'))
+    is_staff = models.BooleanField(
+        _('staff status'), default=False, help_text=_(
+            'Designates whether the user can log into this admin site.'))
+    is_active = models.BooleanField(
+        _('active'), default=True, help_text=_(
+            'Designates whether this user should be treated as '
+            'active. Unselect this instead of deleting accounts.'))
+    is_activated = models.BooleanField(
+        _('activated'), default=False, help_text=_(
+            'Designates whether this user have a verified email.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
     permissions = models.ManyToManyField('shoutit.Permission', through='shoutit.UserPermission')
