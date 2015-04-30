@@ -248,7 +248,6 @@ class Command(BaseCommand):
             ('Munich', 'munich', 'DE', 48.1549107, 11.5418357, True),
             ('Ingolstadt', 'ingolstadt', 'DE', 48.7533744, 11.3796516, True),
             ('Cologne', 'cologne', 'DE', 50.957245, 6.9673223, True),
-            ('Mülheim', 'mülheim', 'DE', 51.4325682, 6.825752, True),
             ('Aachen', 'aachen', 'DE', 50.7738792, 6.0844869, True),
         ]
         for t in cities:

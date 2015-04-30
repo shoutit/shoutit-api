@@ -196,7 +196,9 @@ def save_shout_index(sender, instance=None, created=False, **kwargs):
     shout_index.type = shout.type_name
     shout_index.title = shout.item.name
     shout_index.text = shout.text
-    shout_index.tags = list(shout.tags.values_list('name', flat=True))
+    tags = list(shout.tags.values_list('name', flat=True))
+    shout_index.tags_count = len(tags)
+    shout_index.tags = tags
     shout_index.category = shout.category.name
     shout_index.country = shout.country
     shout_index.city = shout.city

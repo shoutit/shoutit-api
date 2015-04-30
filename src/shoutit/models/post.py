@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.conf import settings
 from elasticsearch import RequestError
-from elasticsearch_dsl import DocType, String, Date, Double
+from elasticsearch_dsl import DocType, String, Date, Double, Integer
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
 from common.utils import date_unix
@@ -219,6 +219,7 @@ class ShoutIndex(DocType):
     type = String(index='not_analyzed')
     title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
     text = String(analyzer='snowball')
+    tags_count = Integer()
     tags = String(index='not_analyzed')
     category = String(index='not_analyzed')
     country = String(index='not_analyzed')
