@@ -13,8 +13,6 @@ class Command(BaseCommand):
     help = 'Index all shouts'
 
     def handle(self, *args, **options):
-
         for shout in Shout.objects.filter(is_disabled=False, muted=False):
-            save_shout_index(shout)
-
+            save_shout_index(None, shout)
         self.stdout.write('Successfully indexed all shouts.')
