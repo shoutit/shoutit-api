@@ -2,12 +2,13 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
-
+import logging
 from common.constants import (
     DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG,TOKEN_TYPE_EMAIL)
 from shoutit.models import ConfirmToken
 from shoutit.models.base import UUIDModel
 from shoutit.models.stream import StreamMixin, Listen
+logger = logging.getLogger('shoutit.debug')
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -111,6 +112,8 @@ from rest_framework.authtoken.models import Token
 
 @receiver(post_save, sender='shoutit.User')
 def create_auth_token(sender, instance=None, created=False, **kwargs):
+    action = 'Created' if created else 'Updated'
+    logger.debug('{} User: {}'.format(action, instance))
     if created:
         # create auth token
         Token.objects.create(user=instance)

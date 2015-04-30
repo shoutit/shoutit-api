@@ -244,6 +244,10 @@ class Command(BaseCommand):
             ('Ajman', 'ajman', 'AE', 25.3994029, 55.5305745, True),
 
             ('Berlin', 'berlin', 'DE', 52.522594, 13.402388, True),
+            ('Hamburg', 'hamburg', 'DE', 53.558572, 9.9278215, True),
+            ('Munich', 'munich', 'DE', 48.1549107, 11.5418357, True),
+            ('Ingolstadt', 'ingolstadt', 'DE', 48.7533744, 11.3796516, True),
+            ('Cologne', 'cologne', 'DE', 50.957245, 6.9673223, True),
             ('Aachen', 'aachen', 'DE', 50.7738792, 6.0844869, True),
         ]
         for t in cities:

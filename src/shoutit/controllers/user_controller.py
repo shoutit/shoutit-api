@@ -11,7 +11,8 @@ from common.constants import *
 from shoutit.utils import to_seo_friendly, generate_username, generate_password
 import logging
 
-logger = logging.getLogger('shoutit.warnings')
+warn_logger = logging.getLogger('shoutit.warnings')
+logger = logging.getLogger('shoutit.debug')
 
 
 def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
@@ -74,9 +75,11 @@ def auth_with_gplus(gplus_user, credentials):
     name = gplus_user.get('name')
     first_name = name.get('givenName')
     last_name = name.get('familyName')
+    gplus_id = gplus_user.get('id')
 
     try:
         user = User.objects.get(email=email)
+        logger.debug('Found user: {} with same email of gplus_user: {}'.format(user, gplus_id))
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True)
 
@@ -85,7 +88,6 @@ def auth_with_gplus(gplus_user, credentials):
         gender = gplus_user.get('gender')
         user.profile.update(gender=gender)
 
-    gplus_id = gplus_user.get('id')
     credentials_json = credentials.to_json()
     try:
         la = LinkedGoogleAccount(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
@@ -108,7 +110,7 @@ def auth_with_gplus(gplus_user, credentials):
         user.profile.image = s3_image_url
         user.profile.save()
     except Exception, e:
-        logger.warn(str(e))
+        warn_logger.warn(str(e))
 
     return user
 
@@ -118,9 +120,11 @@ def auth_with_facebook(fb_user, long_lived_token):
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
     username = fb_user.get('username')
+    facebook_id = fb_user.get('id')
 
     try:
         user = User.objects.get(email=email)
+        logger.debug('Found user: {} with same email of fb_user: {}'.format(user, facebook_id))
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name,
                            username=username, is_activated=True)
@@ -130,7 +134,6 @@ def auth_with_facebook(fb_user, long_lived_token):
         gender = fb_user.get('gender')
         user.profile.update(gender=gender)
 
-    facebook_id = fb_user.get('id')
     access_token = long_lived_token.get('access_token')
     expires = long_lived_token.get('expires')
     try:
@@ -138,7 +141,7 @@ def auth_with_facebook(fb_user, long_lived_token):
                                    expires=expires)
         la.save()
     except (ValidationError, IntegrityError) as e:
-        logger.warn(str(e))
+        warn_logger.warn(str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
     try:
@@ -158,7 +161,7 @@ def auth_with_facebook(fb_user, long_lived_token):
             user.profile.image = s3_image_url
             user.profile.save()
     except Exception, e:
-        logger.warn(str(e))
+        warn_logger.warn(str(e))
 
     return user
 

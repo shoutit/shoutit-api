@@ -33,7 +33,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         linked_account = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
         user = linked_account.user
     except ObjectDoesNotExist:
-        logger.debug('LinkedGoogleAccount.DoesNotExist for facebook_id %s creating new user.' % facebook_id)
+        logger.debug('LinkedGoogleAccount.DoesNotExist for facebook_id %s.' % facebook_id)
         if 'email' not in fb_user:
             logger.error('Facebook user has no email: %s' % json.dumps(fb_user))
             raise FB_LINK_ERROR_EMAIL

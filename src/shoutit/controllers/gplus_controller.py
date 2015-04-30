@@ -28,7 +28,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None):
         linked_account = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         user = linked_account.user
     except LinkedGoogleAccount.DoesNotExist:
-        logger.debug('LinkedGoogleAccount.DoesNotExist for gplus_id %s creating new user.' % gplus_id)
+        logger.debug('LinkedGoogleAccount.DoesNotExist for gplus_id %s.' % gplus_id)
         try:
             # Create a new authorized API client.
             http = httplib2.Http()
