@@ -210,7 +210,11 @@ class DateTimeIndexPagination(DateTimePagination):
             # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
             index_response = []
 
-        object_ids = [object_index._id for object_index in index_response]
+        try:
+            object_ids = [object_index._id for object_index in index_response]
+        except KeyError:
+            # todo: elasticsearch bug
+            object_ids = []
         page = view.model.objects.filter(id__in=object_ids) \
             .select_related(*view.select_related) \
             .prefetch_related(*view.prefetch_related) \
