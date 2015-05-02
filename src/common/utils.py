@@ -36,7 +36,7 @@ def get_address_port(using_gunicorn=False):
 
 def check_offline_mood():
     try:
-        resp = requests.head('http://www.google.com', timeout=5)
+        resp = requests.head('http://www.yourapihere.com', timeout=5)
         return False
     except requests.RequestException:
         return True

@@ -25,8 +25,8 @@ router.register('notifications', notification_views.NotificationViewSet, 'notifi
 router.register(r'misc', misc_views.MiscViewSet, 'misc')
 router.register(r'auth', ShoutitAuthView, 'shoutit_auth')
 
-urlpatterns = (
+urlpatterns = [
     url(r'^oauth2/access_token$', AccessTokenView.as_view(), name='access_token'),
     url(r'^docs/', include('rest_framework_swagger.urls')),
     url(r'^', include(router.urls)),
-)
+]
