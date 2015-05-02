@@ -271,7 +271,8 @@ class PageNumberIndexPagination(PageNumberPagination):
                     if self.num_results:
                         # there are results meaning provided page number exceeded max possible one
                         self.max_possible_page_number_exceeded = True
-            except ElasticsearchException:
+            except (ElasticsearchException, KeyError):
+                # todo: KeyError is some bug in the elastic library
                 # todo: log!
                 # possible errors
                 # SerializationError: returned data was corrupted
