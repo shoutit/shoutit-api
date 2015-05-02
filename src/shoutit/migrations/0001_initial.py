@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
             },
             bases=(models.Model, shoutit.models.base.APIModelMixin),
             managers=[
-                (b'objects', django.contrib.auth.models.UserManager()),
+                ('objects', django.contrib.auth.models.UserManager()),
             ],
         ),
         migrations.CreateModel(
@@ -197,7 +197,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('facebook_id', models.CharField(max_length=24, db_index=True)),
+                ('facebook_id', models.CharField(unique=True, max_length=24, db_index=True)),
                 ('access_token', models.CharField(max_length=512)),
                 ('expires', models.BigIntegerField(default=0)),
                 ('user', models.OneToOneField(related_name='linked_facebook', to=settings.AUTH_USER_MODEL)),
@@ -212,8 +212,8 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('gplus_id', models.CharField(unique=True, max_length=64, db_index=True)),
                 ('credentials_json', models.CharField(max_length=4096)),
-                ('gplus_id', models.CharField(max_length=64, db_index=True)),
                 ('user', models.OneToOneField(related_name='linked_gplus', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -352,7 +352,7 @@ class Migration(migrations.Migration):
                 ('country', models.CharField(default='', max_length=2, db_index=True, blank=True)),
                 ('latitude', models.FloatField(default=0.0)),
                 ('longitude', models.FloatField(default=0.0)),
-                ('Approved', models.BooleanField(default=False)),
+                ('approved', models.BooleanField(default=False)),
             ],
             options={
                 'abstract': False,
@@ -364,14 +364,14 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('image', models.URLField(default=b'https://s3-eu-west-1.amazonaws.com/shoutit-user-image-original/9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg', max_length=1024, blank=True)),
+                ('image', models.URLField(default='https://user-image.static.shoutit.com/9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg', max_length=1024, blank=True)),
                 ('country', models.CharField(default='AE', max_length=200, db_index=True)),
                 ('city', models.CharField(default='Dubai', max_length=200, db_index=True)),
                 ('latitude', models.FloatField(default=25.1993957)),
                 ('longitude', models.FloatField(default=55.2738326)),
-                ('gender', models.CharField(max_length=10, null=True)),
+                ('gender', models.CharField(max_length=10, null=True, blank=True)),
                 ('birthday', models.DateField(null=True, blank=True)),
-                ('bio', models.TextField(default=b'New Shouter!', max_length=512, blank=True)),
+                ('bio', models.TextField(default='New Shouter!', max_length=512, blank=True)),
                 ('user', models.OneToOneField(related_name='profile', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -476,7 +476,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('post_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Post')),
                 ('object_id', models.UUIDField(null=True, blank=True)),
-                ('event_type', models.IntegerField(default=0, choices=[(0, 'Follow User'), (1, 'Follow Tag'), (2, 'Shout Offer'), (3, 'Shout Request'), (4, 'Experience'), (5, 'Share Experience'), (6, 'Comment'), (7, 'Post Deal'), (8, 'Buy Deal'), (9, 'Follow Business')])),
+                ('event_type', models.IntegerField(default=0, choices=[(0, 'Listen to User'), (1, 'Listen to Tag'), (2, 'Shout Offer'), (3, 'Shout Request'), (4, 'Shout Experience'), (5, 'Share Experience'), (6, 'Comment'), (7, 'Post Deal'), (8, 'Buy Deal'), (9, 'Listen to Page')])),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
             ],
             options={
