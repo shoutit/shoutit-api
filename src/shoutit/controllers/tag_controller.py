@@ -1,9 +1,9 @@
-from common.utils import process_tag_name
+from common.utils import process_tag
 from shoutit.models import Tag
 
 
 def get_or_create_tag(name, creator=None):
-    name = process_tag_name(name)
+    name = process_tag(name)
     if not name or not isinstance(name, basestring):
         return None
     tag, created = Tag.objects.get_or_create(name=name)

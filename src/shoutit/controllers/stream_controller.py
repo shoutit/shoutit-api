@@ -3,7 +3,7 @@ from django.db.models.query_utils import Q
 from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \
     POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE, Stream_TYPE_TAG, \
     EVENT_TYPE_LISTEN_TO_USER, EVENT_TYPE_LISTEN_TO_TAG
-from common.utils import process_tag_names
+from common.utils import process_tags
 from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
 
@@ -32,7 +32,7 @@ def get_shouts_by_pks(pks):
         return []
     # todo: optimize
     shout_qs = Shout.objects.get_valid_shouts().select_related(
-        'item', 'item__currency', 'user', 'user__profile').refetch_related('tags').filter(pk__in=pks)
+        'item', 'item__currency', 'user', 'user__profile').filter(pk__in=pks)
     return shout_qs
 
 
@@ -160,21 +160,11 @@ def filter_posts_qs(qs, post_type=None):
     return qs.filter(type__in=types)
 
 
-def filter_shouts_qs_by_tag_names(qs, tag_names=None):
-    if not tag_names:
-        return qs
-
-    tag_names = process_tag_names(tag_names)
-    for tag_name in tag_names:
-        qs = qs.filter(tags__name=tag_name)
-    return qs
-
-
 def filter_shouts_qs_by_tags(qs, tags=None):
     if not tags:
         return qs
 
-    for tag in tags:
-        qs = qs.filter(tags=tag)
+    tags = process_tags(tags)
+    for tag_name in tags:
+        qs = qs.filter(tags=tag_name)
     return qs
-

@@ -195,7 +195,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             self.model = Shout
             self.index_model = ShoutIndex
             self.select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
-            self.prefetch_related = ('tags', 'item__videos')
+            self.prefetch_related = ('item__videos',)
             self.defer = ()
             shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-date_published')
             if shout_type != 'all':

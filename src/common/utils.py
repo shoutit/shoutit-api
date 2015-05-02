@@ -42,7 +42,7 @@ def check_offline_mood():
         return True
 
 
-def process_tag_name(name):
+def process_tag(name):
     if not isinstance(name, basestring):
         return None
     name = name.lower()[:30]
@@ -56,13 +56,13 @@ def process_tag_name(name):
     return name
 
 
-def process_tag_names(names):
-    processed_tag_names = []
+def process_tags(names):
+    processed_tags = []
     for name in names:
-        processed_tag_name = process_tag_name(name)
-        if processed_tag_name:
-            processed_tag_names.append(processed_tag_name)
-    return processed_tag_names
+        processed_tag = process_tag(name)
+        if processed_tag:
+            processed_tags.append(processed_tag)
+    return processed_tags
 
 
 def date_unix(date):

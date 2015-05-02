@@ -8,7 +8,7 @@ from django.db.models import Count
 import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
-from common.utils import process_tag_names
+from common.utils import process_tags
 from shoutit.controllers import stream_controller
 from shoutit.models import Shout, Category, Tag, PredefinedCity
 from elasticsearch_dsl import Q, F
@@ -41,7 +41,7 @@ class ShoutFilter(django_filters.FilterSet):
 
     def filter_tags(self, queryset, value):
         tags = value.replace(',', ' ').split()
-        return stream_controller.filter_shouts_qs_by_tag_names(queryset, tags)
+        return stream_controller.filter_shouts_qs_by_tags(queryset, tags)
 
     def filter_category(self, queryset, value):
         try:
@@ -70,7 +70,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         tags = data.get('tags')
         if tags:
             tags = tags.replace(',', ' ').split()
-            tag_names = process_tag_names(tags)
+            tag_names = process_tags(tags)
             for tag_name in tag_names:
                 index_queryset = index_queryset.filter('term', tags=tag_name)
 
@@ -85,7 +85,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                 pd_city = PredefinedCity.objects.get(city=city)
                 cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
                 for nearby_city in cities:
-                    f.append(F('match', city=nearby_city.city))
+                    f.append(F('term', city=nearby_city.city))
             except PredefinedCity.DoesNotExist:
                 pass
             city_f = F('bool', should=f)

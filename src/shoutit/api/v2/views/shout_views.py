@@ -36,7 +36,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     model = Shout
     index_model = ShoutIndex
     select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
-    prefetch_related = ('tags', 'item__videos')
+    prefetch_related = ('item__videos',)
     defer = ()
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
