@@ -431,7 +431,7 @@ DEFAULT_FROM_EMAIL = 'Shoutit <noreply@shoutit.com>'
 USE_GOOGLE = False
 USE_MANDRILL = True
 
-if USE_GOOGLE:
+if USE_GOOGLE and not LOCAL:
     DEFAULT_FROM_EMAIL = 'Nour <nour@syrex.me>'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = '587'
@@ -440,7 +440,7 @@ if USE_GOOGLE:
     EMAIL_USE_TLS = True
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-elif USE_MANDRILL:
+elif USE_MANDRILL and not LOCAL:
     EMAIL_HOST = 'smtp.mandrillapp.com'
     EMAIL_PORT = 587
     EMAIL_HOST_USER = 'info@shoutit.com'
@@ -606,6 +606,5 @@ SWAGGER_SETTINGS = {
 
 # some monkey patching for global imports
 from common import monkey_patches
-
 info('Monkeys: Loaded')
 info("==================================================")
