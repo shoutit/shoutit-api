@@ -16,7 +16,7 @@ logger = logging.getLogger('shoutit.debug')
 
 class Command(BaseCommand):
     help = 'Fill database with test shouts'
-    max_users = 500
+    max_users = 100
     min_shouts = 10
     max_shouts = 100000
 
