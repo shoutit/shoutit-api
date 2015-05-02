@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
@@ -18,27 +19,14 @@ from django.utils.translation import ugettext_lazy as _
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'owner', 'owner_profile', 'type', 'item', 'text', 'country', 'city', 'is_sss',
-        'is_disabled')
+        'id', 'owner', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
     list_filter = ('type', 'is_sss', 'is_disabled')
     readonly_fields = ('user', 'item')
 
     def owner(self, obj):
-        return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
-            '/admin/auth/user/', obj.user.username, obj.user, obj.user.username)
-
+        return '<a href="%s">%s</a>' % (reverse('admin:shoutit_user_change', args=(obj.user.pk,)), obj.user.name)
     owner.allow_tags = True
     owner.short_description = 'User'
-
-    def owner_profile(self, obj):
-        if hasattr(obj.user, 'profile') and obj.user.profile:
-            return '<a href="%s%s">%s</a>' % (
-                '/admin/ShoutWebsite/userprofile/', obj.user.profile.pk, obj.user.profile)
-        elif hasattr(obj.user, 'Business') and obj.user.Business:
-            return '<a href="%s%s">%s</a>' % (
-                '/admin/ShoutWebsite/businessprofile/', obj.user.Business.pk, obj.user.Business)
-    owner_profile.allow_tags = True
-    owner_profile.short_description = 'User Profile/Business'
 
 
 # Post
@@ -83,7 +71,6 @@ class CustomUserAdmin(UserAdmin):
 
     def get_profile(self, obj):
         return '<a href="%s">Profile</a>' % (reverse('admin:shoutit_profile_change', args=(obj.profile.pk,)))
-        # return ""
     get_profile.allow_tags = True
     get_profile.short_description = 'Profile'
 
