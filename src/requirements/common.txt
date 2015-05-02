@@ -34,3 +34,6 @@ google-api-python-client==1.4.0
 mailchimp==2.0.9
 
 # django-paypal==0.2
+
+git+https://github.com/marcgibbons/django-rest-swagger
+git+https://github.com/jleclanche/django-push-notifications
