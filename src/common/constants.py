@@ -168,6 +168,12 @@ BUSINESS_SOURCE_TYPE_NONE = BusinessSourceType('None')
 BUSINESS_SOURCE_TYPE_FOURSQUARE = BusinessSourceType('Foursquare')
 
 
+class UserType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+USER_TYPE_PROFILE = UserType('Profile')
+USER_TYPE_PAGE = UserType('Page')
+
+
 class UserState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
@@ -187,8 +193,8 @@ class UserTypeFlag(Flag):
         user_type_flags[text] = self.value
 
 
-USER_TYPE_INDIVIDUAL = UserTypeFlag('Individual')
-USER_TYPE_BUSINESS = UserTypeFlag('Business')
+USER_TYPE_FLAG_INDIVIDUAL = UserTypeFlag('Individual')
+USER_TYPE_FLAG_BUSINESS = UserTypeFlag('Business')
 
 
 class StreamType(Constant):

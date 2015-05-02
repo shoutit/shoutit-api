@@ -21,7 +21,7 @@ class Command(BaseCommand):
                                            is_activated=True, is_superuser=True, is_staff=True)
 
         demo, _ = User.objects.get_or_create(username='demo', email='demo@shoutit.com',
-                                             is_activated=True)
+                                             is_activated=True, is_test=True)
         demo.first_name = 'Demo'
         demo.last_name = 'Shouter'
         demo.password = "pbkdf2_sha256$20000$ZhCD1pQdaQ3m$gYgjpu0yqoh57CDuPw9q66Gb3e51OeM44ytS+KZs/bc="

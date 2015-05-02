@@ -35,7 +35,9 @@ class Command(BaseCommand):
             for i in range(self.max_users):
                 username = 'test_' + str(1000000 + i)
                 email = username + '@shoutit.com'
-                user, created = User.objects.get_or_create(username=username, first_name='user', last_name=username, email=email)
+                user, created = User.objects.get_or_create(username=username, first_name='User',
+                                                           last_name=username, email=email,
+                                                           is_test=True)
                 if created:
                     profile = user.profile
                     city = random.choice(cities)

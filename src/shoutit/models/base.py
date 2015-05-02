@@ -13,7 +13,8 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from common.utils import date_unix, AllowedUsernamesValidator
-from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL
+from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, \
+    UserType
 from shoutit.controllers import email_controller
 
 
@@ -106,13 +107,15 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         _('active'), default=True, help_text=_(
             'Designates whether this user should be treated as '
             'active. Unselect this instead of deleting accounts.'))
-    is_activated = models.BooleanField(
-        _('activated'), default=False, help_text=_(
-            'Designates whether this user have a verified email.'))
+    is_activated = models.BooleanField(_('activated'), default=False, help_text=_(
+        'Designates whether this user have a verified email.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
     permissions = models.ManyToManyField('shoutit.Permission', through='shoutit.UserPermission')
-
+    type = models.PositiveSmallIntegerField(
+        choices=UserType.choices, default=USER_TYPE_PROFILE.value, db_index=True)
+    is_test = models.BooleanField(_('testuser status'), default=False, help_text=_(
+        'Designates whether this user is a test user.'))
     objects = UserManager()
 
     USERNAME_FIELD = 'username'
