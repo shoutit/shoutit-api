@@ -1,4 +1,4 @@
 git+https://github.com/mochawich/django-oauth2-provider
 git+https://github.com/mochawich/django-rest-framework-oauth
-git+https://github.com/marcgibbons/django-rest-swagger/releases
+git+https://github.com/marcgibbons/django-rest-swagger
 git+https://github.com/jleclanche/django-push-notifications
