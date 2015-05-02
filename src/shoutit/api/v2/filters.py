@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from common.utils import process_tag_names
 from shoutit.controllers import stream_controller
 from shoutit.models import Shout, Category, Tag, PredefinedCity
-from elasticsearch_dsl import Q
+from elasticsearch_dsl import Q, F
 import logging
 logger = logging.getLogger('shoutit.debug')
 
@@ -64,14 +64,15 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         search = data.get('search')
         if search:
-            index_queryset = index_queryset.query('fuzzy_like_this', like_text=search, fields=['title', 'text', 'tags'], fuzziness=1)
+            index_queryset = index_queryset.query(
+                'fuzzy_like_this', like_text=search, fields=['title', 'text', 'tags'], fuzziness=1)
 
         tags = data.get('tags')
         if tags:
             tags = tags.replace(',', ' ').split()
             tag_names = process_tag_names(tags)
             for tag_name in tag_names:
-                index_queryset = index_queryset.query('match', tags=tag_name)
+                index_queryset = index_queryset.filter('term', tags=tag_name)
 
         country = data.get('country')
         if country and country != 'all':
@@ -79,16 +80,16 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         city = data.get('city')
         if city and city != 'all':
-            q = [Q('match', city=city)]
+            f = [F('term', city=city)]
             try:
                 pd_city = PredefinedCity.objects.get(city=city)
                 cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
                 for nearby_city in cities:
-                    q.append(Q('match', city=nearby_city.city))
+                    f.append(F('match', city=nearby_city.city))
             except PredefinedCity.DoesNotExist:
                 pass
-            city_q = Q('bool', should=q, minimum_should_match=1)
-            index_queryset = index_queryset.query(city_q)
+            city_f = F('bool', should=f)
+            index_queryset = index_queryset.query(city_f)
 
         category = data.get('category')
         if category:
@@ -96,14 +97,14 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             if not exists:
                 raise ValidationError({'category': "Category '%s' does not exist" % category})
             if category != 'all':
-                index_queryset = index_queryset.query('match', category=category)
+                index_queryset = index_queryset.filter('term', category=category)
 
         shout_type = data.get('shout_type')
         if shout_type:
             if shout_type not in ['all', 'offer', 'request']:
                 raise ValidationError({'shout_type': "should be `all`, `request` or `offer`."})
             if shout_type != 'all':
-                index_queryset = index_queryset.query('match', type=shout_type)
+                index_queryset = index_queryset.filter('term', type=shout_type)
 
         min_price = data.get('min_price')
         if min_price:
@@ -113,22 +114,18 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if max_price:
             index_queryset = index_queryset.filter('range', **{'price': {'lte': max_price}})
 
-        # down_left_lat = django_filters.NumberFilter(name='latitude', lookup_type='gte')
         down_left_lat = data.get('down_left_lat')
         if down_left_lat:
             index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
 
-        # down_left_lng = django_filters.NumberFilter(name='longitude', lookup_type='gte')
         down_left_lng = data.get('down_left_lng')
         if down_left_lng:
             index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
 
-        # up_right_lat = django_filters.NumberFilter(name='latitude', lookup_type='lte')
         up_right_lat = data.get('up_right_lat')
         if up_right_lat:
             index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
 
-        # up_right_lng = django_filters.NumberFilter(name='longitude', lookup_type='lte')
         up_right_lng = data.get('up_right_lng')
         if up_right_lng:
             index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
