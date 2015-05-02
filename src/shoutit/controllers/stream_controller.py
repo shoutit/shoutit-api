@@ -31,26 +31,9 @@ def get_shouts_by_pks(pks):
     if not pks:
         return []
     # todo: optimize
-    shout_qs = Shout.objects.get_valid_shouts().select_related('item', 'item__currency', 'user', 'user__profile').filter(pk__in=pks)
-
-    return attach_related_to_shouts(shout_qs)
-
-
-def attach_related_to_shouts(shouts):
-    """
-    attach tags and images to the shouts to minimize the database queries
-    """
-    if len(shouts):
-        tags_qs = Tag.objects.select_related('Creator').prefetch_related('shouts')
-        tags_qs = tags_qs.extra(where=["shout_id IN ({0})".format(','.join(["'{0}'".format(shout.pk) for shout in shouts]))])
-        tags_with_shout_id = list(tags_qs.values('id', 'name', 'Creator', 'image', 'created_at', 'Definition', 'shouts__id'))
-
-        for shout in shouts:
-
-            shout.set_tags([tag for tag in tags_with_shout_id if tag['shouts__id'] == shout.id])
-            tags_with_shout_id = [tag for tag in tags_with_shout_id if tag['shouts__id'] != shout.id]
-
-    return list(shouts)
+    shout_qs = Shout.objects.get_valid_shouts().select_related(
+        'item', 'item__currency', 'user', 'user__profile').refetch_related('tags').filter(pk__in=pks)
+    return shout_qs
 
 
 # todo: use country, city, etc
@@ -61,7 +44,7 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     shout_types = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
     post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-date_published').values_list('id', flat=Shout)[start_index:end_index]
     shouts = list(Shout.objects.filter(id__in=list(post_ids_qs)).order_by('-date_published'))
-    return attach_related_to_shouts(shouts)
+    return shouts
 
 
 def get_stream_shouts_qs(stream, shout_type=None):

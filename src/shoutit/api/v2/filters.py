@@ -76,7 +76,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         country = data.get('country')
         if country and country != 'all':
-            index_queryset = index_queryset.query('match', country=country)
+            index_queryset = index_queryset.filter('term', country=country)
 
         city = data.get('city')
         if city and city != 'all':
@@ -89,7 +89,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             except PredefinedCity.DoesNotExist:
                 pass
             city_f = F('bool', should=f)
-            index_queryset = index_queryset.query(city_f)
+            index_queryset = index_queryset.filter(city_f)
 
         category = data.get('category')
         if category:

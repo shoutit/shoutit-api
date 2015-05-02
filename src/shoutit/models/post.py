@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from datetime import timedelta, datetime
+from django.contrib.postgres.fields import ArrayField
 
 from django.db import models
 from django.db.models import Q
@@ -9,6 +10,7 @@ from elasticsearch_dsl import DocType, String, Date, Double, Integer
 
 from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
 from common.utils import date_unix
+from shoutit.models import Tag
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -142,7 +144,7 @@ class Post(UUIDModel, APIModelMixin):
 
 
 class Shout(Post):
-    tags = models.ManyToManyField('shoutit.Tag', related_name='shouts')
+    tags = ArrayField(Tag._meta.get_field('name'))
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
     item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
@@ -158,27 +160,17 @@ class Shout(Post):
     def __unicode__(self):
         return unicode(self.pk) + ": " + unicode(self.item)
 
-    def set_tags(self, tags):
-        self._tags = tags
-
-    def get_tags(self):
-        if not hasattr(self, '_tags'):
-            self._tags = list(self.tags.all())
-        return self._tags
-
     @property
     def images(self):
-        if self.type == POST_TYPE_EXPERIENCE:
-            return self.images
-        if self.type in [POST_TYPE_OFFER, POST_TYPE_REQUEST]:
-            return self.item.images
+        return self.item.images
 
     @property
     def videos(self):
-        if self.type == POST_TYPE_EXPERIENCE:
-            return self.videos.all()
-        else:
-            return self.item.videos.all()
+        return self.item.videos.all()
+
+    @property
+    def tag_objects(self):
+        return Tag.objects.filter(name__in=self.tags)
 
     def get_text(self):
         text = ''

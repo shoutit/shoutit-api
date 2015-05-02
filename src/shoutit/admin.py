@@ -21,7 +21,7 @@ class ShoutAdmin(admin.ModelAdmin):
         'id', 'owner', 'owner_profile', 'type', 'item', 'text', 'country', 'city', 'is_sss',
         'is_disabled')
     list_filter = ('type', 'is_sss', 'is_disabled')
-    readonly_fields = ('user', 'tags', 'item')
+    readonly_fields = ('user', 'item')
 
     def owner(self, obj):
         return '<a href="%s%s" target="_blank">%s</a> | <a href="/user/%s" target="_blank">link</a>' % (
@@ -185,7 +185,6 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
     def tag_names(self, category):
         return ', '.join([tag.name for tag in category.tags.all()])
-
     tag_names.short_description = 'Tags'
 
 

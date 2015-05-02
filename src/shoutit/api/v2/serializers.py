@@ -302,7 +302,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
-    tags = TagSerializer(many=True)
+    tags = TagSerializer(many=True, source='tag_objects')
     api_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -384,7 +384,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                 latitude=location_data['latitude'],
                                                 longitude=location_data['longitude'],
                                                 category=validated_data['category'],
-                                                tags=validated_data['tags'],
+                                                tags=validated_data['tag_objects'],
                                                 shouter=self.root.context['request'].user,
                                                 country=location_data['country'],
                                                 city=location_data['city'],
@@ -399,7 +399,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                   latitude=location_data['latitude'],
                                                   longitude=location_data['longitude'],
                                                   category=validated_data['category'],
-                                                  tags=validated_data['tags'],
+                                                  tags=validated_data['tag_objects'],
                                                   shouter=self.root.context['request'].user,
                                                   country=location_data['country'],
                                                   city=location_data['city'],

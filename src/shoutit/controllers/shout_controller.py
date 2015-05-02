@@ -13,16 +13,20 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from elasticsearch import NotFoundError, ConflictError
 from shoutit.models.post import ShoutIndex
-from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, DEFAULT_CURRENCY_CODE
+from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, \
+    DEFAULT_CURRENCY_CODE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post, PredefinedCity
 from shoutit.controllers import event_controller, email_controller, item_controller
 from shoutit.utils import to_seo_friendly
+
 logger = logging.getLogger('shoutit.debug')
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
-    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user', 'user__business', 'user__profile')
+    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user',
+                                                                             'user__business',
+                                                                             'user__profile')
     if not find_muted:
         post = post.filter(muted=False)
 
@@ -84,23 +88,44 @@ def NotifyPreExpiry():
                     shout.save()
 
 
+def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city,
+                 address="",
+                 currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
+                 is_sss=False, exp_days=None):
+    return create_shout(POST_TYPE_REQUEST, name, text, price, latitude, longitude, category, tags,
+                 shouter, country, city, address, currency, images, videos, date_published, is_sss,
+                 exp_days)
+
+
+def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city,
+               address="",
+               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
+               is_sss=False, exp_days=None):
+    return create_shout(POST_TYPE_OFFER, name, text, price, latitude, longitude, category, tags,
+                 shouter, country, city, address, currency, images, videos, date_published, is_sss,
+                 exp_days)
+
+
 # todo: handle exception on each step and in case of errors, rollback!
-def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
-                 currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-    shouter_profile = shouter.profile
-    stream = shouter_profile.stream
+def create_shout(shout_type, name, text, price, latitude, longitude, category, tags, shouter,
+                 country, city, address="", currency=DEFAULT_CURRENCY_CODE, images=None,
+                 videos=None,
+                 date_published=None, is_sss=False, exp_days=None):
 
-    item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
-    shout = Shout(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_REQUEST, item=item, category=category,
-                  country=country, city=city, address=address, is_sss=is_sss)
+    item = item_controller.create_item(
+        name=name, price=price, currency=currency, description=text, images=images, videos=videos)
 
-    # todo: check which to save encoded city or just normal. expectations are to get normal city from user
-    encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-    predefined_city = PredefinedCity.objects.filter(city=city)
-    if not predefined_city:
-        predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
-    if not predefined_city:
-        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
+    # if passed as [{'name': 'tag-x'},...]
+    if tags:
+        if not isinstance(tags[0], basestring):
+            tags = [tag['name'] for tag in tags]
+    # remove duplicates
+    tags = list(OrderedDict.fromkeys(tags))
+
+    shout = Shout(type=shout_type, text=text, user=shouter, category=category, tags=tags, item=item,
+                  longitude=longitude, latitude=latitude, country=country, city=city,
+                  address=address,
+                  is_sss=is_sss)
 
     if date_published:
         shout.date_published = date_published
@@ -109,70 +134,33 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
         shout.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
 
     shout.save()
-    stream.add_post(shout)
+    shouter.profile.stream.add_post(shout)
 
-    # if passed as [{'name': 'tag-x'},...]
-    if tags:
-        if not isinstance(tags[0], basestring):
-            tags = [tag['name'] for tag in tags]
-    # remove duplicates in case any
-    tags = list(OrderedDict.fromkeys(tags))
+    add_tags(tags, shout, shouter)
+    add_pd_city(country, city, latitude, longitude)
+    event_type = EVENT_TYPE_SHOUT_OFFER if shout_type == POST_TYPE_OFFER else EVENT_TYPE_SHOUT_REQUEST
+    event_controller.register_event(shouter, event_type, shout)
+    return shout
+
+
+def add_tags(tags, shout, shouter):
     for tag in tag_controller.get_or_create_tags(tags, shouter):
         # prevent adding existing tags
         # todo: optimize
         try:
-            shout.tags.add(tag)
             tag.stream.add_post(shout)
         except IntegrityError:
             pass
 
-    event_controller.register_event(shouter, EVENT_TYPE_SHOUT_REQUEST, shout)
-    return shout
 
-
-# todo: handle exception on each step and in case of errors, rollback!
-def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city, address="",
-               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None, is_sss=False, exp_days=None):
-    shouter_profile = shouter.profile
-    stream = shouter_profile.stream
-
-    item = item_controller.create_item(name=name, price=price, currency=currency, description=text, images=images, videos=videos)
-    shout = Shout(text=text, longitude=longitude, latitude=latitude, user=shouter, type=POST_TYPE_OFFER, category=category,
-                  item=item, country=country, city=city, address=address, is_sss=is_sss)
-
-    if date_published:
-        shout.date_published = date_published
-        shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
-    else:
-        shout.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
-
+def add_pd_city(country, city, latitude, longitude):
     encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
     predefined_city = PredefinedCity.objects.filter(city=city)
     if not predefined_city:
         predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
     if not predefined_city:
-        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
-
-    shout.save()
-    stream.add_post(shout)
-
-    # if passed as [{'name': 'tag-x'},...]
-    if tags:
-        if not isinstance(tags[0], basestring):
-            tags = [tag['name'] for tag in tags]
-    # remove duplicates in case any
-    tags = list(OrderedDict.fromkeys(tags))
-    for tag in tag_controller.get_or_create_tags(tags, shouter):
-        # prevent adding existing tags
-        # todo: optimize
-        try:
-            shout.tags.add(tag)
-            tag.stream.add_post(shout)
-        except IntegrityError:
-            pass
-
-    event_controller.register_event(shouter, EVENT_TYPE_SHOUT_OFFER, shout)
-    return shout
+        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude,
+                       longitude=longitude).save()
 
 
 @receiver(post_save, sender=Shout)
@@ -192,9 +180,8 @@ def shout_index(sender, instance=None, created=False, **kwargs):
     shout_index.type = shout.type_name
     shout_index.title = shout.item.name
     shout_index.text = shout.text
-    tags = list(shout.tags.values_list('name', flat=True))
-    shout_index.tags_count = len(tags)
-    shout_index.tags = tags
+    shout_index.tags = shout.tags
+    shout_index.tags_count = len(shout.tags)
     shout_index.category = shout.category.name
     shout_index.country = shout.country
     shout_index.city = shout.city
@@ -226,7 +213,8 @@ def delete_shout_index(shout):
 
 
 # todo: check!
-def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[], shouter=None, country=None,
+def EditShout(shout_id, name=None, text=None, price=None, latitude=None, longitude=None, tags=[],
+              shouter=None, country=None,
               city=None, address=None, currency=None, images=[], date_published=None):
     shout = Shout.objects.get(pk=shout_id)
 

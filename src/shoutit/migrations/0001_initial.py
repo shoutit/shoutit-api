@@ -488,6 +488,7 @@ class Migration(migrations.Migration):
             name='Shout',
             fields=[
                 ('post_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='shoutit.Post')),
+                ('tags', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(db_index=True, unique=True, max_length=30, validators=[django.core.validators.MinLengthValidator(2), django.core.validators.RegexValidator(re.compile('[0-9a-z-]{2,30}'), 'Enter a valid tag.', 'invalid')]), size=None)),
                 ('renewal_count', models.PositiveSmallIntegerField(default=0)),
                 ('expiry_date', models.DateTimeField(default=None, null=True, db_index=True, blank=True)),
                 ('expiry_notified', models.BooleanField(default=False)),
@@ -591,11 +592,6 @@ class Migration(migrations.Migration):
             model_name='shout',
             name='item',
             field=models.OneToOneField(related_name='shout', null=True, blank=True, to='shoutit.Item'),
-        ),
-        migrations.AddField(
-            model_name='shout',
-            name='tags',
-            field=models.ManyToManyField(related_name='shouts', to='shoutit.Tag'),
         ),
         migrations.AlterUniqueTogether(
             name='messageread',
