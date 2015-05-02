@@ -53,12 +53,6 @@ def delete_post(post):
     post.is_disabled = True
     post.save()
     event_controller.delete_event_about_obj(post)
-    if isinstance(post, Shout):
-        delete_shout_index(post)
-        # elif post.type == POST_TYPE_DEAL:
-        # event_controller.delete_event_about_obj(post.shout.deal)
-        # elif post.type == POST_TYPE_EXPERIENCE:
-        # event_controller.delete_event_about_obj(post.experience)
 
 
 # todo: make api for renewing shouts
@@ -182,13 +176,15 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
 
 
 @receiver(post_save, sender=Shout)
-def save_shout_index(sender, instance=None, created=False, **kwargs):
+def shout_index(sender, instance=None, created=False, **kwargs):
     shout = instance
     action = 'Created' if created else 'Updated'
     logger.debug('{} Shout: {}: {}, city: {}'.format(action, shout.pk, shout.item.name, shout.city))
     try:
         if created:
             raise NotFoundError()
+        if shout.is_disabled:
+            return delete_shout_index(shout)
         shout_index = ShoutIndex.get(shout.pk)
     except NotFoundError:
         shout_index = ShoutIndex()

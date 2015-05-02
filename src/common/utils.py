@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
-import httplib2
+import requests
 import uuid
 from common.constants import NOT_ALLOWED_USERNAMES
 
@@ -35,11 +35,10 @@ def get_address_port(using_gunicorn=False):
 
 
 def check_offline_mood():
-    http = httplib2.Http()
     try:
-        resp, content = http.request('http://www.google.com')
+        resp = requests.head('http://www.google.com', timeout=5)
         return False
-    except httplib2.ServerNotFoundError:
+    except requests.RequestException:
         return True
 
 
