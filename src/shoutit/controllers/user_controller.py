@@ -16,36 +16,22 @@ logger = logging.getLogger('shoutit.debug')
 
 
 def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
-    username = generate_username()
-    while len(User.objects.filter(username=username)):
-        username = generate_username()
-    password = generate_password()
-    django_user = User.objects.create_user(username, email, password)
-    django_user.is_active = False
-    django_user.save()
-
+    user = signup_user(email, None, 'Shoutit', 'User')
     if dbcl_type == 'cl':
-        dbcl_user = CLUser(user=django_user, cl_email=email)
+        dbcl_user = CLUser(user=user, cl_email=email)
     else:
-        dbcl_user = DBUser(user=django_user, db_link=db_link)
+        dbcl_user = DBUser(user=user, db_link=db_link)
     dbcl_user.save()
 
-    up = Profile(
-        user=django_user,
-        latitude=lat, longitude=lng, city=city, country=country,
-        image='/static/img/_user_male.png'
-    )
-    up.save()
-
-    if not PredefinedCity.objects.filter(city=up.city):
-        encoded_city = to_seo_friendly(unicode.lower(unicode(up.city)))
-        PredefinedCity(city=up.city, city_encoded=encoded_city, country=up.country, latitude=up.latitude, longitude=up.longitude).save()
-
-    token_type = TOKEN_TYPE_HTML_NUM
-    token_length = TOKEN_SHORT_UPPER
-    token = set_last_token(django_user, email, token_length, token_type)
-    django_user.token = token
-    return django_user
+    profile = user.profile
+    location = {
+        'country': country,
+        'city': city,
+        'latitude': lat,
+        'longitude': lng
+    }
+    update_profile_location(profile, location)
+    return user
 
 
 def signup_user(email=None, password=None, first_name='', last_name='', username=None, **kwargs):
