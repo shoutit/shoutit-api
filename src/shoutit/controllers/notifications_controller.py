@@ -94,6 +94,7 @@ def notify_db_user(db_user, from_user, message):
         'form_type': 'contact',
         'email': in_email,
         'name': from_user.name,
+        'telephone': '050',
         'message': message.text,
         'captcha_0': d('#id_captcha_0').attr('value'),
         'captcha_1': captcha
