@@ -134,5 +134,5 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         if not (instance.is_activated or instance.is_test):
             # create email confirmation token and send verification email
             ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
-        if not instance.is_test:
+        if not instance.is_test and instance.email:
             instance.send_signup_email()
