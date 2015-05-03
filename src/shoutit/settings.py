@@ -109,6 +109,7 @@ RQ_QUEUES = {
     RQ_QUEUE: {'USE_REDIS_CACHE': 'default'},
 }
 
+ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
 """
 =================================
           Elasticsearch

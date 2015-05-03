@@ -37,3 +37,6 @@ mailchimp==2.0.9
 
 git+https://github.com/marcgibbons/django-rest-swagger
 git+https://github.com/jleclanche/django-push-notifications
+
+antigate
+pyquery

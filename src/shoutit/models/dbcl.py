@@ -33,6 +33,18 @@ User.add_to_class('cl_user', cl_user)
 
 
 @property
+def db_user(self):
+    if hasattr(self, '_db_user') and self._db_user:
+        return self._db_user
+    try:
+        self._db_user = self.dbuser
+    except DBUser.DoesNotExist:
+        self._db_user = None
+    return self._db_user
+User.add_to_class('db_user', db_user)
+
+
+@property
 def cl_ad_id(self):
     if hasattr(self, '_cl_ad_id') and self._cl_ad_id:
         return self._cl_ad_id

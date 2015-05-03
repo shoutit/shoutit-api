@@ -189,6 +189,13 @@ def SendSellOfferEmail(shout, seller):
     msg.send()
 
 
+def email_db_user(message):
+    to_user = message.ToUser
+    from_user = message.FromUser
+    shout = message.Conversation.AboutPost
+    message_text = message.text
+
+
 def send_message_email(message):
     to_user = message.ToUser
     from_user = message.FromUser

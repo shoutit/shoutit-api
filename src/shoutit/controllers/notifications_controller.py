@@ -1,13 +1,16 @@
+import uuid
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from django_rq import job
+import requests
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE,
                               NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED,
                               NOTIFICATION_TYPE_COMMENT)
-from shoutit.models import Notification
+from shoutit.controllers import email_controller
+from shoutit.models import Notification, DBCLConversation
 import logging
 logger = logging.getLogger('shoutit.debug')
 error_logger = logging.getLogger('shoutit.error')
@@ -61,6 +64,42 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
         except GCMError, e:
             error_logger.warn("Could not send gcm push to user %s." % user.username)
             error_logger.warn("GCMError:", e)
+
+    if notification_type == NOTIFICATION_TYPE_MESSAGE:
+        if user.db_user:
+            if not user.email:
+                notify_db_user(user.db_user, from_user, attached_object)
+            else:
+                notify_db_user(user.db_user, from_user, attached_object)
+                # todo: !
+                # email_controller.email_db_user(user.db_user, from_user, attached_object)
+
+
+def notify_db_user(db_user, from_user, message):
+    from pyquery import PyQuery as pq
+    import urlparse
+    from antigate import AntiGate
+    url_parts = urlparse.urlparse(db_user.db_link)
+    reply_url = db_user.db_link + '?reply'
+    d = pq(url=reply_url)
+    captcha_url = "%s://%s%s" % (url_parts[0], url_parts[1], d('img.captcha')[0].attrib['src'])
+    captcha_img = requests.get(captcha_url)
+    gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
+    captcha = str(gate)
+    ref = uuid.uuid4().hex
+    in_email = ref + '-db-reply@in.shoutit.com'
+    DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
+                                    shout=message.conversation.about, ref=ref)
+    form_data = {
+        'form_type': 'contact',
+        'email': in_email,
+        'name': from_user.name,
+        'message': message.text,
+        'captcha_0': d('#id_captcha_0').attr('value'),
+        'captcha_1': captcha
+    }
+    res = requests.post(reply_url, form_data)
+    logger.debug(res.status_code)
 
 
 def notify_user_of_listen(user, listener, request=None):
