@@ -27,8 +27,8 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     location = {
         'country': country,
         'city': city,
-        'latitude': lat,
-        'longitude': lng
+        'latitude': float(lat),
+        'longitude': float(lng)
     }
     update_profile_location(profile, location)
     return user
