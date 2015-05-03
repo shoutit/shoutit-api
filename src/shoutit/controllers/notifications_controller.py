@@ -99,7 +99,10 @@ def notify_db_user(db_user, from_user, message):
         'captcha_1': captcha
     }
     res = requests.post(reply_url, form_data)
-    logger.debug(res.status_code)
+    if int(res.status_code) == 200:
+        logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
+    else:
+        logger.error("Error sending message to db user")
 
 
 def notify_user_of_listen(user, listener, request=None):

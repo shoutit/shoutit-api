@@ -10,7 +10,7 @@ from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
-    ConversationDelete, FeaturedTag, ConfirmToken)
+    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation)
 from django.utils.translation import ugettext_lazy as _
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
@@ -241,6 +241,24 @@ class ConfirmTokenAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'type', 'user', 'token', 'email', 'is_disabled')
     list_filter = ('type', 'is_disabled')
+
+
+@admin.register(DBUser)
+class DBUserAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'user', 'db_link')
+
+
+@admin.register(CLUser)
+class CLUserAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'user', 'cl_email')
+
+
+@admin.register(DBCLConversation)
+class DBCLConversationAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'in_email', 'from_user', 'to_user', 'shout', 'ref')
 
 
 # admin.site.register(StoredFile)
