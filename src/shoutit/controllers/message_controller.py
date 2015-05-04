@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT

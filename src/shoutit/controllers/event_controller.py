@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 
 from common.constants import POST_TYPE_EVENT

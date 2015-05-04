@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import StringIO
 from datetime import datetime
 import urllib2

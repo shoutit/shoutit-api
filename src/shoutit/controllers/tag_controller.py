@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from common.utils import process_tag
 from shoutit.models import Tag
 

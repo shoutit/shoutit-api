@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from paypal.standard.ipn.signals import subscription_signup,subscription_cancel,subscription_eot
 
 from common.constants import SUBSCRIPE_BUSINESS, SUBSCRIPTION_TRAIL, SUBSCRIPTION_EXPIRED, SUBSCRIPTION_CANCELED

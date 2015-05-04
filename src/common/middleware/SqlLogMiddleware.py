@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.db import connection
 from django.template import Template, Context
 from django.conf import settings

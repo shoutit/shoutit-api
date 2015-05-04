@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import urllib2
 import boto
 from django.conf import settings
@@ -5,10 +6,9 @@ from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
 from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
 
-from shoutit.models import (User, Profile, LinkedFacebookAccount, PredefinedCity,
+from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
                             LinkedGoogleAccount, CLUser, DBUser)
-from common.constants import *
-from shoutit.utils import to_seo_friendly, generate_username, generate_password
+from shoutit.utils import to_seo_friendly, generate_username
 import logging
 
 warn_logger = logging.getLogger('shoutit.warnings')

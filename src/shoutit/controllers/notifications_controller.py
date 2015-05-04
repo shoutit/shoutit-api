@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import uuid
 from django.conf import settings
 from django.utils.translation import ugettext as _
@@ -100,6 +101,7 @@ def notify_db_user(db_user, from_user, message):
         'captcha_1': captcha
     }
     res = requests.post(reply_url, form_data)
+    logger.debug(res.content.decode('utf8'))
     if int(res.status_code) == 200:
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.db.models.query_utils import Q
 
 from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \

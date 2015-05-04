@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.context import Context
 from django.template.loader import get_template
