@@ -10,11 +10,13 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
 
-from shoutit.api.v2.serializers import CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer
+from shoutit.api.v2.serializers import CategorySerializer, CurrencySerializer, ReportSerializer, \
+    PredefinedCitySerializer
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.models import Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation
 import re
 import logging
+
 error_logger = logging.getLogger('shoutit.error')
 
 
@@ -114,7 +116,8 @@ class MiscViewSet(viewsets.ViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='Fake Error')
+    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
+                suffix='Fake Error')
     def error(self, request):
         raise Exception("API v2 Fake Error")
 
@@ -140,11 +143,15 @@ class MiscViewSet(viewsets.ViewSet):
         # user creation
         try:
             if shout['source'] == 'cl':
-                user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'], lng=shout['lng'],
-                                    city=shout['city'], country=shout['country'], dbcl_type='cl')
+                user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
+                                                    lng=shout['lng'],
+                                                    city=shout['city'], country=shout['country'],
+                                                    dbcl_type='cl')
             elif shout['source'] == 'db':
-                user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'], city=shout['city'],
-                                    country=shout['country'], dbcl_type='db', db_link=shout['link'])
+                user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
+                                                    city=shout['city'],
+                                                    country=shout['country'], dbcl_type='db',
+                                                    db_link=shout['link'])
             else:
                 raise Exception('Unknown ad source')
         except Exception, e:
@@ -211,14 +218,14 @@ class MiscViewSet(viewsets.ViewSet):
             in_email = msg.get('email')
 
             if 'db-reply' in in_email:
-                return handle_db_reply(in_email, msg)
+                return handle_db_reply(in_email, msg, request)
             elif 'cl-reply' in in_email:
-                return handle_cl_reply(msg)
+                return handle_cl_reply(msg, request)
             else:
                 return Response({'error': "Unknown in_email"})
 
 
-def handle_db_reply(in_email, msg):
+def handle_db_reply(in_email, msg, request):
     from_email = msg.get('from_email')
     text = msg.get('text')
     try:
@@ -237,12 +244,13 @@ def handle_db_reply(in_email, msg):
     from_user.save()
     to_user = dbcl_conversation.from_user
     shout = dbcl_conversation.shout
-    message = message_controller.send_message(conversation=None, user=from_user, to_users=[from_user, to_user],
-                           about=shout, text=text)
+    message = message_controller.send_message(conversation=None, user=from_user,
+                                              to_users=[from_user, to_user],
+                                              about=shout, text=text, request=request)
     return Response({'success': True, 'message_id': message.pk})
 
 
-def handle_cl_reply(msg):
+def handle_cl_reply(msg, request):
     text = msg.get('text')
     try:
         ref = re.search("\{ref:(.+)\}", text).groups()[0]
@@ -264,6 +272,7 @@ def handle_cl_reply(msg):
     from_user = dbcl_conversation.to_user
     to_user = dbcl_conversation.from_user
     shout = dbcl_conversation.shout
-    message = message_controller.send_message(conversation=None, user=from_user, to_users=[from_user, to_user],
-                           about=shout, text=text)
+    message = message_controller.send_message(conversation=None, user=from_user,
+                                              to_users=[from_user, to_user],
+                                              about=shout, text=text, request=request)
     return Response({'success': True, 'message_id': message.pk})
