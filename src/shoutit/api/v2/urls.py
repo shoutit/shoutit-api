@@ -9,6 +9,7 @@ from rest_framework import routers
 
 from shoutit.api.v2.authentication import AccessTokenView, ShoutitAuthView
 from shoutit.api.v2.views import user_views, misc_views, message_views, shout_views, notification_views, tag_views
+from shoutit.tiered_views import shout_views as old_shout_views
 
 
 class ShoutitRouter(routers.DefaultRouter):
@@ -28,5 +29,10 @@ router.register(r'auth', ShoutitAuthView, 'shoutit_auth')
 urlpatterns = [
     url(r'^oauth2/access_token$', AccessTokenView.as_view(), name='access_token'),
     url(r'^docs/', include('rest_framework_swagger.urls')),
+    # sss
+    url(r'^sss4$', old_shout_views.shout_sss4),
+    # inbound
+    url(r'^in$', old_shout_views.inbound_email),
+    # router urls
     url(r'^', include(router.urls)),
 ]

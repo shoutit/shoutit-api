@@ -3,7 +3,7 @@ from django.conf.urls import include, url
 from django.views.generic import RedirectView
 from django.contrib import admin
 from django.conf import settings
-from shoutit.tiered_views import shout_views, general_views
+from shoutit.tiered_views import general_views
 
 urlpatterns = [
     # current api root
@@ -13,12 +13,6 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
-
-    # sss
-    url(r'^sss4$', shout_views.shout_sss4),
-
-    # inbound
-    url(r'^in$', shout_views.inbound_email),
 
     # return fake error
     url(r'^error$', general_views.fake_error),
