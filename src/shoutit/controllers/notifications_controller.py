@@ -52,6 +52,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                     'notification_type': int(notification_type),
                     'object': attached_object_dict
                 })
+            logger.debug("Sent apns push to user %s." % user.username)
         except APNSError, e:
             error_logger.warn("Could not send apns push to user %s." % user.username)
             error_logger.warn("APNSError:", e)
@@ -62,6 +63,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 'notification_type': int(notification_type),
                 'object': attached_object_dict
             })
+            logger.debug("Sent gcm push to user %s." % user.username)
         except GCMError, e:
             error_logger.warn("Could not send gcm push to user %s." % user.username)
             error_logger.warn("GCMError:", e)
@@ -101,7 +103,6 @@ def notify_db_user(db_user, from_user, message):
         'captcha_1': captcha
     }
     res = requests.post(reply_url, form_data)
-    logger.debug(res.content.decode('utf8'))
     if int(res.status_code) == 200:
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:
