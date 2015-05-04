@@ -6,6 +6,7 @@ from django.conf import settings
 from common.constants import StreamType
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
 import logging
+
 logger = logging.getLogger('shoutit.debug')
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -13,13 +14,16 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 class Stream(UUIDModel, AttachedObjectMixin):
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType.choices)
     posts = models.ManyToManyField('shoutit.Post', related_name='streams2')
-    listeners = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Listen', related_name='listening')
+    listeners = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Listen',
+                                       related_name='listening')
 
     class Meta(UUIDModel.Meta):
-        unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
+        unique_together = (
+        'content_type', 'object_id', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
-        return unicode(self.pk) + ':' + StreamType.values[self.type] + ' (' + unicode(self.attached_object) + ')'
+        return unicode(self.pk) + ':' + StreamType.values[self.type] + ' (' + unicode(
+            self.attached_object) + ')'
 
     def __init__(self, *args, **kwargs):
         # attached_object is the owner
@@ -30,6 +34,7 @@ class Stream(UUIDModel, AttachedObjectMixin):
 
     def add_post(self, post):
         from shoutit.models import Post
+
         assert isinstance(post, Post)
         try:
             self.posts.add(post)
@@ -39,6 +44,7 @@ class Stream(UUIDModel, AttachedObjectMixin):
 
     def remove_post(self, post):
         from shoutit.models import Post
+
         assert isinstance(post, Post)
         self.posts.remove(post)
 
@@ -56,6 +62,7 @@ class StreamMixin(models.Model):
     ```
     this will make it easier to query streams based on attributes of their owners
     """
+
     class Meta:
         abstract = True
 
@@ -75,6 +82,7 @@ class StreamMixin(models.Model):
     @property
     def listeners_count(self):
         return self.stream.listeners.count()
+
 
 @receiver(post_save)
 def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs):
@@ -110,4 +118,3 @@ class Listen(UUIDModel):
 
     class Meta(UUIDModel.Meta):
         unique_together = ('listener', 'stream')  # so the user can listen to the stream only once
-

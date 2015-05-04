@@ -1,5 +1,4 @@
 import sys
-
 import os
 
 
@@ -13,7 +12,8 @@ setup_environ(settings)
 
 from common.constants import BUSINESS_SOURCE_TYPE_FOURSQUARE
 from shoutit.models import BusinessCategory
-import urllib2, json
+import urllib2
+import json
 
 
 def traverse_categories(categories, parent, f):

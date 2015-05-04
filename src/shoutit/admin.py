@@ -159,7 +159,7 @@ class TagAdmin(admin.ModelAdmin):
 
 
 @admin.register(Category)
-class FeaturedTagAdmin(admin.ModelAdmin):
+class CategoryAdmin(admin.ModelAdmin):
     raw_id_fields = ('main_tag',)
     list_display = ('name', 'main_tag_name', 'tag_names')
     ordering = ('name',)

@@ -283,4 +283,3 @@ def post_comments_json_renderer(request, result):
         return xhr_respond(ENUM_XHR_RESULT.SUCCESS, '', data=data)
     else:
         return get_initial_json_response(request, result)
-

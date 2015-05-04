@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from django.core.exceptions import ObjectDoesNotExist
 
-from common.constants import *
+from common.constants import *  # NOQA
 
 
 def CommentOnPost(user, post_id, text):
@@ -13,7 +13,8 @@ def CommentOnPost(user, post_id, text):
 
         seen = set()
         seen_add = seen.add
-        users = [comment.user for comment in GetPostComments(post_id) if comment.user not in seen and not seen_add(comment.user)]
+        users = [_comment.user for _comment in GetPostComments(post_id) if
+                 _comment.user not in seen and not seen_add(_comment.user)]
         if post.user not in seen and not seen_add(post.user):
             users.append(post.user)
         users.remove(user)
@@ -25,9 +26,10 @@ def CommentOnPost(user, post_id, text):
 
 def GetPostComments(post_id, date=None, start_index=None, end_index=None):
     # post = shout_controller.get_post(post_id)
-    #	if post:
-    comments = Comment.objects.filter(AboutPost__pk=post_id, is_disabled=False).select_related('user', 'user__profile',
-                                                                                              'user__business').order_by('created_at')
+    # if post:
+    comments = Comment.objects.filter(AboutPost__pk=post_id, is_disabled=False).select_related(
+        'user', 'user__profile',
+        'user__business').order_by('created_at')
     if date:
         comments = comments.filter(created_at__lte=date)
     if start_index:

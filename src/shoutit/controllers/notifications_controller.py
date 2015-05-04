@@ -52,7 +52,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                     'notification_type': int(notification_type),
                     'object': attached_object_dict
                 })
-            logger.debug("Sent apns push to user %s." % user.username)
+            logger.debug("Sent apns push to %s." % user)
         except APNSError, e:
             error_logger.warn("Could not send apns push to user %s." % user.username)
             error_logger.warn("APNSError:", e)
@@ -63,7 +63,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 'notification_type': int(notification_type),
                 'object': attached_object_dict
             })
-            logger.debug("Sent gcm push to user %s." % user.username)
+            logger.debug("Sent gcm push to %s." % user)
         except GCMError, e:
             error_logger.warn("Could not send gcm push to user %s." % user.username)
             error_logger.warn("GCMError:", e)

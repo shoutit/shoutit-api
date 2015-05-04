@@ -12,4 +12,3 @@ def handler500(request):
     content = f.read()
     f.close()
     return HttpResponseServerError(content)
-

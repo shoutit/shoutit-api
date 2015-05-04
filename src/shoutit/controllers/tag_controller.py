@@ -21,4 +21,3 @@ def get_or_create_tags(names, creator=None):
         if tag:
             tags.append(tag)
     return tags
-

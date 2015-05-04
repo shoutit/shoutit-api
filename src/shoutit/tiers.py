@@ -4,7 +4,6 @@ from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpRespon
 from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
-
 from common.constants import Constant
 from shoutit.permissions import PERMISSION_USE_SHOUTIT
 from shoutit.middleware import JsonPostMiddleware
@@ -167,4 +166,3 @@ def non_cached_view(html_renderer=None, json_renderer=None, methods=None,
                        methods=methods, validator=validator, login_required=login_required, post_login_required=post_login_required,
                        activation_required=activation_required, post_activation_required=post_activation_required,
                        permissions_required=permissions_required, business_subscription_required=business_subscription_required)
-

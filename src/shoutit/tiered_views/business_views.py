@@ -3,25 +3,32 @@ from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from shoutit.models import User
-from common.constants import TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE, BUSINESS_CONFIRMATION_STATUS_WAITING, \
+from common.constants import TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE, \
+    BUSINESS_CONFIRMATION_STATUS_WAITING, \
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT, BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION, \
     BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION
-from shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditProfileForm, CreateTinyBusinessForm, RecoverForm, \
+from shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditProfileForm, \
+    CreateTinyBusinessForm, RecoverForm, \
     BusinessTempSignUpForm
 from shoutit.models import ConfirmToken, Business
 from shoutit.permissions import ANONYMOUS_USER_PERMISSIONS
-from shoutit.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, edit_profile_renderer_json, \
+from shoutit.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, \
+    edit_profile_renderer_json, \
     create_tiny_business_renderer_json
 from shoutit.tiered_views.validators import form_validator, user_edit_profile_validator
-from shoutit.controllers import business_controller, payment_controller, email_controller, user_controller
+from shoutit.controllers import business_controller, payment_controller, email_controller, \
+    user_controller
 from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_REDIRECT, \
     RESPONSE_RESULT_ERROR_BAD_REQUEST
 
 
 @non_cached_view(
-    html_renderer=lambda request, result, tiny_username: page_html(request, result, 'signup_temp_business.html', 'Sign Up Business'),
+    html_renderer=lambda request, result, tiny_username: page_html(request, result,
+                                                                   'signup_temp_business.html',
+                                                                   'Sign Up Business'),
     json_renderer=lambda request, result, tiny_username:
-    json_renderer(request, result, success_message=_('Well done, now check your e-mail inbox and follow the instructions')),
+    json_renderer(request, result, success_message=_(
+        'Well done, now check your e-mail inbox and follow the instructions')),
     methods=['GET', 'POST'],
     validator=lambda request, *args, **kwargs: form_validator(request, BusinessTempSignUpForm))
 def signup_temp(request, tiny_username=None):
@@ -40,7 +47,8 @@ def signup_temp(request, tiny_username=None):
         form = BusinessTempSignUpForm(request.POST, request.FILES, initial=init)
         form.is_valid()
 
-        user = business_controller.SignUpTempBusiness(request, form.cleaned_data['email'], form.cleaned_data['password'], True, business)
+        user = business_controller.SignUpTempBusiness(request, form.cleaned_data['email'],
+                                                      form.cleaned_data['password'], True, business)
         user_controller.give_user_permissions(user, ANONYMOUS_USER_PERMISSIONS)
     else:
         form = BusinessTempSignUpForm(initial=init)
@@ -51,12 +59,14 @@ def signup_temp(request, tiny_username=None):
     return result
 
 
-@non_cached_view(html_renderer=lambda request, result, token: page_html(request, result, result.data['template'], 'Sign Up Business'),
-                 json_renderer=lambda request, result, token: json_renderer(request,
-                                                                            result,
-                                                                            success_message=_(
-                                                                                'Well done, now check your e-mail inbox and follow the instructions')),
-                 methods=['GET', 'POST'], )
+@non_cached_view(
+    html_renderer=lambda request, result, token: page_html(request, result, result.data['template'],
+                                                           'Sign Up Business'),
+    json_renderer=lambda request, result, token: json_renderer(request,
+                                                               result,
+                                                               success_message=_(
+                                                                   'Well done, now check your e-mail inbox and follow the instructions')),
+    methods=['GET', 'POST'], )
 def signup(request, token=None):
     business = None
     result = ResponseResult()
@@ -96,16 +106,21 @@ def signup(request, token=None):
 
         if application.Business:
             business = application.Business
-            business_init = {'name': business.name, 'category': application.Category and application.Category.pk or 0,
-                             'location': unicode(business.latitude) + ', ' + unicode(business.longitude), 'city': business.city,
+            business_init = {'name': business.name,
+                             'category': application.Category and application.Category.pk or 0,
+                             'location': unicode(business.latitude) + ', ' + unicode(
+                                 business.longitude), 'city': business.city,
                              'country': business.country}
             lat = business.latitude
             lng = business.longitude
         else:
-            business_init = {'name': application.name, 'category': application.Category and application.Category.pk or 0,
-                             'location': unicode(application.latitude) + ', ' + unicode(application.longitude), 'city': application.city,
+            business_init = {'name': application.name,
+                             'category': application.Category and application.Category.pk or 0,
+                             'location': unicode(application.latitude) + ', ' + unicode(
+                                 application.longitude), 'city': application.city,
                              'country': application.country}
-            init.update({'phone': application.Phone, 'description': application.About, 'website': application.Website})
+            init.update({'phone': application.Phone, 'description': application.About,
+                         'website': application.Website})
             lat = application.latitude
             lng = application.longitude
 
@@ -121,7 +136,8 @@ def signup(request, token=None):
 
             if not len(files):
                 result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
-                result.form_errors = ErrorDict({'business_documents': ErrorList(_('You should upload documents to continue'))})
+                result.form_errors = ErrorDict(
+                    {'business_documents': ErrorList(_('You should upload documents to continue'))})
                 return result
             if form.is_valid() and tiny_business_form.is_valid():
                 if business:
@@ -140,10 +156,15 @@ def signup(request, token=None):
                     country = tiny_business_form.cleaned_data['country']
                     address = tiny_business_form.cleaned_data['address']
 
-                application = business_controller.SignUpBusiness(request, user, tiny_business_form.cleaned_data['name'],
-                                                                 form.cleaned_data['phone'], form.cleaned_data['website'],
-                                                                 category, form.cleaned_data['description'],
-                                                                 latitude=lat, longitude=lng, country=country,
+                application = business_controller.SignUpBusiness(request, user,
+                                                                 tiny_business_form.cleaned_data[
+                                                                     'name'],
+                                                                 form.cleaned_data['phone'],
+                                                                 form.cleaned_data['website'],
+                                                                 category,
+                                                                 form.cleaned_data['description'],
+                                                                 latitude=lat, longitude=lng,
+                                                                 country=country,
                                                                  city=city, address=address,
                                                                  documents=files)
                 application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION
@@ -172,25 +193,30 @@ def signup(request, token=None):
             application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION
             application.save()
             result.data['template'] = 'wait_business.html'
-            result.data['message'] = _('We are still working on confirming your payment, please come back later, thanks.')
+            result.data['message'] = _(
+                'We are still working on confirming your payment, please come back later, thanks.')
         else:
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)
             result.data['next'] = '/subscribe/'
             return result
     elif application.Status == BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION:
         result.data['template'] = 'wait_business.html'
-        result.data['message'] = _('We are still working on confirming your payment, please come back later, thanks.')
+        result.data['message'] = _(
+            'We are still working on confirming your payment, please come back later, thanks.')
     elif application.Status == BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION:
         result.data['template'] = 'wait_business.html'
-        result.data['message'] = _('We are still working on confirming your profile, please come back later, thanks.')
+        result.data['message'] = _(
+            'We are still working on confirming your profile, please come back later, thanks.')
 
     return result
 
 
 @non_cached_view(methods=['POST'],
                  validator=lambda request, *args, **kwargs: form_validator(request, RecoverForm,
-                                                                           message=_('email does not exist.')),
-                 json_renderer=lambda request, result, *args, **kwargs: json_renderer(request, result,
+                                                                           message=_(
+                                                                               'email does not exist.')),
+                 json_renderer=lambda request, result, *args, **kwargs: json_renderer(request,
+                                                                                      result,
                                                                                       _(
                                                                                           'We sent you a new email to activate your account.')))
 def recover_activation(request):
@@ -207,7 +233,8 @@ def recover_activation(request):
         return result
     user = profile.user
     email = user.email
-    token = user_controller.set_last_token(user, email, TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE)
+    token = user_controller.set_last_token(user, email, TOKEN_LONG,
+                                           TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE)
     email_controller.SendEmail(email, {
         'name': profile.name,
         'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
@@ -215,20 +242,28 @@ def recover_activation(request):
     return result
 
 
-@non_cached_view(json_renderer=lambda request, result, *args: create_tiny_business_renderer_json(request, result),
-                 methods=['GET', 'POST'], post_login_required=True)
+@non_cached_view(
+    json_renderer=lambda request, result, *args: create_tiny_business_renderer_json(request,
+                                                                                    result),
+    methods=['GET', 'POST'], post_login_required=True)
 def create_tiny_business(request):
     if request.method == 'POST':
         form = CreateTinyBusinessForm(request.POST)
         form.is_valid()
 
         business_controller.CreateTinyBusinessProfile(form.cleaned_data['name'],
-                                                      'category' in form.cleaned_data and form.cleaned_data['category'] or None,
-                                                      'latitude' in form.cleaned_data and form.cleaned_data['latitude'] or 0.0,
-                                                      'longitude' in form.cleaned_data and form.cleaned_data['longitude'] or 0.0,
-                                                      'country' in form.cleaned_data and form.cleaned_data['country'] or None,
-                                                      'city' in form.cleaned_data and form.cleaned_data['city'] or None,
-                                                      'address' in form.cleaned_data and form.cleaned_data['address'] or None)
+                                                      'category' in form.cleaned_data and
+                                                      form.cleaned_data['category'] or None,
+                                                      'latitude' in form.cleaned_data and
+                                                      form.cleaned_data['latitude'] or 0.0,
+                                                      'longitude' in form.cleaned_data and
+                                                      form.cleaned_data['longitude'] or 0.0,
+                                                      'country' in form.cleaned_data and
+                                                      form.cleaned_data['country'] or None,
+                                                      'city' in form.cleaned_data and
+                                                      form.cleaned_data['city'] or None,
+                                                      'address' in form.cleaned_data and
+                                                      form.cleaned_data['address'] or None)
     else:
         form = CreateTinyBusinessForm()
     result = ResponseResult()
@@ -236,8 +271,9 @@ def create_tiny_business(request):
     return result
 
 
-@non_cached_view(json_renderer=lambda request, result, *args: confirm_business_renderer_json(request, result),
-                 methods=['GET', 'POST'])
+@non_cached_view(
+    json_renderer=lambda request, result, *args: confirm_business_renderer_json(request, result),
+    methods=['GET', 'POST'])
 def confirm_business(request):
     result = ResponseResult()
     if hasattr(request, 'session') and hasattr(request.session, 'session_key'):
@@ -283,7 +319,8 @@ def confirm_business(request):
         email = source_email
 
     if request.method == 'POST':
-        init = {'name': profile.name, 'username': user.username, 'email': user.email, 'phone': profile.Phone, 'tokentype': type}
+        init = {'name': profile.name, 'username': user.username, 'email': user.email,
+                'phone': profile.Phone, 'tokentype': type}
         form = StartBusinessForm(request.POST, request.FILES, initial=init)
         if not form.is_valid():
             result.errors.append(RESPONSE_RESULT_ERROR_BAD_REQUEST)
@@ -297,7 +334,8 @@ def confirm_business(request):
         profile.save()
     # result.data['next'] = '/user/' + user.username
     else:
-        init = {'name': profile.name, 'username': user.username, 'email': email, 'phone': profile.Phone, 'tokentype': type}
+        init = {'name': profile.name, 'username': user.username, 'email': email,
+                'phone': profile.Phone, 'tokentype': type}
         form = StartBusinessForm(initial=init)
     result.data['form'] = form
     return result
@@ -306,8 +344,10 @@ def confirm_business(request):
 @non_cached_view(
     json_renderer=edit_profile_renderer_json,
     login_required=True,
-    validator=lambda request, username: user_edit_profile_validator(request, username, user_controller.get_profile(username).user.email),
-    )
+    validator=lambda request, username: user_edit_profile_validator(request, username,
+                                                                    user_controller.get_profile(
+                                                                        username).user.email),
+)
 def business_edit_profile(request, username):
     profile = user_controller.get_profile(username)
     result = ResponseResult()
@@ -357,8 +397,10 @@ def business_edit_profile(request, username):
     return result
 
 
-@non_cached_view(html_renderer=lambda request, result: page_html(request, result, result.data['template'], 'Subscribe Business'),
-                 methods=['GET'], )
+@non_cached_view(
+    html_renderer=lambda request, result: page_html(request, result, result.data['template'],
+                                                    'Subscribe Business'),
+    methods=['GET'], )
 def subscribe(request):
     result = ResponseResult()
     user = None
@@ -372,7 +414,8 @@ def subscribe(request):
         else:
             user = user[0]
     elif request.user.is_authenticated():
-        if isinstance(request.user.abstract_profile, Business) and request.user.BusinessCreateApplication.all():
+        if isinstance(request.user.abstract_profile,
+                      Business) and request.user.BusinessCreateApplication.all():
             user = request.user
         else:
             result.errors.append(RESPONSE_RESULT_ERROR_REDIRECT)

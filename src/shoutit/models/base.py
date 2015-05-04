@@ -13,8 +13,8 @@ from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from common.utils import date_unix, AllowedUsernamesValidator
-from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, \
-    UserType
+from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE,
+    UserType)
 from shoutit.controllers import email_controller
 
 
@@ -87,11 +87,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     Username, password and email are required. Other fields are optional.
     """
     username = models.CharField(
-        _('username'), max_length=30, unique=True,help_text=_(
+        _('username'), max_length=30, unique=True, help_text=_(
             'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
         validators=[
             validators.RegexValidator(
-                re.compile('[0-9a-zA-Z.]{2,30}'),_('Enter a valid username.'),'invalid'),
+                re.compile('[0-9a-zA-Z.]{2,30}'), _('Enter a valid username.'), 'invalid'),
             validators.MinLengthValidator(2),
             AllowedUsernamesValidator()
         ])
@@ -198,7 +198,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if not hasattr(self, '_linked_accounts'):
             self._linked_accounts = {
                 'facebook': True if (
-                hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
+                    hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
                 'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
             }
         return self._linked_accounts

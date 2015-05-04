@@ -22,7 +22,8 @@ class ProfileMiddleware(object):
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if settings.DEBUG:
             self.statsfile = os.path.join(settings.PROFILE_LOG_BASE, '.'.join(
-                [callback.__module__, callback.__name__, time.strftime("%Y%m%dT%H%M%S", time.gmtime()), 'prof']))
+                [callback.__module__, callback.__name__,
+                 time.strftime("%Y%m%dT%H%M%S", time.gmtime()), 'prof']))
             return self.prof.runcall(callback, request, *callback_args, **callback_kwargs)
 
     def get_group(self, file):
@@ -56,13 +57,11 @@ class ProfileMiddleware(object):
                 time = float(fields[2])
                 sum += time
                 file = fields[6].split(":")[0]
-
-                if not file in mystats:
+                if file not in mystats:
                     mystats[file] = 0
                 mystats[file] += time
-
                 group = self.get_group(file)
-                if not group in mygroups:
+                if group not in mygroups:
                     mygroups[group] = 0
                 mygroups[group] += time
 

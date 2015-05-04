@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from common.utils import process_tags
 from shoutit.controllers import stream_controller
 from shoutit.models import Shout, Category, Tag, PredefinedCity
-from elasticsearch_dsl import Q, F
+from elasticsearch_dsl import F
 import logging
 logger = logging.getLogger('shoutit.debug')
 

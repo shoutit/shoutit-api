@@ -19,7 +19,8 @@ def uuid_validator(uuid_string):
         return VR(False)
 
 
-def object_exists_validator(function, using_uuid, error_message='object does not exist', *args, **kwargs):
+def object_exists_validator(function, using_uuid, error_message='object does not exist', *args,
+                            **kwargs):
     try:
         if using_uuid:
             if not uuid_validator(args[0]):
@@ -35,7 +36,8 @@ def object_exists_validator(function, using_uuid, error_message='object does not
         return VR(False, messages=[('error', error_message)], errors=[RESPONSE_RESULT_ERROR_404])
 
 
-def form_validator(request, form_class, message='You have entered some invalid input.', initial=None):
+def form_validator(request, form_class, message='You have entered some invalid input.',
+                   initial=None):
     initial = initial or {}
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, initial=initial)
@@ -47,7 +49,8 @@ def form_validator(request, form_class, message='You have entered some invalid i
 
 
 def user_edit_profile_validator(request, username, email):
-    result = object_exists_validator(get_profile, False, _('User %(username)s does not exist.') % {'username': username}, username)
+    result = object_exists_validator(get_profile, False, _('User %(username)s does not exist.') % {
+        'username': username}, username)
     if result:
         profile = result.data
         if username == request.user.username or request.user.is_staff:
@@ -57,16 +60,19 @@ def user_edit_profile_validator(request, username, email):
             elif profile and isinstance(profile, Business):
                 result = form_validator(request, BusinessEditProfileForm, initial=init)
             else:
-                result = VR(False, messages=[('error', _('User %(username)s does not exist.') % {'username': username})],
+                result = VR(False, messages=[
+                    ('error', _('User %(username)s does not exist.') % {'username': username})],
                             errors=[RESPONSE_RESULT_ERROR_404])
             return result
         else:
-            return VR(False, messages=[('error', _("You don't have permissions to edit this profile."))])
+            return VR(False,
+                      messages=[('error', _("You don't have permissions to edit this profile."))])
     return result
 
 
 def share_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), exp_id)
+    result = object_exists_validator(shout_controller.get_post, True,
+                                     _('Experience dose not exist.'), exp_id)
     if result:
         experience = experience_controller.GetExperience(exp_id, request.user, detailed=True)
         if not experience.canShare:
@@ -75,9 +81,11 @@ def share_experience_validator(request, exp_id, *args, **kwargs):
 
 
 def experience_validator(request, *args, **kwargs):
-    exp_frm = form_validator(request, ExperienceForm, initial='initial' in kwargs and kwargs['initial'] or {})
+    exp_frm = form_validator(request, ExperienceForm,
+                             initial='initial' in kwargs and kwargs['initial'] or {})
     if not args and ('username' not in kwargs or not kwargs['username']):
-        extended_exp_frm = form_validator(request, CreateTinyBusinessForm, initial='initial' in kwargs and kwargs['initial'] or {})
+        extended_exp_frm = form_validator(request, CreateTinyBusinessForm,
+                                          initial='initial' in kwargs and kwargs['initial'] or {})
         exp_frm.form_errors.update(extended_exp_frm.form_errors)
         exp_frm.valid = exp_frm.valid and extended_exp_frm.valid
         exp_frm.messages = exp_frm.messages if exp_frm.messages else extended_exp_frm.messages
@@ -85,11 +93,13 @@ def experience_validator(request, *args, **kwargs):
 
 
 def experience_view_validator(request, exp_id, *args, **kwargs):
-    return object_exists_validator(experience_controller.GetExperience, True, _('Experience does not exist.'), exp_id, request.user, True)
+    return object_exists_validator(experience_controller.GetExperience, True,
+                                   _('Experience does not exist.'), exp_id, request.user, True)
 
 
 def edit_experience_validator(request, exp_id, *args, **kwargs):
-    result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), exp_id)
+    result = object_exists_validator(shout_controller.get_post, True,
+                                     _('Experience dose not exist.'), exp_id)
     if result.valid:
         experience = experience_controller.GetExperience(exp_id, request.user, detailed=True)
         if not experience.canEdit:
@@ -100,14 +110,17 @@ def edit_experience_validator(request, exp_id, *args, **kwargs):
 def comment_on_post_validator(request, post_id, form_class):
     result = form_validator(request, CommentForm)
     if result:
-        result = object_exists_validator(shout_controller.get_post, True, _('Experience dose not exist.'), post_id)
+        result = object_exists_validator(shout_controller.get_post, True,
+                                         _('Experience dose not exist.'), post_id)
     return result
 
 
 def delete_comment_validator(request, comment_id):
-    result = object_exists_validator(comment_controller.GetCommentByID, True, _('Comment dose not exist.'), comment_id)
+    result = object_exists_validator(comment_controller.GetCommentByID, True,
+                                     _('Comment dose not exist.'), comment_id)
     if result:
         comment = comment_controller.GetCommentByID(comment_id)
         if comment.user != request.user:
-            return VR(False, messages=[('error', _('You do not have permission to delete this comment'))])
+            return VR(False,
+                      messages=[('error', _('You do not have permission to delete this comment'))])
     return result

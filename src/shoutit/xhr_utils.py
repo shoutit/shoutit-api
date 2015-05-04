@@ -8,7 +8,7 @@ from django.utils.decorators import available_attrs
 from django.utils.functional import wraps
 from django.utils.translation import ugettext as _
 
-from common.constants import *
+from common.constants import *  # NOQA
 
 
 class XHRResult(object):
@@ -18,7 +18,8 @@ class XHRResult(object):
     form_errors = {}
     data = []
 
-    def __init__(self, code=ENUM_XHR_RESULT.SUCCESS, message='', form_errors=None, data=None, message_type='success'):
+    def __init__(self, code=ENUM_XHR_RESULT.SUCCESS, message='', form_errors=None, data=None,
+                 message_type='success'):
         self.code = code
         self.message = message
         self.form_errors = form_errors or {}
@@ -37,8 +38,9 @@ class XHRResult(object):
 
 
 def xhr_respond(code, message, errors=None, data=None, message_type='success'):
-    return HttpResponse(content=XHRResult(code, message, errors or {}, data or {}, message_type=message_type),
-                        content_type='application/json')
+    return HttpResponse(
+        content=XHRResult(code, message, errors or {}, data or {}, message_type=message_type),
+        content_type='application/json')
 
 
 def xhr_login_required(function=None):
@@ -63,12 +65,12 @@ def xhr_login_required(function=None):
             querystring['next'] = path
             login_url_parts[4] = querystring.urlencode(safe='/')
             return xhr_respond(ENUM_XHR_RESULT.REDIRECT, _("You are not signed in."),
-                               data={'link': urlparse.urlunparse(login_url_parts)}, message_type='error')
-
+                               data={'link': urlparse.urlunparse(login_url_parts)},
+                               message_type='error')
     return wrapper
 
 
-def redirect_to_modal_xhr(request,to, message, modal_key = None):
+def redirect_to_modal_xhr(request, to, message, modal_key=None):
     if 'HTTP_REFERER' in request.META:
         referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
         path = referer_parts[2]
@@ -90,40 +92,40 @@ def redirect_to_modal_xhr(request,to, message, modal_key = None):
     return xhr_respond(ENUM_XHR_RESULT.REDIRECT, message,
                        data=post_data, message_type='error')
 
-#def redirect_to_login_xhr(request):
-#	if 'HTTP_REFERER' in request.META:
-#		referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
-#		path = referer_parts[2]
-#		if referer_parts[3]:
-#			path += ';' + referer_parts[3]
-#		if referer_parts[4]:
-#			path += '?' + referer_parts[4]
-#		if referer_parts[5]:
-#			path += '#' + referer_parts[5]
-#	else:
-#		path = '/'
-#	login_url_parts = list(urlparse.urlparse(settings.LOGIN_URL))
-#	querystring = QueryDict(login_url_parts[4], mutable=True)
-#	querystring['next'] = path
-#	login_url_parts[4] = querystring.urlencode(safe='/')
-#	return xhr_respond(ENUM_XHR_RESULT.REDIRECT, "You are not signed in.",
-#					   data={'link': urlparse.urlunparse(login_url_parts)}, message_type='error')
-#
-#def redirect_to_activate_xhr(request):
-#	if 'HTTP_REFERER' in request.META:
-#		referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
-#		path = referer_parts[2]
-#		if referer_parts[3]:
-#			path += ';' + referer_parts[3]
-#		if referer_parts[4]:
-#			path += '?' + referer_parts[4]
-#		if referer_parts[5]:
-#			path += '#' + referer_parts[5]
-#	else:
-#		path = '/'
-#	activate_url_parts = list(urlparse.urlparse(settings.ACTIVATE_URL))
-#	querystring = QueryDict(activate_url_parts[4], mutable=True)
-#	querystring['next'] = path
-#	activate_url_parts[4] = querystring.urlencode(safe='/')
-#	return xhr_respond(ENUM_XHR_RESULT.REDIRECT, "You're not activated.",
-#					   data={'link': urlparse.urlunparse(activate_url_parts)}, message_type='error')
+    # def redirect_to_login_xhr(request):
+    #     if 'HTTP_REFERER' in request.META:
+    #         referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
+    #         path = referer_parts[2]
+    #         if referer_parts[3]:
+    #             path += ';' + referer_parts[3]
+    #         if referer_parts[4]:
+    #             path += '?' + referer_parts[4]
+    #         if referer_parts[5]:
+    #             path += '#' + referer_parts[5]
+    #     else:
+    #         path = '/'
+    #     login_url_parts = list(urlparse.urlparse(settings.LOGIN_URL))
+    #     querystring = QueryDict(login_url_parts[4], mutable=True)
+    #     querystring['next'] = path
+    #     login_url_parts[4] = querystring.urlencode(safe='/')
+    #     return xhr_respond(ENUM_XHR_RESULT.REDIRECT, "You are not signed in.",
+    #                        data={'link': urlparse.urlunparse(login_url_parts)}, message_type='error')
+    #
+    # def redirect_to_activate_xhr(request):
+    #     if 'HTTP_REFERER' in request.META:
+    #         referer_parts = urlparse.urlparse(request.META['HTTP_REFERER'])
+    #         path = referer_parts[2]
+    #         if referer_parts[3]:
+    #             path += ';' + referer_parts[3]
+    #         if referer_parts[4]:
+    #             path += '?' + referer_parts[4]
+    #         if referer_parts[5]:
+    #             path += '#' + referer_parts[5]
+    #     else:
+    #         path = '/'
+    #     activate_url_parts = list(urlparse.urlparse(settings.ACTIVATE_URL))
+    #     querystring = QueryDict(activate_url_parts[4], mutable=True)
+    #     querystring['next'] = path
+    #     activate_url_parts[4] = querystring.urlencode(safe='/')
+    #     return xhr_respond(ENUM_XHR_RESULT.REDIRECT, "You're not activated.",
+    #                        data={'link': urlparse.urlunparse(activate_url_parts)}, message_type='error')

@@ -39,8 +39,7 @@ def get_post(post_id, find_muted=False, find_expired=False):
             |
             ((Q(shout__expiry_date__isnull=True, date_published__range=(begin, today))
 
-              | Q(shout__expiry_date__isnull=False, date_published__lte=F('shout__expiry_date'))
-             )
+              | Q(shout__expiry_date__isnull=False, date_published__lte=F('shout__expiry_date')))
              & (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)))
         ).select_related()
     if post:
@@ -93,8 +92,9 @@ def post_request(name, text, price, latitude, longitude, category, tags, shouter
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
                  is_sss=False, exp_days=None):
     return create_shout(POST_TYPE_REQUEST, name, text, price, latitude, longitude, category, tags,
-                 shouter, country, city, address, currency, images, videos, date_published, is_sss,
-                 exp_days)
+                        shouter, country, city, address, currency, images, videos, date_published,
+                        is_sss,
+                        exp_days)
 
 
 def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city,
@@ -102,8 +102,9 @@ def post_offer(name, text, price, latitude, longitude, category, tags, shouter, 
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
                is_sss=False, exp_days=None):
     return create_shout(POST_TYPE_OFFER, name, text, price, latitude, longitude, category, tags,
-                 shouter, country, city, address, currency, images, videos, date_published, is_sss,
-                 exp_days)
+                        shouter, country, city, address, currency, images, videos, date_published,
+                        is_sss,
+                        exp_days)
 
 
 # todo: handle exception on each step and in case of errors, rollback!
@@ -111,7 +112,6 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
                  country, city, address="", currency=DEFAULT_CURRENCY_CODE, images=None,
                  videos=None,
                  date_published=None, is_sss=False, exp_days=None):
-
     item = item_controller.create_item(
         name=name, price=price, currency=currency, description=text, images=images, videos=videos)
 

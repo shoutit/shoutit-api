@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw
 
 # QRCode for Python
 #
-#Ported from the Javascript library by Sam Curren
+# Ported from the Javascript library by Sam Curren
 #
 #QRCode for Javascript
 #http://d-project.googlecode.com/svn/trunk/misc/qrcode/js/qrcode.js
@@ -85,7 +85,8 @@ class QRCode:
             self.setupTypeNumber(test)
 
         if self.dataCache is None:
-            self.dataCache = QRCode.createData(self.typeNumber, self.errorCorrectLevel, self.dataList)
+            self.dataCache = QRCode.createData(self.typeNumber, self.errorCorrectLevel,
+                                               self.dataList)
         self.mapData(self.dataCache, maskPattern)
 
     def setupPositionProbePattern(self, row, col):
@@ -285,7 +286,8 @@ class QRCode:
             totalDataCount += rsBlocks[i].dataCount
 
         if buffer.getLengthInBits() > totalDataCount * 8:
-            raise Exception("code length overflow. (%d > %d)" % (buffer.getLengthInBits(), totalDataCount * 8))
+            raise Exception(
+                "code length overflow. (%d > %d)" % (buffer.getLengthInBits(), totalDataCount * 8))
 
         #// end code
         if buffer.getLengthInBits() + 4 <= totalDataCount * 8:
@@ -473,7 +475,8 @@ class QRUtil(object):
         if maskPattern == QRMaskPattern.PATTERN001: return i % 2 == 0
         if maskPattern == QRMaskPattern.PATTERN010: return j % 3 == 0
         if maskPattern == QRMaskPattern.PATTERN011: return (i + j) % 3 == 0
-        if maskPattern == QRMaskPattern.PATTERN100: return (math.floor(i / 2) + math.floor(j / 3) ) % 2 == 0
+        if maskPattern == QRMaskPattern.PATTERN100: return (math.floor(i / 2) + math.floor(
+            j / 3) ) % 2 == 0
         if maskPattern == QRMaskPattern.PATTERN101: return (i * j) % 2 + (i * j) % 3 == 0
         if maskPattern == QRMaskPattern.PATTERN110: return ( (i * j) % 2 + (i * j) % 3) % 2 == 0
         if maskPattern == QRMaskPattern.PATTERN111: return ( (i * j) % 3 + (i + j) % 2) % 2 == 0
@@ -859,7 +862,8 @@ class QRRSBlock:
     def getRSBlocks(typeNumber, errorCorrectLevel):
         rsBlock = QRRSBlock.getRsBlockTable(typeNumber, errorCorrectLevel)
         if not rsBlock:
-            raise Exception("bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel)
+            raise Exception(
+                "bad rs block @ typeNumber:" + typeNumber + "/errorCorrectLevel:" + errorCorrectLevel)
 
         length = len(rsBlock) / 3
 

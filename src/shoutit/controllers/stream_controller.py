@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
-from django.db.models.query_utils import Q
-
-from common.constants import DEFAULT_PAGE_SIZE, POST_TYPE_EXPERIENCE, \
-    POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE, Stream_TYPE_TAG, \
-    EVENT_TYPE_LISTEN_TO_USER, EVENT_TYPE_LISTEN_TO_TAG
+from common.constants import (DEFAULT_PAGE_SIZE,
+                              POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE,
+                              Stream_TYPE_TAG,
+                              EVENT_TYPE_LISTEN_TO_USER, EVENT_TYPE_LISTEN_TO_TAG)
 from common.utils import process_tags
 from shoutit.controllers import notifications_controller, event_controller
 from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
@@ -38,12 +37,14 @@ def get_shouts_by_pks(pks):
 
 
 # todo: use country, city, etc
-def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_expired=False, country=None, city=None):
+def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_expired=False,
+                      country=None, city=None):
     """
     return the shouts (offers/requests) in a stream
     """
     shout_types = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
-    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by('-date_published').values_list('id', flat=Shout)[start_index:end_index]
+    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by(
+        '-date_published').values_list('id', flat=Shout)[start_index:end_index]
     shouts = list(Shout.objects.filter(id__in=list(post_ids_qs)).order_by('-date_published'))
     return shouts
 
@@ -53,7 +54,8 @@ def get_stream_shouts_qs(stream, shout_type=None):
     return the Shouts Queryset (offers/requests) in a stream
     """
     types = post_types[shout_type]
-    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream).order_by('-date_published')
+    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream).order_by(
+        '-date_published')
     return qs
 
 
@@ -153,7 +155,7 @@ def remove_listener_from_stream(listener, stream):
     """
     remove a stream from user listening
     """
-    listen = Listen.objects.get(listener=listener, stream=stream).delete()
+    Listen.objects.filter(listener=listener, stream=stream).delete()
 
 
 def filter_posts_qs(qs, post_type=None):

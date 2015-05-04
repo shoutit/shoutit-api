@@ -6,7 +6,8 @@ from django.conf import settings
 
 
 class DBCLUser(UUIDModel):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True, db_index=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True,
+                                db_index=True)
 
     class Meta(UUIDModel.Meta):
         abstract = True
@@ -29,6 +30,8 @@ def cl_user(self):
     except CLUser.DoesNotExist:
         self._cl_user = None
     return self._cl_user
+
+
 User.add_to_class('cl_user', cl_user)
 
 
@@ -41,6 +44,8 @@ def db_user(self):
     except DBUser.DoesNotExist:
         self._db_user = None
     return self._db_user
+
+
 User.add_to_class('db_user', db_user)
 
 
@@ -54,6 +59,8 @@ def cl_ad_id(self):
         self._cl_ad_id = None
 
     return self._cl_ad_id
+
+
 User.add_to_class('cl_ad_id', cl_ad_id)
 
 

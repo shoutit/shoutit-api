@@ -6,7 +6,7 @@ import multiprocessing
 # include src dir in sys.path a.k.a PYTHONPATH to be able to use env_settings.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from shoutit.settings_env import *
+from shoutit.settings_env import *  # NOQA
 
 if LOCAL:
     bind = '0.0.0.0:8000'

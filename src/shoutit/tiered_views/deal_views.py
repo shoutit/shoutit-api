@@ -12,14 +12,15 @@ from common.constants import ENUM_XHR_RESULT, DEFAULT_PAGE_SIZE
 from shoutit.models import User
 from shoutit.models import Business, Deal, ServiceBuy
 from shoutit.forms import DealForm
-from shoutit.tiered_views.renderers import get_initial_json_response, json_data_renderer, deals_stream_json
+from shoutit.tiered_views.renderers import (get_initial_json_response, json_data_renderer,
+                                            deals_stream_json)
 from shoutit.tiered_views.validators import object_exists_validator
 from shoutit.xhr_utils import xhr_respond
 from renderers import page_html
 from shoutit.controllers import payment_controller, user_controller, deal_controller
 from validators import form_validator
-from shoutit.tiers import non_cached_view, ResponseResult, ValidationResult, \
-    RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN
+from shoutit.tiers import (non_cached_view, ResponseResult, ValidationResult,
+                           RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN)
 from shoutit.permissions import PERMISSION_SHOUT_DEAL
 
 
@@ -51,7 +52,8 @@ def deals_renderer_json(request, result, *args, **kwargs):
         if 'deals' in result.data:
             for deal in result.data['deals']:
                 data['deals'].append(deal_to_dict(deal))
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, result.messages and result.messages[0][1] or '', data=data, message_type='success')
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, result.messages and result.messages[0][1] or '',
+                           data=data, message_type='success')
     else:
         return get_initial_json_response(request, result)
 
@@ -64,7 +66,8 @@ def deal_renderer_json(request, result, *args, **kwargs):
         for k in ['user_bought_deal', 'available_count', 'buyers_count', 'is_closed']:
             if k in result.data:
                 data[k] = result.data[k]
-        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, result.messages and result.messages[0][1] or '', data=data, message_type='success')
+        return xhr_respond(ENUM_XHR_RESULT.SUCCESS, result.messages and result.messages[0][1] or '',
+                           data=data, message_type='success')
     else:
         return get_initial_json_response(request, result)
 
@@ -78,15 +81,18 @@ def shout_deal_validator(request):
         bp = Business.objects.get(user__pk=request.user.pk)
         concurrent_deals = deal_controller.GetConcurrentDeals(bp)
         if False:  # concurrent_deals:
-            service_buy = ServiceBuy.objects.GetUserServiceBuyRemaining(request.user, CONCURRENT_DEALS_SERVICE)
+            service_buy = ServiceBuy.objects.GetUserServiceBuyRemaining(request.user,
+                                                                        CONCURRENT_DEALS_SERVICE)
             if not service_buy or service_buy[0]['buys_count'] - service_buy[0]['used_count'] < 1:
                 return ValidationResult(False, {}, [RESPONSE_RESULT_ERROR_BAD_REQUEST],
-                                        [('error', _('You can\'t have concurrent deals, you must buy that service.'))])
+                                        [('error', _(
+                                            'You can\'t have concurrent deals, you must buy that service.'))])
     return result
 
 
 @non_cached_view(
-    html_renderer=lambda request, result: page_html(request, result, 'shout_deal.html', _('Shout a deal')),
+    html_renderer=lambda request, result: page_html(request, result, 'shout_deal.html',
+                                                    _('Shout a deal')),
     json_renderer=deal_renderer_json,
     permissions_required=[PERMISSION_SHOUT_DEAL],
     login_required=True,
@@ -128,7 +134,8 @@ def shout_deal(request):
 
 @non_cached_view(
     json_renderer=json_data_renderer,
-    html_renderer=lambda request, result: page_html(request, result, 'voucher_control.html', _('Shout a deal')),
+    html_renderer=lambda request, result: page_html(request, result, 'voucher_control.html',
+                                                    _('Shout a deal')),
     login_required=True,
     methods=['GET'],
 )
@@ -153,8 +160,9 @@ def is_voucher_valid(request):
 
 
 @non_cached_view(methods=['GET'], login_required=True, json_renderer=json_data_renderer,
-    html_renderer=lambda request, result: page_html(request, result, 'voucher_control.html', _('Shout a deal'))
-)
+                 html_renderer=lambda request, result: page_html(request, result,
+                                                                 'voucher_control.html',
+                                                                 _('Shout a deal')))
 def invalidate_voucher(request):
     result = ResponseResult()
     if 'code' in request.GET and request.GET['code']:
@@ -178,7 +186,8 @@ def invalidate_voucher(request):
 
 @non_cached_view(
     methods=['GET'],
-    validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, True, _('Deal does not exist.'), deal_id),
+    validator=lambda request, deal_id: object_exists_validator(deal_controller.GetDeal, True,
+                                                               _('Deal does not exist.'), deal_id),
     json_renderer=deal_renderer_json,
     html_renderer=lambda request, result, deal_id: page_html(request, result, 'deal.html'),
 )
@@ -209,24 +218,31 @@ def close_deal(request, deal_id):
 )
 def view_deals(request):
     result = ResponseResult()
-    result.data['deals'] = deal_controller.GetOpenDeals(request.user.is_authenticated() and request.user or None,
-                                                        country='user_country' in request.session and request.session[
-                                                            'user_country'] or '',
-                                                        city='user_city' in request.session and request.session[
-                                                            'user_city'] or '')
+    result.data['deals'] = deal_controller.GetOpenDeals(
+        request.user.is_authenticated() and request.user or None,
+        country='user_country' in request.session and request.session[
+            'user_country'] or '',
+        city='user_city' in request.session and request.session[
+            'user_city'] or '')
     return result
 
 
 @non_cached_view(html_renderer=lambda request, result: page_html(request, result, 'paypal.html'))
 def paypal(request):
     result = ResponseResult()
-    result.data['form'] = payment_controller.GetPaypalFormForDeal(Deal.objects.get(pk=17407), User.objects.get(username='mpcabd'), 3)
-    result.data['sform'] = payment_controller.GetPaypalFormForSubscription(User.objects.get(username='mrabooode'))
-    result.data['cpsp_dict'] = payment_controller.GetCPSPFormForDeal(Deal.objects.get(pk=17407), User.objects.get(username='mpcabd'), 3)
+    result.data['form'] = payment_controller.GetPaypalFormForDeal(Deal.objects.get(pk=17407),
+                                                                  User.objects.get(
+                                                                      username='mpcabd'), 3)
+    result.data['sform'] = payment_controller.GetPaypalFormForSubscription(
+        User.objects.get(username='mrabooode'))
+    result.data['cpsp_dict'] = payment_controller.GetCPSPFormForDeal(Deal.objects.get(pk=17407),
+                                                                     User.objects.get(
+                                                                         username='mpcabd'), 3)
     return result
 
 
-@non_cached_view(html_renderer=lambda request, result, *args, **kwargs: page_html(request, result, 'paypal.html'))
+@non_cached_view(html_renderer=lambda request, result, *args, **kwargs: page_html(request, result,
+                                                                                  'paypal.html'))
 @csrf_exempt
 def cpsp_action(request, action):
     regex = re.compile(r'(\w+)_(\w+)_U_([^_]+)(?:_x_(\d+))?')
@@ -238,16 +254,20 @@ def cpsp_action(request, action):
             item_type, item_id, user_id, amount = match.groups()
             if request.POST['STATUS'] in ['5', '9']:
                 if item_type == 'D':
-                    payment_controller.PayForDeal(user_id, item_id, amount, transaction_data, transaction_identifier)
+                    payment_controller.PayForDeal(user_id, item_id, amount, transaction_data,
+                                                  transaction_identifier)
                 elif item_id == 'SERVICE':
-                    payment_controller.PayForService(user_id, item_id, amount, transaction_data, transaction_identifier)
+                    payment_controller.PayForService(user_id, item_id, amount, transaction_data,
+                                                     transaction_identifier)
                 else:
                     pass
             elif request.POST['STATUS'] in ['6', '7', '8']:
                 if item_type == 'D':
-                    payment_controller.CancelPaymentForDeal(user_id, item_id, transaction_data, transaction_identifier)
+                    payment_controller.CancelPaymentForDeal(user_id, item_id, transaction_data,
+                                                            transaction_identifier)
                 elif item_id == 'SERVICE':
-                    payment_controller.CancelPaymentForService(user_id, item_id, transaction_data, transaction_identifier)
+                    payment_controller.CancelPaymentForService(user_id, item_id, transaction_data,
+                                                               transaction_identifier)
                 else:
                     pass
     print action, dict(request.POST), dict(request.GET)
@@ -269,6 +289,7 @@ def deals_stream(request, business_name, page_num=None):
     start_index = DEFAULT_PAGE_SIZE * (page_num - 1)
     end_index = DEFAULT_PAGE_SIZE * page_num
 
-    result.data['deals'] = deal_controller.GetOpenDeals(request.user.is_authenticated() and request.user or None, business, start_index,
-                                                        end_index)
+    result.data['deals'] = deal_controller.GetOpenDeals(
+        request.user.is_authenticated() and request.user or None, business, start_index,
+        end_index)
     return result

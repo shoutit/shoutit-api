@@ -8,7 +8,8 @@ from django.conf import settings
 from elasticsearch import RequestError
 from elasticsearch_dsl import DocType, String, Date, Double, Integer
 
-from common.constants import POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType
+from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST,
+    POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType)
 from common.utils import date_unix
 from shoutit.models import Tag
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
@@ -17,7 +18,8 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PostManager(models.Manager):
-    def get_valid_posts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
+    def get_valid_posts(self, types=None, country=None, city=None, get_expired=False,
+                        get_muted=False):
 
         qs = self
         qs = qs.distinct().filter(is_disabled=False)
@@ -58,37 +60,44 @@ class PostManager(models.Manager):
 
 
 class ShoutManager(PostManager):
-    def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
+    def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False,
+                         get_muted=False):
         if not types:
             types = [POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]
         types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]))
-        return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+        return PostManager.get_valid_posts(self, types, country=country, city=city,
+                                           get_expired=get_expired, get_muted=get_muted)
 
     def filter_expired_out(self, qs):
         today = datetime.today()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
-        return qs.filter(Q(expiry_date__isnull=True, date_published__range=(day, today)) | Q(expiry_date__isnull=False, expiry_date__gte=today))
+        return qs.filter(Q(expiry_date__isnull=True, date_published__range=(day, today)) | Q(
+            expiry_date__isnull=False, expiry_date__gte=today))
 
     def get_valid_requests(self, country=None, city=None, get_expired=False, get_muted=False):
         types = [POST_TYPE_REQUEST]
-        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+        return self.get_valid_shouts(types=types, country=country, city=city,
+                                     get_expired=get_expired, get_muted=get_muted)
 
     def get_valid_offers(self, country=None, city=None, get_expired=False, get_muted=False):
         types = [POST_TYPE_OFFER]
-        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired, get_muted=get_muted)
+        return self.get_valid_shouts(types=types, country=country, city=city,
+                                     get_expired=get_expired, get_muted=get_muted)
 
 
 class EventManager(PostManager):
     def get_valid_events(self, country=None, city=None, get_muted=False):
-        return PostManager.get_valid_posts(self, types=[POST_TYPE_EVENT], country=country, city=city, get_expired=True, get_muted=get_muted)
+        return PostManager.get_valid_posts(self, types=[POST_TYPE_EVENT], country=country,
+                                           city=city, get_expired=True, get_muted=get_muted)
 
 
 class Post(UUIDModel, APIModelMixin):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
 
     text = models.TextField(max_length=2000, default='', db_index=True, blank=True)
-    type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True, choices=PostType.choices)
+    type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True,
+                               choices=PostType.choices)
     date_published = models.DateTimeField(auto_now_add=True, db_index=True)
 
     muted = models.BooleanField(default=False, db_index=True)
@@ -147,7 +156,8 @@ class Shout(Post):
     tags = ArrayField(Tag._meta.get_field('name'))
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
-    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
+    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True,
+                                blank=True)
     renewal_count = models.PositiveSmallIntegerField(default=0)
 
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
@@ -187,8 +197,9 @@ class Shout(Post):
     @property
     def is_expired(self):
         now = datetime.now()
-        if (not self.expiry_date and now > self.date_published + timedelta(days=int(settings.MAX_EXPIRY_DAYS))) or (
-            self.expiry_date and now > self.expiry_date):
+        if (not self.expiry_date and now > self.date_published + timedelta(
+                days=int(settings.MAX_EXPIRY_DAYS))) or (
+                    self.expiry_date and now > self.expiry_date):
             return True
 
     @property
@@ -264,7 +275,7 @@ class Video(UUIDModel):
 
 
 # class DealManager(ShoutManager):
-#     def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
+# def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
 #         return ShoutManager.get_valid_shouts(self, [POST_TYPE_DEAL], country=country, city=city, get_expired=get_expired, get_muted=get_muted)
 #
 #

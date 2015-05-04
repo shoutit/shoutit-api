@@ -149,7 +149,8 @@ def SendBuyOfferEmail(shout, buyer):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, from_email, [to], headers={'Reply-To': buyer.email})
+    msg = EmailMultiAlternatives(subject, text_message, from_email, [to],
+                                 headers={'Reply-To': buyer.email})
     msg.attach_alternative(html_message, "text/html")
 
     msg.send()
@@ -158,7 +159,8 @@ def SendBuyOfferEmail(shout, buyer):
 def SendSellOfferEmail(shout, seller):
     subject = u'[ShoutIt] %s has %s and willing to sell it to you' % (seller.username, shout.name)
     shout_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
-    seller_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % seller.username)
+    seller_link = 'https://%s%s' % (
+        settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % seller.username)
     mute_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = shout.user.email
@@ -185,7 +187,8 @@ def SendSellOfferEmail(shout, seller):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, from_email, [to], headers={'Reply-To': seller.email})
+    msg = EmailMultiAlternatives(subject, text_message, from_email, [to],
+                                 headers={'Reply-To': seller.email})
     msg.attach_alternative(html_message, "text/html")
     msg.send()
 
@@ -208,26 +211,30 @@ def send_message_email(message):
 
     from_name = from_user.name
     from_email = settings.DEFAULT_FROM_EMAIL
-    from_link = "" #utils.user_link(from_user)
+    from_link = ""  # utils.user_link(from_user)
 
     shout_name = shout.item.name
-    shout_link = "" #utils.shout_link(shout)
+    shout_link = ""  # utils.shout_link(shout)
 
-    subject = _('[Shoutit] %(name)s sent you a message regarding: %(about)s') % {'name': from_user.first_name, 'about': shout_name}
+    subject = _('[Shoutit] %(name)s sent you a message regarding: %(about)s') % {
+        'name': from_user.first_name, 'about': shout_name}
 
     reply_to_email = from_user.email
 
     if to_user.cl_user:
         from shoutit.models import DBCLConversation
+
         subject = shout_name
         ref = "%s-%s" % (to_user.cl_ad_id, from_user.pk)
         try:
             DBCLConversation.objects.get(ref=ref)
         except DBCLConversation.DoesNotExist:
-            dbcl_conversation = DBCLConversation(ref=ref, from_user=from_user, to_user=to_user, shout=shout)
+            dbcl_conversation = DBCLConversation(ref=ref, from_user=from_user, to_user=to_user,
+                                                 shout=shout)
             dbcl_conversation.save()
 
-        msg = EmailMultiAlternatives(subject, "", "%s <%s>" % (from_name, settings.EMAIL_HOST_USER), [to_email])
+        msg = EmailMultiAlternatives(subject, "", "%s <%s>" % (from_name, settings.EMAIL_HOST_USER),
+                                     [to_email])
         html_message = """
         <p>%s</p>
         <br>
@@ -254,7 +261,8 @@ def send_message_email(message):
         text_context = Context(context)
         text_message = text_template.render(text_context)
 
-        msg = EmailMultiAlternatives(subject, text_message, from_email, [to_email], headers={'Reply-To': reply_to_email})
+        msg = EmailMultiAlternatives(subject, text_message, from_email, [to_email],
+                                     headers={'Reply-To': reply_to_email})
         msg.attach_alternative(html_message, "text/html")
         msg.send()
 
@@ -312,7 +320,8 @@ def SendBusinessDealCancel(deal):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [deal.Business.email])
+    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL,
+                                 [deal.Business.email])
     msg.attach_alternative(html_message, "text/html")
     msg.send()
 
@@ -422,7 +431,8 @@ def SendBusinessBuyersDocument(deal, document):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [deal.Business.user.email])
+    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL,
+                                 [deal.Business.user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.attach('%s_vouchers.pdf' % deal_name.replace(' ', '_'), document, 'application/pdf')
     msg.send()
@@ -452,7 +462,8 @@ def SendUserDealVoucher(buy, voucher):
     })
     text_message = text_template.render(text_context)
 
-    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [buy.user.email])
+    msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL,
+                                 [buy.user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.attach('%s_vouchers.pdf' % deal_name.replace(' ', '_'), voucher, 'application/pdf')
     msg.send()
@@ -467,12 +478,14 @@ def SendInvitationEmail(from_user, names_emails_dict):
         context = Context({
             'from_name': from_user.get_full_name(),
             'from_email': from_user.email,
-            'from_link': 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % from_user.pk),
+            'from_link': 'https://%s%s' % (
+                settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % from_user.pk),
             'to_name': name,
         })
         html_message = html_template.render(context)
         text_message = text_template.render(context)
-        msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, ['%s <%s>' % (name, email)])
+        msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL,
+                                     ['%s <%s>' % (name, email)])
         msg.attach_alternative(html_message, "text/html")
         messages.append(msg)
     connection = get_connection()

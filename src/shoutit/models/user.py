@@ -4,10 +4,11 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 import logging
 from common.constants import (
-    DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG,TOKEN_TYPE_EMAIL)
+    DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG, TOKEN_TYPE_EMAIL)
 from shoutit.models import ConfirmToken
 from shoutit.models.base import UUIDModel
 from shoutit.models.stream import StreamMixin, Listen
+
 logger = logging.getLogger('shoutit.debug')
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')

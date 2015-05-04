@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from django.core.management.base import BaseCommand
 from shoutit.controllers import tag_controller
-from shoutit.models import *
+from shoutit.models import *  # NOQA
 from rest_framework.authtoken.models import Token
 from provider.oauth2.models import Client
 
@@ -134,8 +134,9 @@ class Command(BaseCommand):
             ('Baby items', 'baby-items', 'baby-gear', 'baby-toys', 'feeding', 'nursery-furniture',
              'stroller', 'car-seat'),
             (
-            'Books', 'books', 'audiobooks', 'book-accessories', 'children-books', 'digital/E-books',
-            'fiction', 'nonfiction', 'textbooks'),
+                'Books', 'books', 'audiobooks', 'book-accessories', 'children-books',
+                'digital/E-books',
+                'fiction', 'nonfiction', 'textbooks'),
             ('Business & Industrial', 'business-industrial', 'agriculture-forestry',
              'business-for-sale', 'commercial-printing',
              'copy-machines', 'construction', 'electrical-equipment', 'food-beverage',
@@ -166,7 +167,8 @@ class Command(BaseCommand):
             ('Gaming ', 'gaming', 'gaming-accessories', 'gaming-merchandise', 'gaming-system',
              'video-games'),
             (
-            'Home Appliances', 'outdoor-appliances', 'kitchen-appliances ', 'bathroom-appliances '),
+                'Home Appliances', 'outdoor-appliances', 'kitchen-appliances ',
+                'bathroom-appliances '),
             ('Hotels', 'hotels', '5-star', '4-star', '3-star', '2-star', 'hotel-apartments'),
             ('Jewelry & Watches', 'jewelry-watches', 'diamonds-gems', 'mens-jewelry', 'watches',
              'womens-jewelry'),

@@ -129,4 +129,3 @@ class BusinessConfirmation(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='BusinessConfirmations')
     Files = models.ManyToManyField('shoutit.StoredFile', related_name='Confirmation')
     DateSent = models.DateTimeField(auto_now_add=True)
-

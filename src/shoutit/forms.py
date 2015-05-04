@@ -20,7 +20,8 @@ class RecoverForm(forms.Form):
     username_or_email = forms.CharField(label=_('Username or Email'), max_length=254, min_length=2)
 
     def clean(self):
-        if not user_controller.get_profile(self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(
+        if not user_controller.get_profile(
+                self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(
                 self.data['username_or_email'].strip()):
             raise ValidationError(_('Invalid credentials.'))
         return self.cleaned_data
@@ -39,8 +40,10 @@ class BusinessEditProfileForm(forms.Form):
     mobile = forms.CharField(label=_('Phone'), max_length=20, min_length=3, required=False)
     website = forms.CharField(label=_('Website'), required=False)
 
-    password = forms.CharField(label=_('New password'), widget=forms.PasswordInput(), required=False)
-    password_confirm = forms.CharField(label=_('Confirm new password'), widget=forms.PasswordInput(), required=False)
+    password = forms.CharField(label=_('New password'), widget=forms.PasswordInput(),
+                               required=False)
+    password_confirm = forms.CharField(label=_('Confirm new password'),
+                                       widget=forms.PasswordInput(), required=False)
 
     bio = forms.CharField(label=_('bio'), widget=forms.Textarea(), max_length=512, required=False)
 
@@ -64,11 +67,12 @@ class CreateTinyBusinessForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(CreateTinyBusinessForm, self).__init__(*args, **kwargs)
         if self.initial is not None:
-            if 'name' in self.initial and self.initial['name'] and len(self.initial['name'].strip()):
+            if 'name' in self.initial and self.initial['name'] and len(
+                    self.initial['name'].strip()):
                 self.fields['name'].widget.attrs['disabled'] = True
-            if 'email' in self.initial and self.initial['email'] and len(self.initial['email'].strip()):
+            if 'email' in self.initial and self.initial['email'] and len(
+                    self.initial['email'].strip()):
                 self.fields['email'].widget.attrs['disabled'] = True
-
 
     name = forms.CharField(label=_('name'))
     category = forms.ChoiceField(
@@ -85,17 +89,18 @@ class CreateTinyBusinessForm(forms.Form):
 
 
 class BusinessSignUpForm(CreateTinyBusinessForm):
-    #	name = forms.CharField(label=_('name'))
-    #	username = forms.CharField(label=_('Username'),required=False)
+    # name = forms.CharField(label=_('name'))
+    # username = forms.CharField(label=_('Username'),required=False)
     email = forms.EmailField(label=_('Email'))
     phone = forms.CharField(label=_('Phone'), max_length=20, min_length=3)
     website = forms.CharField(label=_('Website'))
-    description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=200, required=False)
+    description = forms.CharField(label=_('Description'), widget=forms.Textarea(), max_length=200,
+                                  required=False)
 
-    #	location = forms.CharField(label=_('Location'))
-    #	country = forms.CharField(label=_('country'))
-    #	city = forms.CharField(label=_('City'))
-    #	address = forms.CharField(label=_('Address'), required = False)
+    # location = forms.CharField(label=_('Location'))
+    # country = forms.CharField(label=_('country'))
+    # city = forms.CharField(label=_('City'))
+    # address = forms.CharField(label=_('Address'), required = False)
 
     def clean_email(self):
         email = self.data['email'].strip()
@@ -176,7 +181,8 @@ class StartBusinessForm(forms.Form):
         if not username or username == '':
             return username
         if not re.search(r'^\w+$', username):
-            raise forms.ValidationError(_('Username can only contain alphanumeric characters and the underscore.'))
+            raise forms.ValidationError(
+                _('Username can only contain alphanumeric characters and the underscore.'))
         try:
             User.objects.get(username=username)
         except ObjectDoesNotExist:
@@ -212,19 +218,24 @@ class DealForm(forms.Form):
 
     def clean_original_price(self):
         if 'original_price' in self.cleaned_data:
-            if 'price' in self.cleaned_data and self.cleaned_data['original_price'] < self.cleaned_data['price']:
-                raise forms.ValidationError(_('Original price can\'t be less than the price itself.'))
+            if 'price' in self.cleaned_data and self.cleaned_data['original_price'] < \
+                    self.cleaned_data['price']:
+                raise forms.ValidationError(
+                    _('Original price can\'t be less than the price itself.'))
             return self.cleaned_data['original_price']
         return None
 
     def clean_max_buyers(self):
-        if 'max_buyers' in self.cleaned_data and 'min_buyers' in self.cleaned_data and self.cleaned_data['max_buyers'] and \
+        if 'max_buyers' in self.cleaned_data and 'min_buyers' in self.cleaned_data and \
+                self.cleaned_data['max_buyers'] and \
                         self.cleaned_data['max_buyers'] < self.cleaned_data['min_buyers']:
-            raise forms.ValidationError(_('Maximum number of buyres can\'t be less than the minimum number of buyers.'))
+            raise forms.ValidationError(
+                _('Maximum number of buyres can\'t be less than the minimum number of buyers.'))
         return 'max_buyers' in self.cleaned_data and self.cleaned_data['max_buyers'] or None
 
     def clean_expiry_date(self):
-        expiry_date = 'expiry_date' in self.cleaned_data and self.cleaned_data['expiry_date'] or None
+        expiry_date = 'expiry_date' in self.cleaned_data and self.cleaned_data[
+            'expiry_date'] or None
         if expiry_date and expiry_date < datetime.now():
             raise forms.ValidationError(_('Expiry date can\'t be in the past.'))
         return expiry_date

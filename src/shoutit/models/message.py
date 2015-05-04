@@ -8,7 +8,8 @@ from datetime import datetime
 from django.db import models, IntegrityError
 from django.conf import settings
 
-from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
+from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, \
+    MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
@@ -22,7 +23,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     """
     type = models.SmallIntegerField(choices=ConversationType.choices, blank=False)
     users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations2')
-    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.ConversationDelete', related_name='deleted_conversations2')
+    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.ConversationDelete',
+                                        related_name='deleted_conversations2')
     last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True)
 
     def __unicode__(self):
@@ -81,13 +83,15 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         # todo: find more efficient way
         for message in self.messages2.all():
             try:
-                MessageRead.objects.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
+                MessageRead.objects.create(user=user, message_id=message.id,
+                                           conversation_id=message.conversation.id)
             except IntegrityError:
                 pass
 
     def mark_as_unread(self, user):
         try:
-            MessageRead.objects.get(user=user, message_id=self.last_message.id, conversation_id=self.id).delete()
+            MessageRead.objects.get(user=user, message_id=self.last_message.id,
+                                    conversation_id=self.id).delete()
         except MessageRead.DoesNotExist:
             pass
 
@@ -118,13 +122,16 @@ class Message(UUIDModel):
     """
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages2')
-    read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageRead', related_name='read_messages2')
-    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageDelete', related_name='deleted_messages2')
+    read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageRead',
+                                     related_name='read_messages2')
+    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageDelete',
+                                        related_name='deleted_messages2')
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")
 
     def __unicode__(self):
-        return "%s c at:%s" % (self.text[:30] + '...' if self.text else '<attachment>', self.created_at_unix)
+        return "%s c at:%s" % (
+        self.text[:30] + '...' if self.text else '<attachment>', self.created_at_unix)
 
     @property
     def attachments(self):
@@ -135,7 +142,8 @@ class Message(UUIDModel):
         return self.conversation.contributors
 
     def is_read(self, user):
-        return MessageRead.objects.filter(user=user, message=self, conversation=self.conversation).exists()
+        return MessageRead.objects.filter(user=user, message=self,
+                                          conversation=self.conversation).exists()
 
 
 class MessageRead(UUIDModel):
@@ -192,8 +200,10 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
 class Notification(UUIDModel, AttachedObjectMixin):
     ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
-    FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
-    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
+    FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True,
+                                 default=None)
+    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value,
+                               choices=NotificationType.choices)
     is_read = models.BooleanField(default=False)
 
     def __unicode__(self):
@@ -221,4 +231,3 @@ class Report(UUIDModel, AttachedObjectMixin):
     @property
     def type_name(self):
         return ReportType.values[self.type]
-

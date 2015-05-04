@@ -3,10 +3,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
 from shoutit.models import User
-from common.constants import TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE, FILE_TYPE_BUSINESS_DOCUMENT, \
-    TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM, BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE
-from shoutit.models import Business, ConfirmToken, StoredFile, BusinessConfirmation, BusinessSource, BusinessCategory, \
-    BusinessCreateApplication, PredefinedCity
+from common.constants import (TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE,
+                              FILE_TYPE_BUSINESS_DOCUMENT,
+                              TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM,
+                              BUSINESS_CONFIRMATION_STATUS_ACCEPTED, BUSINESS_SOURCE_TYPE_NONE)
+from shoutit.models import (Business, ConfirmToken, StoredFile, BusinessConfirmation,
+                            BusinessSource, BusinessCategory,
+                            BusinessCreateApplication, PredefinedCity)
 from shoutit.controllers.user_controller import set_last_token, give_user_permissions
 from shoutit.controllers import email_controller
 from shoutit.permissions import ACTIVATED_BUSINESS_PERMISSIONS
@@ -23,11 +26,12 @@ def GetBusiness(username):
             return q[0]
         else:
             return None
-    except ValueError, e:
+    except ValueError:
         return None
 
 
-def CreateTinyBusinessProfile(name, category, latitude=0.0, longitude=0.0, country=None, city=None, address=None,
+def CreateTinyBusinessProfile(name, category, latitude=0.0, longitude=0.0, country=None, city=None,
+                              address=None,
                               source_type=BUSINESS_SOURCE_TYPE_NONE, source_id=None):
     username = utils.generate_username()
     while len(User.objects.filter(username=username)):
@@ -45,17 +49,19 @@ def CreateTinyBusinessProfile(name, category, latitude=0.0, longitude=0.0, count
     if category:
         try:
             cat = BusinessCategory.objects.get(pk=int(category))
-        except ObjectDoesNotExist, e:
+        except ObjectDoesNotExist:
             cat = None
 
     bp = Business(user=django_user, Category=cat, name=name,
-                  latitude=latitude, longitude=longitude, country=country, city=city, address=address)
+                  latitude=latitude, longitude=longitude, country=country, city=city,
+                  address=address)
     bp.image = '/static/img/_user_male.png'
     bp.save()
 
     if not PredefinedCity.objects.filter(city=city):
         encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
+        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude,
+                       longitude=longitude).save()
 
     if source_id is not None:
         source = BusinessSource(business=bp, Source=source_type, SourceID=source_id)
@@ -109,9 +115,9 @@ def SignUpTempBusiness(request, email, password, send_activation=True, business=
 
     if email is not None and send_activation:
         email_controller.SendEmail(email, {
-        'name': business and business.name or "New Business",
-        'email': email,
-        'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
+            'name': business and business.name or "New Business",
+            'email': email,
+            'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
         }, "business_temp_registration_email.html", "business_temp_registration_email.txt")
 
     return django_user
@@ -126,7 +132,8 @@ def SetTempRegisterToken(user, email, tokenLength, tokenType):
     tok = ConfirmToken(Token=token, user=user, Email=email, type=tokenType)
     tok.save()
 
-    profile = user.BusinessCreateApplication.count() and user.BusinessCreateApplication.all()[0] or None
+    profile = user.BusinessCreateApplication.count() and user.BusinessCreateApplication.all()[
+        0] or None
     if profile:
         profile.LastToken = tok
         profile.save()
@@ -134,10 +141,11 @@ def SetTempRegisterToken(user, email, tokenLength, tokenType):
 
 
 def SignUpBusiness(request, user, name, phone, website, category, about=None,
-                   latitude=0.0, longitude=0.0, country=None, city=None, address=None, documents=[]):
+                   latitude=0.0, longitude=0.0, country=None, city=None, address=None,
+                   documents=[]):
     try:
         cat = BusinessCategory.objects.get(pk=category)
-    except ObjectDoesNotExist, e:
+    except ObjectDoesNotExist:
         cat = None
 
     if user.BusinessCreateApplication.count():
@@ -164,13 +172,16 @@ def SignUpBusiness(request, user, name, phone, website, category, about=None,
         ba.Website = website
 
     else:
-        ba = BusinessCreateApplication(user=user, Category=cat, name=name, Phone=phone, About=about, Website=website,
-                                       latitude=latitude, longitude=longitude, country=country, city=city, address=address)
+        ba = BusinessCreateApplication(user=user, Category=cat, name=name, Phone=phone, About=about,
+                                       Website=website,
+                                       latitude=latitude, longitude=longitude, country=country,
+                                       city=city, address=address)
     ba.save()
 
     if not PredefinedCity.objects.filter(city=city):
         encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
+        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude,
+                       longitude=longitude).save()
 
     if len(documents):
         confirmation = BusinessConfirmation(user=user)
@@ -183,15 +194,15 @@ def SignUpBusiness(request, user, name, phone, website, category, about=None,
     user.save()
 
     # bp.image = '/static/img/_user_male.png'
-    #	bp.save()
-
-
+    # bp.save()
     email_controller.SendBusinessSignupEmail(user, user.email, ba.name)
     return ba
 
 
-def EditBusiness(request, username=None, name=None, password=None, email=None, phone=None, image=None,
-                 about=None, website=None, latitude=0.0, longitude=0.0, country=None, city=None, address=None):
+def EditBusiness(request, username=None, name=None, password=None, email=None, phone=None,
+                 image=None,
+                 about=None, website=None, latitude=0.0, longitude=0.0, country=None, city=None,
+                 address=None):
     if username:
         business = GetBusiness(username)
 
@@ -225,7 +236,8 @@ def EditBusiness(request, username=None, name=None, password=None, email=None, p
 
         if not PredefinedCity.objects.filter(city=city):
             encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-            PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude).save()
+            PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude,
+                           longitude=longitude).save()
 
         return business
     else:
@@ -276,8 +288,10 @@ def AcceptBusiness(request, username):
         ba.Business.save()
 
     elif not ba.Business and not profile:
-        bp = Business(user=user, name=ba.name, Category=ba.Category, image="/static/img/_user_male.png",
-                      About=ba.About, Phone=ba.Phone, Website=ba.Website, latitude=ba.latitude, longitude=ba.longitude,
+        bp = Business(user=user, name=ba.name, Category=ba.Category,
+                      image="/static/img/_user_male.png",
+                      About=ba.About, Phone=ba.Phone, Website=ba.Website, latitude=ba.latitude,
+                      longitude=ba.longitude,
                       country=ba.country, city=ba.city, address=ba.address, Confirmed=True)
         bp.save()
     elif ba.Business:
@@ -289,4 +303,5 @@ def AcceptBusiness(request, username):
     give_user_permissions(user, ACTIVATED_BUSINESS_PERMISSIONS)
 
     token = set_last_token(user, user.email, TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM)
-    email_controller.SendBusinessAcceptanceEmail(user.Business, user.email, "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/'))
+    email_controller.SendBusinessAcceptanceEmail(user.Business, user.email, "http://%s%s" % (
+        settings.SHOUT_IT_DOMAIN, '/' + token + '/'))

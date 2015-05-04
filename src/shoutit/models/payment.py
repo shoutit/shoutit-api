@@ -114,50 +114,48 @@ class Subscription(UUIDModel):
 # PAUSE: PAYPAL
 # PAUSE: Payment
 
-#from subscription.signals import subscribed, unsubscribed
-#from paypal.standard.ipn.signals import payment_was_successful, payment_was_flagged,subscription_signup,subscription_cancel
-#from paypal.standard.pdt.views import pdt
-#import re
+# from subscription.signals import subscribed, unsubscribed
+# from paypal.standard.ipn.signals import payment_was_successful, payment_was_flagged,subscription_signup,subscription_cancel
+# from paypal.standard.pdt.views import pdt
+# import re
 #
-#def paypal_payment_flag(sender, **kwargs):
-#	import shoutit.controllers.payment_controller
-#	#('Active', 'Cancelled', 'Cleared', 'Completed', 'Denied', 'Paid', 'Pending', 'Processed', 'Refused', 'Reversed', 'Rewarded', 'Unclaimed', 'Uncleared')
-#	ipn_obj = sender
-#	regex = re.compile(r'(\w+)_(\w+)_User_([^_]+)(?:_x_(\d+))?')
-#	match = regex.match(ipn_obj.invoice)
-#	transaction_data = 'PayPal TXN %s#%s by %s (%s)' % (ipn_obj.txn_type, ipn_obj.txn_id, ipn_obj.payer_id, ipn_obj.payer_email)
-#	transaction_identifier = 'PayPal#%s' % ipn_obj.txn_id
-#	if match:
-#		item_type, item_id, user_id, amount = match.groups()
-#		if ipn_obj.payment_status in ['Completed', 'Paid']:
-#			if item_type == 'Deal':
-#				shoutit.controllers.payment_controller.PayForDeal(int(user_id), item_id, amount, transaction_data, transaction_identifier)
-#			elif item_type == 'Service':
-#				shoutit.controllers.payment_controller.PayForService(int(user_id), item_id, amount, transaction_data, transaction_identifier)
-#		elif ipn_obj.payment_status in ['Cancelled', 'Reversed', 'Refunded']:
-#			transaction_identifier = 'PayPal#%s' % ipn_obj.parent_txn_id
-#			if item_type == 'Deal':
-#				shoutit.controllers.payment_controller.CancelPaymentForDeal(int(user_id), item_id, transaction_data, transaction_identifier)
-#			elif item_type == 'Service':
-#				shoutit.controllers.payment_controller.CancelPaymentForService(int(user_id), item_id, transaction_data, transaction_identifier)
-
-#payment_was_successful.connect(paypal_payment_flag)
-#payment_was_flagged.connect(paypal_payment_flag)
-
+# def paypal_payment_flag(sender, **kwargs):
+# 	import shoutit.controllers.payment_controller
+# 	#('Active', 'Cancelled', 'Cleared', 'Completed', 'Denied', 'Paid', 'Pending', 'Processed', 'Refused', 'Reversed', 'Rewarded', 'Unclaimed', 'Uncleared')
+# 	ipn_obj = sender
+# 	regex = re.compile(r'(\w+)_(\w+)_User_([^_]+)(?:_x_(\d+))?')
+# 	match = regex.match(ipn_obj.invoice)
+# 	transaction_data = 'PayPal TXN %s#%s by %s (%s)' % (ipn_obj.txn_type, ipn_obj.txn_id, ipn_obj.payer_id, ipn_obj.payer_email)
+# 	transaction_identifier = 'PayPal#%s' % ipn_obj.txn_id
+# 	if match:
+# 		item_type, item_id, user_id, amount = match.groups()
+# 		if ipn_obj.payment_status in ['Completed', 'Paid']:
+# 			if item_type == 'Deal':
+# 				shoutit.controllers.payment_controller.PayForDeal(int(user_id), item_id, amount, transaction_data, transaction_identifier)
+# 			elif item_type == 'Service':
+# 				shoutit.controllers.payment_controller.PayForService(int(user_id), item_id, amount, transaction_data, transaction_identifier)
+# 		elif ipn_obj.payment_status in ['Cancelled', 'Reversed', 'Refunded']:
+# 			transaction_identifier = 'PayPal#%s' % ipn_obj.parent_txn_id
+# 			if item_type == 'Deal':
+# 				shoutit.controllers.payment_controller.CancelPaymentForDeal(int(user_id), item_id, transaction_data, transaction_identifier)
+# 			elif item_type == 'Service':
+# 				shoutit.controllers.payment_controller.CancelPaymentForService(int(user_id), item_id, transaction_data, transaction_identifier)
+#
+# payment_was_successful.connect(paypal_payment_flag)
+# payment_was_flagged.connect(paypal_payment_flag)
+#
 # taken own payments for now
-#def business_subscribed(sender, **kwargs):
-#	user = kwargs['user']
-#	application = user.BusinessCreateApplication.all()[0]
-#	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION
-#	application.save()
+# def business_subscribed(sender, **kwargs):
+# 	user = kwargs['user']
+# 	application = user.BusinessCreateApplication.all()[0]
+# 	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION
+# 	application.save()
 #
-#def business_unsubscribed(sender, **kwargs):
-#	user = kwargs['user']
-#	application = user.BusinessCreateApplication.all()[0]
-#	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT
-#	application.save()
+# def business_unsubscribed(sender, **kwargs):
+# 	user = kwargs['user']
+# 	application = user.BusinessCreateApplication.all()[0]
+# 	application.Status = BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT
+# 	application.save()
 #
-#subscribed.connect(business_subscribed)
-#unsubscribed.connect(business_unsubscribed)
-
-
+# subscribed.connect(business_subscribed)
+# unsubscribed.connect(business_unsubscribed)
