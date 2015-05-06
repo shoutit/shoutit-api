@@ -326,14 +326,6 @@ class ShoutSerializer(serializers.ModelSerializer):
         # todo: better refactoring
         # if creating new shout no need to validate the id, which will not be passed anyway
         if not self.parent:
-
-            category = ret.get('category')
-            if category:
-                try:
-                    category = Category.objects.get(name=category['name'])
-                    ret['category'] = category
-                except Category.DoesNotExist:
-                    raise ValidationError({'category': ["Category '{}' does not exist.".format(category['name'])]})
             return ret
 
         shout_id = data.get('id')
@@ -376,7 +368,6 @@ class ShoutDetailSerializer(ShoutSerializer):
         location_data = validated_data.get('location')
         images = validated_data['item'].get('images', [])
         videos = validated_data['item'].get('videos', {'all': []})['all']
-
         if validated_data['type_name'] == 'offer':
             shout = shout_controller.post_offer(name=validated_data['item']['name'],
                                                 text=validated_data['text'],

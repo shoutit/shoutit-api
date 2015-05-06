@@ -346,7 +346,7 @@ LOGGING = {
         'sentry_all': {
             'level': 'DEBUG',
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-            # 'filters': ['require_debug_false'],
+            'filters': ['require_debug_false'],
         },
         'sentry_file': {
             'level': 'WARNING',

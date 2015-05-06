@@ -171,16 +171,8 @@ class MiscViewSet(viewsets.ViewSet):
             return Response({'error': msg})
 
         # shout creation
-        tags = shout['tags']
-        if isinstance(tags, basestring):
-            tags = tags.split(' ')
-
-        if not tags:
-            msg = "Invalid tags: " + shout['tags']
-            error_logger.error(msg)
-            return Response({'error': msg})
-
         category = shout.get('category')
+        tags = shout['tags']
         try:
             category = Category.objects.get(name=category)
         except Category.DoesNotExist:
@@ -227,7 +219,6 @@ class MiscViewSet(viewsets.ViewSet):
             mandrill_events = json.loads(data.get('mandrill_events'))
             msg = mandrill_events[0].get('msg') if mandrill_events else {}
             in_email = msg.get('email')
-
             if 'dbz-reply.com' in in_email:
                 return handle_db_reply(in_email, msg, request)
             elif 'cl-reply.com' in in_email:
@@ -243,7 +234,6 @@ def handle_db_reply(in_email, msg, request):
         dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
         return Response({'error': "Unknown in_email"})
-
     try:
         text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
     except AttributeError:
@@ -269,12 +259,10 @@ def handle_cl_reply(msg, request):
     except AttributeError:
         return Response({
             'error': "ref wasn't passed in the reply, we can't process the message any further."})
-
     try:
         text = '\n'.join(text.split('\n> ')[0].splitlines()[:-2])
     except AttributeError:
         return Response({'error': "we couldn't process the message text."})
-
     try:
         dbcl_conversation = DBCLConversation.objects.get(ref=ref)
     except DBCLConversation.DoesNotExist, e:

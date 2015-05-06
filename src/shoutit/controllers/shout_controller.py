@@ -8,15 +8,17 @@ from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
+from rest_framework.exceptions import ValidationError
 import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from elasticsearch import NotFoundError, ConflictError
+from common.utils import process_tags
 from shoutit.models.post import ShoutIndex
-from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, \
-    DEFAULT_CURRENCY_CODE
+from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE,
+                              DEFAULT_CURRENCY_CODE)
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
-from shoutit.models import Shout, Post, PredefinedCity
+from shoutit.models import Shout, Post, PredefinedCity, Category
 from shoutit.controllers import event_controller, email_controller, item_controller
 from shoutit.utils import to_seo_friendly
 
@@ -112,15 +114,29 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
                  country, city, address="", currency=DEFAULT_CURRENCY_CODE, images=None,
                  videos=None,
                  date_published=None, is_sss=False, exp_days=None):
-    item = item_controller.create_item(
-        name=name, price=price, currency=currency, description=text, images=images, videos=videos)
+    # category
+    if category:
+        try:
+            category = Category.objects.get(name=category['name'])
+        except Category.DoesNotExist:
+            raise ValidationError({'category': ["Category '%s' does not exist." % category['name']]})
 
+    # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
         if not isinstance(tags[0], basestring):
             tags = [tag['name'] for tag in tags]
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
+    # process
+    tags = process_tags(tags)
+    if not tags:
+        raise ValidationError({'tags': "Invalid tags."})
+
+    # item
+    item = item_controller.create_item(
+        name=name, price=price, currency=currency, description=text, images=images, videos=videos)
+    # todo: check that item was created!
 
     shout = Shout(type=shout_type, text=text, user=shouter, category=category, tags=tags, item=item,
                   longitude=longitude, latitude=latitude, country=country, city=city,
