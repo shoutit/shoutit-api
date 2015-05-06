@@ -327,16 +327,23 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
-            'formatter': 'simple'
+            'formatter': 'simple',
+            'filters': ['require_debug_true'],
         },
         'console_err_all': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
-            'formatter': 'detailed'
+            'formatter': 'detailed',
+            'filters': ['require_debug_true'],
         },
         'sentry': {
             'level': 'ERROR',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'filters': ['require_debug_false'],
+        },
+        'sentry_all': {
+            'level': 'DEBUG',
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
             'filters': ['require_debug_false'],
         },
@@ -414,7 +421,7 @@ LOGGING = {
             'propagate': False
         },
         'shoutit.error': {
-            'handlers': ['console_err_all', 'sentry'],
+            'handlers': ['console_err_all', 'sentry_all'],
             'level': 'DEBUG',
             'propagate': False
         },
