@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from django.conf.urls import url
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
@@ -19,12 +20,15 @@ from django.utils.translation import ugettext_lazy as _
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'owner', 'type', 'item', 'text', 'country', 'city', 'is_sss', 'is_disabled')
+        'id', 'owner', 'type', 'item', 'country', 'city', 'is_sss', 'is_disabled',
+        'priority', 'date_published')
     list_filter = ('type', 'is_sss', 'is_disabled')
     readonly_fields = ('user', 'item')
 
     def owner(self, obj):
-        return '<a href="%s">%s</a>' % (reverse('admin:shoutit_user_change', args=(obj.user.pk,)), obj.user.name)
+        user_link = reverse('admin:shoutit_user_change', args=(obj.user.pk,))
+        profile_link = reverse('admin:shoutit_profile_change', args=(obj.user.profile.pk,))
+        return '<a href="%s">%s</a> | <a href="%s">Profile</a>' % (user_link, obj.user.name, profile_link)
     owner.allow_tags = True
     owner.short_description = 'User'
 
@@ -36,6 +40,27 @@ class PostAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Item)
+
+
+class UserEmailFilter(admin.SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = _('with email')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'with_email'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('yes')),
+            ('no', _('no')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(~Q(email=''))
+        if self.value() == 'no':
+            return queryset.filter(email='')
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -60,7 +85,8 @@ class CustomUserAdmin(UserAdmin):
                                        'is_test', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
-    list_filter = ('is_active', 'is_activated', 'is_test', 'is_staff', 'is_superuser', 'groups')
+    list_filter = ('is_active', 'is_activated', UserEmailFilter, 'is_test', 'is_staff',
+                   'is_superuser', 'groups')
 
     form = CustomUserChangeForm
 
