@@ -192,7 +192,8 @@ class MiscViewSet(viewsets.ViewSet):
                 )
 
         except Exception, e:
-            msg = "Shout Creation Error: " + str(e)
+            user.delete()
+            msg = "Shout Creation Error: " + str(e) + ", Deleting user: " + user
             error_logger.error(msg)
             return Response({'error': msg})
 
