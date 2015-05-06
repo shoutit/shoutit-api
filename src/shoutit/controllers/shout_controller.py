@@ -116,13 +116,13 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
                  date_published=None, is_sss=False, exp_days=None):
     # category
     # if passed as {'name': 'Category'}
-    if category:
-        if not isinstance(category, basestring):
+    if category and not isinstance(category, Category):
+        if isinstance(category, dict):
             category = category.get('name')
         try:
             category = Category.objects.get(name=category)
         except Category.DoesNotExist:
-            raise ValidationError({'category': ["Category '%s' does not exist." % category['name']]})
+            raise ValidationError({'category': ["Category '%s' does not exist." % category]})
 
     # tags
     # if passed as [{'name': 'tag-x'},...]
