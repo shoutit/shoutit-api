@@ -17,6 +17,7 @@ from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, 
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
                             User)
+
 error_logger = logging.getLogger('shoutit.error')
 logger = logging.getLogger('shoutit.debug')
 
@@ -121,6 +122,7 @@ class MiscViewSet(viewsets.ViewSet):
                 suffix='Fake Error')
     def error(self, request):
         from ipware.ip import get_real_ip
+
         error_logger.error("Fake error request from ip: " + get_real_ip(request) or 'undefined')
         raise Exception("API v2 Fake Error")
 
@@ -128,6 +130,7 @@ class MiscViewSet(viewsets.ViewSet):
                 suffix='IP')
     def ip(self, request):
         from ipware.ip import get_real_ip
+
         ip = get_real_ip(request) or 'undefined'
         logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
@@ -146,7 +149,7 @@ class MiscViewSet(viewsets.ViewSet):
                 error_logger.warn(msg)
                 return Response({'error': msg})
             msg = "Ad already exits. " + shout['link']
-            error_logger.warn(msg)
+            error_logger.info(msg)
             return Response({'error': msg})
         except (CLUser.DoesNotExist, DBUser.DoesNotExist):
             pass
@@ -167,7 +170,7 @@ class MiscViewSet(viewsets.ViewSet):
                 raise Exception('Unknown ad source')
         except Exception, e:
             msg = "User Creation Error."
-            error_logger.error(msg, extra={'detail':str(e)})
+            error_logger.warn(msg, extra={'detail': str(e)})
             return Response({'error': msg, 'detail': str(e)})
 
         # shout creation
@@ -193,7 +196,7 @@ class MiscViewSet(viewsets.ViewSet):
 
         except Exception, e:
             msg = "Shout Creation Error. Deleting user: " + str(user)
-            error_logger.error(msg, extra={'detail': str(e)})
+            error_logger.warn(msg, extra={'detail': str(e)})
             user.delete()
             return Response({'error': msg, 'detail': str(e)})
 
