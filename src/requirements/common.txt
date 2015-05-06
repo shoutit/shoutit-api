@@ -38,6 +38,8 @@ mailchimp==2.0.9
 git+https://github.com/marcgibbons/django-rest-swagger
 git+https://github.com/jleclanche/django-push-notifications
 
+django-ipware
+
 # sss
 # requires apt-get install libcurl4-openssl-dev libxml2-dev libxslt-dev
 antigate

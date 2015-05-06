@@ -4,20 +4,21 @@
 """
 from __future__ import unicode_literals
 import json
+import re
+import logging
 from django.conf import settings
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
 
-from shoutit.api.v2.serializers import CategorySerializer, CurrencySerializer, ReportSerializer, \
-    PredefinedCitySerializer
+from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
+                                        PredefinedCitySerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller
-from shoutit.models import Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation
-import re
-import logging
-
+from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
+                            User)
 error_logger = logging.getLogger('shoutit.error')
+logger = logging.getLogger('shoutit.debug')
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -119,7 +120,17 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
                 suffix='Fake Error')
     def error(self, request):
+        from ipware.ip import get_real_ip
+        error_logger.error("Fake error request from ip: " + get_real_ip(request) or 'undefined')
         raise Exception("API v2 Fake Error")
+
+    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
+                suffix='IP')
+    def ip(self, request):
+        from ipware.ip import get_real_ip
+        ip = get_real_ip(request) or 'undefined'
+        logger.debug("IP request from : " + ip)
+        return Response({'ip': ip})
 
     @list_route(methods=['post'], suffix='SSS4')
     def sss4(self, request):
@@ -217,7 +228,7 @@ class MiscViewSet(viewsets.ViewSet):
             msg = mandrill_events[0].get('msg') if mandrill_events else {}
             in_email = msg.get('email')
 
-            if 'db-reply' in in_email:
+            if 'reply-dubizzle.com' in in_email:
                 return handle_db_reply(in_email, msg, request)
             elif 'cl-reply' in in_email:
                 return handle_cl_reply(msg, request)
@@ -239,9 +250,10 @@ def handle_db_reply(in_email, msg, request):
         return Response({'error': "we couldn't process the message text."})
 
     from_user = dbcl_conversation.to_user
-    # todo: if the user is already on our db! we need to somehow merge them.
-    from_user.email = from_email
-    from_user.save()
+    email_exists = User.objects.filter(email=from_email).exists()
+    if not email_exists:
+        from_user.email = from_email
+        from_user.save()
     to_user = dbcl_conversation.from_user
     shout = dbcl_conversation.shout
     message = message_controller.send_message(conversation=None, user=from_user,
