@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import Q
 from django.conf import settings
 from elasticsearch import RequestError
-from elasticsearch_dsl import DocType, String, Date, Double, Integer
+from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean
 
 from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST,
     POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType)
@@ -109,6 +109,7 @@ class Post(UUIDModel, APIModelMixin):
     longitude = models.FloatField(default=0.0)
     address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
+    priority = models.SmallIntegerField(default=0)
     objects = PostManager()
 
     def mute(self):
@@ -239,6 +240,9 @@ class ShoutIndex(DocType):
     address = String(index='not_analyzed')
     thumbnail = String(index='not_analyzed')
     video_url = String(index='not_analyzed')
+
+    is_sss = Boolean()
+    priority = Integer()
 
     class Meta:
         index = settings.ENV

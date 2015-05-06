@@ -92,28 +92,26 @@ def NotifyPreExpiry():
 def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city,
                  address="",
                  currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
-                 is_sss=False, exp_days=None):
+                 is_sss=False, exp_days=None, priority=0):
     return create_shout(POST_TYPE_REQUEST, name, text, price, latitude, longitude, category, tags,
                         shouter, country, city, address, currency, images, videos, date_published,
-                        is_sss,
-                        exp_days)
+                        is_sss, exp_days, priority)
 
 
 def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city,
                address="",
                currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
-               is_sss=False, exp_days=None):
+               is_sss=False, exp_days=None, priority=0):
     return create_shout(POST_TYPE_OFFER, name, text, price, latitude, longitude, category, tags,
                         shouter, country, city, address, currency, images, videos, date_published,
-                        is_sss,
-                        exp_days)
+                        is_sss, exp_days, priority)
 
 
 # todo: handle exception on each step and in case of errors, rollback!
 def create_shout(shout_type, name, text, price, latitude, longitude, category, tags, shouter,
                  country, city, address="", currency=DEFAULT_CURRENCY_CODE, images=None,
                  videos=None,
-                 date_published=None, is_sss=False, exp_days=None):
+                 date_published=None, is_sss=False, exp_days=None, priority=0):
     # category
     # if passed as {'name': 'Category'}
     if category and not isinstance(category, Category):
@@ -144,7 +142,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
     shout = Shout(type=shout_type, text=text, user=shouter, category=category, tags=tags, item=item,
                   longitude=longitude, latitude=latitude, country=country, city=city,
                   address=address,
-                  is_sss=is_sss)
+                  is_sss=is_sss, priority=priority)
 
     if date_published:
         shout.date_published = date_published
@@ -214,6 +212,8 @@ def shout_index(sender, instance=None, created=False, **kwargs):
     shout_index.address = shout.address
     shout_index.thumbnail = shout.thumbnail
     shout_index.video_url = shout.video_url
+    shout_index.is_sss = shout.is_sss
+    shout_index.priority = shout.priority
     if shout_index.save():
         logger.debug('Created ShoutIndex: %s.' % shout.pk)
     else:

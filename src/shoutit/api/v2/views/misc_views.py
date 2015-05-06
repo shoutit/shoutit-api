@@ -179,7 +179,7 @@ class MiscViewSet(viewsets.ViewSet):
                     latitude=float(shout['lat']), longitude=float(shout['lng']),
                     country=shout['country'], city=shout['city'],
                     tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
-                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category']
+                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category'], priority=-10
                 )
             elif shout['type'] == 'offer':
                 shout = shout_controller.post_offer(
@@ -188,7 +188,7 @@ class MiscViewSet(viewsets.ViewSet):
                     latitude=float(shout['lat']), longitude=float(shout['lng']),
                     country=shout['country'], city=shout['city'],
                     tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
-                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category']
+                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category'], priority=-10
                 )
 
         except Exception, e:
