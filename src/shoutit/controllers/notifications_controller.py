@@ -90,23 +90,25 @@ def notify_db_user(db_user, from_user, message):
     gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
     captcha = str(gate)
     ref = uuid.uuid4().hex
-    in_email = ref + '-db-reply@in.shoutit.com'
+    in_email = ref + '@dbz-reply.com'
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
                                     shout=message.conversation.about, ref=ref)
     form_data = {
         'form_type': 'contact',
         'email': in_email,
         'name': from_user.name,
-        'telephone': '050',
+        'telephone': '.',
         'message': message.text,
         'captcha_0': d('#id_captcha_0').attr('value'),
         'captcha_1': captcha
     }
     res = requests.post(reply_url, form_data)
-    if int(res.status_code) == 200:
+    db_res_content = res.content.decode('utf-8')
+    if 'error' not in res.content:
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:
-        logger.error("Error sending message to db user")
+        d = pq(db_res_content)
+        error_logger.error("Error sending message to db user.", extra={'db_response': d('#container').text()})
 
 
 def notify_user_of_listen(user, listener, request=None):

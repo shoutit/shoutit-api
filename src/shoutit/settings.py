@@ -171,6 +171,7 @@ if PROD:
 
 RAVEN_CONFIG = {
     'dsn': 'requests+https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+    'string_max_length': 1000
 }
 
 APNS_SANDBOX = False
@@ -345,7 +346,7 @@ LOGGING = {
         'sentry_all': {
             'level': 'DEBUG',
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-            'filters': ['require_debug_false'],
+            # 'filters': ['require_debug_false'],
         },
         'sentry_file': {
             'level': 'WARNING',

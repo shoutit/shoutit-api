@@ -228,9 +228,9 @@ class MiscViewSet(viewsets.ViewSet):
             msg = mandrill_events[0].get('msg') if mandrill_events else {}
             in_email = msg.get('email')
 
-            if 'reply-dubizzle.com' in in_email:
+            if 'dbz-reply.com' in in_email:
                 return handle_db_reply(in_email, msg, request)
-            elif 'cl-reply' in in_email:
+            elif 'cl-reply.com' in in_email:
                 return handle_cl_reply(msg, request)
             else:
                 return Response({'error': "Unknown in_email"})
