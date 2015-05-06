@@ -31,7 +31,7 @@ class Command(BaseCommand):
                                            is_activated=True, is_superuser=True, is_staff=True)
         u1.first_name = 'Nour'
         u1.last_name = 'Syron'
-        u1.password = "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg="
+        u1.password = "pbkdf2_sha256$20000$fT380TT4d74W$3CbbfyKvzSBTyBB4F+3/xsciSQkoqRXrVkA/6Xv82NY="
         u1.save()
         Token.objects.filter(user=u1).delete()
         Token.objects.create(user=u1, key="1-5fbb04817861540553ca6ecc6d8fb6569f3adb")
@@ -46,7 +46,7 @@ class Command(BaseCommand):
                                            is_activated=True, is_superuser=True, is_staff=True)
         u2.first_name = 'Mo'
         u2.last_name = 'Chawich'
-        u2.password = "pbkdf2_sha256$12000$LluQpMZvMgfA$9BpmQyVU5dM3Hc20YvVY3K64rsTj/omOQLyfsJuwTCg="
+        u2.password = "pbkdf2_sha256$20000$fT380TT4d74W$3CbbfyKvzSBTyBB4F+3/xsciSQkoqRXrVkA/6Xv82NY="
         u2.save()
 
         Token.objects.filter(user=u2).delete()
