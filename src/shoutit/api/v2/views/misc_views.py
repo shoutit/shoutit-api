@@ -171,13 +171,6 @@ class MiscViewSet(viewsets.ViewSet):
             return Response({'error': msg})
 
         # shout creation
-        category = shout.get('category')
-        tags = shout['tags']
-        try:
-            category = Category.objects.get(name=category)
-        except Category.DoesNotExist:
-            return Response({'error': "Category %s does not exist." % category})
-
         try:
             if shout['type'] == 'request':
                 shout = shout_controller.post_request(
@@ -185,8 +178,8 @@ class MiscViewSet(viewsets.ViewSet):
                     currency=shout['currency'],
                     latitude=float(shout['lat']), longitude=float(shout['lng']),
                     country=shout['country'], city=shout['city'],
-                    tags=tags, images=shout['images'], shouter=user, is_sss=True,
-                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=category
+                    tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
+                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category']
                 )
             elif shout['type'] == 'offer':
                 shout = shout_controller.post_offer(
@@ -194,13 +187,14 @@ class MiscViewSet(viewsets.ViewSet):
                     currency=shout['currency'],
                     latitude=float(shout['lat']), longitude=float(shout['lng']),
                     country=shout['country'], city=shout['city'],
-                    tags=tags, images=shout['images'], shouter=user, is_sss=True,
-                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=category
+                    tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
+                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category']
                 )
 
         except Exception, e:
-            error_logger.error(str(e))
-            return Response({'error': "Shout Creation Error: " + str(e)})
+            msg = "Shout Creation Error: " + str(e)
+            error_logger.error(msg)
+            return Response({'error': msg})
 
         # good bye!
         return Response({'success': True})

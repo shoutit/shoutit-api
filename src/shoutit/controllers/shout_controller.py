@@ -115,9 +115,12 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
                  videos=None,
                  date_published=None, is_sss=False, exp_days=None):
     # category
+    # if passed as {'name': 'Category'}
     if category:
+        if not isinstance(category, basestring):
+            category = category.get('name')
         try:
-            category = Category.objects.get(name=category['name'])
+            category = Category.objects.get(name=category)
         except Category.DoesNotExist:
             raise ValidationError({'category': ["Category '%s' does not exist." % category['name']]})
 
@@ -125,7 +128,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
     # if passed as [{'name': 'tag-x'},...]
     if tags:
         if not isinstance(tags[0], basestring):
-            tags = [tag['name'] for tag in tags]
+            tags = [tag.get('name') for tag in tags]
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
     # process
