@@ -68,11 +68,12 @@ class APIModelMixin(object):
     def web_url(self):
         name = self.__class__.__name__.lower()
         lookups = {
-            'user': self.username,
-            'tag': self.id,
-            'shout': self.id,
+            # class: ('url part', 'lookup')
+            'user': ('user', 'username'),
+            'tag': ('tag', 'name'),
+            'shout': ('shout', 'pk'),
         }
-        lookup = lookups.get(name, self.pk)
+        lookup = getattr(self, lookups.get(name, (name, 'pk'))[1], '')
         return "{}{}/{}".format(settings.SITE_LINK, name, lookup)
 
 
