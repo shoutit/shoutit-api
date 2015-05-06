@@ -66,7 +66,14 @@ class AttachedObjectMixin(models.Model):
 class APIModelMixin(object):
     @property
     def web_url(self):
-        return ''
+        name = self.__class__.__name__.lower()
+        lookups = {
+            'user': self.username,
+            'tag': self.id,
+            'shout': self.id,
+        }
+        lookup = lookups.get(name, self.pk)
+        return "{}{}/{}".format(settings.SITE_LINK, name, lookup)
 
 
 class LocationMixin(models.Model):
