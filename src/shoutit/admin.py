@@ -20,23 +20,28 @@ from django.utils.translation import ugettext_lazy as _
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'owner', 'type', 'item', 'country', 'city', 'is_sss', 'is_disabled',
+        'id', '_user', 'type', 'item', 'country', 'city', 'is_sss', 'is_disabled',
         'priority', 'date_published')
     list_filter = ('type', 'is_sss', 'is_disabled')
-    readonly_fields = ('user', 'item')
+    readonly_fields = ('_user', 'item')
 
-    def owner(self, obj):
-        user_link = reverse('admin:shoutit_user_change', args=(obj.user.pk,))
-        profile_link = reverse('admin:shoutit_profile_change', args=(obj.user.profile.pk,))
-        return '<a href="%s">%s</a> | <a href="%s">Profile</a>' % (user_link, obj.user.name, profile_link)
-    owner.allow_tags = True
-    owner.short_description = 'User'
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 # Post
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
+    list_display = ('id', '_user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 admin.site.register(Item)
@@ -81,53 +86,87 @@ class CustomUserChangeForm(UserChangeForm):
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     save_on_top = True
-    list_display = ('id', 'username', 'get_profile', 'email', 'first_name', 'last_name', 'is_staff',
-                    'is_test', 'is_superuser', 'is_active', 'is_activated', 'last_login')
+    list_display = (
+        'id', 'username', '_profile', 'email', 'first_name', 'last_name', '_messaging'
+        , 'is_staff', 'is_test', 'is_superuser', 'is_active', 'is_activated', 'last_login')
     list_per_page = 50
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', '_profile')}),
         (_('Permissions'), {'fields': ('is_active', 'is_activated', 'is_staff', 'is_superuser',
                                        'is_test', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Extra'), {'fields': ('_messaging',)}),
     )
     list_filter = ('is_active', 'is_activated', UserEmailFilter, 'is_test', 'is_staff',
                    'is_superuser', 'groups')
-
+    readonly_fields = ('_messaging', '_profile')
     form = CustomUserChangeForm
 
     def get_urls(self):
-        return [
-            url(r'^([-\w]+)/password/$', self.admin_site.admin_view(self.user_change_password), name='shoutit_user_password_change'),
-        ] + super(UserAdmin, self).get_urls()
+        return [url(r'^([-\w]+)/password/$',
+                    self.admin_site.admin_view(self.user_change_password),
+                    name='shoutit_user_password_change')
+               ] + super(UserAdmin, self).get_urls()
 
-    def get_profile(self, obj):
-        return '<a href="%s">Profile</a>' % (reverse('admin:shoutit_profile_change', args=(obj.profile.pk,)))
-    get_profile.allow_tags = True
-    get_profile.short_description = 'Profile'
+    def _profile(self, obj):
+        return '<a href="%s">Profile</a>' % (
+            reverse('admin:shoutit_profile_change', args=(obj.profile.pk,)))
+
+    _profile.allow_tags = True
+    _profile.short_description = 'Profile'
+
+    def _messaging(self, user):
+        conversations = '<a href="%s">Conversations</a>' % (
+            reverse('admin:shoutit_conversation_changelist')
+            + '?users=' + user.pk)
+        messages = '<a href="%s">Messages</a>' % (reverse('admin:shoutit_message_changelist')
+                                                  + '?user=' + user.pk)
+        return conversations + '<br/>' + messages
+
+    _messaging.allow_tags = True
+    _messaging.short_descriptions = 'Messaging'
 
 
 # Profile
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'country', 'city', 'gender', 'image')
+    list_display = ('id', '_user', 'country', 'city', 'gender', 'image')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
-    readonly_fields = ('user',)
+    readonly_fields = ('_user',)
     list_filter = ('country', 'city', 'gender', UserEmailFilter)
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'facebook_id', 'access_token', 'expires')
+    list_display = ('_user', 'facebook_id', 'access_token', 'expires')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
                      'facebook_id']
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 @admin.register(LinkedGoogleAccount)
 class LinkedGoogleAccountAdmin(admin.ModelAdmin):
-    list_display = ('user', 'gplus_id')
+    list_display = ('_user', 'gplus_id')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
                      'facebook_id']
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 # # Business
@@ -143,13 +182,13 @@ class LinkedGoogleAccountAdmin(admin.ModelAdmin):
 # list_display = ('name', 'user', 'Business','confirmation_url','country', 'city', 'Status')
 # search_fields = ['name', 'user__email','Website', 'Phone']
 # readonly_fields = ('user','Business','LastToken')
-#     list_filter = ('Status',)
-#     actions = ['accept_business', 'reject_business']
+# list_filter = ('Status',)
+# actions = ['accept_business', 'reject_business']
 #
-#     def confirmation_url(self, obj):
-#         try:
-#             confirmation = obj.user.BusinessConfirmations.all().order_by('id')[0]
-#             return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.pk, obj.user)
+# def confirmation_url(self, obj):
+# try:
+# confirmation = obj.user.BusinessConfirmations.all().order_by('id')[0]
+# return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.pk, obj.user)
 #         except :
 #             return 'Docs not yet submitted'
 #
@@ -204,6 +243,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
     def tag_names(self, category):
         return ', '.join([tag.name for tag in category.tags.all()])
+
     tag_names.short_description = 'Tags'
 
 
@@ -223,18 +263,62 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'usernames', 'object_id')
-    filter_horizontal = ('users',)
-    readonly_fields = ('last_message',)
+    list_display = ('id', 'type', '_users', '_messages', 'content_type', 'object_id', 'modified_at'
+                    , 'created_at')
+    readonly_fields = ('last_message', '_messages')
+    fieldsets = (
+        (None, {'fields': ('content_type', 'object_id', 'type', 'users', 'last_message')}),
+        (_('Extra'), {'fields': ('_messages',)}),
+    )
+    raw_id_fields = ('users',)
 
-    def usernames(self, conversation):
-        return ', '.join([user.username for user in conversation.users.all()])
+    def _users(self, conversation):
+        return '<br/>'.join(['- ' + user_link(user) for user in conversation.users.all()])
 
-    usernames.short_description = 'Users'
+    _users.short_description = 'Users'
+    _users.allow_tags = True
+
+    def _messages(self, conversation):
+        return '<a href="%s">Messages</a>' % (reverse('admin:shoutit_message_changelist')
+                                              + '?conversation__id=' + conversation.pk)
+
+    _messages.allow_tags = True
+    _messages.short_description = 'Messages'
 
 
 admin.site.register(ConversationDelete)
-admin.site.register(Message)
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('id', '_conversation', '_user', 'short_text', 'has_attachments', 'created_at')
+    readonly_fields = ('_conversation', '_user')
+    fieldsets = (
+        (None, {'fields': ('_conversation', '_user', 'text')}),
+)
+
+    def _user(self, message):
+        return user_link(message.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
+
+    def _conversation(self, message):
+        conversation_link = reverse('admin:shoutit_conversation_change', args=(message.conversation.pk,))
+        return '<a href="%s">%s</a>' % (conversation_link, message.conversation.pk)
+
+    _conversation.allow_tags = True
+    _conversation.short_description = 'Conversation'
+
+    def short_text(self, message):
+        return message.text[:30]
+
+    def has_attachments(self, message):
+        return message.attachments.exists()
+
+    has_attachments.boolean = True
+
+
 admin.site.register(MessageRead)
 admin.site.register(MessageDelete)
 
@@ -251,11 +335,11 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
     list_display = (
-        'type_name', 'user', 'text', 'attached_object', 'content_type', 'object_id', 'is_solved',
+        'type_name', '_user', 'text', 'attached_object', 'content_type', 'object_id', 'is_solved',
         'is_disabled')
     list_filter = ('is_solved', 'is_disabled')
     actions = ['mark_as_solved', 'mark_as_disabled']
-    readonly_fields = ('user', 'attached_object', 'content_type')
+    readonly_fields = ('_user', 'attached_object', 'content_type')
 
     def mark_as_solved(self, request, queryset):
         queryset.update(is_solved=True)
@@ -267,30 +351,60 @@ class ReportAdmin(admin.ModelAdmin):
 
     mark_as_disabled.short_description = "Mark selected reports as disabled"
 
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
+
 
 @admin.register(ConfirmToken)
 class ConfirmTokenAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'type', 'user', 'token', 'email', 'is_disabled')
+        'id', 'type', '_user', 'token', 'email', 'is_disabled')
     list_filter = ('type', 'is_disabled')
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 @admin.register(DBUser)
 class DBUserAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'user', 'db_link')
+        'id', '_user', 'db_link')
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 @admin.register(CLUser)
 class CLUserAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'user', 'cl_email')
+        'id', '_user', 'cl_email')
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
 
 
 @admin.register(DBCLConversation)
 class DBCLConversationAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'in_email', 'from_user', 'to_user', 'shout', 'ref')
+        'id', 'in_email', '_from_user', '_to_user', 'shout', 'ref')
+
+    def _from_user(self, obj):
+        return user_link(obj.from_user)
+
+    def _to_user(self, obj):
+        return user_link(obj.to_user)
 
 
 # admin.site.register(StoredFile)
@@ -303,3 +417,8 @@ admin.site.register(PredefinedCity)
 admin.site.register(SharedLocation)
 admin.site.register(UserPermission)
 admin.site.register(Permission)
+
+
+def user_link(user):
+    user_url = reverse('admin:shoutit_user_change', args=(user.pk,))
+    return '<a href="%s">%s</a>' % (user_url, user.name_username)
