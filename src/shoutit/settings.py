@@ -329,7 +329,6 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
             'formatter': 'simple',
-            'filters': ['require_debug_true'],
         },
         'console_err_all': {
             'level': 'DEBUG',
