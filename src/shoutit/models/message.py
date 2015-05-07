@@ -134,7 +134,7 @@ class Message(UUIDModel):
 
     @property
     def summary(self):
-        return getattr(self, 'text', '<attachment>')[:30]
+        return (getattr(self, 'text') or '<attachment>')[:30]
 
     @property
     def attachments(self):
