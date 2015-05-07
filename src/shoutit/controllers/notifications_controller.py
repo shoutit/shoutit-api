@@ -104,11 +104,14 @@ def notify_db_user(db_user, from_user, message):
     }
     res = requests.post(reply_url, form_data)
     db_res_content = res.content.decode('utf-8')
-    if 'error' not in res.content:
+    if 'Sent Succesfully' in res.content:
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:
         d = pq(db_res_content)
-        error_logger.error("Error sending message to db user.", extra={'db_response': d('#container').text()})
+        error_logger.error("Error sending message to db user.", extra={
+            'db_response': d('#container').text(),
+            'db_link': reply_url
+        })
 
 
 def notify_user_of_listen(user, listener, request=None):
