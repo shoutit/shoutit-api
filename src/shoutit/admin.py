@@ -291,7 +291,7 @@ admin.site.register(ConversationDelete)
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', '_conversation', '_user', 'short_text', 'has_attachments', 'created_at')
+    list_display = ('id', '_conversation', '_user', 'summary', 'has_attachments', 'created_at')
     readonly_fields = ('_conversation', '_user')
     fieldsets = (
         (None, {'fields': ('_conversation', '_user', 'text')}),
@@ -309,9 +309,6 @@ class MessageAdmin(admin.ModelAdmin):
 
     _conversation.allow_tags = True
     _conversation.short_description = 'Conversation'
-
-    def short_text(self, message):
-        return message.text[:30]
 
     def has_attachments(self, message):
         return message.attachments.exists()
