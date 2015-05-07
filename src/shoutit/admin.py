@@ -57,10 +57,16 @@ class UserEmailFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
-        if self.value() == 'yes':
-            return queryset.filter(~Q(email=''))
-        if self.value() == 'no':
-            return queryset.filter(email='')
+        if queryset.model == User:
+            if self.value() == 'yes':
+                return queryset.filter(~Q(email=''))
+            if self.value() == 'no':
+                return queryset.filter(email='')
+        elif queryset.model == Profile:
+            if self.value() == 'yes':
+                return queryset.filter(~Q(user__email=''))
+            if self.value() == 'no':
+                return queryset.filter(user__email='')
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -107,7 +113,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'country', 'city', 'gender', 'image')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
     readonly_fields = ('user',)
-    list_filter = ('country', 'city', 'gender')
+    list_filter = ('country', 'city', 'gender', UserEmailFilter)
 
 
 @admin.register(LinkedFacebookAccount)
