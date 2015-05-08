@@ -399,10 +399,11 @@ class DBCLConversationAdmin(admin.ModelAdmin):
 
     def _from_user(self, obj):
         return user_link(obj.from_user)
+    _from_user.allow_tags = True
 
     def _to_user(self, obj):
         return user_link(obj.to_user)
-
+    _to_user.allow_tags = True
 
 # admin.site.register(StoredFile)
 admin.site.register(Video)
