@@ -144,14 +144,13 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             if source == 'cl':
                 CLUser.objects.get(cl_email=shout.get('cl_email'))
+                msg = "Ad already exits."
             elif source == 'db':
                 DBUser.objects.get(db_link=link)
+                msg = "Ad already exits."
             else:
-                msg = "Unknown ad source: " + source
-                error_logger.warn(msg)
-                return Response({'error': msg})
-            msg = "Ad already exits. " + link
-            error_logger.info(msg)
+                msg = "Unknown ad source."
+            error_logger.info(msg, extra={'link': link, 'source': source})
             return Response({'error': msg})
         except (CLUser.DoesNotExist, DBUser.DoesNotExist):
             pass
@@ -194,10 +193,11 @@ class MiscViewSet(viewsets.ViewSet):
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category'], priority=-10
                 )
         except Exception, e:
-            msg = "Shout Creation Error. Deleting user: " + str(user)
-            error_logger.warn(msg, extra={'detail': str(e)})
+            msg = "Shout Creation Error. Deleting user."
+            extra = {'detail': str(e), 'deleted_user': str(user)}
+            error_logger.warn(msg, extra=extra)
             user.delete()
-            return Response({'error': msg, 'detail': str(e)})
+            return Response({'error': msg})
 
         # good bye!
         return Response({'success': True})
