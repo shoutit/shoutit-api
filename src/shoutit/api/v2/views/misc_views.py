@@ -139,16 +139,18 @@ class MiscViewSet(viewsets.ViewSet):
     def sss4(self, request):
         shout = request.data.get('shout')
         # check of previous ad
+        source = shout.get('source')
+        link = shout.get('link', '')
         try:
-            if shout['source'] == 'cl':
-                CLUser.objects.get(cl_email=shout['cl_email'])
-            elif shout['source'] == 'db':
-                DBUser.objects.get(db_link=shout['link'])
+            if source == 'cl':
+                CLUser.objects.get(cl_email=shout.get('cl_email'))
+            elif source == 'db':
+                DBUser.objects.get(db_link=link)
             else:
-                msg = "Unknown ad source: " + shout['source']
+                msg = "Unknown ad source: " + source
                 error_logger.warn(msg)
                 return Response({'error': msg})
-            msg = "Ad already exits. " + shout['link']
+            msg = "Ad already exits. " + link
             error_logger.info(msg)
             return Response({'error': msg})
         except (CLUser.DoesNotExist, DBUser.DoesNotExist):
@@ -156,16 +158,14 @@ class MiscViewSet(viewsets.ViewSet):
 
         # user creation
         try:
-            if shout['source'] == 'cl':
+            if source == 'cl':
                 user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
-                                                    lng=shout['lng'],
-                                                    city=shout['city'], country=shout['country'],
-                                                    dbcl_type='cl')
-            elif shout['source'] == 'db':
+                                                    lng=shout['lng'], city=shout['city'],
+                                                    country=shout['country'], dbcl_type='cl')
+            elif source == 'db':
                 user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
-                                                    city=shout['city'],
-                                                    country=shout['country'], dbcl_type='db',
-                                                    db_link=shout['link'])
+                                                    city=shout['city'], country=shout['country'],
+                                                    dbcl_type='db', db_link=shout['link'])
             else:
                 raise Exception('Unknown ad source')
         except Exception, e:
@@ -193,7 +193,6 @@ class MiscViewSet(viewsets.ViewSet):
                     tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
                     exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category'], priority=-10
                 )
-
         except Exception, e:
             msg = "Shout Creation Error. Deleting user: " + str(user)
             error_logger.warn(msg, extra={'detail': str(e)})
