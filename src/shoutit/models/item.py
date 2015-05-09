@@ -15,7 +15,7 @@ class Item(UUIDModel):
     videos = models.ManyToManyField('shoutit.Video', blank=True)
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.name[:30]
+        return unicode(self.name[:30])
 
     @property
     def thumbnail(self):

@@ -24,6 +24,7 @@ class ShoutAdmin(admin.ModelAdmin):
         'priority', 'date_published')
     list_filter = ('type', 'is_sss', 'is_disabled')
     readonly_fields = ('_user', 'item')
+    ordering = ('-date_published',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -36,6 +37,7 @@ class ShoutAdmin(admin.ModelAdmin):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -101,6 +103,7 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('is_active', 'is_activated', UserEmailFilter, 'is_test', 'is_staff',
                    'is_superuser', 'groups')
     readonly_fields = ('_messaging', '_profile')
+    ordering = ('-date_joined',)
     form = CustomUserChangeForm
 
     def get_urls(self):
@@ -131,10 +134,11 @@ class CustomUserAdmin(UserAdmin):
 # Profile
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', '_user', 'country', 'city', 'gender', 'image')
+    list_display = ('id', '_user', 'country', 'city', 'gender', 'image', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
     readonly_fields = ('_user',)
     list_filter = ('country', 'city', 'gender', UserEmailFilter)
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -145,9 +149,10 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin):
-    list_display = ('_user', 'facebook_id', 'access_token', 'expires')
+    list_display = ('_user', 'facebook_id', 'access_token', 'expires', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
                      'facebook_id']
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -158,9 +163,10 @@ class LinkedFacebookAccountAdmin(admin.ModelAdmin):
 
 @admin.register(LinkedGoogleAccount)
 class LinkedGoogleAccountAdmin(admin.ModelAdmin):
-    list_display = ('_user', 'gplus_id')
+    list_display = ('_user', 'gplus_id', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
                      'facebook_id']
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -271,6 +277,7 @@ class ConversationAdmin(admin.ModelAdmin):
         (_('Extra'), {'fields': ('_messages',)}),
     )
     raw_id_fields = ('users',)
+    ordering = ('-created_at',)
 
     def _users(self, conversation):
         return '<br/>'.join(['- ' + user_link(user) for user in conversation.users.all()])
@@ -295,7 +302,8 @@ class MessageAdmin(admin.ModelAdmin):
     readonly_fields = ('_conversation', '_user')
     fieldsets = (
         (None, {'fields': ('_conversation', '_user', 'text')}),
-)
+    )
+    ordering = ('-created_at',)
 
     def _user(self, message):
         return user_link(message.user)
@@ -326,6 +334,7 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'message', 'conversation', 'type', 'content_type', 'object_id', 'created_at')
     search_fields = ['message__id', 'conversation__id']
+    ordering = ('-created_at',)
 
 
 # Report
@@ -333,10 +342,11 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
 class ReportAdmin(admin.ModelAdmin):
     list_display = (
         'type_name', '_user', 'text', 'attached_object', 'content_type', 'object_id', 'is_solved',
-        'is_disabled')
+        'is_disabled', 'created_at')
     list_filter = ('is_solved', 'is_disabled')
     actions = ['mark_as_solved', 'mark_as_disabled']
     readonly_fields = ('_user', 'attached_object', 'content_type')
+    ordering = ('-created_at',)
 
     def mark_as_solved(self, request, queryset):
         queryset.update(is_solved=True)
@@ -357,9 +367,9 @@ class ReportAdmin(admin.ModelAdmin):
 
 @admin.register(ConfirmToken)
 class ConfirmTokenAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'type', '_user', 'token', 'email', 'is_disabled')
+    list_display = ('id', 'type', '_user', 'token', 'email', 'is_disabled', 'created_at')
     list_filter = ('type', 'is_disabled')
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -370,8 +380,8 @@ class ConfirmTokenAdmin(admin.ModelAdmin):
 
 @admin.register(DBUser)
 class DBUserAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', '_user', 'db_link')
+    list_display = ('id', '_user', 'db_link', 'created_at')
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -382,8 +392,8 @@ class DBUserAdmin(admin.ModelAdmin):
 
 @admin.register(CLUser)
 class CLUserAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', '_user', 'cl_email')
+    list_display = ('id', '_user', 'cl_email', 'created_at')
+    ordering = ('-created_at',)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -394,8 +404,8 @@ class CLUserAdmin(admin.ModelAdmin):
 
 @admin.register(DBCLConversation)
 class DBCLConversationAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'in_email', '_from_user', '_to_user', 'shout', 'ref')
+    list_display = ('id', 'in_email', '_from_user', '_to_user', 'shout', 'ref', 'created_at')
+    ordering = ('-created_at',)
 
     def _from_user(self, obj):
         return user_link(obj.from_user)
