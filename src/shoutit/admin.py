@@ -20,9 +20,9 @@ from django.utils.translation import ugettext_lazy as _
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin):
     list_display = (
-        'id', '_user', 'type', 'item', 'country', 'city', 'is_sss', 'is_disabled',
+        'id', '_user', 'type', 'category', 'item', 'country', 'city', 'is_sss', 'is_disabled',
         'priority', 'date_published')
-    list_filter = ('type', 'is_sss', 'is_disabled')
+    list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city')
     readonly_fields = ('_user', 'item')
     ordering = ('-date_published',)
 

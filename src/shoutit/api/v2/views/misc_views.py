@@ -230,11 +230,15 @@ def handle_db_reply(in_email, msg, request):
     try:
         dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
-        return Response({'error': "Unknown in_email"})
+        msg = {'error': "Unknown in_email"}
+        error_logger.info(msg['error'], extra={'in_email': in_email})
+        return Response(msg)
     try:
         text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
     except AttributeError:
-        return Response({'error': "we couldn't process the message text."})
+        msg = {'error': "we couldn't process the message text."}
+        error_logger.info(msg['error'], extra={'text': text})
+        return Response()
 
     from_user = dbcl_conversation.to_user
     email_exists = User.objects.filter(email=from_email).exists()

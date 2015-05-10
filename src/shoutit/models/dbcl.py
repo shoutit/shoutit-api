@@ -16,6 +16,10 @@ class DBCLUser(UUIDModel):
 class CLUser(DBCLUser):
     cl_email = models.EmailField(max_length=254)
 
+    @property
+    def cl_ad_id(self):
+        return self.cl_email.split('@')[0].split('-')[1]
+
 
 class DBUser(DBCLUser):
     db_link = models.URLField(max_length=1000)
@@ -47,21 +51,6 @@ def db_user(self):
 
 
 User.add_to_class('db_user', db_user)
-
-
-@property
-def cl_ad_id(self):
-    if hasattr(self, '_cl_ad_id') and self._cl_ad_id:
-        return self._cl_ad_id
-    try:
-        self._cl_ad_id = self.email.split('@')[0].split('-')[1]
-    except CLUser.DoesNotExist:
-        self._cl_ad_id = None
-
-    return self._cl_ad_id
-
-
-User.add_to_class('cl_ad_id', cl_ad_id)
 
 
 class DBCLConversation(UUIDModel):

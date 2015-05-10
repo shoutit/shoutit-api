@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import uuid
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.utils.translation import ugettext as _
 from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
@@ -76,6 +77,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 notify_db_user(user.db_user, from_user, attached_object)
                 # todo: !
                 # email_controller.email_db_user(user.db_user, from_user, attached_object)
+        if user.cl_user:
+            notify_cl_user(user.db_user, from_user, attached_object)
 
 
 def notify_db_user(db_user, from_user, message):
@@ -112,6 +115,45 @@ def notify_db_user(db_user, from_user, message):
             'db_response': d('#container').text(),
             'db_link': reply_url
         })
+
+
+def notify_cl_user2(cl_user, from_user, message):
+    shout = message.conversation.about
+    subject = shout.item.name
+    ref = uuid.uuid4().hex
+    in_email = ref + '@dbz-reply.com'
+    try:
+        DBCLConversation.objects.get(in_email=in_email)
+    except DBCLConversation.DoesNotExist:
+        DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=cl_user.user,
+                                        shout=message.conversation.about, ref=ref)
+    email = EmailMultiAlternatives(
+        subject=subject, body=message.text, to=[cl_user.cl_email],
+        from_email="%s <%s>" % (from_user.name, settings.EMAIL_HOST_USER), reply_to=[in_email])
+    email.send()
+
+
+def notify_cl_user(cl_user, from_user, message):
+    shout = message.conversation.about
+    subject = shout.item.name
+    ref = "%s-%s" % (cl_user.cl_ad_id, from_user.pk)
+    try:
+        DBCLConversation.objects.get(ref=ref)
+    except DBCLConversation.DoesNotExist:
+        dbcl_conversation = DBCLConversation(
+            ref=ref, from_user=from_user, to_user=cl_user.user, shout=shout)
+        dbcl_conversation.save()
+
+    email = EmailMultiAlternatives(
+        subject, "", "%s <%s>" % (from_user.name, settings.EMAIL_HOST_USER), [cl_user.cl_email])
+    html_message = """
+    <p>%s</p>
+    <br>
+    <br>
+    <p style="max-height:1px;min-height:1px;font-size:0;display:none;color:#fffffe">{ref:%s}</p>
+    """ % (message.text, ref)
+    email.attach_alternative(html_message, "text/html")
+    email.send()
 
 
 def notify_user_of_listen(user, listener, request=None):

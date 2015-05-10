@@ -222,49 +222,28 @@ def send_message_email(message):
     reply_to_email = from_user.email
 
     if to_user.cl_user:
-        from shoutit.models import DBCLConversation
+        return
 
-        subject = shout_name
-        ref = "%s-%s" % (to_user.cl_ad_id, from_user.pk)
-        try:
-            DBCLConversation.objects.get(ref=ref)
-        except DBCLConversation.DoesNotExist:
-            dbcl_conversation = DBCLConversation(ref=ref, from_user=from_user, to_user=to_user,
-                                                 shout=shout)
-            dbcl_conversation.save()
+    context = {
+        'to': to_name,
+        'from': from_name,
+        'from_link': from_link,
+        'shout_link': shout_link,
+        'shout_name': shout_name,
+        'message': message_text
+    }
+    html_template = get_template('message_email.html')
+    html_context = Context(context)
+    html_message = html_template.render(html_context)
 
-        msg = EmailMultiAlternatives(subject, "", "%s <%s>" % (from_name, settings.EMAIL_HOST_USER),
-                                     [to_email])
-        html_message = """
-        <p>%s</p>
-        <br>
-        <br>
-        <p style="max-height:1px;min-height:1px;font-size:0;display:none;color:#fffffe">{ref:%s}</p>
-        """ % (message_text, ref)
-        msg.attach_alternative(html_message, "text/html")
-        msg.send()
+    text_template = get_template('message_email.txt')
+    text_context = Context(context)
+    text_message = text_template.render(text_context)
 
-    else:
-        context = {
-            'to': to_name,
-            'from': from_name,
-            'from_link': from_link,
-            'shout_link': shout_link,
-            'shout_name': shout_name,
-            'message': message_text
-        }
-        html_template = get_template('message_email.html')
-        html_context = Context(context)
-        html_message = html_template.render(html_context)
-
-        text_template = get_template('message_email.txt')
-        text_context = Context(context)
-        text_message = text_template.render(text_context)
-
-        msg = EmailMultiAlternatives(subject, text_message, from_email, [to_email],
-                                     headers={'Reply-To': reply_to_email})
-        msg.attach_alternative(html_message, "text/html")
-        msg.send()
+    msg = EmailMultiAlternatives(subject, text_message, from_email, [to_email],
+                                 headers={'Reply-To': reply_to_email})
+    msg.attach_alternative(html_message, "text/html")
+    msg.send()
 
 
 def SendUserDealCancel(user, deal):

@@ -436,19 +436,19 @@ MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
 
 DEFAULT_FROM_EMAIL = 'Shoutit <noreply@shoutit.com>'
-USE_GOOGLE = False
-USE_MANDRILL = True
+USE_GOOGLE = True
+USE_MANDRILL = False
+FORCE_SMTP = True
 
-if USE_GOOGLE and not LOCAL:
-    DEFAULT_FROM_EMAIL = 'Nour <nour@syrex.me>'
+if USE_GOOGLE and (not LOCAL or FORCE_SMTP):
+    DEFAULT_FROM_EMAIL = 'Jack <reply@shoutit.com>'
     EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = '587'
-    EMAIL_HOST_USER = 'nour@syrex.me'
-    EMAIL_HOST_PASSWORD = ''
+    EMAIL_PORT = 587
+    EMAIL_HOST_USER = 'reply@shoutit.com'
+    EMAIL_HOST_PASSWORD = 'replytomenow'
     EMAIL_USE_TLS = True
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-elif USE_MANDRILL and not LOCAL:
+elif USE_MANDRILL and (not LOCAL or FORCE_SMTP):
     EMAIL_HOST = 'smtp.mandrillapp.com'
     EMAIL_PORT = 587
     EMAIL_HOST_USER = 'info@shoutit.com'
