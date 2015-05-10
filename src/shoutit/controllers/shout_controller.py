@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
-
+import random
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models.expressions import F
@@ -144,11 +144,14 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
                   address=address,
                   is_sss=is_sss, priority=priority)
 
-    if date_published:
-        shout.date_published = date_published
-        shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
-    else:
-        shout.expiry_date = exp_days and datetime.today() + timedelta(days=exp_days) or None
+    if not date_published:
+        date_published = datetime.today()
+        if is_sss:
+            hours = random.randrange(-11, 11)
+            minutes = random.randrange(-59, 59)
+            date_published += timedelta(hours=hours, minutes=minutes)
+    shout.date_published = date_published
+    shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
 
     shout.save()
     shouter.profile.stream.add_post(shout)
