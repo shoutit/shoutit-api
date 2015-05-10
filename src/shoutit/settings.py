@@ -119,7 +119,6 @@ from elasticsearch_dsl.connections import connections
 # Define a default global Elasticsearch client
 ES = connections.create_connection(hosts=['es.shoutit.com'])
 
-
 AUTH_USER_MODEL = 'shoutit.User'
 
 # Application definition
@@ -435,36 +434,59 @@ LOGGING = {
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
 
-DEFAULT_FROM_EMAIL = 'Shoutit <noreply@shoutit.com>'
-USE_GOOGLE = True
-USE_MANDRILL = False
 FORCE_SMTP = True
 
-if USE_GOOGLE and (not LOCAL or FORCE_SMTP):
-    DEFAULT_FROM_EMAIL = 'Jack <reply@shoutit.com>'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_HOST_USER = 'reply@shoutit.com'
-    EMAIL_HOST_PASSWORD = 'replytomenow'
-    EMAIL_USE_TLS = True
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-elif USE_MANDRILL and (not LOCAL or FORCE_SMTP):
-    EMAIL_HOST = 'smtp.mandrillapp.com'
-    EMAIL_PORT = 587
-    EMAIL_HOST_USER = 'info@shoutit.com'
-    EMAIL_HOST_PASSWORD = 'bneGVmK5BHC5B9pyLUEj_w'
-    EMAIL_USE_TLS = True
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+GOOGLE_SMTP = {
+    'default_from_email': 'Jack <reply@shoutit.com>',
+    'host': 'smtp.gmail.com',
+    'port': 587,
+    'username': 'reply@shoutit.com',
+    'password': 'replytomenow',
+    'use_tls': True,
+    'time_out': 5,
+    'backend': 'django.core.mail.backends.smtp.EmailBackend'
+}
+
+MANDRILL_SMTP = {
+    'default_from_email': 'Shoutit <noreply@shoutit.com>',
+    'host': 'smtp.mandrillapp.com',
+    'port': 587,
+    'username': 'info@shoutit.com',
+    'password': 'bneGVmK5BHC5B9pyLUEj_w',
+    'use_tls': True,
+    'time_out': 5,
+    'backend': 'django.core.mail.backends.smtp.EmailBackend'
+}
+
+FILE_SMTP = {
+    'host': 'localhost',
+    'backend': 'django.core.mail.backends.filebased.EmailBackend',
+    'file_path': os.path.join(LOG_DIR, 'messages')
+}
+
+EMAIL_BACKENDS = {
+    'google': GOOGLE_SMTP,
+    'mandrill': MANDRILL_SMTP,
+    'file': FILE_SMTP
+}
+
+if not LOCAL or FORCE_SMTP:
+    EMAIL_USING = EMAIL_BACKENDS['mandrill']
 else:
-    EMAIL_HOST = SHOUT_IT_HOST
-    EMAIL_PORT = '25'
-    EMAIL_HOST_USER = 'admin'
-    EMAIL_HOST_PASSWORD = 'password'
-    EMAIL_USE_TLS = False
-    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-    EMAIL_FILE_PATH = os.path.join(LOG_DIR, 'messages')
+    EMAIL_USING = EMAIL_BACKENDS['file']
+
+DEFAULT_FROM_EMAIL = EMAIL_USING.get('default_from_email')
+EMAIL_HOST = EMAIL_USING.get('host')
+EMAIL_PORT = EMAIL_USING.get('port')
+EMAIL_HOST_USER = EMAIL_USING.get('username')
+EMAIL_HOST_PASSWORD = EMAIL_USING.get('password')
+EMAIL_USE_TLS = EMAIL_USING.get('use_tls')
+EMAIL_TIMEOUT = EMAIL_USING.get('time_out')
+EMAIL_BACKEND = EMAIL_USING.get('backend')
+EMAIL_FILE_PATH = EMAIL_USING.get('file_path')
 
 info("EMAIL_HOST:", EMAIL_HOST)
+info("FORCE_SMTP:", FORCE_SMTP)
 
 # Facebook App
 FACEBOOK_APP_ID = '353625811317277'
@@ -533,8 +555,10 @@ SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 # PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-public-key.pem')
+PAYPAL_PRIVATE_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal',
+                                   'paypal-private-key.pem')
+PAYPAL_PUBLIC_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal',
+                                  'paypal-public-key.pem')
 PAYPAL_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-cert.pem')
 PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
 PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
@@ -614,5 +638,6 @@ SWAGGER_SETTINGS = {
 
 # some monkey patching for global imports
 from common import monkey_patches
+
 info('Monkeys: Loaded')
 info("==================================================")

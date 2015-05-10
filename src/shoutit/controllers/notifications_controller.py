@@ -14,6 +14,8 @@ from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAG
 from shoutit.controllers import email_controller
 from shoutit.models import Notification, DBCLConversation
 import logging
+from shoutit.utils import get_google_smtp_connection
+
 logger = logging.getLogger('shoutit.debug')
 error_logger = logging.getLogger('shoutit.error')
 
@@ -111,7 +113,7 @@ def notify_db_user(db_user, from_user, message):
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:
         d = pq(db_res_content)
-        error_logger.error("Error sending message to db user.", extra={
+        error_logger.warn("Error sending message to db user.", extra={
             'db_response': d('#container').text(),
             'db_link': reply_url
         })
@@ -120,17 +122,23 @@ def notify_db_user(db_user, from_user, message):
 def notify_cl_user2(cl_user, from_user, message):
     shout = message.conversation.about
     subject = shout.item.name
-    ref = uuid.uuid4().hex
+    ref = "%s-%s" % (from_user.username, shout.pk)
     in_email = ref + '@dbz-reply.com'
     try:
         DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
         DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=cl_user.user,
                                         shout=message.conversation.about, ref=ref)
-    email = EmailMultiAlternatives(
-        subject=subject, body=message.text, to=[cl_user.cl_email],
-        from_email="%s <%s>" % (from_user.name, settings.EMAIL_HOST_USER), reply_to=[in_email])
-    email.send()
+    reply_to = "%s <%s>" % (from_user.name, in_email)
+    connection = get_google_smtp_connection()
+    email = EmailMultiAlternatives(subject=subject, body=message.text, to=[cl_user.cl_email],
+                                   from_email=reply_to, reply_to=[reply_to], connection=connection)
+    if email.send(True) == 1:
+        logger.debug("Sent message to cl user about his ad id: %s" % cl_user.cl_ad_id)
+    else:
+        error_logger.warn("Error sending message to cl user.", extra={
+            'cl_email': cl_user.cl_email
+        })
 
 
 def notify_cl_user(cl_user, from_user, message):

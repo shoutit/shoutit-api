@@ -7,6 +7,7 @@ import base64
 import hashlib
 import hmac
 import re
+from django.core.mail import get_connection
 from django.http import HttpResponse
 from shoutit import settings
 import mailchimp
@@ -137,3 +138,7 @@ class JsonResponseBadRequest(JsonResponse):
 
 def get_mailchimp_api():
     return mailchimp.Mailchimp(settings.MAILCHIMP_API_KEY)
+
+
+def get_google_smtp_connection():
+    return get_connection(**settings.EMAIL_BACKENDS['google'])

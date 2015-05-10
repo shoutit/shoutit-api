@@ -145,7 +145,7 @@ class MiscViewSet(viewsets.ViewSet):
             if source == 'cl':
                 CLUser.objects.get(cl_email=shout.get('cl_email'))
                 msg = "Ad already exits."
-            elif source == 'db':
+            elif source == 'dbz':
                 DBUser.objects.get(db_link=link)
                 msg = "Ad already exits."
             else:
@@ -161,12 +161,12 @@ class MiscViewSet(viewsets.ViewSet):
                 user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
                                                     lng=shout['lng'], city=shout['city'],
                                                     country=shout['country'], dbcl_type='cl')
-            elif source == 'db':
+            elif source == 'dbz':
                 user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
                                                     city=shout['city'], country=shout['country'],
-                                                    dbcl_type='db', db_link=shout['link'])
+                                                    dbcl_type='dbz', db_link=shout['link'])
             else:
-                raise Exception('Unknown ad source')
+                raise Exception('Unknown ad source.')
         except Exception, e:
             msg = "User Creation Error."
             error_logger.warn(msg, extra={'detail': str(e)})
@@ -240,7 +240,7 @@ def handle_dbz_reply(in_email, msg, request):
             source = 'dbz'
             text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
         else:
-            text = '\n'.join(text.split('\n> ')[0].splitlines()[:-2])
+            text = '\n'.join(text.split(dbcl_conversation.from_user.name)[0].splitlines()[:-2])
     except AttributeError:
         error = {'error': "Couldn't process the message text."}
         error_logger.info(error['error'], extra={'in_email': in_email, 'source': source, 'text':text})
