@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from datetime import timedelta, datetime
 from django.contrib.postgres.fields import ArrayField
-
+from django.utils import timezone
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
@@ -98,7 +98,7 @@ class Post(UUIDModel, APIModelMixin):
     text = models.TextField(max_length=2000, default='', db_index=True, blank=True)
     type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True,
                                choices=PostType.choices)
-    date_published = models.DateTimeField(auto_now_add=True, db_index=True)
+    date_published = models.DateTimeField(default=timezone.now, db_index=True)
 
     muted = models.BooleanField(default=False, db_index=True)
     is_disabled = models.BooleanField(default=False, db_index=True)
