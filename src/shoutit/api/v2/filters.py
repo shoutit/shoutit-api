@@ -83,13 +83,14 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             f = [F('term', city=city)]
             try:
                 pd_city = PredefinedCity.objects.get(city=city)
+            except PredefinedCity.DoesNotExist:
+                pass
+            else:
                 cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
                 for nearby_city in cities:
                     f.append(F('term', city=nearby_city.city))
-            except PredefinedCity.DoesNotExist:
-                pass
-            city_f = F('bool', should=f)
-            index_queryset = index_queryset.filter(city_f)
+                city_f = F('bool', should=f)
+                index_queryset = index_queryset.filter(city_f)
 
         category = data.get('category')
         if category:
