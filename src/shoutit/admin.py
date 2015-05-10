@@ -59,21 +59,31 @@ class UserEmailFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
+            ('shoutit', _('only shoutit users')),
             ('yes', _('yes')),
             ('no', _('no')),
+            ('cl', _('only cl users')),
         )
 
     def queryset(self, request, queryset):
         if queryset.model == User:
+            if self.value() == 'shoutit':
+                return queryset.filter(~Q(email=''), ~Q(email__icontains='@sale.craigslist.org'))
             if self.value() == 'yes':
                 return queryset.filter(~Q(email=''))
             if self.value() == 'no':
                 return queryset.filter(email='')
+            if self.value() == 'cl':
+                return queryset.filter(email__icontains='@sale.craigslist.org')
         elif queryset.model == Profile:
+            if self.value() == 'shoutit':
+                return queryset.filter(~Q(user__email=''), ~Q(user__email__icontains='@sale.craigslist.org'))
             if self.value() == 'yes':
                 return queryset.filter(~Q(user__email=''))
             if self.value() == 'no':
                 return queryset.filter(user__email='')
+            if self.value() == 'cl':
+                return queryset.filter(user__email__icontains='@sale.craigslist.org')
 
 
 class CustomUserChangeForm(UserChangeForm):
