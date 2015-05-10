@@ -262,7 +262,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def verification_link(self):
         try:
             cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL, is_disabled=False)[0]
-            return settings.API_LINK + 'auth/verify_email?token=' + cf.token
+            return settings.API_LINK + 'auth/verify_email?format=json&token=' + cf.token
         except IndexError:
             return settings.API_LINK
 
