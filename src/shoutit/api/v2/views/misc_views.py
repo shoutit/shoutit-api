@@ -217,32 +217,38 @@ class MiscViewSet(viewsets.ViewSet):
             msg = mandrill_events[0].get('msg') if mandrill_events else {}
             in_email = msg.get('email')
             if 'dbz-reply.com' in in_email:
-                return handle_db_reply(in_email, msg, request)
+                return handle_dbz_reply(in_email, msg, request)
             elif 'cl-reply.com' in in_email:
                 return handle_cl_reply(msg, request)
             else:
                 return Response({'error': "Unknown in_email"})
 
 
-def handle_db_reply(in_email, msg, request):
+def handle_dbz_reply(in_email, msg, request):
     from_email = msg.get('from_email')
     text = msg.get('text')
     try:
         dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
-        msg = {'error': "Unknown in_email"}
-        error_logger.info(msg['error'], extra={'in_email': in_email})
-        return Response(msg)
+        error = {'error': "Unknown in_email."}
+        error_logger.info(error['error'], extra={'in_email': in_email})
+        return Response(error)
+    # extract actual message from email without quoted text
+    source = 'cl'
     try:
-        text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
+        if 'Dubizzle' in text:
+            source = 'dbz'
+            text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
+        else:
+            text = '\n'.join(text.split('\n> ')[0].splitlines()[:-2])
     except AttributeError:
-        msg = {'error': "we couldn't process the message text."}
-        error_logger.info(msg['error'], extra={'text': text})
-        return Response()
+        error = {'error': "Couldn't process the message text."}
+        error_logger.info(error['error'], extra={'in_email': in_email, 'source': source, 'text':text})
+        return Response(error)
 
     from_user = dbcl_conversation.to_user
     email_exists = User.objects.filter(email=from_email).exists()
-    if not email_exists:
+    if source == 'dbz' and not email_exists:
         from_user.email = from_email
         from_user.save()
     to_user = dbcl_conversation.from_user
