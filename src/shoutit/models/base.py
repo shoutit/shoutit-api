@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from common.utils import date_unix, AllowedUsernamesValidator
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE,
-    UserType)
+                              UserType)
 from shoutit.controllers import email_controller
 
 
@@ -271,7 +271,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         # invalidate other reset tokens
         self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL).update(is_disabled=True)
         # create new reset token
-        ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_RESET_PASSWORD)
+        ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_EMAIL)
         # email the user
         email_controller.send_signup_email(self)
 

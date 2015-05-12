@@ -7,7 +7,6 @@ from .settings_env import *
 from common.utils import get_address_port, check_offline_mood
 
 OFFLINE_MODE = check_offline_mood()
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
@@ -157,7 +156,6 @@ if LOCAL:
 # apps on on server [dev, prod]
 if ON_SERVER:
     INSTALLED_APPS += (
-        'storages',
     )
 # apps only on server development
 if DEV:
@@ -232,6 +230,7 @@ DEFAULT_LANGUAGE_CODE = 'en'
 
 
 # Static files (CSS, JavaScript, Images)
+FORCE_S3 = True
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -239,7 +238,10 @@ STATICFILES_FINDERS = (
 
 AWS_ACCESS_KEY_ID = 'AKIAIWBSACXFWBQ3MGWA'
 AWS_SECRET_ACCESS_KEY = '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'
-if ON_SERVER:
+if ON_SERVER or FORCE_S3:
+    INSTALLED_APPS += (
+        'storages',
+    )
     STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     AWS_STORAGE_BUCKET_NAME = 'shoutit-api-static'
     AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
@@ -251,6 +253,9 @@ else:
 STATICFILES_DIRS = (
     os.path.join(DJANGO_DIR, 'static'),
 )
+
+info('FORCE_S3:', FORCE_S3)
+info('STATIC_URL:', STATIC_URL)
 
 # Templates
 TEMPLATE_DIRS = (
@@ -485,8 +490,8 @@ EMAIL_TIMEOUT = EMAIL_USING.get('time_out')
 EMAIL_BACKEND = EMAIL_USING.get('backend')
 EMAIL_FILE_PATH = EMAIL_USING.get('file_path')
 
-info("EMAIL_HOST:", EMAIL_HOST)
 info("FORCE_SMTP:", FORCE_SMTP)
+info("EMAIL_HOST:", EMAIL_HOST)
 
 # Facebook App
 FACEBOOK_APP_ID = '353625811317277'
