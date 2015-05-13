@@ -7,6 +7,9 @@ from django.core.mail import get_connection
 from django.conf import settings
 from common import constants
 from shoutit.utils import get_google_smtp_connection
+import logging
+logger = logging.getLogger('shoutit.debug')
+error_logger = logging.getLogger('shoutit.error')
 
 
 def SendEmail(email, variables, html_template, text_template):
@@ -65,7 +68,7 @@ def send_cl_invitation_email(cl_user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
-        'shout': cl_user.shout.item.name,
+        'shout': cl_user.shout.item.name[:30] + '...',
         'link': 'http://hyperurl.co/shoutitcl',
     })
     text_template = get_template('cl_user_invitation_email.txt')
@@ -73,21 +76,27 @@ def send_cl_invitation_email(cl_user):
     connection = get_google_smtp_connection()
     email = EmailMultiAlternatives(subject=subject, body=text_message, to=[cl_user.cl_email],
                                    from_email=from_email, connection=connection)
-    email.send()
+    if email.send(True):
+        logger.debug("Sent invitation to cl user: %s" % str(cl_user.user))
+    else:
+        error_logger.warn("Failed to send invitation to cl user: %s" % str(cl_user.user))
 
 
 def send_db_invitation_email(db_user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
-        'shout': db_user.shout.item.name,
-        'link': 'http://hyperurl.co/shoutitcl',
+        'shout': db_user.shout.item.name[:30] + '...',
+        'link': 'http://hyperurl.co/shoutitdb',
     })
     html_template = get_template('db_user_invitation_email.html')
     html_message = html_template.render(context)
     email = EmailMultiAlternatives(subject=subject, to=[db_user.user.email], from_email=from_email)
     email.attach_alternative(html_message, "text/html")
-    email.send()
+    if email.send(True):
+        logger.debug("Sent invitation to db user: %s" % str(db_user.user))
+    else:
+        error_logger.warn("Failed to send invitation to db user: %s" % str(db_user.user))
 
 
 def send_template_email_test(template, email, context, use_google_connection=False):
