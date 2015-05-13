@@ -226,29 +226,33 @@ class MiscViewSet(viewsets.ViewSet):
 
 def handle_dbz_reply(in_email, msg, request):
     from_email = msg.get('from_email')
-    text = msg.get('text')
     try:
         dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
         error = {'error': "Unknown in_email."}
         error_logger.info(error['error'], extra={'in_email': in_email})
         return Response(error)
+
+    from_user = dbcl_conversation.to_user
+    to_user = dbcl_conversation.from_user
+    shout = dbcl_conversation.shout
+    if from_user.cl_user:
+        source = 'cl'
+    else:
+        source = 'dbz'
+
     # extract actual message from email without quoted text
-    source = 'cl'
+    text = msg.get('text')
     try:
-        if 'Dubizzle' in text:
-            source = 'dbz'
-            text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
-        else:
+        if source == 'cl':
             text = '\n'.join(text.split(dbcl_conversation.from_user.name)[0].splitlines()[:-2])
+        else:
+            text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
     except AttributeError:
         error = {'error': "Couldn't process the message text."}
         error_logger.info(error['error'], extra={'in_email': in_email, 'source': source, 'text':text})
         return Response(error)
 
-    from_user = dbcl_conversation.to_user
-    to_user = dbcl_conversation.from_user
-    shout = dbcl_conversation.shout
     message = message_controller.send_message(conversation=None, user=from_user,
                                               to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
