@@ -28,7 +28,7 @@ def SendEmail(email, variables, html_template, text_template):
     msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
     msg.attach_alternative(html_message, "text/html")
 
-    msg.send()
+    msg.send(True)
 
 
 def send_password_reset_email(user):
@@ -45,7 +45,7 @@ def send_password_reset_email(user):
     text_message = text_template.render(context)
     msg = EmailMultiAlternatives(subject, text_message, from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    msg.send(True)
 
 
 def send_signup_email(user):
@@ -61,7 +61,7 @@ def send_signup_email(user):
     html_message = html_template.render(context)
     msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    msg.send(True)
 
 
 def send_cl_invitation_email(cl_user):
@@ -110,7 +110,7 @@ def send_template_email_test(template, email, context, use_google_connection=Fal
         connection = get_google_smtp_connection()
         email.connection = connection
     email.attach_alternative(html_message, "text/html")
-    email.send()
+    email.send(True)
 
 
 def SendListenEmail(follower, followed):
@@ -166,7 +166,7 @@ def SendExpiryNotificationEmail(user, shout):
     msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
     msg.attach_alternative(html_message, "text/html")
 
-    msg.send()
+    msg.send(True)
 
 
 # todo: links
@@ -204,7 +204,7 @@ def SendBuyOfferEmail(shout, buyer):
                                  headers={'Reply-To': buyer.email})
     msg.attach_alternative(html_message, "text/html")
 
-    msg.send()
+    msg.send(True)
 
 
 def SendSellOfferEmail(shout, seller):
@@ -294,7 +294,7 @@ def send_message_email(message):
     msg = EmailMultiAlternatives(subject, text_message, from_email, [to_email],
                                  headers={'Reply-To': reply_to_email})
     msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    msg.send(True)
 
 
 def SendUserDealCancel(user, deal):
@@ -325,7 +325,7 @@ def SendUserDealCancel(user, deal):
 
     msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL, [user.email])
     msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    msg.send(True)
 
 
 def SendBusinessDealCancel(deal):
@@ -353,7 +353,7 @@ def SendBusinessDealCancel(deal):
     msg = EmailMultiAlternatives(subject, text_message, settings.DEFAULT_FROM_EMAIL,
                                  [deal.Business.email])
     msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    msg.send(True)
 
 
 def SendBusinessSignupEmail(user, email, name):
@@ -378,7 +378,7 @@ def SendBusinessSignupEmail(user, email, name):
     msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
     msg.attach_alternative(html_message, "text/html")
 
-    msg.send()
+    msg.send(True)
 
 
 def SendBusinessRejectionEmail(user, email, link):
@@ -405,7 +405,7 @@ def SendBusinessRejectionEmail(user, email, link):
     msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
     msg.attach_alternative(html_message, "text/html")
 
-    msg.send()
+    msg.send(True)
 
 
 def SendBusinessAcceptanceEmail(user, email, link):
@@ -434,7 +434,7 @@ def SendBusinessAcceptanceEmail(user, email, link):
     msg = EmailMultiAlternatives(subject, text_message, from_email, [to])
     msg.attach_alternative(html_message, "text/html")
 
-    msg.send()
+    msg.send(True)
 
 
 def SendBusinessBuyersDocument(deal, document):
@@ -465,7 +465,7 @@ def SendBusinessBuyersDocument(deal, document):
                                  [deal.Business.user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.attach('%s_vouchers.pdf' % deal_name.replace(' ', '_'), document, 'application/pdf')
-    msg.send()
+    msg.send(True)
 
 
 def SendUserDealVoucher(buy, voucher):
@@ -496,7 +496,7 @@ def SendUserDealVoucher(buy, voucher):
                                  [buy.user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.attach('%s_vouchers.pdf' % deal_name.replace(' ', '_'), voucher, 'application/pdf')
-    msg.send()
+    msg.send(True)
 
 
 def SendInvitationEmail(from_user, names_emails_dict):

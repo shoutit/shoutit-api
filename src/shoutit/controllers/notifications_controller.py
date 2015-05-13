@@ -161,7 +161,7 @@ def notify_cl_user(cl_user, from_user, message):
     <p style="max-height:1px;min-height:1px;font-size:0;display:none;color:#fffffe">{ref:%s}</p>
     """ % (message.text, ref)
     email.attach_alternative(html_message, "text/html")
-    email.send()
+    email.send(True)
 
 
 def notify_user_of_listen(user, listener, request=None):
