@@ -283,6 +283,14 @@ def handle_cl_reply(msg, request):
     message = message_controller.send_message(conversation=None, user=from_user,
                                               to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
-    if message.conversation.messages_count < 4:
+
+    messages_count = message.conversation.messages_count
+    if messages_count < 4:
+        logger.debug('Messages count: %s' % messages_count)
+        logger.debug('Sending invitation email to cl user: %s' % str(from_user))
         from_user.cl_user.send_invitation_email()
+    else:
+        logger.debug('Messages count: %s' % messages_count)
+        logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
+
     return Response({'success': True, 'message_id': message.pk})
