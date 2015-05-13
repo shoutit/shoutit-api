@@ -14,6 +14,7 @@ class DBCLUser(UUIDModel):
     class Meta(UUIDModel.Meta):
         abstract = True
 
+    @property
     def shout(self):
         return Shout.objects.filter(user=self.user)[0]
 
