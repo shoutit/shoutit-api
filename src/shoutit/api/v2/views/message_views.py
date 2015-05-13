@@ -94,7 +94,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
 
         # only keep the messages that were not deleted by this user
         messages_ids = [message.id for message in page.object_list]
-        deleted_messages_ids = request.user.deleted_messages2.filter(id__in=messages_ids).values_list('id', flat=True)
+        deleted_messages_ids = request.user.deleted_messages.filter(id__in=messages_ids).values_list('id', flat=True)
         [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
 
         serializer = MessageSerializer(page, many=True, context={'request': request})

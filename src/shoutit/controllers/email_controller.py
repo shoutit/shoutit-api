@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from django.conf import settings
 from common import constants
+from shoutit.utils import get_google_smtp_connection
 
 
 def SendEmail(email, variables, html_template, text_template):
@@ -55,11 +56,52 @@ def send_signup_email(user):
     })
     html_template = get_template('registration_email.html')
     html_message = html_template.render(context)
-    text_template = get_template('registration_email.txt')
-    text_message = text_template.render(context)
-    msg = EmailMultiAlternatives(subject, text_message, from_email, [user.email])
+    msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
     msg.send()
+
+
+def send_cl_invitation_email(cl_user):
+    subject = _('Welcome to Shoutit!')
+    from_email = settings.DEFAULT_FROM_EMAIL
+    context = Context({
+        'shout': cl_user.shout.item.name,
+        'link': 'http://hyperurl.co/shoutitcl',
+    })
+    text_template = get_template('cl_user_invitation_email.txt')
+    text_message = text_template.render(context)
+    connection = get_google_smtp_connection()
+    email = EmailMultiAlternatives(subject=subject, body=text_message, to=[cl_user.cl_email],
+                                   from_email=from_email, connection=connection)
+    email.send()
+
+
+def send_db_invitation_email(db_user):
+    subject = _('Welcome to Shoutit!')
+    from_email = settings.DEFAULT_FROM_EMAIL
+    context = Context({
+        'shout': db_user.shout.item.name,
+        'link': 'http://hyperurl.co/shoutitcl',
+    })
+    html_template = get_template('db_user_invitation_email.html')
+    html_message = html_template.render(context)
+    email = EmailMultiAlternatives(subject=subject, to=[db_user.user.email], from_email=from_email)
+    email.attach_alternative(html_message, "text/html")
+    email.send()
+
+
+def send_template_email_test(template, email, context, use_google_connection=False):
+    subject = _('Template Test!')
+    from_email = settings.DEFAULT_FROM_EMAIL
+    context = Context(context)
+    html_template = get_template(template)
+    html_message = html_template.render(context)
+    email = EmailMultiAlternatives(subject=subject, to=[email], from_email=from_email)
+    if use_google_connection:
+        connection = get_google_smtp_connection()
+        email.connection = connection
+    email.attach_alternative(html_message, "text/html")
+    email.send()
 
 
 def SendListenEmail(follower, followed):

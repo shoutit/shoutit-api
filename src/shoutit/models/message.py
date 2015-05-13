@@ -31,7 +31,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
 
     def get_messages(self, before=None, after=None, limit=25):
-        messages = self.messages2.order_by('-created_at')
+        messages = self.messages.order_by('-created_at')
         if before:
             messages = messages.filter(created_at__lt=datetime.fromtimestamp(before))
         if after:
@@ -39,10 +39,10 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         return messages[:limit][::-1]
 
     def get_messages_qs(self, ):
-        return self.messages2.order_by('-created_at')
+        return self.messages.order_by('-created_at')
 
     def get_messages_qs2(self, ):
-        return self.messages2.all()
+        return self.messages.all()
 
     @property
     def about(self):
@@ -54,10 +54,10 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
 
     @property
     def messages_count(self):
-        return self.messages2.count()
+        return self.messages.count()
 
     def unread_messages_count(self, user):
-        return self.messages_count - user.read_messages2.filter(conversation=self).count()
+        return self.messages_count - user.read_messages.filter(conversation=self).count()
 
     def mark_as_deleted(self, user):
         # 1 - record the deletion
@@ -81,7 +81,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
 
     def mark_as_read(self, user):
         # todo: find more efficient way
-        for message in self.messages2.all():
+        for message in self.messages.all():
             try:
                 MessageRead.objects.create(user=user, message_id=message.id,
                                            conversation_id=message.conversation.id)
@@ -121,11 +121,11 @@ class Message(UUIDModel):
     Message is a message from user into a Conversation
     """
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
-    conversation = models.ForeignKey('shoutit.Conversation', related_name='messages2')
+    conversation = models.ForeignKey('shoutit.Conversation', related_name='messages')
     read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageRead',
-                                     related_name='read_messages2')
+                                     related_name='read_messages')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageDelete',
-                                        related_name='deleted_messages2')
+                                        related_name='deleted_messages')
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")
 
@@ -153,9 +153,9 @@ class MessageRead(UUIDModel):
     """
     MessageRead is to record a user reading a Message
     """
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='read_messages2_set')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='read_messages_set')
     message = models.ForeignKey('shoutit.Message', related_name='read_set')
-    conversation = models.ForeignKey('shoutit.Conversation', related_name='messages2_read_set')
+    conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_read_set')
 
     class Meta(UUIDModel.Meta):
         # user can mark the message as 'read' only once
@@ -166,9 +166,9 @@ class MessageDelete(UUIDModel):
     """
     MessageDelete is to record a user deleting a Message
     """
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_messages2_set')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_messages_set')
     message = models.ForeignKey(Message, related_name='deleted_set')
-    conversation = models.ForeignKey(Conversation, related_name='messages2_deleted_set')
+    conversation = models.ForeignKey(Conversation, related_name='messages_deleted_set')
 
     class Meta(UUIDModel.Meta):
         # user can mark the message as 'deleted' only once

@@ -251,6 +251,7 @@ def handle_dbz_reply(in_email, msg, request):
     if source == 'dbz' and not email_exists:
         from_user.email = from_email
         from_user.save()
+        from_user.db_user.send_invitation_email()
     to_user = dbcl_conversation.from_user
     shout = dbcl_conversation.shout
     message = message_controller.send_message(conversation=None, user=from_user,
@@ -282,4 +283,6 @@ def handle_cl_reply(msg, request):
     message = message_controller.send_message(conversation=None, user=from_user,
                                               to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
+    if message.conversation.messages_count() < 4:
+        from_user.cl_user.send_invitation_email()
     return Response({'success': True, 'message_id': message.pk})
