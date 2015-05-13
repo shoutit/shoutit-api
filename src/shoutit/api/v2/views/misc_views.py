@@ -247,16 +247,28 @@ def handle_dbz_reply(in_email, msg, request):
         return Response(error)
 
     from_user = dbcl_conversation.to_user
-    email_exists = User.objects.filter(email=from_email).exists()
-    if source == 'dbz' and not email_exists:
-        from_user.email = from_email
-        from_user.save()
-        from_user.db_user.send_invitation_email()
     to_user = dbcl_conversation.from_user
     shout = dbcl_conversation.shout
     message = message_controller.send_message(conversation=None, user=from_user,
                                               to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
+    # invitations
+    if source == 'dbz':
+        email_exists = User.objects.filter(email=from_email).exists()
+        if not email_exists:
+            from_user.email = from_email
+            from_user.save()
+            from_user.db_user.send_invitation_email()
+    if source == 'cl':
+        messages_count = message.conversation.messages_count
+        if messages_count < 4:
+            logger.debug('Messages count: %s' % messages_count)
+            logger.debug('Sending invitation email to cl user: %s' % str(from_user))
+            from_user.cl_user.send_invitation_email()
+        else:
+            logger.debug('Messages count: %s' % messages_count)
+            logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
+
     return Response({'success': True, 'message_id': message.pk})
 
 
@@ -283,14 +295,5 @@ def handle_cl_reply(msg, request):
     message = message_controller.send_message(conversation=None, user=from_user,
                                               to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
-
-    messages_count = message.conversation.messages_count
-    if messages_count < 4:
-        logger.debug('Messages count: %s' % messages_count)
-        logger.debug('Sending invitation email to cl user: %s' % str(from_user))
-        from_user.cl_user.send_invitation_email()
-    else:
-        logger.debug('Messages count: %s' % messages_count)
-        logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
 
     return Response({'success': True, 'message_id': message.pk})
