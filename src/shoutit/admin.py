@@ -296,8 +296,9 @@ class ConversationAdmin(admin.ModelAdmin):
     _users.allow_tags = True
 
     def _messages(self, conversation):
-        return '<a href="%s">Messages</a>' % (reverse('admin:shoutit_message_changelist')
-                                              + '?conversation__id=' + conversation.pk)
+        return '<a href="%s">Messages [%s]</a>' % (
+            reverse('admin:shoutit_message_changelist') + '?conversation__id=' + conversation.pk,
+            conversation.messages_count)
 
     _messages.allow_tags = True
     _messages.short_description = 'Messages'
@@ -425,10 +426,15 @@ class DBCLConversationAdmin(admin.ModelAdmin):
         return user_link(obj.to_user)
     _to_user.allow_tags = True
 
+
+@admin.register(Listen)
+class ListenAdmin(admin.ModelAdmin):
+    list_display = ('id', 'listener', 'stream')
+    readonly_fields = ('listener', 'stream')
+
 # admin.site.register(StoredFile)
 admin.site.register(Video)
 admin.site.register(Stream)
-admin.site.register(Listen)
 admin.site.register(Notification)
 admin.site.register(Currency)
 admin.site.register(PredefinedCity)
