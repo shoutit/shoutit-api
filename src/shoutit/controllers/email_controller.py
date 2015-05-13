@@ -87,7 +87,7 @@ def send_db_invitation_email(db_user):
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
         'shout': db_user.shout.item.name[:30] + '...',
-        'link': 'http://hyperurl.co/shoutitdb',
+        'link': 'http://hyperurl.co/shoutitdbz',
     })
     html_template = get_template('db_user_invitation_email.html')
     html_message = html_template.render(context)
