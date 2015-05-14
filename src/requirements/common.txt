@@ -44,3 +44,4 @@ django-ipware
 # requires apt-get install libcurl4-openssl-dev libxml2-dev libxslt-dev
 antigate
 pyquery
+fake_useragent
