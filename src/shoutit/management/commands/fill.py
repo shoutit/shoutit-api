@@ -262,6 +262,11 @@ class Command(BaseCommand):
         Currency.objects.get_or_create(country='DE', code='EUR', name='Euro')
         Currency.objects.get_or_create(country='EG', code='EGP', name='Pound')
         Currency.objects.get_or_create(country='GB', code='GBP', name='Pound')
-        Currency.objects.get_or_create(country='SA', code='SR', name='Riyal')
+        Currency.objects.get_or_create(country='SA', code='SAR', name='Riyal')
+        Currency.objects.get_or_create(country='KW', code='KWD', name='Riyal')
+        Currency.objects.get_or_create(country='QA', code='QAR', name='Riyal')
+        Currency.objects.get_or_create(country='BH', code='BHD', name='Riyal')
+        Currency.objects.get_or_create(country='OM', code='OMR', name='Riyal')
+        Currency.objects.get_or_create(country='JO', code='JOD', name='Riyal')
 
         self.stdout.write('Successfully filled initial data')
