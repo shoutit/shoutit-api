@@ -5,7 +5,7 @@ from shoutit.models.tag import Tag, Category, FeaturedTag
 from shoutit.models.misc import ConfirmToken, PredefinedCity, SharedLocation
 from shoutit.models.user import Profile, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission
 from shoutit.models.post import Event, Post, Shout, Video, ShoutIndex
-from shoutit.models.dbcl import DBUser, CLUser, DBCLConversation
+from shoutit.models.dbcl import DBUser, DBZ2User, CLUser, DBCLConversation
 from shoutit.models.message import Conversation, ConversationDelete, Message, MessageDelete, MessageRead
 from shoutit.models.message import MessageAttachment, Report, Notification
 

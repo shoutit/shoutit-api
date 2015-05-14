@@ -37,32 +37,38 @@ class DBUser(DBCLUser):
         return email_controller.send_db_invitation_email(self)
 
 
+class DBZ2User(DBCLUser):
+    db_link = models.URLField(max_length=1000)
+
+    def send_invitation_email(self):
+        return email_controller.send_db_invitation_email(self)
+
+
 @property
 def cl_user(self):
-    if hasattr(self, '_cl_user') and self._cl_user:
-        return self._cl_user
     try:
-        self._cl_user = self.cluser
+        return self.cluser
     except CLUser.DoesNotExist:
-        self._cl_user = None
-    return self._cl_user
-
-
+        return None
 User.add_to_class('cl_user', cl_user)
 
 
 @property
 def db_user(self):
-    if hasattr(self, '_db_user') and self._db_user:
-        return self._db_user
     try:
-        self._db_user = self.dbuser
+        return self.dbuser
     except DBUser.DoesNotExist:
-        self._db_user = None
-    return self._db_user
-
-
+        return None
 User.add_to_class('db_user', db_user)
+
+
+@property
+def dbz2_user(self):
+    try:
+        return self.dbz2user
+    except DBZ2User.DoesNotExist:
+        return None
+User.add_to_class('dbz2_user', dbz2_user)
 
 
 class DBCLConversation(UUIDModel):

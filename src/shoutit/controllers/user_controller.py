@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
 
 from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
-                            LinkedGoogleAccount, CLUser, DBUser)
+                            LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import to_seo_friendly, generate_username
 import logging
 
@@ -19,8 +19,10 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     user = signup_user(email, None, 'Shoutit', 'User')
     if dbcl_type == 'cl':
         dbcl_user = CLUser(user=user, cl_email=email)
-    else:
+    elif dbcl_type == 'db':
         dbcl_user = DBUser(user=user, db_link=db_link)
+    else:
+        dbcl_user = DBZ2User(user=user, db_link=db_link)
     dbcl_user.save()
 
     profile = user.profile

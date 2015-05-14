@@ -79,6 +79,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 notify_db_user(user.db_user, from_user, attached_object)
                 # todo: !
                 # email_controller.email_db_user(user.db_user, from_user, attached_object)
+        if user.dbz2_user:
+            notify_dbz2_user(user.dbz2_user, from_user, attached_object)
         if user.cl_user:
             notify_cl_user2(user.cl_user, from_user, attached_object)
 
@@ -115,6 +117,58 @@ def notify_db_user(db_user, from_user, message):
         d = pq(db_res_content)
         error_logger.warn("Error sending message to db user.", extra={
             'db_response': d('#container').text(),
+            'db_link': reply_url
+        })
+
+
+def get_dbz_base_url(db_link):
+    import urlparse
+    parts = urlparse.urlparse(db_link)
+    return parts.scheme + '://' + parts.netloc
+
+
+def notify_dbz2_user(db_user, from_user, message):
+    from antigate import AntiGate
+    from fake_useragent import UserAgent
+    import re
+
+    base_url = get_dbz_base_url(db_user.db_link)
+    reply_url = db_user.db_link.replace('/show/', '/reply/')
+
+    client = requests.session()
+    headers = {
+        'User-Agent': UserAgent().random,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': reply_url
+    }
+    reply_html = client.get(reply_url, headers=headers).content
+    csrftoken = client.cookies.get('csrftoken')
+
+    captcha_url = base_url + re.search('img src="(.*?)" alt="captcha"', reply_html).groups()[0]
+    captcha_img = requests.get(captcha_url)
+    gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
+    captcha_code = str(gate)
+    captcha_hash = re.search('captcha/image/(.*?)/', captcha_url).groups()[0]
+
+    ref = uuid.uuid4().hex
+    in_email = ref + '@dbz-reply.com'
+    DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
+                                    shout=message.conversation.about, ref=ref)
+    form_data = {
+        'csrfmiddlewaretoken': csrftoken,
+        'email': in_email,
+        'name': from_user.name,
+        'message': message.text,
+        'captcha_0': captcha_hash,
+        'captcha_1': captcha_code
+    }
+    res = client.post(reply_url, data=form_data, headers=headers)
+    db_res_content = res.content.decode('utf-8')
+    if 'success' in db_res_content:
+        logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
+    else:
+        error_logger.warn("Error sending message to db user.", extra={
+            'db_response': db_res_content,
             'db_link': reply_url
         })
 

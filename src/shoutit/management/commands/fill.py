@@ -260,5 +260,7 @@ class Command(BaseCommand):
         Currency.objects.get_or_create(country='AE', code='AED', name='Dirham')
         Currency.objects.get_or_create(country='US', code='USD', name='Dollar')
         Currency.objects.get_or_create(country='DE', code='EUR', name='Euro')
+        Currency.objects.get_or_create(country='EG', code='EGP', name='Pound')
+        Currency.objects.get_or_create(country='GB', code='GBP', name='Pound')
 
         self.stdout.write('Successfully filled initial data')

@@ -16,7 +16,7 @@ from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, 
                                         PredefinedCitySerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
-                            User)
+                            User, DBZ2User)
 
 error_logger = logging.getLogger('shoutit.error')
 logger = logging.getLogger('shoutit.debug')
@@ -144,15 +144,18 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             if source == 'cl':
                 CLUser.objects.get(cl_email=shout.get('cl_email'))
-                msg = "Ad already exits."
+                msg = "CL ad already exits."
             elif source == 'dbz':
                 DBUser.objects.get(db_link=link)
-                msg = "Ad already exits."
+                msg = "DBZ ad already exits."
+            elif source == 'dbz2':
+                DBZ2User.objects.get(db_link=link)
+                msg = "DBZ2 ad already exits."
             else:
                 msg = "Unknown ad source."
             error_logger.info(msg, extra={'link': link, 'source': source})
             return Response({'error': msg})
-        except (CLUser.DoesNotExist, DBUser.DoesNotExist):
+        except (CLUser.DoesNotExist, DBUser.DoesNotExist, DBZ2User.DoesNotExist):
             pass
 
         # user creation
@@ -161,10 +164,10 @@ class MiscViewSet(viewsets.ViewSet):
                 user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
                                                     lng=shout['lng'], city=shout['city'],
                                                     country=shout['country'], dbcl_type='cl')
-            elif source == 'dbz':
+            elif source in ['dbz', 'dbz2']:
                 user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
                                                     city=shout['city'], country=shout['country'],
-                                                    dbcl_type='dbz', db_link=shout['link'])
+                                                    dbcl_type=source, db_link=shout['link'])
             else:
                 raise Exception('Unknown ad source.')
         except Exception, e:
@@ -238,8 +241,10 @@ def handle_dbz_reply(in_email, msg, request):
     shout = dbcl_conversation.shout
     if from_user.cl_user:
         source = 'cl'
-    else:
+    elif from_user.db_user:
         source = 'dbz'
+    else:
+        source = 'dbz2'
 
     # extract actual message from email without quoted text
     text = msg.get('text')
@@ -257,12 +262,6 @@ def handle_dbz_reply(in_email, msg, request):
                                               to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
     # invitations
-    if source == 'dbz':
-        email_exists = User.objects.filter(email=from_email).exists()
-        if not email_exists:
-            from_user.email = from_email
-            from_user.save()
-            from_user.db_user.send_invitation_email()
     if source == 'cl':
         messages_count = message.conversation.messages_count
         if messages_count < 4:
@@ -272,6 +271,12 @@ def handle_dbz_reply(in_email, msg, request):
         else:
             logger.debug('Messages count: %s' % messages_count)
             logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
+    if source in ['dbz', 'dbz2']:
+        email_exists = User.objects.filter(email=from_email).exists()
+        if not email_exists:
+            from_user.email = from_email
+            from_user.save()
+            from_user.db_user.send_invitation_email()
 
     return Response({'success': True, 'message_id': message.pk})
 
