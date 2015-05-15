@@ -141,7 +141,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         }
         if sort and sort not in sort_types:
                 raise ValidationError({'sort': "Invalid sort."})
-        selected_sort = ('-priority',) + sort_types[sort]
+        # selected_sort = ('-priority',) + sort_types[sort]
+        selected_sort = sort_types[sort]
         if search:
             selected_sort = ('_score',) + selected_sort
         index_queryset = index_queryset.sort(*selected_sort)
