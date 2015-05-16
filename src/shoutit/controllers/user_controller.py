@@ -19,7 +19,7 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     user = signup_user(email, None)
     if dbcl_type == 'cl':
         dbcl_user = CLUser(user=user, cl_email=email)
-    elif dbcl_type == 'db':
+    elif dbcl_type == 'dbz':
         dbcl_user = DBUser(user=user, db_link=db_link)
     else:
         dbcl_user = DBZ2User(user=user, db_link=db_link)
