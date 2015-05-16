@@ -278,7 +278,10 @@ def handle_dbz_reply(in_email, msg, request):
         if not email_exists:
             from_user.email = from_email
             from_user.save()
-            from_user.db_user.send_invitation_email()
+            if from_user.db_user:
+                from_user.db_user.send_invitation_email()
+            if from_user.dbz2_user:
+                from_user.dbz2_user.send_invitation_email()
 
     return Response({'success': True, 'message_id': message.pk})
 
