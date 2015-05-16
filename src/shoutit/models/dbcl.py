@@ -1,10 +1,14 @@
 from __future__ import unicode_literals
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from shoutit.controllers import email_controller
 from shoutit.models import Shout
 
 from shoutit.models.base import UUIDModel, User
 from django.conf import settings
+import logging
+logger = logging.getLogger('shoutit.debug')
 
 
 class DBCLUser(UUIDModel):
@@ -17,6 +21,15 @@ class DBCLUser(UUIDModel):
     @property
     def shout(self):
         return Shout.objects.filter(user=self.user)[0]
+
+
+@receiver(post_delete)
+def post_delete_dbcl_user(sender, instance, *args, **kwargs):
+    if not issubclass(sender, DBCLUser):
+        return
+    if instance.user:
+        instance.user.delete()
+        logger.debug('Deleted User for: <%s>' % sender.__name__)
 
 
 class CLUser(DBCLUser):
