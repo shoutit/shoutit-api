@@ -103,10 +103,16 @@ REDIS_CACHES = {
 SESSION_ENGINE = REDIS_SESSION_ENGINE
 CACHES = REDIS_CACHES
 
+FORCE_SYNC_RQ = False
 RQ_QUEUE = ENV
 RQ_QUEUES = {
-    RQ_QUEUE: {'USE_REDIS_CACHE': 'default'},
+    RQ_QUEUE: {
+        'USE_REDIS_CACHE': 'default',
+    },
 }
+if DEBUG or FORCE_SYNC_RQ:
+    for queue_config in RQ_QUEUES.itervalues():
+        queue_config['ASYNC'] = False
 
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
 """
@@ -367,6 +373,11 @@ LOGGING = {
             'level': 'INFO',
             'filename': os.path.join(LOG_DIR, 'sql.log')
         },
+        'sss_file': {
+            'class': 'logging.FileHandler',
+            'level': 'DEBUG',
+            'filename': os.path.join(LOG_DIR, 'sss.log')
+        },
         'sql_console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -428,6 +439,11 @@ LOGGING = {
         },
         'shoutit.error': {
             'handlers': ['console_err_all', 'sentry_all'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'shoutit.sss': {
+            'handlers': ['sss_file'],
             'level': 'DEBUG',
             'propagate': False
         },

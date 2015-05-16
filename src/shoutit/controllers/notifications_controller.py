@@ -18,6 +18,7 @@ from shoutit.utils import get_google_smtp_connection
 
 logger = logging.getLogger('shoutit.debug')
 error_logger = logging.getLogger('shoutit.error')
+sss_logger = logging.getLogger('shoutit.sss')
 
 
 def mark_all_as_read(user):
@@ -163,13 +164,15 @@ def notify_dbz2_user(db_user, from_user, message):
         'captcha_1': captcha_code
     }
     res = client.post(reply_url, data=form_data, headers=headers)
-    db_res_content = res.content.decode('utf-8')
+    db_res_content = res.content.decode('utf-8').strip()
     if 'success' in db_res_content:
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:
+        sss_logger.warn("Error sending message to db user: " + db_user.db_link)
+        sss_logger.warn(db_res_content)
         error_logger.warn("Error sending message to db user.", extra={
             'db_response': db_res_content,
-            'db_link': reply_url
+            'db_link': db_user.db_link
         })
 
 
