@@ -15,10 +15,8 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class AbstractProfile(UUIDModel, StreamMixin):
-    image = models.URLField(max_length=1024,
-                            default='https://user-image.static.shoutit.com/'
-                                    '9ca75a6a-fc7e-48f7-9b25-ec71783c28f5-1428689093983.jpg',
-                            blank=True)
+    image = models.URLField(max_length=1024, blank=True,
+                            default='https://user-image.static.shoutit.com/default_male.jpg')
     video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
 
     # Location attributes

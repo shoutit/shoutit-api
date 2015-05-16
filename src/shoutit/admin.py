@@ -11,7 +11,7 @@ from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
-    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation)
+    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User)
 from django.utils.translation import ugettext_lazy as _
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
@@ -391,7 +391,19 @@ class ConfirmTokenAdmin(admin.ModelAdmin):
 
 @admin.register(DBUser)
 class DBUserAdmin(admin.ModelAdmin):
-    list_display = ('id', '_user', 'db_link', 'created_at')
+    list_display = ('id', '_user', 'db_link', 'shout','created_at')
+    ordering = ('-created_at',)
+
+    def _user(self, obj):
+        return user_link(obj.user)
+
+    _user.allow_tags = True
+    _user.short_description = 'User'
+
+
+@admin.register(DBZ2User)
+class DBZ2UserAdmin(admin.ModelAdmin):
+    list_display = ('id', '_user', 'db_link', 'shout', 'created_at')
     ordering = ('-created_at',)
 
     def _user(self, obj):
@@ -403,7 +415,7 @@ class DBUserAdmin(admin.ModelAdmin):
 
 @admin.register(CLUser)
 class CLUserAdmin(admin.ModelAdmin):
-    list_display = ('id', '_user', 'cl_email', 'created_at')
+    list_display = ('id', '_user', 'cl_email', 'shout', 'created_at')
     ordering = ('-created_at',)
 
     def _user(self, obj):

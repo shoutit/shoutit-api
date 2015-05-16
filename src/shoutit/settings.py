@@ -343,12 +343,12 @@ LOGGING = {
         },
         'sentry': {
             'level': 'ERROR',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'class': 'raven.contrib.django.handlers.SentryHandler',
             'filters': ['require_debug_false'],
         },
         'sentry_all': {
             'level': 'DEBUG',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'class': 'raven.contrib.django.handlers.SentryHandler',
             'filters': ['require_debug_false'],
         },
         'sentry_file': {
@@ -402,6 +402,8 @@ LOGGING = {
             'propagate': False,
         },
         'rq.worker': {
+            'handlers': ['console_out', 'console_err', 'sentry'],
+            "level": "DEBUG",
             'propagate': False,
         },
         # 'requests': {

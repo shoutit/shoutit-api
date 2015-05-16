@@ -16,7 +16,7 @@ logger = logging.getLogger('shoutit.debug')
 
 
 def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
-    user = signup_user(email, None, 'Shoutit', 'User')
+    user = signup_user(email, None)
     if dbcl_type == 'cl':
         dbcl_user = CLUser(user=user, cl_email=email)
     elif dbcl_type == 'db':
@@ -46,6 +46,10 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
         first_name = ''
     if len(last_name) < 1:
         last_name = ''
+    if not first_name:
+        first_name = 'user'
+    if not last_name:
+        last_name = username
     return User.objects.create_user(username=username, email=email, password=password,
                                     first_name=first_name, last_name=last_name, **kwargs)
 
