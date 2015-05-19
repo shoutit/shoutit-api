@@ -32,6 +32,8 @@ def mark_notifications_as_read_by_ids(notification_ids):
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
     from shoutit.api.v2 import serializers
+    # set the request.user to the notified user as if he was asking for it.
+    request.user = user
 
     notification = Notification(ToUser=user, type=notification_type, FromUser=from_user,
                                 attached_object=attached_object)
@@ -58,8 +60,10 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 })
             logger.debug("Sent apns push to %s." % user)
         except APNSError, e:
-            error_logger.warn("Could not send apns push to user %s." % user.username)
-            error_logger.warn("APNSError:", e)
+            error_logger.warn("Could not send apns push.", extra={
+                'user': user.username,
+                'APNSError': str(e)
+            })
 
     if user.gcm_device:
         try:
@@ -69,8 +73,10 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
             })
             logger.debug("Sent gcm push to %s." % user)
         except GCMError, e:
-            error_logger.warn("Could not send gcm push to user %s." % user.username)
-            error_logger.warn("GCMError:", e)
+            error_logger.warn("Could not send gcm push.", extra={
+                'user': user.username,
+                'GCMError': str(e)
+            })
 
     if notification_type == NOTIFICATION_TYPE_MESSAGE:
         if user.db_user:
@@ -156,9 +162,11 @@ def notify_dbz2_user(db_user, from_user, message):
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
                                     shout=message.conversation.about, ref=ref)
     form_data = {
+        'is_ajax': '1',
         'csrfmiddlewaretoken': csrftoken,
         'email': in_email,
         'name': from_user.name,
+        'mobile_number': '',
         'message': message.text,
         'captcha_0': captcha_hash,
         'captcha_1': captcha_code
