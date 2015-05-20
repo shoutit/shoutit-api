@@ -2,7 +2,7 @@
 gunicorn==19.3.0
 raven==5.2.0
 requests==2.7.0
-Django==1.8
+Django==1.8.1
 psycopg2==2.6
 
 django-grappelli==2.6.4
