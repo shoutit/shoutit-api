@@ -117,15 +117,18 @@ def notify_db_user(db_user, from_user, message):
         'captcha_1': captcha
     }
     res = requests.post(reply_url, form_data)
-    db_res_content = res.content.decode('utf-8')
+    db_res_content = res.content.decode('utf-8').strip()
     if 'Sent Succesfully' in db_res_content:
-        logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
+        sss_logger.debug("Sent message to dbz user about his ad on: %s" % db_user.db_link)
     else:
-        d = pq(db_res_content)
-        error_logger.warn("Error sending message to db user.", extra={
-            'db_response': d('#container').text(),
-            'db_link': reply_url
+        msg = "Error sending message to dbz user: " + db_user.db_link
+        msg += '\n' + db_res_content
+        sss_logger.warn(msg)
+        form_data.update({
+            'db_response': db_res_content,
+            'db_link': db_user.db_link
         })
+        error_logger.warn("Error sending message to dbz user.", extra=form_data)
 
 
 def get_dbz_base_url(db_link):
@@ -134,13 +137,13 @@ def get_dbz_base_url(db_link):
     return parts.scheme + '://' + parts.netloc
 
 
-def notify_dbz2_user(db_user, from_user, message):
+def notify_dbz2_user(dbz2_user, from_user, message):
     from antigate import AntiGate
     from fake_useragent import UserAgent
     import re
 
-    base_url = get_dbz_base_url(db_user.db_link)
-    reply_url = db_user.db_link.replace('/show/', '/reply/')
+    base_url = get_dbz_base_url(dbz2_user.db_link)
+    reply_url = dbz2_user.db_link.replace('/show/', '/reply/')
 
     client = requests.session()
     headers = {
@@ -159,7 +162,7 @@ def notify_dbz2_user(db_user, from_user, message):
 
     ref = uuid.uuid4().hex
     in_email = ref + '@dbz-reply.com'
-    DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
+    DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=dbz2_user.user,
                                     shout=message.conversation.about, ref=ref)
     form_data = {
         'is_ajax': '1',
@@ -174,16 +177,16 @@ def notify_dbz2_user(db_user, from_user, message):
     res = client.post(reply_url, data=form_data, headers=headers)
     db_res_content = res.content.decode('utf-8').strip()
     if 'success' in db_res_content:
-        logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
+        sss_logger.debug("Sent message to dbz2 user about his ad on: %s" % dbz2_user.db_link)
     else:
-        msg = "Error sending message to db user: " + db_user.db_link
+        msg = "Error sending message to dbz2 user: " + dbz2_user.db_link
         msg += '\n' + db_res_content
         sss_logger.warn(msg)
         form_data.update({
             'db_response': db_res_content,
-            'db_link': db_user.db_link
+            'db_link': dbz2_user.db_link
         })
-        error_logger.warn("Error sending message to db user.", extra=form_data)
+        error_logger.warn("Error sending message to dbz2 user.", extra=form_data)
 
 
 def notify_cl_user2(cl_user, from_user, message):

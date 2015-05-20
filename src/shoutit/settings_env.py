@@ -8,6 +8,8 @@ import sys
 import codecs
 
 # very important when printing unicode strings
+import datetime
+
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
@@ -26,4 +28,5 @@ PROD = ON_SERVER and ENV == 'shoutit_api_prod'
 
 
 def info(*args):
-    print("[INFO]  ", *args, file=sys.stderr)
+    _now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    print("[%s] [INFO]: " % _now, *args, file=sys.stderr)

@@ -294,15 +294,15 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '[%(levelname)s] [%(asctime)s]: %(message)s'
+            'format': '[%(asctime)s] [%(levelname)s]: %(message)s'
         },
         'simple_dashed': {
             'format': '-------------------------------------------'
-                      '[%(levelname)s] [%(asctime)s]: %(message)s'
+                      '[%(asctime)s] [%(levelname)s]: %(message)s'
                       '-------------------------------------------'
         },
         'detailed': {
-            'format': '[%(levelname)s] [%(asctime)s] in %(pathname)s:%(lineno)s:%(funcName)s: %(message)s'
+            'format': '[%(asctime)s] [%(levelname)s] in %(pathname)s:%(lineno)s:%(funcName)s: %(message)s'
         },
         'message_only': {
             'format': '%(message)s'
