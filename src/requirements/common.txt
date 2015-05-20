@@ -45,3 +45,9 @@ django-ipware
 antigate
 pyquery
 fake_useragent
+
+
+# urllib
+pyopenssl
+ndg-httpsclient
+pyasn1

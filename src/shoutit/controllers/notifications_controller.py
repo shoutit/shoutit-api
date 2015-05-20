@@ -176,12 +176,14 @@ def notify_dbz2_user(db_user, from_user, message):
     if 'success' in db_res_content:
         logger.debug("Sent message to db user about his ad on: %s" % db_user.db_link)
     else:
-        sss_logger.warn("Error sending message to db user: " + db_user.db_link)
-        sss_logger.warn(db_res_content)
-        error_logger.warn("Error sending message to db user.", extra={
+        msg = "Error sending message to db user: " + db_user.db_link
+        msg += '\n' + db_res_content
+        sss_logger.warn(msg)
+        form_data.update({
             'db_response': db_res_content,
             'db_link': db_user.db_link
         })
+        error_logger.warn("Error sending message to db user.", extra=form_data)
 
 
 def notify_cl_user2(cl_user, from_user, message):

@@ -296,6 +296,11 @@ LOGGING = {
         'simple': {
             'format': '[%(levelname)s] [%(asctime)s]: %(message)s'
         },
+        'simple_dashed': {
+            'format': '-------------------------------------------'
+                      '[%(levelname)s] [%(asctime)s]: %(message)s'
+                      '-------------------------------------------'
+        },
         'detailed': {
             'format': '[%(levelname)s] [%(asctime)s] in %(pathname)s:%(lineno)s:%(funcName)s: %(message)s'
         },
@@ -376,7 +381,8 @@ LOGGING = {
         'sss_file': {
             'class': 'logging.FileHandler',
             'level': 'DEBUG',
-            'filename': os.path.join(LOG_DIR, 'sss.log')
+            'filename': os.path.join(LOG_DIR, 'sss.log'),
+            'formatter': 'simple_dashed'
         },
         'sql_console': {
             'level': 'INFO',

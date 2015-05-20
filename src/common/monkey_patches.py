@@ -10,6 +10,13 @@ from django.http import HttpRequest
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl.result import Response
 from rest_framework.request import Request
+import urllib3.contrib.pyopenssl
+
+
+# tell urllib3 to switch the ssl backend to PyOpenSSL to avoid InsecurePlatformWarning
+# https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning
+urllib3.contrib.pyopenssl.inject_into_urllib3()
+
 
 default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
 
