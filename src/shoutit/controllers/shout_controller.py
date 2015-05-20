@@ -147,7 +147,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
     if not date_published:
         date_published = datetime.today()
         if is_sss:
-            hours = random.randrange(-23, 0)
+            hours = random.randrange(-5, 0)
             minutes = random.randrange(-59, 0)
             date_published += timedelta(hours=hours, minutes=minutes)
     shout.date_published = date_published

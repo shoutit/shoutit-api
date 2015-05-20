@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from django.contrib import admin
+from django.contrib.admin import DateFieldListFilter
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
@@ -100,7 +101,7 @@ class CustomUserAdmin(UserAdmin):
     save_on_top = True
     list_display = (
         'id', 'username', '_profile', 'email', 'first_name', 'last_name', '_messaging'
-        , 'is_staff', 'is_test', 'is_superuser', 'is_active', 'is_activated', 'last_login')
+        , 'is_staff', 'is_test', 'is_superuser', 'is_active', 'is_activated', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
@@ -111,7 +112,7 @@ class CustomUserAdmin(UserAdmin):
         (_('Extra'), {'fields': ('_messaging',)}),
     )
     list_filter = ('is_active', 'is_activated', UserEmailFilter, 'is_test', 'is_staff',
-                   'is_superuser', 'groups')
+                   'is_superuser', 'groups', ('created_at', DateFieldListFilter))
     readonly_fields = ('_messaging', '_profile')
     ordering = ('-date_joined',)
     form = CustomUserChangeForm
@@ -147,7 +148,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'country', 'city', 'gender', 'image', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
     readonly_fields = ('_user',)
-    list_filter = ('country', 'city', 'gender', UserEmailFilter)
+    list_filter = ('country', 'city', 'gender', UserEmailFilter, ('created_at', DateFieldListFilter))
     ordering = ('-created_at',)
 
     def _user(self, obj):
