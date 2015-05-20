@@ -48,6 +48,7 @@ fake_useragent
 
 
 # urllib
+# requires apt-get install libffi-dev
 pyopenssl
 ndg-httpsclient
 pyasn1
