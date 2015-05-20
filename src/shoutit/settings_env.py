@@ -29,4 +29,4 @@ PROD = ON_SERVER and ENV == 'shoutit_api_prod'
 
 def info(*args):
     _now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-    print("[%s] [INFO]: " % _now, *args, file=sys.stderr)
+    print("[%s] [INFO]:" % _now, *args, file=sys.stderr)

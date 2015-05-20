@@ -297,8 +297,8 @@ LOGGING = {
             'format': '[%(asctime)s] [%(levelname)s]: %(message)s'
         },
         'simple_dashed': {
-            'format': '-------------------------------------------'
-                      '[%(asctime)s] [%(levelname)s]: %(message)s'
+            'format': '-------------------------------------------\n'
+                      '[%(asctime)s] [%(levelname)s]: %(message)s\n'
                       '-------------------------------------------'
         },
         'detailed': {
