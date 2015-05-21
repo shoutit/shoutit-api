@@ -184,7 +184,7 @@ def add_pd_city(country, city, latitude, longitude):
 
 
 @receiver(post_save, sender=Shout)
-def shout_index(sender, instance=None, created=False, **kwargs):
+def save_shout_index(sender, instance=None, created=False, **kwargs):
     shout = instance
     action = 'Created' if created else 'Updated'
     logger.debug('{} Shout: {}: {}, city: {}'.format(action, shout.pk, shout.item.name, shout.city))
