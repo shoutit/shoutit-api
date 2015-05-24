@@ -250,11 +250,19 @@ def handle_dbz_reply(in_email, msg, request):
     text = msg.get('text')
     try:
         if source == 'cl':
-            text = '\n'.join(text.split(dbcl_conversation.from_user.name)[0].splitlines()[:-2])
+            split = dbcl_conversation.from_user.name
         elif source == 'dbz':
-            text = '\n'.join(text.split('Dubizzle')[0].splitlines()[:-2])
+            split = 'Dubizzle'
         else:
-            text = '\n'.join(text.split('dbz-reply')[0].splitlines()[:-2])
+            split = 'dbz-reply'
+        text = text.split(split)[0]
+        lines = text.splitlines()
+        if len(lines) > 4:
+            text = '\n'.join(lines[:-2])
+        else:
+            text = '\n'.join(lines)
+        if text.strip() == "":
+            text = '\n'.join(lines)
     except AttributeError:
         error = {'error': "Couldn't process the message text."}
         error_logger.info(error['error'], extra={'in_email': in_email, 'source': source, 'text':text})
