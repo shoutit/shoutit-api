@@ -124,6 +124,9 @@ def notify_db_user(db_user, from_user, message):
         msg = "Error sending message to dbz user: " + db_user.db_link
         msg += '\n' + db_res_content
         sss_logger.warn(msg)
+        # sentry doesn't like 'name' in extra
+        form_data['_name'] = form_data.get('name')
+        del form_data['name']
         form_data.update({
             'db_response': db_res_content,
             'db_link': db_user.db_link
@@ -180,8 +183,13 @@ def notify_dbz2_user(dbz2_user, from_user, message):
         sss_logger.debug("Sent message to dbz2 user about his ad on: %s" % dbz2_user.db_link)
     else:
         msg = "Error sending message to dbz2 user: " + dbz2_user.db_link
+        if '<!doctype html>' in db_res_content:
+            db_res_content = 'Truncated full html page response...'
         msg += '\n' + db_res_content
         sss_logger.warn(msg)
+        # sentry doesn't like name in extra
+        form_data['_name'] = form_data.get('name')
+        del form_data['name']
         form_data.update({
             'db_response': db_res_content,
             'db_link': dbz2_user.db_link
