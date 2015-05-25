@@ -153,15 +153,15 @@ class Message(UUIDModel):
 
 
 @receiver(post_save, sender=Message)
-def save_message(sender, message=None, created=False, **kwargs):
+def save_message(sender, instance=None, created=False, **kwargs):
     if created:
         # update the conversation
-        conversation = message.conversation
-        conversation.last_message = message
+        conversation = instance.conversation
+        conversation.last_message = instance
         conversation.save()
         # read it by its owner if exists (not by system)
-        if message.user:
-            MessageRead.objects.create(user=message.user, message=message, conversation=conversation)
+        if instance.user:
+            MessageRead.objects.create(user=instance.user, message=instance, conversation=conversation)
 
 
 class MessageRead(UUIDModel):
