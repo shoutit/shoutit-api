@@ -297,6 +297,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'], help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
+    text = serializers.CharField(min_length=10, max_length=1000)
     price = serializers.FloatField(source='item.price')
     currency = serializers.CharField(source='item.currency.code', help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
