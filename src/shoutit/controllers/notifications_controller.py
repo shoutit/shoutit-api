@@ -118,20 +118,17 @@ def notify_db_user(db_user, from_user, message):
     }
     res = requests.post(reply_url, form_data)
     db_res_content = res.content.decode('utf-8').strip()
-    if 'Sent Succesfully' in db_res_content:
+    if 'Sent Succ' in db_res_content:
         sss_logger.debug("Sent message to dbz user about his ad on: %s" % db_user.db_link)
     else:
         msg = "Error sending message to dbz user: " + db_user.db_link
         msg += '\n' + db_res_content
         sss_logger.warn(msg)
-        # sentry doesn't like 'name' in extra
-        form_data['_name'] = form_data.get('name')
-        del form_data['name']
         form_data.update({
             'db_response': db_res_content,
             'db_link': db_user.db_link
         })
-        error_logger.warn("Error sending message to dbz user.", extra=form_data)
+        error_logger.warn("Error sending message to dbz user.", extra={'form_data': form_data})
 
 
 def get_dbz_base_url(db_link):
@@ -157,7 +154,7 @@ def notify_dbz2_user(dbz2_user, from_user, message):
     reply_html = client.get(reply_url, headers=headers).content
     csrftoken = client.cookies.get('csrftoken')
 
-    captcha_url = base_url + re.search('img src="(.*?)" alt="captcha"', reply_html).groups()[0]
+    captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
     captcha_img = requests.get(captcha_url)
     gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
     captcha_code = str(gate)
@@ -187,14 +184,11 @@ def notify_dbz2_user(dbz2_user, from_user, message):
             db_res_content = 'Truncated full html page response...'
         msg += '\n' + db_res_content
         sss_logger.warn(msg)
-        # sentry doesn't like name in extra
-        form_data['_name'] = form_data.get('name')
-        del form_data['name']
         form_data.update({
             'db_response': db_res_content,
             'db_link': dbz2_user.db_link
         })
-        error_logger.warn("Error sending message to dbz2 user.", extra=form_data)
+        error_logger.warn("Error sending message to dbz2 user.", extra={'form_data': form_data})
 
 
 def notify_cl_user2(cl_user, from_user, message):
