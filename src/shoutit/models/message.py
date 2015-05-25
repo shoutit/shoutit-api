@@ -7,10 +7,13 @@ from datetime import datetime
 
 from django.db import models, IntegrityError
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-from common.constants import ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, \
-    MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT, \
-    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL
+from common.constants import (
+    ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType,
+    MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
+    REPORT_TYPE_GENERAL)
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -70,7 +73,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         if user in self.contributors:
             self.users.remove(user)
 
-        # 3 - send a system message saying the user has left the conversation
+        # 3 - create a system message saying the user has left the conversation
         text = "{} has left the conversation".format(user.name)
         message = Message.objects.create(user=None, text=text, conversation=self)
 
@@ -147,6 +150,18 @@ class Message(UUIDModel):
     def is_read(self, user):
         return MessageRead.objects.filter(user=user, message=self,
                                           conversation=self.conversation).exists()
+
+
+@receiver(post_save, sender=Message)
+def save_message(sender, message=None, created=False, **kwargs):
+    if created:
+        # update the conversation
+        conversation = message.conversation
+        conversation.last_message = message
+        conversation.save()
+        # read it by its owner if exists (not by system)
+        if message.user:
+            MessageRead.objects.create(user=message.user, message=message, conversation=conversation)
 
 
 class MessageRead(UUIDModel):

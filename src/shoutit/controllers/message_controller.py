@@ -72,13 +72,6 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
     # add the new message
     message = Message.objects.create(conversation=conversation, user=user, text=text)
 
-    # read it
-    MessageRead.objects.create(user=user, message=message, conversation=conversation)
-
-    # update the conversation
-    conversation.last_message = message
-    conversation.save()
-
     if not attachments:
         attachments = []
 
