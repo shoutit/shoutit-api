@@ -147,7 +147,8 @@ class CustomUserAdmin(UserAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'country', 'city', 'gender', 'image', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
-    readonly_fields = ('_user',)
+    readonly_fields = ('video', '_user')
+    exclude = ('user',)
     list_filter = ('country', 'city', 'gender', UserEmailFilter, ('created_at', DateFieldListFilter))
     ordering = ('-created_at',)
 

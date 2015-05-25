@@ -38,7 +38,7 @@ class Command(BaseCommand):
 
         p1 = u1.profile
         p1.bio = 'Shoutit Master!'
-        p1.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
+        p1.image = 'https://user-image.static.shoutit.com/mo.jpg'
         p1.gender = 'male'
         p1.save()
 
@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
         p2 = u2.profile
         p2.bio = 'Shoutit Master 2!'
-        p2.image = 'http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg'
+        p2.image = 'https://user-image.static.shoutit.com/mo.jpg'
         p2.gender = 'male'
         p2.save()
 
