@@ -52,3 +52,6 @@ fake_useragent
 pyopenssl
 ndg-httpsclient
 pyasn1
+
+# python interface for django-admin shell
+bpython==0.14.1
