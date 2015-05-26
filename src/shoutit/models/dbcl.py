@@ -18,6 +18,9 @@ class DBCLUser(UUIDModel):
     class Meta(UUIDModel.Meta):
         abstract = True
 
+    def __unicode__(self):
+        return unicode(self.pk) + ": " + unicode(self.user)
+
     @property
     def shout(self):
         return Shout.objects.filter(user=self.user)[0]
