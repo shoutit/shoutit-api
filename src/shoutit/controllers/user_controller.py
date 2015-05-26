@@ -170,9 +170,10 @@ def update_profile_location(profile, location):
     profile.country = country
     profile.save(update_fields=['country', 'city', 'latitude', 'longitude'])
 
+    encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
     try:
-        PredefinedCity.objects.get(city=city)
-    except PredefinedCity.DoesNotExist:
-        encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-        PredefinedCity.objects.create(city=city, city_encoded=encoded_city, country=country, latitude=latitude, longitude=longitude)
+        PredefinedCity.objects.create(city=city, city_encoded=encoded_city, country=country,
+                                      latitude=latitude, longitude=longitude)
+    except IntegrityError:
+        pass
     return profile
