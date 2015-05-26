@@ -95,21 +95,29 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
             notify_cl_user2(user.cl_user, from_user, attached_object)
 
 
-def notify_db_user(db_user, from_user, message):
-    from pyquery import PyQuery as pq
+def get_dbz_base_url(db_link):
     import urlparse
+    parts = urlparse.urlparse(db_link)
+    return parts.scheme + '://' + parts.netloc
+
+
+def notify_db_user(db_user, from_user, message):
     from antigate import AntiGate
-    url_parts = urlparse.urlparse(db_user.db_link)
+    import re
+
+    base_url = get_dbz_base_url(db_user.db_link)
     reply_url = db_user.db_link + '?reply'
     reply_response = requests.get(reply_url)
     if reply_response.status_code != 200:
         error_logger.warn("Deleted dbz ad.", extra={'db_link': db_user.db_link})
         return
-    d = pq(url=reply_url)
-    captcha_url = "%s://%s%s" % (url_parts[0], url_parts[1], d('img.captcha')[0].attrib['src'])
+    reply_html = reply_response.content.decode('utf-8')
+    captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
     captcha_img = requests.get(captcha_url)
     gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
-    captcha = str(gate)
+    captcha_code = str(gate)
+    captcha_hash = re.search('captcha/image_mobile/(.*?)/', captcha_url).groups()[0]
+
     ref = uuid.uuid4().hex
     in_email = ref + '@dbz-reply.com'
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
@@ -120,8 +128,8 @@ def notify_db_user(db_user, from_user, message):
         'name': from_user.name,
         'telephone': '.',
         'message': message.text,
-        'captcha_0': d('#id_captcha_0').attr('value'),
-        'captcha_1': captcha
+        'captcha_0': captcha_hash,
+        'captcha_1': captcha_code
     }
     res = requests.post(reply_url, form_data)
     db_res_content = res.content.decode('utf-8').strip()
@@ -138,16 +146,15 @@ def notify_db_user(db_user, from_user, message):
         error_logger.warn("Error sending message to dbz user.", extra={'form_data': form_data})
 
 
-def get_dbz_base_url(db_link):
-    import urlparse
-    parts = urlparse.urlparse(db_link)
-    return parts.scheme + '://' + parts.netloc
-
-
 def notify_dbz2_user(dbz2_user, from_user, message):
     from antigate import AntiGate
     from fake_useragent import UserAgent
     import re
+
+    ad = requests.head(dbz2_user.db_link, allow_redirects=False)
+    if ad.status_code != 200:
+        error_logger.warn("Deleted dbz2 ad.", extra={'db_link': dbz2_user.db_link})
+        return
 
     base_url = get_dbz_base_url(dbz2_user.db_link)
     reply_url = dbz2_user.db_link.replace('/show/', '/reply/')
