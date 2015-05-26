@@ -101,6 +101,10 @@ def notify_db_user(db_user, from_user, message):
     from antigate import AntiGate
     url_parts = urlparse.urlparse(db_user.db_link)
     reply_url = db_user.db_link + '?reply'
+    reply_response = requests.get(reply_url)
+    if reply_response.status_code != 200:
+        error_logger.warn("Deleted dbz ad.", extra={'db_link': db_user.db_link})
+        return
     d = pq(url=reply_url)
     captcha_url = "%s://%s%s" % (url_parts[0], url_parts[1], d('img.captcha')[0].attrib['src'])
     captcha_img = requests.get(captcha_url)

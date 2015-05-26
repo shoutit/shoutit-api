@@ -2,16 +2,16 @@
 gunicorn==19.3.0
 raven==5.3.1
 requests==2.7.0
-Django==1.8.1
+Django==1.8.2
 psycopg2==2.6
 
+# admin
 django-grappelli==2.6.4
 
 # django-rest-framework
 djangorestframework==3.1.2
 django-filter==0.10.0
 drf-extensions
-markdown==2.6.2
 
 # cache search queues
 redis==2.10.3
@@ -26,18 +26,22 @@ Pillow==2.8.1
 geraldo==0.4.17
 boto==2.38.0
 
-# google push
+# google
 httplib2==0.9.1
 google-api-python-client==1.4.0
+
+# push + sockets
+git+https://github.com/jleclanche/django-push-notifications
+pusher==1.1.3
 
 # email
 mailchimp==2.0.9
 
-# django-paypal==0.2
-
+# docs
 git+https://github.com/marcgibbons/django-rest-swagger
-git+https://github.com/jleclanche/django-push-notifications
+markdown==2.6.2
 
+# utils
 django-ipware
 
 # sss
@@ -45,7 +49,6 @@ django-ipware
 antigate
 pyquery
 fake_useragent
-
 
 # urllib
 # requires apt-get install libffi-dev
@@ -55,3 +58,5 @@ pyasn1
 
 # python interface for django-admin shell
 bpython==0.14.1
+
+# django-paypal==0.2
