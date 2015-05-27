@@ -42,7 +42,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        return Shout.objects.get_valid_shouts().all()\
+        return Shout.objects.all()\
             .select_related(*self.select_related)\
             .prefetch_related(*self.prefetch_related)\
             .defer(*self.defer)
