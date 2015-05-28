@@ -6,7 +6,7 @@ Django==1.8.2
 psycopg2==2.6
 
 # admin
-django-grappelli==2.6.4
+https://github.com/sehmaschine/django-grappelli/archive/stable/2.7.x.zip
 
 # django-rest-framework
 djangorestframework==3.1.2
