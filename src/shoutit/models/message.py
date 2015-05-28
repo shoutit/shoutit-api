@@ -75,12 +75,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
 
         # 3 - create a system message saying the user has left the conversation
         text = "{} has left the conversation".format(user.name)
-        message = Message.objects.create(user=None, text=text, conversation=self)
-
-        from shoutit.controllers import notifications_controller
-
-        for to_user in self.contributors:
-            notifications_controller.notify_user_of_message(to_user, message)
+        Message.objects.create(user=None, text=text, conversation=self)
 
     def mark_as_read(self, user):
         # todo: find more efficient way
@@ -162,6 +157,12 @@ def save_message(sender, instance=None, created=False, **kwargs):
         # read it by its owner if exists (not by system)
         if instance.user:
             MessageRead.objects.create(user=instance.user, message=instance, conversation=conversation)
+
+        if getattr(instance, 'send_notification', True):
+            from shoutit.controllers import notifications_controller
+            for to_user in conversation.contributors:
+                if instance.user and instance.user != to_user:
+                    notifications_controller.notify_user_of_message(to_user, instance)
 
 
 class MessageRead(UUIDModel):

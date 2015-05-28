@@ -293,7 +293,9 @@ class ConversationAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
 
     def _users(self, conversation):
-        return '<br/>'.join(['- ' + user_link(user) for user in conversation.users.all()])
+        def user_line(u):
+            return '- %s | %s' % (user_link(u), reply_link(conversation, u))
+        return '<br/>'.join([user_line(user) for user in conversation.users.all()])
 
     _users.short_description = 'Users'
     _users.allow_tags = True
@@ -314,8 +316,9 @@ admin.site.register(ConversationDelete)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', '_conversation', '_user', 'summary', 'has_attachments', 'created_at')
     readonly_fields = ('_conversation', '_user')
+    raw_id_fields = ('conversation', 'user')
     fieldsets = (
-        (None, {'fields': ('_conversation', '_user', 'text')}),
+        (None, {'fields': ('conversation', '_conversation', 'user', '_user', 'text')}),
     )
     ordering = ('-created_at',)
 
@@ -463,3 +466,9 @@ def user_link(user):
         return 'system'
     user_url = reverse('admin:shoutit_user_change', args=(user.pk,))
     return '<a href="%s">%s</a>' % (user_url, user.name_username)
+
+
+def reply_link(conversation, user):
+    message_add_url = reverse('admin:shoutit_message_add')
+    params = '?conversation=%s&user=%s' % (conversation.pk, user.pk)
+    return '<a href="%s%s">send reply</a>' % (message_add_url, params)

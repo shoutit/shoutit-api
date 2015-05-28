@@ -70,7 +70,9 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
         conversation.users = to_users
 
     # add the new message
-    message = Message.objects.create(conversation=conversation, user=user, text=text)
+    message = Message(conversation=conversation, user=user, text=text)
+    message.send_notification = False
+    message.save()
 
     if not attachments:
         attachments = []

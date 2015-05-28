@@ -9,9 +9,11 @@ from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from django_rq import job
 import requests
+from rest_framework.request import Request
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE,
                               NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED,
                               NOTIFICATION_TYPE_COMMENT)
+from shoutit.api.versioning import ShoutitNamespaceVersioning
 from shoutit.controllers import email_controller
 from shoutit.models import Notification, DBCLConversation
 import logging
@@ -34,7 +36,14 @@ def mark_notifications_as_read_by_ids(notification_ids):
 def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
     from shoutit.api.v2 import serializers
     if not request:
-        request = HttpRequest()
+        # todo: create general fake request
+        django_request = HttpRequest()
+        django_request.META['SERVER_NAME'] = 'api.shoutit.com'
+        django_request.META['SERVER_PORT'] = '80'
+        request = Request(django_request)
+        request.version = 'v2'
+        request.versioning_scheme = ShoutitNamespaceVersioning()
+
     # set the request.user to the notified user as if he was asking for it.
     request.user = user
 
