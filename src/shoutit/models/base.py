@@ -99,7 +99,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
         validators=[
             validators.RegexValidator(
-                re.compile('[0-9a-zA-Z.]{2,30}'), _('Enter a valid username.'), 'invalid'),
+                re.compile('^[0-9a-zA-Z.]+$'), _('Enter a valid username.'), 'invalid'),
             validators.MinLengthValidator(2),
             AllowedUsernamesValidator()
         ])

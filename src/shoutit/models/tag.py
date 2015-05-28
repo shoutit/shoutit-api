@@ -13,11 +13,13 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Tag(UUIDModel, StreamMixin, APIModelMixin):
-    name = models.CharField(max_length=30, unique=True, db_index=True,
-                            validators=[
-                                validators.MinLengthValidator(2),
-                                validators.RegexValidator(re.compile('[0-9a-z-]{2,30}'), "Enter a valid tag.", 'invalid'),
-                            ])
+    name = models.CharField(
+        max_length=30, unique=True, db_index=True,
+        help_text='Required. 2 to 30 characters and can only contain a-z, 0-9, and the dash (-)',
+        validators=[
+            validators.MinLengthValidator(2),
+            validators.RegexValidator(re.compile('^[0-9a-z-]+$'), "Enter a valid tag.", 'invalid'),
+        ])
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True,
                                 blank=True, on_delete=models.SET_NULL)
     image = models.URLField(
@@ -32,7 +34,7 @@ class Tag(UUIDModel, StreamMixin, APIModelMixin):
     def is_category(self):
         return Category.objects.get(main_tag=self).exists()
 
-    # todo: filter the name before saving
+        # todo: filter the name before saving
 
 
 class Category(UUIDModel):
