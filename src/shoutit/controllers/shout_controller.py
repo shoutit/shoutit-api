@@ -114,7 +114,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
                  date_published=None, is_sss=False, exp_days=None, priority=0):
     # category
     # if passed as {'name': 'Category'}
-    if category and not isinstance(category, Category):
+    if not isinstance(category, Category):
         if isinstance(category, dict):
             category = category.get('name')
         try:
@@ -129,11 +129,10 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
             tags = [tag.get('name') for tag in tags]
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
-    # process
+    # process tags
     tags = process_tags(tags)
-    if not tags:
-        raise ValidationError({'tags': "Invalid tags."})
-
+    # add main_tag from category
+    tags.insert(0, category.main_tag.name)
     # item
     item = item_controller.create_item(
         name=name, price=price, currency=currency, description=text, images=images, videos=videos)

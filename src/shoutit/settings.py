@@ -283,6 +283,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "shoutit.middleware.include_settings",
 )
 
+GRAPPELLI_ADMIN_TITLE = 'Shoutit'
+
 LOG_SQL = False
 
 # Logging
