@@ -18,12 +18,11 @@ class Tag(UUIDModel, StreamMixin, APIModelMixin):
                                 validators.MinLengthValidator(2),
                                 validators.RegexValidator(re.compile('[0-9a-z-]{2,30}'), "Enter a valid tag.", 'invalid'),
                             ])
-    Creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True, on_delete=models.SET_NULL)
-    image = models.CharField(max_length=1024, null=True, blank=True)
-    Parent = models.ForeignKey('shoutit.Tag', related_name='ChildTags', null=True, blank=True, db_index=True)
-
-    Definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')
-
+    creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True,
+                                blank=True, on_delete=models.SET_NULL)
+    image = models.URLField(
+        max_length=1024, blank=True, default='https://tag-image.static.shoutit.com/default.jpg')
+    definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')
     _stream = GenericRelation('shoutit.Stream', related_query_name='tag')
 
     def __unicode__(self):

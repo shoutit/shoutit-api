@@ -9,7 +9,7 @@ def get_or_create_tag(name, creator=None):
         return None
     tag, created = Tag.objects.get_or_create(name=name)
     if created:
-        tag.Creator = creator
+        tag.creator = creator
         tag.save()
     return tag
 

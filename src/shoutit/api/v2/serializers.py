@@ -49,7 +49,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'api_url')
+        fields = ('id', 'name', 'api_url', 'image')
 
     def get_api_url(self, tag):
         return reverse('tag-detail', kwargs={'name': tag.name}, request=self.context['request'])
