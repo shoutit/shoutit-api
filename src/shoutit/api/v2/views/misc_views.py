@@ -72,7 +72,7 @@ class MiscViewSet(viewsets.ViewSet):
         ---
         serializer: CategorySerializer
         """
-        categories = Category.objects.all()
+        categories = Category.objects.all().order_by('name').select_related('main_tag')
         serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
 

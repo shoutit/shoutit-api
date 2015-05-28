@@ -245,6 +245,7 @@ class LinkedGoogleAccountAdmin(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'stream')
     search_fields = ('name',)
+    readonly_fields = ('creator',)
 
 
 @admin.register(Category)
