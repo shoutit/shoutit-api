@@ -250,14 +250,17 @@ def handle_dbz_reply(in_email, msg, request):
     text = msg.get('text')
     try:
         if source == 'cl':
-            split = dbcl_conversation.from_user.name
+            if dbcl_conversation.from_user.name in text:
+                split = dbcl_conversation.from_user.name
+            else:
+                split = 'reply.craigslist.org'
         elif source == 'dbz':
             split = 'Dubizzle'
         else:
             split = 'dbz-reply'
         text = text.split(split)[0]
         lines = text.splitlines()
-        if len(lines) > 4:
+        if len(lines) >= 3:
             text = '\n'.join(lines[:-2])
         else:
             text = '\n'.join(lines)
