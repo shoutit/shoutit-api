@@ -154,6 +154,8 @@ INSTALLED_APPS = (
 
     'django_rq',
     'widget_tweaks',
+    'corsheaders',
+    'shoutit_pusher',
 )
 # apps only on local development
 if LOCAL:
@@ -187,8 +189,11 @@ PUSH_NOTIFICATIONS_SETTINGS = {
 }
 info('APNS_SANDBOX:', APNS_SANDBOX)
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
