@@ -122,6 +122,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         elif request.method == 'DELETE':
             conversation.mark_as_unread(request.user)
             return Response(status.HTTP_204_NO_CONTENT)
+        else:
+            return Response()
 
     @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):

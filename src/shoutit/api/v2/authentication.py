@@ -354,7 +354,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return self.error_response(e.args[0])
 
 
-class ShoutitAuthView(viewsets.ViewSet):
+class ShoutitAuthViewSet(viewsets.ViewSet):
     """
     ShoutitAuth Resource
     """
@@ -417,7 +417,7 @@ class ShoutitAuthView(viewsets.ViewSet):
             except ConfirmToken.DoesNotExist:
                 return self.error_response("Token does not exist.")
 
-        if request.method == 'POST':
+        elif request.method == 'POST':
             if request.user.is_anonymous():
                 return Response({"detail": "Authentication credentials were not provided."},
                                 status=status.HTTP_401_UNAUTHORIZED)
@@ -427,6 +427,8 @@ class ShoutitAuthView(viewsets.ViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.instance.send_verification_email()
             return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
+        else:
+            return Response()
 
     @list_route(methods=['post'], suffix='Change Password')
     def change_password(self, request):

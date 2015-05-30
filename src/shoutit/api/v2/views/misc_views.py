@@ -208,12 +208,7 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get', 'post', 'head'], suffix='Inbound Email')
     def inbound(self, request):
         data = request.POST or request.GET or {}
-        if request.method == 'GET':
-            print data
-            return Response(data)
-        elif request.method == 'HEAD':
-            return Response({})
-        elif request.method == 'POST':
+        if request.method == 'POST':
             if not data:
                 return Response({})
             mandrill_events = json.loads(data.get('mandrill_events'))
@@ -225,6 +220,8 @@ class MiscViewSet(viewsets.ViewSet):
                 return handle_cl_reply(msg, request)
             else:
                 return Response({'error': "Unknown in_email"})
+        else:
+            return Response(data)
 
 
 def handle_dbz_reply(in_email, msg, request):
