@@ -167,8 +167,7 @@ class TagFilter(django_filters.FilterSet):
             raise ValidationError({'type': "should be `all`, `top` or `featured`."})
 
         if value == 'featured':
-            # queryset = queryset.annotate(c=Count('featured_in')).filter(c__gte=1)
-            queryset = FeaturedTag.objects.all()
+            queryset = FeaturedTag.objects.all().order_by('rank')
         return queryset
 
     def filter_country(self, queryset, value):

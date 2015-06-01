@@ -295,16 +295,18 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(FeaturedTag)
 class FeaturedTagAdmin(admin.ModelAdmin):
-    list_display = ('title', 'tag_name', 'country', 'city', 'rank')
+    list_display = ('title', '_tag', 'country', 'city', 'rank')
     list_filter = ('country', 'city')
     ordering = ('country', 'city', 'rank')
     search_fields = ('title', 'tag__name', 'tag__country', 'tag__city')
     raw_id_fields = ('tag',)
+    readonly_fields = ('_tag',)
 
-    def tag_name(self, featured_tag):
-        return featured_tag.tag.name
+    def _tag(self, f_tag):
+        return tag_link(f_tag.tag)
 
-    tag_name.short_description = 'Tag'
+    _tag.allow_tags = True
+    _tag.short_description = 'Tag'
 
 
 @admin.register(Conversation)
@@ -490,6 +492,11 @@ admin.site.register(PredefinedCity)
 admin.site.register(SharedLocation)
 admin.site.register(UserPermission)
 admin.site.register(Permission)
+
+
+def tag_link(tag):
+    tag_url = reverse('admin:shoutit_tag_change', args=(tag.pk,))
+    return '<a href="%s">%s</a>' % (tag_url, tag.name)
 
 
 def user_link(user):

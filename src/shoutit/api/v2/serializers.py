@@ -84,7 +84,7 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FeaturedTag
-        fields = ('id', 'title', 'name', 'api_url', 'image')
+        fields = ('id', 'title', 'name', 'api_url', 'image', 'rank')
 
     def get_api_url(self, f_tag):
         return reverse('tag-detail', kwargs={'name': f_tag.tag.name}, request=self.context['request'])
