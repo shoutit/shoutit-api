@@ -267,7 +267,7 @@ class TagChangeForm(forms.ModelForm):
 # Tag
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stream')
+    list_display = ('name', 'image', 'stream')
     search_fields = ('name',)
     readonly_fields = ('creator',)
     form = TagChangeForm
@@ -293,11 +293,11 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(FeaturedTag)
 class FeaturedTagAdmin(admin.ModelAdmin):
-    raw_id_fields = ('tag',)
-    list_display = ('tag_name', 'country', 'city', 'rank')
+    list_display = ('title', 'tag_name', 'country', 'city', 'rank')
     list_filter = ('country', 'city')
     ordering = ('country', 'city', 'rank')
-    search_fields = ('tag__name', 'tag__country', 'tag__city')
+    search_fields = ('title', 'tag__name', 'tag__country', 'tag__city')
+    raw_id_fields = ('tag',)
 
     def tag_name(self, featured_tag):
         return featured_tag.tag.name
@@ -307,8 +307,8 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', '_users', '_messages', 'content_type', 'object_id', 'modified_at'
-                    , 'created_at')
+    list_display = ('id', 'type', '_users', '_messages', 'content_type', 'object_id', 'modified_at',
+                    'created_at')
     readonly_fields = ('last_message', '_messages')
     fieldsets = (
         (None, {'fields': ('content_type', 'object_id', 'type', 'users', 'last_message')}),

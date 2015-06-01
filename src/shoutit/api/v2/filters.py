@@ -10,7 +10,7 @@ from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 from common.utils import process_tags
 from shoutit.controllers import stream_controller
-from shoutit.models import Shout, Category, Tag, PredefinedCity
+from shoutit.models import Shout, Category, Tag, PredefinedCity, FeaturedTag
 from elasticsearch_dsl import F
 import logging
 logger = logging.getLogger('shoutit.debug')
@@ -167,28 +167,32 @@ class TagFilter(django_filters.FilterSet):
             raise ValidationError({'type': "should be `all`, `top` or `featured`."})
 
         if value == 'featured':
-            queryset = queryset.annotate(c=Count('featured_in')).filter(c__gte=1)
+            # queryset = queryset.annotate(c=Count('featured_in')).filter(c__gte=1)
+            queryset = FeaturedTag.objects.all()
         return queryset
 
     def filter_country(self, queryset, value):
-        tag_type = 'type' in self.data and self.data['type']
+        tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
             raise ValidationError({'country': "only works when type equals `top` or `featured`."})
 
         if tag_type == 'featured':
-            queryset = queryset.filter(featured_in__country=value)
+            queryset = queryset.filter(country=value)
         return queryset
 
     def filter_city(self, queryset, value):
-        tag_type = 'type' in self.data and self.data['type']
+        tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
             raise ValidationError({'city': "only works when type equals `top` or `featured`."})
 
         if tag_type == 'featured':
-            queryset = queryset.filter(featured_in__city=value)
+            queryset = queryset.filter(city=value)
         return queryset
 
     def filter_category(self, queryset, value):
+        tag_type = self.data.get('type')
+        if tag_type == 'featured':
+            raise ValidationError({'category': "does not work when type is `featured`."})
         try:
             category = Category.objects.get(name=value)
             # return all tags that belong to the category except the main tag

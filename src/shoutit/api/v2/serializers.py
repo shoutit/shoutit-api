@@ -17,7 +17,7 @@ from common.constants import (
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
 from shoutit.controllers import shout_controller, user_controller
 import logging
 logger = logging.getLogger('shoutit.debug')
@@ -75,6 +75,19 @@ class TagDetailSerializer(TagSerializer):
 
     def get_shouts_url(self, tag):
         return reverse('tag-shouts', kwargs={'name': tag.name}, request=self.context['request'])
+
+
+class FeaturedTagSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='tag.name')
+    api_url = serializers.SerializerMethodField()
+    image = serializers.URLField(source='tag.image')
+
+    class Meta:
+        model = FeaturedTag
+        fields = ('id', 'title', 'name', 'api_url', 'image')
+
+    def get_api_url(self, f_tag):
+        return reverse('tag-detail', kwargs={'name': f_tag.tag.name}, request=self.context['request'])
 
 
 class CategorySerializer(serializers.ModelSerializer):

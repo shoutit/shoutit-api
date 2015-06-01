@@ -47,6 +47,7 @@ class Category(UUIDModel):
 
 
 class FeaturedTag(UUIDModel):
+    title = models.CharField(max_length=100)
     tag = models.ForeignKey('shoutit.Tag', related_name='featured_in')
     country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
     city = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)

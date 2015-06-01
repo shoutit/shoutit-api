@@ -46,7 +46,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Tag Object}
+          "results": [] // list of {Tag Object}, an extra field `title` will be returned for featured tags
         }
         </code></pre>
         ---
@@ -71,6 +71,9 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
               description: return tags that belong to this category only
               paramType: query
         """
+        tags_type = request.query_params.get('type')
+        if tags_type == 'featured':
+            self.serializer_class = FeaturedTagSerializer
         return super(TagViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
