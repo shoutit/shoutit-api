@@ -246,16 +246,18 @@ class LinkedGoogleAccountAdmin(admin.ModelAdmin):
 # admin.site.register(BusinessCategory, BusinessCategoryAdmin)
 
 class TagChangeForm(forms.ModelForm):
-    image_file = forms.FileField()
+    image_file = forms.FileField(required=False)
 
     class Meta:
         model = Tag
         fields = '__all__'
 
     def clean_image_file(self):
+        image_file = self.cleaned_data.get('image_file')
+        if not image_file:
+            return
         s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
         bucket = s3.get_bucket('shoutit-tag-image-original')
-        image_file = self.cleaned_data['image_file']
         filename = "%s-%s.jpg" % (uuid.uuid4(), self.cleaned_data['name'])
         key = bucket.new_key(filename)
         key.set_metadata('Content-Type', 'image/jpg')
