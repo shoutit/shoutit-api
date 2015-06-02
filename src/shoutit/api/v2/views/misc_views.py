@@ -11,6 +11,7 @@ from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
+from common.utils import location_from_latlng
 
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
@@ -51,7 +52,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = PredefinedCitySerializer(cities, many=True, context={'request': request})
         return Response(serializer.data)
 
-    @list_route(methods=['get'], suffix='Categories')
+    @list_route(methods=['get'], suffix='Shouts Sort Types')
     def shouts_sort_types(self, request):
         """
         Get shouts sort types
@@ -223,6 +224,10 @@ class MiscViewSet(viewsets.ViewSet):
         else:
             return Response(data)
 
+    @list_route(methods=['get'])
+    def geocode(self, request):
+        latlng = request.query_params.get('latlng')
+        return Response(location_from_latlng(latlng))
 
 def handle_dbz_reply(in_email, msg, request):
     from_email = msg.get('from_email')

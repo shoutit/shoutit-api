@@ -22,7 +22,6 @@ urlpatterns = [
 
     # api v2
     url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
-    url(r'^v1/', include('shoutit.api.v2.urls', namespace='v1')),
 
     # django-rq
     # (r'^rq/', include('django_rq.urls')),

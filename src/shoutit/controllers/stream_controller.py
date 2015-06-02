@@ -43,7 +43,7 @@ def get_stream_shouts(stream, start_index=0, end_index=DEFAULT_PAGE_SIZE, show_e
     return the shouts (offers/requests) in a stream
     """
     shout_types = [POST_TYPE_REQUEST, POST_TYPE_OFFER]
-    post_ids_qs = stream.Posts.get_valid_posts(types=shout_types).order_by(
+    post_ids_qs = stream.posts.get_valid_posts(types=shout_types).order_by(
         '-date_published').values_list('id', flat=Shout)[start_index:end_index]
     shouts = list(Shout.objects.filter(id__in=list(post_ids_qs)).order_by('-date_published'))
     return shouts
@@ -63,7 +63,7 @@ def get_stream_shouts_count(stream):
     """
     return the total number of shouts (offers/requests) in a stream
     """
-    return stream.Posts.filter(type__in=[POST_TYPE_REQUEST, POST_TYPE_OFFER]).count()
+    return stream.posts.filter(type__in=[POST_TYPE_REQUEST, POST_TYPE_OFFER]).count()
 
 
 def get_stream_listeners(stream, count_only=False):

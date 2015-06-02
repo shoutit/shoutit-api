@@ -1,4 +1,4 @@
-from shoutit.models.base import UUIDModel, User
+from shoutit.models.base import UUIDModel, LocationMixin, User
 from shoutit.models.item import Currency, Item
 from shoutit.models.stream import Stream, StreamMixin, Listen
 from shoutit.models.tag import Tag, Category, FeaturedTag

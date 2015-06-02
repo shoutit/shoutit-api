@@ -12,7 +12,7 @@ from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST
     POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType)
 from common.utils import date_unix
 from shoutit.models import Tag
-from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
+from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, LocationMixin
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -92,22 +92,15 @@ class EventManager(PostManager):
                                            city=city, get_expired=True, get_muted=get_muted)
 
 
-class Post(UUIDModel, APIModelMixin):
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='Posts')
-
-    text = models.TextField(max_length=1000, default='', db_index=True, blank=True)
+class Post(UUIDModel, APIModelMixin, LocationMixin):
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='posts')
+    text = models.TextField(max_length=1000, blank=True)
     type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True,
                                choices=PostType.choices)
     date_published = models.DateTimeField(default=timezone.now, db_index=True)
 
     muted = models.BooleanField(default=False, db_index=True)
     is_disabled = models.BooleanField(default=False, db_index=True)
-
-    country = models.CharField(max_length=2, db_index=True, null=True, blank=True)
-    city = models.CharField(max_length=200, db_index=True, null=True, blank=True)
-    latitude = models.FloatField(default=0.0)
-    longitude = models.FloatField(default=0.0)
-    address = models.CharField(max_length=200, db_index=True, null=True, blank=True)
 
     priority = models.SmallIntegerField(default=0)
     objects = PostManager()
@@ -123,16 +116,6 @@ class Post(UUIDModel, APIModelMixin):
     @property
     def type_name(self):
         return PostType.values[self.type]
-
-    @property
-    def location(self):
-        return {
-            'country': self.country,
-            'city': self.city,
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-            'address': self.address,
-        }
 
     @property
     def date_published_unix(self):

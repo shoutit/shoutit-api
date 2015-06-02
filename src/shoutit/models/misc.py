@@ -10,13 +10,9 @@ from shoutit.models.base import UUIDModel, LocationMixin
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class PredefinedCity(UUIDModel):
-    city = models.CharField(max_length=200, default='', blank=True, db_index=True, unique=True)
+class PredefinedCity(UUIDModel, LocationMixin):
     city_encoded = models.CharField(max_length=200, default='', blank=True, db_index=True,
                                     unique=True)
-    country = models.CharField(max_length=2, default='', blank=True, db_index=True)
-    latitude = models.FloatField(default=0.0)
-    longitude = models.FloatField(default=0.0)
     approved = models.BooleanField(default=False)
 
     def __unicode__(self):

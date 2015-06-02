@@ -3,10 +3,9 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 import logging
-from common.constants import (
-    DEFAULT_LOCATION, Stream_TYPE_PROFILE, Stream_TYPE_TAG, TOKEN_TYPE_EMAIL)
+from common.constants import (Stream_TYPE_PROFILE, Stream_TYPE_TAG, TOKEN_TYPE_EMAIL)
 from shoutit.models import ConfirmToken
-from shoutit.models.base import UUIDModel
+from shoutit.models.base import UUIDModel, LocationMixin
 from shoutit.models.stream import StreamMixin, Listen
 
 logger = logging.getLogger('shoutit.debug')
@@ -14,16 +13,10 @@ logger = logging.getLogger('shoutit.debug')
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class AbstractProfile(UUIDModel, StreamMixin):
+class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
     image = models.URLField(max_length=1024, blank=True,
                             default='https://user-image.static.shoutit.com/default_male.jpg')
     video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
-
-    # Location attributes
-    country = models.CharField(max_length=200, default=DEFAULT_LOCATION['country'], db_index=True)
-    city = models.CharField(max_length=200, default=DEFAULT_LOCATION['city'], db_index=True)
-    latitude = models.FloatField(default=DEFAULT_LOCATION['latitude'])
-    longitude = models.FloatField(default=DEFAULT_LOCATION['longitude'])
 
     class Meta(UUIDModel.Meta):
         abstract = True

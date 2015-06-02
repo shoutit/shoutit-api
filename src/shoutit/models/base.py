@@ -82,9 +82,26 @@ class LocationMixin(models.Model):
         validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
     longitude = models.FloatField(
         validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
+    country = models.CharField(max_length=2, blank=True, db_index=True)
+    postal_code = models.CharField(max_length=10, blank=True, db_index=True)
+    state = models.CharField(max_length=50, blank=True, db_index=True)
+    city = models.CharField(max_length=100, blank=True, db_index=True)
+    address = models.CharField(max_length=200, blank=True)
 
     class Meta:
         abstract = True
+
+    @property
+    def location(self):
+        return {
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'country': self.country,
+            'postal_code': self.postal_code,
+            'state': self.state,
+            'city': self.city,
+            'address': self.address,
+        }
 
 
 class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
@@ -145,29 +162,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return self
 
     @property
-    def latitude(self):
-        return self.profile.latitude
-
-    @property
-    def longitude(self):
-        return self.profile.longitude
-
-    @property
-    def city(self):
-        return self.profile.city
-
-    @property
-    def country(self):
-        return self.profile.country
-
-    @property
     def location(self):
-        return {
-            'country': self.country,
-            'city': self.city,
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-        }
+        return self.profile.location
 
     @property
     def name(self):

@@ -17,7 +17,7 @@ from common.constants import (
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, LocationMixin)
 from shoutit.controllers import shout_controller, user_controller
 import logging
 logger = logging.getLogger('shoutit.debug')
@@ -25,11 +25,13 @@ error_logger = logging.getLogger('shoutit.error')
 
 
 class LocationSerializer(serializers.Serializer):
-    country = serializers.CharField(min_length=2, max_length=2)
-    city = serializers.CharField(max_length=200)
-    latitude = serializers.FloatField()
-    longitude = serializers.FloatField()
-    address = serializers.CharField(required=False)
+    latitude = serializers.FloatField(min_value=-90, max_value=90)
+    longitude = serializers.FloatField(min_value=-180, max_value=180)
+    country = serializers.CharField(min_length=2, max_length=2, required=False)
+    postal_code = serializers.CharField(max_length=10, required=False)
+    state = serializers.CharField(max_length=50, required=False)
+    city = serializers.CharField(max_length=100, required=False)
+    address = serializers.CharField(max_length=200, required=False)
 
 
 class PushTokensSerializer(serializers.Serializer):
