@@ -6,7 +6,9 @@ from shoutit.models import Event
 
 
 def register_event(user, event_type, attached_object=None):
-    event = Event.objects.create(user=user, type=POST_TYPE_EVENT, event_type=event_type, attached_object=attached_object)
+    event = Event.objects.create(user=user, type=POST_TYPE_EVENT, event_type=event_type,
+                                 attached_object=attached_object, latitude=user.profile.latitude,
+                                 longitude=user.profile.longitude)
     user.profile.stream.add_post(event)
 
 

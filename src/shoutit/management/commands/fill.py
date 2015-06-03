@@ -240,21 +240,20 @@ class Command(BaseCommand):
 
         # pre defined cities
         cities = [
-            ('Abu Dhabi', 'abu-dhabi', 'AE', 24.3865481, 54.5599079, True),
-            ('Dubai', 'dubai', 'AE', 25.1993957, 55.2738326, True),
-            ('Sharjah', 'sharjah', 'AE', 25.328435, 55.512258, True),
-            ('Ajman', 'ajman', 'AE', 25.3994029, 55.5305745, True),
+            ('Abu Dhabi', 'AE', 24.3865481, 54.5599079, True),
+            ('Dubai', 'AE', 25.1993957, 55.2738326, True),
+            ('Sharjah', 'AE', 25.328435, 55.512258, True),
+            ('Ajman', 'AE', 25.3994029, 55.5305745, True),
 
-            ('Berlin', 'berlin', 'DE', 52.522594, 13.402388, True),
-            ('Hamburg', 'hamburg', 'DE', 53.558572, 9.9278215, True),
-            ('Munich', 'munich', 'DE', 48.1549107, 11.5418357, True),
-            ('Ingolstadt', 'ingolstadt', 'DE', 48.7533744, 11.3796516, True),
-            ('Cologne', 'cologne', 'DE', 50.957245, 6.9673223, True),
-            ('Aachen', 'aachen', 'DE', 50.7738792, 6.0844869, True),
+            ('Berlin', 'DE', 52.522594, 13.402388, True),
+            ('Hamburg', 'DE', 53.558572, 9.9278215, True),
+            ('Munich', 'DE', 48.1549107, 11.5418357, True),
+            ('Ingolstadt', 'DE', 48.7533744, 11.3796516, True),
+            ('Cologne', 'DE', 50.957245, 6.9673223, True),
+            ('Aachen', 'DE', 50.7738792, 6.0844869, True),
         ]
         for t in cities:
-            PredefinedCity.objects.get_or_create(city=t[0], city_encoded=t[1], country=t[2],
-                                                 latitude=t[3], longitude=t[4], approved=t[5])
+            PredefinedCity.objects.get_or_create(city=t[0], country=t[1], latitude=t[2], longitude=t[3], approved=t[4])
 
         # currencies
         Currency.objects.get_or_create(country='AE', code='AED', name='Dirham')

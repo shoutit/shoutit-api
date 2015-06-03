@@ -81,6 +81,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         city = data.get('city')
         if city and city != 'all':
             f = [F('term', city=city)]
+            # todo: use other means of finding the surrounding cities like state.
             try:
                 pd_city = PredefinedCity.objects.get(city=city)
             except PredefinedCity.DoesNotExist:

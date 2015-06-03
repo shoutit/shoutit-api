@@ -483,12 +483,16 @@ class ListenAdmin(admin.ModelAdmin):
     list_display = ('id', 'listener', 'stream')
     readonly_fields = ('listener', 'stream')
 
+
+@admin.register(PredefinedCity)
+class PredefinedCity(admin.ModelAdmin):
+    list_display = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')
+
 # admin.site.register(StoredFile)
 admin.site.register(Video)
 admin.site.register(Stream)
 admin.site.register(Notification)
 admin.site.register(Currency)
-admin.site.register(PredefinedCity)
 admin.site.register(SharedLocation)
 admin.site.register(UserPermission)
 admin.site.register(Permission)

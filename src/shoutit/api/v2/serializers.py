@@ -17,9 +17,10 @@ from common.constants import (
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, LocationMixin)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
 from shoutit.controllers import shout_controller, user_controller
 import logging
+
 logger = logging.getLogger('shoutit.debug')
 error_logger = logging.getLogger('shoutit.error')
 
@@ -27,11 +28,11 @@ error_logger = logging.getLogger('shoutit.error')
 class LocationSerializer(serializers.Serializer):
     latitude = serializers.FloatField(min_value=-90, max_value=90)
     longitude = serializers.FloatField(min_value=-180, max_value=180)
-    country = serializers.CharField(min_length=2, max_length=2, required=False)
-    postal_code = serializers.CharField(max_length=10, required=False)
-    state = serializers.CharField(max_length=50, required=False)
-    city = serializers.CharField(max_length=100, required=False)
-    address = serializers.CharField(max_length=200, required=False)
+    country = serializers.CharField(min_length=2, max_length=2, required=False, allow_blank=True)
+    postal_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    state = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    address = serializers.CharField(max_length=200, required=False, allow_blank=True)
 
 
 class PushTokensSerializer(serializers.Serializer):
@@ -89,7 +90,8 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'name', 'api_url', 'image', 'rank')
 
     def get_api_url(self, f_tag):
-        return reverse('tag-detail', kwargs={'name': f_tag.tag.name}, request=self.context['request'])
+        return reverse('tag-detail', kwargs={'name': f_tag.tag.name},
+                       request=self.context['request'])
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -141,7 +143,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(UserSerializer):
-    email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
+    email = serializers.EmailField(allow_blank=True, max_length=254, required=False,
+                                   help_text="Only shown for owner")
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender')
@@ -150,15 +153,20 @@ class UserDetailSerializer(UserSerializer):
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
     push_tokens = PushTokensSerializer(help_text="Only shown for owner")
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
-    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
-    is_listener = serializers.SerializerMethodField(help_text="Whether this user is one of the signed in user's listeners")
-    listeners_count = serializers.IntegerField(source='profile.listeners_count', help_text="Number of Listeners to this user")
+    is_listening = serializers.SerializerMethodField(
+        help_text="Whether signed in user is listening to this user")
+    is_listener = serializers.SerializerMethodField(
+        help_text="Whether this user is one of the signed in user's listeners")
+    listeners_count = serializers.IntegerField(source='profile.listeners_count',
+                                               help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
-    listening_count = serializers.DictField(read_only=True, child=serializers.IntegerField(), source='profile.listening_count',
+    listening_count = serializers.DictField(read_only=True, child=serializers.IntegerField(),
+                                            source='profile.listening_count',
                                             help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
-    is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
+    is_owner = serializers.SerializerMethodField(
+        help_text="Whether the signed in user and this user are the same")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
     message_url = serializers.SerializerMethodField(
         help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
@@ -167,7 +175,8 @@ class UserDetailSerializer(UserSerializer):
         parent_fields = UserSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email',
                                   'linked_accounts', 'push_tokens', 'is_password_set',
-                                  'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
+                                  'is_listening', 'is_listener', 'shouts_url', 'listeners_count',
+                                  'listeners_url',
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
 
     def get_is_listening(self, user):
@@ -181,19 +190,23 @@ class UserDetailSerializer(UserSerializer):
         return False
 
     def get_shouts_url(self, user):
-        return reverse('user-shouts', kwargs={'username': user.username}, request=self.context['request'])
+        return reverse('user-shouts', kwargs={'username': user.username},
+                       request=self.context['request'])
 
     def get_listening_url(self, user):
-        return reverse('user-listening', kwargs={'username': user.username}, request=self.context['request'])
+        return reverse('user-listening', kwargs={'username': user.username},
+                       request=self.context['request'])
 
     def get_listeners_url(self, user):
-        return reverse('user-listeners', kwargs={'username': user.username}, request=self.context['request'])
+        return reverse('user-listeners', kwargs={'username': user.username},
+                       request=self.context['request'])
 
     def get_is_owner(self, user):
         return self.root.context['request'].user == user
 
     def get_message_url(self, user):
-        return reverse('user-message', kwargs={'username': user.username}, request=self.context['request'])
+        return reverse('user-message', kwargs={'username': user.username},
+                       request=self.context['request'])
 
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
@@ -203,6 +216,7 @@ class UserDetailSerializer(UserSerializer):
             del ret['email']
             del ret['location']['latitude']
             del ret['location']['longitude']
+            del ret['location']['address']
             del ret['push_tokens']
             del ret['linked_accounts']
             if not ret['is_listener']:
@@ -258,13 +272,15 @@ class UserDetailSerializer(UserSerializer):
         user.save()
 
         if location_data:
-            profile = user_controller.update_profile_location(profile, location_data)
+            user_controller.update_profile_location(profile, location_data)
 
         if profile_data:
 
             if video_data:
-                video = Video(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'], provider=video_data['provider'],
-                              id_on_provider=video_data['id_on_provider'], duration=video_data['duration'])
+                video = Video(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
+                              provider=video_data['provider'],
+                              id_on_provider=video_data['id_on_provider'],
+                              duration=video_data['duration'])
                 video.save()
                 # delete existing video first
                 if profile.video:
@@ -309,12 +325,14 @@ class UserDetailSerializer(UserSerializer):
 
 
 class ShoutSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'], help_text="'offer' or 'request'")
+    type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'],
+                                   help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
     text = serializers.CharField(min_length=10, max_length=1000)
     price = serializers.FloatField(source='item.price')
-    currency = serializers.CharField(source='item.currency.code', help_text='Currency code taken from list of available currencies')
+    currency = serializers.CharField(source='item.currency.code',
+                                     help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
@@ -323,8 +341,10 @@ class ShoutSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Shout
-        fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency', 'thumbnail', 'video_url', 'user',
-                  'date_published', 'category', 'tags')
+        fields = (
+        'id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency',
+        'thumbnail', 'video_url', 'user',
+        'date_published', 'category', 'tags')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -361,15 +381,18 @@ class ShoutSerializer(serializers.ModelSerializer):
 
 
 class ShoutDetailSerializer(ShoutSerializer):
-    images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
+    images = serializers.ListField(source='item.images', child=serializers.URLField(),
+                                   required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
-    reply_url = serializers.SerializerMethodField(help_text="URL to reply to this shout if possible, not set for shout owner.")
+    reply_url = serializers.SerializerMethodField(
+        help_text="URL to reply to this shout if possible, not set for shout owner.")
     related_requests = ShoutSerializer(many=True, required=False)
     related_offers = ShoutSerializer(many=True, required=False)
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers')
+        fields = parent_fields + (
+        'images', 'videos', 'reply_url', 'related_requests', 'related_offers')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -393,9 +416,11 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                 category=validated_data['category'],
                                                 tags=validated_data['tag_objects'],
                                                 shouter=self.root.context['request'].user,
-                                                country=location_data['country'],
-                                                city=location_data['city'],
-                                                address=location_data.get('address', ""),
+                                                country=location_data.get('country'),
+                                                postal_code=location_data.get('postal_code'),
+                                                state=location_data.get('state'),
+                                                city=location_data.get('city'),
+                                                address=location_data.get('address'),
                                                 currency=validated_data['item']['currency']['code'],
                                                 images=images,
                                                 videos=videos)
@@ -408,9 +433,11 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                   category=validated_data['category'],
                                                   tags=validated_data['tag_objects'],
                                                   shouter=self.root.context['request'].user,
-                                                  country=location_data['country'],
-                                                  city=location_data['city'],
-                                                  address=location_data.get('address', ""),
+                                                  country=location_data.get('country'),
+                                                  postal_code=location_data.get('postal_code'),
+                                                  state=location_data.get('state'),
+                                                  city=location_data.get('city'),
+                                                  address=location_data.get('address'),
                                                   currency=validated_data['item']['currency']['code'],
                                                   images=images,
                                                   videos=videos)
@@ -473,20 +500,27 @@ class MessageSerializer(serializers.ModelSerializer):
         if 'attachments' not in validated_data:
             validated_data['attachments'] = None
         else:
-            if isinstance(validated_data['attachments'], list) and len(validated_data['attachments']):
+            if isinstance(validated_data['attachments'], list) and len(
+                    validated_data['attachments']):
 
                 for attachment in validated_data['attachments']:
                     if 'shout' not in attachment and 'location' not in attachment:
-                        errors['attachments'] = "attachment should have either 'shout' or 'location'"
+                        errors[
+                            'attachments'] = "attachment should have either 'shout' or 'location'"
                         continue
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
                         elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
-                            errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
+                            errors['attachments'] = {
+                            'shout': "shout with id '%s' does not exist" % attachment['shout'][
+                                'id']}
 
-                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
-                        errors['attachments'] = {'shout': "location object should have 'latitude' and 'longitude'"}
+                    if 'location' in attachment and (
+                            'latitude' not in attachment['location'] or 'longitude' not in
+                        attachment['location']):
+                        errors['attachments'] = {
+                        'shout': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
 
@@ -500,19 +534,24 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    users = UserSerializer(many=True, source='contributors', help_text="List of users in this conversations")
+    users = UserSerializer(many=True, source='contributors',
+                           help_text="List of users in this conversations")
     last_message = MessageSerializer(required=False)
     type = serializers.CharField(source='type_name', help_text="Either 'chat' or 'about_shout'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
-    about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
-    unread_messages_count = serializers.SerializerMethodField(help_text="Number of unread messages in this conversation")
-    messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
+    about = serializers.SerializerMethodField(
+        help_text="Only set if the conversation of type 'about_shout'")
+    unread_messages_count = serializers.SerializerMethodField(
+        help_text="Number of unread messages in this conversation")
+    messages_url = serializers.SerializerMethodField(
+        help_text="URL to get the messages of this conversation")
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
         model = Conversation
-        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'users',
+        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count',
+                  'unread_messages_count', 'users',
                   'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
@@ -525,10 +564,12 @@ class ConversationSerializer(serializers.ModelSerializer):
         return instance.unread_messages_count(self.context['request'].user)
 
     def get_messages_url(self, conversation):
-        return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])
+        return reverse('conversation-messages', kwargs={'id': conversation.id},
+                       request=self.context['request'])
 
     def get_reply_url(self, conversation):
-        return reverse('conversation-reply', kwargs={'id': conversation.id}, request=self.context['request'])
+        return reverse('conversation-reply', kwargs={'id': conversation.id},
+                       request=self.context['request'])
 
 
 class AttachedObjectSerializer(serializers.Serializer):
@@ -554,7 +595,8 @@ class AttachedObjectSerializer(serializers.Serializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix')
-    type = serializers.CharField(source='type_name', help_text="Currently, either 'listen' or 'message'")
+    type = serializers.CharField(source='type_name',
+                                 help_text="Currently, either 'listen' or 'message'")
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'message' objects depending on notification type")
 
@@ -571,7 +613,8 @@ class CurrencySerializer(serializers.ModelSerializer):
 
 class ReportSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
-    type = serializers.CharField(source='type_name', help_text="Currently, either 'user' or 'shout'", read_only=True)
+    type = serializers.CharField(source='type_name',
+                                 help_text="Currently, either 'user' or 'shout'", read_only=True)
     user = UserSerializer(read_only=True)
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'shout' objects depending on report type")
@@ -606,11 +649,14 @@ class ReportSerializer(serializers.ModelSerializer):
         report_type = ReportType.texts[validated_data['type']]
 
         if report_type == REPORT_TYPE_USER:
-            attached_object = User.objects.get(id=validated_data['attached_object']['attached_user']['id'])
+            attached_object = User.objects.get(
+                id=validated_data['attached_object']['attached_user']['id'])
         if report_type == REPORT_TYPE_SHOUT:
-            attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
+            attached_object = Shout.objects.get(
+                id=validated_data['attached_object']['attached_shout']['id'])
         text = validated_data['text'] if 'text' in validated_data else None
-        report = Report.objects.create(user=self.root.context['request'].user, text=text, attached_object=attached_object, type=report_type)
+        report = Report.objects.create(user=self.root.context['request'].user, text=text,
+                                       attached_object=attached_object, type=report_type)
         return report
 
 
@@ -658,7 +704,8 @@ class ShoutitSigninSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+            raise ValidationError(
+                {'email': ['The email or username you entered do not belong to any account.']})
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
@@ -762,4 +809,4 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
 class PredefinedCitySerializer(serializers.ModelSerializer):
     class Meta:
         model = PredefinedCity
-        fields = ('city', 'city_encoded', 'country', 'latitude', 'longitude')
+        fields = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')

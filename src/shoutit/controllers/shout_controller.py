@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import random
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -20,7 +20,6 @@ from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post, PredefinedCity, Category
 from shoutit.controllers import event_controller, email_controller, item_controller
-from shoutit.utils import to_seo_friendly
 
 logger = logging.getLogger('shoutit.debug')
 
@@ -89,29 +88,26 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def post_request(name, text, price, latitude, longitude, category, tags, shouter, country, city,
-                 address="",
-                 currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
-                 is_sss=False, exp_days=None, priority=0):
+def post_request(name, text, price, latitude, longitude, category, tags, shouter, country=None,
+                 postal_code=None, state=None,city=None, address=None, currency=DEFAULT_CURRENCY_CODE,
+                 images=None, videos=None, date_published=None, is_sss=False, exp_days=None, priority=0):
     return create_shout(POST_TYPE_REQUEST, name, text, price, latitude, longitude, category, tags,
-                        shouter, country, city, address, currency, images, videos, date_published,
-                        is_sss, exp_days, priority)
+                        shouter, country, postal_code, state, city, address, currency, images,
+                        videos, date_published, is_sss, exp_days, priority)
 
 
-def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country, city,
-               address="",
-               currency=DEFAULT_CURRENCY_CODE, images=None, videos=None, date_published=None,
-               is_sss=False, exp_days=None, priority=0):
+def post_offer(name, text, price, latitude, longitude, category, tags, shouter, country=None,
+               postal_code=None, state=None,city=None, address=None, currency=DEFAULT_CURRENCY_CODE,
+               images=None, videos=None, date_published=None, is_sss=False, exp_days=None, priority=0):
     return create_shout(POST_TYPE_OFFER, name, text, price, latitude, longitude, category, tags,
-                        shouter, country, city, address, currency, images, videos, date_published,
-                        is_sss, exp_days, priority)
+                        shouter, country, postal_code, state, city, address, currency, images,
+                        videos, date_published, is_sss, exp_days, priority)
 
 
 # todo: handle exception on each step and in case of errors, rollback!
 def create_shout(shout_type, name, text, price, latitude, longitude, category, tags, shouter,
-                 country, city, address="", currency=DEFAULT_CURRENCY_CODE, images=None,
-                 videos=None,
-                 date_published=None, is_sss=False, exp_days=None, priority=0):
+                 country=None, postal_code=None, state=None, city=None, address=None, currency=DEFAULT_CURRENCY_CODE, images=None,
+                 videos=None, date_published=None, is_sss=False, exp_days=None, priority=0):
     # category
     # if passed as {'name': 'Category'}
     if not isinstance(category, Category):
@@ -120,7 +116,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
         try:
             category = Category.objects.get(name=category)
         except Category.DoesNotExist:
-            raise ValidationError({'category': ["Category '%s' does not exist." % category]})
+            raise DRFValidationError({'category': ["Category '%s' does not exist." % category]})
 
     # tags
     # if passed as [{'name': 'tag-x'},...]
@@ -139,9 +135,8 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
     # todo: check that item was created!
 
     shout = Shout(type=shout_type, text=text, user=shouter, category=category, tags=tags, item=item,
-                  longitude=longitude, latitude=latitude, country=country, city=city,
-                  address=address,
-                  is_sss=is_sss, priority=priority)
+                  longitude=longitude, latitude=latitude, country=country or '', postal_code=postal_code or '',
+                  state=state or '', city=city or '', address=address or '', is_sss=is_sss, priority=priority)
 
     if not date_published:
         date_published = datetime.today()
@@ -156,7 +151,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
     shouter.profile.stream.add_post(shout)
 
     add_tags(tags, shout, shouter)
-    add_pd_city(country, city, latitude, longitude)
+    add_pd_city(country, postal_code, state, city, latitude, longitude)
     event_type = EVENT_TYPE_SHOUT_OFFER if shout_type == POST_TYPE_OFFER else EVENT_TYPE_SHOUT_REQUEST
     event_controller.register_event(shouter, event_type, shout)
     return shout
@@ -172,15 +167,13 @@ def add_tags(tags, shout, shouter):
             pass
 
 
-def add_pd_city(country, city, latitude, longitude):
-    encoded_city = to_seo_friendly(unicode.lower(unicode(city)))
-    predefined_city = PredefinedCity.objects.filter(city=city)
-    if not predefined_city:
-        predefined_city = PredefinedCity.objects.filter(city_encoded=encoded_city)
-    if not predefined_city:
-        PredefinedCity(city=city, city_encoded=encoded_city, country=country, latitude=latitude,
-                       longitude=longitude).save()
-
+def add_pd_city(country, postal_code, state, city, latitude, longitude):
+    if country and (postal_code or city):
+        try:
+            PredefinedCity(country=country, postal_code=postal_code or '', state=state or '',
+                           city=city or '', latitude=latitude, longitude=longitude).save()
+        except (ValidationError, IntegrityError) as e:
+            pass
 
 @receiver(post_save, sender=Shout)
 def save_shout_index(sender, instance=None, created=False, **kwargs):

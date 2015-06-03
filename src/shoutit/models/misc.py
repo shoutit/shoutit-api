@@ -11,9 +11,10 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PredefinedCity(UUIDModel, LocationMixin):
-    city_encoded = models.CharField(max_length=200, default='', blank=True, db_index=True,
-                                    unique=True)
     approved = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('country', 'postal_code', 'state', 'city')
 
     def __unicode__(self):
         return unicode(self.country + ':' + self.city)
