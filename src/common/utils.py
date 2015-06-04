@@ -109,7 +109,8 @@ def location_from_latlng(latlng):
         'language': "en"
     }
     response = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params).json()
-
+    if response.get('status', 'ZERO_RESULTS') == 'ZERO_RESULTS':
+        return {'error': "Make sure you have a valid latlng param."}
     locality = None
     postal_town = None
     administrative_area_level_1 = None

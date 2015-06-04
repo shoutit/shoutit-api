@@ -226,7 +226,7 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['get'])
     def geocode(self, request):
-        latlng = request.query_params.get('latlng')
+        latlng = request.query_params.get('latlng', '')
         return Response(location_from_latlng(latlng))
 
 def handle_dbz_reply(in_email, msg, request):
