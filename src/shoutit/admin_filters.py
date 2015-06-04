@@ -54,22 +54,28 @@ class ShoutitDateFieldListFilter(DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super(ShoutitDateFieldListFilter, self).__init__(field, request, params, model, model_admin,
                                                          field_path)
+        # from DateFieldListFilter constructor
         now = timezone.now()
-        # When time zone support is enabled, convert "now" to the user's time
-        # zone so Django's definition of "Today" matches what the user expects.
         if timezone.is_aware(now):
             now = timezone.localtime(now)
-
         if isinstance(field, DateTimeField):
             today = now.replace(hour=0, minute=0, second=0, microsecond=0)
         else:  # field is a models.DateField
             today = now.date()
-        yesterday = today + datetime.timedelta(days=-1)
 
-        yesterday_link = (_('Yesterday'), {
-            self.lookup_kwarg_since: str(yesterday),
-            self.lookup_kwarg_until: str(today),
-        })
+        # convert the links tuple to list to be able to insert elements in it
         links_list = list(self.links)
-        links_list.insert(2, yesterday_link)
+
+        # 1 to 7 days ago
+        for day in range(1, 8):
+            day_ago = today + datetime.timedelta(days=-day)
+            after_day_ago = day_ago + datetime.timedelta(days=+1)
+            label = 'Yesterday' if day == 1 else '%s days ago [%s]' % (day, day_ago.strftime('%Y-%m-%d'))
+            day_ago_link = (label, {
+                self.lookup_kwarg_since: str(day_ago),
+                self.lookup_kwarg_until: str(after_day_ago),
+            })
+            links_list.insert(day + 1, day_ago_link)
+
+        # convert back to tuple
         self.links = tuple(links_list)
