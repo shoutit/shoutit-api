@@ -79,9 +79,9 @@ class APIModelMixin(object):
 
 class LocationMixin(models.Model):
     latitude = models.FloatField(
-        validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
+        default=0, validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
     longitude = models.FloatField(
-        validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
+        default=0, validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
     country = models.CharField(max_length=2, blank=True, db_index=True)
     postal_code = models.CharField(max_length=10, blank=True, db_index=True)
     state = models.CharField(max_length=50, blank=True, db_index=True)

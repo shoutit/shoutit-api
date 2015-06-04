@@ -103,7 +103,7 @@ from rest_framework.authtoken.models import Token
 
 
 @receiver(post_save, sender='shoutit.User')
-def create_auth_token(sender, instance=None, created=False, **kwargs):
+def user_post_save(sender, instance=None, created=False, **kwargs):
     action = 'Created' if created else 'Updated'
     logger.debug('{} User: {}'.format(action, instance))
     if created:
