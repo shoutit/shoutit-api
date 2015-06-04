@@ -3,13 +3,12 @@ import uuid
 import boto
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin import DateFieldListFilter
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from django.conf.urls import url
 from django.core.urlresolvers import reverse
-from django.db.models import Q
+from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter
 
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
@@ -26,7 +25,7 @@ class ShoutAdmin(admin.ModelAdmin):
     list_display = (
         'id', '_user', 'type', 'category', 'item', 'country', 'city', 'is_sss', 'is_disabled',
         'priority', 'date_published')
-    list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city')
+    list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city', ('created_at', ShoutitDateFieldListFilter))
     readonly_fields = ('_user', 'item')
     ordering = ('-date_published',)
 
@@ -42,6 +41,7 @@ class ShoutAdmin(admin.ModelAdmin):
 class PostAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
     ordering = ('-created_at',)
+    list_filter = ('type', 'is_disabled', 'country', 'city', ('created_at', ShoutitDateFieldListFilter))
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -51,44 +51,6 @@ class PostAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Item)
-
-
-class UserEmailFilter(admin.SimpleListFilter):
-    # Human-readable title which will be displayed in the
-    # right admin sidebar just above the filter options.
-    title = _('with email')
-
-    # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'with_email'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('shoutit', _('only shoutit users')),
-            ('yes', _('yes')),
-            ('no', _('no')),
-            ('cl', _('only cl users')),
-        )
-
-    def queryset(self, request, queryset):
-        if queryset.model == User:
-            if self.value() == 'shoutit':
-                return queryset.filter(~Q(email=''), ~Q(email__icontains='@sale.craigslist.org'))
-            if self.value() == 'yes':
-                return queryset.filter(~Q(email=''))
-            if self.value() == 'no':
-                return queryset.filter(email='')
-            if self.value() == 'cl':
-                return queryset.filter(email__icontains='@sale.craigslist.org')
-        elif queryset.model == Profile:
-            if self.value() == 'shoutit':
-                return queryset.filter(~Q(user__email=''),
-                                       ~Q(user__email__icontains='@sale.craigslist.org'))
-            if self.value() == 'yes':
-                return queryset.filter(~Q(user__email=''))
-            if self.value() == 'no':
-                return queryset.filter(user__email='')
-            if self.value() == 'cl':
-                return queryset.filter(user__email__icontains='@sale.craigslist.org')
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -117,7 +79,7 @@ class CustomUserAdmin(UserAdmin):
         (_('Extra'), {'fields': ('_messaging',)}),
     )
     list_filter = ('is_active', 'is_activated', UserEmailFilter, 'is_test', 'is_staff',
-                   'is_superuser', 'groups', ('created_at', DateFieldListFilter))
+                   'is_superuser', 'groups', ('created_at', ShoutitDateFieldListFilter))
     readonly_fields = ('_messaging', '_profile')
     ordering = ('-date_joined',)
     form = CustomUserChangeForm
@@ -155,7 +117,7 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = ('video', '_user')
     exclude = ('user',)
     list_filter = (
-    'country', 'city', 'gender', UserEmailFilter, ('created_at', DateFieldListFilter))
+        'country', 'city', 'gender', UserEmailFilter, ('created_at', ShoutitDateFieldListFilter))
     ordering = ('-created_at',)
 
     def _user(self, obj):
@@ -319,6 +281,7 @@ class ConversationAdmin(admin.ModelAdmin):
         (_('Extra'), {'fields': ('_messages',)}),
     )
     raw_id_fields = ('users',)
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
     ordering = ('-created_at',)
 
     def _users(self, conversation):
@@ -391,7 +354,7 @@ class ReportAdmin(admin.ModelAdmin):
     list_display = (
         'type_name', '_user', 'text', 'attached_object', 'content_type', 'object_id', 'is_solved',
         'is_disabled', 'created_at')
-    list_filter = ('is_solved', 'is_disabled')
+    list_filter = ('is_solved', 'is_disabled', ('created_at', ShoutitDateFieldListFilter))
     actions = ['mark_as_solved', 'mark_as_disabled']
     readonly_fields = ('_user', 'attached_object', 'content_type')
     ordering = ('-created_at',)
@@ -430,6 +393,7 @@ class ConfirmTokenAdmin(admin.ModelAdmin):
 class DBUserAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'db_link', 'shout', 'created_at')
     ordering = ('-created_at',)
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -442,6 +406,7 @@ class DBUserAdmin(admin.ModelAdmin):
 class DBZ2UserAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'db_link', 'shout', 'created_at')
     ordering = ('-created_at',)
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -454,6 +419,7 @@ class DBZ2UserAdmin(admin.ModelAdmin):
 class CLUserAdmin(admin.ModelAdmin):
     list_display = ('id', '_user', 'cl_email', 'shout', 'created_at')
     ordering = ('-created_at',)
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
 
     def _user(self, obj):
         return user_link(obj.user)
@@ -466,6 +432,7 @@ class CLUserAdmin(admin.ModelAdmin):
 class DBCLConversationAdmin(admin.ModelAdmin):
     list_display = ('id', 'in_email', '_from_user', '_to_user', 'shout', 'ref', 'created_at')
     ordering = ('-created_at',)
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
 
     def _from_user(self, obj):
         return user_link(obj.from_user)
@@ -482,6 +449,7 @@ class DBCLConversationAdmin(admin.ModelAdmin):
 class ListenAdmin(admin.ModelAdmin):
     list_display = ('id', 'listener', 'stream')
     readonly_fields = ('listener', 'stream')
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
 
 
 @admin.register(PredefinedCity)
