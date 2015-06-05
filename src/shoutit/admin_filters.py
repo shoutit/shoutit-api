@@ -13,11 +13,7 @@ from shoutit.models import User, Profile
 
 
 class UserEmailFilter(admin.SimpleListFilter):
-    # Human-readable title which will be displayed in the
-    # right admin sidebar just above the filter options.
     title = _('with email')
-
-    # Parameter for the filter that will be used in the URL query.
     parameter_name = 'with_email'
 
     def lookups(self, request, model_admin):
@@ -48,6 +44,29 @@ class UserEmailFilter(admin.SimpleListFilter):
                 return queryset.filter(user__email='')
             if self.value() == 'cl':
                 return queryset.filter(user__email__icontains='@sale.craigslist.org')
+
+
+class UserDeviceFilter(admin.SimpleListFilter):
+    title = _('device')
+    parameter_name = 'device'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('android', _('Android')),
+            ('ios', _('iOs')),
+            ('both', _('Android and iOS')),
+            ('none', _('No device [WebApp]')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'android':
+            return queryset.filter(~Q(gcmdevice=None))
+        elif self.value() == 'ios':
+            return queryset.filter(~Q(apnsdevice=None))
+        elif self.value() == 'both':
+            return queryset.filter(~Q(gcmdevice=None), ~Q(apnsdevice=None))
+        elif self.value() == 'none':
+            return queryset.filter(gcmdevice=None, apnsdevice=None)
 
 
 class ShoutitDateFieldListFilter(DateFieldListFilter):
