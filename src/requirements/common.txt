@@ -31,7 +31,7 @@ httplib2==0.9.1
 google-api-python-client==1.4.0
 
 # push + sockets
-git+https://github.com/jleclanche/django-push-notifications
+git+https://github.com/mochawich/django-push-notifications
 pusher==1.1.3
 django-cors-headers==1.1.0
 

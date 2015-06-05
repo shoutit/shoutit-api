@@ -66,7 +66,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
     if user.apns_device:
         try:
             user.apns_device.send_message(
-                None, sound='default', badge=get_user_notifications_count(user), extra={
+                message, sound='default', badge=get_user_notifications_count(user), extra={
                     'notification_type': int(notification_type),
                     'object': attached_object_dict
                 })
@@ -79,7 +79,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
 
     if user.gcm_device:
         try:
-            user.gcm_device.send_message(None, extra={
+            user.gcm_device.send_message(message, extra={
                 'notification_type': int(notification_type),
                 'object': attached_object_dict
             })
