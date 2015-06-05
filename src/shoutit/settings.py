@@ -466,11 +466,14 @@ LOGGING = {
     }
 }
 
+# Mixpanel
+MIXPANEL_TOKEN = 'c9d0a1dc521ac1962840e565fa971574'
+
 # Mail Settings
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
 
-FORCE_SMTP = True
+FORCE_SMTP = False
 
 GOOGLE_SMTP = {
     'default_from_email': 'Jack <reply@shoutit.com>',
@@ -653,6 +656,7 @@ SWAGGER_SETTINGS = {
     'exclude_namespaces': [],
     'api_version': '2.0',
     'api_path': '/',
+    'protocol': 'https' if PROD else 'http',
     'enabled_methods': [
         'get',
         'post',

@@ -9,7 +9,7 @@ psycopg2==2.6
 https://github.com/sehmaschine/django-grappelli/archive/stable/2.7.x.zip
 
 # django-rest-framework
-djangorestframework==3.1.2
+djangorestframework==3.1.3
 django-filter==0.10.0
 drf-extensions
 
@@ -38,8 +38,11 @@ django-cors-headers==1.1.0
 # email
 mailchimp==2.0.9
 
+# tracking
+mixpanel-py==4.0.2
+
 # docs
-git+https://github.com/marcgibbons/django-rest-swagger
+django-rest-swagger==0.3.1
 markdown==2.6.2
 
 # utils

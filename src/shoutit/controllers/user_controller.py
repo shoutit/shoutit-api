@@ -9,7 +9,7 @@ from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_
 
 from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
                             LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
-from shoutit.utils import generate_username
+from shoutit.utils import generate_username, shoutit_mp
 import logging
 
 warn_logger = logging.getLogger('shoutit.warnings')
@@ -37,7 +37,8 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
     return user
 
 
-def signup_user(email=None, password=None, first_name='', last_name='', username=None, **kwargs):
+def signup_user(email=None, password=None, first_name='', last_name='', username=None, source=None,
+                **kwargs):
     if email and User.objects.filter(email=email.lower()).exists():
         raise DRFValidationError({'email': "User with same email exists."})
     username = username or generate_username()
@@ -51,8 +52,16 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
         first_name = 'user'
     if not last_name:
         last_name = username
-    return User.objects.create_user(username=username, email=email, password=password,
+    user = User.objects.create_user(username=username, email=email, password=password,
                                     first_name=first_name, last_name=last_name, **kwargs)
+    if source:
+        # track registration
+        # todo: put tracking on rq
+        try:
+            shoutit_mp.track(user.pk, 'signup', {'type': source})
+        except:
+            pass
+    return user
 
 
 def user_from_shoutit_signup_data(signup_data):
@@ -60,7 +69,7 @@ def user_from_shoutit_signup_data(signup_data):
     password = signup_data.get('password')
     first_name = signup_data.get('first_name')
     last_name = signup_data.get('last_name')
-    return signup_user(email=email, password=password, first_name=first_name, last_name=last_name)
+    return signup_user(email=email, password=password, first_name=first_name, last_name=last_name, source='shoutit')
 
 
 def auth_with_gplus(gplus_user, credentials):
@@ -74,7 +83,8 @@ def auth_with_gplus(gplus_user, credentials):
         user = User.objects.get(email=email)
         logger.debug('Found user: {} with same email of gplus_user: {}'.format(user, gplus_id))
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name,
+                           is_activated=True, source='gplus')
 
     if not user.is_activated:
         user.activate()
@@ -120,7 +130,7 @@ def auth_with_facebook(fb_user, long_lived_token):
         logger.debug('Found user: {} with same email of fb_user: {}'.format(user, facebook_id))
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name,
-                           username=username, is_activated=True)
+                           username=username, is_activated=True, source='facebook')
 
     if not user.is_activated:
         user.activate()
