@@ -71,8 +71,8 @@ class CustomUserAdmin(UserAdmin):
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
-    list_filter = (UserEmailFilter, UserDeviceFilter, 'is_activated', 'is_active','is_test', 'is_staff',
-                   ('created_at', ShoutitDateFieldListFilter), 'is_superuser', 'groups')
+    list_filter = (UserEmailFilter, UserDeviceFilter, ('created_at', ShoutitDateFieldListFilter),
+                   'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
     readonly_fields = ('_devices', '_messaging', '_profile')
     ordering = ('-date_joined',)
     form = CustomUserChangeForm
