@@ -14,6 +14,7 @@ import logging
 
 warn_logger = logging.getLogger('shoutit.warnings')
 logger = logging.getLogger('shoutit.debug')
+error_logger = logging.getLogger('shoutit.error')
 
 
 def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
@@ -59,8 +60,8 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
         # todo: put tracking on rq
         try:
             shoutit_mp.track(user.pk, 'signup', {'type': source})
-        except:
-            pass
+        except Exception as e:
+            error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
     return user
 
 

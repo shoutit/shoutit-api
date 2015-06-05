@@ -203,7 +203,7 @@ class FeaturedTagAdmin(admin.ModelAdmin):
     list_display = ('title', '_tag', 'country', 'city', 'rank')
     list_filter = ('country', 'city')
     ordering = ('country', 'city', 'rank')
-    search_fields = ('title', 'tag__name', 'tag__country', 'tag__city')
+    search_fields = ('title', 'tag__name', 'country', 'city')
     raw_id_fields = ('tag',)
     readonly_fields = ('_tag',)
 

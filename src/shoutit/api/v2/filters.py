@@ -78,20 +78,21 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if country and country != 'all':
             index_queryset = index_queryset.filter('term', country=country)
 
-            city = data.get('city')
-            if city and city != 'all':
-                f = [F('term', city=city)]
-                # todo: use other means of finding the surrounding cities like state.
-                try:
-                    pd_city = PredefinedCity.objects.get(country=country, city=city)
-                except PredefinedCity.DoesNotExist:
-                    pass
-                else:
-                    cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
-                    for nearby_city in cities:
-                        f.append(F('term', city=nearby_city.city))
-                    city_f = F('bool', should=f)
-                    index_queryset = index_queryset.filter(city_f)
+        # todo: this should be under country condition!
+        city = data.get('city')
+        if city and city != 'all':
+            f = [F('term', city=city)]
+            # todo: use other means of finding the surrounding cities like state.
+            try:
+                pd_city = PredefinedCity.objects.get(city=city)
+            except (PredefinedCity.DoesNotExist, PredefinedCity.MultipleObjectsReturned):
+                pass
+            else:
+                cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
+                for nearby_city in cities:
+                    f.append(F('term', city=nearby_city.city))
+                city_f = F('bool', should=f)
+                index_queryset = index_queryset.filter(city_f)
 
         category = data.get('category')
         if category:
