@@ -74,7 +74,7 @@ class CustomUserAdmin(UserAdmin):
     list_filter = (UserEmailFilter, UserDeviceFilter, ('created_at', ShoutitDateFieldListFilter),
                    'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
     readonly_fields = ('_devices', '_messaging', '_profile')
-    ordering = ('-date_joined',)
+    ordering = ('-created_at',)
     form = CustomUserChangeForm
 
     def get_urls(self):
