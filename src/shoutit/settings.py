@@ -142,7 +142,6 @@ INSTALLED_APPS = (
     # 'l10n',
     # 'payment',
     # 'subscription',
-    'shoutit',
 
     'rest_framework',
     'rest_framework.authtoken',
@@ -155,7 +154,9 @@ INSTALLED_APPS = (
     'django_rq',
     'widget_tweaks',
     'corsheaders',
+
     'shoutit_pusher',
+    'shoutit',
 )
 # apps only on local development
 if LOCAL:
