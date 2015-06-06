@@ -113,6 +113,7 @@ def location_from_latlng(latlng):
         return {'error': "Make sure you have a valid latlng param."}
     locality = None
     postal_town = None
+    administrative_area_level_2 = None
     administrative_area_level_1 = None
     country = None
     postal_code = None
@@ -125,6 +126,9 @@ def location_from_latlng(latlng):
 
         elif 'postal_town' in component['types']:
             postal_town = component['long_name']
+
+        elif 'administrative_area_level_2' in component['types']:
+            administrative_area_level_2 = component['long_name']
 
         elif 'administrative_area_level_1' in component['types']:
             administrative_area_level_1 = component['long_name']
@@ -139,7 +143,7 @@ def location_from_latlng(latlng):
         'country': country,
         'postal_code': postal_code,
         'state': administrative_area_level_1,
-        'city': locality or postal_town or administrative_area_level_1,
+        'city': locality or postal_town or administrative_area_level_2 or administrative_area_level_1,
         'address': address
     }
     return location
