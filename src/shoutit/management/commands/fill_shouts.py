@@ -5,13 +5,12 @@ Fill database with test shouts from test users
 from __future__ import unicode_literals
 import random
 import time
-import logging
 from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from rest_framework.request import Request
 from shoutit.api.v2.serializers import ShoutDetailSerializer
 from shoutit.models import User, Category, PredefinedCity
-logger = logging.getLogger('shoutit.debug')
+from shoutit.utils import debug_logger
 
 
 class Command(BaseCommand):
@@ -46,7 +45,7 @@ class Command(BaseCommand):
                     profile.latitude = city.latitude + random.uniform(-3, 3) / 100.0
                     profile.longitude = city.longitude + random.uniform(-3, 3) / 100.0
                     profile.save()
-                logger.debug('Created test user in: {}, lat: {}, lng: {}'.format(user.profile.city, user.profile.latitude, user.profile.longitude))
+                debug_logger.debug('Created test user in: {}, lat: {}, lng: {}'.format(user.profile.city, user.profile.latitude, user.profile.longitude))
                 users.append(user)
 
         for i in range(min(max(options.get('num_shouts')[0], self.min_shouts), self.max_shouts)):

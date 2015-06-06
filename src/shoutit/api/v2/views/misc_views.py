@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 import json
 import re
-import logging
 from django.conf import settings
 
 from rest_framework import viewsets, status
@@ -18,9 +17,7 @@ from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, 
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
                             User, DBZ2User)
-
-error_logger = logging.getLogger('shoutit.error')
-logger = logging.getLogger('shoutit.debug')
+from shoutit.utils import debug_logger, error_logger
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -133,7 +130,7 @@ class MiscViewSet(viewsets.ViewSet):
         from ipware.ip import get_real_ip
 
         ip = get_real_ip(request) or 'undefined'
-        logger.debug("IP request from : " + ip)
+        debug_logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
 
     @list_route(methods=['post'], suffix='SSS4')
@@ -280,12 +277,12 @@ def handle_dbz_reply(in_email, msg, request):
     if source == 'cl':
         messages_count = message.conversation.messages_count
         if messages_count < 4:
-            logger.debug('Messages count: %s' % messages_count)
-            logger.debug('Sending invitation email to cl user: %s' % str(from_user))
+            debug_logger.debug('Messages count: %s' % messages_count)
+            debug_logger.debug('Sending invitation email to cl user: %s' % str(from_user))
             from_user.cl_user.send_invitation_email()
         else:
-            logger.debug('Messages count: %s' % messages_count)
-            logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
+            debug_logger.debug('Messages count: %s' % messages_count)
+            debug_logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
     if source in ['dbz', 'dbz2']:
         email_exists = User.objects.filter(email=from_email).exists()
         if not email_exists:

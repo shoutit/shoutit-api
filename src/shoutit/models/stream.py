@@ -5,9 +5,8 @@ from django.dispatch import receiver
 from django.conf import settings
 from common.constants import StreamType
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
-import logging
+from shoutit.utils import debug_logger
 
-logger = logging.getLogger('shoutit.debug')
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
@@ -94,7 +93,7 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
     if created:
         stream = Stream(attached_object=instance)
         stream.save()
-        logger.debug('Created Stream for: <%s: %s>' % (sender.__name__, instance))
+        debug_logger.debug('Created Stream for: <%s: %s>' % (sender.__name__, instance))
 
 
 @receiver(pre_delete)
@@ -105,7 +104,7 @@ def delete_attached_stream(sender, instance, using, **kwargs):
     if not issubclass(sender, StreamMixin):
         return
 
-    logger.debug('Deleted Stream for: <%s: %s>' % (sender.__name__, instance))
+    debug_logger.debug('Deleted Stream for: <%s: %s>' % (sender.__name__, instance))
     # GenericRelation in StreamMixin makes sure that Stream is being deleted when deleting the instance itself
     # so no need for us to explicitly do that
     # instance.stream.delete()

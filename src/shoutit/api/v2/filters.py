@@ -4,7 +4,6 @@
 """
 from __future__ import unicode_literals
 from django.conf import settings
-from django.db.models import Count
 import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
@@ -12,8 +11,7 @@ from common.utils import process_tags
 from shoutit.controllers import stream_controller
 from shoutit.models import Shout, Category, Tag, PredefinedCity, FeaturedTag
 from elasticsearch_dsl import F
-import logging
-logger = logging.getLogger('shoutit.debug')
+from shoutit.utils import debug_logger
 
 
 class ShoutFilter(django_filters.FilterSet):
@@ -149,7 +147,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             selected_sort = ('_score',) + selected_sort
         index_queryset = index_queryset.sort(*selected_sort)
 
-        logger.debug(index_queryset.to_dict())
+        debug_logger.debug(index_queryset.to_dict())
         return index_queryset
 
 

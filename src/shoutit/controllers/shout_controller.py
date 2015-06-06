@@ -9,7 +9,6 @@ from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
 from rest_framework.exceptions import ValidationError as DRFValidationError
-import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from elasticsearch import NotFoundError, ConflictError
@@ -20,8 +19,7 @@ from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post, PredefinedCity, Category
 from shoutit.controllers import event_controller, email_controller, item_controller
-
-logger = logging.getLogger('shoutit.debug')
+from shoutit.utils import debug_logger
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
@@ -179,7 +177,7 @@ def add_pd_city(country, postal_code, state, city, latitude, longitude):
 def save_shout_index(sender, instance=None, created=False, **kwargs):
     shout = instance
     action = 'Created' if created else 'Updated'
-    logger.debug('{} Shout: {}: {}, city: {}'.format(action, shout.pk, shout.item.name, shout.city))
+    debug_logger.debug('{} Shout: {}: {}, city: {}'.format(action, shout.pk, shout.item.name, shout.city))
     try:
         if created:
             raise NotFoundError()
@@ -210,20 +208,20 @@ def save_shout_index(sender, instance=None, created=False, **kwargs):
     shout_index.is_sss = shout.is_sss
     shout_index.priority = shout.priority
     if shout_index.save():
-        logger.debug('Created ShoutIndex: %s.' % shout.pk)
+        debug_logger.debug('Created ShoutIndex: %s.' % shout.pk)
     else:
-        logger.debug('Updated ShoutIndex: %s.' % shout.pk)
+        debug_logger.debug('Updated ShoutIndex: %s.' % shout.pk)
 
 
 def delete_shout_index(shout):
     try:
         shout_index = ShoutIndex.get(shout.pk)
         shout_index.delete()
-        logger.debug('Deleted ShoutIndex: %s.' % shout.pk)
+        debug_logger.debug('Deleted ShoutIndex: %s.' % shout.pk)
     except NotFoundError:
-        logger.debug('ShoutIndex: %s not found.' % shout.pk)
+        debug_logger.debug('ShoutIndex: %s not found.' % shout.pk)
     except ConflictError:
-        logger.debug('ShoutIndex: %s already deleted.' % shout.pk)
+        debug_logger.debug('ShoutIndex: %s already deleted.' % shout.pk)
 
 
 # todo: check!

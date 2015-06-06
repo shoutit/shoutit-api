@@ -4,11 +4,9 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from shoutit.controllers import email_controller
 from shoutit.models import Shout
-
+from shoutit.utils import debug_logger
 from shoutit.models.base import UUIDModel, User
 from django.conf import settings
-import logging
-logger = logging.getLogger('shoutit.debug')
 
 
 class DBCLUser(UUIDModel):
@@ -32,7 +30,7 @@ def post_delete_dbcl_user(sender, instance, *args, **kwargs):
         return
     if instance.user:
         instance.user.delete()
-        logger.debug('Deleted User for: <%s>' % sender.__name__)
+        debug_logger.debug('Deleted User for: <%s>' % sender.__name__)
 
 
 class CLUser(DBCLUser):

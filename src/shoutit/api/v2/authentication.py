@@ -23,6 +23,7 @@ from shoutit.api.v2.serializers import (
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import ConfirmToken
+from shoutit.utils import shoutit_mp, error_logger
 
 
 class RequestParamsClientBackend(object):
@@ -72,6 +73,20 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         as defined in :rfc:`5.1`.
         """
 
+        # track registration
+        # todo: put tracking on rq
+        request_data = self.request.data
+        grant_type = request_data.get('grant_type')
+        if 'signin' not in grant_type:
+            try:
+                shoutit_mp.track(self.request.user.pk, 'signup', {
+                    'api_client': request_data.get('client_id'),
+                    'using': grant_type,
+                    'server': self.request.META.get('HTTP_HOST'),
+                })
+            except Exception as e:
+                error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
+
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,
@@ -111,6 +126,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         user = self.get_facebook_access_token_grant(request, data, client)
+        self.request.user = user
         scope = provider_scope.to_int('read', 'write')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
@@ -145,6 +161,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         user = self.get_gplus_code_grant(request, data, client)
+        self.request.user = user
         scope = provider_scope.to_int('read', 'write')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
@@ -177,6 +194,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         user = self.get_shoutit_signup_grant(request, data, client)
+        self.request.user = user
         scope = provider_scope.to_int('read', 'write')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
@@ -207,6 +225,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         user = self.get_shoutit_signin_grant(request, data, client)
+        self.request.user = user
         scope = provider_scope.to_int('read', 'write')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:

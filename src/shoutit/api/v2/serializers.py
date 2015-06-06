@@ -19,10 +19,6 @@ from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
 from shoutit.controllers import shout_controller, user_controller
-import logging
-
-logger = logging.getLogger('shoutit.debug')
-error_logger = logging.getLogger('shoutit.error')
 
 
 class LocationSerializer(serializers.Serializer):

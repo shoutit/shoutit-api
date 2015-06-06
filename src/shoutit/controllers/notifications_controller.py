@@ -16,12 +16,7 @@ from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAG
 from shoutit.api.versioning import ShoutitNamespaceVersioning
 from shoutit.controllers import email_controller
 from shoutit.models import Notification, DBCLConversation
-import logging
-from shoutit.utils import get_google_smtp_connection
-
-logger = logging.getLogger('shoutit.debug')
-error_logger = logging.getLogger('shoutit.error')
-sss_logger = logging.getLogger('shoutit.sss')
+from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger
 
 
 def mark_all_as_read(user):
@@ -70,7 +65,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                     'notification_type': int(notification_type),
                     'object': attached_object_dict
                 })
-            logger.debug("Sent apns push to %s." % user)
+            debug_logger.debug("Sent apns push to %s." % user)
         except APNSError, e:
             error_logger.warn("Could not send apns push.", extra={
                 'user': user.username,
@@ -83,7 +78,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 'notification_type': int(notification_type),
                 'object': attached_object_dict
             })
-            logger.debug("Sent gcm push to %s." % user)
+            debug_logger.debug("Sent gcm push to %s." % user)
         except GCMError, e:
             error_logger.warn("Could not send gcm push.", extra={
                 'user': user.username,
@@ -229,7 +224,7 @@ def notify_cl_user2(cl_user, from_user, message):
     email = EmailMultiAlternatives(subject=subject, body=message.text, to=[cl_user.cl_email],
                                    from_email=reply_to, reply_to=[reply_to], connection=connection)
     if email.send(True) == 1:
-        logger.debug("Sent message to cl user about his ad id: %s" % cl_user.cl_ad_id)
+        debug_logger.debug("Sent message to cl user about his ad id: %s" % cl_user.cl_ad_id)
     else:
         error_logger.warn("Error sending message to cl user.", extra={
             'cl_email': cl_user.cl_email

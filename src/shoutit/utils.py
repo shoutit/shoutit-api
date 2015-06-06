@@ -10,7 +10,12 @@ from django.http import HttpResponse
 from shoutit import settings
 import mailchimp
 from mixpanel import Mixpanel
+import logging
 
+
+error_logger = logging.getLogger('shoutit.error')
+debug_logger = logging.getLogger('shoutit.debug')
+sss_logger = logging.getLogger('shoutit.sss')
 
 shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN)
 

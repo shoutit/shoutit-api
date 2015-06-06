@@ -6,11 +6,7 @@ from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from django.conf import settings
 from common import constants
-from shoutit.utils import get_google_smtp_connection
-import logging
-logger = logging.getLogger('shoutit.debug')
-sss_logger = logging.getLogger('shoutit.sss')
-error_logger = logging.getLogger('shoutit.error')
+from shoutit.utils import get_google_smtp_connection, error_logger, sss_logger
 
 
 def SendEmail(email, variables, html_template, text_template):
