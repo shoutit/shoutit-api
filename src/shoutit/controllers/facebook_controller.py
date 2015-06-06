@@ -40,7 +40,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         user = auth_with_facebook(fb_user, long_lived_token)
 
     if initial_user and initial_user.get('location'):
-        update_profile_location(user.profile, initial_user['location'])
+        update_profile_location(user.profile, initial_user.get('location'))
     return user
 
 

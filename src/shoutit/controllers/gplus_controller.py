@@ -52,7 +52,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None):
         user = auth_with_gplus(gplus_user, credentials)
 
     if initial_user and initial_user.get('location'):
-        update_profile_location(user.profile, initial_user['location'])
+        update_profile_location(user.profile, initial_user.get('location'))
     return user
 
 

@@ -77,12 +77,16 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         # todo: put tracking on rq
         request_data = self.request.data
         grant_type = request_data.get('grant_type')
-        if 'signin' not in grant_type:
+        if grant_type in ['gplus_code', 'facebook_access_token', 'shoutit_signup']:
             try:
-                shoutit_mp.track(self.request.user.pk, 'signup', {
+                user = self.request.user
+                shoutit_mp.track(user.pk, 'signup', {
                     'api_client': request_data.get('client_id'),
                     'using': grant_type,
                     'server': self.request.META.get('HTTP_HOST'),
+                    'initial_country': user.location.get('country'),
+                    'initial_state': user.location.get('state'),
+                    'initial_city': user.location.get('city'),
                 })
             except Exception as e:
                 error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
