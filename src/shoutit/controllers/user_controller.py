@@ -1,15 +1,13 @@
 from __future__ import unicode_literals
-import urllib2
-import boto
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+import requests
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
 
 from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
                             LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
-from shoutit.utils import generate_username, debug_logger, error_logger
+from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 
 
 def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
@@ -89,22 +87,7 @@ def auth_with_gplus(gplus_user, credentials):
         print "create g+ la error", str(e)
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 
-    try:
-        response = urllib2.urlopen(gplus_user['image']['url'].split('?')[0], timeout=20)
-        # todo: check when pic is the std pic
-        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = s3.get_bucket('shoutit-user-image-original')
-        img_data = response.read()
-        filename = user.pk + '.jpg'
-        key = bucket.new_key(filename)
-        key.set_metadata('Content-Type', 'image/jpg')
-        key.set_contents_from_string(img_data)
-        s3_image_url = 'https://user-image.static.shoutit.com/%s' % filename
-        user.profile.image = s3_image_url
-        user.profile.save()
-    except Exception, e:
-        error_logger.warn(str(e))
-
+    set_profile_image(user.profile, gplus_user['image']['url'].split('?')[0])
     return user
 
 
@@ -137,22 +120,15 @@ def auth_with_facebook(fb_user, long_lived_token):
         error_logger.warn(str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
+    std_male = '10354686_10150004552801856_220367501106153455_n.jpg'
+    std_female = '1379841_10150004552801901_469209496895221757_n.jpg'
+    image_url = 'https://graph.facebook.com/me/picture/?type=large&access_token=' + access_token
     try:
-        response = urllib2.urlopen('https://graph.facebook.com/me/picture/?type=large&access_token=' + access_token, timeout=20)
-        std_male = '10354686_10150004552801856_220367501106153455_n.jpg'
-        std_female = '1379841_10150004552801901_469209496895221757_n.jpg'
-        response_url = response.geturl()
-        if not (std_male in response_url or std_female in response_url or '.gif' in response_url):
-            s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-            bucket = s3.get_bucket('shoutit-user-image-original')
-            img_data = response.read()
-            filename = user.pk + '.jpg'
-            key = bucket.new_key(filename)
-            key.set_metadata('Content-Type', 'image/jpg')
-            key.set_contents_from_string(img_data)
-            s3_image_url = 'https://user-image.static.shoutit.com/%s' % filename
-            user.profile.image = s3_image_url
-            user.profile.save()
+        response = requests.get(image_url, timeout=10)
+        image_data = response.content
+        if not (std_male in response.url or std_female in response.url or '.gif' in response.url):
+            set_profile_image(user.profile, image_data=image_data)
+
     except Exception, e:
         error_logger.warn(str(e))
 

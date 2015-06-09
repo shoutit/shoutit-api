@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
-from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-from django.conf import settings
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from common.constants import (Stream_TYPE_PROFILE, Stream_TYPE_TAG, TOKEN_TYPE_EMAIL)
+from rest_framework.authtoken.models import Token
 from shoutit.models import ConfirmToken
 from shoutit.models.base import UUIDModel, LocationMixin
 from shoutit.models.stream import StreamMixin, Listen
 from shoutit.utils import debug_logger
-
-
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
+from shoutit.settings import AUTH_USER_MODEL
 
 
 class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
@@ -96,11 +96,6 @@ class UserPermission(UUIDModel):
     date_given = models.DateTimeField(auto_now_add=True)
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
-
-
 @receiver(post_save, sender='shoutit.User')
 def user_post_save(sender, instance=None, created=False, **kwargs):
     action = 'Created' if created else 'Updated'
@@ -126,3 +121,9 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
             ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
             instance.send_signup_email()
+
+
+@receiver(post_save, sender='shoutit.Profile')
+def profile_post_save(sender, instance=None, created=False, **kwargs):
+    action = 'Created' if created else 'Updated'
+    debug_logger.debug('{} Profile: {}'.format(action, instance))

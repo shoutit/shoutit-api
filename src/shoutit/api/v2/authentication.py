@@ -23,7 +23,7 @@ from shoutit.api.v2.serializers import (
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import ConfirmToken
-from shoutit.utils import shoutit_mp, error_logger
+from shoutit.utils import track
 
 
 class RequestParamsClientBackend(object):
@@ -74,22 +74,17 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
 
         # track registration
-        # todo: put tracking on rq
         request_data = self.request.data
-        grant_type = request_data.get('grant_type')
-        if grant_type in ['gplus_code', 'facebook_access_token', 'shoutit_signup']:
-            try:
-                user = self.request.user
-                shoutit_mp.track(user.pk, 'signup', {
-                    'api_client': request_data.get('client_id'),
-                    'using': grant_type,
-                    'server': self.request.META.get('HTTP_HOST'),
-                    'initial_country': user.location.get('country'),
-                    'initial_state': user.location.get('state'),
-                    'initial_city': user.location.get('city'),
-                })
-            except Exception as e:
-                error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
+        user = self.request.user
+        if getattr(user, 'new_signup', False):
+            track(user.pk, 'signup', {
+                'api_client': request_data.get('client_id'),
+                'using': request_data.get('grant_type'),
+                'server': self.request.META.get('HTTP_HOST'),
+                'initial_country': user.location.get('country'),
+                'initial_state': user.location.get('state'),
+                'initial_city': user.location.get('city'),
+            })
 
         response_data = {
             'access_token': access_token.token,
@@ -445,11 +440,14 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 return Response({"detail": "Authentication credentials were not provided."},
                                 status=status.HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
-                return self.success_response("Your email '{}' is already verified.".format(request.user.email))
-            serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
+                return self.success_response(
+                    "Your email '{}' is already verified.".format(request.user.email))
+            serializer = ShoutitVerifyEmailSerializer(data=request.data,
+                                                      context={'request': request})
             serializer.is_valid(raise_exception=True)
             serializer.instance.send_verification_email()
-            return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
+            return self.success_response(
+                "Verification email will be soon sent to {}.".format(request.user.email))
         else:
             return Response()
 
@@ -472,7 +470,8 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             - name: body
               paramType: body
         """
-        serializer = ShoutitChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer = ShoutitChangePasswordSerializer(data=request.data,
+                                                     context={'request': request})
         serializer.is_valid(raise_exception=True)
         return self.success_response("Password changed.")
 
