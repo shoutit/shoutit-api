@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter
-from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link
+from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin
 
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
@@ -24,23 +24,24 @@ from django.utils.translation import ugettext_lazy as _
 
 # Shout
 @admin.register(Shout)
-class ShoutAdmin(admin.ModelAdmin, UserLinkMixin):
+class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
     list_display = (
-        'id', '_user', 'type', 'category', 'item', 'country', 'city', 'is_sss', 'is_disabled',
+        'id', '_user', 'type', 'category', 'item', '_location', 'is_sss', 'is_disabled',
         'priority', 'date_published')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city',
                    ('created_at', ShoutitDateFieldListFilter))
+    raw_id_fields = ('user',)
     readonly_fields = ('_user', 'item')
     ordering = ('-date_published',)
 
 
 # Post
 @admin.register(Post)
-class PostAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'type', 'text', 'country', 'city', 'muted', 'is_disabled')
+class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
+    list_display = ('id', '_user', 'type', 'text', '_location', 'muted', 'is_disabled')
     ordering = ('-created_at',)
     list_filter = ('type', 'is_disabled', 'country', 'city', ('created_at', ShoutitDateFieldListFilter))
-
+    raw_id_fields = ('user',)
 
 
 admin.site.register(Item)
@@ -56,7 +57,7 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin, LocationMixin):
     save_on_top = True
     list_display = (
         'id', 'username', '_profile', 'email', 'first_name', 'last_name', '_devices', '_messaging',
@@ -99,7 +100,7 @@ class CustomUserAdmin(UserAdmin):
         return conversations + '<br/>' + messages
 
     _messaging.allow_tags = True
-    _messaging.short_descriptions = 'Messaging'
+    _messaging.short_description = 'Messaging'
 
     def _devices(self, user):
         apns_device = ''
@@ -111,15 +112,7 @@ class CustomUserAdmin(UserAdmin):
         return ((apns_device + '<br/>') if apns_device else '') + gcm_device
 
     _devices.allow_tags = True
-    _devices.short_descriptions = 'Devices'
-
-    def _location(self, user):
-        location = "%s,%s" % (user.location['latitude'], user.location['longitude'])
-        location += "<br>c: %s | z: %s" % (user.location['country'], user.location['postal_code'])
-        location += "<br>s: %s | c: %s" % (user.location['state'], user.location['city'])
-        return location
-    _location.allow_tags = True
-    _devices.short_descriptions = 'Location'
+    _devices.short_description = 'Devices'
 
 
 # Profile
@@ -136,18 +129,22 @@ class ProfileAdmin(admin.ModelAdmin, UserLinkMixin):
 
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('_user', 'facebook_id', 'access_token', 'expires', 'created_at')
+    list_display = ('id', '_user', 'facebook_id', 'access_token', 'expires', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
                      'facebook_id']
     ordering = ('-created_at',)
+    readonly_fields = ('_user',)
+    exclude = ('user',)
 
 
 @admin.register(LinkedGoogleAccount)
 class LinkedGoogleAccountAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('_user', 'gplus_id', 'created_at')
+    list_display = ('id', '_user', 'gplus_id', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
                      'facebook_id']
     ordering = ('-created_at',)
+    readonly_fields = ('_user',)
+    exclude = ('user',)
 
 
 class TagChangeForm(forms.ModelForm):
@@ -176,7 +173,7 @@ class TagChangeForm(forms.ModelForm):
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'image', 'stream')
     search_fields = ('name',)
-    readonly_fields = ('creator',)
+    raw_id_fields = ('creator',)
     form = TagChangeForm
 
 
@@ -294,9 +291,8 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
 # Report
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = (
-        'type_name', '_user', 'text', 'attached_object', 'content_type', 'object_id', 'is_solved',
-        'is_disabled', 'created_at')
+    list_display = ('id', 'type_name', '_user', 'text', 'attached_object', 'content_type',
+                    'object_id', 'is_solved', 'is_disabled', 'created_at')
     list_filter = ('is_solved', 'is_disabled', ('created_at', ShoutitDateFieldListFilter))
     actions = ['mark_as_solved', 'mark_as_disabled']
     readonly_fields = ('_user', 'attached_object', 'content_type')
@@ -318,6 +314,7 @@ class ConfirmTokenAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', 'type', '_user', 'token', 'email', 'is_disabled', 'created_at')
     list_filter = ('type', 'is_disabled')
     ordering = ('-created_at',)
+    readonly_fields = ('user',)
 
 
 @admin.register(DBUser)
@@ -325,6 +322,8 @@ class DBUserAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'db_link', 'shout', 'created_at')
     ordering = ('-created_at',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    readonly_fields = ('_user',)
+    exclude = ('user',)
 
 
 @admin.register(DBZ2User)
@@ -332,6 +331,8 @@ class DBZ2UserAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'db_link', 'shout', 'created_at')
     ordering = ('-created_at',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    readonly_fields = ('_user',)
+    exclude = ('user',)
 
 
 @admin.register(CLUser)
@@ -339,13 +340,16 @@ class CLUserAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'cl_email', 'shout', 'created_at')
     ordering = ('-created_at',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
-
+    readonly_fields = ('_user',)
+    exclude = ('user',)
 
 @admin.register(DBCLConversation)
 class DBCLConversationAdmin(admin.ModelAdmin):
     list_display = ('id', 'in_email', '_from_user', '_to_user', 'shout', 'ref', 'created_at')
     ordering = ('-created_at',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    exclude = ('from_user', 'to_user')
+    readonly_fields = ('_from_user', '_to_user')
 
     def _from_user(self, obj):
         return user_link(obj.from_user)

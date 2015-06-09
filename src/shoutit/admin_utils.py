@@ -13,6 +13,17 @@ class UserLinkMixin(object):
     _user.short_description = 'User'
 
 
+class LocationMixin(object):
+    def _location(self, obj):
+        location = obj.location
+        location_html = "%s,%s" % (location['latitude'], location['longitude'])
+        location_html += "<br>c: %s | z: %s" % (location['country'], location['postal_code'])
+        location_html += "<br>s: %s | c: %s" % (location['state'], location['city'])
+        return location_html
+    _location.allow_tags = True
+    _location.short_description = 'Location'
+
+
 def tag_link(tag):
     tag_url = reverse('admin:shoutit_tag_change', args=(tag.pk,))
     return '<a href="%s">%s</a>' % (tag_url, tag.name)
