@@ -151,10 +151,14 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
           "category": {"name": "Computers & Networking"}
           "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
           "location": {
+            "latitude": 25.1593957,
+            "longitude": 55.2338326,
             "country": "AE",
+            "postal_code": "857",
+            "state": "Dubai",
             "city": "Dubai",
-            "latitude": 25.165173368664,
-            "longitude": 55.2667236328125
+            "address": "Whatever Street 31",
+            "google_geocode_response": {}  // when passed server will auto calculate the location attributes except latitude and longitude
           }
         }
         </code></pre>

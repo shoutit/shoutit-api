@@ -15,6 +15,7 @@ from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
+from common.utils import location_from_google_geocode_response
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
@@ -29,6 +30,17 @@ class LocationSerializer(serializers.Serializer):
     state = serializers.CharField(max_length=50, required=False, allow_blank=True)
     city = serializers.CharField(max_length=100, required=False, allow_blank=True)
     address = serializers.CharField(max_length=200, required=False, allow_blank=True)
+
+    google_geocode_response = serializers.DictField(required=False, allow_null=True)
+
+    def to_internal_value(self, data):
+        validated_data = super(LocationSerializer, self).to_internal_value(data)
+        google_geocode_response = validated_data.get('google_geocode_response')
+        if google_geocode_response:
+            location = location_from_google_geocode_response(google_geocode_response)
+            if location:
+                validated_data.update(location)
+        return validated_data
 
 
 class PushTokensSerializer(serializers.Serializer):

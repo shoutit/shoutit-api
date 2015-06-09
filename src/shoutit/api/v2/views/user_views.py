@@ -107,9 +107,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
             "location": {
                 "latitude": 25.1593957,
-                "country": "AE",
                 "longitude": 55.2338326,
-                "city": "Dubai"
+                "country": "AE",
+                "postal_code": "857",
+                "state": "Dubai",
+                "city": "Dubai",
+                "address": "Whatever Street 31",
+                "google_geocode_response": {}  // when passed server will auto calculate the location attributes except latitude and longitude
             },
             "video": {
                 "url": "https://www.youtube.com/watch?v=Mp12bkOzO9Q",
