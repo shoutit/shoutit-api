@@ -115,7 +115,6 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
         # give appropriate permissions
         from shoutit.permissions import (give_user_permissions, INITIAL_USER_PERMISSIONS,
                                          FULL_USER_PERMISSIONS)
-
         permissions = INITIAL_USER_PERMISSIONS
         if instance.is_activated:
             permissions = FULL_USER_PERMISSIONS

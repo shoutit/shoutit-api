@@ -12,7 +12,7 @@ OFFLINE_MODE = check_offline_mood()
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
 # using gunicorn or not
-GUNICORN = 'SERVER_SOFTWARE' in os.environ and 'gunicorn' in os.environ.get('SERVER_SOFTWARE')
+GUNICORN = 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '')
 ADDRESS, PORT = get_address_port(GUNICORN)
 
 info("==================================================")
@@ -71,11 +71,8 @@ MAX_EXPIRY_DAYS_SSS = 7
 SHOUT_EXPIRY_NOTIFY = 2
 MAX_EXPIRY_DAYS = 60
 ACCOUNT_ACTIVATION_DAYS = 7
-
-RANK_COEFFICIENT_TIME = 0.7  # value should be between 0.0 ~ 1.0
-RANK_COEFFICIENT_FOLLOW = 0.014  # value should be between 0.0 ~ 1.0
-RANK_COEFFICIENT_DISTANCE = 1  # value should be between 0.0 ~ 1.0
 NEARBY_CITIES_RADIUS_KM = 65
+
 """
 =================================
             Caching
@@ -103,18 +100,30 @@ REDIS_CACHES = {
 SESSION_ENGINE = REDIS_SESSION_ENGINE
 CACHES = REDIS_CACHES
 
+"""
+=================================
+           Queuing
+=================================
+"""
 FORCE_SYNC_RQ = False
 RQ_QUEUE = ENV
 RQ_QUEUES = {
     RQ_QUEUE: {
         'USE_REDIS_CACHE': 'default',
+        'DEFAULT_TIMEOUT': 30,
     },
 }
 if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
         queue_config['ASYNC'] = False
 
+"""
+=================================
+           AntiCaptcha
+=================================
+"""
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
+
 """
 =================================
           Elasticsearch

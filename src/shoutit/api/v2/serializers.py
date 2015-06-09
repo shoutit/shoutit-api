@@ -349,10 +349,8 @@ class ShoutSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Shout
-        fields = (
-        'id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price', 'currency',
-        'thumbnail', 'video_url', 'user',
-        'date_published', 'category', 'tags')
+        fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price',
+                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])

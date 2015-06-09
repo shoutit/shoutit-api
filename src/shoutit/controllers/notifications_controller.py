@@ -93,9 +93,9 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 notify_db_user(user.db_user, from_user, attached_object)
                 # todo: !
                 # email_controller.email_db_user(user.db_user, from_user, attached_object)
-        if user.dbz2_user:
+        elif user.dbz2_user:
             notify_dbz2_user(user.dbz2_user, from_user, attached_object)
-        if user.cl_user:
+        elif user.cl_user:
             notify_cl_user2(user.cl_user, from_user, attached_object)
 
 

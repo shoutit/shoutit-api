@@ -5,6 +5,7 @@ from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django.core.mail import get_connection
 from django.conf import settings
+from django_rq import job
 from common import constants
 from shoutit.utils import get_google_smtp_connection, error_logger, sss_logger
 
@@ -46,6 +47,11 @@ def send_password_reset_email(user):
 
 
 def send_signup_email(user):
+    return _send_signup_email.delay(user)
+
+
+@job(settings.RQ_QUEUE)
+def _send_signup_email(user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
@@ -62,6 +68,11 @@ def send_signup_email(user):
 
 
 def send_cl_invitation_email(cl_user):
+    return _send_cl_invitation_email.delay(cl_user)
+
+
+@job(settings.RQ_QUEUE)
+def _send_cl_invitation_email(cl_user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
@@ -82,6 +93,11 @@ def send_cl_invitation_email(cl_user):
 
 
 def send_db_invitation_email(db_user):
+    return _send_db_invitation_email.delay(db_user)
+
+
+@job(settings.RQ_QUEUE)
+def _send_db_invitation_email(db_user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
@@ -100,7 +116,19 @@ def send_db_invitation_email(db_user):
         })
 
 
+def email_db_user(message):
+    to_user = message.ToUser
+    from_user = message.FromUser
+    shout = message.Conversation.AboutPost
+    message_text = message.text
+
+
 def send_template_email_test(template, email, context, use_google_connection=False):
+    return _send_template_email_test.delay(template, email, context, use_google_connection)
+
+
+@job(settings.RQ_QUEUE)
+def _send_template_email_test(template, email, context, use_google_connection=False):
     subject = _('Template Test!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context(context)
@@ -243,13 +271,6 @@ def SendSellOfferEmail(shout, seller):
                                  headers={'Reply-To': seller.email})
     msg.attach_alternative(html_message, "text/html")
     msg.send()
-
-
-def email_db_user(message):
-    to_user = message.ToUser
-    from_user = message.FromUser
-    shout = message.Conversation.AboutPost
-    message_text = message.text
 
 
 def send_message_email(message):
