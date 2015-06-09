@@ -324,7 +324,7 @@ class PageNumberIndexPagination(PageNumberPagination):
     def get_valid_page_number(self, page_number):
         try:
             page_number = int(page_number)
-            if page_number == 0:
+            if page_number <= 0:
                 raise ValueError
         except ValueError:
             page_number = 1
