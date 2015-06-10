@@ -48,4 +48,7 @@ class FeaturedTag(UUIDModel, NamedLocationMixin):
     rank = models.PositiveSmallIntegerField(validators=[validators.MinValueValidator(1)])
 
     class Meta:
-        unique_together = ('country', 'postal_code', 'state', 'city', 'rank')
+        unique_together = ('country', 'state', 'city', 'rank')
+
+    def __unicode__(self):
+        return "%s in %s, %s, %s" % (self.tag.name, self.city, self.state, self.country)

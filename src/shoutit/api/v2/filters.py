@@ -11,7 +11,7 @@ from common.utils import process_tags
 from shoutit.controllers import stream_controller
 from shoutit.models import Shout, Category, Tag, PredefinedCity, FeaturedTag
 from elasticsearch_dsl import F
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, error_logger
 
 
 class ShoutFilter(django_filters.FilterSet):
@@ -156,13 +156,12 @@ class TagFilter(django_filters.FilterSet):
     type = django_filters.MethodFilter(action='filter_type')
     category = django_filters.MethodFilter(action='filter_category')
     country = django_filters.MethodFilter(action='filter_country')
-    postal_code = django_filters.MethodFilter(action='filter_postal_code')
     state = django_filters.MethodFilter(action='filter_state')
     city = django_filters.MethodFilter(action='filter_city')
 
     class Meta:
         model = Tag
-        fields = ('name', 'type', 'country', 'city')
+        fields = ('name', 'type', 'category', 'country', 'state', 'city')
 
     def filter_type(self, queryset, value):
         if value not in ['all', 'top', 'featured']:
@@ -192,12 +191,6 @@ class TagFilter(django_filters.FilterSet):
             raise ValidationError({'country': "only works when type equals `top` or `featured`."})
         return queryset
 
-    def filter_postal_code(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type not in ['top', 'featured']:
-            raise ValidationError({'postal_code': "only works when type equals `top` or `featured`."})
-        return queryset
-
     def filter_state(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
@@ -211,16 +204,45 @@ class TagFilter(django_filters.FilterSet):
         return queryset
 
     def filter_location(self, queryset):
-        country = self.data.get('country')
-        postal_code = self.data.get('postal_code')
-        state = self.data.get('state')
-        city = self.data.get('city')
+        country = self.data.get('country', '')
+        state = self.data.get('state', '')
+        city = self.data.get('city', '')
 
         # country
         if country:
-            country_queryset = queryset.filter(country=country)
-            if not country_queryset:
-                country_queryset = queryset.filter(country='')
-            queryset = country_queryset
+            country_qs = queryset.filter(country=country)
+            if not country_qs:
+                country = ''
+                country_qs = queryset.filter(country=country)
+            queryset = country_qs
 
+            # state
+            if country:
+                if state:
+                    state_qs = queryset.filter(state=state)
+                    if not state_qs:
+                        state = ''
+                        state_qs = queryset.filter(state=state)
+                    queryset = state_qs
+
+                    # city
+                    if state:
+                        if city:
+                            city_qs = queryset.filter(city=city)
+                            if not city_qs:
+                                city = ''
+                                city_qs = queryset.filter(city=city)
+                            queryset = city_qs
+                        else:
+                            queryset = queryset.filter(city=city)
+                else:
+                    queryset = queryset.filter(state=state)
+        else:
+            queryset = queryset.filter(country=country)
+
+        if not queryset:
+            queryset = queryset.filter(country='')
+            error_logger.warn("Discover returned 0 Featured Tags.", extra={
+                'country': country, 'state': state, 'city': city,
+            })
         return queryset

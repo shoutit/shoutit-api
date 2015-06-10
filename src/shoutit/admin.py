@@ -197,12 +197,13 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(FeaturedTag)
 class FeaturedTagAdmin(admin.ModelAdmin):
-    list_display = ('title', '_tag', 'country', 'postal_code', 'state', 'city', 'rank')
-    list_filter = ('country', 'postal_code', 'state', 'city')
-    ordering = ('country', 'postal_code', 'state', 'city', 'rank')
-    search_fields = ('title', 'tag__name', 'country', 'postal_code', 'state', 'city')
+    list_display = ('title', '_tag', 'country', 'state', 'city', 'rank')
+    list_filter = ('country', 'state', 'city')
+    ordering = ('country', 'state', 'city', 'rank')
+    search_fields = ('title', 'tag__name', 'country', 'state', 'city')
     raw_id_fields = ('tag',)
     readonly_fields = ('_tag',)
+    exclude = ('postal_code',)
 
     def _tag(self, f_tag):
         return tag_link(f_tag.tag)
