@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from common.constants import StreamType
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, track
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -17,8 +17,7 @@ class Stream(UUIDModel, AttachedObjectMixin):
                                        related_name='listening')
 
     class Meta(UUIDModel.Meta):
-        unique_together = (
-        'content_type', 'object_id', 'type')  # so each model can have only one stream
+        unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
         return unicode(self.pk) + ':' + StreamType.values[self.type] + ' (' + unicode(
@@ -50,6 +49,10 @@ class Stream(UUIDModel, AttachedObjectMixin):
     @property
     def owner(self):
         return self.attached_object
+
+    @property
+    def type_name(self):
+        return StreamType.values[self.type]
 
 
 class StreamMixin(models.Model):
@@ -117,3 +120,14 @@ class Listen(UUIDModel):
 
     class Meta(UUIDModel.Meta):
         unique_together = ('listener', 'stream')  # so the user can listen to the stream only once
+
+    @property
+    def track_properties(self):
+        return {
+            'type': self.stream.type_name.lower()
+        }
+
+@receiver(post_save, sender=Listen)
+def post_save_listen(sender, instance=None, created=False, **kwargs):
+    if created:
+        track(instance.listener.pk, 'new_listen', instance.track_properties)

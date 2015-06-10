@@ -200,6 +200,19 @@ class Shout(Post):
         else:
             return []
 
+    @property
+    def track_properties(self):
+        return {
+            'type': self.type_name,
+            'category': self.category.name,
+            'country': self.country,
+            'state': self.state,
+            'city': self.city,
+            'images': len(self.images),
+            'videos': self.videos.count(),
+            'price': self.item.price,
+        }
+
 
 class ShoutIndex(DocType):
     # indexed
@@ -210,6 +223,8 @@ class ShoutIndex(DocType):
     tags = String(index='not_analyzed')
     category = String(index='not_analyzed')
     country = String(index='not_analyzed')
+    postal_code = String(index='not_analyzed')
+    state = String(index='not_analyzed')
     city = String(index='not_analyzed')
     latitude = Double()
     longitude = Double()

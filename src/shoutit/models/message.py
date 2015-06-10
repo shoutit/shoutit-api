@@ -15,6 +15,7 @@ from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
     REPORT_TYPE_GENERAL)
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
+from shoutit.utils import track
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -101,6 +102,18 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     def contributors(self):
         return self.users.all()
 
+    @property
+    def track_properties(self):
+        return {
+            'type': self.type_name
+        }
+
+
+@receiver(post_save, sender=Conversation)
+def post_save_conversation(sender, instance=None, created=False, **kwargs):
+    if created:
+        track(getattr(instance, 'creator_id'), 'new_conversation', instance.track_properties)
+
 
 class ConversationDelete(UUIDModel):
     """
@@ -148,7 +161,7 @@ class Message(UUIDModel):
 
 
 @receiver(post_save, sender=Message)
-def save_message(sender, instance=None, created=False, **kwargs):
+def post_save_message(sender, instance=None, created=False, **kwargs):
     if created:
         # update the conversation
         conversation = instance.conversation

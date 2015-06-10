@@ -8,6 +8,7 @@ from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
+from django_rq import job
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -19,7 +20,7 @@ from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPE
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post, PredefinedCity, Category
 from shoutit.controllers import event_controller, email_controller, item_controller
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, track
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
@@ -174,10 +175,25 @@ def add_pd_city(country, postal_code, state, city, latitude, longitude):
             pass
 
 @receiver(post_save, sender=Shout)
-def save_shout_index(sender, instance=None, created=False, **kwargs):
-    shout = instance
+def shout_post_save(sender, instance=None, created=False, **kwargs):
     action = 'Created' if created else 'Updated'
-    debug_logger.debug('{} Shout: {}: {}, city: {}'.format(action, shout.pk, shout.item.name, shout.city))
+    debug_logger.debug('{} Shout: {}: {}, {}: {}'.format(action, instance.pk, instance.item.name,
+                                                         instance.country, instance.city))
+    # save index
+    save_shout_index(instance, created)
+    # track
+    if created:
+        track(instance.user.pk, 'new_shout', instance.track_properties)
+
+
+def save_shout_index(shout=None, created=False, delay=True):
+    if delay:
+        return _save_shout_index.delay(shout, created)
+    return _save_shout_index(shout, created)
+
+
+@job(settings.RQ_QUEUE)
+def _save_shout_index(shout=None, created=False):
     try:
         if created:
             raise NotFoundError()
@@ -194,6 +210,8 @@ def save_shout_index(sender, instance=None, created=False, **kwargs):
     shout_index.tags_count = len(shout.tags)
     shout_index.category = shout.category.name
     shout_index.country = shout.country
+    shout_index.postal_code = shout.postal_code
+    shout_index.state = shout.state
     shout_index.city = shout.city
     shout_index.latitude = shout.latitude
     shout_index.longitude = shout.longitude

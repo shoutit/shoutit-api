@@ -19,6 +19,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # todo find better way to index all shouts no matter how many there is
-        for shout in Shout.objects.filter(is_disabled=False, muted=False)[options.get('from')[0]:options.get('to')[0]]:
-            save_shout_index(None, shout)
-        self.stdout.write('Successfully indexed all shouts.')
+        _from = options.get('from')[0]
+        _to = options.get('to')[0]
+        for shout in Shout.objects.filter(is_disabled=False, muted=False)[_from:_to]:
+            save_shout_index(shout, delay=False)
+        self.stdout.write('Successfully indexed shouts from %s to %s' % (_from, _to))
