@@ -13,4 +13,4 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         index_name = settings.ENV
         settings.ES.indices.delete(index_name)
-        self.stdout.write("Successfully flushed '{}' index. Make sure to restart the server immediately.".format(index_name))
+        self.stdout.write("Successfully flushed '{}' index. Make sure to restart the server immediately".format(index_name))

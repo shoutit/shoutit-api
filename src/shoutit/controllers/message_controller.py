@@ -62,6 +62,7 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
     if not conversation:
         conversation = conversation_exist(users=to_users, about=about)
 
+    # creator_id is temp attributes used only for tracking
     if not conversation:
         if about:
             conversation = Conversation(attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)

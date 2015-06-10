@@ -13,7 +13,7 @@ from django.dispatch import receiver
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType,
     MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
-    REPORT_TYPE_GENERAL)
+    REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT)
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 from shoutit.utils import track
 
@@ -104,9 +104,12 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
 
     @property
     def track_properties(self):
-        return {
+        properties = {
             'type': self.type_name
         }
+        if self.about and self.type == CONVERSATION_TYPE_ABOUT_SHOUT and self.about.is_sss:
+            properties.update({'about_sss': True})
+        return properties
 
 
 @receiver(post_save, sender=Conversation)

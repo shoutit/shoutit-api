@@ -115,7 +115,7 @@ def create_shout(shout_type, name, text, price, latitude, longitude, category, t
         try:
             category = Category.objects.get(name=category)
         except Category.DoesNotExist:
-            raise DRFValidationError({'category': ["Category '%s' does not exist." % category]})
+            raise DRFValidationError({'category': ["Category '%s' does not exist" % category]})
 
     # tags
     # if passed as [{'name': 'tag-x'},...]
@@ -182,7 +182,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
     # save index
     save_shout_index(instance, created)
     # track
-    if created:
+    if created and not instance.is_sss:
         track(instance.user.pk, 'new_shout', instance.track_properties)
 
 
@@ -226,20 +226,20 @@ def _save_shout_index(shout=None, created=False):
     shout_index.is_sss = shout.is_sss
     shout_index.priority = shout.priority
     if shout_index.save():
-        debug_logger.debug('Created ShoutIndex: %s.' % shout.pk)
+        debug_logger.debug('Created ShoutIndex: %s' % shout.pk)
     else:
-        debug_logger.debug('Updated ShoutIndex: %s.' % shout.pk)
+        debug_logger.debug('Updated ShoutIndex: %s' % shout.pk)
 
 
 def delete_shout_index(shout):
     try:
         shout_index = ShoutIndex.get(shout.pk)
         shout_index.delete()
-        debug_logger.debug('Deleted ShoutIndex: %s.' % shout.pk)
+        debug_logger.debug('Deleted ShoutIndex: %s' % shout.pk)
     except NotFoundError:
-        debug_logger.debug('ShoutIndex: %s not found.' % shout.pk)
+        debug_logger.debug('ShoutIndex: %s not found' % shout.pk)
     except ConflictError:
-        debug_logger.debug('ShoutIndex: %s already deleted.' % shout.pk)
+        debug_logger.debug('ShoutIndex: %s already deleted' % shout.pk)
 
 
 # todo: check!
