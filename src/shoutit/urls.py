@@ -25,10 +25,8 @@ urlpatterns = [
     url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
 
     # todo: move to web
-    url(r'^favicon\.ico$',
-        RedirectView.as_view(url=settings.STATIC_URL + 'img/icon.png', permanent=True)),
-    url(r'^robots\.txt$',
-        RedirectView.as_view(url=settings.STATIC_URL + 'robots.txt', permanent=True)),
+    url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL + 'img/icon.png', permanent=True)),
+    url(r'^robots\.txt$', RedirectView.as_view(url=settings.STATIC_URL + 'robots.txt', permanent=True)),
 
     # todo: 2nd release concepts!
     # Business
@@ -74,5 +72,4 @@ urlpatterns = [
 # serving static files while developing locally using gunicorn
 if settings.GUNICORN and settings.LOCAL:
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
     urlpatterns += staticfiles_urlpatterns()

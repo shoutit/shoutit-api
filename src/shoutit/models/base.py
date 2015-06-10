@@ -14,7 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from common.utils import date_unix, AllowedUsernamesValidator
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE,
-                              UserType)
+                              UserType, COUNTRY_ISO)
 from shoutit.controllers import email_controller
 
 
@@ -77,17 +77,28 @@ class APIModelMixin(object):
         return "{}{}/{}".format(settings.SITE_LINK, name, lookup)
 
 
-class LocationMixin(models.Model):
+class AbstractLocationMixin(models.Model):
     latitude = models.FloatField(
         default=0, validators=[validators.MaxValueValidator(90), validators.MinValueValidator(-90)])
     longitude = models.FloatField(
         default=0, validators=[validators.MaxValueValidator(180), validators.MinValueValidator(-180)])
-    country = models.CharField(max_length=2, blank=True, db_index=True)
+    address = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class NamedLocationMixin(models.Model):
+    country = models.CharField(max_length=2, blank=True, db_index=True, choices=COUNTRY_ISO.items())
     postal_code = models.CharField(max_length=10, blank=True, db_index=True)
     state = models.CharField(max_length=50, blank=True, db_index=True)
     city = models.CharField(max_length=100, blank=True, db_index=True)
-    address = models.CharField(max_length=200, blank=True)
 
+    class Meta:
+        abstract = True
+
+
+class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
     class Meta:
         abstract = True
 
