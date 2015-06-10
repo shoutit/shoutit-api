@@ -64,6 +64,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             - name: country
               description: only used when type is `featured` or `top`
               paramType: query
+            - name: postal_code
+              description: only used when type is `featured` or `top`
+              paramType: query
+            - name: state
+              description: only used when type is `featured` or `top`
+              paramType: query
             - name: city
               description: only used when type is `featured` or `top`
               paramType: query

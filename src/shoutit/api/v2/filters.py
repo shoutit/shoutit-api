@@ -154,9 +154,11 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 class TagFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_type='icontains')
     type = django_filters.MethodFilter(action='filter_type')
-    country = django_filters.MethodFilter(action='filter_country')
-    city = django_filters.MethodFilter(action='filter_city')
     category = django_filters.MethodFilter(action='filter_category')
+    country = django_filters.MethodFilter(action='filter_country')
+    postal_code = django_filters.MethodFilter(action='filter_postal_code')
+    state = django_filters.MethodFilter(action='filter_state')
+    city = django_filters.MethodFilter(action='filter_city')
 
     class Meta:
         model = Tag
@@ -168,24 +170,7 @@ class TagFilter(django_filters.FilterSet):
 
         if value == 'featured':
             queryset = FeaturedTag.objects.all().order_by('rank')
-        return queryset
-
-    def filter_country(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type not in ['top', 'featured']:
-            raise ValidationError({'country': "only works when type equals `top` or `featured`."})
-
-        if tag_type == 'featured':
-            queryset = queryset.filter(country=value)
-        return queryset
-
-    def filter_city(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type not in ['top', 'featured']:
-            raise ValidationError({'city': "only works when type equals `top` or `featured`."})
-
-        if tag_type == 'featured':
-            queryset = queryset.filter(city=value)
+            queryset = self.filter_location(queryset)
         return queryset
 
     def filter_category(self, queryset, value):
@@ -200,3 +185,42 @@ class TagFilter(django_filters.FilterSet):
             return queryset.filter(category=category)
         except Category.DoesNotExist:
             raise ValidationError({'category': "Category '%s' does not exist" % value})
+
+    def filter_country(self, queryset, value):
+        tag_type = self.data.get('type')
+        if tag_type not in ['top', 'featured']:
+            raise ValidationError({'country': "only works when type equals `top` or `featured`."})
+        return queryset
+
+    def filter_postal_code(self, queryset, value):
+        tag_type = self.data.get('type')
+        if tag_type not in ['top', 'featured']:
+            raise ValidationError({'postal_code': "only works when type equals `top` or `featured`."})
+        return queryset
+
+    def filter_state(self, queryset, value):
+        tag_type = self.data.get('type')
+        if tag_type not in ['top', 'featured']:
+            raise ValidationError({'state': "only works when type equals `top` or `featured`."})
+        return queryset
+
+    def filter_city(self, queryset, value):
+        tag_type = self.data.get('type')
+        if tag_type not in ['top', 'featured']:
+            raise ValidationError({'city': "only works when type equals `top` or `featured`."})
+        return queryset
+
+    def filter_location(self, queryset):
+        country = self.data.get('country')
+        postal_code = self.data.get('postal_code')
+        state = self.data.get('state')
+        city = self.data.get('city')
+
+        # country
+        if country:
+            country_queryset = queryset.filter(country=country)
+            if not country_queryset:
+                country_queryset = queryset.filter(country='')
+            queryset = country_queryset
+
+        return queryset
