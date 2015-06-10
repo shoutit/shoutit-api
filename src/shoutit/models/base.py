@@ -220,6 +220,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             }
         return self._push_tokens
 
+    @property
+    def api_client_name(self):
+        if self.accesstoken_set.exists():
+            return self.accesstoken_set.all()[0].client.name
+        return 'none'
+
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)
 

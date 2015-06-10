@@ -24,7 +24,7 @@ urlpatterns = [
     url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
 
     # django-rq
-    # (r'^rq/', include('django_rq.urls')),
+    (r'^4b07b0d3-467c-4221-8830-a834b40b7fdd/', include('django_rq.urls')),
 
     # todo: move to web
     url(r'^favicon\.ico$',

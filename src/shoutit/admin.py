@@ -61,9 +61,8 @@ class CustomUserChangeForm(UserChangeForm):
 class CustomUserAdmin(UserAdmin, LocationMixin):
     save_on_top = True
     list_display = (
-        'id', 'username', '_profile', 'email', 'first_name', 'last_name', '_devices', '_messaging',
-        '_location', 'is_active', 'is_activated', 'last_login',
-        'created_at')
+        'id', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_name',
+        '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
