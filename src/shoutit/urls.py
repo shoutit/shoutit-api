@@ -12,6 +12,7 @@ urlpatterns = [
     # admin
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/rq/', include('django_rq.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
     # return fake error
@@ -22,9 +23,6 @@ urlpatterns = [
 
     # api v2
     url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
-
-    # django-rq
-    # (r'^rq/', include('django_rq.urls')),
 
     # todo: move to web
     url(r'^favicon\.ico$',
