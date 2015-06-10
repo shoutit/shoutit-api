@@ -27,7 +27,7 @@ class UserEmailFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if queryset.model == User:
             if self.value() == 'shoutit':
-                return queryset.filter(~Q(email=''), ~Q(email__icontains='@sale.craigslist.org'))
+                return queryset.filter(~Q(accesstoken=None))
             if self.value() == 'yes':
                 return queryset.filter(~Q(email=''))
             if self.value() == 'no':
@@ -36,8 +36,7 @@ class UserEmailFilter(admin.SimpleListFilter):
                 return queryset.filter(email__icontains='@sale.craigslist.org')
         elif queryset.model == Profile:
             if self.value() == 'shoutit':
-                return queryset.filter(~Q(user__email=''),
-                                       ~Q(user__email__icontains='@sale.craigslist.org'))
+                return queryset.filter(~Q(user__accesstoken=None))
             if self.value() == 'yes':
                 return queryset.filter(~Q(user__email=''))
             if self.value() == 'no':
@@ -47,15 +46,15 @@ class UserEmailFilter(admin.SimpleListFilter):
 
 
 class UserDeviceFilter(admin.SimpleListFilter):
-    title = _('device')
-    parameter_name = 'device'
+    title = _('Push Device')
+    parameter_name = 'push_device'
 
     def lookups(self, request, model_admin):
         return (
             ('android', _('Android')),
             ('ios', _('iOs')),
             ('both', _('Android and iOS')),
-            ('none', _('No device [WebApp]')),
+            ('none', _('No device')),
         )
 
     def queryset(self, request, queryset):
@@ -67,6 +66,24 @@ class UserDeviceFilter(admin.SimpleListFilter):
             return queryset.filter(~Q(gcmdevice=None), ~Q(apnsdevice=None))
         elif self.value() == 'none':
             return queryset.filter(gcmdevice=None, apnsdevice=None)
+
+
+class APIClientFilter(admin.SimpleListFilter):
+    title = _('API Client')
+    parameter_name = 'api_client'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('shoutit-android', 'Android'),
+            ('shoutit-ios', 'iOS'),
+            ('shoutit-web', 'Web'),
+            ('shoutit-test', 'Test'),
+        )
+
+    def queryset(self, request, queryset):
+        client_name = self.value()
+        if client_name in ['shoutit-android', 'shoutit-ios', 'shoutit-web', 'shoutit-test']:
+            return queryset.filter(accesstoken__client__name=client_name)
 
 
 class ShoutitDateFieldListFilter(DateFieldListFilter):

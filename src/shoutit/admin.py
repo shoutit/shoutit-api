@@ -10,7 +10,8 @@ from django.conf.urls import url
 from django.core.urlresolvers import reverse
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
-from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter
+from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, \
+    APIClientFilter
 from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin
 
 from shoutit.models import (
@@ -72,8 +73,8 @@ class CustomUserAdmin(UserAdmin, LocationMixin):
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
-    list_filter = (UserEmailFilter, UserDeviceFilter, ('created_at', ShoutitDateFieldListFilter),
-                   'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
+    list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter),
+                   UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
     readonly_fields = ('_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
