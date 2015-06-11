@@ -115,6 +115,8 @@ def _set_profile_image(profile, image_url=None, image_data=None):
 
 
 def track(distinct_id, event_name, properties=None):
+    if settings.DEBUG and not getattr(settings, 'FORCE_MP_TRACKING', False):
+        return
     return _track.delay(distinct_id, event_name, properties)
 
 

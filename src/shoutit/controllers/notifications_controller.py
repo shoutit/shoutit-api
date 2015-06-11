@@ -19,6 +19,10 @@ from shoutit.models import Notification, DBCLConversation
 from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger
 
 
+class NotifySSSException(Exception):
+    pass
+
+
 def mark_all_as_read(user):
     Notification.objects.filter(is_read=False, ToUser=user).update(is_read=True)
 
@@ -88,15 +92,15 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
     if notification_type == NOTIFICATION_TYPE_MESSAGE and from_user:
         if user.db_user:
             if not user.email:
-                notify_db_user(user.db_user, from_user, attached_object)
+                notify_db_user.delay(user.db_user, from_user, attached_object)
             else:
-                notify_db_user(user.db_user, from_user, attached_object)
+                notify_db_user.dealy(user.db_user, from_user, attached_object)
                 # todo: !
                 # email_controller.email_db_user(user.db_user, from_user, attached_object)
         elif user.dbz2_user:
-            notify_dbz2_user(user.dbz2_user, from_user, attached_object)
+            notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
         elif user.cl_user:
-            notify_cl_user2(user.cl_user, from_user, attached_object)
+            notify_cl_user2.delay(user.cl_user, from_user, attached_object)
 
 
 def get_dbz_base_url(db_link):
@@ -105,6 +109,7 @@ def get_dbz_base_url(db_link):
     return parts.scheme + '://' + parts.netloc
 
 
+@job(settings.RQ_QUEUE)
 def notify_db_user(db_user, from_user, message):
     from antigate import AntiGate
     import re
@@ -140,16 +145,12 @@ def notify_db_user(db_user, from_user, message):
     if 'Sent Succ' in db_res_content:
         sss_logger.debug("Sent message to dbz user about his ad on: %s" % db_user.db_link)
     else:
-        msg = "Error sending message to dbz user: " + db_user.db_link
-        msg += '\n' + db_res_content
+        msg = "Error sending message to dbz user: " + db_user.db_link + '\n' + db_res_content
         sss_logger.warn(msg)
-        form_data.update({
-            'db_response': db_res_content,
-            'db_link': db_user.db_link
-        })
-        error_logger.warn("Error sending message to dbz user.", extra={'form_data': form_data})
+        raise NotifySSSException("Error sending message to dbz user")
 
 
+@job(settings.RQ_QUEUE)
 def notify_dbz2_user(dbz2_user, from_user, message):
     from antigate import AntiGate
     from fake_useragent import UserAgent
@@ -199,16 +200,13 @@ def notify_dbz2_user(dbz2_user, from_user, message):
     else:
         msg = "Error sending message to dbz2 user: " + dbz2_user.db_link
         if '<!doctype html>' in db_res_content:
-            db_res_content = 'Truncated full html page response...'
+            db_res_content = 'Truncated full html page response.'
         msg += '\n' + db_res_content
         sss_logger.warn(msg)
-        form_data.update({
-            'db_response': db_res_content,
-            'db_link': dbz2_user.db_link
-        })
-        error_logger.warn("Error sending message to dbz2 user.", extra={'form_data': form_data})
+        raise NotifySSSException("Error sending message to dbz2 user")
 
 
+@job(settings.RQ_QUEUE)
 def notify_cl_user2(cl_user, from_user, message):
     shout = message.conversation.about
     subject = shout.item.name
