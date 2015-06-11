@@ -74,9 +74,12 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         as defined in :rfc:`5.1`.
         """
 
+        # set the request user in case it is not set [refresh_token, password, etc grants]
+        user = access_token.user
+        self.request.user = user
+
         # track registration
         request_data = self.request.data
-        user = self.request.user
         user_dict = UserDetailSerializer(user, context={'request': self.request}).data
         if getattr(user, 'new_signup', False):
             user_dict['new_signup'] = True
