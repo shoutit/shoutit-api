@@ -77,27 +77,16 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         # set the request user in case it is not set [refresh_token, password, etc grants]
         user = access_token.user
         self.request.user = user
-
-        # track registration
-        request_data = self.request.data
         user_dict = UserDetailSerializer(user, context={'request': self.request}).data
-        if getattr(user, 'new_signup', False):
-            user_dict['new_signup'] = True
-            track(user.pk, 'signup', {
-                'api_client': request_data.get('client_id'),
-                'using': request_data.get('grant_type'),
-                'server': self.request.META.get('HTTP_HOST'),
-                'initial_country': user.location.get('country'),
-                'initial_state': user.location.get('state'),
-                'initial_city': user.location.get('city'),
-            })
+        new_signup = getattr(user, 'new_signup', False)
 
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
-            'user': user_dict
+            'user': user_dict,
+            'new_signup': new_signup
         }
 
         # Not all access_tokens are given a refresh_token
@@ -107,6 +96,18 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             response_data['refresh_token'] = rt.token
         except ObjectDoesNotExist:
             pass
+
+        # track registration
+        request_data = self.request.data
+        if new_signup:
+            track(user.pk, 'signup', {
+                'api_client': request_data.get('client_id'),
+                'using': request_data.get('grant_type'),
+                'server': self.request.META.get('HTTP_HOST'),
+                'initial_country': user.location.get('country'),
+                'initial_state': user.location.get('state'),
+                'initial_city': user.location.get('city'),
+            })
 
         return Response(response_data)
 
@@ -336,8 +337,12 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write"
+            "user": {Detailed User Object}
+            "new_signup": true
         }
         </code></pre>
+
+        ```if the user newly signed up `new_signup` will be set to true otherwise false```
 
         ###Using the Token in header for later API calls.
         ```
