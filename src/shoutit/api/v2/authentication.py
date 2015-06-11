@@ -19,7 +19,8 @@ from rest_framework.exceptions import ValidationError
 from common.constants import TOKEN_TYPE_EMAIL
 from shoutit.api.v2.serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
-    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer)
+    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
+    UserSerializer, UserDetailSerializer)
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import ConfirmToken
@@ -76,7 +77,9 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         # track registration
         request_data = self.request.data
         user = self.request.user
+        user_dict = UserDetailSerializer(user, context={'request': self.request}).data
         if getattr(user, 'new_signup', False):
+            user_dict['new_signup'] = True
             track(user.pk, 'signup', {
                 'api_client': request_data.get('client_id'),
                 'using': request_data.get('grant_type'),
@@ -91,6 +94,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             'token_type': provider_constants.TOKEN_TYPE,
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
+            'user': user_dict
         }
 
         # Not all access_tokens are given a refresh_token
