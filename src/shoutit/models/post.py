@@ -211,6 +211,8 @@ class Shout(Post):
             'images': len(self.images),
             'videos': self.videos.count(),
             'price': self.item.price,
+            'currency': self.item.currency.name,
+            'shout_id': self.pk
         }
 
 

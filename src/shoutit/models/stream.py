@@ -3,7 +3,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.db import models, IntegrityError
 from django.dispatch import receiver
 from django.conf import settings
-from common.constants import StreamType
+from common.constants import StreamType, Stream_TYPE_PROFILE
 from shoutit.models.base import UUIDModel, AttachedObjectMixin
 from shoutit.utils import debug_logger, track
 
@@ -123,9 +123,13 @@ class Listen(UUIDModel):
 
     @property
     def track_properties(self):
-        return {
-            'type': self.stream.type_name.lower()
+        type_name = self.stream.type_name.lower()
+        properties = {
+            'type': type_name,
+            type_name: str(self.stream.owner.user) if self.stream.type == Stream_TYPE_PROFILE else self.stream.owner.name
+
         }
+        return properties
 
 @receiver(post_save, sender=Listen)
 def post_save_listen(sender, instance=None, created=False, **kwargs):
