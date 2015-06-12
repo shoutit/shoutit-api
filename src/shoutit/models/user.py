@@ -64,6 +64,12 @@ class Profile(AbstractProfile):
         self.save(update_fields=update_fields)
 
 
+@receiver(post_save, sender='shoutit.Profile')
+def profile_post_save(sender, instance=None, created=False, **kwargs):
+    action = 'Created' if created else 'Updated'
+    debug_logger.debug('{} Profile: {}'.format(action, instance))
+
+
 class LinkedFacebookAccount(UUIDModel):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook', db_index=True)
     facebook_id = models.CharField(max_length=24, db_index=True, unique=True)
@@ -94,36 +100,3 @@ class UserPermission(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
     permission = models.ForeignKey('shoutit.Permission', on_delete=models.CASCADE)
     date_given = models.DateTimeField(auto_now_add=True)
-
-
-@receiver(post_save, sender='shoutit.User')
-def user_post_save(sender, instance=None, created=False, **kwargs):
-    action = 'Created' if created else 'Updated'
-    debug_logger.debug('{} User: {}'.format(action, instance))
-    if created:
-        # create auth token
-        Token.objects.create(user=instance)
-
-        # create profile
-        Profile.objects.create(user=instance)
-
-        # give appropriate permissions
-        from shoutit.permissions import (give_user_permissions, INITIAL_USER_PERMISSIONS,
-                                         FULL_USER_PERMISSIONS)
-        permissions = INITIAL_USER_PERMISSIONS
-        if instance.is_activated:
-            permissions = FULL_USER_PERMISSIONS
-        give_user_permissions(user=instance, permissions=permissions)
-
-        # send signup email
-        if not (instance.is_activated or instance.is_test):
-            # create email confirmation token and send verification email
-            ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
-        if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
-            instance.send_signup_email()
-
-
-@receiver(post_save, sender='shoutit.Profile')
-def profile_post_save(sender, instance=None, created=False, **kwargs):
-    action = 'Created' if created else 'Updated'
-    debug_logger.debug('{} Profile: {}'.format(action, instance))

@@ -118,7 +118,10 @@ def notify_db_user(db_user, from_user, message):
     reply_url = db_user.db_link + '?reply'
     reply_response = requests.get(reply_url)
     if reply_response.status_code != 200:
-        error_logger.warn("Deleted dbz ad.", extra={'db_link': db_user.db_link})
+        error_logger.warn("Deleted dbz ad.", extra={
+            'db_link': db_user.db_link,
+            'conversation': message.conversation.pk
+        })
         return
     reply_html = reply_response.content.decode('utf-8')
     captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
@@ -158,7 +161,10 @@ def notify_dbz2_user(dbz2_user, from_user, message):
 
     ad = requests.head(dbz2_user.db_link, allow_redirects=False)
     if ad.status_code != 200:
-        error_logger.warn("Deleted dbz2 ad.", extra={'db_link': dbz2_user.db_link})
+        error_logger.warn("Deleted dbz2 ad.", extra={
+            'db_link': dbz2_user.db_link,
+            'conversation': message.conversation.pk
+        })
         return
 
     base_url = get_dbz_base_url(dbz2_user.db_link)

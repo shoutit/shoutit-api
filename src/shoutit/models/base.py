@@ -8,6 +8,8 @@ from django.core import validators
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.core.mail import send_mail
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
@@ -115,6 +117,28 @@ class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
         }
 
 
+class ShoutitUserManager(UserManager):
+    def _create_user(self, username, email, password, is_staff, is_superuser, **extra_fields):
+        """
+        Creates and saves a User with the given username, email and password.
+        An extra profile_fields is to be passed so the user_post_save method can setup the
+        Profile to prevent multiple saves / updates when creating new users.
+        """
+        profile_fields = extra_fields.pop('profile_fields')
+        now = timezone.now()
+        if not username:
+            raise ValueError('The given username must be set')
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email,
+                          is_staff=is_staff, is_active=True,
+                          is_superuser=is_superuser,
+                          date_joined=now, **extra_fields)
+        user.set_password(password)
+        user.profile_fields = profile_fields
+        user.save(using=self._db)
+        return user
+
+
 class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     """
     An abstract base class implementing a fully featured User model with
@@ -152,7 +176,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         choices=UserType.choices, default=USER_TYPE_PROFILE.value, db_index=True)
     is_test = models.BooleanField(_('testuser status'), default=False, help_text=_(
         'Designates whether this user is a test user.'))
-    objects = UserManager()
+    objects = ShoutitUserManager()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
@@ -312,3 +336,36 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def is_password_set(self):
         return self.has_usable_password()
+
+
+@receiver(post_save, sender='shoutit.User')
+def user_post_save(sender, instance=None, created=False, **kwargs):
+    from shoutit.utils import debug_logger
+
+    action = 'Created' if created else 'Updated'
+    debug_logger.debug('{} User: {}'.format(action, instance))
+    if created:
+        from shoutit.models import Profile, ConfirmToken
+        from rest_framework.authtoken.models import Token
+        from shoutit.permissions import (give_user_permissions, INITIAL_USER_PERMISSIONS,
+                                         FULL_USER_PERMISSIONS)
+
+        # create auth token
+        Token.objects.create(user=instance)
+
+        # create profile
+        profile_fields = getattr(instance, 'profile_fields', {})
+        Profile.objects.create(user=instance, **profile_fields)
+
+        # give appropriate permissions
+        permissions = INITIAL_USER_PERMISSIONS
+        if instance.is_activated:
+            permissions = FULL_USER_PERMISSIONS
+        give_user_permissions(user=instance, permissions=permissions)
+
+        # send signup email
+        if not (instance.is_activated or instance.is_test):
+            # create email confirmation token and send verification email
+            ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
+        if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
+            instance.send_signup_email()

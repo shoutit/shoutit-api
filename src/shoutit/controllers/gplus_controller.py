@@ -4,18 +4,17 @@
 """
 from __future__ import unicode_literals
 import json
-from django.db import IntegrityError
 import httplib2
-from oauth2client.client import AccessTokenRefreshError, FlowExchangeError
-from oauth2client.client import credentials_from_clientsecrets_and_code, OOB_CALLBACK_URN
 from django.conf import settings
+from django.db import IntegrityError
 from apiclient import discovery
+from oauth2client.client import (AccessTokenRefreshError, FlowExchangeError,
+                                 credentials_from_clientsecrets_and_code, OOB_CALLBACK_URN)
 from rest_framework.exceptions import ValidationError
-from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_NO_LINK, \
-    GPLUS_LINK_ERROR_EMAIL
-
+from shoutit.api.v2.exceptions import (GPLUS_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_NO_LINK,
+                                       GPLUS_LINK_ERROR_EMAIL)
 from shoutit.models import LinkedGoogleAccount
-from shoutit.controllers.user_controller import auth_with_gplus, update_profile_location
+from shoutit.controllers.user_controller import auth_with_gplus
 from shoutit.utils import debug_logger
 
 
@@ -49,10 +48,8 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None):
             error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
             error.update({'error_description': str(e)})
             raise ValidationError(error)
-        user = auth_with_gplus(gplus_user, credentials)
+        user = auth_with_gplus(gplus_user, credentials, initial_user)
 
-    if initial_user and initial_user.get('location'):
-        update_profile_location(user.profile, initial_user.get('location'))
     return user
 
 

@@ -7,24 +7,26 @@ from collections import OrderedDict
 import uuid
 from django.contrib.auth import login
 from django.db.models import Q
+from ipware.ip import get_ip
 from push_notifications.models import APNSDevice, GCMDevice
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
-from common.utils import location_from_google_geocode_response
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
 from shoutit.controllers import shout_controller, user_controller
+from shoutit.utils import location_from_google_geocode_response
 
 
 class LocationSerializer(serializers.Serializer):
-    latitude = serializers.FloatField(min_value=-90, max_value=90)
-    longitude = serializers.FloatField(min_value=-180, max_value=180)
+    latitude = serializers.FloatField(min_value=-90, max_value=90, required=False)
+    longitude = serializers.FloatField(min_value=-180, max_value=180, required=False)
     country = serializers.CharField(min_length=2, max_length=2, required=False, allow_blank=True)
     postal_code = serializers.CharField(max_length=10, required=False, allow_blank=True)
     state = serializers.CharField(max_length=50, required=False, allow_blank=True)
@@ -35,7 +37,13 @@ class LocationSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         validated_data = super(LocationSerializer, self).to_internal_value(data)
-        google_geocode_response = validated_data.get('google_geocode_response')
+        lat = 'latitude' in validated_data
+        lng = 'longitude' in validated_data
+        ggr = 'google_geocode_response' in validated_data
+        if not ((lat and lng) or ggr):
+            raise ValidationError({'error': "could not find [latitude and longitude] or [google_geocode_response]"})
+
+        google_geocode_response = validated_data.pop('google_geocode_response', None)
         if google_geocode_response:
             location = location_from_google_geocode_response(google_geocode_response)
             if location:
@@ -115,12 +123,16 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    image = serializers.URLField(source='profile.image')
+    image = serializers.URLField(source='profile.image', required=False)
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated', 'image')
+
+    def __init__(self, instance=None, data=empty, **kwargs):
+        super(UserSerializer, self).__init__(instance, data, **kwargs)
+        self.fields['username'].required = False
 
     def get_api_url(self, user):
         return reverse('user-detail', kwargs={'username': user.username}, request=self.context['request'])
@@ -128,8 +140,8 @@ class UserSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         ret = super(UserSerializer, self).to_internal_value(data)
 
-        # if creating new shout no need to validate the id, which will not be passed anyway
-        if not self.parent:
+        # validate the id only when sharing the user as an attached object
+        if not self.parent == AttachedObjectSerializer:
             return ret
 
         # todo: refactor
@@ -155,17 +167,17 @@ class UserDetailSerializer(UserSerializer):
                                    help_text="Only shown for owner")
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    gender = serializers.CharField(source='profile.gender')
-    bio = serializers.CharField(source='profile.bio')
+    gender = serializers.CharField(source='profile.gender', required=False)
+    bio = serializers.CharField(source='profile.bio', required=False)
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
-    location = LocationSerializer(help_text="latitude and longitude are only shown for owner")
-    push_tokens = PushTokensSerializer(help_text="Only shown for owner")
+    location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
+    push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listening = serializers.SerializerMethodField(
         help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(
         help_text="Whether this user is one of the signed in user's listeners")
-    listeners_count = serializers.IntegerField(source='profile.listeners_count',
+    listeners_count = serializers.IntegerField(source='profile.listeners_count', required=False,
                                                help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
     listening_count = serializers.DictField(read_only=True, child=serializers.IntegerField(),
@@ -673,7 +685,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(min_length=6, max_length=30)
     # todo
-    # initial_user = UserDetailSerializer(required=False)
+    user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
         if not data:
@@ -695,7 +707,9 @@ class ShoutitSignupSerializer(serializers.Serializer):
         return email
 
     def create(self, validated_data):
-        user = user_controller.user_from_shoutit_signup_data(validated_data)
+        initial_user = validated_data.get('user', {})
+        initial_user['ip'] = get_ip(self.context.get('request'))
+        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user)
         return user
 
 

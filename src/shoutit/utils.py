@@ -14,14 +14,19 @@ from shoutit import settings
 import mailchimp
 from mixpanel import Mixpanel
 import logging
+from IP2Location import IP2Location
 
-# shoutit loggers
+
+# Shoutit loggers
 error_logger = logging.getLogger('shoutit.error')
 debug_logger = logging.getLogger('shoutit.debug')
 sss_logger = logging.getLogger('shoutit.sss')
 
-# shoutit mixpanel
+# Shoutit mixpanel
 shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN)
+
+# IP2Location instant
+ip2location = IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 
 
 def generate_password():
@@ -127,3 +132,76 @@ def _track(distinct_id, event_name, properties=None):
         shoutit_mp.track(distinct_id, event_name, properties)
     except Exception as e:
         error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
+
+
+# Location functions
+
+def location_from_ip(ip, use_google_geocode=False):
+    result = ip2location.get_all(ip)
+    if use_google_geocode:
+        return location_from_latlng('%s,%s' % (result.latitude or 0, result.longitude or 0))
+    location = {
+        'latitude': round(result.latitude or 0, 6),
+        'longitude': round(result.longitude or 0, 6),
+        'country': result.country_short if result.country_short != '-' else '',
+        'postal_code': result.zipcode if result.zipcode != '-' else '',
+        'state': result.region if result.region != '-' else '',
+        'city': result.city if result.city != '-' else '',
+        'address': ''
+    }
+    return location
+
+
+def location_from_latlng(latlng):
+    params = {
+        'latlng': latlng,
+        'language': "en"
+    }
+    response = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params).json()
+    if response.get('status', 'ZERO_RESULTS') == 'ZERO_RESULTS':
+        return {'error': "Make sure you have a valid latlng param."}
+    return location_from_google_geocode_response(response)
+
+
+def location_from_google_geocode_response(response):
+    locality = ''
+    postal_town = ''
+    administrative_area_level_2 = ''
+    administrative_area_level_1 = ''
+    country = ''
+    postal_code = ''
+
+    results = response['results']
+    first_result = results[0]
+    address = first_result['formatted_address']
+    for result in results:
+        for component in result['address_components']:
+            if 'locality' in component['types']:
+                locality = component['long_name']
+
+            elif 'postal_town' in component['types']:
+                postal_town = component['long_name']
+
+            elif 'administrative_area_level_2' in component['types']:
+                administrative_area_level_2 = component['long_name']
+
+            elif 'administrative_area_level_1' in component['types']:
+                administrative_area_level_1 = component['long_name']
+
+            elif 'country' in component['types']:
+                country = component['short_name']
+
+            elif 'postal_code' in component['types']:
+                postal_code = component['long_name']
+
+    location = {
+        'latitude': round(float(first_result['geometry']['location']['lat']), 6),
+        'longitude': round(float(first_result['geometry']['location']['lng']), 6),
+        'country': country,
+        'postal_code': postal_code,
+        'state': administrative_area_level_1,
+        'city': locality or postal_town or administrative_area_level_2 or administrative_area_level_1,
+        'address': address
+    }
+    return location
+

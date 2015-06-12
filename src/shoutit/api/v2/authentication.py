@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
+from ipware.ip import get_ip
 
 from provider import constants as provider_constants, scope as provider_scope
 from provider.oauth2.forms import ClientAuthForm
@@ -20,7 +21,7 @@ from common.constants import TOKEN_TYPE_EMAIL
 from shoutit.api.v2.serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
-    UserSerializer, UserDetailSerializer)
+    UserDetailSerializer)
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import ConfirmToken
@@ -116,7 +117,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         facebook_access_token = data.get('facebook_access_token')
         if not facebook_access_token:
             raise OAuthError({'invalid_request': "Missing required parameter: facebook_access_token"})
-        initial_user = data.get('user')
+        initial_user = data.get('user', {})
+        initial_user['ip'] = get_ip(request)
 
         user = user_from_facebook_auth_response(facebook_access_token, initial_user)
         return user
@@ -151,7 +153,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         gplus_code = data.get('gplus_code')
         if not gplus_code:
             raise OAuthError({'invalid_request': "Missing required parameter: gplus_code"})
-        initial_user = data.get('user')
+        initial_user = data.get('user', {})
+        initial_user['ip'] = get_ip(request)
 
         user = user_from_gplus_code(gplus_code, initial_user, client.name)
         return user
@@ -276,15 +279,23 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
         Authorize the user and return an access token to be used in later API calls.
 
+        The `user` attribute in all signup calls is optional. It may have full location information, or the response from google geocode maps call.
+
         ###Using Google Code
         <pre><code>
         {
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "gplus_code",
-            "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI"
+            "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI",
+            "user": {
+                "location": {
+                    "google_geocode_response": {}
+                }
+            }
         }
         </code></pre>
+
 
         ###Using Facebook Access Token
         <pre><code>
@@ -292,7 +303,12 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "facebook_access_token",
-            "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy"
+            "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy",
+            "user": {
+                "location": {
+                    "google_geocode_response": {}
+                }
+            }
         }
         </code></pre>
 
@@ -304,7 +320,12 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "grant_type": "shoutit_signup",
             "name": "Barack Hussein Obama",
             "email": "i.also.shout@whitehouse.gov",
-            "password": "iW@ntToPl*YaGam3"
+            "password": "iW@ntToPl*YaGam3",
+            "user": {
+                "location": {
+                    "google_geocode_response": {}
+                }
+            }
         }
         </code></pre>
 
@@ -342,7 +363,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         }
         </code></pre>
 
-        ```if the user newly signed up `new_signup` will be set to true otherwise false```
+        if the user newly signed up `new_signup` will be set to true otherwise false. If the location was initially passed Users objects will it, otherwise they will have an estimated location based on their IP.
 
         ###Using the Token in header for later API calls.
         ```

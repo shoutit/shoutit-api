@@ -16,7 +16,7 @@ from shoutit.api.v2.exceptions import (FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EM
                                        FB_LINK_ERROR_NO_LINK)
 
 from shoutit.models import LinkedFacebookAccount
-from shoutit.controllers.user_controller import auth_with_facebook, update_profile_location
+from shoutit.controllers.user_controller import auth_with_facebook
 from shoutit.utils import debug_logger
 
 
@@ -37,10 +37,8 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
             debug_logger.error('Facebook user has no email: %s' % json.dumps(fb_user))
             raise FB_LINK_ERROR_EMAIL
         long_lived_token = extend_token(access_token)
-        user = auth_with_facebook(fb_user, long_lived_token)
+        user = auth_with_facebook(fb_user, long_lived_token, initial_user)
 
-    if initial_user and initial_user.get('location'):
-        update_profile_location(user.profile, initial_user.get('location'))
     return user
 
 

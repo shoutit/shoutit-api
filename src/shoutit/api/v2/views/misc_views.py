@@ -10,14 +10,13 @@ from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
-from common.utils import location_from_latlng
 
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
                             User, DBZ2User)
-from shoutit.utils import debug_logger, error_logger
+from shoutit.utils import debug_logger, error_logger, location_from_latlng
 
 
 class MiscViewSet(viewsets.ViewSet):
