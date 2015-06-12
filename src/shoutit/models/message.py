@@ -105,10 +105,13 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     @property
     def track_properties(self):
         properties = {
+            'id': self.pk,
             'type': self.type_name
         }
-        if self.about and self.type == CONVERSATION_TYPE_ABOUT_SHOUT and self.about.is_sss:
-            properties.update({'about_sss': True})
+        if self.about and self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
+            properties.update({'shout': self.about.pk})
+            if self.about.is_sss:
+                properties.update({'about_sss': True})
         return properties
 
 
