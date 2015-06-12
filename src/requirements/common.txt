@@ -64,3 +64,5 @@ pyasn1
 bpython==0.14.1
 
 # django-paypal==0.2
+
+http://www.ip2location.com/downloads/ip2location-python-7.0.0.tar.gz
