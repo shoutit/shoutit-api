@@ -141,7 +141,7 @@ class UserSerializer(serializers.ModelSerializer):
         ret = super(UserSerializer, self).to_internal_value(data)
 
         # validate the id only when sharing the user as an attached object
-        if not self.parent == AttachedObjectSerializer:
+        if not isinstance(self.parent, AttachedObjectSerializer):
             return ret
 
         # todo: refactor
