@@ -684,7 +684,6 @@ class ShoutitSignupSerializer(serializers.Serializer):
     last_name = serializers.CharField(min_length=1, max_length=30, required=False)
     email = serializers.EmailField()
     password = serializers.CharField(min_length=6, max_length=30)
-    # todo
     user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
