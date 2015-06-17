@@ -17,7 +17,7 @@ from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
-from common.constants import TOKEN_TYPE_EMAIL
+from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
 from shoutit.api.v2.serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
@@ -25,7 +25,7 @@ from shoutit.api.v2.serializers import (
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import ConfirmToken
-from shoutit.utils import track
+from shoutit.utils import track, alias
 
 
 class RequestParamsClientBackend(object):
@@ -98,16 +98,17 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         except ObjectDoesNotExist:
             pass
 
-        # track registration
+        # alias the mixpanel id and track registration
         request_data = self.request.data
         if new_signup:
+            alias(request_data.get('mixpanel_distinct_id'), user.pk)
             track(user.pk, 'signup', {
                 'api_client': request_data.get('client_id'),
                 'using': request_data.get('grant_type'),
                 'server': self.request.META.get('HTTP_HOST'),
-                'initial_country': user.location.get('country'),
-                'initial_state': user.location.get('state'),
-                'initial_city': user.location.get('city'),
+                'Country': COUNTRY_ISO.get(user.location.get('country')),
+                'Region': user.location.get('state'),
+                'City': user.location.get('city'),
             })
 
         return Response(response_data)
@@ -292,7 +293,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
                 "location": {
                     "google_geocode_response": {}
                 }
-            }
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
 
@@ -308,7 +310,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
                 "location": {
                     "google_geocode_response": {}
                 }
-            }
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
 
@@ -325,7 +328,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
                 "location": {
                     "google_geocode_response": {}
                 }
-            }
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
 

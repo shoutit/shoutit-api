@@ -119,6 +119,17 @@ def _set_profile_image(profile, image_url=None, image_data=None):
         error_logger.warn(str(e))
 
 
+def alias(alias_id, original):
+    if settings.DEBUG and not getattr(settings, 'FORCE_MP_TRACKING', False):
+        return
+    return _alias.delay(alias_id, original)
+
+
+@job(settings.RQ_QUEUE)
+def _alias(alias_id, original):
+    shoutit_mp.alias(alias_id, original)
+
+
 def track(distinct_id, event_name, properties=None):
     if settings.DEBUG and not getattr(settings, 'FORCE_MP_TRACKING', False):
         return
