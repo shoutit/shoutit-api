@@ -101,7 +101,9 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         # alias the mixpanel id and track registration
         request_data = self.request.data
         if new_signup:
-            # alias(request_data.get('mixpanel_distinct_id'), user.pk)
+            mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
+            if mixpanel_distinct_id:
+                alias(user.pk, mixpanel_distinct_id)
             track(user.pk, 'signup', {
                 'api_client': request_data.get('client_id'),
                 'using': request_data.get('grant_type'),
