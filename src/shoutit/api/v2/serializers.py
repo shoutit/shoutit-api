@@ -17,6 +17,8 @@ from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
+from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
+from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
@@ -677,6 +679,34 @@ class ReportSerializer(serializers.ModelSerializer):
         report = Report.objects.create(user=self.root.context['request'].user, text=text,
                                        attached_object=attached_object, type=report_type)
         return report
+
+
+class FacebookAuthSerializer(serializers.Serializer):
+    facebook_access_token = serializers.CharField(max_length=500)
+    user = UserDetailSerializer(required=False)
+
+    def to_internal_value(self, data):
+        ret = super(FacebookAuthSerializer, self).to_internal_value(data)
+        facebook_access_token = ret.get('facebook_access_token')
+        initial_user = ret.get('user', {})
+        initial_user['ip'] = get_ip(self.context.get('request'))
+        user = user_from_facebook_auth_response(facebook_access_token, initial_user)
+        self.instance = user
+        return ret
+
+
+class GplusAuthSerializer(serializers.Serializer):
+    gplus_code = serializers.CharField(max_length=500)
+    user = UserDetailSerializer(required=False)
+
+    def to_internal_value(self, data):
+        ret = super(GplusAuthSerializer, self).to_internal_value(data)
+        gplus_code = ret.get('gplus_code')
+        initial_user = ret.get('user', {})
+        initial_user['ip'] = get_ip(self.context.get('request'))
+        user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'))
+        self.instance = user
+        return ret
 
 
 class ShoutitSignupSerializer(serializers.Serializer):

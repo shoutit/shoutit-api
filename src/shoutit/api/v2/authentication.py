@@ -21,9 +21,7 @@ from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
 from shoutit.api.v2.serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
-    UserDetailSerializer)
-from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
-from shoutit.controllers.gplus_controller import user_from_gplus_code
+    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer)
 from shoutit.models import ConfirmToken
 from shoutit.utils import track, alias
 
@@ -117,15 +115,9 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         return Response(response_data)
 
     def get_facebook_access_token_grant(self, request, data, client):
-
-        facebook_access_token = data.get('facebook_access_token')
-        if not facebook_access_token:
-            raise OAuthError({'invalid_request': "Missing required parameter: facebook_access_token"})
-        initial_user = data.get('user', {})
-        initial_user['ip'] = get_ip(request)
-
-        user = user_from_facebook_auth_response(facebook_access_token, initial_user)
-        return user
+        serializer = FacebookAuthSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return serializer.instance
 
     def facebook_access_token(self, request, data, client):
         """
@@ -147,15 +139,10 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         return self.access_token_response(at)
 
     def get_gplus_code_grant(self, request, data, client):
-
-        gplus_code = data.get('gplus_code')
-        if not gplus_code:
-            raise OAuthError({'invalid_request': "Missing required parameter: gplus_code"})
-        initial_user = data.get('user', {})
-        initial_user['ip'] = get_ip(request)
-
-        user = user_from_gplus_code(gplus_code, initial_user, client.name)
-        return user
+        data.update({'client_name': client.name})
+        serializer = GplusAuthSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return serializer.instance
 
     def gplus_code(self, request, data, client):
         """

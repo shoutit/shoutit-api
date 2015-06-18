@@ -74,6 +74,8 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
     try:
         user = User.objects.get(email=email)
         debug_logger.debug('Found user: {} with same email of gplus_user: {}'.format(user, gplus_id))
+        if location:
+            update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name,
                            is_activated=True, profile_fields=profile_fields)
@@ -117,6 +119,8 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
     try:
         user = User.objects.get(email=email)
         debug_logger.debug('Found user: {} with same email of fb_user: {}'.format(user, facebook_id))
+        if location:
+            update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name,
                            username=username, is_activated=True, profile_fields=profile_fields)
