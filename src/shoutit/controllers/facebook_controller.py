@@ -16,7 +16,7 @@ from shoutit.api.v2.exceptions import (FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EM
                                        FB_LINK_ERROR_NO_LINK)
 
 from shoutit.models import LinkedFacebookAccount
-from shoutit.controllers.user_controller import auth_with_facebook
+from shoutit.controllers.user_controller import auth_with_facebook, update_profile_location
 from shoutit.utils import debug_logger
 
 
@@ -27,10 +27,11 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         access_token = auth_response
     fb_user = fb_user_from_facebook_access_token(access_token)
     facebook_id = fb_user.get('id')
-
     try:
         linked_account = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
         user = linked_account.user
+        if initial_user and initial_user.get('location'):
+            update_profile_location(user.profile, initial_user.get('location'))
     except ObjectDoesNotExist:
         debug_logger.debug('LinkedGoogleAccount.DoesNotExist for facebook_id %s.' % facebook_id)
         if 'email' not in fb_user:

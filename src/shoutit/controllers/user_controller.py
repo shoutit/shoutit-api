@@ -137,6 +137,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
         error_logger.warn(str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
+    # todo: move the entire logic to rq
     std_male = '10354686_10150004552801856_220367501106153455_n.jpg'
     std_female = '1379841_10150004552801901_469209496895221757_n.jpg'
     image_url = 'https://graph.facebook.com/me/picture/?type=large&access_token=' + access_token
@@ -145,7 +146,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
         image_data = response.content
         if not (std_male in response.url or std_female in response.url or '.gif' in response.url):
             set_profile_image(user.profile, image_data=image_data)
-    except Exception, e:
+    except requests.RequestException as e:
         error_logger.warn(str(e))
 
     return user

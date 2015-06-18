@@ -17,6 +17,7 @@ from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
+from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
@@ -715,11 +716,13 @@ class ShoutitSignupSerializer(serializers.Serializer):
 class ShoutitSigninSerializer(serializers.Serializer):
     email = serializers.CharField()
     password = serializers.CharField()
+    user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
         ret = super(ShoutitSigninSerializer, self).to_internal_value(data)
         email = ret.get('email').lower()
         password = ret.get('password')
+        initial_user = ret.get('user', {})
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
@@ -728,6 +731,8 @@ class ShoutitSigninSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
+        if initial_user and initial_user.get('location'):
+            update_profile_location(user.profile, initial_user.get('location'))
         return ret
 
 

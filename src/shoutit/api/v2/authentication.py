@@ -342,7 +342,13 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "shoutit_signin",
             "email": "i.also.shout@whitehouse.gov",  // email or username
-            "password": "iW@ntToPl*YaGam3"
+            "password": "iW@ntToPl*YaGam3",
+            "user": {
+                "location": {
+                    "google_geocode_response": {}
+                }
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
 
