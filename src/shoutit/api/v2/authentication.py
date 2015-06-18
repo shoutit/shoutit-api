@@ -130,12 +130,6 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     def facebook_access_token(self, request, data, client):
         """
         Handle ``grant_type=facebook_access_token`` requests.
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "facebook_access_token",
-            "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy"
-        }
         """
 
         user = self.get_facebook_access_token_grant(request, data, client)
@@ -166,12 +160,6 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     def gplus_code(self, request, data, client):
         """
         Handle ``grant_type=gplus_code`` requests.
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "gplus_code",
-            "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI"
-        }
         """
 
         user = self.get_gplus_code_grant(request, data, client)
@@ -197,14 +185,6 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     def shoutit_signup(self, request, data, client):
         """
         Handle ``grant_type=shoutit_signup`` requests.
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "shoutit_signup",
-            "name": "Barack Hussein Obama",
-            "email": "i.also.shout@whitehouse.gov",
-            "password": "iW@ntToPl*YaGam3"
-        }
         """
 
         user = self.get_shoutit_signup_grant(request, data, client)
@@ -229,13 +209,6 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     def shoutit_signin(self, request, data, client):
         """
         Handle ``grant_type=shoutit_signin`` requests.
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "shoutit_signin",
-            "email": "i.also.shout@whitehouse.gov",  // email or username
-            "password": "iW@ntToPl*YaGam3"
-        }
         """
 
         user = self.get_shoutit_signin_grant(request, data, client)
@@ -283,7 +256,10 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         """
         Authorize the user and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup calls is optional. It may have full location information, or the response from google geocode maps call.
+        The `user` attribute in all signup / signin calls is optional. It may have full location information, or better the JSON response from google geocode maps call.
+        If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
+
+        Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
 
         ###Using Google Code
         <pre><code>
@@ -342,7 +318,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "shoutit_signin",
-            "email": "i.also.shout@whitehouse.gov",  // email or username
+            "email": "i.also.shout@whitehouse.gov",
             "password": "iW@ntToPl*YaGam3",
             "user": {
                 "location": {
@@ -352,6 +328,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
+
+        `email` can be email or username
 
         ###Refreshing the Token
         <pre><code>
@@ -376,7 +354,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         }
         </code></pre>
 
-        if the user newly signed up `new_signup` will be set to true otherwise false. If the location was initially passed Users objects will it, otherwise they will have an estimated location based on their IP.
+        If the user newly signed up `new_signup` will be set to true otherwise false.
 
         ###Using the Token in header for later API calls.
         ```
@@ -455,9 +433,10 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         POST:
         <pre><code>
         {
-            "email": "email@example.com"  // optional to change the email before sending new verification email
+            "email": "email@example.com"
         }
         </code></pre>
+        `email` is optional to change the current email before sending the new verification
 
         ---
         omit_serializer: true
@@ -504,11 +483,13 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         This changes the current user's password.
         <pre><code>
         {
-            "old_password": "easypass", // only required if set before. check user.is_set_password
+            "old_password": "easypass",
             "new_password": "HarD3r0n#",
             "new_password2": "HarD3r0n#"
         }
         </code></pre>
+
+        `old_password` is only required if set before. check user's `is_set_password` property
 
         ---
         omit_serializer: true
@@ -525,12 +506,14 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     def reset_password(self, request):
         """
         ###Reset password
-        This sends the user a password reset email. It can be used when user forgets his password.
+        This sends the user a password reset email. Used when user forgot his password.
         <pre><code>
         {
-            "email": "email@example.com"  // email or username
+            "email": "email@example.com"
         }
         </code></pre>
+
+        `email` can be email or username
 
         ---
         omit_serializer: true
@@ -547,14 +530,16 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     def set_password(self, request):
         """
         ###Set password using reset token
-        This changes the current user's password.
+        This changes the user's current password.
         <pre><code>
         {
-            "reset_token": "23456789876543245678987654", // the WebApp should extract this from url send to user's email
+            "reset_token": "23456789876543245678987654",
             "new_password": "HarD3r0n#",
             "new_password2": "HarD3r0n#"
         }
         </code></pre>
+
+        `reset_token` is to be extracted from the url sent to user's email
 
         ---
         omit_serializer: true
