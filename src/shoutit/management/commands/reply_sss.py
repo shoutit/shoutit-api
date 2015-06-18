@@ -14,6 +14,10 @@ from shoutit.models import Conversation, DBCLConversation
 class Command(BaseCommand):
     help = 'Reply on behalf of SSS users.'
 
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument('text', nargs=1)
+
     def handle(self, *args, **options):
         # get conversations
         now = timezone.now()
@@ -30,7 +34,7 @@ class Command(BaseCommand):
                 # sss user already replied
                 continue
             # set the text
-            text = 'sold'
+            text = options.get('text', ['sold sorry'])[0]
             # send the message
             message_controller.send_message(conversation=conversation, user=sss_user, text=text)
             # disable the shout
