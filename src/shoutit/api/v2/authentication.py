@@ -105,6 +105,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             if mixpanel_distinct_id:
                 alias(user.pk, mixpanel_distinct_id)
             track(user.pk, 'signup', {
+                'user_id': user.pk,
                 'api_client': request_data.get('client_id'),
                 'using': request_data.get('grant_type'),
                 'server': self.request.META.get('HTTP_HOST'),
