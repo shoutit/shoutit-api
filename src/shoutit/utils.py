@@ -120,7 +120,7 @@ def _set_profile_image(profile, image_url=None, image_data=None):
 
 
 def alias(alias_id, original):
-    if settings.DEBUG and not getattr(settings, 'FORCE_MP_TRACKING', False):
+    if settings.DEBUG and not settings.FORCE_MP_TRACKING:
         return
     return _alias.delay(alias_id, original)
 
@@ -132,7 +132,7 @@ def _alias(alias_id, original):
 
 
 def track(distinct_id, event_name, properties=None):
-    if settings.DEBUG and not getattr(settings, 'FORCE_MP_TRACKING', False):
+    if settings.DEBUG and not settings.FORCE_MP_TRACKING:
         return
     return _track.delay(distinct_id, event_name, properties)
 

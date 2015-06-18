@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from datetime import timedelta, datetime
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 from django.db import models
@@ -148,6 +149,8 @@ class Shout(Post):
     expiry_notified = models.BooleanField(default=False)
 
     is_sss = models.BooleanField(default=False)
+
+    conversations = GenericRelation('shoutit.Conversation', related_query_name='shout')
 
     objects = ShoutManager()
 

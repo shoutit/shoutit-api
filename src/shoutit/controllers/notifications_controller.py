@@ -62,34 +62,37 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
         message = None
         attached_object_dict = {}
 
-    if user.apns_device:
-        try:
-            user.apns_device.send_message(
-                message, sound='default', badge=get_user_notifications_count(user), extra={
+    if not settings.DEBUG or settings.FORCE_PUSH:
+        if user.apns_device:
+            try:
+                user.apns_device.send_message(
+                    message, sound='default', badge=get_user_notifications_count(user), extra={
+                        'notification_type': int(notification_type),
+                        'object': attached_object_dict
+                    })
+                debug_logger.debug("Sent apns push to %s." % user)
+            except APNSError, e:
+                error_logger.warn("Could not send apns push.", extra={
+                    'user': user.username,
+                    'APNSError': str(e)
+                })
+
+        if user.gcm_device:
+            try:
+                user.gcm_device.send_message(message, extra={
                     'notification_type': int(notification_type),
                     'object': attached_object_dict
                 })
-            debug_logger.debug("Sent apns push to %s." % user)
-        except APNSError, e:
-            error_logger.warn("Could not send apns push.", extra={
-                'user': user.username,
-                'APNSError': str(e)
-            })
+                debug_logger.debug("Sent gcm push to %s." % user)
+            except GCMError, e:
+                error_logger.warn("Could not send gcm push.", extra={
+                    'user': user.username,
+                    'GCMError': str(e)
+                })
 
-    if user.gcm_device:
-        try:
-            user.gcm_device.send_message(message, extra={
-                'notification_type': int(notification_type),
-                'object': attached_object_dict
-            })
-            debug_logger.debug("Sent gcm push to %s." % user)
-        except GCMError, e:
-            error_logger.warn("Could not send gcm push.", extra={
-                'user': user.username,
-                'GCMError': str(e)
-            })
-
-    if notification_type == NOTIFICATION_TYPE_MESSAGE and from_user:
+    if notification_type == NOTIFICATION_TYPE_MESSAGE and from_user \
+            and not attached_object.conversation.attached_object.is_disabled \
+            and (not settings.DEBUG or settings.FORCE_SSS_NOTIFY):
         if user.db_user:
             if not user.email:
                 notify_db_user.delay(user.db_user, from_user, attached_object)

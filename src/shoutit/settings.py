@@ -68,6 +68,7 @@ MANAGERS = ADMINS
 MAX_REG_DAYS = 14
 MAX_SHOUTS_INACTIVE_USER = 5
 MAX_EXPIRY_DAYS_SSS = 7
+FORCE_SSS_NOTIFY = False
 SHOUT_EXPIRY_NOTIFY = 2
 MAX_EXPIRY_DAYS = 60
 ACCOUNT_ACTIVATION_DAYS = 7
@@ -190,6 +191,7 @@ RAVEN_CONFIG = {
 }
 
 APNS_SANDBOX = False
+FORCE_PUSH = False
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
     'APNS_CERTIFICATE': os.path.join(API_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
@@ -197,6 +199,7 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
+info('FORCE_PUSH:', FORCE_PUSH)
 info('APNS_SANDBOX:', APNS_SANDBOX)
 
 CORS_ORIGIN_ALLOW_ALL = True
