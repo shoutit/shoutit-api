@@ -19,7 +19,7 @@ class PredefinedCity(UUIDModel, LocationMixin):
     def __unicode__(self):
         return unicode(self.country + ':' + self.city)
 
-    def get_cities_within(self, dist_km, max_cities=10):
+    def get_cities_within(self, dist_km, max_cities=30):
         distance = {
             'distance': """(6371 * acos( cos( radians(%s) ) * cos( radians( latitude ) ) *
                     cos( radians( longitude ) - radians(%s) ) + sin( radians(%s) ) *
