@@ -13,6 +13,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, \
     APIClientFilter
 from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin
+from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
@@ -387,6 +388,18 @@ admin.site.register(APNSDevice, CustomDeviceAdmin)
 admin.site.unregister(GCMDevice)
 admin.site.register(GCMDevice, CustomDeviceAdmin)
 
+
+
+# Pusher
+@admin.register(PusherChannel)
+class PusherChannelAdmin(admin.ModelAdmin):
+    list_display = ('type', 'name')
+    raw_id_fields = ('users',)
+
+@admin.register(PusherChannelJoin)
+class PusherChannelJoinAdmin(admin.ModelAdmin):
+    list_display = ('channel', 'user')
+    raw_id_fields = ('channel', 'user')
 
 # Others
 admin.site.register(Video)
