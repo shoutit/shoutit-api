@@ -28,10 +28,16 @@ class PusherChannel(UUIDModel):
     name = models.CharField(max_length=164, unique=True, validators=[
         validators.RegexValidator(channel_name_re)
     ])
-    devices = models.ManyToManyField('shoutit_pusher.PusherDevice', related_name='channels',
-                                     through='shoutit_pusher.PusherChannelJoin')
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='channels',
+                                   through='shoutit_pusher.PusherChannelJoin')
+
+    def __unicode__(self):
+        return "%s: %s users" % (self.name, self.users.count())
 
 
 class PusherChannelJoin(UUIDModel):
-    device = models.ForeignKey('shoutit_pusher.PusherDevice')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     channel = models.ForeignKey('shoutit_pusher.PusherChannel')
+
+    class Meta:
+        unique_together = ('user', 'channel')

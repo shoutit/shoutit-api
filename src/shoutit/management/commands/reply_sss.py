@@ -5,18 +5,16 @@
 from __future__ import unicode_literals
 import datetime
 from django.core.management.base import BaseCommand
-from django.conf import settings
 from django.utils import timezone
 from shoutit.controllers import message_controller
 from shoutit.models import Conversation, DBCLConversation
+import random
 
 
 class Command(BaseCommand):
     help = 'Reply on behalf of SSS users.'
-
-    def add_arguments(self, parser):
-        # Positional arguments
-        parser.add_argument('text', nargs=1)
+    arabic_replies = ["العفو تم البيع", "شكرا، بس للاسف تم البيع"]
+    english_replies = ["sorry sold", "it is sold already sorry", "thanks for your message but it has been already sold", "sold"]
 
     def handle(self, *args, **options):
         # get conversations
@@ -34,7 +32,7 @@ class Command(BaseCommand):
                 # sss user already replied
                 continue
             # set the text
-            text = options.get('text', ['sold sorry'])[0]
+            text = random.choice(self.english_replies)
             # send the message
             message_controller.send_message(conversation=conversation, user=sss_user, text=text)
             # disable the shout
