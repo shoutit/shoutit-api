@@ -19,7 +19,7 @@ class PredefinedCity(UUIDModel, LocationMixin):
     def __unicode__(self):
         return unicode(self.country + ':' + self.city)
 
-    def get_cities_within(self, dist_km):
+    def get_cities_within(self, dist_km, max_cities=10):
         distance = {
             'distance': """(6371 * acos( cos( radians(%s) ) * cos( radians( latitude ) ) *
                     cos( radians( longitude ) - radians(%s) ) + sin( radians(%s) ) *
@@ -27,7 +27,9 @@ class PredefinedCity(UUIDModel, LocationMixin):
         }
         cities = PredefinedCity.objects.filter(country=self.country).exclude(id=self.id)\
             .extra(select=distance).values('id', 'distance')
-        ids = [c['id'] for c in cities if float(c['distance']) < dist_km]
+        cities = list(cities)
+        cities.sort(key=lambda x: x['distance'])
+        ids = [c['id'] for c in cities if float(c['distance']) < dist_km][:max_cities]
         return PredefinedCity.objects.filter(id__in=ids)
 
 
