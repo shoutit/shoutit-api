@@ -91,7 +91,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
                 })
 
     if notification_type == NOTIFICATION_TYPE_MESSAGE and from_user \
-            and not attached_object.conversation.attached_object.is_disabled \
+            and not getattr(attached_object.conversation.attached_object, 'is_disabled', False) \
             and (not settings.DEBUG or settings.FORCE_SSS_NOTIFY):
         if user.db_user:
             if not user.email:
