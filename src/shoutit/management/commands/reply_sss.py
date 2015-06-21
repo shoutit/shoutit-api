@@ -23,9 +23,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # get conversations
         now = timezone.now()
-        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        nine_hours_ago = today + datetime.timedelta(hours=-9)
-        days_ago = today + datetime.timedelta(days=-options['days'])
+        nine_hours_ago = now + datetime.timedelta(hours=-9)
+        days_ago = now + datetime.timedelta(days=-options['days'])
         conversations = Conversation.objects.filter(created_at__gte=days_ago,
                                                     created_at__lt=nine_hours_ago,
                                                     shout__is_sss=True)
