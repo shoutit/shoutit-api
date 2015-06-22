@@ -172,9 +172,11 @@ def location_from_latlng(latlng):
     }
     response = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params).json()
     if response.get('status', 'ZERO_RESULTS') == 'ZERO_RESULTS':
-        return {'error': "Make sure you have a valid latlng param."}
-    return location_from_google_geocode_response(response)
-
+        return {'error': "Make sure you have a valid latlng param"}
+    try:
+        return location_from_google_geocode_response(response)
+    except (IndexError, KeyError, ValueError):
+        return {'error': "Malformed Google geocode response"}
 
 def location_from_google_geocode_response(response):
     locality = ''

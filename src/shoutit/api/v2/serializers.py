@@ -44,13 +44,15 @@ class LocationSerializer(serializers.Serializer):
         lng = 'longitude' in validated_data
         ggr = 'google_geocode_response' in validated_data
         if not ((lat and lng) or ggr):
-            raise ValidationError({'error': "could not find [latitude and longitude] or [google_geocode_response]"})
+            raise ValidationError({'error': "Could not find [latitude and longitude] or [google_geocode_response]"})
 
         google_geocode_response = validated_data.pop('google_geocode_response', None)
         if google_geocode_response:
-            location = location_from_google_geocode_response(google_geocode_response)
-            if location:
-                validated_data.update(location)
+            try:
+                location = location_from_google_geocode_response(google_geocode_response)
+            except (IndexError, KeyError, ValueError):
+                raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
+            validated_data.update(location)
         return validated_data
 
 
