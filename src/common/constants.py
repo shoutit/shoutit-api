@@ -55,9 +55,6 @@ class Constant(object):
     # choices: is tuple of (value, text) used for Model choices attribute
     counter, values, texts, choices = 0, {}, {}, ()
 
-    def __int__(self):
-        return self.value
-
     def __init__(self, text='', value=None):
         self.text = text
         if not value:
@@ -66,6 +63,9 @@ class Constant(object):
         self.__class__.values[self.value] = text
         self.__class__.texts[text or self.value] = self.value
         self.__class__.choices += ((self.value, text),)
+
+    def __int__(self):
+        return self.value
 
     def __eq__(self, other):
         if other is not None:
@@ -280,8 +280,8 @@ class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
 
-NOTIFICATION_TYPE_LISTEN = NotificationType('listen')
-NOTIFICATION_TYPE_MESSAGE = NotificationType('message')
+NOTIFICATION_TYPE_LISTEN = NotificationType('new_listen')
+NOTIFICATION_TYPE_MESSAGE = NotificationType('new_message')
 NOTIFICATION_TYPE_EXP_POSTED = NotificationType('Experience')
 NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')

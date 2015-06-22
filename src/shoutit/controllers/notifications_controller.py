@@ -8,6 +8,7 @@ from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from django_rq import job
+from pusher import Pusher
 import requests
 from rest_framework.request import Request
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE,
@@ -17,6 +18,8 @@ from shoutit.api.versioning import ShoutitNamespaceVersioning
 from shoutit.controllers import email_controller
 from shoutit.models import Notification, DBCLConversation
 from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger
+from shoutit_pusher.models import PusherChannel
+from shoutit_pusher.utils import pusher
 
 
 class NotifySSSException(Exception):
@@ -62,48 +65,76 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
         message = None
         attached_object_dict = {}
 
-    if not settings.DEBUG or settings.FORCE_PUSH:
-        if user.apns_device:
-            try:
-                user.apns_device.send_message(
-                    message, sound='default', badge=get_user_notifications_count(user), extra={
-                        'notification_type': int(notification_type),
-                        'object': attached_object_dict
-                    })
-                debug_logger.debug("Sent apns push to %s." % user)
-            except APNSError, e:
-                error_logger.warn("Could not send apns push.", extra={
-                    'user': user.username,
-                    'APNSError': str(e)
-                })
-
-        if user.gcm_device:
-            try:
-                user.gcm_device.send_message(message, extra={
-                    'notification_type': int(notification_type),
-                    'object': attached_object_dict
-                })
-                debug_logger.debug("Sent gcm push to %s." % user)
-            except GCMError, e:
-                error_logger.warn("Could not send gcm push.", extra={
-                    'user': user.username,
-                    'GCMError': str(e)
-                })
+    if check_pusher(user, notification_type, attached_object):
+        send_pusher(user, notification_type, attached_object_dict)
+    elif not settings.DEBUG or settings.FORCE_PUSH:
+        send_push(user, attached_object_dict, message, notification_type)
 
     if notification_type == NOTIFICATION_TYPE_MESSAGE and from_user \
             and not getattr(attached_object.conversation.attached_object, 'is_disabled', False) \
-            and (not settings.DEBUG or settings.FORCE_SSS_NOTIFY):
-        if user.db_user:
-            if not user.email:
-                notify_db_user.delay(user.db_user, from_user, attached_object)
-            else:
-                notify_db_user.dealy(user.db_user, from_user, attached_object)
-                # todo: !
-                # email_controller.email_db_user(user.db_user, from_user, attached_object)
-        elif user.dbz2_user:
-            notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
-        elif user.cl_user:
-            notify_cl_user2.delay(user.cl_user, from_user, attached_object)
+            and (not settings.DEBUG or settings.FORCE_SSS_NOTIFY) and attached_object.text:
+        send_sss(user, attached_object, notification_type, from_user)
+
+
+def check_pusher(user, notification_type, attached_object):
+    return PusherChannel.objects.filter(name='presence-u-%s' % user.pk).exists()
+    # todo: check if we really want to send new messages on chat channel
+    # if notification_type == NOTIFICATION_TYPE_MESSAGE:
+    #     return PusherChannel.objects.filter(name='presence-c-%s' % attached_object.conversation.pk).exists()
+    # else:
+    #     return PusherChannel.objects.filter(name='presence-u-%s' % user.pk).exists()
+
+
+def send_pusher(user, notification_type, attached_object_dict):
+    pusher.trigger('presence-u-%s' % user.pk, str(notification_type), attached_object_dict)
+    # todo: check if we really want to send new messages on chat channel
+    # if notification_type == NOTIFICATION_TYPE_MESSAGE:
+    #     pusher.trigger('presence-c-%s' % attached_object_dict.get('conversation_id'), 'new_message', attached_object_dict)
+    # elif notification_type == NOTIFICATION_TYPE_LISTEN:
+    #     pusher.trigger('presence-u-%s' % user.pk, 'new_listen')
+
+
+def send_push(user, attached_object_dict, message, notification_type):
+    if user.apns_device:
+        try:
+            user.apns_device.send_message(
+                message, sound='default', badge=get_user_notifications_count(user), extra={
+                    'notification_type': int(notification_type),
+                    'object': attached_object_dict
+                })
+            debug_logger.debug("Sent apns push to %s." % user)
+        except APNSError, e:
+            error_logger.warn("Could not send apns push.", extra={
+                'user': user.username,
+                'APNSError': str(e)
+            })
+
+    if user.gcm_device:
+        try:
+            user.gcm_device.send_message(message, extra={
+                'notification_type': int(notification_type),
+                'object': attached_object_dict
+            })
+            debug_logger.debug("Sent gcm push to %s." % user)
+        except GCMError, e:
+            error_logger.warn("Could not send gcm push.", extra={
+                'user': user.username,
+                'GCMError': str(e)
+            })
+
+
+def send_sss(user, attached_object, notification_type, from_user):
+    if user.db_user:
+        if not user.email:
+            notify_db_user.delay(user.db_user, from_user, attached_object)
+        else:
+            notify_db_user.dealy(user.db_user, from_user, attached_object)
+            # todo: !
+            # email_controller.email_db_user(user.db_user, from_user, attached_object)
+    elif user.dbz2_user:
+        notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
+    elif user.cl_user:
+        notify_cl_user2.delay(user.cl_user, from_user, attached_object)
 
 
 def get_dbz_base_url(db_link):
