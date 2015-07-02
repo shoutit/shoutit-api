@@ -190,7 +190,7 @@ def add_predefined_city(location):
         pass
 
 
-def update_object_location(obj, location):
+def update_object_location(obj, location, save=True):
     obj.latitude = location.get('latitude')
     obj.longitude = location.get('longitude')
     obj.country = location.get('country', '')
@@ -198,6 +198,8 @@ def update_object_location(obj, location):
     obj.state = location.get('state', '')
     obj.city = location.get('city', '')
     obj.address = location.get('address', '')
+    if not save:
+        return
     # if obj already exits, only save location attributes otherwise save everything
     if obj.created_at:
         obj.save(update_fields=['latitude', 'longitude', 'country', 'postal_code', 'state', 'city', 'address'])

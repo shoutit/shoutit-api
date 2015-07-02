@@ -148,7 +148,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
           "currency": "EUR",
           "images": [], // list of image urls
           "videos": [], // list of {Video Object}s
-          "category": {"name": "Computers & Networking"}
+          "category": {"name": "Computers & Networking"},
           "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
           "location": {
             "latitude": 25.1593957,
@@ -189,19 +189,43 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         """
         Modify shout
 
-        ```
-        NOT IMPLEMENTED!
-        ```
+        <pre><code>
+        {
+          "title": "macbook pro 15",
+          "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
+          "price": 1000,
+          "currency": "EUR",
+          "images": [], // list of image urls
+          "videos": [], // list of {Video Object}s
+          "category": {"name": "Computers & Networking"},
+          "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
+          "location": {
+            "latitude": 25.1593957,
+            "longitude": 55.2338326,
+            "country": "AE",
+            "postal_code": "857",
+            "state": "Dubai",
+            "city": "Dubai",
+            "address": "Whatever Street 31",
+            "google_geocode_response": {}  // when passed server will auto calculate the location attributes except latitude and longitude
+          }
+        }
+        </code></pre>
         ---
         serializer: ShoutDetailSerializer
         omit_parameters:
             - form
         parameters:
+            - name: shout_id
+              paramType: path
+              required: true
             - name: body
               paramType: body
         """
         instance = self.get_object()
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):

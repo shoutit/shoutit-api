@@ -16,7 +16,8 @@ from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
-    ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD)
+    ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
+    POST_TYPE_OFFER)
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers.user_controller import update_profile_location
@@ -356,7 +357,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='item.name')
     text = serializers.CharField(min_length=10, max_length=1000)
     price = serializers.FloatField(source='item.price')
-    currency = serializers.CharField(source='item.currency.code',
+    currency = serializers.CharField(source='item.currency_code',
                                      help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
@@ -371,6 +372,18 @@ class ShoutSerializer(serializers.ModelSerializer):
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
+
+    def validate_currency(self, value):
+        try:
+            return Currency.objects.get(code__iexact=value)
+        except Currency.DoesNotExist:
+            raise ValidationError({'currency': ['Invalid currency']})
+
+    def validate_category(self, value):
+        try:
+            return Category.objects.get(name=value.get('name'))
+        except Category.DoesNotExist:
+            raise ValidationError({'category': ['Invalid category']})
 
     def to_internal_value(self, data):
         if not data:
@@ -414,8 +427,7 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + (
-        'images', 'videos', 'reply_url', 'related_requests', 'related_offers')
+        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -427,45 +439,36 @@ class ShoutDetailSerializer(ShoutSerializer):
         return ret
 
     def create(self, validated_data):
-        location_data = validated_data.get('location')
+        return self.perform_save(shout=None, validated_data=validated_data)
+
+    def update(self, shout, validated_data):
+        return self.perform_save(shout=shout, validated_data=validated_data)
+
+    def perform_save(self, shout, validated_data):
+        text = validated_data.get('text')
+        title = validated_data['item'].get('name')
+        price = validated_data['item'].get('price')
+        currency = validated_data['item'].get('currency_code')
+
+        category = validated_data.get('category')
+        tags = validated_data.get('tag_objects')
+
+        location = validated_data.get('location')
+
         images = validated_data['item'].get('images', [])
         videos = validated_data['item'].get('videos', {'all': []})['all']
-        if validated_data['type_name'] == 'offer':
-            shout = shout_controller.post_offer(name=validated_data['item']['name'],
-                                                text=validated_data['text'],
-                                                price=validated_data['item']['price'],
-                                                latitude=location_data['latitude'],
-                                                longitude=location_data['longitude'],
-                                                category=validated_data['category'],
-                                                tags=validated_data['tag_objects'],
-                                                shouter=self.root.context['request'].user,
-                                                country=location_data.get('country'),
-                                                postal_code=location_data.get('postal_code'),
-                                                state=location_data.get('state'),
-                                                city=location_data.get('city'),
-                                                address=location_data.get('address'),
-                                                currency=validated_data['item']['currency']['code'],
-                                                images=images,
-                                                videos=videos)
-        else:
-            shout = shout_controller.post_request(name=validated_data['item']['name'],
-                                                  text=validated_data['text'],
-                                                  price=validated_data['item']['price'],
-                                                  latitude=location_data['latitude'],
-                                                  longitude=location_data['longitude'],
-                                                  category=validated_data['category'],
-                                                  tags=validated_data['tag_objects'],
-                                                  shouter=self.root.context['request'].user,
-                                                  country=location_data.get('country'),
-                                                  postal_code=location_data.get('postal_code'),
-                                                  state=location_data.get('state'),
-                                                  city=location_data.get('city'),
-                                                  address=location_data.get('address'),
-                                                  currency=validated_data['item']['currency']['code'],
-                                                  images=images,
-                                                  videos=videos)
-        return shout
 
+        if not shout:
+            user = self.root.context['request'].user
+            shout_type = POST_TYPE_OFFER if validated_data['type_name'] == 'offer' else POST_TYPE_REQUEST
+            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text,
+                                                  price=price, currency=currency, category=category, tags=tags,
+                                                  location=location,images=images, videos=videos)
+        else:
+            shout = shout_controller.edit_shout(shout, title=title, text=text, price=price,
+                                                currency=currency, category=category, tags=tags,
+                                                images=images, videos=videos, location=location)
+        return shout
 
 class SharedLocationSerializer(serializers.ModelSerializer):
     class Meta:

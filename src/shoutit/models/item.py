@@ -30,6 +30,10 @@ class Item(UUIDModel):
     def video_url(self):
         return self.videos.all()[0].url if self.videos.all() else None
 
+    @property
+    def currency_code(self):
+        return self.currency.code
+
 
 class Currency(UUIDModel):
     code = models.CharField(max_length=10)
