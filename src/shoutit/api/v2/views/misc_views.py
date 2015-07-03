@@ -10,6 +10,8 @@ from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
+from common.constants import POST_TYPE_OFFER
+from common.constants import POST_TYPE_REQUEST
 
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
@@ -174,24 +176,25 @@ class MiscViewSet(viewsets.ViewSet):
 
         # shout creation
         try:
-            if shout['type'] == 'request':
-                shout = shout_controller.post_request(
-                    name=shout['title'], text=shout['description'], price=float(shout['price']),
-                    currency=shout['currency'],
-                    latitude=float(shout['lat']), longitude=float(shout['lng']),
-                    country=shout['country'], city=shout['city'],
-                    tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
-                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category'], priority=-10
-                )
-            elif shout['type'] == 'offer':
-                shout = shout_controller.post_offer(
-                    name=shout['title'], text=shout['description'], price=float(shout['price']),
-                    currency=shout['currency'],
-                    latitude=float(shout['lat']), longitude=float(shout['lng']),
-                    country=shout['country'], city=shout['city'],
-                    tags=shout['tags'], images=shout['images'], shouter=user, is_sss=True,
-                    exp_days=settings.MAX_EXPIRY_DAYS_SSS, category=shout['category'], priority=-10
-                )
+            shout_type = POST_TYPE_OFFER if shout['type'] == 'offer' else POST_TYPE_REQUEST
+            title = shout['title']
+            text = shout['description']
+            price = float(shout['price'])
+            currency = Currency.objects.get(code=shout['currency'])
+            category = Category.objects.get(name=shout['category'])
+            tags = shout['tags']
+            location = {
+                'latitude': float(shout['lat']),
+                'longitude': float(shout['lng']),
+                'country': shout['country'],
+                'city': shout['city']
+            }
+            shout = shout_controller.create_shout(
+                user=user, shout_type=shout_type,
+                title=title, text=text, price=price, currency=currency, location=location,
+                category=category, tags=tags, images=shout['images'],
+                is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10
+            )
         except Exception, e:
             msg = "Shout Creation Error. Deleting user."
             extra = {'detail': str(e), 'deleted_user': str(user)}
@@ -224,6 +227,7 @@ class MiscViewSet(viewsets.ViewSet):
     def geocode(self, request):
         latlng = request.query_params.get('latlng', '')
         return Response(location_from_latlng(latlng))
+
 
 def handle_dbz_reply(in_email, msg, request):
     from_email = msg.get('from_email')
@@ -266,7 +270,8 @@ def handle_dbz_reply(in_email, msg, request):
             text = '\n'.join(lines)
     except AttributeError:
         error = {'error': "Couldn't process the message text."}
-        error_logger.info(error['error'], extra={'in_email': in_email, 'source': source, 'text':text})
+        error_logger.info(error['error'],
+                          extra={'in_email': in_email, 'source': source, 'text': text})
         return Response(error)
 
     message = message_controller.send_message(conversation=None, user=from_user,
