@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 from datetime import datetime
+from django.contrib.postgres.fields import ArrayField
 
 from django.db import models, IntegrityError
 from django.conf import settings
@@ -214,6 +215,9 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     type = models.SmallIntegerField(choices=MessageAttachmentType.choices, blank=False)
     message = models.ForeignKey('shoutit.Message', related_name='attachments')
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
+    # media type
+    images = ArrayField(models.URLField(), null=True, blank=True)
+    videos = models.ManyToManyField('shoutit.Video', blank=True)
 
     def __unicode__(self):
         return self.pk + " for message: " + self.message.pk

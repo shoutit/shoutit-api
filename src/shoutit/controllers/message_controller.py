@@ -1,10 +1,12 @@
 from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
-from common.constants import MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT
+from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
+                              MESSAGE_ATTACHMENT_TYPE_MEDIA)
 from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
-
-from shoutit.models import MessageAttachment, Shout, Conversation, Message, MessageDelete, MessageRead, SharedLocation
+from common.utils import any_in
+from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation,
+                            Video)
 from shoutit.controllers import notifications_controller
 
 
@@ -98,6 +100,21 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
             ma_type = MESSAGE_ATTACHMENT_TYPE_LOCATION
             MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
                               type=ma_type).save()
+
+        if any_in(['images', 'videos'], attachment):
+            ma_type = MESSAGE_ATTACHMENT_TYPE_MEDIA
+            ma = MessageAttachment(type=ma_type, message=message, conversation=conversation,
+                                   images=attachment.get('images', []))
+            ma.save()
+            videos = attachment.get('videos', [])
+            for v in videos:
+                # todo: better handling
+                try:
+                    video = Video.objects.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
+                                                 id_on_provider=v['id_on_provider'], duration=v['duration'])
+                    ma.videos.add(video)
+                except:
+                    pass
 
     for to_user in conversation.contributors:
         if user != to_user:

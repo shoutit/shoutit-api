@@ -262,6 +262,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
                         "latitude": 12.345,
                         "longitude": 12.345
                     }
+                },
+                {
+                    "images": [], // list of image urls
+                    "videos": [], // list of {Video Object}s
                 }
             ]
         }

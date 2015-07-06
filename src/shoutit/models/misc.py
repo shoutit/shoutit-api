@@ -29,6 +29,7 @@ class PredefinedCity(UUIDModel, LocationMixin):
             .extra(select=distance).values('id', 'distance')
         cities = list(cities)
         cities.sort(key=lambda x: x['distance'])
+        # todo: remove duplicates
         ids = [c['id'] for c in cities if float(c['distance']) < dist_km][:max_cities]
         return PredefinedCity.objects.filter(id__in=ids)
 

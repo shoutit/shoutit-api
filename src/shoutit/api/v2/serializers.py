@@ -17,7 +17,8 @@ from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA)
+from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers.user_controller import update_profile_location
@@ -386,33 +387,32 @@ class ShoutSerializer(serializers.ModelSerializer):
             raise ValidationError({'category': ['Invalid category']})
 
     def to_internal_value(self, data):
+        # validate the id only when sharing the shout as message attachment
+        if isinstance(self.parent, MessageAttachmentSerializer):
+            shout_id = data.get('id')
+            if shout_id == '':
+                raise ValidationError({'id': ['This field can not be empty.']})
+            if shout_id:
+                try:
+                    uuid.UUID(shout_id)
+                    if not Shout.objects.filter(id=shout_id).exists():
+                        raise ValidationError({'id': ["shout with id '%s' does not exist" % shout_id]})
+                    return {'id': shout_id}
+                except (ValueError, TypeError):
+                    raise ValidationError({'id': ["'%s' is not a valid id." % shout_id]})
+            else:
+                raise ValidationError({'id': ["This field is required."]})
+
+        # todo: hack!
         if not data:
             data = {}
-        # todo: hack!
-        category = data.get('category')
-        if not category:
-            data['category'] = {'name': 'Other'}
-
+        try:
+            category = data.get('category')
+            if not category:
+                data['category'] = {'name': 'Other'}
+        except AttributeError:
+            pass
         ret = super(ShoutSerializer, self).to_internal_value(data)
-
-        # todo: better refactoring
-        # if creating new shout no need to validate the id, which will not be passed anyway
-        if not self.parent:
-            return ret
-
-        shout_id = data.get('id')
-        if shout_id == '':
-            raise ValidationError({'id': 'This field can not be empty.'})
-        if shout_id:
-            try:
-                uuid.UUID(shout_id)
-                if not Shout.objects.filter(id=shout_id).exists():
-                    raise ValidationError("shout with id '{}' does not exist".format(shout_id))
-                ret['id'] = shout_id
-            except (ValueError, TypeError):
-                raise ValidationError({'id': "'%s' is not a valid id." % shout_id})
-        else:
-            raise ValidationError({'id': "This field is required."})
         return ret
 
 
@@ -479,19 +479,26 @@ class SharedLocationSerializer(serializers.ModelSerializer):
 class MessageAttachmentSerializer(serializers.ModelSerializer):
     shout = ShoutSerializer(required=False)
     location = SharedLocationSerializer(required=False)
+    images = serializers.ListField(child=serializers.URLField(), required=False)
+    videos = VideoSerializer(many=True, required=False)
 
     class Meta:
         model = MessageAttachment
-        fields = ['shout', 'location']
+        fields = ['shout', 'location', 'images', 'videos']
 
     def to_representation(self, instance):
         ret = super(MessageAttachmentSerializer, self).to_representation(instance)
-
         if instance.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
             del ret['location']
+            del ret['images']
+            del ret['videos']
         if instance.type == MESSAGE_ATTACHMENT_TYPE_LOCATION:
             del ret['shout']
-
+            del ret['images']
+            del ret['videos']
+        if instance.type == MESSAGE_ATTACHMENT_TYPE_MEDIA:
+            del ret['location']
+            del ret['shout']
         return ret
 
 
@@ -530,23 +537,17 @@ class MessageSerializer(serializers.ModelSerializer):
                     validated_data['attachments']):
 
                 for attachment in validated_data['attachments']:
-                    if 'shout' not in attachment and 'location' not in attachment:
-                        errors[
-                            'attachments'] = "attachment should have either 'shout' or 'location'"
+                    if not any_in(['shout', 'location', 'images', 'videos'], attachment):
+                        errors['attachments'] = "attachment should have at least a 'shout', 'location', 'images' or 'videos'"
                         continue
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
                         elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
-                            errors['attachments'] = {
-                            'shout': "shout with id '%s' does not exist" % attachment['shout'][
-                                'id']}
+                            errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                            'latitude' not in attachment['location'] or 'longitude' not in
-                        attachment['location']):
-                        errors['attachments'] = {
-                        'shout': "location object should have 'latitude' and 'longitude'"}
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                        errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
 

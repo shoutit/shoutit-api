@@ -69,6 +69,10 @@ def date_unix(date):
     return int((date - datetime(1970, 1, 1)).total_seconds())
 
 
+def any_in(a, b):
+    return any(i in b for i in a)
+
+
 @deconstructible
 class AllowedUsernamesValidator(object):
     message = "'%s' can not be used as username, please choose something else."

@@ -398,6 +398,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                         "latitude": 12.345,
                         "longitude": 12.345
                     }
+                },
+                {
+                    "images": [], // list of image urls
+                    "videos": [], // list of {Video Object}s
                 }
             ]
         }
@@ -419,7 +423,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         ):
             raise ValidationError({'error': "You can only start a conversation with your listeners"})
 
-        serializer = MessageSerializer(data=request.data, partial=True, context={'request': request})
+        serializer = MessageSerializer(data=request.data, partial=False, context={'request': request})
         serializer.is_valid(raise_exception=True)
         text = serializer.validated_data['text']
         attachments = serializer.validated_data['attachments']
