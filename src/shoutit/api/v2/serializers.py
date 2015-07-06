@@ -388,7 +388,7 @@ class ShoutSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         # validate the id only when sharing the shout as message attachment
-        if isinstance(self.parent, MessageAttachmentSerializer):
+        if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
             shout_id = data.get('id')
             if shout_id == '':
                 raise ValidationError({'id': ['This field can not be empty.']})
