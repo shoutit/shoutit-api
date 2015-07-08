@@ -118,6 +118,7 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
     main_tag = TagSerializer(read_only=True)
 
     class Meta:
@@ -125,8 +126,14 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('name', 'main_tag')
 
     def to_internal_value(self, data):
-        # todo: check!
-        return data
+        super(CategorySerializer, self).to_internal_value(data)
+        return self.instance
+
+    def validate_name(self, value):
+        try:
+            self.instance = Category.objects.get(name=value)
+        except (Category.DoesNotExist, AttributeError):
+            raise ValidationError(["Category %s does not exist" % value])
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -357,8 +364,8 @@ class ShoutSerializer(serializers.ModelSerializer):
     location = LocationSerializer()
     title = serializers.CharField(source='item.name')
     text = serializers.CharField(min_length=10, max_length=1000)
-    price = serializers.FloatField(source='item.price')
-    currency = serializers.CharField(source='item.currency_code',
+    price = serializers.FloatField(source='item.price', allow_null=True)
+    currency = serializers.CharField(source='item.currency_code', allow_null=True,
                                      help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
@@ -376,15 +383,13 @@ class ShoutSerializer(serializers.ModelSerializer):
 
     def validate_currency(self, value):
         try:
+            if not value:
+                raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except Currency.DoesNotExist:
             raise ValidationError({'currency': ['Invalid currency']})
-
-    def validate_category(self, value):
-        try:
-            return Category.objects.get(name=value.get('name'))
-        except Category.DoesNotExist:
-            raise ValidationError({'category': ['Invalid category']})
+        except ValueError:
+            return None
 
     def to_internal_value(self, data):
         # validate the id only when sharing the shout as message attachment
@@ -412,6 +417,11 @@ class ShoutSerializer(serializers.ModelSerializer):
                 data['category'] = {'name': 'Other'}
         except AttributeError:
             pass
+        # optional price and currency
+        price_is_none = data['price'] is None
+        currency_is_none = data['currency'] is None
+        if price_is_none != currency_is_none:
+            raise ValidationError({'price': ["price and currency must be either both set or both null"]})
         ret = super(ShoutSerializer, self).to_internal_value(data)
         return ret
 

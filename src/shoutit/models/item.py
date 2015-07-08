@@ -6,10 +6,10 @@ from shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
-    name = models.CharField(max_length=512, default='', blank=True)
-    description = models.CharField(max_length=1000)
-    price = models.FloatField(default=0.0)
-    currency = models.ForeignKey('shoutit.Currency', related_name='Items')
+    name = models.CharField(max_length=500)
+    description = models.TextField(max_length=2000)
+    price = models.FloatField(default=0, null=True, blank=True)
+    currency = models.ForeignKey('shoutit.Currency', null=True, blank=True)
     state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)
     images = ArrayField(models.URLField(), null=True, blank=True)
     videos = models.ManyToManyField('shoutit.Video', blank=True)
@@ -32,7 +32,7 @@ class Item(UUIDModel):
 
     @property
     def currency_code(self):
-        return self.currency.code
+        return self.currency.code if self.currency else None
 
 
 class Currency(UUIDModel):
