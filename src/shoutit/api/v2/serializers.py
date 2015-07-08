@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 import uuid
 from django.contrib.auth import login
+from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from ipware.ip import get_ip
 from push_notifications.models import APNSDevice, GCMDevice
@@ -432,15 +433,23 @@ class ShoutDetailSerializer(ShoutSerializer):
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner.")
-    related_requests = ShoutSerializer(many=True, required=False)
-    related_offers = ShoutSerializer(many=True, required=False)
+    related_requests = ShoutSerializer(many=True, read_only=True)
+    related_offers = ShoutSerializer(many=True, read_only=True)
+    conversations = serializers.SerializerMethodField()
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers')
+        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
+
+    def get_conversations(self, shout):
+        user = self.root.context['request'].user
+        if isinstance(user, AnonymousUser):
+            return []
+        conversations = shout.conversations.filter(users=user)
+        return ConversationSerializer(conversations, many=True, context=self.root.context).data
 
     def to_representation(self, instance):
         ret = super(ShoutDetailSerializer, self).to_representation(instance)
