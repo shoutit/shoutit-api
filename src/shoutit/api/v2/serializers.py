@@ -892,7 +892,7 @@ class SMSCodeSerializer(serializers.Serializer):
         ret = super(SMSCodeSerializer, self).to_internal_value(data)
         sms_code = ret.get('sms_code').upper()
         try:
-            dbcl_conversation = DBCLConversation.objects.get(sms_code=sms_code)
+            dbcl_conversation = DBCLConversation.objects.get(sms_code__iexact=sms_code)
             self.instance = dbcl_conversation.to_user
         except DBCLConversation.DoesNotExist:
             raise ValidationError({'sms_code': ["Invalid sms_code"]})

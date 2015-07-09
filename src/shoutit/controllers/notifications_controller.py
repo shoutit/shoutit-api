@@ -166,7 +166,7 @@ def notify_db_user(db_user, from_user, message):
 
     ref = uuid.uuid4().hex
     in_email = ref + '@dbz-reply.com'
-    sms_code = ref[-6:].upper()
+    sms_code = ref[-6:]
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
                                     shout=message.conversation.about, ref=ref, sms_code=sms_code)
     form_data = {
@@ -222,7 +222,7 @@ def notify_dbz2_user(dbz2_user, from_user, message):
 
     ref = uuid.uuid4().hex
     in_email = ref + '@dbz-reply.com'
-    sms_code = ref[-6:].upper()
+    sms_code = ref[-6:]
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=dbz2_user.user,
                                     shout=message.conversation.about, ref=ref, sms_code=sms_code)
     form_data = {
