@@ -25,7 +25,7 @@ from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation)
 from shoutit.controllers import shout_controller, user_controller
 from shoutit.utils import location_from_google_geocode_response
 
@@ -883,6 +883,21 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
             self.instance = cf.user
         except ConfirmToken.DoesNotExist:
             raise ValidationError(['Reset token is invalid.'])
+
+
+class SMSCodeSerializer(serializers.Serializer):
+    sms_code = serializers.CharField(max_length=10, min_length=6)
+
+    def to_internal_value(self, data):
+        ret = super(SMSCodeSerializer, self).to_internal_value(data)
+        sms_code = ret.get('sms_code').upper()
+        try:
+            dbcl_conversation = DBCLConversation.objects.get(sms_code=sms_code)
+            self.instance = dbcl_conversation.to_user
+        except DBCLConversation.DoesNotExist:
+            raise ValidationError({'sms_code': ["Invalid sms_code"]})
+        return ret
+
 
 
 class PredefinedCitySerializer(serializers.ModelSerializer):

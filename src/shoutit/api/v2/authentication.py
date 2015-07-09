@@ -21,7 +21,7 @@ from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
 from shoutit.api.v2.serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
-    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer)
+    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer)
 from shoutit.models import ConfirmToken
 from shoutit.utils import track, alias
 
@@ -58,7 +58,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
     permission_classes = ()
 
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials',
-                   'facebook_access_token', 'gplus_code', 'shoutit_signup', 'shoutit_signin']
+                   'facebook_access_token', 'gplus_code', 'shoutit_signup', 'shoutit_signin',
+                   'sms_code']
 
     def error_response(self, error, content_type='application/json', status=400, **kwargs):
         """
@@ -212,6 +213,32 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
 
         return self.access_token_response(at)
 
+    def get_sms_code_grant(self, request, data, client):
+        serializer = SMSCodeSerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return serializer.instance
+
+    def sms_code(self, request, data, client):
+        """
+        Handle ``grant_type=sms_code`` requests.
+        """
+        user = self.get_sms_code_grant(request, data, client)
+        return self.prepare_access_token_response(request, client, user)
+
+    def prepare_access_token_response(self, request, client, user):
+        self.request.user = user
+        scope = provider_scope.to_int('read', 'write')
+
+        if provider_constants.SINGLE_ACCESS_TOKEN:
+            at = self.get_access_token(request, user, scope, client)
+        else:
+            at = self.create_access_token(request, user, scope, client)
+            # Public clients don't get refresh tokens
+            if client.client_type == provider_constants.CONFIDENTIAL:
+                self.create_refresh_token(request, user, scope, at, client)
+
+        return self.access_token_response(at)
+
     def get_handler(self, grant_type):
         """
         Return a function or method that is capable handling the ``grant_type``
@@ -234,6 +261,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return self.shoutit_signup
         elif grant_type == 'shoutit_signin':
             return self.shoutit_signin
+        elif grant_type == 'sms_code':
+            return self.sms_code
         return None
 
     # override get, not to be documented or listed in urls.
@@ -313,6 +342,16 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
                 }
             },
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+        }
+        </code></pre>
+
+        ###Signin with SMS Code
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "sms_code",
+            "sms_code": "07c59e",
         }
         </code></pre>
 

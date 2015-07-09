@@ -91,3 +91,4 @@ class DBCLConversation(UUIDModel):
     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
     shout = models.ForeignKey('shoutit.Shout')
     ref = models.CharField(max_length=100, null=True, blank=True)
+    sms_code = models.CharField(max_length=10, null=True, blank=True)
