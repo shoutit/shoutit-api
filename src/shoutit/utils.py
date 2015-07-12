@@ -14,7 +14,7 @@ from shoutit import settings
 import mailchimp
 from mixpanel import Mixpanel
 import logging
-from IP2Location import IP2Location
+from common.IP2Location import IP2Location
 
 
 # Shoutit loggers
