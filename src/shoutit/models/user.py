@@ -44,6 +44,7 @@ class Profile(AbstractProfile):
     gender = models.CharField(max_length=10, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     bio = models.TextField(blank=True, max_length=512, default='New Shouter!')
+    mobile = models.CharField(blank=True, max_length=20, default='')
 
     _stream = GenericRelation('shoutit.Stream', related_query_name='profile')
 

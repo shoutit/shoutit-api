@@ -156,14 +156,18 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
     return user
 
 
-def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link=''):
+def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link='', mobile=''):
+    profile_fields = {}
     location = {
         'country': country,
         'city': city,
         'latitude': float(lat),
         'longitude': float(lng)
     }
-    user = signup_user(email, None, profile_fields=location)
+    profile_fields.update(location)
+    if mobile:
+        profile_fields.update({'mobile': mobile})
+    user = signup_user(email, None, profile_fields=profile_fields)
     if dbcl_type == 'cl':
         dbcl_user = CLUser(user=user, cl_email=email)
     elif dbcl_type == 'dbz':

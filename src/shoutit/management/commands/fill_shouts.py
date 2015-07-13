@@ -53,7 +53,8 @@ class Command(BaseCommand):
             type = random.choice(['offer', 'request'])
             category = random.choice(categories)
             city = random.choice(cities)
-            tags = random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
+            tags = ['filling-shout'] + random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
+            self.stdout.write(str(tags))
             images = [
                 "https://shout-image.static.shoutit.com/opo0928a.jpg",
                 "https://shout-image.static.shoutit.com/heic1501a.jpg",
@@ -63,7 +64,7 @@ class Command(BaseCommand):
             shout_data = {
                 "type": type,
                 "title": "{0} {1} in {2} at {3:0.0f}".format(category.name, type, city.city, time.time()),
-                "text": "".format(" ".join(tags)),
+                "text": " ".join(tags),
                 "price": random.randint(0, 1000),
                 "currency": "EUR",
                 "images": images,
