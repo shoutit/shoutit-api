@@ -172,7 +172,7 @@ class MiscViewSet(viewsets.ViewSet):
                 raise Exception('Unknown ad source.')
         except Exception, e:
             msg = "User Creation Error."
-            error_logger.warn(msg, extra={'detail': str(e)})
+            error_logger.warn(msg, extra={'detail': str(e), 'shout': shout})
             return Response({'error': msg, 'detail': str(e)})
 
         # shout creation
@@ -190,7 +190,7 @@ class MiscViewSet(viewsets.ViewSet):
                 'country': shout['country'],
                 'city': shout['city']
             }
-            shout = shout_controller.create_shout(
+            shout_controller.create_shout(
                 user=user, shout_type=shout_type,
                 title=title, text=text, price=price, currency=currency, location=location,
                 category=category, tags=tags, images=shout['images'],
@@ -198,10 +198,10 @@ class MiscViewSet(viewsets.ViewSet):
             )
         except Exception, e:
             msg = "Shout Creation Error. Deleting user."
-            extra = {'detail': str(e), 'deleted_user': str(user)}
+            extra = {'detail': str(e), 'deleted_user': str(user), 'shout': shout}
             error_logger.warn(msg, extra=extra)
             user.delete()
-            return Response({'error': msg})
+            return Response({'error': msg, 'detail': str(e)})
 
         # good bye!
         return Response({'success': True})

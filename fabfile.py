@@ -4,6 +4,7 @@ from fabric.api import *
 from fabric.contrib.console import confirm
 
 env.user = 'root'
+env.use_ssh_config = True
 env.roledefs = {
     'local': ['localhost'],
     'dev': ['root@dev.api.shoutit.com'],
