@@ -3,9 +3,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from common.constants import (Stream_TYPE_PROFILE, Stream_TYPE_TAG, TOKEN_TYPE_EMAIL)
-from rest_framework.authtoken.models import Token
-from shoutit.models import ConfirmToken
+import phonenumbers
+from common.constants import (Stream_TYPE_PROFILE, Stream_TYPE_TAG)
 from shoutit.models.base import UUIDModel, LocationMixin
 from shoutit.models.stream import StreamMixin, Listen
 from shoutit.utils import debug_logger
@@ -51,7 +50,7 @@ class Profile(AbstractProfile):
     def __unicode__(self):
         return "{}".format(self.user)
 
-    def update(self, gender=None, birthday=None, bio=None):
+    def update(self, gender=None, birthday=None, bio=None, mobile=None):
         update_fields = []
         if gender:
             self.gender = gender
@@ -62,7 +61,20 @@ class Profile(AbstractProfile):
         if bio:
             self.birthday = bio
             update_fields.append('bio')
+        if mobile:
+            self.mobile = mobile
+            update_fields.append('mobile')
         self.save(update_fields=update_fields)
+
+    def clean(self):
+        try:
+            p = phonenumbers.parse(self.mobile, self.country)
+            if phonenumbers.is_valid_number(p) and phonenumbers.number_type(p) != phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE:
+                self.mobile = phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)
+            else:
+                raise ValueError()
+        except (phonenumbers.NumberParseException, ValueError):
+            self.mobile = ''
 
 
 @receiver(post_save, sender='shoutit.Profile')

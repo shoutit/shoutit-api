@@ -148,8 +148,10 @@ class BusinessConfirmationState(Constant):
 
 BUSINESS_CONFIRMATION_STATUS_WAITING = BusinessConfirmationState("Waiting")
 BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT = BusinessConfirmationState("Waiting Payment")
-BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION = BusinessConfirmationState("Waiting Payment Confirmation")
-BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION = BusinessConfirmationState("Waiting Confirmation")
+BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION = BusinessConfirmationState(
+    "Waiting Payment Confirmation")
+BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION = BusinessConfirmationState(
+    "Waiting Confirmation")
 BUSINESS_CONFIRMATION_STATUS_ACCEPTED = BusinessConfirmationState("Confirmed")
 BUSINESS_CONFIRMATION_STATUS_REJECTED = BusinessConfirmationState("Rejected")
 
@@ -170,12 +172,15 @@ BUSINESS_SOURCE_TYPE_FOURSQUARE = BusinessSourceType('Foursquare')
 
 class UserType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
+
 USER_TYPE_PROFILE = UserType('Profile')
 USER_TYPE_PAGE = UserType('Page')
 
 
 class UserState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+
 
 # USER_STATE_INACTIVE = UserState("Inactive")
 USER_STATE_ACTIVE = UserState("Active")

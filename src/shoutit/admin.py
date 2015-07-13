@@ -119,7 +119,7 @@ class CustomUserAdmin(UserAdmin, LocationMixin):
 # Profile
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'country', 'city', 'gender', 'image', 'created_at')
+    list_display = ('id', '_user', 'country', 'city', 'gender', 'image', 'mobile', 'created_at')
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
     readonly_fields = ('video', '_user')
     exclude = ('user',)

@@ -85,6 +85,7 @@ class AllowedUsernamesValidator(object):
     def __eq__(self, other):
         return True
 
+
 validate_allowed_usernames = AllowedUsernamesValidator()
 
 

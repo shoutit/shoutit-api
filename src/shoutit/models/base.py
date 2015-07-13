@@ -355,7 +355,7 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
 
         # create profile
         profile_fields = getattr(instance, 'profile_fields', {})
-        Profile.objects.create(user=instance, **profile_fields)
+        Profile(user=instance, **profile_fields).save()
 
         # give appropriate permissions
         permissions = INITIAL_USER_PERMISSIONS
