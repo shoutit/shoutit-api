@@ -12,6 +12,8 @@ from django.conf import settings
 class DBCLUser(UUIDModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True,
                                 db_index=True)
+    converted = models.BooleanField(default=False)
+    converted_at = models.DateTimeField(verbose_name="Conversion time", null=True)
 
     class Meta(UUIDModel.Meta):
         abstract = True
@@ -85,6 +87,13 @@ def dbz2_user(self):
 User.add_to_class('dbz2_user', dbz2_user)
 
 
+@property
+def sss_user(self):
+    # todo: find more efficient way
+    return self.cl_user or self.db_user or self.dbz2_user
+User.add_to_class('sss_user', sss_user)
+
+
 class DBCLConversation(UUIDModel):
     in_email = models.EmailField(max_length=254, null=True, blank=True)
     from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
@@ -95,4 +104,6 @@ class DBCLConversation(UUIDModel):
 
     def clean(self):
         if isinstance(self.sms_code, basestring):
+            if self._state.adding:
+                self.sms_code = 'Z' + self.sms_code
             self.sms_code = self.sms_code.upper()

@@ -8,16 +8,14 @@ from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from django_rq import job
-from pusher import Pusher
 import requests
 from rest_framework.request import Request
-from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE,
-                              NOTIFICATION_TYPE_EXP_POSTED, NOTIFICATION_TYPE_EXP_SHARED,
-                              NOTIFICATION_TYPE_COMMENT)
+from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED,
+                              NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT)
 from shoutit.api.versioning import ShoutitNamespaceVersioning
 from shoutit.controllers import email_controller
-from shoutit.models import Notification, DBCLConversation
-from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger
+from shoutit.models import Notification, DBCLConversation, Message, User
+from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, shoutit_twilio
 from shoutit_pusher.models import PusherChannel
 from shoutit_pusher.utils import pusher
 
@@ -36,6 +34,20 @@ def mark_notifications_as_read_by_ids(notification_ids):
 
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
+    # create notification object
+    Notification(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object).save()
+    # send appropriate notification
+    if check_sss(user, notification_type, attached_object, from_user):
+        send_sss(user, attached_object, notification_type, from_user)
+    else:
+        attached_object_dict = serialize_attached_object(attached_object, user, request)
+        if check_pusher(user):
+            send_pusher(user, notification_type, attached_object_dict)
+        elif check_push():
+            send_push.delay(user, notification_type, attached_object_dict)
+
+
+def serialize_attached_object(attached_object, user, request):
     from shoutit.api.v2 import serializers
     if not request:
         # todo: create general fake request
@@ -45,56 +57,40 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, r
         request = Request(django_request)
         request.version = 'v2'
         request.versioning_scheme = ShoutitNamespaceVersioning()
-
     # set the request.user to the notified user as if he was asking for it.
     request.user = user
 
-    notification = Notification(ToUser=user, type=notification_type, FromUser=from_user,
-                                attached_object=attached_object)
-    notification.save()
-
-    if notification_type == NOTIFICATION_TYPE_LISTEN:
-        message = _("You got a new listen")
-        attached_object_dict = serializers.UserSerializer(attached_object,
-                                                          context={'request': request}).data
-    elif notification_type == NOTIFICATION_TYPE_MESSAGE:
-        message = _("You got a new message")
-        attached_object_dict = serializers.MessageSerializer(attached_object,
-                                                             context={'request': request}).data
+    if isinstance(attached_object, User):
+        attached_object_dict = serializers.UserSerializer(attached_object, context={'request': request}).data
+    elif isinstance(attached_object, Message):
+        attached_object_dict = serializers.MessageSerializer(attached_object, context={'request': request}).data
     else:
-        message = None
         attached_object_dict = {}
-
-    if check_pusher(user, notification_type, attached_object):
-        send_pusher(user, notification_type, attached_object_dict)
-    elif not settings.DEBUG or settings.FORCE_PUSH:
-        send_push(user, attached_object_dict, message, notification_type)
-
-    if notification_type == NOTIFICATION_TYPE_MESSAGE and from_user \
-            and not getattr(attached_object.conversation.attached_object, 'is_disabled', False) \
-            and (not settings.DEBUG or settings.FORCE_SSS_NOTIFY) and attached_object.text:
-        send_sss(user, attached_object, notification_type, from_user)
+    return attached_object_dict
 
 
-def check_pusher(user, notification_type, attached_object):
+def check_pusher(user):
     return PusherChannel.objects.filter(name='presence-u-%s' % user.pk).exists()
-    # todo: check if we really want to send new messages on chat channel
-    # if notification_type == NOTIFICATION_TYPE_MESSAGE:
-    #     return PusherChannel.objects.filter(name='presence-c-%s' % attached_object.conversation.pk).exists()
-    # else:
-    #     return PusherChannel.objects.filter(name='presence-u-%s' % user.pk).exists()
 
 
 def send_pusher(user, notification_type, attached_object_dict):
     pusher.trigger('presence-u-%s' % user.pk, str(notification_type), attached_object_dict)
-    # todo: check if we really want to send new messages on chat channel
-    # if notification_type == NOTIFICATION_TYPE_MESSAGE:
-    #     pusher.trigger('presence-c-%s' % attached_object_dict.get('conversation_id'), 'new_message', attached_object_dict)
-    # elif notification_type == NOTIFICATION_TYPE_LISTEN:
-    #     pusher.trigger('presence-u-%s' % user.pk, 'new_listen')
 
 
-def send_push(user, attached_object_dict, message, notification_type):
+def check_push():
+    return not settings.DEBUG or settings.FORCE_PUSH
+
+
+@job(settings.RQ_QUEUE)
+def send_push(user, notification_type, attached_object_dict):
+
+    if notification_type == NOTIFICATION_TYPE_LISTEN:
+        message = _("You got a new listen")
+    elif notification_type == NOTIFICATION_TYPE_MESSAGE:
+        message = _("You got a new message")
+    else:
+        message = None
+
     if user.apns_device:
         try:
             user.apns_device.send_message(
@@ -123,6 +119,16 @@ def send_push(user, attached_object_dict, message, notification_type):
             })
 
 
+def check_sss(user, notification_type, attached_object, from_user):
+    if not user.sss_user or user.sss_user.converted:
+        return False
+    is_message = notification_type == NOTIFICATION_TYPE_MESSAGE
+    disabled_shout = getattr(attached_object.conversation.attached_object, 'is_disabled', False)
+    text = getattr(attached_object, 'text')
+    force_sss = not settings.DEBUG or settings.FORCE_SSS_NOTIFY
+    return is_message and not disabled_shout and from_user and text and force_sss
+
+
 def send_sss(user, attached_object, notification_type, from_user):
     if user.db_user:
         if not user.email:
@@ -132,9 +138,29 @@ def send_sss(user, attached_object, notification_type, from_user):
             # todo: !
             # email_controller.email_db_user(user.db_user, from_user, attached_object)
     elif user.dbz2_user:
-        notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
+        if user.profile.mobile:
+            sms_sss_user.delay(user, from_user, attached_object)
+        else:
+            notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
     elif user.cl_user:
         notify_cl_user2.delay(user.cl_user, from_user, attached_object)
+
+
+@job(settings.RQ_QUEUE)
+def sms_sss_user(user, from_user, message):
+    # create dbcl conversation
+    shout = message.conversation.about
+    ref = uuid.uuid4().hex
+    sms_code = ref[-6:]
+    dbcl_conversation = DBCLConversation(from_user=from_user, to_user=user, shout=shout, ref=ref, sms_code=sms_code)
+    dbcl_conversation.save()
+
+    # send the sms
+    from_ = settings.TWILIO_FROM
+    to = user.profile.mobile
+    body = "hi there! check your ad on shoutit.com/" + dbcl_conversation.sms_code
+
+    shoutit_twilio.messages.create(from_=from_, to=to, body=body)
 
 
 def get_dbz_base_url(db_link):

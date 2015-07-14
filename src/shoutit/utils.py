@@ -13,6 +13,7 @@ import requests
 from shoutit import settings
 import mailchimp
 from mixpanel import Mixpanel
+from twilio.rest import TwilioRestClient
 import logging
 from common.IP2Location import IP2Location
 
@@ -27,6 +28,9 @@ shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN)
 
 # IP2Location instant
 ip2location = IP2Location(filename=settings.IP2LOCATION_DB_BIN)
+
+# Shoutit twilio
+shoutit_twilio = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 
 def generate_password():
