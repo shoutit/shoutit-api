@@ -13,7 +13,7 @@ class DBCLUser(UUIDModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True,
                                 db_index=True)
     converted = models.BooleanField(default=False)
-    converted_at = models.DateTimeField(verbose_name="Conversion time", null=True)
+    converted_at = models.DateTimeField(verbose_name="Conversion time", null=True, blank=True)
 
     class Meta(UUIDModel.Meta):
         abstract = True
