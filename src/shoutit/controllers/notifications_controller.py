@@ -165,7 +165,7 @@ def sms_sss_user(user, from_user, message):
     to = user.profile.mobile
     body = "someone is interested in your '%s...'\nreply on\nshoutit.com/%s"
     body %= (shout.item.name[:36], dbcl_conversation.sms_code)
-    shoutit_twilio.messages.create(from_=from_, to='+971561757666', body=body)
+    shoutit_twilio.messages.create(from_=from_, to='+971508702566', body=body)
 
 
 def get_dbz_base_url(db_link):
