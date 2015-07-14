@@ -36,6 +36,13 @@ def user_link(user):
     return '<a href="%s">%s</a>' % (user_url, user.name_username)
 
 
+def item_link(item):
+    if not item:
+        return 'no item'
+    item_url = reverse('admin:shoutit_item_change', args=(item.pk,))
+    return '<a href="%s">%s</a>' % (item_url, item.name)
+
+
 def reply_link(conversation, user):
     message_add_url = reverse('admin:shoutit_message_add')
     params = '?conversation=%s&user=%s' % (conversation.pk, user.pk)

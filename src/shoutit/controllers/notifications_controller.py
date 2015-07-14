@@ -148,8 +148,13 @@ def send_sss(user, attached_object, notification_type, from_user):
 
 @job(settings.RQ_QUEUE)
 def sms_sss_user(user, from_user, message):
-    # create dbcl conversation
     shout = message.conversation.about
+
+    # check for existing dbcl conversation. do not send new sms if any found.
+    if DBCLConversation.objects.filter(from_user=from_user, to_user=user, shout=shout).exists():
+        return
+
+    # create dbcl conversation
     ref = uuid.uuid4().hex
     sms_code = ref[-6:]
     dbcl_conversation = DBCLConversation(from_user=from_user, to_user=user, shout=shout, ref=ref, sms_code=sms_code)
@@ -158,9 +163,9 @@ def sms_sss_user(user, from_user, message):
     # send the sms
     from_ = settings.TWILIO_FROM
     to = user.profile.mobile
-    body = "hi there! check your ad on shoutit.com/" + dbcl_conversation.sms_code
-
-    shoutit_twilio.messages.create(from_=from_, to=to, body=body)
+    body = "someone is interested in your '%s...'\nreply on\nshoutit.com/%s"
+    body %= (shout.item.name[:36], dbcl_conversation.sms_code)
+    shoutit_twilio.messages.create(from_=from_, to='+971561757666', body=body)
 
 
 def get_dbz_base_url(db_link):

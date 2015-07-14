@@ -12,7 +12,7 @@ from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, \
     APIClientFilter
-from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin
+from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link
 from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 
 from shoutit.models import (
@@ -27,14 +27,20 @@ from django.utils.translation import ugettext_lazy as _
 # Shout
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
-    list_display = (
-        'id', '_user', 'type', 'category', 'item', '_location', 'is_sss', 'is_disabled',
-        'priority', 'date_published')
+    list_display = ('id', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled', 'priority',
+                    'date_published')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city',
                    ('created_at', ShoutitDateFieldListFilter))
     raw_id_fields = ('user',)
-    readonly_fields = ('_user', 'item')
+    exclude = ('item',)
+    readonly_fields = ('_user', '_item')
     ordering = ('-date_published',)
+
+    def _item(self, obj):
+        return item_link(obj.item)
+    _item.allow_tags = True
+    _item.short_description = 'Item'
+
 
 
 # Post
@@ -345,9 +351,10 @@ class CLUserAdmin(admin.ModelAdmin, UserLinkMixin):
     readonly_fields = ('_user',)
     exclude = ('user',)
 
+
 @admin.register(DBCLConversation)
 class DBCLConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'in_email', '_from_user', '_to_user', 'shout', 'ref', 'created_at')
+    list_display = ('id', 'in_email', '_from_user', '_to_user', 'shout', 'ref', 'sms_code', 'created_at')
     ordering = ('-created_at',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
     exclude = ('from_user', 'to_user')
