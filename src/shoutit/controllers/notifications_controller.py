@@ -138,10 +138,10 @@ def send_sss(user, attached_object, notification_type, from_user):
             # todo: !
             # email_controller.email_db_user(user.db_user, from_user, attached_object)
     elif user.dbz2_user:
-        if user.profile.mobile:
-            sms_sss_user.delay(user, from_user, attached_object)
-        else:
-            notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
+        # if user.profile.mobile:
+        #     sms_sss_user.delay(user, from_user, attached_object)
+        # else:
+        notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
     elif user.cl_user:
         notify_cl_user2.delay(user.cl_user, from_user, attached_object)
 
@@ -165,7 +165,7 @@ def sms_sss_user(user, from_user, message):
     to = user.profile.mobile
     body = "someone is interested in your '%s...'\nreply on\nshoutit.com/%s"
     body %= (shout.item.name[:36], dbcl_conversation.sms_code)
-    shoutit_twilio.messages.create(from_=from_, to='+971508702566', body=body)
+    shoutit_twilio.messages.create(from_=from_, to=to, body=body)
 
 
 def get_dbz_base_url(db_link):
