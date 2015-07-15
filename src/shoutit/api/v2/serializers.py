@@ -582,8 +582,11 @@ class MessageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super(MessageSerializer, self).to_representation(instance)
         request = self.root.context.get('request')
-        if request and request.method == 'POST' and request.data.get("client_id"):
-            ret['client_id'] = request.data.get('client_id')
+        if request and request.method == 'POST':
+            data = getattr(request, 'data', {})
+            client_id = data.get('client_id')
+            if client_id:
+                ret['client_id'] = request.data.get('client_id')
         return ret
 
 
