@@ -489,6 +489,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                                                 images=images, videos=videos, location=location)
         return shout
 
+
 class SharedLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SharedLocation
@@ -577,6 +578,13 @@ class MessageSerializer(serializers.ModelSerializer):
             raise ValidationError(errors)
 
         return validated_data
+
+    def to_representation(self, instance):
+        ret = super(MessageSerializer, self).to_representation(instance)
+        request = self.root.context.get('request')
+        if request and request.method == 'POST' and request.data.get("client_id"):
+            ret['client_id'] = request.data.get('client_id')
+        return ret
 
 
 class ConversationSerializer(serializers.ModelSerializer):
