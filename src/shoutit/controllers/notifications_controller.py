@@ -138,10 +138,10 @@ def send_sss(user, attached_object, notification_type, from_user):
             # todo: !
             # email_controller.email_db_user(user.db_user, from_user, attached_object)
     elif user.dbz2_user:
-        # if user.profile.mobile:
-        #     sms_sss_user.delay(user, from_user, attached_object)
-        # else:
-        notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
+        if user.profile.mobile:
+            sms_sss_user.delay(user, from_user, attached_object)
+        else:
+            notify_dbz2_user.delay(user.dbz2_user, from_user, attached_object)
     elif user.cl_user:
         notify_cl_user2.delay(user.cl_user, from_user, attached_object)
 
