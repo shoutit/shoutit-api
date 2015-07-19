@@ -3,11 +3,10 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import phonenumbers
 from common.constants import (Stream_TYPE_PROFILE, Stream_TYPE_TAG)
 from shoutit.models.base import UUIDModel, LocationMixin
 from shoutit.models.stream import StreamMixin, Listen
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, correct_mobile
 from shoutit.settings import AUTH_USER_MODEL
 
 
@@ -67,14 +66,7 @@ class Profile(AbstractProfile):
         self.save(update_fields=update_fields)
 
     def clean(self):
-        try:
-            p = phonenumbers.parse(self.mobile, self.country)
-            if phonenumbers.is_valid_number(p) and phonenumbers.number_type(p) != phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE:
-                self.mobile = phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)
-            else:
-                raise ValueError()
-        except (phonenumbers.NumberParseException, ValueError):
-            self.mobile = ''
+        self.mobile = correct_mobile(self.mobile, self.country)
 
 
 @receiver(post_save, sender='shoutit.Profile')

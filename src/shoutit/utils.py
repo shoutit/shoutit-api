@@ -9,6 +9,7 @@ import boto
 from django.core.mail import get_connection
 from django.http import HttpResponse
 from django_rq import job
+import phonenumbers
 import requests
 from shoutit import settings
 import mailchimp
@@ -182,6 +183,7 @@ def location_from_latlng(latlng):
     except (IndexError, KeyError, ValueError):
         return {'error': "Malformed Google geocode response"}
 
+
 def location_from_google_geocode_response(response):
     locality = ''
     postal_town = ''
@@ -224,3 +226,17 @@ def location_from_google_geocode_response(response):
     }
     return location
 
+
+def correct_mobile(mobile, country):
+    try:
+        country = country.upper()
+        if country in ['KW', 'OM', 'BH', 'QA'] and not mobile.startswith('00') and mobile.startswith('0'):
+            mobile = mobile[1:]
+        p = phonenumbers.parse(mobile, country)
+        if phonenumbers.is_valid_number(p) and phonenumbers.number_type(p) != phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE:
+            mobile = phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)
+        else:
+            raise ValueError()
+    except (phonenumbers.NumberParseException, ValueError):
+        mobile = ''
+    return mobile
