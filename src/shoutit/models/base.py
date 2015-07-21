@@ -18,6 +18,7 @@ from common.utils import date_unix, AllowedUsernamesValidator
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE,
                               UserType, COUNTRY_ISO)
 from shoutit.controllers import email_controller
+from shoutit.utils import generate_username
 
 
 class UUIDModel(models.Model):
@@ -126,12 +127,8 @@ class ShoutitUserManager(UserManager):
         """
         profile_fields = extra_fields.pop('profile_fields')
         now = timezone.now()
-        if not username:
-            raise ValueError('The given username must be set')
         email = self.normalize_email(email)
-        user = self.model(username=username, email=email,
-                          is_staff=is_staff, is_active=True,
-                          is_superuser=is_superuser,
+        user = self.model(username=username, email=email, is_staff=is_staff, is_active=True, is_superuser=is_superuser,
                           date_joined=now, **extra_fields)
         user.set_password(password)
         user.profile_fields = profile_fields
@@ -147,7 +144,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     Username, password and email are required. Other fields are optional.
     """
     username = models.CharField(
-        _('username'), max_length=30, unique=True, help_text=_(
+        _('username'), max_length=30, unique=True, blank=True, help_text=_(
             'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
         validators=[
             validators.RegexValidator(
@@ -332,6 +329,23 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     def clean(self):
         self.email = self.email.lower()
+        if self._state.adding:
+            self.first_name = self.first_name[:30]
+            self.last_name = self.last_name[:30]
+            if not self.username and self.first_name and self.last_name:
+                self.username = ("%s.%s" % (self.first_name.lower(), self.last_name.lower()))[:30]
+            if not self.username:
+                self.username = generate_username()
+            while len(self.username) < 2 or User.objects.filter(username=self.username).exists():
+                self.username = generate_username()
+            if len(self.first_name) < 2:
+                self.first_name = ''
+            if len(self.last_name) < 1:
+                self.last_name = ''
+            if not self.first_name:
+                self.first_name = 'user'
+            if not self.last_name:
+                self.last_name = self.username
 
     @property
     def is_password_set(self):
