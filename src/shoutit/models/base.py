@@ -332,8 +332,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if self._state.adding:
             self.first_name = self.first_name[:30]
             self.last_name = self.last_name[:30]
-            if not self.username and self.first_name and self.last_name:
-                self.username = ("%s.%s" % (self.first_name.lower(), self.last_name.lower()))[:30]
+            # if not self.username and self.first_name and self.last_name:
+            #     self.username = ("%s.%s" % (self.first_name.lower(), self.last_name.lower()))[:30]
             if not self.username:
                 self.username = generate_username()
             while len(self.username) < 2 or User.objects.filter(username=self.username).exists():
