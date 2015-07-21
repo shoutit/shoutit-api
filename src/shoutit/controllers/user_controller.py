@@ -13,8 +13,28 @@ from shoutit.utils import generate_username, debug_logger, error_logger, set_pro
 
 def signup_user(email=None, password=None, first_name='', last_name='', username=None,
                 profile_fields=None, **extra_user_fields):
+    # email
     if email and User.objects.filter(email=email.lower()).exists():
         raise DRFValidationError({'email': "User with same email exists."})
+
+    # first, last and username
+    if not username:
+        username = generate_username()
+    while len(username) < 2 or User.objects.filter(username=username).exists():
+        username = generate_username()
+    if len(first_name) < 2:
+        first_name = ''
+    if len(last_name) < 1:
+        last_name = ''
+    if not first_name:
+        first_name = 'user'
+    if not last_name:
+        last_name = username
+    username = username[:30]
+    first_name = first_name[:30]
+    last_name = last_name[:30]
+
+    # profile fields
     profile_fields = profile_fields or {}
     extra_user_fields.update({'profile_fields': profile_fields})
     user = User.objects.create_user(username=username, email=email, password=password,
