@@ -15,17 +15,7 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
                 profile_fields=None, **extra_user_fields):
     if email and User.objects.filter(email=email.lower()).exists():
         raise DRFValidationError({'email': "User with same email exists."})
-    username = username or generate_username()
-    while len(username) < 2 and User.objects.filter(username=username).exists():
-        username = generate_username()
-    if len(first_name) < 2:
-        first_name = ''
-    if len(last_name) < 1:
-        last_name = ''
-    if not first_name:
-        first_name = 'user'
-    if not last_name:
-        last_name = username
+    profile_fields = profile_fields or {}
     extra_user_fields.update({'profile_fields': profile_fields})
     user = User.objects.create_user(username=username, email=email, password=password,
                                     first_name=first_name, last_name=last_name, **extra_user_fields)

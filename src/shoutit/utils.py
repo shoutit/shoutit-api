@@ -43,7 +43,7 @@ def random_uuid_str():
 
 
 def generate_username():
-    return str(random.randint(1000000000, 1999999999))
+    return str(random.randint(10000000000, 19999999999))
 
 
 def base64_url_decode(inp):
