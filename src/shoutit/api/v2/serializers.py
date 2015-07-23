@@ -25,7 +25,7 @@ from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
 from shoutit.controllers import shout_controller, user_controller
 from shoutit.utils import location_from_google_geocode_response
 
@@ -910,8 +910,28 @@ class SMSCodeSerializer(serializers.Serializer):
         return ret
 
 
-
 class PredefinedCitySerializer(serializers.ModelSerializer):
     class Meta:
         model = PredefinedCity
         fields = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')
+
+
+class SMSInvitationSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    message = serializers.CharField(max_length=1000, required=False)
+    title = serializers.CharField(max_length=1000, required=False, write_only=True)
+
+    class Meta:
+        model = SMSInvitation
+        fields = ('id', 'user', 'message', 'title', 'mobile', 'status', 'country')
+
+    def to_internal_value(self, data):
+        ret = super(SMSInvitationSerializer, self).to_internal_value(data)
+        title = ret.get('title', "")
+        message = ret.get('message', "")
+        if not message and title:
+            message = title
+        if message:
+            ret['message'] = message[:160]
+        ret.pop('title', None)
+        return ret

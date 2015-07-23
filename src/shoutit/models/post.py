@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
-from elasticsearch import RequestError
+from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean
 
 from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST,
@@ -14,6 +14,7 @@ from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST
 from common.utils import date_unix
 from shoutit.models import Tag
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, LocationMixin
+from shoutit.utils import error_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -259,6 +260,8 @@ try:
     ShoutIndex.init()
 except RequestError:
     pass
+except ConnectionTimeout:
+    error_logger.warn("ES Server is down.")
 
 
 class Event(Post, AttachedObjectMixin):

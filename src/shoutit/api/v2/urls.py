@@ -8,7 +8,8 @@ from django.conf.urls import url, include
 from rest_framework import routers
 
 from shoutit.api.v2.authentication import AccessTokenView, ShoutitAuthViewSet
-from shoutit.api.v2.views import user_views, misc_views, message_views, shout_views, notification_views, tag_views
+from shoutit.api.v2.views import (user_views, misc_views, message_views, shout_views, notification_views, tag_views,
+                                  sms_views)
 from shoutit_pusher.views import ShoutitPusherViewSet
 
 
@@ -24,6 +25,7 @@ router.register('conversations', message_views.ConversationViewSet, 'conversatio
 router.register('messages', message_views.MessageViewSet, 'message')
 router.register('notifications', notification_views.NotificationViewSet, 'notification')
 router.register(r'misc', misc_views.MiscViewSet, 'misc')
+router.register(r'sms', sms_views.SMSViewSet, 'sms')
 router.register(r'auth', ShoutitAuthViewSet, 'shoutit_auth')
 router.register(r'pusher', ShoutitPusherViewSet, 'pusher')
 

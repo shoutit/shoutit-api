@@ -379,6 +379,16 @@ SUBSCRIPTION_ACTIVE = SubscriptionStatus('Active')
 SUBSCRIPTION_CANCELED = SubscriptionStatus('Canceled')
 SUBSCRIPTION_EXPIRED = SubscriptionStatus('Expired')
 
+
+class SMSInvitationStatus(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+SMS_INVITATION_ADDED = SMSInvitationStatus('added')
+SMS_INVITATION_QUEUED = SMSInvitationStatus('queued')
+SMS_INVITATION_SENT = SMSInvitationStatus('sent')
+SMS_INVITATION_DELIVERED = SMSInvitationStatus('delivered')
+
 COUNTRY_ISO = {
     "AF": "Afghanistan",
     "AX": "Aland Islands",

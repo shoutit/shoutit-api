@@ -3,7 +3,7 @@ import uuid
 
 from django.db import models
 from django.conf import settings
-from common.constants import TOKEN_TYPE_EMAIL, TokenType
+from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED
 
 from shoutit.models.base import UUIDModel, LocationMixin
 
@@ -69,3 +69,11 @@ class SharedLocation(LocationMixin, UUIDModel):
 #
 #     def __unicode__(self):
 #         return "(" + unicode(self.pk) + ") " + unicode(self.File)
+
+
+class SMSInvitation(UUIDModel):
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name="sms_invitation", null=True, blank=True)
+    message = models.CharField(max_length=160)
+    mobile = models.CharField(max_length=20, unique=True)
+    status = models.SmallIntegerField(default=SMS_INVITATION_ADDED.value, choices=SMSInvitationStatus.choices)
+    country = LocationMixin._meta.get_field("country")

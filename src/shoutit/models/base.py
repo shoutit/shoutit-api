@@ -125,9 +125,11 @@ class ShoutitUserManager(UserManager):
         An extra profile_fields is to be passed so the user_post_save method can setup the
         Profile to prevent multiple saves / updates when creating new users.
         """
-        profile_fields = extra_fields.pop('profile_fields')
         now = timezone.now()
+        if not username:
+            raise ValueError('The given username must be set')
         email = self.normalize_email(email)
+        profile_fields = extra_fields.pop('profile_fields')
         user = self.model(username=username, email=email, is_staff=is_staff, is_active=True, is_superuser=is_superuser,
                           date_joined=now, **extra_fields)
         user.set_password(password)
@@ -144,7 +146,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     Username, password and email are required. Other fields are optional.
     """
     username = models.CharField(
-        _('username'), max_length=30, unique=True, blank=True, help_text=_(
+        _('username'), max_length=30, unique=True, help_text=_(
             'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
         validators=[
             validators.RegexValidator(

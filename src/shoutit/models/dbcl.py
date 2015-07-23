@@ -12,7 +12,6 @@ from django.conf import settings
 class DBCLUser(UUIDModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True,
                                 db_index=True)
-    converted = models.BooleanField(default=False)
     converted_at = models.DateTimeField(verbose_name="Conversion time", null=True, blank=True)
 
     class Meta(UUIDModel.Meta):
@@ -100,7 +99,7 @@ class DBCLConversation(UUIDModel):
     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
     shout = models.ForeignKey('shoutit.Shout')
     ref = models.CharField(max_length=100, null=True, blank=True)
-    sms_code = models.CharField(max_length=10, null=True, blank=True)
+    sms_code = models.CharField(max_length=10, default='', blank=True)
 
     def clean(self):
         if isinstance(self.sms_code, basestring):
