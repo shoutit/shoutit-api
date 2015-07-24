@@ -65,7 +65,7 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
 
 def auth_with_gplus(gplus_user, credentials, initial_user=None):
     email = gplus_user.get('emails')[0].get('value').lower()
-    name = gplus_user.get('name')
+    name = gplus_user.get('name', {})
     first_name = name.get('givenName')
     last_name = name.get('familyName')
     gplus_id = gplus_user.get('id')

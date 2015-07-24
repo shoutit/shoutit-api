@@ -122,7 +122,7 @@ def send_push(user, notification_type, attached_object_dict):
 def check_sss(user, notification_type, attached_object, from_user):
     if notification_type != NOTIFICATION_TYPE_MESSAGE:
         return False
-    if not user.sss_user or user.sss_user.converted:
+    if not user.sss_user or user.sss_user.converted_at:
         return False
     disabled_shout = getattr(attached_object.conversation.attached_object, 'is_disabled', False)
     text = getattr(attached_object, 'text')
