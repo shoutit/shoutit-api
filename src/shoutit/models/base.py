@@ -18,7 +18,6 @@ from common.utils import date_unix, AllowedUsernamesValidator
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE,
                               UserType, COUNTRY_ISO)
 from shoutit.controllers import email_controller
-from shoutit.utils import generate_username
 
 
 class UUIDModel(models.Model):
@@ -348,6 +347,7 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
         from rest_framework.authtoken.models import Token
         from shoutit.permissions import (give_user_permissions, INITIAL_USER_PERMISSIONS,
                                          FULL_USER_PERMISSIONS)
+        from shoutit.utils import subscribe_to_master_list
 
         # create auth token
         Token.objects.create(user=instance)
@@ -368,3 +368,6 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
             ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
             instance.send_signup_email()
+
+            # subscribe to mailchimp master list
+            subscribe_to_master_list(instance)

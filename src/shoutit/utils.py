@@ -12,7 +12,7 @@ from django_rq import job
 import phonenumbers
 import requests
 from shoutit import settings
-import mailchimp
+from shoutit.lib import mailchimp
 from mixpanel import Mixpanel
 from twilio.rest import TwilioRestClient
 import logging
@@ -32,6 +32,9 @@ ip2location = IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 
 # Shoutit twilio
 shoutit_twilio = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+# shoutit mailchimp
+shoutit_mailchimp = mailchimp.Client(settings.MAILCHIMP_API_KEY)
 
 
 def generate_password():
@@ -86,10 +89,6 @@ class JsonResponse(HttpResponse):
 
 class JsonResponseBadRequest(JsonResponse):
     status_code = 400
-
-
-def get_mailchimp_api():
-    return mailchimp.Mailchimp(settings.MAILCHIMP_API_KEY)
 
 
 def get_google_smtp_connection():
@@ -150,6 +149,40 @@ def _track(distinct_id, event_name, properties=None):
         debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
     except Exception as e:
         error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
+
+
+def subscribe_to_master_list(user):
+    return _subscribe_to_master_list.delay(user)
+
+
+@job(settings.RQ_QUEUE)
+def _subscribe_to_master_list(user):
+    try:
+        location = user.location
+        address = {
+            'addr1': location.get('address') or 'n/a',
+            'city': location.get('city') or 'n/a',
+            'state': location.get('state') or location.get('city') or 'n/a',
+            'zip': location.get('postal_code') or 'n/a',
+            'country': location.get('country'),
+        }
+        merge_fields = {
+            'FNAME': user.first_name,
+            'LNAME': user.last_name,
+            'IMAGE': user.profile.image,
+        }
+        if location.get('country'):
+            merge_fields.update({'ADDRESS': address})
+        shoutit_mailchimp.add_member(list_id=settings.MAILCHIMP_MASTER_LIST_ID, email=user.email,
+                                     status='subscribed', merge_fields=merge_fields)
+        debug_logger.debug("Added user %s to MailChimp master list" % user)
+    except mailchimp.MailChimpException as e:
+        if hasattr(e.response, 'json'):
+            status = e.json.get('status')
+            detail = e.json.get('detail', "")
+            if status == 400 and 'is already a list member' in detail:
+                return
+        raise
 
 
 # Location functions
