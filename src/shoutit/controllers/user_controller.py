@@ -22,9 +22,9 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
         username = generate_username()
     while len(username) < 2 or User.objects.filter(username=username).exists():
         username = generate_username()
-    if len(first_name) < 2:
+    if first_name and len(first_name) < 2:
         first_name = ''
-    if len(last_name) < 1:
+    if last_name and len(last_name) < 1:
         last_name = ''
     if not first_name:
         first_name = 'user'
