@@ -419,8 +419,8 @@ class ShoutSerializer(serializers.ModelSerializer):
         except AttributeError:
             pass
         # optional price and currency
-        price_is_none = data['price'] is None
-        currency_is_none = data['currency'] is None
+        price_is_none = data.get('price') is None
+        currency_is_none = data.get('currency') is None
         if price_is_none != currency_is_none:
             raise ValidationError({'price': ["price and currency must be either both set or both null"]})
         ret = super(ShoutSerializer, self).to_internal_value(data)

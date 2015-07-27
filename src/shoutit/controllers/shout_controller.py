@@ -191,6 +191,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
 
 def save_shout_index(shout=None, created=False, delay=True):
     if delay:
+        shout = Shout.objects.get(id=shout.id)
         return _save_shout_index.delay(shout, created)
     return _save_shout_index(shout, created)
 
