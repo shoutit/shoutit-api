@@ -171,10 +171,16 @@ def _subscribe_to_master_list(user):
             'LNAME': user.last_name,
             'IMAGE': user.profile.image,
         }
-        if location.get('country'):
+        if address.get('country'):
             merge_fields.update({'ADDRESS': address})
+        extra_fields = {
+            'location': {
+                'latitude': "%s" % location.get('latitude', 0),
+                'longitude': "%s" % location.get('longitude', 0)
+            }
+        }
         shoutit_mailchimp.add_member(list_id=settings.MAILCHIMP_MASTER_LIST_ID, email=user.email,
-                                     status='subscribed', merge_fields=merge_fields)
+                                     status='subscribed', extra_fields=extra_fields, merge_fields=merge_fields)
         debug_logger.debug("Added user %s to MailChimp master list" % user)
     except mailchimp.MailChimpException as e:
         if hasattr(e.response, 'json'):
