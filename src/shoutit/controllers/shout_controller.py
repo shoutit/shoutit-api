@@ -103,7 +103,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images, videos=videos)
 
-    shout = Shout.create(user=user, typ=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
+    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
                          priority=priority, save=False)
     update_object_location(shout, location, save=False)
 
