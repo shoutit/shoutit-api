@@ -8,6 +8,7 @@ import re
 from django.conf import settings
 
 from rest_framework import viewsets, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
 from common.constants import POST_TYPE_OFFER
@@ -18,7 +19,7 @@ from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, 
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
                             User, DBZ2User)
-from shoutit.utils import debug_logger, error_logger, location_from_latlng
+from shoutit.utils import debug_logger, error_logger, location_from_latlng, location_from_google_geocode_response
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -134,6 +135,20 @@ class MiscViewSet(viewsets.ViewSet):
         debug_logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
 
+    @list_route(methods=['get'])
+    def geocode(self, request):
+        latlng = request.query_params.get('latlng', '')
+        return Response(location_from_latlng(latlng))
+
+    @list_route(methods=['post'])
+    def parse_google_geocode_response(self, request):
+        google_geocode_response = request.data.get('google_geocode_response', {})
+        try:
+            location = location_from_google_geocode_response(google_geocode_response)
+        except (IndexError, KeyError, ValueError):
+            raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
+        return Response(location)
+
     @list_route(methods=['post'], suffix='SSS4')
     def sss4(self, request):
         shout = request.data.get('shout')
@@ -223,11 +238,6 @@ class MiscViewSet(viewsets.ViewSet):
                 return Response({'error': "Unknown in_email"})
         else:
             return Response(data)
-
-    @list_route(methods=['get'])
-    def geocode(self, request):
-        latlng = request.query_params.get('latlng', '')
-        return Response(location_from_latlng(latlng))
 
 
 def handle_dbz_reply(in_email, msg, request):
