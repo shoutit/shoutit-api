@@ -34,6 +34,17 @@ class UUIDModel(models.Model):
             self.full_clean()
         super(UUIDModel, self).save(force_insert, force_update, **kwargs)
 
+    @classmethod
+    def create(cls, save=True, **kwargs):
+        """
+        Creates a new object with the given kwargs, saving it to the database
+        and returning the created object.
+        """
+        obj = cls(**kwargs)
+        if save:
+            obj.save()
+        return obj
+
     @property
     def pk(self):
         return str(self.id).lower()

@@ -464,6 +464,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         return self.perform_save(shout=shout, validated_data=validated_data)
 
     def perform_save(self, shout, validated_data):
+        shout_type = POST_TYPE_OFFER if validated_data.get('type_name') == 'offer' else POST_TYPE_REQUEST
         text = validated_data.get('text')
         title = validated_data['item'].get('name')
         price = validated_data['item'].get('price')
@@ -474,19 +475,18 @@ class ShoutDetailSerializer(ShoutSerializer):
 
         location = validated_data.get('location')
 
-        images = validated_data['item'].get('images', [])
-        videos = validated_data['item'].get('videos', {'all': []})['all']
+        images = validated_data['item'].get('images', None)
+        videos = validated_data['item'].get('videos', {'all': None})['all']
 
         if not shout:
             user = self.root.context['request'].user
-            shout_type = POST_TYPE_OFFER if validated_data['type_name'] == 'offer' else POST_TYPE_REQUEST
             shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text,
                                                   price=price, currency=currency, category=category, tags=tags,
-                                                  location=location,images=images, videos=videos)
+                                                  location=location, images=images, videos=videos)
         else:
-            shout = shout_controller.edit_shout(shout, title=title, text=text, price=price,
+            shout = shout_controller.edit_shout(shout, shout_type=shout_type, title=title, text=text, price=price,
                                                 currency=currency, category=category, tags=tags,
-                                                images=images, videos=videos, location=location)
+                                                location=location, images=images, videos=videos)
         return shout
 
 

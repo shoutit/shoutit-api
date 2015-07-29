@@ -103,15 +103,8 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images, videos=videos)
 
-    shout = Shout()
-    shout.type = shout_type
-    shout.text = text
-    shout.user = user
-    shout.category = category
-    shout.tags = tags
-    shout.item = item
-    shout.is_sss = is_sss
-    shout.priority = priority
+    shout = Shout.create(user=user, typ=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
+                         priority=priority, save=False)
     update_object_location(shout, location, save=False)
 
     if not date_published:
@@ -134,9 +127,11 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     return shout
 
 
-def edit_shout(shout, title=None, text=None, price=None, currency=None, category=None, tags=None,
+def edit_shout(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
                images=None, videos=None, location=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images, videos=videos)
+    if shout_type:
+        shout.type = shout_type
     if text:
         shout.text = text
     if category:
