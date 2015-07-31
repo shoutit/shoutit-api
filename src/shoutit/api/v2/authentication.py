@@ -66,7 +66,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
         """
-        error_logger.warn('Oauth2 Error', extra={'detail': error})
+        error_logger.warn('Oauth2 Error', extra={'detail': error, 'request_data': self.request.data})
         return Response(error, status=400)
 
     def access_token_response(self, access_token, data=None):
