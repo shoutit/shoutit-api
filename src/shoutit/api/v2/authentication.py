@@ -23,7 +23,7 @@ from shoutit.api.v2.serializers import (
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
     UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer)
 from shoutit.models import ConfirmToken
-from shoutit.utils import track, alias
+from shoutit.utils import track, alias, error_logger
 
 
 class RequestParamsClientBackend(object):
@@ -66,6 +66,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
         """
+        error_logger.warn('Oauth2 Error', extra={'detail': error})
         return Response(error, status=400)
 
     def access_token_response(self, access_token, data=None):
@@ -420,6 +421,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return handler(request, request.data, client)
         except OAuthError, e:
             return self.error_response(e.args[0])
+        except ValidationError as e:
+            return self.error_response(e.detail)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):

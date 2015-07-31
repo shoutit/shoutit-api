@@ -135,7 +135,7 @@ def send_sss(user, attached_object, notification_type, from_user):
         if not user.email:
             notify_db_user.delay(user.db_user, from_user, attached_object)
         else:
-            notify_db_user.dealy(user.db_user, from_user, attached_object)
+            notify_db_user.delay(user.db_user, from_user, attached_object)
             # todo: !
             # email_controller.email_db_user(user.db_user, from_user, attached_object)
     elif user.dbz2_user:

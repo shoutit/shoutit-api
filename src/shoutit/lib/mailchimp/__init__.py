@@ -96,8 +96,12 @@ class Client(object):
         url = urlparse.urljoin(self.api_root, path)
         auth = ('apikey', self.api_key)
         headers = {"User-Agent": "MailChimp Python Client 3.0", "Accept": "application/json"}
-        return self.parse(requests.request(method, url, auth=auth, headers=headers, params=params,
-                                           json=json, verify=self.verify))
+        try:
+            response = requests.request(method, url, auth=auth, headers=headers, params=params, json=json, verify=self.verify)
+        except requests.RequestException as e:
+            raise MailChimpException(str(e))
+        else:
+            return self.parse(response)
 
     @staticmethod
     def parse(response):
