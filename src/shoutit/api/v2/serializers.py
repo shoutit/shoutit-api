@@ -28,7 +28,7 @@ from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
 from shoutit.controllers import shout_controller, user_controller
-from shoutit.utils import location_from_google_geocode_response
+from shoutit.utils import location_from_google_geocode_response, generate_username
 
 
 class LocationSerializer(serializers.Serializer):
@@ -794,8 +794,20 @@ class ShoutitSigninSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise ValidationError(
-                {'email': ['The email or username you entered do not belong to any account.']})
+            # raise ValidationError(
+            #     {'email': ['The email or username you entered do not belong to any account.']})
+            # todo: hack!
+            request = self.root.context.get('request')
+            username = generate_username()
+            data.update({
+                'name': "user " + username
+            })
+            serializer = ShoutitSignupSerializer(data=data, context={'request': request})
+            serializer.is_valid(raise_exception=True)
+            serializer.validated_data['username'] = username
+            self.instance = serializer.save()
+            return serializer.validated_data
+
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user

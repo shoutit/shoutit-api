@@ -195,7 +195,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         return self.access_token_response(at)
 
     def get_shoutit_signin_grant(self, request, signin_data, client):
-        serializer = ShoutitSigninSerializer(data=signin_data)
+        serializer = ShoutitSigninSerializer(data=signin_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
 

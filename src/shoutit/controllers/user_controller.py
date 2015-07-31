@@ -50,6 +50,7 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
     password = signup_data.get('password')
     first_name = signup_data.get('first_name')
     last_name = signup_data.get('last_name')
+    username = signup_data.get('username')
     profile_fields = {}
     location = {}
     if initial_user:
@@ -60,7 +61,7 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
             location = location_from_ip(initial_user.get('ip'))
     profile_fields.update(location)
     return signup_user(email=email, password=password, first_name=first_name, last_name=last_name,
-                       profile_fields=profile_fields)
+                       username=username, profile_fields=profile_fields)
 
 
 def auth_with_gplus(gplus_user, credentials, initial_user=None):

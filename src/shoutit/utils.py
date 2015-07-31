@@ -152,6 +152,8 @@ def _track(distinct_id, event_name, properties=None):
 
 
 def subscribe_to_master_list(user):
+    if settings.DEBUG:
+        return
     return _subscribe_to_master_list.delay(user)
 
 
