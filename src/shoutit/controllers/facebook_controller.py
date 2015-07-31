@@ -35,7 +35,9 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         debug_logger.debug('LinkedGoogleAccount.DoesNotExist for facebook_id %s.' % facebook_id)
         if 'email' not in fb_user:
             debug_logger.error('Facebook user has no email: %s' % json.dumps(fb_user))
-            raise FB_LINK_ERROR_EMAIL
+            detail = FB_LINK_ERROR_EMAIL.detail
+            detail.update({'fb_user': fb_user})
+            raise ValidationError(detail)
         long_lived_token = extend_token(access_token)
         user = auth_with_facebook(fb_user, long_lived_token, initial_user)
 

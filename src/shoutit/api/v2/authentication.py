@@ -66,7 +66,11 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
         """
-        error_logger.warn('Oauth2 Error', extra={'detail': error, 'request_data': self.request.data})
+        client = kwargs.get('client')
+        client_name = client.name if client else 'NoClient'
+        grant_type = kwargs.get('grant_type', 'NoGrant')
+        error_name = "oAuth2 Error - %s - %s" % (client_name, grant_type)
+        error_logger.warn(error_name, extra={'detail': error, 'request_data': self.request.data})
         return Response(error, status=400)
 
     def access_token_response(self, access_token, data=None):
@@ -420,9 +424,9 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         try:
             return handler(request, request.data, client)
         except OAuthError, e:
-            return self.error_response(e.args[0])
+            return self.error_response(e.args[0], client=client, grant_type=grant_type)
         except ValidationError as e:
-            return self.error_response(e.detail)
+            return self.error_response(e.detail, client=client, grant_type=grant_type)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):
