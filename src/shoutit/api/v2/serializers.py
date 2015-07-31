@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 from collections import OrderedDict
+import random
 import uuid
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
@@ -758,11 +759,12 @@ class ShoutitSignupSerializer(serializers.Serializer):
             data = {}
         name = data.get('name')
         names = name.split()
-        if len(names) < 2:
-            raise ValidationError({'name': ['Please enter your full name.']})
-        data['first_name'] = " ".join(names[0:-1])
-        data['last_name'] = names[-1]
-
+        if len(names) >= 2:
+            data['first_name'] = " ".join(names[0:-1])
+            data['last_name'] = names[-1]
+        else:
+            data['first_name'] = names[0]
+            data['last_name'] = random.randint(0, 999)
         ret = super(ShoutitSignupSerializer, self).to_internal_value(data)
         return ret
 
