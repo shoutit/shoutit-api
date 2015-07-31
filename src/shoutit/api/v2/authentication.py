@@ -427,6 +427,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
             return self.error_response(e.args[0], client=client, grant_type=grant_type)
         except ValidationError as e:
             return self.error_response(e.detail, client=client, grant_type=grant_type)
+        except Exception as e:
+            return self.error_response(str(e), client=client, grant_type=grant_type)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):
