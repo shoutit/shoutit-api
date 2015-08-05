@@ -94,6 +94,15 @@ REDIS_CACHES = {
             'DB': 2,  # redis_db
         },
         'KEY_PREFIX': ENV + '_cache'
+    },
+    'mail': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': 'redis.shoutit.com:6379',
+        'TIMEOUT': 12 * 60 * 60,
+        'OPTIONS': {
+            'DB': 3,  # redis_db
+        },
+        'KEY_PREFIX': ENV + '_mail_cache'
     }
 }
 # todo: set passwords for redis
@@ -108,11 +117,17 @@ CACHES = REDIS_CACHES
 """
 FORCE_SYNC_RQ = False
 RQ_QUEUE = ENV
+RQ_QUEUE_MAIL = ENV + '_mail'
 RQ_QUEUES = {
     RQ_QUEUE: {
         'USE_REDIS_CACHE': 'default',
         'DEFAULT_TIMEOUT': 30,
     },
+    RQ_QUEUE_MAIL: {
+        'USE_REDIS_CACHE': 'mail',
+        'DEFAULT_TIMEOUT': 30,
+    },
+    # todo: more specific queues
 }
 if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():

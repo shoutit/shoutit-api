@@ -163,8 +163,7 @@ class Message(UUIDModel):
         return self.conversation.contributors
 
     def is_read(self, user):
-        return MessageRead.objects.filter(user=user, message=self,
-                                          conversation=self.conversation).exists()
+        return MessageRead.objects.filter(user=user, message=self, conversation=self.conversation).exists()
 
 
 @receiver(post_save, sender=Message)
@@ -183,6 +182,8 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
             for to_user in conversation.contributors:
                 if instance.user and instance.user != to_user:
                     notifications_controller.notify_user_of_message(to_user, instance)
+
+        # todo: push the message to the conversation presence channel
 
 
 class MessageRead(UUIDModel):

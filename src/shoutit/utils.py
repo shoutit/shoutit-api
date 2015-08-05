@@ -157,7 +157,7 @@ def subscribe_to_master_list(user):
     return _subscribe_to_master_list.delay(user)
 
 
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_MAIL)
 def _subscribe_to_master_list(user):
     try:
         location = user.location

@@ -42,7 +42,6 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
     _item.short_description = 'Item'
 
 
-
 # Post
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
