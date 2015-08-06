@@ -13,7 +13,9 @@ from shoutit.controllers import facebook_controller
 class BadRequestsMiddleware(object):
     @staticmethod
     def process_response(request, response):
-        if response.status_code in [400]:
+        path = request.path
+        excluded_paths = ['/v2/sms', '/v2/misc/sss4']
+        if response.status_code in [400] and path not in excluded_paths:
             drf_request = response.renderer_context.get('request')
             req_data = drf_request.data if drf_request else None
             res_data = response.data
