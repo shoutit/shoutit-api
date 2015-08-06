@@ -39,7 +39,7 @@ elif DEV:
     API_LINK = 'http://dev.api.shoutit.com/v2/'
 
 else:  # LOCAL
-    DEBUG = True
+    DEBUG = False
     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = 'shoutit.dev'
     SITE_LINK = 'http://shoutit.dev:3000/'
@@ -212,9 +212,10 @@ if PROD:
     )
 
 RAVEN_CONFIG = {
-    'dsn': 'requests+https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+    'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
     'string_max_length': 1000
 }
+
 
 APNS_SANDBOX = False
 FORCE_PUSH = False
@@ -241,6 +242,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     # Shoutit Custom Middleware
+    'shoutit.middleware.BadRequestsMiddleware',
     'shoutit.middleware.APIDetectionMiddleware',
     'shoutit.middleware.JsonPostMiddleware',
     'shoutit.middleware.UserPermissionsMiddleware',

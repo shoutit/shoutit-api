@@ -6,8 +6,28 @@ from django.utils import datastructures
 
 from common.constants import DEFAULT_LOCATION
 from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
-from shoutit.utils import JsonResponseBadRequest
+from shoutit.utils import JsonResponseBadRequest, error_logger
 from shoutit.controllers import facebook_controller
+
+
+class BadRequestsMiddleware(object):
+    @staticmethod
+    def process_response(request, response):
+        if response.status_code in [400]:
+            drf_request = response.renderer_context.get('request')
+            req_data = drf_request.data if drf_request else None
+            res_data = response.data
+            api_client = drf_request.auth.client.name if drf_request and hasattr(drf_request.auth, 'client') else None
+            extra = {
+                'request': request,
+                'req_data': req_data,
+                'res_data': res_data,
+                'tags': {
+                    'api_client': api_client,
+                },
+            }
+            error_logger.debug("%s: %s" % (request.method.upper(), request.path), extra=extra)
+        return response
 
 
 class APIDetectionMiddleware(object):
