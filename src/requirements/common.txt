@@ -35,7 +35,7 @@ pusher==1.2.3
 django-cors-headers==1.1.0
 
 # tracking
-mixpanel-py==4.0.3
+mixpanel==4.1.0
 
 # docs
 django-rest-swagger==0.3.3

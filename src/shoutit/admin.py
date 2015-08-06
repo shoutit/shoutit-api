@@ -19,7 +19,7 @@ from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
-    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User)
+    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation)
 from django.utils.translation import ugettext_lazy as _
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
@@ -396,17 +396,25 @@ admin.site.unregister(GCMDevice)
 admin.site.register(GCMDevice, CustomDeviceAdmin)
 
 
-
 # Pusher
 @admin.register(PusherChannel)
 class PusherChannelAdmin(admin.ModelAdmin):
     list_display = ('type', 'name')
     raw_id_fields = ('users',)
 
+
 @admin.register(PusherChannelJoin)
 class PusherChannelJoinAdmin(admin.ModelAdmin):
     list_display = ('channel', 'user')
     raw_id_fields = ('channel', 'user')
+
+
+@admin.register(SMSInvitation)
+class SMSInvitationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'status', 'country', 'mobile', 'user')
+    list_filter = ('status', 'country')
+    search_fields = ('mobile', 'message')
+    raw_id_fields = ('user',)
 
 # Others
 admin.site.register(Video)

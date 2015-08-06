@@ -9,6 +9,7 @@ import boto
 from django.core.mail import get_connection
 from django.http import HttpResponse
 from django_rq import job
+import nexmo as nexmo
 import phonenumbers
 import requests
 from shoutit import settings
@@ -35,6 +36,9 @@ shoutit_twilio = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_A
 
 # shoutit mailchimp
 shoutit_mailchimp = mailchimp.Client(settings.MAILCHIMP_API_KEY)
+
+# nexmo
+nexmo_client = nexmo.Client(key=settings.NEXMO_API_KEY, secret=settings.NEXMO_API_SECRET)
 
 
 def generate_password():

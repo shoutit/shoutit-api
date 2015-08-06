@@ -13,8 +13,8 @@ import random
 
 class Command(BaseCommand):
     help = 'Reply on behalf of SSS users.'
-    arabic_replies = ["العفو تم البيع", "شكرا، بس للاسف تم البيع"]
-    english_replies = ["sorry sold", "it is sold already sorry", "thanks for your message but it has been already sold", "sold"]
+    arabic_replies = ["العفو تم البيع", "شكرا، بس للاسف تم البيع", "عفوا تم البيع", "مباع", "غير موجود حاليا", "غير موجود", "عفوا انباع", "للاسف انباعت", "شكرا بس تم البيع", ""]
+    english_replies = ["sorry sold", "it is sold already sorry", "been already sold", "sold"]
 
     def add_arguments(self, parser):
         # Positional arguments
@@ -36,9 +36,14 @@ class Command(BaseCommand):
                 # sss user already replied
                 continue
             # set the text
-            text = random.choice(self.english_replies)
+            if sss_user.profile.country in ['JO', 'EG', 'SA', 'OM', 'BH']:
+                text = random.choice(self.arabic_replies)
+            else:  # ['AE', 'QA', 'KQ', 'BH', ...]
+                text = random.choice(self.english_replies)
             # send the message
             message_controller.send_message(conversation=conversation, user=sss_user, text=text)
+            # leave conversation
+            conversation.mark_as_deleted(sss_user)
             # disable the shout
             shout.is_disabled = True
             shout.save()

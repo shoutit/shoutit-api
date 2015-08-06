@@ -77,3 +77,7 @@ class SMSInvitation(UUIDModel):
     mobile = models.CharField(max_length=20, unique=True)
     status = models.SmallIntegerField(default=SMS_INVITATION_ADDED.value, choices=SMSInvitationStatus.choices)
     country = LocationMixin._meta.get_field("country")
+
+    def __unicode__(self):
+        return "%s %s for %s" % (self.country, self.status, self.mobile)
+
