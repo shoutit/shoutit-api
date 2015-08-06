@@ -79,36 +79,47 @@ NEARBY_CITIES_RADIUS_KM = 65
             Caching
 =================================
 """
-# Redis
-SESSION_REDIS_HOST = 'redis.shoutit.com'
-SESSION_REDIS_PORT = 6379
-SESSION_REDIS_DB = 1  # redis_db
-SESSION_REDIS_PREFIX = ENV + '_session'
-REDIS_SESSION_ENGINE = 'redis_sessions.session'
-REDIS_CACHES = {
-    'default': {
-        'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': 'redis.shoutit.com:6379',
-        'TIMEOUT': 12 * 60 * 60,
-        'OPTIONS': {
-            'DB': 2,  # redis_db
-        },
-        'KEY_PREFIX': ENV + '_cache'
+# todo: set passwords for redis databases
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+        }
     },
-    'mail': {
-        'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': 'redis.shoutit.com:6379',
-        'TIMEOUT': 12 * 60 * 60,
-        'OPTIONS': {
-            'DB': 3,  # redis_db
-        },
-        'KEY_PREFIX': ENV + '_mail_cache'
+    "session": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+        }
+    },
+    "worker": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/3",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+        }
+    },
+    "worker_mail": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+        }
     }
 }
-# todo: set passwords for redis
-
-SESSION_ENGINE = REDIS_SESSION_ENGINE
-CACHES = REDIS_CACHES
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "session"
 
 """
 =================================
@@ -120,14 +131,14 @@ RQ_QUEUE = ENV
 RQ_QUEUE_MAIL = ENV + '_mail'
 RQ_QUEUES = {
     RQ_QUEUE: {
-        'USE_REDIS_CACHE': 'default',
+        'USE_REDIS_CACHE': 'worker',
         'DEFAULT_TIMEOUT': 30,
     },
     RQ_QUEUE_MAIL: {
-        'USE_REDIS_CACHE': 'mail',
+        'USE_REDIS_CACHE': 'worker_mail',
         'DEFAULT_TIMEOUT': 30,
     },
-    # todo: more specific queues
+    # todo: add more specific queues
 }
 if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
@@ -505,6 +516,10 @@ IP2LOCATION_DB_BIN = os.path.join(API_DIR, 'assets', 'ip2location', 'IP2LOCATION
 TWILIO_ACCOUNT_SID = "AC72062980c854618cfa7765121af3085d"
 TWILIO_AUTH_TOKEN = "ed5a3b1dc6debc010e10047ebaa066ce"
 TWILIO_FROM = '+14807255600'
+
+# Nexmo
+NEXMO_API_KEY = "7c650639"
+NEXMO_API_SECRET = "4ee98397"
 
 # Mail Settings
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
