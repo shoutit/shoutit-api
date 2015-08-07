@@ -389,7 +389,7 @@ class ShoutSerializer(serializers.ModelSerializer):
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except Currency.DoesNotExist:
-            raise ValidationError({'currency': ['Invalid currency']})
+            raise ValidationError(['Invalid currency'])
         except ValueError:
             return None
 
@@ -771,7 +771,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def validate_email(self, email):
         email = email.lower()
         if User.objects.filter(email=email).exists():
-            raise ValidationError({'email': ['Email is already used by another user.']})
+            raise ValidationError(['Email is already used by another user.'])
         return email
 
     def create(self, validated_data):
@@ -823,7 +823,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         user = self.context.get('request').user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise ValidationError({['Email is already used by another user.']})
+            raise ValidationError(['Email is already used by another user.'])
         return email
 
     def to_internal_value(self, data):
