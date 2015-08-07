@@ -794,19 +794,19 @@ class ShoutitSigninSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            # raise ValidationError(
-            #     {'email': ['The email or username you entered do not belong to any account.']})
-            # todo: hack!
-            request = self.root.context.get('request')
-            username = generate_username()
-            data.update({
-                'name': "user " + username
-            })
-            serializer = ShoutitSignupSerializer(data=data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            serializer.validated_data['username'] = username
-            self.instance = serializer.save()
-            return serializer.validated_data
+            raise ValidationError(
+                {'email': ['The email or username you entered do not belong to any account.']})
+            # todo: hack! act as signup if email is new
+            # request = self.root.context.get('request')
+            # username = generate_username()
+            # data.update({
+            #     'name': "user " + username
+            # })
+            # serializer = ShoutitSignupSerializer(data=data, context={'request': request})
+            # serializer.is_valid(raise_exception=True)
+            # serializer.validated_data['username'] = username
+            # self.instance = serializer.save()
+            # return serializer.validated_data
 
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
