@@ -9,7 +9,7 @@ from django.utils import timezone
 from shoutit.controllers import message_controller
 from shoutit.models import Conversation, DBCLConversation, SMSInvitation
 import random
-from shoutit.utils import nexmo_client
+from shoutit.utils import nexmo_client, has_unicode
 
 
 class Command(BaseCommand):
@@ -32,8 +32,8 @@ class Command(BaseCommand):
                 message = {
                     'from': 'Shoutit Adv',
                     'to': sms_invitation.mobile,
-                    'type': 'unicode',
-                    'text': sms_invitation.message
+                    'text': sms_invitation.message,
+                    'type': 'unicode' if has_unicode(sms_invitation.message) else None
                 }
                 nexmo_client.send_message(message)
                 sent.append(sms_invitation.pk)

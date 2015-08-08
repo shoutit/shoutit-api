@@ -53,6 +53,15 @@ def generate_username():
     return str(random.randint(10000000000, 19999999999))
 
 
+def has_unicode(s):
+    try:
+        s.decode('ascii')
+    except UnicodeDecodeError:
+        return True
+    else:
+        return False
+
+
 def base64_url_decode(inp):
     inp = inp.replace('-', '+').replace('_', '/')
     padding_factor = (4 - len(inp) % 4) % 4
