@@ -17,7 +17,7 @@ class SMSViewSet(UUIDViewSetMixin, NoUpdateModelViewSet):
     """
     SMS API Resources.
     """
-    queryset = SMSInvitation.objects.all().order_by('-modified_at')
+    queryset = SMSInvitation.objects.all().order_by('-created_at')
     serializer_class = SMSInvitationSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_fields = ('status', 'country', 'mobile')
