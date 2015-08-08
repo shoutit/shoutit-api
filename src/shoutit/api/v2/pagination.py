@@ -140,14 +140,21 @@ class ShoutitPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
     results_field = 'results'
+    show_count = True
 
     def get_paginated_response(self, data):
-        return Response(OrderedDict([
-            ('count', self.page.paginator.count),
+        res = [
             ('next', self.get_next_link()),
             ('previous', self.get_previous_link()),
             (self.results_field, data)
-        ]))
+        ]
+        if self.show_count:
+            res.insert(0, ('count', self.page.paginator.count))
+        return Response(OrderedDict(res))
+
+
+class ShoutitPageNumberPaginationNoCount(ShoutitPageNumberPagination):
+    show_count = False
 
 
 class ShoutitPaginationMixin(object):
@@ -247,6 +254,7 @@ class PageNumberIndexPagination(PageNumberPagination):
     max_results = 1000
     results_field = 'results'
     template = 'rest_framework/pagination/previous_and_next.html'
+    show_count = False
 
     def paginate_queryset(self, index_queryset, request, view=None):
         """
@@ -332,11 +340,12 @@ class PageNumberIndexPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         res = [
-            ('count', self.num_results),
             ('next', self.get_next_link()),
             ('previous', self.get_previous_link()),
             (self.results_field, data)
         ]
+        if self.show_count:
+            res.insert(0, ('count', self.num_results))
         if getattr(self, 'max_page_number_exceeded', False):
             res.insert(0, ('error', 'We do not return more than 1000 results for any query.'))
         return Response(OrderedDict(res))

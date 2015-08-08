@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 from shoutit.api.v2.pagination import (
-    ShoutitPageNumberPagination, ShoutitPaginationMixin, ReverseDateTimePagination,
-    PageNumberIndexPagination)
+    ShoutitPaginationMixin, ReverseDateTimePagination,
+    PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
 from shoutit.controllers import stream_controller, message_controller
 
 from shoutit.api.v2.serializers import *  # NOQA
@@ -34,7 +34,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     queryset = User.objects.filter(is_activated=True)
     queryset_detail = User.objects.filter().prefetch_related('profile')
 
-    pagination_class = ShoutitPageNumberPagination
+    pagination_class = ShoutitPageNumberPaginationNoCount
 
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')
@@ -57,7 +57,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         ###Response
         <pre><code>
         {
-          "count": 7, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
           "results": [] // list of {UserSerializer}
