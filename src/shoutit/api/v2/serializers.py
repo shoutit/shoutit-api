@@ -937,7 +937,7 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SMSInvitation
-        fields = ('id', 'user', 'message', 'title', 'mobile', 'status', 'country')
+        fields = ('id', 'user', 'message', 'old_message', 'title', 'mobile', 'status', 'country')
 
     def to_internal_value(self, data):
         ret = super(SMSInvitationSerializer, self).to_internal_value(data)

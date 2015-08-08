@@ -74,6 +74,7 @@ class SharedLocation(LocationMixin, UUIDModel):
 class SMSInvitation(UUIDModel):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name="sms_invitation", null=True, blank=True)
     message = models.CharField(max_length=160)
+    old_message = models.CharField(max_length=160, default='', blank=True)
     mobile = models.CharField(max_length=20, unique=True)
     status = models.SmallIntegerField(default=SMS_INVITATION_ADDED.value, choices=SMSInvitationStatus.choices)
     country = LocationMixin._meta.get_field("country")

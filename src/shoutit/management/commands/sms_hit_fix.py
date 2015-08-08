@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# coding=utf-8
 """
 
 """
@@ -32,7 +33,7 @@ class Command(BaseCommand):
             self.stdout.write("Would have tried to fix %s sms invitations" % len(sms_invitations))
             return
 
-        one_e = "Hi there!\n list your '%s...' and more for FREE on\nshoutit.com/app"
+        one_e = "Hi there!\nlist your '%s...' for FREE on\nshoutit.com/app"
         two_e = "Someone might be interested in your '%s...'\nlist FREE ads on\nshoutit.com/app"
         cut_e = 35
         english_sms = [one_e, two_e]
@@ -42,18 +43,19 @@ class Command(BaseCommand):
         cut_a = 30
         arabic_sms = [one_a, two_a]
 
-        sent = []
         for sms_invitation in sms_invitations:
             try:
                 orig_message = sms_invitation.message
                 ad_title = re.search("'(.*)\.\.\.'", orig_message).groups()[0]
                 if has_unicode(ad_title):  # arabic
-                    new_message = random.choice(arabic_sms) % ad_title
+                    new_message = random.choice(arabic_sms) % (ad_title[:cut_a])
                 else:  # english
-                    new_message = random.choice(english_sms) % ad_title
-                # sms_invitation.save(update_fields=['message'])
-                self.stderr.write("SMS fixed: %s" % new_message.encode('utf8'))
+                    new_message = random.choice(english_sms) % (ad_title[:cut_e])
+                sms_invitation.old_message = orig_message
+                sms_invitation.message = new_message
+                sms_invitation.save(update_fields=['message', 'old_message'])
+                self.stderr.write("SMS fixed: %s" % sms_invitation.mobile)
             except Exception as e:
-                self.stderr.write("Error fix: %s" % e)
+                self.stderr.write("Error fixing: %s" % e)
 
-        self.stdout.write("Successfully fix %s sms invitations" % len(sent))
+        self.stdout.write("Successfully fix sms invitations")
