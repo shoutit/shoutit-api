@@ -56,7 +56,7 @@ def generate_username():
 def has_unicode(s):
     try:
         s.decode('ascii')
-    except UnicodeDecodeError:
+    except UnicodeError:
         return True
     else:
         return False
