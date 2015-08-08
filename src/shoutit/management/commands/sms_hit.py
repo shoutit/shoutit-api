@@ -18,13 +18,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # Positional arguments
         parser.add_argument('--count', default=10, type=int)
+        parser.add_argument('--status', default=1, type=int)
         parser.add_argument('--countries', default='AE,SA,OM,QA,KW,BH,EG,LB,JO', type=str)
 
     def handle(self, *args, **options):
         # get sms invitations
         count = options['count']
+        status = options['status']
         countries = options['countries'].split(',')
-        sms_invitations = SMSInvitation.objects.filter(status=1, country__in=countries)[:count]
+        sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries)[:count]
 
         sent = []
         for sms_invitation in sms_invitations:
