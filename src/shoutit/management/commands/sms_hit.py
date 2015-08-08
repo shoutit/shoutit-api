@@ -20,6 +20,8 @@ class Command(BaseCommand):
         parser.add_argument('--count', default=10, type=int)
         parser.add_argument('--status', default=1, type=int)
         parser.add_argument('--countries', default='AE,SA,OM,QA,KW,BH,EG,LB,JO', type=str)
+        parser.add_argument('--dry', dest='dry', action='store_true')
+        parser.set_defaults(dry=False)
 
     def handle(self, *args, **options):
         # get sms invitations
@@ -27,6 +29,10 @@ class Command(BaseCommand):
         status = options['status']
         countries = options['countries'].split(',')
         sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries)[:count]
+
+        if options['dry']:
+            self.stdout.write("Would have tried to send %s sms invitations" % len(sms_invitations))
+            return
 
         sent = []
         for sms_invitation in sms_invitations:
