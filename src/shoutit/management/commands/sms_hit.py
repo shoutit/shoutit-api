@@ -37,11 +37,17 @@ class Command(BaseCommand):
         sent = []
         for sms_invitation in sms_invitations:
             try:
+                _has_unicode = has_unicode(sms_invitation.message)
+                text = sms_invitation.message
+                if _has_unicode and len(text) > 70:
+                    raise ValueError('max len 70 for unicode sms exceeded')
+                if not _has_unicode and len(text) > 160:
+                    raise ValueError('max len 160 for text sms exceeded')
                 message = {
                     'from': 'Shoutit Adv',
                     'to': sms_invitation.mobile,
-                    'text': sms_invitation.message,
-                    'type': 'unicode' if has_unicode(sms_invitation.message) else None
+                    'text': text,
+                    'type': 'unicode' if _has_unicode else None
                 }
                 nexmo_client.send_message(message)
                 sent.append(sms_invitation.pk)
