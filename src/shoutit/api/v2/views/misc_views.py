@@ -76,7 +76,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
 
-    @list_route(methods=['post'], permission_classes=permissions.IsAuthenticatedOrReadOnly, suffix='Reports')
+    @list_route(methods=['post'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,), suffix='Reports')
     def reports(self, request):
         """
         Report
