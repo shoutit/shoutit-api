@@ -27,7 +27,7 @@ class Command(BaseCommand):
         count = options['count']
         status = options['status']
         countries = options['countries'].split(',')
-        sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries)[:count]
+        sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries, old_message="")[:count]
 
         if options['dry']:
             self.stdout.write("Would have tried to fix %s sms invitations" % len(sms_invitations))

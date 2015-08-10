@@ -7,7 +7,7 @@ import json
 import re
 from django.conf import settings
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
@@ -76,7 +76,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
 
-    @list_route(methods=['post'], suffix='Reports')
+    @list_route(methods=['post'], permission_classes=permissions.IsAuthenticatedOrReadOnly, suffix='Reports')
     def reports(self, request):
         """
         Report
