@@ -179,8 +179,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         # user = self.get_object()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @detail_route(methods=['post', 'delete'], suffix='Listen',
-                  permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to user
