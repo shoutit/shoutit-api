@@ -13,12 +13,12 @@ from rest_framework.request import Request
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED,
                               NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT)
 from shoutit.api.versioning import ShoutitNamespaceVersioning
-from shoutit.controllers import email_controller
 from shoutit.models import Notification, DBCLConversation, Message, User
 from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, shoutit_twilio
 from shoutit_pusher.models import PusherChannel
 from shoutit_pusher.utils import pusher
-
+from antigate import AntiGate
+import re
 
 class NotifySSSException(Exception):
     pass
@@ -177,17 +177,13 @@ def get_dbz_base_url(db_link):
 
 @job(settings.RQ_QUEUE)
 def notify_db_user(db_user, from_user, message):
-    from antigate import AntiGate
-    import re
+    conversation = message.conversation
+    shout = conversation.about
 
     base_url = get_dbz_base_url(db_user.db_link)
     reply_url = db_user.db_link + '?reply'
     reply_response = requests.get(reply_url)
     if reply_response.status_code != 200:
-        error_logger.warn("Deleted dbz ad.", extra={
-            'db_link': db_user.db_link,
-            'conversation': message.conversation.pk
-        })
         return
     reply_html = reply_response.content.decode('utf-8')
     captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
@@ -200,7 +196,7 @@ def notify_db_user(db_user, from_user, message):
     in_email = ref + '@dbz-reply.com'
     sms_code = ref[-6:]
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=db_user.user,
-                                    shout=message.conversation.about, ref=ref, sms_code=sms_code)
+                                    shout=shout, ref=ref, sms_code=sms_code)
     form_data = {
         'form_type': 'contact',
         'email': in_email,
@@ -222,16 +218,12 @@ def notify_db_user(db_user, from_user, message):
 
 @job(settings.RQ_QUEUE)
 def notify_dbz2_user(dbz2_user, from_user, message):
-    from antigate import AntiGate
     from fake_useragent import UserAgent
-    import re
+    conversation = message.conversation
+    shout = conversation.about
 
     ad = requests.head(dbz2_user.db_link, allow_redirects=False)
     if ad.status_code != 200:
-        error_logger.warn("Deleted dbz2 ad.", extra={
-            'db_link': dbz2_user.db_link,
-            'conversation': message.conversation.pk
-        })
         return
 
     base_url = get_dbz_base_url(dbz2_user.db_link)
@@ -256,7 +248,7 @@ def notify_dbz2_user(dbz2_user, from_user, message):
     in_email = ref + '@dbz-reply.com'
     sms_code = ref[-6:]
     DBCLConversation.objects.create(in_email=in_email, from_user=from_user, to_user=dbz2_user.user,
-                                    shout=message.conversation.about, ref=ref, sms_code=sms_code)
+                                    shout=shout, ref=ref, sms_code=sms_code)
     form_data = {
         'is_ajax': '1',
         'csrfmiddlewaretoken': csrftoken,

@@ -10,11 +10,12 @@ from shoutit.controllers import message_controller
 from shoutit.models import Conversation, DBCLConversation
 import random
 
+arabic_replies = ["العفو تم البيع", "شكرا، بس للاسف تم البيع", "عفوا تم البيع", "مباع", "غير موجود حاليا", "غير موجود", "عفوا انباع", "للاسف انباعت", "شكرا بس تم البيع", ""]
+english_replies = ["sorry sold", "it is sold already sorry", "been already sold", "sold", ""]
+
 
 class Command(BaseCommand):
     help = 'Reply on behalf of SSS users.'
-    arabic_replies = ["العفو تم البيع", "شكرا، بس للاسف تم البيع", "عفوا تم البيع", "مباع", "غير موجود حاليا", "غير موجود", "عفوا انباع", "للاسف انباعت", "شكرا بس تم البيع", ""]
-    english_replies = ["sorry sold", "it is sold already sorry", "been already sold", "sold"]
 
     def add_arguments(self, parser):
         # Positional arguments
@@ -30,24 +31,28 @@ class Command(BaseCommand):
                                                     shout__is_sss=True)
         replies_count = 0
         for conversation in conversations:
-            shout = conversation.attached_object
+            shout = conversation.about
             sss_user = shout.user
             if conversation.messages.filter(user=sss_user).exists():
                 # sss user already replied
                 continue
-            # set the text
-            if sss_user.profile.country in ['JO', 'EG', 'SA', 'OM', 'BH']:
-                text = random.choice(self.arabic_replies)
-            else:  # ['AE', 'QA', 'KQ', 'BH', ...]
-                text = random.choice(self.english_replies)
-            # send the message
-            message_controller.send_message(conversation=conversation, user=sss_user, text=text)
-            # leave conversation
-            conversation.mark_as_deleted(sss_user)
-            # disable the shout
-            shout.is_disabled = True
-            shout.save()
+            reply_sss(conversation, shout, sss_user)
             # delete dbcl conversations
             DBCLConversation.objects.filter(to_user=sss_user).delete()
             replies_count += 1
         self.stdout.write("Successfully replied on behalf of %s sss users" % replies_count)
+
+
+def reply_sss(conversation, shout, sss_user):
+    # set the text
+    if sss_user.profile.country in ['JO', 'EG', 'SA', 'OM', 'BH']:
+        text = random.choice(arabic_replies)
+    else:  # ['AE', 'QA', 'KQ', 'BH', ...]
+        text = random.choice(english_replies)
+    # send the message
+    message_controller.send_message(conversation=conversation, user=sss_user, text=text)
+    # leave conversation
+    conversation.mark_as_deleted(sss_user)
+    # disable the shout
+    shout.is_disabled = True
+    shout.save()
