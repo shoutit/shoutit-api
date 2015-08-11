@@ -20,6 +20,9 @@ class BadRequestsMiddleware(object):
             req_data = drf_request.data if drf_request else None
             res_data = getattr(response, 'data', {})
             api_client = drf_request.auth.client.name if drf_request and hasattr(drf_request.auth, 'client') else None
+            location = req_data.get('location')
+            if location and 'google_geocode_response' in location:
+                req_data['location']['google_geocode_response'] = '<stripped>'
             extra = {
                 'request': request,
                 'req_data': req_data,
