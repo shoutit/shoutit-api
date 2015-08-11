@@ -55,10 +55,10 @@ class Command(BaseCommand):
                     raise OverflowError
                 sent.append(sms_invitation.pk)
                 self.stderr.write("SMS sent: %s" % sms_invitation.mobile)
-            except Exception as e:
-                self.stderr.write("Error sending: %s" % e)
             except OverflowError:
                 self.stderr.write("Quota Exceeded, stopping...")
                 break
+            except Exception as e:
+                self.stderr.write("Error sending: %s" % e)
         SMSInvitation.objects.filter(id__in=sent).update(status=2)
         self.stdout.write("Successfully sent %s sms invitations" % len(sent))
