@@ -486,7 +486,9 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             if not token:
                 raise ValidationError({'token': "This parameter is required."})
             try:
-                cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token, is_disabled=False)
+                cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token)
+                if token.is_disabled:
+                    raise ValueError()
                 user = cf.user
                 user.activate()
                 cf.is_disabled = True
@@ -494,6 +496,8 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 return self.success_response("Your email has been verified.")
             except ConfirmToken.DoesNotExist:
                 return self.error_response("Token does not exist.")
+            except ValueError:
+                return self.error_response("Email address is already verified.")
 
         elif request.method == 'POST':
             if request.user.is_anonymous():
