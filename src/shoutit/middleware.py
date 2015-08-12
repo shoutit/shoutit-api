@@ -17,7 +17,7 @@ class BadRequestsMiddleware(object):
         excluded_paths = ['/v2/sms', '/v2/misc/sss4']
         if response.status_code in [400] and path not in excluded_paths:
             drf_request = response.renderer_context.get('request') if hasattr(response, 'renderer_context') else None
-            req_data = drf_request.data if drf_request else None
+            req_data = drf_request.data if drf_request else {}
             res_data = getattr(response, 'data', {})
             api_client = drf_request.auth.client.name if drf_request and hasattr(drf_request.auth, 'client') else None
             location = req_data.get('location')

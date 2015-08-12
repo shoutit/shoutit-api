@@ -84,37 +84,41 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis.shoutit.com:6379/1",
+        'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
+            # "SOCKET_CONNECT_TIMEOUT": 5,
+            # "SOCKET_TIMEOUT": 5,
         }
     },
     "session": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis.shoutit.com:6379/2",
+        'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
+            # "SOCKET_CONNECT_TIMEOUT": 5,
+            # "SOCKET_TIMEOUT": 5,
         }
     },
     "worker": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis.shoutit.com:6379/3",
+        'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
+            # "SOCKET_CONNECT_TIMEOUT": 5,
+            # "SOCKET_TIMEOUT": 5,
         }
     },
     "worker_mail": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis.shoutit.com:6379/4",
+        'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
+            # "SOCKET_CONNECT_TIMEOUT": 5,
+            # "SOCKET_TIMEOUT": 5,
         }
     }
 }
