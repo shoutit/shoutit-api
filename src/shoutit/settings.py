@@ -724,7 +724,7 @@ SWAGGER_SETTINGS = {
     ],
     'api_key': '',
     # 'is_authenticated': True,
-    # 'is_superuser': True,
+    'is_superuser': False,
     'permission_denied_handler': None,
     'info': {
         # 'contact': 'mo.chawich@gmail.com',
