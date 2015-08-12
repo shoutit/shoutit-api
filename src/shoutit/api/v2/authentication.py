@@ -487,7 +487,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 raise ValidationError({'token': "This parameter is required."})
             try:
                 cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token)
-                if token.is_disabled:
+                if cf.is_disabled:
                     raise ValueError()
                 user = cf.user
                 user.activate()
