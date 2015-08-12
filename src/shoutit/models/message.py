@@ -217,7 +217,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     message = models.ForeignKey('shoutit.Message', related_name='attachments')
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages_attachments')
     # media type
-    images = ArrayField(models.URLField(), null=True, blank=True)
+    images = ArrayField(models.URLField(), default=list, blank=True)
     videos = models.ManyToManyField('shoutit.Video', blank=True)
 
     def __unicode__(self):

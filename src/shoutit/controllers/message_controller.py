@@ -8,6 +8,7 @@ from common.utils import any_in
 from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation,
                             Video)
 from shoutit.controllers import notifications_controller
+from shoutit.utils import error_logger
 
 
 def get_conversation(conversation_id):
@@ -88,8 +89,8 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
             object_id = attachment[MESSAGE_ATTACHMENT_TYPE_SHOUT.text]['id']
             content_type = ContentType.objects.get_for_model(Shout)
             ma_type = MESSAGE_ATTACHMENT_TYPE_SHOUT
-            MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
-                              type=ma_type).save()
+            MessageAttachment.create(message_id=message.id, conversation_id=conversation.id, content_type=content_type,
+                                     object_id=object_id, type=ma_type).save()
 
         if MESSAGE_ATTACHMENT_TYPE_LOCATION.text in attachment:
             location = attachment['location']
@@ -98,23 +99,22 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
             object_id = sl.id
             content_type = ContentType.objects.get_for_model(SharedLocation)
             ma_type = MESSAGE_ATTACHMENT_TYPE_LOCATION
-            MessageAttachment(message_id=message.id, conversation_id=conversation.id, content_type=content_type, object_id=object_id,
-                              type=ma_type).save()
+            MessageAttachment.create(message_id=message.id, conversation_id=conversation.id, content_type=content_type,
+                                     object_id=object_id, type=ma_type)
 
         if any_in(['images', 'videos'], attachment):
             ma_type = MESSAGE_ATTACHMENT_TYPE_MEDIA
-            ma = MessageAttachment(type=ma_type, message=message, conversation=conversation,
-                                   images=attachment.get('images', []))
-            ma.save()
-            videos = attachment.get('videos', [])
+            images = attachment.get('images', []) or []
+            videos = attachment.get('videos', []) or []
+            ma = MessageAttachment.create(type=ma_type, message=message, conversation=conversation, images=images)
             for v in videos:
                 # todo: better handling
                 try:
-                    video = Video.objects.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
-                                                 id_on_provider=v['id_on_provider'], duration=v['duration'])
+                    video = Video.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
+                                         id_on_provider=v['id_on_provider'], duration=v['duration'])
                     ma.videos.add(video)
-                except:
-                    pass
+                except Exception as e:
+                    error_logger.warn("Error creating video", extra={'detail': str(e), 'video': v})
 
     for to_user in conversation.contributors:
         if user != to_user:

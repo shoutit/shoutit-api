@@ -6,7 +6,8 @@ from shoutit.utils import error_logger
 
 
 def create_item(name, description, price, currency, images=None, videos=None):
-    currency = currency
+    # currency = currency  # todo: check!
+    images = images or []
     item = Item.create(name=name, description=description, price=price, currency=currency, images=images)
     add_videos_to_item(item, videos)
     return item
@@ -21,7 +22,7 @@ def edit_item(item, name=None, description=None, price=None, currency=None, imag
         item.price = price
     if currency:
         item.currency = currency
-    if images:
+    if images is not None:
         item.images = images
     item.save()
     add_videos_to_item(item, videos, remove_existing=True)

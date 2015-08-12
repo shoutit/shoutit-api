@@ -11,7 +11,7 @@ class Item(UUIDModel):
     price = models.FloatField(default=0, null=True, blank=True)
     currency = models.ForeignKey('shoutit.Currency', null=True, blank=True)
     state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)
-    images = ArrayField(models.URLField(), null=True, blank=True)
+    images = ArrayField(models.URLField(), default=list, blank=True)
     videos = models.ManyToManyField('shoutit.Video', blank=True)
 
     def __unicode__(self):

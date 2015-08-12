@@ -364,7 +364,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'],
                                    help_text="'offer' or 'request'")
     location = LocationSerializer()
-    title = serializers.CharField(source='item.name')
+    title = serializers.CharField(min_length=10, source='item.name')
     text = serializers.CharField(min_length=10, max_length=1000)
     price = serializers.FloatField(source='item.price', allow_null=True)
     currency = serializers.CharField(source='item.currency_code', allow_null=True,
@@ -465,19 +465,26 @@ class ShoutDetailSerializer(ShoutSerializer):
         return self.perform_save(shout=shout, validated_data=validated_data)
 
     def perform_save(self, shout, validated_data):
-        shout_type = POST_TYPE_OFFER if validated_data.get('type_name') == 'offer' else POST_TYPE_REQUEST
+        shout_type_name = validated_data.get('type_name')
+        shout_types = {
+            'request': POST_TYPE_REQUEST,
+            'offer': POST_TYPE_OFFER,
+            None: None
+        }
+        shout_type = shout_types[shout_type_name]
         text = validated_data.get('text')
-        title = validated_data['item'].get('name')
-        price = validated_data['item'].get('price')
-        currency = validated_data['item'].get('currency_code')
+        item = validated_data.get('item', {})
+        title = item.get('name')
+        price = item.get('price')
+        currency = item.get('currency_code')
 
         category = validated_data.get('category')
         tags = validated_data.get('tag_objects')
 
         location = validated_data.get('location')
 
-        images = validated_data['item'].get('images', None)
-        videos = validated_data['item'].get('videos', {'all': None})['all']
+        images = item.get('images', None)
+        videos = item.get('videos', {'all': None})['all']
 
         if not shout:
             user = self.root.context['request'].user

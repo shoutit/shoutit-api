@@ -39,7 +39,7 @@ elif DEV:
     API_LINK = 'http://dev.api.shoutit.com/v2/'
 
 else:  # LOCAL
-    DEBUG = False
+    DEBUG = True
     SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
     SHOUT_IT_HOST = 'shoutit.dev'
     SITE_LINK = 'http://shoutit.dev:3000/'

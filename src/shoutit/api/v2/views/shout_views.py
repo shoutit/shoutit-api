@@ -216,9 +216,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         omit_parameters:
             - form
         parameters:
-            - name: shout_id
-              paramType: path
-              required: true
             - name: body
               paramType: body
         """
