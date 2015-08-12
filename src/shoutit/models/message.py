@@ -150,10 +150,6 @@ class Message(UUIDModel):
     def __unicode__(self):
         return "%s  at:%s" % (self.summary, self.created_at_unix)
 
-    def clean(self):
-        if isinstance(self.text, basestring):
-            self.text = self.text[2000]
-
     @property
     def summary(self):
         return (getattr(self, 'text') or '<attachment>')[:30]

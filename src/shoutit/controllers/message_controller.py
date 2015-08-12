@@ -76,6 +76,8 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
         conversation.users = to_users
 
     # add the new message
+    if text:
+        text = text[:2000]
     message = Message(conversation=conversation, user=user, text=text)
     message.send_notification = False
     message.save()
