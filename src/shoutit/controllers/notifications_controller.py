@@ -14,11 +14,12 @@ from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAG
                               NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT)
 from shoutit.api.versioning import ShoutitNamespaceVersioning
 from shoutit.models import Notification, DBCLConversation, Message, User
-from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, shoutit_twilio
+from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, send_nexmo_sms
 from shoutit_pusher.models import PusherChannel
 from shoutit_pusher.utils import pusher
 from antigate import AntiGate
 import re
+
 
 class NotifySSSException(Exception):
     pass
@@ -148,25 +149,29 @@ def send_sss(user, attached_object, notification_type, from_user):
 
 
 @job(settings.RQ_QUEUE)
-def sms_sss_user(user, from_user, message):
+def sms_sss_user(sss_user, from_user, message, sms_anyway=False):
     shout = message.conversation.about
 
-    # check for existing dbcl conversation. do not send new sms if any found.
-    if DBCLConversation.objects.filter(from_user=from_user, to_user=user, shout=shout).exists():
-        return
-
-    # create dbcl conversation
-    ref = uuid.uuid4().hex
-    sms_code = ref[-6:]
-    dbcl_conversation = DBCLConversation(from_user=from_user, to_user=user, shout=shout, ref=ref, sms_code=sms_code)
-    dbcl_conversation.save()
+    # check for existing dbcl conversation. do not create new one.
+    try:
+        dbcl_conversation = DBCLConversation.objects.get(from_user=from_user, to_user=sss_user, shout=shout)
+        if not sms_anyway:
+            return
+    except DBCLConversation.DoesNotExist:
+        # create dbcl conversation
+        ref = uuid.uuid4().hex
+        sms_code = ref[-6:]
+        dbcl_conversation = DBCLConversation(from_user=from_user, to_user=sss_user, shout=shout, ref=ref, sms_code=sms_code)
+        dbcl_conversation.save()
+    except DBCLConversation.MultipleObjectsReturned:
+        dbcl_conversation = DBCLConversation.objects.filter(from_user=from_user, to_user=sss_user, shout=shout)[0]
 
     # send the sms
-    from_ = settings.TWILIO_FROM
-    to = user.profile.mobile
-    body = "someone is interested in your '%s...'\nreply on\nshoutit.com/%s"
-    body %= (shout.item.name[:36], dbcl_conversation.sms_code)
-    shoutit_twilio.messages.create(from_=from_, to=to, body=body)
+    text = message.text or ''
+    to = sss_user.profile.mobile
+    body = "you got a message about '%s...'\n\n%s\n\nreply on\nshoutit.com/%s"
+    body %= (shout.item.name[:20], text[:50], dbcl_conversation.sms_code)
+    send_nexmo_sms(to, body, len_restriction=False)
 
 
 def get_dbz_base_url(db_link):

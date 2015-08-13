@@ -294,3 +294,26 @@ def correct_mobile(mobile, country):
     except (phonenumbers.NumberParseException, ValueError):
         mobile = ''
     return mobile
+
+
+def send_nexmo_sms(mobile, text, len_restriction=True):
+    try:
+        _has_unicode = has_unicode(text)
+        if len_restriction and _has_unicode and len(text) > 70:
+            raise ValueError('max len 70 for unicode sms exceeded')
+        if len_restriction and not _has_unicode and len(text) > 160:
+            raise ValueError('max len 160 for text sms exceeded')
+        message = {
+            'from': 'Shoutit Adv',
+            'to': mobile,
+            'text': text,
+            'type': 'unicode' if _has_unicode else None
+        }
+        res = nexmo_client.send_message(message)
+        messages = res.get('messages')
+        if messages and messages[0].get('status') == '9':
+            raise OverflowError('Quota Exceeded')
+        return True
+    except Exception as e:
+        debug_logger.debug(e, extra={'mobile': mobile, 'text': text, 'detail': str(e)})
+        return False
