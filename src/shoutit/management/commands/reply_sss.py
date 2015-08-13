@@ -25,10 +25,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # get conversations
         now = timezone.now()
-        four_hours_ago = now + datetime.timedelta(hours=-0)
+        two_hours_ago = now + datetime.timedelta(hours=-2)
         days_ago = now + datetime.timedelta(days=-options['days'])
         conversations = Conversation.objects.filter(created_at__gte=days_ago,
-                                                    created_at__lt=four_hours_ago,
+                                                    created_at__lt=two_hours_ago,
                                                     shout__is_sss=True)
         replies_count = 0
         for conversation in conversations:
@@ -52,7 +52,7 @@ def reply_sss(conversation, shout, sss_user):
         # send the message
         message_controller.send_message(conversation=conversation, user=sss_user, text=text)
         # sms the sss_user again
-        sms_sss_user(sss_user, from_user=last_message.user, message=last_message, sms_anyway=True)
+        sms_sss_user.delay(sss_user, from_user=last_message.user, message=last_message, sms_anyway=True)
     else:
         if sss_user.profile.country in ['JO', 'EG', 'SA', 'OM', 'BH']:
             text = random.choice(arabic_replies)
