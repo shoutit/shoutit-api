@@ -29,17 +29,21 @@ def push():
 
 def pull(env_name):
     with cd('/opt/shoutit_api_{}/api'.format(env_name)):
+        if confirm('Fast deploy [pull then restart]?'):
+            out = run('git pull')
+            if out != 'Already up-to-date.':
+                run('supervisorctl restart all')
+            return
         run('supervisorctl stop all')
         run('git pull')
-        if not confirm('Fast deploy [pull and restart only]?'):
-            if confirm("Update requirements?"):
-                run('/opt/shoutit_api_{}/bin/pip install    -r src/requirements/common_noupdate.txt'.format(env_name))
-                run('/opt/shoutit_api_{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(env_name))
-            # run('/opt/shoutit_api_{}/bin/python src/manage.py test'.format(env))
-            if confirm("Migratey?"):
-                run('/opt/shoutit_api_{}/bin/python src/manage.py migrate'.format(env_name))
-            if confirm("Clear all logs?"):
-                run("find /opt/shoutit_api_{}/log/. -type f -exec cp /dev/null {{}} \;".format(env_name))
+        if confirm("Update requirements?"):
+            run('/opt/shoutit_api_{}/bin/pip install    -r src/requirements/common_noupdate.txt'.format(env_name))
+            run('/opt/shoutit_api_{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(env_name))
+        # run('/opt/shoutit_api_{}/bin/python src/manage.py test'.format(env))
+        if confirm("Migratey?"):
+            run('/opt/shoutit_api_{}/bin/python src/manage.py migrate'.format(env_name))
+        if confirm("Clear all logs?"):
+            run("find /opt/shoutit_api_{}/log/. -type f -exec cp /dev/null {{}} \;".format(env_name))
         run('chown shoutit_api_{0} -R /opt/shoutit_api_{0}/'.format(env_name))
         run('supervisorctl start all')
 
