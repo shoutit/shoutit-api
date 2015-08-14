@@ -13,6 +13,13 @@ class UserLinkMixin(object):
     _user.short_description = 'User'
 
 
+class LinksMixin(object):
+    def _links(self, obj):
+        return links(obj)
+    _links.allow_tags = True
+    _links.short_description = 'Link'
+
+
 class LocationMixin(object):
     def _location(self, obj):
         location = obj.location
@@ -22,6 +29,13 @@ class LocationMixin(object):
         return location_html
     _location.allow_tags = True
     _location.short_description = 'Location'
+
+
+def links(obj):
+    web_link = '<a href="%s" target="_blank">%s</a>' % (obj.web_url, 'WebApp')
+    # api_link = '<a href="%s" target="_blank">%s</a>' % (obj.api_url, 'Api')
+    # return "%s | %s" % (web_link, api_link)
+    return "%s" % web_link
 
 
 def tag_link(tag):

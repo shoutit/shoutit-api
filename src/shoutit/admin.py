@@ -10,11 +10,9 @@ from django.conf.urls import url
 from django.core.urlresolvers import reverse
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
-from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, \
-    APIClientFilter
-from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link
+from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter
+from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin
 from shoutit_pusher.models import PusherChannel, PusherChannelJoin
-
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
@@ -26,8 +24,8 @@ from django.utils.translation import ugettext_lazy as _
 
 # Shout
 @admin.register(Shout)
-class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
-    list_display = ('id', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled', 'priority',
+class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
+    list_display = ('id', '_links', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled', 'priority',
                     'date_published')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city',
                    ('created_at', ShoutitDateFieldListFilter))
@@ -64,10 +62,10 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin, LocationMixin):
+class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     save_on_top = True
     list_display = (
-        'id', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_name',
+        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_name',
         '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
@@ -176,8 +174,8 @@ class TagChangeForm(forms.ModelForm):
 
 # Tag
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'image', 'stream')
+class TagAdmin(admin.ModelAdmin, LinksMixin):
+    list_display = ('name', 'image', '_links', 'stream')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     form = TagChangeForm
