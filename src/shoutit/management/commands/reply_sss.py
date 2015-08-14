@@ -59,7 +59,8 @@ def reply_sss(conversation, shout, sss_user):
         else:  # ['AE', 'QA', 'KQ', 'BH', ...]
             text = random.choice(english_replies)
         # send the message
-        message_controller.send_message(conversation=conversation, user=sss_user, text=text)
+        if text:
+            message_controller.send_message(conversation=conversation, user=sss_user, text=text)
         # leave conversation
         conversation.mark_as_deleted(sss_user)
         # disable the shout
