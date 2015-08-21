@@ -415,8 +415,10 @@ class ShoutSerializer(serializers.ModelSerializer):
             data = {}
         try:
             category = data.get('category')
-            if not category:
+            if not category or not category.get('name'):
                 data['category'] = {'name': 'Other'}
+            if data['category'] == 'cv-video':  # fix for current ios bug
+                data['category'] = {'name': 'Jobs Wanted'}
         except AttributeError:
             pass
         # optional price and currency
