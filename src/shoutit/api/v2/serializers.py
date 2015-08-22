@@ -23,12 +23,13 @@ from common.constants import (
 from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
+from shoutit.controllers.location_controller import location_from_google_geocode_response
 from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
 from shoutit.controllers import shout_controller, user_controller
-from shoutit.utils import location_from_google_geocode_response, generate_username
+from shoutit.utils import generate_username
 
 
 class LocationSerializer(serializers.Serializer):

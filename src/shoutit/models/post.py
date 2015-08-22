@@ -10,7 +10,7 @@ from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean
 
 from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST,
-    POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, COUNTRY_ISO)
+                              POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, COUNTRY_ISO)
 from common.utils import date_unix
 from shoutit.models import Tag
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, LocationMixin

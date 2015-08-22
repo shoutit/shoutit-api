@@ -57,6 +57,10 @@ class UUIDModel(models.Model):
     def modified_at_unix(self):
         return date_unix(self.modified_at)
 
+    @property
+    def model_name(self):
+        return type(self).__name__
+
 
 class AttachedObjectMixinManager(models.Manager):
     def with_attached_object(self, attached_object):

@@ -7,8 +7,8 @@ from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_
 
 from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
                             LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
-from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image, \
-    location_from_ip
+from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
+from shoutit.controllers.location_controller import location_from_ip
 
 
 def signup_user(email=None, password=None, first_name='', last_name='', username=None,

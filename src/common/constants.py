@@ -344,7 +344,10 @@ LOCATION_ATTRIBUTES = ('country', 'city', 'latitude', 'longitude')
 
 DEFAULT_LOCATION = {
     'country': 'AE',
+    'postal_code': 'Dubai',
+    'state': 'Dubai',
     'city': 'Dubai',
+    'address': '',
     'latitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][0],
     'longitude': DEFAULT_LOCATIONS_LATLNG['Dubai'][1]
 }

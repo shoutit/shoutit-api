@@ -1,11 +1,15 @@
 from __future__ import unicode_literals
 import uuid
-
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django_rq import job
+from elasticsearch import RequestError, ConnectionTimeout, NotFoundError, ConflictError
+from elasticsearch_dsl import DocType, String, Double, Integer, Boolean, GeoPoint
 from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED
-
 from shoutit.models.base import UUIDModel, LocationMixin
+from shoutit.utils import error_logger, debug_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -60,6 +64,105 @@ class ConfirmToken(UUIDModel):
 
 class SharedLocation(LocationMixin, UUIDModel):
     pass
+
+
+class GoogleLocation(LocationMixin, UUIDModel):
+    geocode_response = models.TextField(max_length=5000)
+
+
+class LocationIndex(DocType):
+    source = String(index='not_analyzed')
+    location = GeoPoint()
+    country = String(index='not_analyzed')
+    postal_code = String(index='not_analyzed')
+    state = String(index='not_analyzed')
+    city = String(index='not_analyzed')
+    address = String(index='not_analyzed')
+
+    class Meta:
+        index = settings.ENV + '_location'
+
+    @property
+    def location_dict(self):
+        return {
+            'latitude': self.location['lat'],
+            'longitude': self.location['lon'],
+            'country': self.country,
+            'postal_code': self.postal_code,
+            'state': self.state,
+            'city': self.city,
+            'address': self.address,
+        }
+
+
+# initiate the index if not initiated
+try:
+    LocationIndex.init()
+except RequestError:
+    pass
+except ConnectionTimeout:
+    error_logger.warn("ES Server is down.")
+
+
+@receiver(post_save, sender=GoogleLocation)
+def shout_post_save(sender, instance=None, created=False, **kwargs):
+    action = 'Created' if created else 'Updated'
+    debug_logger.debug('{} {}: {}'.format(action, instance.model_name, instance))
+    # save index
+    save_location_index(instance, created)
+
+
+@receiver(post_delete, sender=GoogleLocation)
+def shout_post_delete(sender, instance=None, created=False, **kwargs):
+    debug_logger.debug('Deleted {}: {}'.format(instance.model_name, instance))
+    # delete index
+    delete_object_index.delay(LocationIndex, instance)
+
+
+def save_location_index(location=None, created=False, delay=True):
+    if delay:
+        location = type(location).objects.get(id=location.id)
+        return _save_location_index.delay(location, created)
+    return _save_location_index(location, created)
+
+
+@job(settings.RQ_QUEUE)
+def _save_location_index(location=None, created=False):
+    try:
+        if created:
+            raise NotFoundError()
+        location_index = LocationIndex.get(location.pk)
+    except NotFoundError:
+        location_index = LocationIndex()
+        location_index._id = location.pk
+        location_index.source = type(location).__name__
+
+    location_index.location = {
+        'lat': location.latitude,
+        'lon': location.longitude
+    }
+    location_index.country = location.country
+    location_index.postal_code = location.postal_code
+    location_index.state = location.state
+    location_index.city = location.city
+    location_index.address = location.address
+    if location_index.save():
+        debug_logger.debug('Created LocationIndex: %s' % location)
+    else:
+        debug_logger.debug('Updated LocationIndex: %s' % location)
+
+
+@job(settings.RQ_QUEUE)
+def delete_object_index(index_model, obj):
+    index_model_name = index_model.__name__
+    try:
+        object_index = index_model.get(obj.pk)
+        object_index.delete()
+        debug_logger.debug('Deleted %s: %s' % (index_model_name, obj.pk))
+    except NotFoundError:
+        debug_logger.debug('%s: %s not found' % (index_model_name, obj.pk))
+    except ConflictError:
+        debug_logger.debug('%s: %s already deleted' % (index_model_name, obj.pk))
 
 
 # class StoredFile(UUIDModel):

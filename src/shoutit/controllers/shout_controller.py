@@ -11,9 +11,10 @@ from django.conf import settings
 from django_rq import job
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from elasticsearch import NotFoundError, ConflictError
+from elasticsearch import NotFoundError
 from common.utils import process_tags
 from shoutit.controllers.user_controller import update_object_location, add_predefined_city
+from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
@@ -197,7 +198,7 @@ def _save_shout_index(shout=None, created=False):
         if created:
             raise NotFoundError()
         if shout.is_disabled:
-            return delete_shout_index(shout)
+            return delete_object_index(ShoutIndex, shout)
         shout_index = ShoutIndex.get(shout.pk)
     except NotFoundError:
         shout_index = ShoutIndex()
@@ -228,15 +229,3 @@ def _save_shout_index(shout=None, created=False):
         debug_logger.debug('Created ShoutIndex: %s' % shout.pk)
     else:
         debug_logger.debug('Updated ShoutIndex: %s' % shout.pk)
-
-
-def delete_shout_index(shout):
-    try:
-        shout_index = ShoutIndex.get(shout.pk)
-        shout_index.delete()
-        debug_logger.debug('Deleted ShoutIndex: %s' % shout.pk)
-    except NotFoundError:
-        debug_logger.debug('ShoutIndex: %s not found' % shout.pk)
-    except ConflictError:
-        debug_logger.debug('ShoutIndex: %s already deleted' % shout.pk)
-

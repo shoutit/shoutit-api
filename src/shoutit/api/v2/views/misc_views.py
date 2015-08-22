@@ -16,10 +16,11 @@ from common.constants import POST_TYPE_REQUEST
 
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
-from shoutit.controllers import shout_controller, user_controller, message_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
                             User, DBZ2User)
-from shoutit.utils import debug_logger, error_logger, location_from_latlng, location_from_google_geocode_response
+from shoutit.utils import debug_logger, error_logger
+from ipware.ip import get_real_ip
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -129,8 +130,6 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
                 suffix='IP')
     def ip(self, request):
-        from ipware.ip import get_real_ip
-
         ip = get_real_ip(request) or 'undefined'
         debug_logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
@@ -138,13 +137,24 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get'])
     def geocode(self, request):
         latlng = request.query_params.get('latlng', '')
-        return Response(location_from_latlng(latlng))
+        return Response(location_controller.location_from_latlng(latlng))
+
+    @list_route(methods=['get'])
+    def geocode2(self, request):
+        try:
+            latlng = request.query_params.get('latlng', '')
+            lat = float(latlng.split(',')[0])
+            lon = float(latlng.split(',')[1])
+        except Exception:
+            raise ValidationError({'latlng': ['missing or wrong latlng parameter']})
+        ip = get_real_ip(request)
+        return Response(location_controller.location_from_latlng2(lat, lon, ip))
 
     @list_route(methods=['post'])
     def parse_google_geocode_response(self, request):
         google_geocode_response = request.data.get('google_geocode_response', {})
         try:
-            location = location_from_google_geocode_response(google_geocode_response)
+            location = location_controller.location_from_google_geocode_response(google_geocode_response)
         except (IndexError, KeyError, ValueError):
             raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
         return Response(location)

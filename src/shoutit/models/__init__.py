@@ -2,7 +2,7 @@ from shoutit.models.base import UUIDModel, LocationMixin, User
 from shoutit.models.item import Currency, Item
 from shoutit.models.stream import Stream, StreamMixin, Listen
 from shoutit.models.tag import Tag, Category, FeaturedTag
-from shoutit.models.misc import ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation
+from shoutit.models.misc import ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation, GoogleLocation, LocationIndex
 from shoutit.models.user import Profile, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission
 from shoutit.models.post import Event, Post, Shout, Video, ShoutIndex
 from shoutit.models.dbcl import DBUser, DBZ2User, CLUser, DBCLConversation
