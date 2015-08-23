@@ -107,7 +107,7 @@ class AbstractLocationMixin(models.Model):
 
 class NamedLocationMixin(models.Model):
     country = models.CharField(max_length=2, blank=True, db_index=True, choices=COUNTRY_ISO.items())
-    postal_code = models.CharField(max_length=10, blank=True, db_index=True)
+    postal_code = models.CharField(max_length=30, blank=True, db_index=True)
     state = models.CharField(max_length=50, blank=True, db_index=True)
     city = models.CharField(max_length=100, blank=True, db_index=True)
 
