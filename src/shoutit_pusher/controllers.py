@@ -18,13 +18,13 @@ def create_channel(channel_name):
     else:
         channel_type = 0
 
-    channel = PusherChannel(type=channel_type, name=channel_name)
     try:
-        channel.save()
+        channel = PusherChannel.create(type=channel_type, name=channel_name)
         debug_logger.debug('Created PusherChannel: %s' % channel_name)
+        return channel
     except (ValidationError, IntegrityError) as e:
         debug_logger.warn(e)
-    return channel
+        return None
 
 
 def delete_channel(channel_name):
@@ -37,12 +37,12 @@ def add_member(channel_name, user_id):
         channel = PusherChannel.objects.get(name=channel_name)
     except PusherChannel.DoesNotExist:
         channel = create_channel(channel_name)
-
-    try:
-        PusherChannelJoin(channel=channel, user_id=user_id).save()
-        debug_logger.debug('Added User: %s to PusherChannel: %s' % (user_id, channel.name))
-    except (ValidationError, IntegrityError) as e:
-        debug_logger.warn(e)
+    if channel:
+        try:
+            PusherChannelJoin.objects.create(channel=channel, user_id=user_id)
+            debug_logger.debug('Added User: %s to PusherChannel: %s' % (user_id, channel.name))
+        except IntegrityError as e:
+            debug_logger.warn(e)
 
 
 def remove_member(channel_name, user_id):

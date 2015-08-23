@@ -81,7 +81,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         # todo: find more efficient way
         for message in self.messages.all():
             try:
-                MessageRead.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
+                MessageRead.objects.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
             except IntegrityError:
                 pass
 

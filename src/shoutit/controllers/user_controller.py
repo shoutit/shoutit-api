@@ -99,9 +99,8 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
 
     credentials_json = credentials.to_json()
     try:
-        la = LinkedGoogleAccount(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
-        la.save()
-    except (ValidationError, IntegrityError) as e:
+        LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
+    except IntegrityError as e:
         print "create g+ la error", str(e)
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 
@@ -145,10 +144,8 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
     access_token = long_lived_token.get('access_token')
     expires = long_lived_token.get('expires')
     try:
-        la = LinkedFacebookAccount(user=user, facebook_id=facebook_id, access_token=access_token,
-                                   expires=expires)
-        la.save()
-    except (ValidationError, IntegrityError) as e:
+        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, access_token=access_token, expires=expires)
+    except IntegrityError as e:
         error_logger.warn(str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 

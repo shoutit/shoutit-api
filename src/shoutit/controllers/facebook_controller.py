@@ -121,10 +121,8 @@ def link_facebook_account(user, facebook_access_token):
     access_token = long_lived_token.get('access_token')
     expires = long_lived_token.get('expires')
     try:
-        la = LinkedFacebookAccount(user=user, facebook_id=facebook_id, expires=expires,
-                                   access_token=access_token)
-        la.save()
-    except (ValidationError, IntegrityError) as e:
+        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, expires=expires, access_token=access_token)
+    except IntegrityError as e:
         debug_logger.error("LinkedFacebookAccount creation error: %s." % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 

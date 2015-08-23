@@ -79,9 +79,8 @@ def link_gplus_account(user, gplus_code, client=None):
     # link
     # todo: get info, pic, etc about user
     try:
-        la = LinkedGoogleAccount(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
-        la.save()
-    except (ValidationError, IntegrityError) as e:
+        LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
+    except IntegrityError as e:
         debug_logger.error("LinkedGoogleAccount creation error: %s." % str(e))
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 

@@ -36,8 +36,8 @@ def add_videos_to_item(item, videos=None, remove_existing=False):
         for v in videos:
             # todo: better handling
             try:
-                video = Video.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
-                                     id_on_provider=v['id_on_provider'], duration=v['duration'])
+                video = Video.objects.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
+                                             id_on_provider=v['id_on_provider'], duration=v['duration'])
                 item.videos.add(video)
-            except (KeyError, ValidationError, IntegrityError) as e:
+            except (KeyError, IntegrityError) as e:
                 error_logger.warn(str(e))
