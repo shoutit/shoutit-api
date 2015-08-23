@@ -33,21 +33,6 @@ def mark_notifications_as_read_by_ids(notification_ids):
     Notification.objects.filter(id__in=notification_ids).update(is_read=True)
 
 
-@job(settings.RQ_QUEUE)
-def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
-    # create notification object
-    Notification(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object).save()
-    # send appropriate notification
-    if check_sss(user, notification_type, attached_object, from_user):
-        send_sss(user, attached_object, notification_type, from_user)
-    else:
-        attached_object_dict = serialize_attached_object(attached_object, user, request)
-        if check_pusher(user):
-            send_pusher(user, notification_type, attached_object_dict)
-        elif check_push():
-            send_push.delay(user, notification_type, attached_object_dict)
-
-
 def serialize_attached_object(attached_object, user, request):
     from shoutit.api.v2 import serializers
     if not request:
@@ -74,17 +59,56 @@ def check_pusher(user):
     return PusherChannel.objects.filter(name='presence-u-%s' % user.pk).exists()
 
 
+def check_push():
+    return (not settings.DEBUG) or settings.FORCE_PUSH
+
+
+def check_sss(user, notification_type, attached_object, from_user):
+    if notification_type != NOTIFICATION_TYPE_MESSAGE:
+        return False
+    if not user.sss_user or user.sss_user.converted_at:
+        return False
+    disabled_shout = getattr(attached_object.conversation.attached_object, 'is_disabled', False)
+    text = getattr(attached_object, 'text')
+    force_sss = not settings.DEBUG or settings.FORCE_SSS_NOTIFY
+    return not disabled_shout and from_user and text and force_sss
+
+
+def get_dbz_base_url(db_link):
+    import urlparse
+    parts = urlparse.urlparse(db_link)
+    return parts.scheme + '://' + parts.netloc
+
+
+@job(settings.RQ_QUEUE)
+def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
+    # send notification to pusher
+    attached_object_dict = serialize_attached_object(attached_object, user, request)
+    send_pusher.delay(user, notification_type, attached_object_dict)
+
+    # create notification object
+    Notification.create(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object)
+
+    # send appropriate notification
+    if check_sss(user, notification_type, attached_object, from_user):
+        send_sss(user, attached_object, notification_type, from_user)
+    elif check_push() and not check_pusher(user):
+        send_push.delay(user, notification_type, attached_object_dict)
+
+
+@job(settings.RQ_QUEUE_PUSHER)
 def send_pusher(user, notification_type, attached_object_dict):
     pusher.trigger('presence-u-%s' % user.pk, str(notification_type), attached_object_dict)
 
 
-def check_push():
-    return not settings.DEBUG or settings.FORCE_PUSH
+@job(settings.RQ_QUEUE_PUSHER)
+def send_pusher_message(message, request=None):
+    message_dict = serialize_attached_object(message, message.user, request)
+    pusher.trigger('presence-c-%s' % message.conversation.pk, str(NOTIFICATION_TYPE_MESSAGE), message_dict)
 
 
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_PUSH)
 def send_push(user, notification_type, attached_object_dict):
-
     if notification_type == NOTIFICATION_TYPE_LISTEN:
         message = _("You got a new listen")
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
@@ -120,17 +144,7 @@ def send_push(user, notification_type, attached_object_dict):
             })
 
 
-def check_sss(user, notification_type, attached_object, from_user):
-    if notification_type != NOTIFICATION_TYPE_MESSAGE:
-        return False
-    if not user.sss_user or user.sss_user.converted_at:
-        return False
-    disabled_shout = getattr(attached_object.conversation.attached_object, 'is_disabled', False)
-    text = getattr(attached_object, 'text')
-    force_sss = not settings.DEBUG or settings.FORCE_SSS_NOTIFY
-    return not disabled_shout and from_user and text and force_sss
-
-
+@job(settings.RQ_QUEUE_SSS)
 def send_sss(user, attached_object, notification_type, from_user):
     if user.db_user:
         if not user.email:
@@ -148,7 +162,7 @@ def send_sss(user, attached_object, notification_type, from_user):
         notify_cl_user2.delay(user.cl_user, from_user, attached_object)
 
 
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_SSS)
 def sms_sss_user(sss_user, from_user, message, sms_anyway=False):
     shout = message.conversation.about
 
@@ -174,13 +188,7 @@ def sms_sss_user(sss_user, from_user, message, sms_anyway=False):
     send_nexmo_sms(to, body, len_restriction=False)
 
 
-def get_dbz_base_url(db_link):
-    import urlparse
-    parts = urlparse.urlparse(db_link)
-    return parts.scheme + '://' + parts.netloc
-
-
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_SSS)
 def notify_db_user(db_user, from_user, message):
     conversation = message.conversation
     shout = conversation.about
@@ -221,7 +229,7 @@ def notify_db_user(db_user, from_user, message):
         raise NotifySSSException("Error sending message to dbz user")
 
 
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_SSS)
 def notify_dbz2_user(dbz2_user, from_user, message):
     from fake_useragent import UserAgent
     conversation = message.conversation
@@ -277,7 +285,7 @@ def notify_dbz2_user(dbz2_user, from_user, message):
         raise NotifySSSException("Error sending message to dbz2 user")
 
 
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_SSS)
 def notify_cl_user2(cl_user, from_user, message):
     shout = message.conversation.about
     subject = shout.item.name
@@ -300,29 +308,6 @@ def notify_cl_user2(cl_user, from_user, message):
         })
 
 
-def notify_cl_user(cl_user, from_user, message):
-    shout = message.conversation.about
-    subject = shout.item.name
-    ref = "%s-%s" % (cl_user.cl_ad_id, from_user.pk)
-    try:
-        DBCLConversation.objects.get(ref=ref)
-    except DBCLConversation.DoesNotExist:
-        dbcl_conversation = DBCLConversation(
-            ref=ref, from_user=from_user, to_user=cl_user.user, shout=shout)
-        dbcl_conversation.save()
-
-    email = EmailMultiAlternatives(
-        subject, "", "%s <%s>" % (from_user.name, settings.EMAIL_HOST_USER), [cl_user.cl_email])
-    html_message = """
-    <p>%s</p>
-    <br>
-    <br>
-    <p style="max-height:1px;min-height:1px;font-size:0;display:none;color:#fffffe">{ref:%s}</p>
-    """ % (message.text, ref)
-    email.attach_alternative(html_message, "text/html")
-    email.send(True)
-
-
 def notify_user_of_listen(user, listener, request=None):
     notify_user.delay(user, NOTIFICATION_TYPE_LISTEN, listener, listener, request)
 
@@ -332,19 +317,16 @@ def notify_user_of_message(user, message, request=None):
 
 
 def notify_business_of_exp_posted(business, exp):
-    notify_user.delay(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.user,
-                      attached_object=exp)
+    notify_user.delay(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.user, attached_object=exp)
 
 
 def notify_user_of_exp_shared(user, shared_exp):
-    notify_user.delay(user, NOTIFICATION_TYPE_EXP_SHARED, from_user=shared_exp.user,
-                      attached_object=shared_exp)
+    notify_user.delay(user, NOTIFICATION_TYPE_EXP_SHARED, from_user=shared_exp.user, attached_object=shared_exp)
 
 
 def notify_users_of_comment(users, comment):
     for user in users:
-        notify_user.delay(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.user,
-                          attached_object=comment)
+        notify_user.delay(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.user, attached_object=comment)
 
 
 def get_user_notifications_count(user):
@@ -352,5 +334,4 @@ def get_user_notifications_count(user):
 
 
 def get_user_notifications_without_messages_count(user):
-    return Notification.objects.filter(
-        Q(is_read=False) & Q(ToUser=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()
+    return Notification.objects.filter(Q(is_read=False) & Q(ToUser=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()

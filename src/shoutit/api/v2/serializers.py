@@ -152,7 +152,10 @@ class UserSerializer(serializers.ModelSerializer):
         self.fields['username'].required = False
 
     def get_api_url(self, user):
-        return reverse('user-detail', kwargs={'username': user.username}, request=self.context['request'])
+        request = self.root.context.get('request')
+        if request:
+            return reverse('user-detail', kwargs={'username': user.username}, request=request)
+        return "https://api.shoutit.com/v2/users/" + user.username
 
     def to_internal_value(self, data):
         ret = super(UserSerializer, self).to_internal_value(data)
@@ -546,8 +549,10 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'conversation_id', 'user', 'text', 'attachments', 'is_read')
 
     def get_is_read(self, message):
-        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return message.is_read(self.root.context['request'].user)
+        request = self.root.context.get('request')
+        user = request and getattr(request, 'user', None)
+        if user and user.is_authenticated():
+            return message.is_read(user)
         return False
 
     def to_internal_value(self, data):

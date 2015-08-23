@@ -63,6 +63,7 @@ ADMINS = (
     ('Mo Chawich', 'mo.chawich@gmail.com'),
 )
 MANAGERS = ADMINS
+GRAPPELLI_ADMIN_TITLE = 'Shoutit'
 
 # Shoutit defaults
 MAX_REG_DAYS = 14
@@ -87,8 +88,6 @@ CACHES = {
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # "SOCKET_CONNECT_TIMEOUT": 5,
-            # "SOCKET_TIMEOUT": 5,
         }
     },
     "session": {
@@ -97,30 +96,48 @@ CACHES = {
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # "SOCKET_CONNECT_TIMEOUT": 5,
-            # "SOCKET_TIMEOUT": 5,
         }
     },
     "worker": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/3",
+        "LOCATION": "redis://redis.shoutit.com:6379/10",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # "SOCKET_CONNECT_TIMEOUT": 5,
-            # "SOCKET_TIMEOUT": 5,
         }
     },
     "worker_mail": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/4",
+        "LOCATION": "redis://redis.shoutit.com:6379/11",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            # "SOCKET_CONNECT_TIMEOUT": 5,
-            # "SOCKET_TIMEOUT": 5,
         }
-    }
+    },
+    "worker_push": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/12",
+        'TIMEOUT': None,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "worker_pusher": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/13",
+        'TIMEOUT': None,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "worker_sss": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/14",
+        'TIMEOUT': None,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "session"
@@ -133,6 +150,9 @@ SESSION_CACHE_ALIAS = "session"
 FORCE_SYNC_RQ = False
 RQ_QUEUE = ENV
 RQ_QUEUE_MAIL = ENV + '_mail'
+RQ_QUEUE_PUSH = ENV + '_push'
+RQ_QUEUE_PUSHER = ENV + '_pusher'
+RQ_QUEUE_SSS = ENV + '_sss'
 RQ_QUEUES = {
     RQ_QUEUE: {
         'USE_REDIS_CACHE': 'worker',
@@ -142,11 +162,23 @@ RQ_QUEUES = {
         'USE_REDIS_CACHE': 'worker_mail',
         'DEFAULT_TIMEOUT': 30,
     },
-    # todo: add more specific queues
+    RQ_QUEUE_PUSH: {
+        'USE_REDIS_CACHE': 'worker_push',
+        'DEFAULT_TIMEOUT': 5,
+    },
+    RQ_QUEUE_PUSHER: {
+        'USE_REDIS_CACHE': 'worker_pusher',
+        'DEFAULT_TIMEOUT': 5,
+    },
+    RQ_QUEUE_SSS: {
+        'USE_REDIS_CACHE': 'worker_sss',
+        'DEFAULT_TIMEOUT': 30,
+    },
 }
 if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
         queue_config['ASYNC'] = False
+
 
 """
 =================================
@@ -154,6 +186,7 @@ if DEBUG or FORCE_SYNC_RQ:
 =================================
 """
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
+
 
 """
 =================================
@@ -272,12 +305,10 @@ DATABASES = {
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = False
-
 ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
@@ -333,11 +364,157 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "shoutit.middleware.include_settings",
 )
 
-GRAPPELLI_ADMIN_TITLE = 'Shoutit'
+# Mixpanel
+MIXPANEL_TOKEN = 'c9d0a1dc521ac1962840e565fa971574'
+FORCE_MP_TRACKING = False
 
-LOG_SQL = False
+# IP2Location
+IP2LOCATION_DB_BIN = os.path.join(API_DIR, 'assets', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
+
+# Twilio
+TWILIO_ACCOUNT_SID = "AC72062980c854618cfa7765121af3085d"
+TWILIO_AUTH_TOKEN = "ed5a3b1dc6debc010e10047ebaa066ce"
+TWILIO_FROM = '+14807255600'
+
+# Nexmo
+NEXMO_API_KEY = "7c650639"
+NEXMO_API_SECRET = "4ee98397"
+
+# Mail Settings
+MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
+MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
+
+FORCE_SMTP = False
+
+GOOGLE_SMTP = {
+    'default_from_email': 'Jack <reply@shoutit.com>',
+    'host': 'smtp.gmail.com',
+    'port': 587,
+    'username': 'reply@shoutit.com',
+    'password': 'replytomenow',
+    'use_tls': True,
+    'time_out': 5,
+    'backend': 'django.core.mail.backends.smtp.EmailBackend'
+}
+
+MANDRILL_SMTP = {
+    'default_from_email': 'Shoutit <noreply@shoutit.com>',
+    'host': 'smtp.mandrillapp.com',
+    'port': 587,
+    'username': 'info@shoutit.com',
+    'password': 'bneGVmK5BHC5B9pyLUEj_w',
+    'use_tls': True,
+    'time_out': 5,
+    'backend': 'django.core.mail.backends.smtp.EmailBackend'
+}
+
+FILE_SMTP = {
+    'host': 'localhost',
+    'backend': 'django.core.mail.backends.filebased.EmailBackend',
+    'file_path': os.path.join(LOG_DIR, 'messages')
+}
+
+EMAIL_BACKENDS = {
+    'google': GOOGLE_SMTP,
+    'mandrill': MANDRILL_SMTP,
+    'file': FILE_SMTP
+}
+
+if not LOCAL or FORCE_SMTP:
+    EMAIL_USING = EMAIL_BACKENDS['mandrill']
+else:
+    EMAIL_USING = EMAIL_BACKENDS['file']
+
+DEFAULT_FROM_EMAIL = EMAIL_USING.get('default_from_email')
+EMAIL_HOST = EMAIL_USING.get('host')
+EMAIL_PORT = EMAIL_USING.get('port')
+EMAIL_HOST_USER = EMAIL_USING.get('username')
+EMAIL_HOST_PASSWORD = EMAIL_USING.get('password')
+EMAIL_USE_TLS = EMAIL_USING.get('use_tls')
+EMAIL_TIMEOUT = EMAIL_USING.get('time_out')
+EMAIL_BACKEND = EMAIL_USING.get('backend')
+EMAIL_FILE_PATH = EMAIL_USING.get('file_path')
+
+info("FORCE_SMTP:", FORCE_SMTP)
+info("EMAIL_HOST:", EMAIL_HOST)
+
+# Facebook App
+FACEBOOK_APP_ID = '353625811317277'
+FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
+
+# Google App
+GOOGLE_API = {
+    'CLIENTS': {
+        'web': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'web.json')},
+        'android': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'android.json')},
+        'ios': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'ios.json')},
+    }
+}
+
+
+# Rest FW
+REST_FRAMEWORK = {
+    'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
+    'DEFAULT_VERSION': 'v2',
+    'ALLOWED_VERSIONS': ['v2'],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_oauth.authentication.OAuth2Authentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'shoutit.api.v2.permissions.IsSecure',
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'shoutit.api.v2.renderers.ShoutitBrowsableAPIRenderer',
+    ),
+    'DEFAULT_FILTER_BACKENDS': [],
+    'URL_FIELD_NAME': 'api_url',
+}
+
+ENFORCE_SECURE = PROD and not DEBUG
+
+# oauth2 settings
+OAUTH_SINGLE_ACCESS_TOKEN = True
+OAUTH_ENFORCE_SECURE = ENFORCE_SECURE
+OAUTH_ENFORCE_CLIENT_SECURE = True
+OAUTH_DELETE_EXPIRED = True
+
+SWAGGER_SETTINGS = {
+    'exclude_namespaces': [],
+    'api_version': '2.0',
+    'api_path': '/',
+    'protocol': 'https' if PROD else 'http',
+    'enabled_methods': [
+        'get',
+        'post',
+        'put',
+        'patch',
+        'delete',
+    ],
+    'api_key': '',
+    # 'is_authenticated': True,
+    'is_superuser': False,
+    'permission_denied_handler': None,
+    'info': {
+        # 'contact': 'mo.chawich@gmail.com',
+        'description': '',
+        'title': 'Shoutit API V2 Documentation',
+    },
+    'doc_expansion': 'none',
+}
+
+# some monkey patching for global imports
+from common import monkey_patches
+
+info('Monkeys: Loaded')
+info("==================================================")
+
 
 # Logging
+LOG_SQL = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -511,143 +688,7 @@ LOGGING = {
     }
 }
 
-# Mixpanel
-MIXPANEL_TOKEN = 'c9d0a1dc521ac1962840e565fa971574'
-FORCE_MP_TRACKING = False
 
-# IP2Location
-IP2LOCATION_DB_BIN = os.path.join(API_DIR, 'assets', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
-
-# Twilio
-TWILIO_ACCOUNT_SID = "AC72062980c854618cfa7765121af3085d"
-TWILIO_AUTH_TOKEN = "ed5a3b1dc6debc010e10047ebaa066ce"
-TWILIO_FROM = '+14807255600'
-
-# Nexmo
-NEXMO_API_KEY = "7c650639"
-NEXMO_API_SECRET = "4ee98397"
-
-# Mail Settings
-MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
-MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
-
-FORCE_SMTP = False
-
-GOOGLE_SMTP = {
-    'default_from_email': 'Jack <reply@shoutit.com>',
-    'host': 'smtp.gmail.com',
-    'port': 587,
-    'username': 'reply@shoutit.com',
-    'password': 'replytomenow',
-    'use_tls': True,
-    'time_out': 5,
-    'backend': 'django.core.mail.backends.smtp.EmailBackend'
-}
-
-MANDRILL_SMTP = {
-    'default_from_email': 'Shoutit <noreply@shoutit.com>',
-    'host': 'smtp.mandrillapp.com',
-    'port': 587,
-    'username': 'info@shoutit.com',
-    'password': 'bneGVmK5BHC5B9pyLUEj_w',
-    'use_tls': True,
-    'time_out': 5,
-    'backend': 'django.core.mail.backends.smtp.EmailBackend'
-}
-
-FILE_SMTP = {
-    'host': 'localhost',
-    'backend': 'django.core.mail.backends.filebased.EmailBackend',
-    'file_path': os.path.join(LOG_DIR, 'messages')
-}
-
-EMAIL_BACKENDS = {
-    'google': GOOGLE_SMTP,
-    'mandrill': MANDRILL_SMTP,
-    'file': FILE_SMTP
-}
-
-if not LOCAL or FORCE_SMTP:
-    EMAIL_USING = EMAIL_BACKENDS['mandrill']
-else:
-    EMAIL_USING = EMAIL_BACKENDS['file']
-
-DEFAULT_FROM_EMAIL = EMAIL_USING.get('default_from_email')
-EMAIL_HOST = EMAIL_USING.get('host')
-EMAIL_PORT = EMAIL_USING.get('port')
-EMAIL_HOST_USER = EMAIL_USING.get('username')
-EMAIL_HOST_PASSWORD = EMAIL_USING.get('password')
-EMAIL_USE_TLS = EMAIL_USING.get('use_tls')
-EMAIL_TIMEOUT = EMAIL_USING.get('time_out')
-EMAIL_BACKEND = EMAIL_USING.get('backend')
-EMAIL_FILE_PATH = EMAIL_USING.get('file_path')
-
-info("FORCE_SMTP:", FORCE_SMTP)
-info("EMAIL_HOST:", EMAIL_HOST)
-
-# Facebook App
-FACEBOOK_APP_ID = '353625811317277'
-FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
-
-# Google App
-GOOGLE_API = {
-    'CLIENTS': {
-        'web': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'web.json')},
-        'android': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'android.json')},
-        'ios': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'ios.json')},
-    }
-}
-
-
-# Filter
-PROFANITIES_LIST = (
-    'ass', 'ass lick', 'asses', 'asshole', 'assholes', 'asskisser', 'asswipe',
-    'balls', 'bastard', 'beastial', 'beastiality', 'beastility', 'beaver',
-    'belly whacker', 'bestial', 'bestiality', 'bitch', 'bitcher', 'bitchers',
-    'bitches', 'bitchin', 'bitching', 'blow job', 'blowjob', 'blowjobs', 'bonehead',
-    'boner', 'brown eye', 'browneye', 'browntown', 'bucket cunt', 'bull shit',
-    'bullshit', 'bum', 'bung hole', 'butch', 'butt', 'butt breath', 'butt fucker',
-    'butt hair', 'buttface', 'buttfuck', 'buttfucker', 'butthead', 'butthole',
-    'buttpicker', 'chink', 'circle jerk', 'clam', 'clit', 'cobia', 'cock', 'cocks',
-    'cocksuck', 'cocksucked', 'cocksucker', 'cocksucking', 'cocksucks', 'cooter',
-    'crap', 'cum', 'cummer', 'cumming', 'cums', 'cumshot', 'cunilingus',
-    'cunillingus', 'cunnilingus', 'cunt', 'cuntlick', 'cuntlicker', 'cuntlicking',
-    'cunts', 'cyberfuc', 'cyberfuck', 'cyberfucked', 'cyberfucker', 'cyberfuckers',
-    'cyberfucking', 'damn', 'dick', 'dike', 'dildo', 'dildos', 'dink', 'dinks',
-    'dipshit', 'dong', 'douche bag', 'dumbass', 'dyke', 'ejaculate', 'ejaculated',
-    'ejaculates', 'ejaculating', 'ejaculatings', 'ejaculation', 'fag', 'fagget',
-    'fagging', 'faggit', 'faggot', 'faggs', 'fagot', 'fagots', 'fags', 'fart',
-    'farted', 'farting', 'fartings', 'farts', 'farty', 'fatass', 'fatso',
-    'felatio', 'fellatio', 'fingerfuck', 'fingerfucked', 'fingerfucker',
-    'fingerfuckers', 'fingerfucking', 'fingerfucks', 'fistfuck', 'fistfucked',
-    'fistfucker', 'fistfuckers', 'fistfucking', 'fistfuckings', 'fistfucks',
-    'fuck', 'fucked', 'fucker', 'fuckers', 'fuckin', 'fucking', 'fuckings',
-    'fuckme', 'fucks', 'fuk', 'fuks', 'furburger', 'gangbang', 'gangbanged',
-    'gangbangs', 'gaysex', 'gazongers', 'goddamn', 'gonads', 'gook', 'guinne',
-    'hard on', 'hardcoresex', 'homo', 'hooker', 'horniest', 'horny', 'hotsex',
-    'hussy', 'jack off', 'jackass', 'jacking off', 'jackoff', 'jack-off', 'jap',
-    'jerk', 'jerk-off', 'jism', 'jiz', 'jizm', 'jizz', 'kike', 'kock', 'kondum',
-    'kondums', 'kraut', 'kum', 'kummer', 'kumming', 'kums', 'kunilingus', 'lesbian',
-    'lesbo', 'merde', 'mick', 'mothafuck', 'mothafucka', 'mothafuckas',
-    'mothafuckaz', 'mothafucked', 'mothafucker', 'mothafuckers', 'mothafuckin',
-    'mothafucking', 'mothafuckings', 'mothafucks', 'motherfuck', 'motherfucked',
-    'motherfucker', 'motherfuckers', 'motherfuckin', 'motherfucking',
-    'motherfuckings', 'motherfucks', 'muff', 'nigger', 'niggers', 'orgasim',
-    'orgasims', 'orgasm', 'orgasms', 'pecker', 'penis', 'phonesex', 'phuk',
-    'phuked', 'phuking', 'phukked', 'phukking', 'phuks', 'phuq', 'pimp', 'piss',
-    'pissed', 'pissrr', 'pissers', 'pisses', 'pissin', 'pissing', 'pissoff',
-    'prick', 'pricks', 'pussies', 'pussy', 'pussys', 'queer', 'retard', 'schlong',
-    'screw', 'sheister', 'shit', 'shited', 'shitfull', 'shiting', 'shitings',
-    'shits', 'shitted', 'shitter', 'shitters', 'shitting', 'shittings', 'shitty',
-    'slag', 'sleaze', 'slut', 'sluts', 'smut', 'snatch', 'spunk', 'twat', 'wetback',
-    'whore', 'wop',
-)
-
-CLOUD_USERNAME = 'noorsyron'
-CLOUD_API_KEY = '3528746c5ca336ee6be4f293fdb66a57'
-CLOUD_IDENTITY = 'rackspace'
-CLOUD_FILES_SERVICE_NET = False  # True
-SHOUT_IMAGES_CDN = 'c296814.r14.cf1.rackcdn.com'
 
 # PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
@@ -679,63 +720,3 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
-
-# Rest FW
-REST_FRAMEWORK = {
-    'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
-    'DEFAULT_VERSION': 'v2',
-    'ALLOWED_VERSIONS': ['v2'],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework_oauth.authentication.OAuth2Authentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'shoutit.api.v2.permissions.IsSecure',
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'shoutit.api.v2.renderers.ShoutitBrowsableAPIRenderer',
-    ),
-    'DEFAULT_FILTER_BACKENDS': [],
-    'URL_FIELD_NAME': 'api_url',
-}
-
-ENFORCE_SECURE = PROD and not DEBUG
-
-# oauth2 settings
-OAUTH_SINGLE_ACCESS_TOKEN = True
-OAUTH_ENFORCE_SECURE = PROD and not DEBUG
-OAUTH_ENFORCE_CLIENT_SECURE = True
-OAUTH_DELETE_EXPIRED = True
-
-SWAGGER_SETTINGS = {
-    'exclude_namespaces': [],
-    'api_version': '2.0',
-    'api_path': '/',
-    'protocol': 'https' if PROD else 'http',
-    'enabled_methods': [
-        'get',
-        'post',
-        'put',
-        'patch',
-        'delete',
-    ],
-    'api_key': '',
-    # 'is_authenticated': True,
-    'is_superuser': False,
-    'permission_denied_handler': None,
-    'info': {
-        # 'contact': 'mo.chawich@gmail.com',
-        'description': '',
-        'title': 'Shoutit API V2 Documentation',
-    },
-    'doc_expansion': 'none',
-}
-
-# some monkey patching for global imports
-from common import monkey_patches
-
-info('Monkeys: Loaded')
-info("==================================================")

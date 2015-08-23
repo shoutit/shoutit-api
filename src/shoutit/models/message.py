@@ -5,12 +5,10 @@
 from __future__ import unicode_literals
 from datetime import datetime
 from django.contrib.postgres.fields import ArrayField
-
 from django.db import models, IntegrityError
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType,
     MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
@@ -83,8 +81,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         # todo: find more efficient way
         for message in self.messages.all():
             try:
-                MessageRead.objects.create(user=user, message_id=message.id,
-                                           conversation_id=message.conversation.id)
+                MessageRead.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
             except IntegrityError:
                 pass
 
@@ -159,6 +156,10 @@ class Message(UUIDModel):
         return MessageAttachment.objects.filter(message_id=self.id)
 
     @property
+    def has_attachments(self):
+        return MessageAttachment.objects.filter(message_id=self.id).exists()
+
+    @property
     def contributors(self):
         return self.conversation.contributors
 
@@ -169,21 +170,29 @@ class Message(UUIDModel):
 @receiver(post_save, sender=Message)
 def post_save_message(sender, instance=None, created=False, **kwargs):
     if created:
+        # save the attachments
+        from shoutit.controllers.message_controller import save_message_attachments
+        attachments = getattr(instance, 'raw_attachments', [])
+        save_message_attachments(instance, attachments)
+
+        # push the message to the conversation presence channel
+        from shoutit.controllers import notifications_controller
+        request = getattr(instance, 'request', None)
+        notifications_controller.send_pusher_message.delay(instance, request)
+
         # update the conversation
         conversation = instance.conversation
         conversation.last_message = instance
         conversation.save()
-        # read it by its owner if exists (not by system)
+
+        # read the message by its owner if exists (not by system)
         if instance.user:
-            MessageRead.objects.create(user=instance.user, message=instance, conversation=conversation)
+            MessageRead.create(user=instance.user, message=instance, conversation=conversation)
 
-        if getattr(instance, 'send_notification', True):
-            from shoutit.controllers import notifications_controller
-            for to_user in conversation.contributors:
-                if instance.user and instance.user != to_user:
-                    notifications_controller.notify_user_of_message(to_user, instance)
-
-        # todo: push the message to the conversation presence channel
+        # notify the users
+        for to_user in conversation.contributors:
+            if instance.user and instance.user != to_user:
+                notifications_controller.notify_user_of_message(to_user, instance)
 
 
 class MessageRead(UUIDModel):

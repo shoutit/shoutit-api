@@ -73,18 +73,22 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
             conversation = Conversation(type=CONVERSATION_TYPE_CHAT)
         conversation.creator_id = user.pk
         conversation.save()
-        conversation.users = to_users
+        conversation.users.add(*to_users)
 
     # add the new message
     if text:
         text = text[:2000]
-    message = Message(conversation=conversation, user=user, text=text)
-    message.send_notification = False
-    message.save()
-
     if not attachments:
         attachments = []
+    message = Message(conversation=conversation, user=user, text=text)
+    message.raw_attachments = attachments
+    message.request = request
+    message.save()
+    return message
 
+
+def save_message_attachments(message, attachments):
+    conversation = message.conversation
     for attachment in attachments:
         # todo: map the content types to models
         if MESSAGE_ATTACHMENT_TYPE_SHOUT.text in attachment:
@@ -101,7 +105,7 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
             object_id = sl.id
             content_type = ContentType.objects.get_for_model(SharedLocation)
             ma_type = MESSAGE_ATTACHMENT_TYPE_LOCATION
-            MessageAttachment.create(message_id=message.id, conversation_id=conversation.id, content_type=content_type,
+            MessageAttachment.create(message=message, conversation=conversation, content_type=content_type,
                                      object_id=object_id, type=ma_type)
 
         if any_in(['images', 'videos'], attachment):
@@ -117,9 +121,3 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
                     ma.videos.add(video)
                 except Exception as e:
                     error_logger.warn("Error creating video", extra={'detail': str(e), 'video': v})
-
-    for to_user in conversation.contributors:
-        if user != to_user:
-            notifications_controller.notify_user_of_message(to_user, message, request)
-
-    return message

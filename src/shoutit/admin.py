@@ -276,7 +276,7 @@ class MessageAdmin(admin.ModelAdmin):
     _conversation.short_description = 'Conversation'
 
     def has_attachments(self, message):
-        return message.attachments.exists()
+        return message.has_attachments
 
     has_attachments.boolean = True
 
