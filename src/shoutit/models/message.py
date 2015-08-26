@@ -177,9 +177,9 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         save_message_attachments(instance, attachments)
 
         # push the message to the conversation presence channel
-        from shoutit.controllers import notifications_controller
-        request = getattr(instance, 'request', None)
-        notifications_controller.send_pusher_message.delay(instance, request)
+        # from shoutit.controllers import notifications_controller
+        # request = getattr(instance, 'request', None)
+        # notifications_controller.send_pusher_message.delay(instance, request)
 
         # update the conversation
         conversation = instance.conversation
