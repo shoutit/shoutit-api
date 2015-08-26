@@ -19,7 +19,7 @@ from shoutit.models import (
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast)
+    PushBroadcast, GoogleLocation)
 from django.utils.translation import ugettext_lazy as _
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
@@ -430,6 +430,13 @@ class SMSInvitationAdmin(admin.ModelAdmin):
     list_filter = ('status', 'country')
     search_fields = ('mobile', 'message')
     raw_id_fields = ('user',)
+
+
+@admin.register(GoogleLocation)
+class GoogleLocationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'country', 'state', 'city', 'postal_code', 'latitude', 'longitude')
+    list_filter = ('country', 'state', 'city', 'postal_code')
+
 
 # Others
 admin.site.register(Video)
