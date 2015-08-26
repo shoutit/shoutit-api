@@ -151,6 +151,7 @@ FORCE_SYNC_RQ = False
 RQ_QUEUE = ENV
 RQ_QUEUE_MAIL = ENV + '_mail'
 RQ_QUEUE_PUSH = ENV + '_push'
+RQ_QUEUE_PUSH_BROADCAST = ENV + '_push_broadcast'
 RQ_QUEUE_PUSHER = ENV + '_pusher'
 RQ_QUEUE_SSS = ENV + '_sss'
 RQ_QUEUES = {
@@ -164,6 +165,10 @@ RQ_QUEUES = {
     },
     RQ_QUEUE_PUSH: {
         'USE_REDIS_CACHE': 'worker_push',
+        'DEFAULT_TIMEOUT': 5,
+    },
+    RQ_QUEUE_PUSH_BROADCAST: {
+        'USE_REDIS_CACHE': 'worker_sss',  # todo: assign to different redis
         'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_PUSHER: {
@@ -263,6 +268,7 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
+MAX_BROADCAST_RECIPIENTS = 1000
 info('FORCE_PUSH:', FORCE_PUSH)
 info('APNS_SANDBOX:', APNS_SANDBOX)
 

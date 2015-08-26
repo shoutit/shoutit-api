@@ -142,6 +142,14 @@ class FileType(Constant):
 FILE_TYPE_BUSINESS_DOCUMENT = FileType("Business Document")
 
 
+class DeviceOS(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+DEVICE_ANDROID = DeviceOS("android")
+DEVICE_IOS = DeviceOS("ios")
+
+
 class BusinessConfirmationState(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
@@ -288,6 +296,8 @@ class NotificationType(Constant):
 
 NOTIFICATION_TYPE_LISTEN = NotificationType('new_listen')
 NOTIFICATION_TYPE_MESSAGE = NotificationType('new_message')
+NOTIFICATION_TYPE_BROADCAST = NotificationType('broadcast')
+NOTIFICATION_TYPE_PROFILE_UPDATE = NotificationType('profile_update')
 NOTIFICATION_TYPE_EXP_POSTED = NotificationType('Experience')
 NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
@@ -644,6 +654,8 @@ COUNTRY_ISO = {
     "ZW": "Zimbabwe",
     "": "None"
 }
+
+COUNTRIES = sorted(COUNTRY_ISO.items(), key=lambda tup: tup[1])
 
 NOT_ALLOWED_USERNAMES = [
     'activate',

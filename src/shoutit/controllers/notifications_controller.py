@@ -1,19 +1,23 @@
 from __future__ import unicode_literals
 import uuid
+import requests
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.http import HttpRequest
 from django.utils.translation import ugettext as _
 from django.db.models.query_utils import Q
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
+from push_notifications.models import APNSDevice, GCMDevice
 from django_rq import job
-import requests
 from rest_framework.request import Request
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED,
-                              NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT)
+                              NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, DEVICE_ANDROID, DEVICE_IOS,
+                              NOTIFICATION_TYPE_BROADCAST)
 from shoutit.api.versioning import ShoutitNamespaceVersioning
-from shoutit.models import Notification, DBCLConversation, Message, User
+from shoutit.models import Notification, DBCLConversation, Message, User, PushBroadcast
 from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, send_nexmo_sms
 from shoutit_pusher.models import PusherChannel
 from shoutit_pusher.utils import pusher
@@ -335,3 +339,50 @@ def get_user_notifications_count(user):
 
 def get_user_notifications_without_messages_count(user):
     return Notification.objects.filter(Q(is_read=False) & Q(ToUser=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()
+
+
+@receiver(post_save, sender=PushBroadcast)
+def post_save_push_broadcast(sender, instance=None, created=False, **kwargs):
+    if not created:
+        return
+    prepare_push_broadcast.delay(instance)
+
+
+@job(settings.RQ_QUEUE_PUSH_BROADCAST)
+def prepare_push_broadcast(push_broadcast):
+    users = User.objects.filter(~Q(accesstoken=None))
+    countries = push_broadcast.conditions.get('countries', [])
+    devices = push_broadcast.conditions.get('devices', [])
+    user_ids = push_broadcast.conditions.get('user_ids', [])
+
+    if not user_ids:
+        if countries:
+            users = users.filter(profile__country__in=countries)
+
+        user_ids = list(users.values_list('id', flat=True))
+
+    while len(user_ids) > settings.MAX_BROADCAST_RECIPIENTS:
+        chunk = user_ids[-settings.MAX_BROADCAST_RECIPIENTS:]
+        user_ids = user_ids[:-settings.MAX_BROADCAST_RECIPIENTS]
+        send_push_broadcast.delay(push_broadcast, devices, UserIds(chunk))
+    send_push_broadcast.delay(push_broadcast, devices, UserIds(user_ids))
+
+
+@job(settings.RQ_QUEUE_PUSH_BROADCAST)
+def send_push_broadcast(push_broadcast, devices, user_ids):
+    assert isinstance(user_ids, list) and len(user_ids) <= settings.MAX_BROADCAST_RECIPIENTS, "user_ids shout be a list <= 1000"
+
+    if DEVICE_IOS.value in devices:
+        apns_devices = APNSDevice.objects.filter(user__in=user_ids)
+        apns_devices.send_message(push_broadcast.message, sound='default',
+                                  extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
+        debug_logger.debug("Sent push broadcast: %s to %d apns devices" % (push_broadcast.pk, len(apns_devices)))
+    if DEVICE_ANDROID.value in devices:
+        gcm_devices = GCMDevice.objects.filter(user__in=user_ids)
+        gcm_devices.send_message(push_broadcast.message, extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
+        debug_logger.debug("Sent push broadcast: %s to %d gcm devices" % (push_broadcast.pk, len(gcm_devices)))
+
+
+class UserIds(list):
+    def __repr__(self):
+        return "UserIds: %d ids" % len(self)

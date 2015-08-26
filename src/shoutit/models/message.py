@@ -4,15 +4,16 @@
 """
 from __future__ import unicode_literals
 from datetime import datetime
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models, IntegrityError
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType,
     MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
-    REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT)
+    REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT, DeviceOS)
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 from shoutit.utils import track
 
@@ -283,3 +284,13 @@ class Report(UUIDModel, AttachedObjectMixin):
     @property
     def type_name(self):
         return ReportType.values[self.type]
+
+
+class PushBroadcast(UUIDModel, AttachedObjectMixin):
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='broadcasts')
+    message = models.TextField(max_length=300, blank=True)
+    conditions = JsonField(default=dict, blank=True)
+    data = JsonField(default=dict, blank=True)
+
+    def __unicode__(self):
+        return self.pk + ": Broadcast"

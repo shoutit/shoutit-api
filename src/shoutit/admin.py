@@ -12,12 +12,14 @@ from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter
 from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin
+from shoutit.forms import PushBroadcastForm
 from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
-    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation)
+    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
+    PushBroadcast)
 from django.utils.translation import ugettext_lazy as _
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
@@ -302,6 +304,7 @@ class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
     list_filter = ('is_solved', 'is_disabled', ('created_at', ShoutitDateFieldListFilter))
     actions = ['mark_as_solved', 'mark_as_disabled']
     readonly_fields = ('_user', 'attached_object', 'content_type')
+    raw_id_fields = ('user',)
     ordering = ('-created_at',)
 
     def mark_as_solved(self, request, queryset):
@@ -313,6 +316,20 @@ class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
         queryset.update(is_disabled=True)
 
     mark_as_disabled.short_description = "Mark selected reports as disabled"
+
+
+# PushBroadcast
+@admin.register(PushBroadcast)
+class PushBroadcastAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', '_user', 'message', 'created_at')
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    readonly_fields = ('_user',)
+    ordering = ('-created_at',)
+    form = PushBroadcastForm
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.save()
 
 
 @admin.register(ConfirmToken)
