@@ -168,7 +168,7 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_PUSH_BROADCAST: {
-        'USE_REDIS_CACHE': 'worker_sss',  # todo: assign to different redis
+        'USE_REDIS_CACHE': 'worker_push_broadcast',
         'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_PUSHER: {
