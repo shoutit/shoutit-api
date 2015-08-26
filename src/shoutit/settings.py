@@ -122,6 +122,14 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
+    "worker_push_broadcast": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis.shoutit.com:6379/15",
+        'TIMEOUT': None,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
     "worker_pusher": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis.shoutit.com:6379/13",
