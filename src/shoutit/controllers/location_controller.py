@@ -7,7 +7,7 @@ from shoutit.utils import ip2location, error_logger
 def location_from_ip(ip, use_google_geocode=False):
     result = ip2location.get_all(ip)
     if use_google_geocode:
-        return location_from_latlng('%s,%s' % (result.latitude or 0, result.longitude or 0))
+        return get_google_geocode_response('%s,%s' % (result.latitude or 0, result.longitude or 0))
     location = {
         'latitude': round(result.latitude or 0, 6),
         'longitude': round(result.longitude or 0, 6),
@@ -20,9 +20,9 @@ def location_from_ip(ip, use_google_geocode=False):
     return location
 
 
-def location_from_latlng2(lat, lon, ip=None):
+def location_from_latlng(lat, lon, ip=None):
     # 1 - search for saved locations ordered by distance
-    index_locations = LocationIndex.search().sort({
+    indexed_locations = LocationIndex.search().sort({
         "_geo_distance": {
             "location": {
                 'lat': lat,
@@ -32,18 +32,18 @@ def location_from_latlng2(lat, lon, ip=None):
     }).execute()[:1]
 
     # 2 - check if there is results
-    if index_locations:
+    if indexed_locations:
         # 3 - check closest location, if closer than x km return its attributes
-        closest_location = index_locations[0]
+        closest_location = indexed_locations[0]
         if closest_location.meta['sort'][0] < 5.0:
             return closest_location.location_dict
 
     # 4 - else
     latlng = "%s,%s" % (lat, lon)
-    return location_from_latlng(latlng, ip)
+    return get_google_geocode_response(latlng, ip)
 
 
-def location_from_latlng(latlng, ip=None):
+def get_google_geocode_response(latlng, ip=None):
     params = {
         'latlng': latlng,
         'language': "en"

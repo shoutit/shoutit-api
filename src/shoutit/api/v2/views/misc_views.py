@@ -136,11 +136,6 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['get'])
     def geocode(self, request):
-        latlng = request.query_params.get('latlng', '')
-        return Response(location_controller.location_from_latlng(latlng))
-
-    @list_route(methods=['get'])
-    def geocode2(self, request):
         try:
             latlng = request.query_params.get('latlng', '')
             lat = float(latlng.split(',')[0])
@@ -148,7 +143,10 @@ class MiscViewSet(viewsets.ViewSet):
         except Exception:
             raise ValidationError({'latlng': ['missing or wrong latlng parameter']})
         ip = get_real_ip(request)
-        return Response(location_controller.location_from_latlng2(lat, lon, ip))
+        location = location_controller.location_from_latlng(lat, lon, ip)
+        location['latitude'] = round(float(lat), 6)
+        location['longitude'] = round(float(lon), 6)
+        return Response(location)
 
     @list_route(methods=['post'])
     def parse_google_geocode_response(self, request):
