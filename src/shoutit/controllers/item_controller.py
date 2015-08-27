@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from shoutit.models import Item, Video
@@ -6,9 +7,8 @@ from shoutit.utils import error_logger
 
 
 def create_item(name, description, price, currency, images=None, videos=None):
-    # currency = currency  # todo: check!
     images = images or []
-    item = Item.create(name=name, description=description, price=price, currency=currency, images=images)
+    item = Item.create(name=name, description=description, price=price, currency=currency, images=images[:settings.MAX_IMAGES_PER_ITEM])
     add_videos_to_item(item, videos)
     return item
 
@@ -33,7 +33,7 @@ def add_videos_to_item(item, videos=None, remove_existing=False):
     if videos is not None:
         if remove_existing:
             item.videos.all().delete()
-        for v in videos:
+        for v in videos[:settings.MAX_VIDEOS_PER_ITEM]:
             # todo: better handling
             try:
                 video = Video.objects.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],

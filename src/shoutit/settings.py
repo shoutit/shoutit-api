@@ -74,6 +74,8 @@ SHOUT_EXPIRY_NOTIFY = 2
 MAX_EXPIRY_DAYS = 60
 ACCOUNT_ACTIVATION_DAYS = 7
 NEARBY_CITIES_RADIUS_KM = 65
+MAX_IMAGES_PER_ITEM = 10
+MAX_VIDEOS_PER_ITEM = 2
 
 """
 =================================
@@ -124,7 +126,7 @@ CACHES = {
     },
     "worker_push_broadcast": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/15",
+        "LOCATION": "redis://redis.shoutit.com:6379/13",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -132,7 +134,7 @@ CACHES = {
     },
     "worker_pusher": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/13",
+        "LOCATION": "redis://redis.shoutit.com:6379/14",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -140,7 +142,7 @@ CACHES = {
     },
     "worker_sss": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/14",
+        "LOCATION": "redis://redis.shoutit.com:6379/15",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",

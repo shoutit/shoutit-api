@@ -28,8 +28,14 @@ def create_channel(channel_name):
 
 
 def delete_channel(channel_name):
-    PusherChannel.objects.filter(name=channel_name).delete()
-    debug_logger.debug('Deleted PusherChannel: %s' % channel_name)
+    try:
+        channel = PusherChannel.objects.get(name=channel_name)
+    except PusherChannel.DoesNotExist:
+        pass
+    else:
+        channel.users.clear()
+        channel.delete()
+        debug_logger.debug('Deleted PusherChannel: %s' % channel_name)
 
 
 def add_member(channel_name, user_id):

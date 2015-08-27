@@ -4,13 +4,15 @@ from shoutit.models import LocationIndex, GoogleLocation
 from shoutit.utils import ip2location, error_logger
 
 
-def location_from_ip(ip, use_google_geocode=False):
+def location_from_ip(ip, use_location_index=False):
     result = ip2location.get_all(ip)
-    if use_google_geocode:
-        return get_google_geocode_response('%s,%s' % (result.latitude or 0, result.longitude or 0))
+    lat = result.latitude or DEFAULT_LOCATION['latitude']
+    lng = result.longitude or DEFAULT_LOCATION['longitude']
+    if use_location_index:
+        return location_from_latlng(lat, lng)
     location = {
-        'latitude': round(result.latitude or 0, 6),
-        'longitude': round(result.longitude or 0, 6),
+        'latitude': round(lat, 6),
+        'longitude': round(lng, 6),
         'country': result.country_short if result.country_short != '-' else '',
         'postal_code': result.zipcode if result.zipcode != '-' else '',
         'state': result.region if result.region != '-' else '',
@@ -57,7 +59,9 @@ def get_google_geocode_response(latlng, ip=None):
     except Exception as e:
         error_logger.warn("Google geocoding failed", extra={'detail': str(e), 'latlng': latlng, 'ip': ip, 'geocode_response': response})
         try:
-            return location_from_ip(ip)
+            if not ip:
+                raise ValueError("No IP to be used for getting location")
+            return location_from_ip(ip, use_location_index=True)
         except Exception as e2:
             error_logger.warn("IP geocoding failed", extra={'detail': str(e2), 'latlng': latlng, 'ip': ip})
             return DEFAULT_LOCATION

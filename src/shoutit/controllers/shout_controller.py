@@ -95,12 +95,12 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     if tags:
         if not isinstance(tags[0], basestring):
             tags = [tag.get('name') for tag in tags]
-    # remove duplicates
-    tags = list(OrderedDict.fromkeys(tags))
     # process tags
     tags = process_tags(tags)
     # add main_tag from category
     tags.insert(0, category.main_tag.name)
+    # remove duplicates
+    tags = list(OrderedDict.fromkeys(tags))
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images, videos=videos)
 

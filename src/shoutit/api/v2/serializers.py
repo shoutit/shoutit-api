@@ -9,7 +9,7 @@ import uuid
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
-from ipware.ip import get_ip
+from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
 
 from rest_framework import serializers
@@ -23,7 +23,7 @@ from common.constants import (
 from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
-from shoutit.controllers.location_controller import location_from_google_geocode_response
+from shoutit.controllers import location_controller
 from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
@@ -48,16 +48,28 @@ class LocationSerializer(serializers.Serializer):
         lat = 'latitude' in validated_data
         lng = 'longitude' in validated_data
         ggr = 'google_geocode_response' in validated_data
-        if not ((lat and lng) or ggr):
-            raise ValidationError({'error': "Could not find [latitude and longitude] or [google_geocode_response]"})
+        request = self.root.context.get('request')
+        ip = get_real_ip(request) if request else None
 
-        google_geocode_response = validated_data.pop('google_geocode_response', None)
-        if google_geocode_response:
+        if lat and lng:
+            # Get location attributes using latitude, longitude or IP
+            location = location_controller.location_from_latlng(validated_data.get('latitude'),
+                                                                validated_data.get('longitude'), ip)
+        elif ggr:
+            # Handle Google geocode response if provided
+            google_geocode_response = validated_data.pop('google_geocode_response', None)
             try:
-                location = location_from_google_geocode_response(google_geocode_response)
+                location = location_controller.location_from_google_geocode_response(google_geocode_response)
             except (IndexError, KeyError, ValueError):
                 raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
-            validated_data.update(location)
+        elif ip:
+            # Get location attributes using IP
+            location = location_controller.location_from_ip(ip, use_location_index=True)
+        else:
+            raise ValidationError({
+                                      'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
+
+        validated_data.update(location)
         return validated_data
 
 
@@ -116,8 +128,7 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'name', 'api_url', 'image', 'rank')
 
     def get_api_url(self, f_tag):
-        return reverse('tag-detail', kwargs={'name': f_tag.tag.name},
-                       request=self.context['request'])
+        return reverse('tag-detail', kwargs={'name': f_tag.tag.name}, request=self.context['request'])
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -230,23 +241,19 @@ class UserDetailSerializer(UserSerializer):
         return False
 
     def get_shouts_url(self, user):
-        return reverse('user-shouts', kwargs={'username': user.username},
-                       request=self.context['request'])
+        return reverse('user-shouts', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_listening_url(self, user):
-        return reverse('user-listening', kwargs={'username': user.username},
-                       request=self.context['request'])
+        return reverse('user-listening', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_listeners_url(self, user):
-        return reverse('user-listeners', kwargs={'username': user.username},
-                       request=self.context['request'])
+        return reverse('user-listeners', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_is_owner(self, user):
         return self.root.context['request'].user == user
 
     def get_message_url(self, user):
-        return reverse('user-message', kwargs={'username': user.username},
-                       request=self.context['request'])
+        return reverse('user-message', kwargs={'username': user.username}, request=self.context['request'])
 
     def to_representation(self, instance):
         ret = super(UserDetailSerializer, self).to_representation(instance)
@@ -574,15 +581,18 @@ class MessageSerializer(serializers.ModelSerializer):
 
                 for attachment in validated_data['attachments']:
                     if not any_in(['shout', 'location', 'images', 'videos'], attachment):
-                        errors['attachments'] = "attachment should have at least a 'shout', 'location', 'images' or 'videos'"
+                        errors[
+                            'attachments'] = "attachment should have at least a 'shout', 'location', 'images' or 'videos'"
                         continue
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
                         elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
-                            errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
+                            errors['attachments'] = {
+                                'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                    if 'location' in attachment and (
+                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -637,12 +647,10 @@ class ConversationSerializer(serializers.ModelSerializer):
         return instance.unread_messages_count(self.context['request'].user)
 
     def get_messages_url(self, conversation):
-        return reverse('conversation-messages', kwargs={'id': conversation.id},
-                       request=self.context['request'])
+        return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])
 
     def get_reply_url(self, conversation):
-        return reverse('conversation-reply', kwargs={'id': conversation.id},
-                       request=self.context['request'])
+        return reverse('conversation-reply', kwargs={'id': conversation.id}, request=self.context['request'])
 
 
 class AttachedObjectSerializer(serializers.Serializer):
@@ -741,7 +749,7 @@ class FacebookAuthSerializer(serializers.Serializer):
         ret = super(FacebookAuthSerializer, self).to_internal_value(data)
         facebook_access_token = ret.get('facebook_access_token')
         initial_user = ret.get('user', {})
-        initial_user['ip'] = get_ip(self.context.get('request'))
+        initial_user['ip'] = get_real_ip(self.context.get('request'))
         user = user_from_facebook_auth_response(facebook_access_token, initial_user)
         self.instance = user
         return ret
@@ -755,7 +763,7 @@ class GplusAuthSerializer(serializers.Serializer):
         ret = super(GplusAuthSerializer, self).to_internal_value(data)
         gplus_code = ret.get('gplus_code')
         initial_user = ret.get('user', {})
-        initial_user['ip'] = get_ip(self.context.get('request'))
+        initial_user['ip'] = get_real_ip(self.context.get('request'))
         user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'))
         self.instance = user
         return ret
@@ -791,7 +799,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         initial_user = validated_data.get('user', {})
-        initial_user['ip'] = get_ip(self.context.get('request'))
+        initial_user['ip'] = get_real_ip(self.context.get('request'))
         user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user)
         return user
 
@@ -809,19 +817,19 @@ class ShoutitSigninSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            # raise ValidationError(
-            #     {'email': ['The email or username you entered do not belong to any account.']})
-            # todo: hack! act as signup if email is new
-            request = self.root.context.get('request')
-            username = generate_username()
-            data.update({
-                'name': "user " + username
-            })
-            serializer = ShoutitSignupSerializer(data=data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            serializer.validated_data['username'] = username
-            self.instance = serializer.save()
-            return serializer.validated_data
+            raise ValidationError(
+                {'email': ['The email or username you entered do not belong to any account.']})
+            # signup hack! act as signup if email is new
+            # request = self.root.context.get('request')
+            # username = generate_username()
+            # data.update({
+            #     'name': "user " + username
+            # })
+            # serializer = ShoutitSignupSerializer(data=data, context={'request': request})
+            # serializer.is_valid(raise_exception=True)
+            # serializer.validated_data['username'] = username
+            # self.instance = serializer.save()
+            # return serializer.validated_data
 
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
