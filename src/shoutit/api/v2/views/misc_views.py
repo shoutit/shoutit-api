@@ -139,20 +139,18 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             latlng = request.query_params.get('latlng', '')
             lat = float(latlng.split(',')[0])
-            lon = float(latlng.split(',')[1])
+            lng = float(latlng.split(',')[1])
         except Exception:
             raise ValidationError({'latlng': ['missing or wrong latlng parameter']})
         ip = get_real_ip(request)
-        location = location_controller.location_from_latlng(lat, lon, ip)
-        location['latitude'] = round(float(lat), 6)
-        location['longitude'] = round(float(lon), 6)
+        location = location_controller.from_location_index(lat, lng, ip)
         return Response(location)
 
     @list_route(methods=['post'])
     def parse_google_geocode_response(self, request):
         google_geocode_response = request.data.get('google_geocode_response', {})
         try:
-            location = location_controller.location_from_google_geocode_response(google_geocode_response)
+            location = location_controller.parse_google_geocode_response(google_geocode_response)
         except (IndexError, KeyError, ValueError):
             raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
         return Response(location)

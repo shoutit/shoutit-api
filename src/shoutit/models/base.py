@@ -328,8 +328,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def password_reset_link(self):
         try:
-            cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD,
-                                                 is_disabled=False)[0]
+            cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD, is_disabled=False)[0]
             return settings.API_LINK + 'auth/set_password?token=' + cf.token
         except IndexError:
             return settings.API_LINK

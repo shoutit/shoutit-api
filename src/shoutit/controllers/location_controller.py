@@ -5,77 +5,104 @@ from shoutit.models import LocationIndex, GoogleLocation
 from shoutit.utils import ip2location, error_logger
 
 
-def location_from_ip(ip, use_location_index=False):
-    result = ip2location.get_all(ip)
-    lat = result.latitude or DEFAULT_LOCATION['latitude']
-    lng = result.longitude or DEFAULT_LOCATION['longitude']
-    if use_location_index:
-        return location_from_latlng(lat, lng)
+def from_ip(ip=None, use_location_index=False):
+    try:
+        if not ip:
+            raise ValueError()
+        result = ip2location.get_all(ip)
+        if not (result and (result.latitude and result.longitude)):
+            raise ValueError()
+    except ValueError:
+        return DEFAULT_LOCATION
+
     location = {
-        'latitude': round(lat, 6),
-        'longitude': round(lng, 6),
+        'latitude': round(result.latitude, 6),
+        'longitude': round(result.longitude, 6),
         'country': result.country_short if result.country_short != '-' else '',
         'postal_code': result.zipcode if result.zipcode != '-' else '',
         'state': result.region if result.region != '-' else '',
         'city': result.city if result.city != '-' else '',
         'address': ''
     }
+    if use_location_index:
+        location = from_location_index(result.latitude, result.longitude, ip_location=location)
+
     return location
 
 
-def location_from_latlng(lat, lon, ip=None):
-    # 1 - search for saved locations ordered by distance
-    try:
-        indexed_locations = LocationIndex.search().sort({
-            "_geo_distance": {
-                "location": {
-                    'lat': lat,
-                    'lon': lon
-                }, 'unit': 'km', 'order': 'asc'
-            }
-        }).execute()[:1]
-    except ElasticsearchException as e:
-        error_logger.warn("ElasticsearchException", extra={'detail': str(e), 'lat':lat, 'lng': lon, 'ip': ip})
-        if ip:
-            return location_from_ip(ip)
-        else:
-            return DEFAULT_LOCATION
+def from_location_index(lat, lon, ip=None, ip_location=None):
+    location = {}
+    # 0 - if lat and lon are 0, use the ip to determine location
+    if lat == 0 and lon == 0:
+        location = from_ip(ip, use_location_index=True)
 
-    # 2 - check if there is results
-    if indexed_locations:
-        # 3 - check closest location, if closer than x km return its attributes
-        closest_location = indexed_locations[0]
-        if closest_location.meta['sort'][0] < 5.0:
-            return closest_location.location_dict
+    # 1 - search for saved locations ordered by distance
+    if not location:
+        try:
+            indexed_locations = LocationIndex.search().sort({
+                "_geo_distance": {
+                    "location": {
+                        'lat': lat,
+                        'lon': lon
+                    }, 'unit': 'km', 'order': 'asc'
+                }
+            }).execute()[:1]
+        except ElasticsearchException as e:
+            error_logger.warn("Location Index searching failed", extra={'detail': str(e), 'lat': lat, 'lng': lon, 'ip': ip})
+            if ip_location:
+                location = ip_location
+            elif ip:
+                location = from_ip(ip)
+            else:
+                location = DEFAULT_LOCATION
+        else:
+            # 2 - check if there is results
+            if indexed_locations:
+                # 3 - check closest location, if closer than x km return its attributes
+                closest_location = indexed_locations[0]
+                if closest_location.meta['sort'][0] < 5.0:
+                    location = closest_location.location_dict
 
     # 4 - else
-    latlng = "%s,%s" % (lat, lon)
-    return get_google_geocode_response(latlng, ip)
+    if not location:
+        latlng = "%s,%s" % (lat, lon)
+        location = from_google_geocode_response(latlng, ip, ip_location)
+
+    # 5 - use original lat, lon if there were not 0 and we did not use DEFAULT_LOCATION
+    if location != DEFAULT_LOCATION:
+        if lat != 0.0:
+            location['latitude'] = round(float(lat), 6)
+        if lon != 0.0:
+            location['longitude'] = round(float(lon), 6)
+    return location
 
 
-def get_google_geocode_response(latlng, ip=None):
+def from_google_geocode_response(latlng, ip=None, ip_location=None):
     params = {
         'latlng': latlng,
         'language': "en"
     }
     geocode_response = None
     try:
+        if latlng in ['0,0', '0.0,0.0', '0.0,0', '0,0.0']:
+            raise ValueError("Ignoring 0,0 lat lng")
         geocode_response = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params).json()
         if geocode_response.get('status') != 'OK':
             raise Exception("Make sure you have a valid latlng param")
-        return location_from_google_geocode_response(geocode_response)
+        location = parse_google_geocode_response(geocode_response)
     except Exception as e:
-        error_logger.warn("Google geocoding failed", extra={'detail': str(e), 'latlng': latlng, 'ip': ip, 'geocode_response': geocode_response})
-        try:
-            if not ip:
-                raise ValueError("No IP to be used for getting location")
-            return location_from_ip(ip, use_location_index=True)
-        except Exception as e2:
-            error_logger.warn("IP geocoding failed", extra={'detail': str(e2), 'latlng': latlng, 'ip': ip})
-            return DEFAULT_LOCATION
+        error_logger.warn("Google geocoding failed",
+                          extra={'detail': str(e), 'latlng': latlng, 'ip': ip, 'geocode_response': geocode_response})
+        if ip_location:
+            location = ip_location
+        elif ip:
+            location = from_ip(ip)
+        else:
+            location = DEFAULT_LOCATION
+    return location
 
 
-def location_from_google_geocode_response(response):
+def parse_google_geocode_response(response):
     locality = ''
     postal_town = ''
     administrative_area_level_2 = ''

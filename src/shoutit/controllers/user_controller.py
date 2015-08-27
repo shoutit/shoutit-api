@@ -8,7 +8,7 @@ from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_
 from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
                             LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
-from shoutit.controllers.location_controller import location_from_ip
+from shoutit.controllers import location_controller
 
 
 def signup_user(email=None, password=None, first_name='', last_name='', username=None,
@@ -58,7 +58,7 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
             location = initial_user.get('location')
             add_predefined_city(location)
         elif initial_user.get('ip'):
-            location = location_from_ip(initial_user.get('ip'))
+            location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
     return signup_user(email=email, password=password, first_name=first_name, last_name=last_name,
                        username=username, profile_fields=profile_fields)
@@ -78,7 +78,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
             location = initial_user.get('location')
             add_predefined_city(location)
         elif initial_user.get('ip'):
-            location = location_from_ip(initial_user.get('ip'))
+            location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
     profile_fields.update({'gender': gender})
 
@@ -122,7 +122,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
             location = initial_user.get('location')
             add_predefined_city(location)
         elif initial_user.get('ip'):
-            location = location_from_ip(initial_user.get('ip'))
+            location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
     profile_fields.update({'gender': gender})
 

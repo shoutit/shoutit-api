@@ -53,21 +53,20 @@ class LocationSerializer(serializers.Serializer):
 
         if lat and lng:
             # Get location attributes using latitude, longitude or IP
-            location = location_controller.location_from_latlng(validated_data.get('latitude'),
+            location = location_controller.from_location_index(validated_data.get('latitude'),
                                                                 validated_data.get('longitude'), ip)
         elif ggr:
             # Handle Google geocode response if provided
             google_geocode_response = validated_data.pop('google_geocode_response', None)
             try:
-                location = location_controller.location_from_google_geocode_response(google_geocode_response)
+                location = location_controller.parse_google_geocode_response(google_geocode_response)
             except (IndexError, KeyError, ValueError):
                 raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
         elif ip:
             # Get location attributes using IP
-            location = location_controller.location_from_ip(ip, use_location_index=True)
+            location = location_controller.from_ip(ip, use_location_index=True)
         else:
-            raise ValidationError({
-                                      'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
+            raise ValidationError({'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
 
         validated_data.update(location)
         return validated_data
@@ -869,8 +868,7 @@ class ShoutitResetPasswordSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise ValidationError({'email': ['The email or username you entered do not belong to '
-                                             'any account.']})
+            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
         self.instance = user
         return ret
 
