@@ -1,3 +1,4 @@
+from elasticsearch import ElasticsearchException
 import requests
 from common.constants import DEFAULT_LOCATION
 from shoutit.models import LocationIndex, GoogleLocation
@@ -24,14 +25,21 @@ def location_from_ip(ip, use_location_index=False):
 
 def location_from_latlng(lat, lon, ip=None):
     # 1 - search for saved locations ordered by distance
-    indexed_locations = LocationIndex.search().sort({
-        "_geo_distance": {
-            "location": {
-                'lat': lat,
-                'lon': lon
-            }, 'unit': 'km', 'order': 'asc'
-        }
-    }).execute()[:1]
+    try:
+        indexed_locations = LocationIndex.search().sort({
+            "_geo_distance": {
+                "location": {
+                    'lat': lat,
+                    'lon': lon
+                }, 'unit': 'km', 'order': 'asc'
+            }
+        }).execute()[:1]
+    except ElasticsearchException as e:
+        error_logger.warn("ElasticsearchException", extra={'detail': str(e), 'lat':lat, 'lng': lon, 'ip': ip})
+        if ip:
+            return location_from_ip(ip)
+        else:
+            return DEFAULT_LOCATION
 
     # 2 - check if there is results
     if indexed_locations:
@@ -50,14 +58,14 @@ def get_google_geocode_response(latlng, ip=None):
         'latlng': latlng,
         'language': "en"
     }
-    response = None
+    geocode_response = None
     try:
-        response = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params).json()
-        if response.get('status') != 'OK':
+        geocode_response = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params).json()
+        if geocode_response.get('status') != 'OK':
             raise Exception("Make sure you have a valid latlng param")
-        return location_from_google_geocode_response(response)
+        return location_from_google_geocode_response(geocode_response)
     except Exception as e:
-        error_logger.warn("Google geocoding failed", extra={'detail': str(e), 'latlng': latlng, 'ip': ip, 'geocode_response': response})
+        error_logger.warn("Google geocoding failed", extra={'detail': str(e), 'latlng': latlng, 'ip': ip, 'geocode_response': geocode_response})
         try:
             if not ip:
                 raise ValueError("No IP to be used for getting location")
