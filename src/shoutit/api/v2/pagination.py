@@ -288,7 +288,7 @@ class PageNumberIndexPagination(PageNumberPagination):
                         raise ElasticsearchException("Results from different index")
             except (ElasticsearchException, KeyError) as e:
                 msg = "ES Exception: " + str(type(e))
-                extra = {'check': check or index_response, 'request': request, 'detail': str(e)}
+                extra = {'check': check or index_response, 'request': request._request, 'detail': str(e)}
                 error_logger.warn(msg, exc_info=True, extra=extra)
                 # todo: KeyError is some bug in the elastic library.
                 # todo: log!
