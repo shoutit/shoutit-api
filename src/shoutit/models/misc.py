@@ -105,7 +105,7 @@ except ConnectionTimeout:
 
 
 @receiver(post_save, sender=GoogleLocation)
-def shout_post_save(sender, instance=None, created=False, **kwargs):
+def location_post_save(sender, instance=None, created=False, **kwargs):
     action = 'Created' if created else 'Updated'
     debug_logger.debug('{} {}: {}'.format(action, instance.model_name, instance))
     # save index
@@ -113,7 +113,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
 
 
 @receiver(post_delete, sender=GoogleLocation)
-def shout_post_delete(sender, instance=None, created=False, **kwargs):
+def location_post_delete(sender, instance=None, created=False, **kwargs):
     debug_logger.debug('Deleted {}: {}'.format(instance.model_name, instance))
     # delete index
     delete_object_index.delay(LocationIndex, instance)

@@ -47,7 +47,7 @@ def from_location_index(lat, lon, ip=None, ip_location=None):
                     }, 'unit': 'km', 'order': 'asc'
                 }
             }).execute()[:1]
-        except ElasticsearchException as e:
+        except (ElasticsearchException, KeyError) as e:
             error_logger.warn("Location Index searching failed", extra={'detail': str(e), 'lat': lat, 'lng': lon, 'ip': ip})
             if ip_location:
                 location = ip_location

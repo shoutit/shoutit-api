@@ -209,7 +209,7 @@ class DateTimeIndexPagination(DateTimePagination):
 
         try:
             index_response = index_queryset[:page_size].execute()
-        except ElasticsearchException:
+        except (ElasticsearchException, KeyError):
             # todo: log!
             # possible errors
             # SerializationError: returned data was corrupted
@@ -290,6 +290,7 @@ class PageNumberIndexPagination(PageNumberPagination):
                 # SerializationError: returned data was corrupted
                 # ConnectionTimeout
                 # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
+                # todo: handle returned data are from different index! report bug issue
                 index_response = []
 
         # save the order
