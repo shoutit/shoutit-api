@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from django.core.paginator import Paginator as DjangoPaginator
 from elasticsearch import ElasticsearchException
+from elasticsearch_dsl.result import Result
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
@@ -15,6 +16,7 @@ from datetime import datetime
 from rest_framework.utils.urls import remove_query_param
 from shoutit.api.api_utils import get_current_uri
 import math
+from shoutit.utils import error_logger
 
 
 class DateTimePagination(CursorPagination):
@@ -214,7 +216,7 @@ class DateTimeIndexPagination(DateTimePagination):
             index_response = []
 
         try:
-            object_ids = [object_index._id for object_index in index_response]
+            object_ids = [object_index.meta.id for object_index in index_response]
         except KeyError:
             # todo: elasticsearch bug
             object_ids = []
@@ -264,13 +266,14 @@ class PageNumberIndexPagination(PageNumberPagination):
         page_number = request.query_params.get(self.page_query_param, 1)
         page_number = self.get_valid_page_number(page_number)
 
+        index_response = []
         if page_number > max_page_number:
             self.max_page_number_exceeded = True
             self.num_results = index_queryset.count()
-            index_response = []
         else:
             _from = (page_number - 1) * page_size
             _to = page_number * page_size
+            check = {}
             try:
                 index_response = index_queryset[_from:_to].execute()
                 # if there are no results for this [_from:_to], check if there are ones at all
@@ -279,7 +282,12 @@ class PageNumberIndexPagination(PageNumberPagination):
                     if self.num_results:
                         # there are results meaning provided page number exceeded max possible one
                         self.max_possible_page_number_exceeded = True
-            except (ElasticsearchException, KeyError):
+                else:
+                    check = index_response[0]
+                    if isinstance(check, Result):
+                        raise ElasticsearchException("Results from different index")
+            except (ElasticsearchException, KeyError) as e:
+                error_logger.warn("ES Exception: " + str(e), extra={'check': check or index_response})
                 # todo: KeyError is some bug in the elastic library.
                 # todo: log!
                 # possible errors
@@ -292,7 +300,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         # save the order
         objects_dict = OrderedDict()
         for object_index in index_response:
-            objects_dict[object_index._id] = None
+            objects_dict[object_index.meta.id] = None
 
         # populate from database
         ids = objects_dict.keys()
