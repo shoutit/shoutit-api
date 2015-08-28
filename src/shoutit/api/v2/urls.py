@@ -24,10 +24,10 @@ router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('conversations', message_views.ConversationViewSet, 'conversation')
 router.register('messages', message_views.MessageViewSet, 'message')
 router.register('notifications', notification_views.NotificationViewSet, 'notification')
-router.register(r'misc', misc_views.MiscViewSet, 'misc')
-router.register(r'sms', sms_views.SMSViewSet, 'sms')
-router.register(r'auth', ShoutitAuthViewSet, 'shoutit_auth')
-router.register(r'pusher', ShoutitPusherViewSet, 'pusher')
+router.register('misc', misc_views.MiscViewSet, 'misc')
+router.register('sms', sms_views.SMSViewSet, 'sms')
+router.register('auth', ShoutitAuthViewSet, 'shoutit_auth')
+router.register('pusher', ShoutitPusherViewSet, 'pusher')
 
 urlpatterns = [
     url(r'^oauth2/access_token$', AccessTokenView.as_view(), name='access_token'),

@@ -32,9 +32,7 @@ class DateTimePagination(CursorPagination):
         """
         Paginate a queryset using unix timestamp query params.
         """
-        page_size = self.get_page_size(request)
-        if not page_size:
-            return queryset
+        self.page_size = self.get_page_size(request)
 
         before_query_param = request.query_params.get(self.before_field)
         after_query_param = request.query_params.get(self.after_field)
@@ -64,7 +62,7 @@ class DateTimePagination(CursorPagination):
         else:
             queryset = queryset.order_by('-' + self.datetime_attribute)
 
-        paginator = DjangoPaginator(queryset, page_size)
+        paginator = DjangoPaginator(queryset, self.page_size)
         page_number = 1
         page = paginator.page(page_number)
         # reverse the messages order inside the page itself if needed, so the results are always sorted from oldest to newest.
@@ -94,22 +92,22 @@ class DateTimePagination(CursorPagination):
 
     def get_next_link(self):
         recent_object = hasattr(self, 'page') and len(self.page) and self.page[self.get_recent_index()]
-        if not recent_object:
+        if not recent_object or len(self.page) < self.page_size:
             return None
         recent_object_timestamp = getattr(recent_object, self.datetime_unix_attribute)
         url = get_current_uri(self.request)
         url = replace_query_param(url, self.after_field, recent_object_timestamp)
-        url = replace_query_param(url, self.page_size_query_param, self.get_page_size(self.request))
+        url = replace_query_param(url, self.page_size_query_param, self.page_size)
         return url
 
     def get_previous_link(self):
         oldest_object = hasattr(self, 'page') and len(self.page) and self.page[self.get_oldest_index()]
-        if not oldest_object:
+        if not oldest_object or len(self.page) < self.page_size:
             return None
         oldest_object_timestamp = getattr(oldest_object, self.datetime_unix_attribute)
         url = get_current_uri(self.request)
         url = replace_query_param(url, self.before_field, oldest_object_timestamp)
-        url = replace_query_param(url, self.page_size_query_param, self.get_page_size(self.request))
+        url = replace_query_param(url, self.page_size_query_param, self.page_size)
         return url
 
     def get_page_size(self, request):
@@ -175,9 +173,7 @@ class DateTimeIndexPagination(DateTimePagination):
         """
         Paginate a queryset using unix timestamp query params.
         """
-        page_size = self.get_page_size(request)
-        if not page_size:
-            return index_queryset
+        self.page_size = self.get_page_size(request)
 
         before_query_param = request.query_params.get(self.before_field)
         after_query_param = request.query_params.get(self.after_field)
@@ -208,7 +204,7 @@ class DateTimeIndexPagination(DateTimePagination):
             index_queryset = index_queryset.sort({self.datetime_attribute: 'desc'})
 
         try:
-            index_response = index_queryset[:page_size].execute()
+            index_response = index_queryset[:self.page_size].execute()
         except (ElasticsearchException, KeyError):
             # todo: log!
             # possible errors

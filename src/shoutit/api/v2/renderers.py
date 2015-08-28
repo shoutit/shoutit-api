@@ -14,11 +14,11 @@ class ShoutitBrowsableAPIRenderer(BrowsableAPIRenderer):
         context['display_edit_forms'] = False
         return context
 
-    def get_description(self, view):
+    def get_description(self, view, status_code):
         try:
             description = getattr(view, view.action).__doc__ or ''
             description = formatting.dedent(smart_text(description)).split('---')
             description = description[0] if isinstance(description, list) else description
             return formatting.markup_description(description)
         except (AttributeError, TypeError):
-            return super(ShoutitBrowsableAPIRenderer, self).get_description(view)
+            return super(ShoutitBrowsableAPIRenderer, self).get_description(view, status_code)
