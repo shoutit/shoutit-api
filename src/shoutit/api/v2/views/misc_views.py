@@ -173,7 +173,7 @@ class MiscViewSet(viewsets.ViewSet):
                 msg = "DBZ2 ad already exits."
             else:
                 msg = "Unknown ad source."
-            error_logger.info(msg, extra={'link': link, 'source': source})
+            # error_logger.info(msg, extra={'link': link, 'source': source})
             return Response({'error': msg})
         except (CLUser.DoesNotExist, DBUser.DoesNotExist, DBZ2User.DoesNotExist):
             pass
@@ -193,7 +193,7 @@ class MiscViewSet(viewsets.ViewSet):
                 raise Exception('Unknown ad source.')
         except Exception, e:
             msg = "User Creation Error."
-            error_logger.warn(msg, extra={'detail': str(e), 'shout': shout})
+            error_logger.warn(msg, exc_info=True, extra={'detail': str(e), 'shout': shout})
             return Response({'error': msg, 'detail': str(e)})
 
         # shout creation
@@ -220,7 +220,7 @@ class MiscViewSet(viewsets.ViewSet):
         except Exception, e:
             msg = "Shout Creation Error. Deleting user."
             extra = {'detail': str(e), 'deleted_user': str(user), 'shout': shout}
-            error_logger.warn(msg, extra=extra)
+            error_logger.warn(msg, exc_info=True, extra=extra)
             user.delete()
             return Response({'error': msg, 'detail': str(e)})
 
@@ -252,7 +252,7 @@ def handle_dbz_reply(in_email, msg, request):
         dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
         error = {'error': "Unknown in_email."}
-        error_logger.info(error['error'], extra={'in_email': in_email})
+        error_logger.info(error['error'], exc_info=True, extra={'in_email': in_email})
         return Response(error)
 
     from_user = dbcl_conversation.to_user
@@ -287,8 +287,7 @@ def handle_dbz_reply(in_email, msg, request):
             text = '\n'.join(lines)
     except AttributeError:
         error = {'error': "Couldn't process the message text."}
-        error_logger.info(error['error'],
-                          extra={'in_email': in_email, 'source': source, 'text': text})
+        error_logger.info(error['error'], exc_info=True, extra={'in_email': in_email, 'source': source, 'text': text})
         return Response(error)
 
     message = message_controller.send_message(conversation=None, user=from_user,

@@ -368,7 +368,7 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
 
         # create profile
         profile_fields = getattr(instance, 'profile_fields', {})
-        Profile(user=instance, **profile_fields).save()
+        Profile.create(user=instance, **profile_fields)
 
         # give appropriate permissions
         permissions = INITIAL_USER_PERMISSIONS
@@ -379,7 +379,7 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
         # send signup email
         if not (instance.is_activated or instance.is_test):
             # create email confirmation token and send verification email
-            ConfirmToken.objects.create(user=instance, type=TOKEN_TYPE_EMAIL)
+            ConfirmToken.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
             instance.send_signup_email()
 

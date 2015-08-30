@@ -40,4 +40,4 @@ def add_videos_to_item(item, videos=None, remove_existing=False):
                                              id_on_provider=v['id_on_provider'], duration=v['duration'])
                 item.videos.add(video)
             except (KeyError, IntegrityError) as e:
-                error_logger.warn(str(e))
+                error_logger.warn(str(e), exc_info=True)

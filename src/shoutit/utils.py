@@ -133,7 +133,7 @@ def _set_profile_image(profile, image_url=None, image_data=None):
         profile.save()
 
     except Exception, e:
-        error_logger.warn(str(e))
+        error_logger.warn(str(e), exc_info=True)
 
 
 def alias(alias_id, original):
@@ -161,7 +161,7 @@ def _track(distinct_id, event_name, properties=None):
         shoutit_mp.track(distinct_id, event_name, properties)
         debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
     except Exception as e:
-        error_logger.warn("shoutit_mp.track failed", extra={'reason': str(e)})
+        error_logger.warn("shoutit_mp.track failed", exc_info=True, extra={'reason': str(e)})
 
 
 def subscribe_to_master_list(user):

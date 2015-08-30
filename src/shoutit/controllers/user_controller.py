@@ -146,7 +146,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
     try:
         LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, access_token=access_token, expires=expires)
     except IntegrityError as e:
-        error_logger.warn(str(e))
+        error_logger.warn(str(e), exc_info=True)
         raise FB_LINK_ERROR_TRY_AGAIN
 
     # todo: move the entire logic to rq
@@ -159,7 +159,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
         if not (std_male in response.url or std_female in response.url or '.gif' in response.url):
             set_profile_image(user.profile, image_data=image_data)
     except requests.RequestException as e:
-        error_logger.warn(str(e))
+        error_logger.warn(str(e), exc_info=True)
 
     return user
 

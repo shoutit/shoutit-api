@@ -87,7 +87,7 @@ def _send_cl_invitation_email(cl_user):
     if email.send(True):
         sss_logger.debug("Sent invitation to cl user: %s" % str(cl_user.user))
     else:
-        error_logger.warn("Failed to send invitation to cl user.", extra={
+        error_logger.warn("Failed to send invitation to cl user.", exc_info=True, extra={
             'cl_user': str(cl_user.user)
         })
 
@@ -111,7 +111,7 @@ def _send_db_invitation_email(db_user):
     if email.send(True):
         sss_logger.debug("Sent invitation to db user: %s" % str(db_user.user))
     else:
-        error_logger.warn("Failed to send invitation to db user.", extra={
+        error_logger.warn("Failed to send invitation to db user.", exc_info=True, extra={
             'db_user': str(db_user.user)
         })
 

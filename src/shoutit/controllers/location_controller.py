@@ -48,7 +48,7 @@ def from_location_index(lat, lon, ip=None, ip_location=None):
                 }
             }).execute()[:1]
         except (ElasticsearchException, KeyError) as e:
-            error_logger.warn("Location Index searching failed", extra={'detail': str(e), 'lat': lat, 'lng': lon, 'ip': ip})
+            error_logger.warn("Location Index searching failed", exc_info=True, extra={'detail': str(e), 'lat': lat, 'lng': lon, 'ip': ip})
             if ip_location:
                 location = ip_location
             elif ip:
@@ -91,7 +91,7 @@ def from_google_geocode_response(latlng, ip=None, ip_location=None):
             raise Exception("Make sure you have a valid latlng param")
         location = parse_google_geocode_response(geocode_response)
     except Exception as e:
-        error_logger.warn("Google geocoding failed",
+        error_logger.warn("Google geocoding failed", exc_info=True,
                           extra={'detail': str(e), 'latlng': latlng, 'ip': ip, 'geocode_response': geocode_response})
         if ip_location:
             location = ip_location

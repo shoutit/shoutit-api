@@ -129,7 +129,7 @@ def send_push(user, notification_type, attached_object_dict):
                 })
             debug_logger.debug("Sent apns push to %s." % user)
         except APNSError, e:
-            error_logger.warn("Could not send apns push.", extra={
+            error_logger.warn("Could not send apns push.", exc_info=True, extra={
                 'user': user.username,
                 'APNSError': str(e)
             })
@@ -142,7 +142,7 @@ def send_push(user, notification_type, attached_object_dict):
             })
             debug_logger.debug("Sent gcm push to %s." % user)
         except GCMError, e:
-            error_logger.warn("Could not send gcm push.", extra={
+            error_logger.warn("Could not send gcm push.", exc_info=True, extra={
                 'user': user.username,
                 'GCMError': str(e)
             })
@@ -307,7 +307,7 @@ def notify_cl_user2(cl_user, from_user, message):
     if email.send(True) == 1:
         debug_logger.debug("Sent message to cl user about his ad id: %s" % cl_user.cl_ad_id)
     else:
-        error_logger.warn("Error sending message to cl user.", extra={
+        error_logger.warn("Error sending message to cl user.", exc_info=True, extra={
             'cl_email': cl_user.cl_email
         })
 

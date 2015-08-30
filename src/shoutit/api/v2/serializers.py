@@ -48,16 +48,16 @@ class LocationSerializer(serializers.Serializer):
         lat = 'latitude' in validated_data
         lng = 'longitude' in validated_data
         ggr = 'google_geocode_response' in validated_data
+        google_geocode_response = validated_data.pop('google_geocode_response', None)
         request = self.root.context.get('request')
         ip = get_real_ip(request) if request else None
 
         if lat and lng:
             # Get location attributes using latitude, longitude or IP
             location = location_controller.from_location_index(validated_data.get('latitude'),
-                                                                validated_data.get('longitude'), ip)
+                                                               validated_data.get('longitude'), ip)
         elif ggr:
             # Handle Google geocode response if provided
-            google_geocode_response = validated_data.pop('google_geocode_response', None)
             try:
                 location = location_controller.parse_google_geocode_response(google_geocode_response)
             except (IndexError, KeyError, ValueError):
@@ -280,18 +280,18 @@ class UserDetailSerializer(UserSerializer):
         validated_data = super(UserDetailSerializer, self).to_internal_value(data)
 
         # force partial=false validation for location and video
-
         location_data = validated_data.get('location', {})
         profile_data = validated_data.get('profile', {})
         video_data = profile_data.get('video', {})
 
         errors = OrderedDict()
 
-        has_location = 'location' in data
-        if has_location and isinstance(location_data, OrderedDict):
-            ls = LocationSerializer(data=location_data)
-            if not ls.is_valid():
-                errors['location'] = ls.errors
+        # todo: check if location is being validated in all cases
+        # has_location = 'location' in data
+        # if has_location and isinstance(location_data, OrderedDict):
+        #     ls = LocationSerializer(data=location_data)
+        #     if not ls.is_valid():
+        #         errors['location'] = ls.errors
 
         has_video = 'video' in data
         if has_video and isinstance(video_data, OrderedDict):

@@ -120,4 +120,4 @@ def save_message_attachments(message, attachments):
                                          id_on_provider=v['id_on_provider'], duration=v['duration'])
                     ma.videos.add(video)
                 except Exception as e:
-                    error_logger.warn("Error creating video", extra={'detail': str(e), 'video': v})
+                    error_logger.warn("Error creating video", exc_info=True, extra={'detail': str(e), 'video': v})

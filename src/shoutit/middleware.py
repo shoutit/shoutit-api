@@ -31,7 +31,7 @@ class BadRequestsMiddleware(object):
                     'api_client': api_client,
                 },
             }
-            error_logger.debug("%s: %s" % (request.method.upper(), request.path), extra=extra)
+            error_logger.debug("%s: %s" % (request.method.upper(), request.path), exc_info=True, extra=extra)
         return response
 
 
