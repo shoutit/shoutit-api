@@ -779,14 +779,18 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         if not data:
             data = {}
-        name = data.get('name')
+        name = data.get('name', 'user')
         names = name.split()
         if len(names) >= 2:
             data['first_name'] = " ".join(names[0:-1])
             data['last_name'] = names[-1]
-        else:
+        elif len(names) >= 1:
             data['first_name'] = names[0]
             data['last_name'] = random.randint(0, 999)
+        else:
+            data['first_name'] = 'user'
+            data['last_name'] = random.randint(0, 999)
+
         ret = super(ShoutitSignupSerializer, self).to_internal_value(data)
         return ret
 
@@ -816,19 +820,21 @@ class ShoutitSigninSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise ValidationError(
-                {'email': ['The email or username you entered do not belong to any account.']})
-            # signup hack! act as signup if email is new
-            # request = self.root.context.get('request')
-            # username = generate_username()
-            # data.update({
-            #     'name': "user " + username
-            # })
-            # serializer = ShoutitSignupSerializer(data=data, context={'request': request})
-            # serializer.is_valid(raise_exception=True)
-            # serializer.validated_data['username'] = username
-            # self.instance = serializer.save()
-            # return serializer.validated_data
+            client_name = data.get('client_name')
+            if client_name and client_name == 'shoutit-ios':
+                # signup hack! act as signup if email is new and from ios only!
+                request = self.root.context.get('request')
+                username = generate_username()
+                data.update({
+                    'name': "user " + username
+                })
+                serializer = ShoutitSignupSerializer(data=data, context={'request': request})
+                serializer.is_valid(raise_exception=True)
+                serializer.validated_data['username'] = username
+                self.instance = serializer.save()
+                return serializer.validated_data
+            else:
+                raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
 
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
