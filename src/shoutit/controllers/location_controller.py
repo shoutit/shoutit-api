@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from elasticsearch import ElasticsearchException
 import requests
 from common.constants import DEFAULT_LOCATION
@@ -142,5 +143,8 @@ def parse_google_geocode_response(response):
         'city': locality or postal_town or administrative_area_level_2 or administrative_area_level_1,
         'address': address
     }
-    GoogleLocation.create(geocode_response=response, **location)
+    try:
+        GoogleLocation.create(geocode_response=response, **location)
+    except ValidationError:
+        pass
     return location

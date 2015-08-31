@@ -69,6 +69,9 @@ class SharedLocation(LocationMixin, UUIDModel):
 class GoogleLocation(LocationMixin, UUIDModel):
     geocode_response = models.TextField(max_length=5000)
 
+    class Meta:
+        unique_together = ('country', 'state', 'city', 'postal_code', 'latitude', 'longitude')
+
 
 class LocationIndex(DocType):
     source = String(index='not_analyzed')
