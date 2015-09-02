@@ -5,16 +5,16 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
-from ipware.ip import get_ip
 
 from provider import constants as provider_constants, scope as provider_scope
 from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.views import OAuthError
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
+from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
@@ -32,6 +32,7 @@ class RequestParamsClientBackend(object):
     which might be in the request body or URI as defined in :rfc:`2.3.1`.
     Modified to work with DRF request.data instead request.REQUEST
     """
+
     def authenticate(self, request=None):
         if request is None:
             return None
@@ -61,7 +62,7 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
                    'facebook_access_token', 'gplus_code', 'shoutit_signup', 'shoutit_signin',
                    'sms_code']
 
-    def error_response(self, error, content_type='application/json', status=400, **kwargs):
+    def error_response(self, error, **kwargs):
         """
         Return an error response to the client with default status code of
         *400* stating the error as outlined in :rfc:`5.2`.
@@ -402,7 +403,8 @@ class AccessTokenView(APIView, OAuthAccessTokenView):
         if provider_constants.ENFORCE_SECURE and not request.is_secure():
             return self.error_response({
                 'error': 'invalid_request',
-                'error_description': "A secure connection is required."})
+                'error_description': "A secure connection is required."
+            })
 
         if 'grant_type' not in request.data:
             return self.error_response({
@@ -503,7 +505,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         elif request.method == 'POST':
             if request.user.is_anonymous():
                 return Response({"detail": "Authentication credentials were not provided."},
-                                status=status.HTTP_401_UNAUTHORIZED)
+                                status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
                 return self.success_response(
                     "Your email '{}' is already verified.".format(request.user.email))

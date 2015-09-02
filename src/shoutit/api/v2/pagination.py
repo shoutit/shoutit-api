@@ -4,6 +4,8 @@
 """
 from __future__ import unicode_literals
 from collections import OrderedDict
+import math
+from datetime import datetime
 from django.core.paginator import Paginator as DjangoPaginator
 from elasticsearch import ElasticsearchException
 from elasticsearch_dsl.result import Result
@@ -12,10 +14,9 @@ from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
 from rest_framework.templatetags.rest_framework import replace_query_param
 from rest_framework.pagination import CursorPagination
-from datetime import datetime
 from rest_framework.utils.urls import remove_query_param
+from django.conf import settings
 from shoutit.api.api_utils import get_current_uri
-import math
 from shoutit.utils import error_logger
 
 
@@ -27,7 +28,7 @@ class DateTimePagination(CursorPagination):
     after_field = 'after'
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = settings.DEFAULT_MAX_PAGE_SIZE
     display_page_controls = True
 
     def paginate_queryset(self, queryset, request, view=None):
@@ -138,7 +139,7 @@ class ReverseModifiedDateTimePagination(ReverseDateTimePagination):
 class ShoutitPageNumberPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = settings.DEFAULT_MAX_PAGE_SIZE
     results_field = 'results'
     show_count = True
 
@@ -248,7 +249,7 @@ class ReverseDateTimeIndexPagination(DateTimeIndexPagination):
 class PageNumberIndexPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 50
+    max_page_size = settings.DEFAULT_MAX_PAGE_SIZE
     max_results = 1000
     results_field = 'results'
     template = 'rest_framework/pagination/previous_and_next.html'
