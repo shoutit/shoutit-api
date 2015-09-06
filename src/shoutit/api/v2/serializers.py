@@ -91,6 +91,12 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'api_url', 'image')
 
+    def to_internal_value(self, data):
+        if isinstance(data, basestring):
+            data = {'name': data}
+        ret = super(TagSerializer, self).to_internal_value(data)
+        return ret
+
     def get_api_url(self, tag):
         return reverse('tag-detail', kwargs={'name': tag.name}, request=self.context['request'])
 
@@ -139,6 +145,8 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('name', 'main_tag')
 
     def to_internal_value(self, data):
+        if isinstance(data, basestring):
+            data = {'name': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance
 
@@ -375,7 +383,7 @@ class ShoutSerializer(serializers.ModelSerializer):
                                    help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(min_length=6, source='item.name')
-    text = serializers.CharField(min_length=10, max_length=1000)
+    text = serializers.CharField(min_length=10, max_length=5000)
     price = serializers.FloatField(source='item.price', allow_null=True)
     currency = serializers.CharField(source='item.currency_code', allow_null=True,
                                      help_text='Currency code taken from list of available currencies')
@@ -499,7 +507,8 @@ class ShoutDetailSerializer(ShoutSerializer):
         videos = item.get('videos', {'all': None})['all']
 
         if not shout:
-            user = self.root.context['request'].user
+            request = self.root.context.get('request')
+            user = request.user if request else self.root.context.get('user')
             shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text,
                                                   price=price, currency=currency, category=category, tags=tags,
                                                   location=location, images=images, videos=videos)

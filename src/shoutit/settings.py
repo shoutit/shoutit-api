@@ -244,6 +244,7 @@ INSTALLED_APPS = (
     'corsheaders',
 
     'shoutit_pusher',
+    'shoutit_crm',
     'shoutit',
 )
 # apps only on local development
