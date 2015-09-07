@@ -329,9 +329,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def password_reset_link(self):
         try:
             cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD, is_disabled=False)[0]
-            return settings.API_LINK + 'auth/set_password?token=' + cf.token
+            return settings.SITE_LINK + 'services/reset_password?reset_token=' + cf.token
         except IndexError:
-            return settings.API_LINK
+            return settings.SITE_LINK
 
     def reset_password(self):
         from shoutit.models import ConfirmToken
