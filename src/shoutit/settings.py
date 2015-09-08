@@ -5,6 +5,7 @@
 from __future__ import unicode_literals, print_function
 from .settings_env import *
 from common.utils import get_address_port, check_offline_mood
+from elasticsearch_dsl.connections import connections
 
 OFFLINE_MODE = check_offline_mood()
 # Quick-start development settings - unsuitable for production
@@ -24,26 +25,30 @@ if OFFLINE_MODE:
 info("GUNICORN:", GUNICORN)
 info("BIND: {}:{}".format(ADDRESS, PORT))
 
+# todo: move sensitive settings [passwords, hosts, ports, etc] to environment or external conf files
 if PROD:
     DEBUG = False
-    SHOUT_IT_DOMAIN = 'www.shoutit.com'
-    SHOUT_IT_HOST = 'shoutit.com'
     SITE_LINK = 'https://www.shoutit.com/'
     API_LINK = 'https://api.shoutit.com/v2/'
+    DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
+    REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
+    ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
 
 elif DEV:
     DEBUG = True
-    SHOUT_IT_DOMAIN = 'dev.shoutit.com'
-    SHOUT_IT_HOST = 'dev.shoutit.com'
     SITE_LINK = 'http://dev.www.shoutit.com/'
     API_LINK = 'http://dev.api.shoutit.com/v2/'
+    DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
+    REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
+    ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
 
 else:  # LOCAL
     DEBUG = True
-    SHOUT_IT_DOMAIN = 'shoutit.dev:8000'
-    SHOUT_IT_HOST = 'shoutit.dev'
-    SITE_LINK = 'http://shoutit.dev:3000/'
+    SITE_LINK = 'http://shoutit.dev:8080/'
     API_LINK = 'http://shoutit.dev:8000/v2/'
+    DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
+    REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
+    ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
 
 info("DEBUG:", DEBUG)
 info("SITE_LINK:", SITE_LINK)
@@ -82,75 +87,39 @@ MAX_VIDEOS_PER_ITEM = 2
             Caching
 =================================
 """
+
+
 # todo: set passwords for redis databases
+def default_redis_conf(db=0):
+    return {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://%s:%s/%s" % (REDIS_HOST, REDIS_PORT, str(db)),
+        'TIMEOUT': None,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+
+
+SESSION_CACHE_ALIAS = "session"
+WORKER_CACHE_ALIAS = "worker"
+WORKER_MAIL_CACHE_ALIAS = "worker_mail"
+WORKER_PUSH_CACHE_ALIAS = "worker_push"
+WORKER_PUSH_BROADCAST_CACHE_ALIAS = "worker_push_broadcast"
+WORKER_PUSHER_CACHE_ALIAS = "worker_pusher"
+WORKER_SSS_CACHE_ALIAS = "worker_sss"
+
 CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/1",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "session": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/2",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "worker": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/10",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "worker_mail": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/11",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "worker_push": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/12",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "worker_push_broadcast": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/13",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "worker_pusher": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/14",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
-    "worker_sss": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis.shoutit.com:6379/15",
-        'TIMEOUT': None,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    },
+    "default": default_redis_conf(1),
+    SESSION_CACHE_ALIAS: default_redis_conf(2),
+    WORKER_CACHE_ALIAS: default_redis_conf(10),
+    WORKER_MAIL_CACHE_ALIAS: default_redis_conf(11),
+    WORKER_PUSH_CACHE_ALIAS: default_redis_conf(12),
+    WORKER_PUSH_BROADCAST_CACHE_ALIAS: default_redis_conf(13),
+    WORKER_PUSHER_CACHE_ALIAS: default_redis_conf(14),
+    WORKER_SSS_CACHE_ALIAS: default_redis_conf(15),
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "session"
 
 """
 =================================
@@ -166,34 +135,33 @@ RQ_QUEUE_PUSHER = ENV + '_pusher'
 RQ_QUEUE_SSS = ENV + '_sss'
 RQ_QUEUES = {
     RQ_QUEUE: {
-        'USE_REDIS_CACHE': 'worker',
+        'USE_REDIS_CACHE': WORKER_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 30,
     },
     RQ_QUEUE_MAIL: {
-        'USE_REDIS_CACHE': 'worker_mail',
+        'USE_REDIS_CACHE': WORKER_MAIL_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 30,
     },
     RQ_QUEUE_PUSH: {
-        'USE_REDIS_CACHE': 'worker_push',
+        'USE_REDIS_CACHE': WORKER_PUSH_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_PUSH_BROADCAST: {
-        'USE_REDIS_CACHE': 'worker_push_broadcast',
+        'USE_REDIS_CACHE': WORKER_PUSH_BROADCAST_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_PUSHER: {
-        'USE_REDIS_CACHE': 'worker_pusher',
+        'USE_REDIS_CACHE': WORKER_PUSHER_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_SSS: {
-        'USE_REDIS_CACHE': 'worker_sss',
+        'USE_REDIS_CACHE': WORKER_SSS_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 30,
     },
 }
 if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
         queue_config['ASYNC'] = False
-
 
 """
 =================================
@@ -202,15 +170,15 @@ if DEBUG or FORCE_SYNC_RQ:
 """
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
 
-
 """
 =================================
           Elasticsearch
 =================================
 """
-from elasticsearch_dsl.connections import connections
+
 # Define a default global Elasticsearch client
-ES = connections.create_connection(hosts=['es.shoutit.com'])
+ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
+ES = connections.create_connection(hosts=[ES_URL])
 
 AUTH_USER_MODEL = 'shoutit.User'
 
@@ -268,7 +236,6 @@ RAVEN_CONFIG = {
     'string_max_length': 1000
 }
 
-
 APNS_SANDBOX = False
 FORCE_PUSH = False
 PUSH_NOTIFICATIONS_SETTINGS = {
@@ -309,11 +276,11 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': ENV.replace('_api', ''),  # eg. ENV is shoutit_api_pro, db should be shoutit_prod
+        'NAME': ENV.replace('_api', ''),  # eg. ENV is shoutit_api_prod, db should be shoutit_prod
         'USER': 'shoutit',
         'PASSWORD': '#a\_Y9>uw<.5;_=/kUwK',
-        'HOST': 'db.shoutit.com',
-        'PORT': '5432',
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
 

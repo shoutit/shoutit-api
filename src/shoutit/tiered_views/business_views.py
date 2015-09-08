@@ -237,7 +237,7 @@ def recover_activation(request):
                                            TOKEN_TYPE_EMAIL_BUSINESS_ACTIVATE)
     email_controller.SendEmail(email, {
         'name': profile.name,
-        'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
+        'link': settings.SITE_LINK + token
     }, '', '')
     return result
 

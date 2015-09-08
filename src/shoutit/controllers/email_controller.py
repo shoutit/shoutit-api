@@ -144,7 +144,7 @@ def _send_template_email_test(template, email, context, use_google_connection=Fa
 
 def SendListenEmail(follower, followed):
     subject = _('[ShoutIt] %(name)s has started listening to your shouts') % {'name': follower.name}
-    link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % follower.username)
+    link = '%s%s' % (settings.SITE_LINK, constants.PROFILE_URL % follower.username)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = followed.email
 
@@ -172,7 +172,7 @@ def SendListenEmail(follower, followed):
 def SendExpiryNotificationEmail(user, shout):
     subject = _('[ShoutIt] your shout is about to expire! reshout it now.')
     title = shout.item.name
-    link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
+    link = '%s%s' % (settings.SITE_LINK, constants.SHOUT_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = user.email
 
@@ -198,12 +198,11 @@ def SendExpiryNotificationEmail(user, shout):
     msg.send(True)
 
 
-# todo: links
 def SendBuyOfferEmail(shout, buyer):
     subject = u'[Shoutit] %s offered to buy your %s' % (buyer.username, shout.name)
-    shout_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
-    buyer_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % buyer.username)
-    mute_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
+    shout_link = '%s%s' % (settings.SITE_LINK, constants.SHOUT_URL % shout.pk)
+    buyer_link = '%s%s' % (settings.SITE_LINK, constants.PROFILE_URL % buyer.username)
+    mute_link = '%s%s' % (settings.SITE_LINK, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = shout.user.email
 
@@ -238,10 +237,9 @@ def SendBuyOfferEmail(shout, buyer):
 
 def SendSellOfferEmail(shout, seller):
     subject = u'[ShoutIt] %s has %s and willing to sell it to you' % (seller.username, shout.name)
-    shout_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.SHOUT_URL % shout.pk)
-    seller_link = 'https://%s%s' % (
-        settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % seller.username)
-    mute_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.MUTE_URL % shout.pk)
+    shout_link = '%s%s' % (settings.SITE_LINK, constants.SHOUT_URL % shout.pk)
+    seller_link = '%s%s' % (settings.SITE_LINK, constants.PROFILE_URL % seller.username)
+    mute_link = '%s%s' % (settings.SITE_LINK, constants.MUTE_URL % shout.pk)
     from_email = settings.DEFAULT_FROM_EMAIL
     to = shout.user.email
 
@@ -322,7 +320,7 @@ def send_message_email(message):
 def SendUserDealCancel(user, deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.item.name}
     to_name = user.name
-    deal_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
+    deal_link = '%s%s' % (settings.SITE_LINK, constants.DEAL_URL % deal.pk)
     deal_name = deal.item.name
 
     html_template = get_template('deal_cancel_user.html')
@@ -353,7 +351,7 @@ def SendUserDealCancel(user, deal):
 def SendBusinessDealCancel(deal):
     subject = _('[ShoutIt] Deal %(name)s has been cancelled') % {'name': deal.item.name}
     to_name = deal.Business.name
-    deal_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
+    deal_link = '%s%s' % (settings.SITE_LINK, constants.DEAL_URL % deal.pk)
     deal_name = deal.item.name
 
     html_template = get_template('deal_cancel_business.html')
@@ -462,7 +460,7 @@ def SendBusinessAcceptanceEmail(user, email, link):
 def SendBusinessBuyersDocument(deal, document):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': deal.item.name}
     to_name = deal.Business.user.get_full_name()
-    deal_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % deal.pk)
+    deal_link = '%s%s' % (settings.SITE_LINK, constants.DEAL_URL % deal.pk)
     deal_name = deal.item.name
     buyers_count = deal.BuyersCount()
     html_template = get_template('deal_close_business.html')
@@ -493,7 +491,7 @@ def SendBusinessBuyersDocument(deal, document):
 def SendUserDealVoucher(buy, voucher):
     subject = _('[ShoutIt] Deal %(name)s has been closed') % {'name': buy.Deal.item.name}
     to_name = buy.user.get_full_name()
-    deal_link = 'https://%s%s' % (settings.SHOUT_IT_DOMAIN, constants.DEAL_URL % buy.Deal.pk)
+    deal_link = '%s%s' % (settings.SITE_LINK, constants.DEAL_URL % buy.Deal.pk)
     deal_name = buy.Deal.item.name
     vouchers_count = buy.Amount
     html_template = get_template('deal_close_user.html')
@@ -530,8 +528,7 @@ def SendInvitationEmail(from_user, names_emails_dict):
         context = Context({
             'from_name': from_user.get_full_name(),
             'from_email': from_user.email,
-            'from_link': 'https://%s%s' % (
-                settings.SHOUT_IT_DOMAIN, constants.PROFILE_URL % from_user.pk),
+            'from_link': '%s%s' % (settings.SITE_LINK, constants.PROFILE_URL % from_user.pk),
             'to_name': name,
         })
         html_message = html_template.render(context)

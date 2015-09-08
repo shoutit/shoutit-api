@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 
 # URLS
 # todo: rebase on web app
-LOGIN_URL = '/signin/'
-LOGOUT_URL = '/signout/'
-PROFILE_URL = '/user/%s/'
-SHOUT_URL = '/shout/%s/'
-DEAL_URL = '/deal/%s/'
-MUTE_URL = '/shout/%s/mute/'
+LOGIN_URL = 'signin'
+LOGOUT_URL = 'signout'
+PROFILE_URL = 'user/%s'
+SHOUT_URL = 'shout/%s'
+DEAL_URL = 'deal/%s'
+MUTE_URL = 'shout/%s/mute'
 
 # message headings
 MESSAGE_HEAD = {

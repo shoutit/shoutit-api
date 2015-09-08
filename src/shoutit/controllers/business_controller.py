@@ -117,7 +117,7 @@ def SignUpTempBusiness(request, email, password, send_activation=True, business=
         email_controller.SendEmail(email, {
             'name': business and business.name or "New Business",
             'email': email,
-            'link': "http://%s%s" % (settings.SHOUT_IT_DOMAIN, '/' + token + '/')
+            'link': settings.SITE_LINK + token
         }, "business_temp_registration_email.html", "business_temp_registration_email.txt")
 
     return django_user
@@ -303,5 +303,4 @@ def AcceptBusiness(request, username):
     give_user_permissions(user, ACTIVATED_BUSINESS_PERMISSIONS)
 
     token = set_last_token(user, user.email, TOKEN_LONG, TOKEN_TYPE_EMAIL_BUSINESS_CONFIRM)
-    email_controller.SendBusinessAcceptanceEmail(user.Business, user.email, "http://%s%s" % (
-        settings.SHOUT_IT_DOMAIN, '/' + token + '/'))
+    email_controller.SendBusinessAcceptanceEmail(user.Business, user.email, settings.SITE_LINK + token)
