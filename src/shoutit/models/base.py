@@ -312,9 +312,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def verification_link(self):
         try:
             cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL, is_disabled=False)[0]
-            return settings.API_LINK + 'auth/verify_email?format=json&token=' + cf.token
+            return settings.SITE_LINK + 'services/verify_email&verify_token=' + cf.token
         except IndexError:
-            return settings.API_LINK
+            return settings.SITE_LINK
 
     def send_verification_email(self):
         from shoutit.models import ConfirmToken

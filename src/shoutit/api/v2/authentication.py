@@ -9,7 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from provider import constants as provider_constants, scope as provider_scope
 from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
+from provider.utils import now
 from provider.views import OAuthError
+from provider.oauth2.models import AccessToken, RefreshToken, Client
 
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
@@ -45,7 +47,7 @@ class RequestParamsClientBackend(object):
         return None
 
 
-class AccessTokenView(APIView, OAuthAccessTokenView):
+class AccessTokenView(OAuthAccessTokenView, APIView):
     """
     OAuth2 Resource
     """
@@ -458,6 +460,35 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         }
         return Response(response_data)
 
+    def access_token_response(self, access_token):
+        """
+        Returns a successful response after creating the access token
+        as defined in :rfc:`5.1`.
+        """
+
+        # set the request user in case it is not set
+        user = access_token.user
+        self.request.user = user
+        user_dict = UserDetailSerializer(user, context={'request': self.request}).data
+
+        response_data = {
+            'access_token': access_token.token,
+            'token_type': provider_constants.TOKEN_TYPE,
+            'expires_in': access_token.get_expire_delta(),
+            'scope': ' '.join(provider_scope.names(access_token.scope)),
+            'user': user_dict,
+        }
+
+        # Not all access_tokens are given a refresh_token
+        # (for example, public clients doing password auth)
+        try:
+            rt = access_token.refresh_token
+            response_data['refresh_token'] = rt.token
+        except ObjectDoesNotExist:
+            pass
+
+        return Response(response_data)
+
     @list_route(methods=['get', 'post'], permission_classes=(), suffix='Verify Email')
     def verify_email(self, request):
         """
@@ -496,7 +527,13 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 user.activate()
                 cf.is_disabled = True
                 cf.save(update_fields=['is_disabled'])
-                return self.success_response("Your email has been verified.")
+
+                # Try to get a valid access token
+                try:
+                    access_token = self.get_access_token(user)
+                    return self.access_token_response(access_token)
+                except Exception as e:
+                    return self.success_response("Your email has been verified.")
             except ConfirmToken.DoesNotExist:
                 return self.error_response("Token does not exist.")
             except ValueError:
@@ -507,14 +544,11 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 return Response({"detail": "Authentication credentials were not provided."},
                                 status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
-                return self.success_response(
-                    "Your email '{}' is already verified.".format(request.user.email))
-            serializer = ShoutitVerifyEmailSerializer(data=request.data,
-                                                      context={'request': request})
+                return self.success_response("Your email '{}' is already verified.".format(request.user.email))
+            serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
             serializer.instance.send_verification_email()
-            return self.success_response(
-                "Verification email will be soon sent to {}.".format(request.user.email))
+            return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
         else:
             return Response()
 
@@ -592,3 +626,22 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         serializer = ShoutitSetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return self.success_response("New password set.")
+
+    # OAuth2 methods
+    def get_access_token(self, user):
+        client = Client.objects.get(name='shoutit-web')
+        scope = provider_scope.to_int('read', 'write')
+        try:
+            # Attempt to fetch an existing access token.
+            at = AccessToken.objects.get(user=user, client=client, scope=scope, expires__gt=now())
+        except AccessToken.DoesNotExist:
+            # None found... make a new one!
+            at = self.create_access_token(user, scope, client)
+            self.create_refresh_token(at)
+        return at
+
+    def create_access_token(self, user, scope, client):
+        return AccessToken.objects.create(user=user, client=client, scope=scope)
+
+    def create_refresh_token(self, at):
+        return RefreshToken.objects.create(user=at.user, access_token=at, client=at.client)
