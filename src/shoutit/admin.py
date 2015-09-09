@@ -122,6 +122,12 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     _devices.allow_tags = True
     _devices.short_description = 'Devices'
 
+    def save_model(self, request, obj, form, change):
+        update_fields = form.changed_data
+        if isinstance(update_fields, list) and 'email' in update_fields:
+            update_fields.append('is_activated')
+        obj.save(update_fields=update_fields)
+
 
 # Profile
 @admin.register(Profile)

@@ -297,20 +297,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         send_mail(subject, message, from_email, [self.email])
 
     def activate(self, save=True):
-        if self.is_activated:
-            return
         from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
-
         self.is_activated = True
         if save:
             self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
 
     def deactivate(self, save=True):
-        if not self.is_activated:
-            return
         from shoutit.permissions import take_permissions_from_user, ACTIVATED_USER_PERMISSIONS
-
         self.is_activated = False
         if save:
             self.save(update_fields=['is_activated'])
@@ -368,8 +362,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 def user_pre_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     if created:
         return
-    if isinstance(update_fields, frozenset) and 'email' in update_fields:
-        instance.deactivate(save=False)
+    if isinstance(update_fields, frozenset):
+        if 'email' in update_fields:
+            instance.deactivate(save=False)
+        elif 'is_activated' in update_fields:
+            if instance.is_activated:
+                instance.activate(save=False)
+            else:
+                instance.deactivate(save=False)
 
 
 @receiver(post_save, sender='shoutit.User')
@@ -407,7 +407,7 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
             subscribe_to_master_list(instance)
     else:
         if isinstance(update_fields, frozenset):
-            if 'email' in update_fields:
-                instance.send_verification_email()
-            elif 'is_activated' in update_fields and instance.is_activated:
+            if 'is_activated' in update_fields and instance.is_activated:
                 instance.send_verified_email()
+            elif 'email' in update_fields:
+                instance.send_verification_email()

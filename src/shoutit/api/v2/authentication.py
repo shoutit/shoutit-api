@@ -609,7 +609,6 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 return self.success_response("Your email '{}' is already verified.".format(request.user.email))
             serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
-            serializer.instance.send_verification_email()
             return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
         else:
             return Response()

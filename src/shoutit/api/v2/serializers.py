@@ -330,7 +330,7 @@ class UserDetailSerializer(UserSerializer):
         new_email = validated_data.get('email')
         if new_email and new_email != user.email:
             user.email = new_email
-            update_fields.append('email')
+            update_fields.extend(['email', 'is_activated'])
 
         user.save(update_fields=update_fields)
 
@@ -875,10 +875,12 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         ret = super(ShoutitVerifyEmailSerializer, self).to_internal_value(data)
         user = self.context.get('request').user
         email = ret.get('email')
+        # if the email changed the model will take care of sending the verification emal
         if email:
             user.email = email.lower()
-            user.save(update_fields=['email'])
-        self.instance = user
+            user.save(update_fields=['email', 'is_activated'])
+        else:
+            user.send_verification_email()
         return ret
 
 
