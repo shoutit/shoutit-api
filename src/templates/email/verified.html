@@ -1,0 +1,43 @@
+{% extends "email/base.html" %}
+{% load staticfiles %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <div class="content">
+    <table>
+      <tr>
+        <td>
+          <h1 style="font-size:40px; font-family:Arial, Helvetica, sans-serif; color:#99ca3b; font-weight:bold;">
+            Hello {{ name }},
+          </h1>
+
+          <p class="lead">Thank you for verifying your email. Your account details are:</p>
+          <p>
+            <b>Username</b>: {{ username }}
+          </p>
+          {% if not is_activated %}
+            <table bgcolor="">
+              <tr>
+                <td>
+                  <p class="callout">
+                    Your account has been verified and you can now use Shoutit full potential. <a href='{{ link }}'>Take me to the Marketplace. &raquo;</a>
+                  </p>
+              </tr>
+            </table>
+          {% endif %}
+          <!-- A Real Hero (and a real human being) -->
+          <p><img src="{% static "email/banner.jpg" %}" alt="banner"/></p>
+          <!-- /hero -->
+          <p>Shoutit is a Photo/video messaging application allowing users to take photos, record
+            videos of the items and products they want to sell or buy. These videos and photographs
+            are known as "shouts". Users then upload the shouts into the shoutit marketplace
+            allowing for buyers and sellers to connect with each other in their local community.
+            Shoutit is the fastest, easiest way to share and offer what you want to sell or buy.</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+{% endblock %}
+

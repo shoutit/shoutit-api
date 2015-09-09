@@ -319,11 +319,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def send_signup_email(self):
         email_controller.send_signup_email(self)
 
+    def send_verified_email(self):
+        email_controller.send_verified_email(self)
+
     @property
     def verification_link(self):
         try:
             cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL, is_disabled=False)[0]
-            return settings.SITE_LINK + 'services/verify_email&verify_token=' + cf.token
+            return settings.SITE_LINK + 'services/verify_email?verify_token=' + cf.token
         except IndexError:
             return settings.SITE_LINK
 
@@ -403,5 +406,8 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
             # subscribe to mailchimp master list
             subscribe_to_master_list(instance)
     else:
-        if isinstance(update_fields, frozenset) and 'email' in update_fields:
-            instance.send_verification_email()
+        if isinstance(update_fields, frozenset):
+            if 'email' in update_fields:
+                instance.send_verification_email()
+            elif 'is_activated' in update_fields and instance.is_activated:
+                instance.send_verified_email()

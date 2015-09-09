@@ -52,6 +52,27 @@ def _send_password_reset_email(user):
     msg.send(True)
 
 
+def send_verified_email(user):
+    return _send_verified_email.delay(user)
+
+
+@job(settings.RQ_QUEUE_MAIL)
+def _send_verified_email(user):
+    subject = _('Your email has been verified!')
+    from_email = settings.DEFAULT_FROM_EMAIL
+    context = Context({
+        'title': subject,
+        'username': user.username,
+        'name': user.name if user.name != user.username else '',
+        'link': settings.SITE_LINK,
+    })
+    html_template = get_template('email/verified.html')
+    html_message = html_template.render(context)
+    msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
+    msg.attach_alternative(html_message, "text/html")
+    msg.send(True)
+
+
 def send_signup_email(user):
     return _send_signup_email.delay(user)
 
