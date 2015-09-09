@@ -9,7 +9,7 @@ import re
 import requests
 from rest_framework.exceptions import ValidationError
 from shoutit.api.v2.serializers import ShoutDetailSerializer
-from shoutit.models import Shout
+from shoutit.models import Shout, ShoutIndex
 from shoutit.utils import debug_logger
 from shoutit_crm.constants import XML_LINK_ENABLED
 from shoutit_crm.models import XMLLinkCRMSource, XMLCRMShout
@@ -61,11 +61,13 @@ class Command(BaseCommand):
         # Disable current source Shouts with no matching crm ids
         current_crm_shouts = source.crm_shouts.filter(shout__is_disabled=False)
         discarded_crm_shouts = current_crm_shouts.filter(~Q(id_on_source__in=source_ids))
-        discarded_shouts_ids = map(lambda d_crm_s: d_crm_s.shout_id, discarded_crm_shouts)
+        discarded_shouts_ids = map(lambda d_crm_s: str(d_crm_s.shout_id), discarded_crm_shouts)
         Shout.objects.filter(id__in=discarded_shouts_ids).update(is_disabled=True)
+        # Remove them from the index too
+        ShoutIndex()._get_connection().delete_by_query(index=ShoutIndex()._get_index(),
+                                                       body={"query": {"terms": {"_id": discarded_shouts_ids}}})
 
         # Create or update Shouts
-
         for raw_shout in raw_shouts:
             id_on_source = raw_shout.get('id_on_source')
             try:
@@ -77,8 +79,10 @@ class Command(BaseCommand):
             finally:
                 shout = crm_shout.shout if crm_shout else None
             try:
-                if shout and shout.images:
-                    raw_shout['images'] = shout.images
+                if shout:
+                    if shout.images:
+                        raw_shout['images'] = shout.images
+                    shout.is_disabled = False
                 serializer = ShoutDetailSerializer(instance=shout, data=raw_shout, context={'user': source.user})
                 serializer.is_valid(raise_exception=True)
                 shout = serializer.save()
