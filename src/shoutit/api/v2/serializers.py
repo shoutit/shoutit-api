@@ -296,6 +296,13 @@ class UserDetailSerializer(UserSerializer):
 
         return validated_data
 
+    def validate_email(self, email):
+        user = self.context['request'].user
+        email = email.lower()
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            raise ValidationError(["Email is already used by another user."])
+        return email
+
     def update(self, user, validated_data):
         location_data = validated_data.get('location', {})
         push_tokens_data = validated_data.get('push_tokens', {})
