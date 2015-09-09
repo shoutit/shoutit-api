@@ -30,14 +30,20 @@ def SendEmail(email, variables, html_template, text_template):
 
 
 def send_password_reset_email(user):
+    return _send_password_reset_email.delay(user)
+
+
+@job(settings.RQ_QUEUE_MAIL)
+def _send_password_reset_email(user):
     subject = _('Password Reset')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
+        'title': subject,
         'username': user.username,
         'name': user.name if user.name != user.username else '',
         'link': user.password_reset_link
     })
-    html_template = get_template('password_recovery_email.html')
+    html_template = get_template('email/passwordrecovery.html')
     html_message = html_template.render(context)
     text_template = get_template('password_recovery_email.txt')
     text_message = text_template.render(context)
@@ -50,17 +56,39 @@ def send_signup_email(user):
     return _send_signup_email.delay(user)
 
 
-@job(settings.RQ_QUEUE)
+@job(settings.RQ_QUEUE_MAIL)
 def _send_signup_email(user):
     subject = _('Welcome to Shoutit!')
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
+        'title': subject,
         'username': user.username,
         'name': user.name if user.name != user.username else '',
         'link': user.verification_link,
         'is_activated': user.is_activated
     })
-    html_template = get_template('registration_email.html')
+    html_template = get_template('email/registration.html')
+    html_message = html_template.render(context)
+    msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
+    msg.attach_alternative(html_message, "text/html")
+    msg.send(True)
+
+
+def send_verification_email(user):
+    return _send_verification_email.delay(user)
+
+
+@job(settings.RQ_QUEUE_MAIL)
+def _send_verification_email(user):
+    subject = _('Shoutit - Verify your email')
+    from_email = settings.DEFAULT_FROM_EMAIL
+    context = Context({
+        'title': subject,
+        'username': user.username,
+        'name': user.name if user.name != user.username else '',
+        'link': user.verification_link
+    })
+    html_template = get_template('email/registration.html')
     html_message = html_template.render(context)
     msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
@@ -104,7 +132,7 @@ def _send_db_invitation_email(db_user):
         'shout': db_user.shout.item.name[:30] + '...',
         'link': 'http://hyperurl.co/shoutitdbz',
     })
-    html_template = get_template('db_user_invitation_email.html')
+    html_template = get_template('email/db_user_invitation_email.html')
     html_message = html_template.render(context)
     email = EmailMultiAlternatives(subject=subject, to=[db_user.user.email], from_email=from_email)
     email.attach_alternative(html_message, "text/html")

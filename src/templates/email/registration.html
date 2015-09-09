@@ -1,7 +1,7 @@
-{% extends "emaibase.html" %}
+{% extends "email/base.html" %}
 {% load staticfiles %}
 
-{% block title %}Welcome to Shoutit!{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
   <div class="content">
@@ -9,8 +9,24 @@
       <tr>
         <td>
           <h1 style="font-size:40px; font-family:Arial, Helvetica, sans-serif; color:#99ca3b; font-weight:bold;">
-            Hi there! Welcome to Shoutit!
+            Hi {{ name }}, Welcome to Shoutit!
           </h1>
+
+          <p class="lead">Your account details are:</p>
+          <p>
+            <b>Username</b>: {{ username }}
+          </p>
+          {% if not is_activated %}
+            <table bgcolor="">
+              <tr>
+                <td>
+                  <p class="callout">
+                    To use Shoutit with full potential we need to verify your email.<a
+                      href='{{ link }}'>Please click here to verify it. &raquo;</a>
+                  </p>
+              </tr>
+            </table>
+          {% endif %}
           <!-- A Real Hero (and a real human being) -->
           <p><img src="{% static "email/banner.jpg" %}" alt="banner"/></p>
           <!-- /hero -->
@@ -24,15 +40,5 @@
     </table>
   </div>
 
-  <div class="content">
-    <table bgcolor="">
-      <tr>
-        <td>
-          <p class="callout large">
-            Join the easiest and most effective marketplace ever. <a href='{{ link }}'>Download Shoutit App Now!</a>
-          </p>
-      </tr>
-    </table>
-  </div>
 {% endblock %}
 

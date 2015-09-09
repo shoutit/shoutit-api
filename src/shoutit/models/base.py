@@ -8,7 +8,7 @@ from django.core import validators
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.core.mail import send_mail
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.http import urlquote
@@ -296,14 +296,25 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         """
         send_mail(subject, message, from_email, [self.email])
 
-    def activate(self):
+    def activate(self, save=True):
         if self.is_activated:
             return
         from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
 
         self.is_activated = True
-        self.save(update_fields=['is_activated'])
+        if save:
+            self.save(update_fields=['is_activated'])
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
+
+    def deactivate(self, save=True):
+        if not self.is_activated:
+            return
+        from shoutit.permissions import take_permissions_from_user, ACTIVATED_USER_PERMISSIONS
+
+        self.is_activated = False
+        if save:
+            self.save(update_fields=['is_activated'])
+        take_permissions_from_user(self, ACTIVATED_USER_PERMISSIONS)
 
     def send_signup_email(self):
         email_controller.send_signup_email(self)
@@ -323,7 +334,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         # create new reset token
         ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_EMAIL)
         # email the user
-        email_controller.send_signup_email(self)
+        email_controller.send_verification_email(self)
 
     @property
     def password_reset_link(self):
@@ -350,8 +361,16 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return self.has_usable_password()
 
 
+@receiver(pre_save, sender='shoutit.User')
+def user_pre_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    if created:
+        return
+    if isinstance(update_fields, frozenset) and 'email' in update_fields:
+        instance.deactivate(save=False)
+
+
 @receiver(post_save, sender='shoutit.User')
-def user_post_save(sender, instance=None, created=False, **kwargs):
+def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     from shoutit.utils import debug_logger
 
     action = 'Created' if created else 'Updated'
@@ -371,9 +390,7 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
         Profile.create(user=instance, **profile_fields)
 
         # give appropriate permissions
-        permissions = INITIAL_USER_PERMISSIONS
-        if instance.is_activated:
-            permissions = FULL_USER_PERMISSIONS
+        permissions = FULL_USER_PERMISSIONS if instance.is_activated else INITIAL_USER_PERMISSIONS
         give_user_permissions(user=instance, permissions=permissions)
 
         # send signup email
@@ -385,3 +402,6 @@ def user_post_save(sender, instance=None, created=False, **kwargs):
 
             # subscribe to mailchimp master list
             subscribe_to_master_list(instance)
+    else:
+        if isinstance(update_fields, frozenset) and 'email' in update_fields:
+            instance.send_verification_email()

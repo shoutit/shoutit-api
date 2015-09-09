@@ -329,6 +329,7 @@ info('STATIC_URL:', STATIC_URL)
 
 # Templates
 TEMPLATE_DIRS = (
+    os.path.join(DJANGO_DIR, 'templates'),
     os.path.join(DJANGO_DIR, 'templates', 'api_site'),
     os.path.join(DJANGO_DIR, 'templates', 'text_messages'),
     os.path.join(DJANGO_DIR, 'templates', 'html_messages'),

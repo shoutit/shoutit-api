@@ -9,13 +9,13 @@
   <meta name="author" content="">
 
   <title>{% block title %}Shoutit{% endblock %}</title>
-  {% include "emailstyle.html" %}
+  {% include "email/style.html" %}
 </head>
 
 <body bgcolor="#FFFFFF" topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
 
 <!-- HEADER -->
-{% include "emailheader.html" %}
+{% include "email/header.html" %}
 <!-- /HEADER -->
 
 <!-- BODY -->
@@ -24,7 +24,7 @@
     <td></td>
     <td class="container" align="" bgcolor="#FFFFFF">
       {% block content %}{% endblock %}
-      {% include "emailcontentfooter.html" %}
+      {% include "email/contentfooter.html" %}
     </td>
     <td></td>
   </tr>
@@ -32,7 +32,7 @@
 <!-- /BODY -->
 
 <!-- FOOTER -->
-{% include "emailfooter.html" %}
+{% include "email/footer.html" %}
 <!-- /FOOTER -->
 </body>
 </html>

@@ -280,18 +280,10 @@ class UserDetailSerializer(UserSerializer):
         validated_data = super(UserDetailSerializer, self).to_internal_value(data)
 
         # force partial=false validation for location and video
-        location_data = validated_data.get('location', {})
         profile_data = validated_data.get('profile', {})
         video_data = profile_data.get('video', {})
 
         errors = OrderedDict()
-
-        # todo: check if location is being validated in all cases
-        # has_location = 'location' in data
-        # if has_location and isinstance(location_data, OrderedDict):
-        #     ls = LocationSerializer(data=location_data)
-        #     if not ls.is_valid():
-        #         errors['location'] = ls.errors
 
         has_video = 'video' in data
         if has_video and isinstance(video_data, OrderedDict):
@@ -311,11 +303,29 @@ class UserDetailSerializer(UserSerializer):
         video_data = profile_data.get('video', {})
 
         profile = user.profile
-        user.username = validated_data.get('username', user.username)
-        user.first_name = validated_data.get('first_name', user.first_name)
-        user.last_name = validated_data.get('last_name', user.last_name)
-        user.email = validated_data.get('email', user.email)
-        user.save()
+        update_fields = []
+
+        new_username = validated_data.get('username')
+        if new_username and new_username != user.username:
+            user.username = new_username
+            update_fields.append('username')
+
+        new_first_name = validated_data.get('first_name')
+        if new_first_name and new_first_name != user.first_name:
+            user.first_name = new_first_name
+            update_fields.append('first_name')
+
+        new_last_name = validated_data.get('last_name')
+        if new_last_name and new_last_name != user.last_name:
+            user.last_name = new_last_name
+            update_fields.append('last_name')
+
+        new_email = validated_data.get('email')
+        if new_email and new_email != user.email:
+            user.email = new_email
+            update_fields.append('email')
+
+        user.save(update_fields=update_fields)
 
         if location_data:
             user_controller.update_profile_location(profile, location_data)

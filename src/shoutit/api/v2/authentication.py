@@ -383,8 +383,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "token_type": "Bearer",
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
-            "scope": "read write read+write"
-            "user": {Detailed User Object}
+            "scope": "read write read+write",
+            "user": {Detailed User Object},
             "new_signup": true
         }
         </code></pre>
@@ -492,13 +492,9 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['get', 'post'], permission_classes=(), suffix='Verify Email')
     def verify_email(self, request):
         """
-        ###Verify email
-        GET:
-        <pre><code>
-        GET: /auth/verify_email?token=39097c224b0f4ffb8923fc92337ec90bd71d294092aa4bbaa2e8c91854fd891e
-        </code></pre>
+        This endpoint requires authentication headers!
 
-        ###Resend email verification
+        ##Resend email verification
         POST:
         <pre><code>
         {
@@ -506,6 +502,72 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         }
         </code></pre>
         `email` is optional to change the current email before sending the new verification
+
+        ##Verify email
+        GET:
+        <pre><code>
+        GET: /auth/verify_email?token=39097c224b0f4ffb8923fc92337ec90bd71d294092aa4bbaa2e8c91854fd891e
+        </code></pre>
+
+
+        ###Result
+        API server will send an email to the user with webapp link such as:
+        <pre><code>
+        www.shoutit.com/services/verify_email&verify_token=xxx
+        </code></pre>
+
+        Webapp should get the token and send an "api" call to:
+        <pre><code>
+        GET: /auth/verify_email?token=xxx
+        </code></pre>
+
+        ###Response(s)
+        ##POST
+        <pre><code>
+        {
+            "success": "Your email 'xxx@mail.com' is already verified"
+        }
+        </code></pre>
+        or
+        <pre><code>
+        {
+            "success": "Verification email will be soon sent to xxx@mail.com."
+        }
+        </code></pre>
+
+
+        ##GET
+        The main response
+        <pre><code>
+        {
+            "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
+            "token_type": "Bearer",
+            "expires_in": 31480817,
+            "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
+            "scope": "read write read+write",
+            "user": {Detailed User Object}
+        }
+        </code></pre>
+
+        In some cases the response will just look like:
+        <pre><code>
+        {
+            "success": "Your email has been verified"
+        }
+        </code></pre>
+        or
+        <pre><code>
+        {
+            "error": "Email address is already verified"
+        }
+        </code></pre>
+        or
+        <pre><code>
+        {
+            "error": "Token does not exist"
+        }
+        </code></pre>
+        In any of these cases, show the user the message and below it a link to log in page.
 
         ---
         omit_serializer: true

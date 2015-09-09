@@ -11,8 +11,8 @@ from shoutit.utils import generate_username, debug_logger, error_logger, set_pro
 from shoutit.controllers import location_controller
 
 
-def signup_user(email=None, password=None, first_name='', last_name='', username=None,
-                profile_fields=None, **extra_user_fields):
+def signup_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
+                **extra_user_fields):
     # email
     if email and User.objects.filter(email=email.lower()).exists():
         raise DRFValidationError({'email': "User with same email exists."})
@@ -37,8 +37,8 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
     # profile fields
     profile_fields = profile_fields or {}
     extra_user_fields.update({'profile_fields': profile_fields})
-    user = User.objects.create_user(username=username, email=email, password=password,
-                                    first_name=first_name, last_name=last_name, **extra_user_fields)
+    user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name,
+                                    last_name=last_name, **extra_user_fields)
 
     # used to later track signup events
     user.new_signup = True
@@ -60,8 +60,8 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
         elif initial_user.get('ip'):
             location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
-    return signup_user(email=email, password=password, first_name=first_name, last_name=last_name,
-                       username=username, profile_fields=profile_fields)
+    return signup_user(email=email, password=password, first_name=first_name, last_name=last_name, username=username,
+                       profile_fields=profile_fields)
 
 
 def auth_with_gplus(gplus_user, credentials, initial_user=None):
@@ -88,8 +88,8 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
         if location:
             update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name,
-                           is_activated=True, profile_fields=profile_fields)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True,
+                           profile_fields=profile_fields)
 
     if not user.is_activated:
         user.activate()
@@ -132,8 +132,8 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
         if location:
             update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name,
-                           username=username, is_activated=True, profile_fields=profile_fields)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username,
+                           is_activated=True, profile_fields=profile_fields)
 
     if not user.is_activated:
         user.activate()
@@ -144,7 +144,8 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
     access_token = long_lived_token.get('access_token')
     expires = long_lived_token.get('expires')
     try:
-        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, access_token=access_token, expires=expires)
+        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, access_token=access_token,
+                                             expires=expires)
     except IntegrityError as e:
         error_logger.warn(str(e), exc_info=True)
         raise FB_LINK_ERROR_TRY_AGAIN
