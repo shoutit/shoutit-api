@@ -88,7 +88,7 @@ def _send_verification_email(user):
         'name': user.name if user.name != user.username else '',
         'link': user.verification_link
     })
-    html_template = get_template('email/registration.html')
+    html_template = get_template('email/verification.html')
     html_message = html_template.render(context)
     msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
     msg.attach_alternative(html_message, "text/html")
