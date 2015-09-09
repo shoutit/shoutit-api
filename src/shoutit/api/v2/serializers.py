@@ -9,6 +9,7 @@ import uuid
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
+from django.conf import settings
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -29,7 +30,7 @@ from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
 from shoutit.controllers import shout_controller, user_controller
-from shoutit.utils import generate_username
+from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
 
 
 class LocationSerializer(serializers.Serializer):
@@ -91,6 +92,12 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ('id', 'name', 'api_url', 'image')
 
+    def to_internal_value(self, data):
+        if isinstance(data, basestring):
+            data = {'name': data}
+        ret = super(TagSerializer, self).to_internal_value(data)
+        return ret
+
     def get_api_url(self, tag):
         return reverse('tag-detail', kwargs={'name': tag.name}, request=self.context['request'])
 
@@ -139,6 +146,8 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('name', 'main_tag')
 
     def to_internal_value(self, data):
+        if isinstance(data, basestring):
+            data = {'name': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance
 
@@ -392,7 +401,7 @@ class ShoutSerializer(serializers.ModelSerializer):
                                    help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(min_length=6, source='item.name')
-    text = serializers.CharField(min_length=10, max_length=1000)
+    text = serializers.CharField(min_length=10, max_length=5000)
     price = serializers.FloatField(source='item.price', allow_null=True)
     currency = serializers.CharField(source='item.currency_code', allow_null=True,
                                      help_text='Currency code taken from list of available currencies')
@@ -487,6 +496,20 @@ class ShoutDetailSerializer(ShoutSerializer):
             del ret['reply_url']
         return ret
 
+    def validate_images(self, images):
+        valid_images = []
+        for image in images[:settings.MAX_IMAGES_PER_ITEM]:
+            if 'shout-image.static.shoutit.com' in image and '.jpg' in image:
+                valid_images.append(image)
+                continue
+            try:
+                s3_image = upload_image_to_s3(bucket='shoutit-shout-image-original', url=image,
+                                              public_url='https://shout-image.static.shoutit.com', raise_exception=True)
+                valid_images.append(s3_image)
+            except Exception as e:
+                debug_logger.warn(str(e), exc_info=True)
+        return valid_images
+
     def create(self, validated_data):
         return self.perform_save(shout=None, validated_data=validated_data)
 
@@ -516,7 +539,8 @@ class ShoutDetailSerializer(ShoutSerializer):
         videos = item.get('videos', {'all': None})['all']
 
         if not shout:
-            user = self.root.context['request'].user
+            request = self.root.context.get('request')
+            user = request.user if request else self.root.context.get('user')
             shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text,
                                                   price=price, currency=currency, category=category, tags=tags,
                                                   location=location, images=images, videos=videos)

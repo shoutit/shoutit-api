@@ -96,7 +96,7 @@ class EventManager(PostManager):
 
 class Post(UUIDModel, APIModelMixin, LocationMixin):
     user = models.ForeignKey(AUTH_USER_MODEL, related_name='posts')
-    text = models.TextField(max_length=1000, blank=True)
+    text = models.TextField(max_length=10000, blank=True)
     type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True,
                                choices=PostType.choices)
     date_published = models.DateTimeField(default=timezone.now, db_index=True)
