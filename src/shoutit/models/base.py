@@ -296,18 +296,20 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         """
         send_mail(subject, message, from_email, [self.email])
 
-    def activate(self, save=True):
-        from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
+    def activate(self):
         self.is_activated = True
-        if save:
-            self.save(update_fields=['is_activated'])
+        self.save(update_fields=['is_activated'])
+
+    def give_activate_permission(self):
+        from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
         give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
 
-    def deactivate(self, save=True):
-        from shoutit.permissions import take_permissions_from_user, ACTIVATED_USER_PERMISSIONS
+    def deactivate(self):
         self.is_activated = False
-        if save:
-            self.save(update_fields=['is_activated'])
+        self.save(update_fields=['is_activated'])
+
+    def take_activate_permission(self):
+        from shoutit.permissions import take_permissions_from_user, ACTIVATED_USER_PERMISSIONS
         take_permissions_from_user(self, ACTIVATED_USER_PERMISSIONS)
 
     def send_signup_email(self):
@@ -364,12 +366,13 @@ def user_pre_save(sender, instance=None, created=False, update_fields=None, **kw
         return
     if isinstance(update_fields, frozenset):
         if 'email' in update_fields:
-            instance.deactivate(save=False)
+            instance.take_activate_permission()
+            instance.is_activated = False
         elif 'is_activated' in update_fields:
             if instance.is_activated:
-                instance.activate(save=False)
+                instance.give_activate_permission()
             else:
-                instance.deactivate(save=False)
+                instance.take_activate_permission()
 
 
 @receiver(post_save, sender='shoutit.User')

@@ -586,8 +586,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 if cf.is_disabled:
                     raise ValueError()
                 user = cf.user
-                user.is_activated = True
-                user.save(update_fields=['is_activated'])
+                user.activate()
                 cf.is_disabled = True
                 cf.save(update_fields=['is_disabled'])
 
