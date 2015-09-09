@@ -1,10 +1,12 @@
 from __future__ import unicode_literals
+from cStringIO import StringIO
 import random
 import json
 import uuid
 import base64
 import hashlib
 import hmac
+from PIL import Image
 import boto
 from django.core.mail import get_connection
 from django.http import HttpResponse
@@ -12,6 +14,7 @@ from django_rq import job
 import nexmo as nexmo
 import phonenumbers
 import requests
+import time
 from shoutit import settings
 from shoutit.lib import mailchimp
 from mixpanel import Mixpanel
@@ -47,6 +50,10 @@ def generate_password():
 
 def random_uuid_str():
     return str(uuid.uuid4())
+
+
+def generate_image_name():
+    return "%s-%s.jpg" % (str(uuid.uuid4()), int(time.time()))
 
 
 def generate_username():
@@ -136,8 +143,35 @@ def _set_profile_image(profile, image_url=None, image_data=None):
         error_logger.warn(str(e), exc_info=True)
 
 
+def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, raise_exception=False):
+    assert url or data, 'Must pass url or data'
+    try:
+        if not data:
+            response = requests.get(url, timeout=10)
+            data = response.content
+        if not filename:
+            filename = generate_image_name()
+        # Check if an actual image
+        _ = Image.open(StringIO(data))
+        # Connect to S3
+        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+        bucket = s3.get_bucket(bucket)
+        key = bucket.new_key(filename)
+        key.set_metadata('Content-Type', 'image/jpg')
+        # Upload
+        key.set_contents_from_string(data)
+        # Construct public url
+        s3_image_url = '%s/%s' % (public_url, filename)
+        return s3_image_url
+    except Exception, e:
+        if raise_exception:
+            raise e
+        else:
+            error_logger.warn(str(e), exc_info=True)
+
+
 def alias(alias_id, original):
-    if settings.DEBUG and not settings.FORCE_MP_TRACKING:
+    if not settings.PROD and not settings.FORCE_MP_TRACKING:
         return
     return _alias.delay(alias_id, original)
 
@@ -149,7 +183,7 @@ def _alias(alias_id, original):
 
 
 def track(distinct_id, event_name, properties=None):
-    if settings.DEBUG and not settings.FORCE_MP_TRACKING:
+    if not settings.PROD and not settings.FORCE_MP_TRACKING:
         return
     return _track.delay(distinct_id, event_name, properties)
 
@@ -165,7 +199,7 @@ def _track(distinct_id, event_name, properties=None):
 
 
 def subscribe_to_master_list(user):
-    if settings.DEBUG:
+    if not settings.PROD:
         return
     return _subscribe_to_master_list.delay(user)
 

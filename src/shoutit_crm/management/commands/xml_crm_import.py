@@ -19,8 +19,13 @@ import xmltodict
 class Command(BaseCommand):
     help = 'Import shouts from XML CRM sources.'
 
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument('--count', default=10, type=int)
+
     def handle(self, *args, **options):
         # Get XML CRM Sources
+        count = options['count']
         xml_crm_sources = XMLLinkCRMSource.objects.filter(status=XML_LINK_ENABLED)
         processed_sources = []
         errors = []
@@ -28,7 +33,7 @@ class Command(BaseCommand):
         # Load XML from source
         for source in xml_crm_sources:
             try:
-                self.process_source(source)
+                self.process_source(source, count)
                 processed_sources.append(source)
             except Exception as e:
                 errors.append(e)
@@ -39,7 +44,7 @@ class Command(BaseCommand):
         if len(errors):
             debug_logger.error("Encountered %s errors" % len(errors))
 
-    def process_source(self, source):
+    def process_source(self, source, count):
         # load source xml
         xml = self.xml_from_source(source)
 
@@ -48,15 +53,15 @@ class Command(BaseCommand):
 
         # Map data
         mapping = source.mapping
-        raw_shouts = map_data(data, mapping) or []
+        raw_shouts = (map_data(data, mapping) or [])[:count]
 
         # Collect crm ids
         source_ids = map(lambda rs: rs.get('id_on_source'), raw_shouts)
 
         # Disable current source Shouts with no matching crm ids
-        current_crm_shouts = source.crm_shouts.all()
+        current_crm_shouts = source.crm_shouts.filter(shout__is_disabled=False)
         discarded_crm_shouts = current_crm_shouts.filter(~Q(id_on_source__in=source_ids))
-        discarded_shouts_ids = [crm_shout.shout_id for crm_shout in discarded_crm_shouts]
+        discarded_shouts_ids = map(lambda d_crm_s: d_crm_s.shout_id, discarded_crm_shouts)
         Shout.objects.filter(id__in=discarded_shouts_ids).update(is_disabled=True)
 
         # Create or update Shouts
@@ -72,6 +77,8 @@ class Command(BaseCommand):
             finally:
                 shout = crm_shout.shout if crm_shout else None
             try:
+                if shout and shout.images:
+                    raw_shout['images'] = shout.images
                 serializer = ShoutDetailSerializer(instance=shout, data=raw_shout, context={'user': source.user})
                 serializer.is_valid(raise_exception=True)
                 shout = serializer.save()
@@ -83,7 +90,7 @@ class Command(BaseCommand):
 
     def xml_from_source(self, source):
         # Used for testing only. could be used again.
-        # path = "D:\\dev\crm_full.xml"
+        # path = "D:\\dev\crm_example.xml"
         # with open(path, "r") as xml_file:
         #     xml_data = xml_file.read().replace('\n', '')
         xml_data = requests.get(source.url).content

@@ -9,6 +9,7 @@ import uuid
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
+from django.conf import settings
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -29,7 +30,7 @@ from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
 from shoutit.controllers import shout_controller, user_controller
-from shoutit.utils import generate_username
+from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
 
 
 class LocationSerializer(serializers.Serializer):
@@ -477,6 +478,20 @@ class ShoutDetailSerializer(ShoutSerializer):
         if self.root.context['request'].user == instance.owner:
             del ret['reply_url']
         return ret
+
+    def validate_images(self, images):
+        valid_images = []
+        for image in images[:settings.MAX_IMAGES_PER_ITEM]:
+            if 'shout-image.static.shoutit.com' in image and '.jpg' in image:
+                valid_images.append(image)
+                continue
+            try:
+                s3_image = upload_image_to_s3(bucket='shoutit-shout-image-original', url=image,
+                                              public_url='https://shout-image.static.shoutit.com', raise_exception=True)
+                valid_images.append(s3_image)
+            except Exception as e:
+                debug_logger.warn(str(e), exc_info=True)
+        return valid_images
 
     def create(self, validated_data):
         return self.perform_save(shout=None, validated_data=validated_data)
