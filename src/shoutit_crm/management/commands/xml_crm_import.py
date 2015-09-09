@@ -37,7 +37,7 @@ class Command(BaseCommand):
                 processed_sources.append(source)
             except Exception as e:
                 errors.append(e)
-                debug_logger.error("Error processing source: " % str(source))
+                debug_logger.error("Error processing source: %s" % str(source))
                 debug_logger.error(str(e))
 
         debug_logger.info("Successfully processed %s sources" % len(processed_sources))
