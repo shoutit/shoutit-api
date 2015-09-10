@@ -21,6 +21,8 @@ from mixpanel import Mixpanel
 from twilio.rest import TwilioRestClient
 import logging
 from common.IP2Location import IP2Location
+from HTMLParser import HTMLParser
+from re import sub
 
 
 # Shoutit loggers
@@ -169,7 +171,7 @@ def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, r
         return s3_image_url
     except Exception, e:
         if raise_exception:
-            raise e
+            raise
         else:
             error_logger.warn(str(e), exc_info=True)
 
@@ -285,3 +287,38 @@ def send_nexmo_sms(mobile, text, len_restriction=True):
 class ImageData(str):
     def __repr__(self):
         return "ImageData: %d bytes" % len(self)
+
+
+class DeHTMLParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.__text = []
+
+    def handle_data(self, data):
+        text = data.strip()
+        if len(text) > 0:
+            text = sub('[ \t\r\n]+', ' ', text)
+            self.__text.append(text + ' ')
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'p':
+            self.__text.append('\n\n')
+        elif tag == 'br':
+            self.__text.append('\n')
+
+    def handle_startendtag(self, tag, attrs):
+        if tag == 'br':
+            self.__text.append('\n')
+
+    def text(self):
+        return ''.join(self.__text).strip()
+
+
+def text_from_html(text):
+    try:
+        parser = DeHTMLParser()
+        parser.feed(text)
+        parser.close()
+        return parser.text()
+    except:
+        return text

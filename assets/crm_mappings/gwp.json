@@ -41,7 +41,7 @@
         "extra_lines": [
           {
             "type": "str",
-            "value": "Other Details:"
+            "value": "<br/>Other Details:"
           },
           {
             "node": "Property_Name",

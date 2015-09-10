@@ -10,7 +10,7 @@ import requests
 from rest_framework.exceptions import ValidationError
 from shoutit.api.v2.serializers import ShoutDetailSerializer
 from shoutit.models import Shout, ShoutIndex
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, text_from_html
 from shoutit_crm.constants import XML_LINK_ENABLED
 from shoutit_crm.models import XMLLinkCRMSource, XMLCRMShout
 import xmltodict
@@ -83,6 +83,7 @@ class Command(BaseCommand):
                     if shout.images:
                         raw_shout['images'] = shout.images
                     shout.is_disabled = False
+                raw_shout['text'] = text_from_html(raw_shout['text'])
                 serializer = ShoutDetailSerializer(instance=shout, data=raw_shout, context={'user': source.user})
                 serializer.is_valid(raise_exception=True)
                 shout = serializer.save()
@@ -162,7 +163,7 @@ def _map_str(data, mapping):
     # Add extra lines
     for extra_line_map in str_extra_lines:
         mapped_extra_line = map_data(data, extra_line_map)
-        mapped_str = "%s\n%s" % (mapped_str, mapped_extra_line)
+        mapped_str = "%s<br/>%s" % (mapped_str, mapped_extra_line)
     return mapped_str
 
 
