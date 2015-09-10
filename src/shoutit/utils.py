@@ -116,6 +116,8 @@ def get_google_smtp_connection():
 
 
 def set_profile_image(profile, image_url=None, image_data=None):
+    if image_data:
+        image_data = ImageData(image_data)
     return _set_profile_image.delay(profile, image_url, image_data)
 
 
@@ -145,6 +147,8 @@ def _set_profile_image(profile, image_url=None, image_data=None):
 
 def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, raise_exception=False):
     assert url or data, 'Must pass url or data'
+    source = url if url else str(ImageData(data))
+    debug_logger.debug("Uploading image to S3 from %s" % source)
     try:
         if not data:
             response = requests.get(url, timeout=10)
@@ -276,3 +280,8 @@ def send_nexmo_sms(mobile, text, len_restriction=True):
     except Exception as e:
         debug_logger.debug(e, extra={'mobile': mobile, 'text': text, 'detail': str(e)})
         return False
+
+
+class ImageData(str):
+    def __repr__(self):
+        return "ImageData: %d bytes" % len(self)

@@ -1,0 +1,115 @@
+{
+  "node": "Listings",
+  "item": {
+    "node": "Listing",
+    "attributes": {
+      "category": {
+        "node": "Ad_Type",
+        "map": {
+          "Rent": "Property For Rent",
+          "Sale": "Property For Sale"
+        },
+        "type": "str"
+      },
+      "tags": {
+        "items": [
+          {
+            "node": "Unit_Type",
+            "type": "str"
+          },
+          {
+            "node": "Unit_Reference_No",
+            "type": "str"
+          },
+          {
+            "node": "Bedrooms",
+            "post": "-bedroom",
+            "type": "str",
+            "blank_concat": false
+          },
+          {
+            "node": "No_of_Bathroom",
+            "post": "-bathroom",
+            "type": "str",
+            "blank_concat": false
+          }
+        ],
+        "type": "list"
+      },
+      "text": {
+        "node": "Web_Remarks",
+        "extra_lines": [
+          {
+            "type": "str",
+            "value": "Other Details:"
+          },
+          {
+            "node": "Property_Name",
+            "pre": "Property Name: ",
+            "type": "str"
+          },
+          {
+            "node": "Property_Ref_No",
+            "pre": "Property Ref No: ",
+            "type": "str"
+          },
+          {
+            "node": "Community",
+            "pre": "Community: ",
+            "type": "str"
+          },
+          {
+            "node": "Emirate",
+            "pre": "Emirate: ",
+            "type": "str"
+          }
+        ],
+        "type": "str"
+      },
+      "price": {
+        "node": "Price",
+        "type": "float"
+      },
+      "title": {
+        "node": "Property_Title",
+        "type": "str"
+      },
+      "currency": {
+        "type": "str",
+        "value": "AED"
+      },
+      "location": {
+        "attributes": {
+          "latitude": {
+            "node": "Latitude",
+            "type": "float"
+          },
+          "longitude": {
+            "node": "Longitude",
+            "type": "float"
+          }
+        },
+        "type": "dict"
+      },
+      "images": {
+        "node": "Images",
+        "item": {
+          "node": "image",
+          "type": "str"
+        },
+        "type": "list"
+      },
+      "id_on_source": {
+        "node": "PreviewLink",
+        "re": "l_id=(\\d+)",
+        "type": "str"
+      },
+      "type": {
+        "type": "str",
+        "value": "offer"
+      }
+    },
+    "type": "dict"
+  },
+  "type": "list"
+}
