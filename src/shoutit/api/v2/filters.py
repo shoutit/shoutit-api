@@ -242,7 +242,7 @@ class TagFilter(django_filters.FilterSet):
 
         if not queryset:
             queryset = queryset.filter(country='')
-            error_logger.warn("Discover returned 0 Featured Tags.", exc_info=True, extra={
+            error_logger.warn("Discover returned 0 Featured Tags.", extra={
                 'country': country, 'state': state, 'city': city,
             })
         return queryset

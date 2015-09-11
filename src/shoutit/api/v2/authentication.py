@@ -73,7 +73,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         client_name = client.name if client else 'NoClient'
         grant_type = kwargs.get('grant_type', 'NoGrant')
         error_name = "oAuth2 Error - %s - %s" % (client_name, grant_type)
-        error_logger.warn(error_name, exc_info=True, extra={'detail': error, 'request_data': self.request.data})
+        error_logger.warn(error_name, extra={'detail': error, 'request_data': self.request.data})
         return Response(error, status=400)
 
     def access_token_response(self, access_token, data=None):

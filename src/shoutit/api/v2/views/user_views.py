@@ -363,6 +363,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             self.pagination_class = PageNumberIndexPagination
             self.model = Shout
             self.index_model = ShoutIndex
+            self.filters = {'is_disabled': False}
             self.select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
             self.prefetch_related = ('item__videos',)
             self.defer = ()

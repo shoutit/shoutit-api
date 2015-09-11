@@ -7,7 +7,7 @@ from collections import OrderedDict
 import math
 from datetime import datetime
 from django.core.paginator import Paginator as DjangoPaginator
-from elasticsearch import ElasticsearchException
+from elasticsearch import ElasticsearchException, SerializationError
 from elasticsearch_dsl.result import Result
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination, _positive_int
@@ -248,6 +248,7 @@ class ReverseDateTimeIndexPagination(DateTimeIndexPagination):
 
 class PageNumberIndexPagination(PageNumberPagination):
     page_size = 10
+    page_number = 1
     page_size_query_param = 'page_size'
     max_page_size = settings.DEFAULT_MAX_PAGE_SIZE
     max_results = 1000
@@ -255,86 +256,83 @@ class PageNumberIndexPagination(PageNumberPagination):
     template = 'rest_framework/pagination/previous_and_next.html'
     show_count = False
 
+    # private
+    _max_page_number_exceeded = False
+    _max_possible_page_number_exceeded = False
+    _num_results = 0
+    _num_pages = 0
+
     def paginate_queryset(self, index_queryset, request, view=None):
         """
         Paginate a queryset using Elasticsearch index.
         """
 
-        page_size = self.get_page_size(request)
-        if not page_size:
+        self.page_size = self.get_page_size(request)
+        if not self.page_size:
             return None
-        max_page_number = self.max_results / page_size
+        max_page_number = self.max_results / self.page_size
         page_number = request.query_params.get(self.page_query_param, 1)
         page_number = self.get_valid_page_number(page_number)
 
         index_response = []
         if page_number > max_page_number:
-            self.max_page_number_exceeded = True
-            self.num_results = index_queryset.count()
+            self._max_page_number_exceeded = True
+            self._num_results = index_queryset.count()
         else:
-            _from = (page_number - 1) * page_size
-            _to = page_number * page_size
-            check = {}
+            _from = (page_number - 1) * self.page_size
+            _to = page_number * self.page_size
             try:
                 index_response = index_queryset[_from:_to].execute()
                 # if there are no results for this [_from:_to], check if there are ones at all
                 if not index_response:
-                    self.num_results = index_queryset.count()
-                    if self.num_results:
+                    self._num_results = index_queryset.count()
+                    if self._num_results:
                         # there are results meaning provided page number exceeded max possible one
-                        self.max_possible_page_number_exceeded = True
+                        self._max_possible_page_number_exceeded = True
                 else:
-                    check = index_response[0]
-                    if isinstance(check, Result):
-                        raise ElasticsearchException("Results from different index")
+                    if isinstance(index_response[0], Result):
+                        raise SerializationError("Results from different index")
             except (ElasticsearchException, KeyError) as e:
                 msg = "ES Exception: " + str(type(e))
-                extra = {'check': check or index_response, 'request': request._request, 'detail': str(e)}
+                extra = {'detail': str(e), 'request': request._request, 'query_dict': index_queryset.__dict__}
                 error_logger.warn(msg, exc_info=True, extra=extra)
-                # todo: KeyError is some bug in the elastic library.
-                # todo: log!
                 # possible errors
                 # SerializationError: returned data was corrupted
+                # KeyError: some bug in the elasticsearch-dsl library.
                 # ConnectionTimeout
-                # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
                 # todo: handle returned data are from different index! report bug issue
                 index_response = []
 
-        # save the order
-        objects_dict = OrderedDict()
-        for object_index in index_response:
-            objects_dict[object_index.meta.id] = None
+        # Save the index order. `None` is used to later filter out the objects that do not exist in db query
+        index_tuples = map(lambda s: (s.meta.id, None), index_response)
+        objects_dict = OrderedDict(index_tuples)
 
-        # populate from database
+        # Fetch objects from database
         ids = objects_dict.keys()
         if ids:
-            qs = view.model.objects.filter(id__in=ids) \
-                .select_related(*view.select_related) \
-                .prefetch_related(*view.prefetch_related) \
-                .defer(*view.defer)
+            qs = (view.model.objects.filter(id__in=ids, **view.filters)
+                  .select_related(*view.select_related)
+                  .prefetch_related(*view.prefetch_related)
+                  .defer(*view.defer))
         else:
             qs = []
 
-        # sort populated objects according to saved order
-        for shout in qs:
-            objects_dict[shout.pk] = shout
-        page = [item for key, item in objects_dict.items() if item]
+        # Replace the values of objects_dict with the actual db objects and filter out the non existing ones
+        # pk is used to make sure the ids are converted to strings otherwise setitem will create new keys
+        map(lambda s: objects_dict.__setitem__(s.pk, s), qs)
+        self.page = filter(None, objects_dict.values())
 
-        if (len(page) > 1 or (getattr(self, 'num_results', 0))) and self.template is not None:
-            # The browsable API should display pagination controls.
-            self.display_page_controls = True
-
-        self.page = page
-        if not hasattr(self, 'num_results'):
-            self.num_results = index_response.hits.total if self.page else 0
-        self.num_pages = int(math.ceil(self.num_results / (page_size * 1.0)))
-        if getattr(self, 'max_page_number_exceeded', False) \
-                or getattr(self, 'max_possible_page_number_exceeded', False):
-            self.page_number = min(self.num_pages + 1, max_page_number + 1)
+        self._num_results = index_response.hits.total if self.page else 0
+        self._num_pages = int(math.ceil(self._num_results / (self.page_size * 1.0)))
+        if self._max_page_number_exceeded or self._max_possible_page_number_exceeded:
+            self.page_number = min(self._num_pages + 1, max_page_number + 1)
         else:
             self.page_number = page_number
-        self.page_size = page_size
         self.request = request
+
+        if (len(self.page) > 1 or self._num_results) and self.template is not None:
+            # The browsable API should display pagination controls.
+            self.display_page_controls = True
         return self.page
 
     def get_valid_page_number(self, page_number):
@@ -353,8 +351,8 @@ class PageNumberIndexPagination(PageNumberPagination):
             (self.results_field, data)
         ]
         if self.show_count:
-            res.insert(0, ('count', self.num_results))
-        if getattr(self, 'max_page_number_exceeded', False):
+            res.insert(0, ('count', self._num_results))
+        if self._max_page_number_exceeded:
             res.insert(0, ('error', 'We do not return more than 1000 results for any query.'))
         return Response(OrderedDict(res))
 
@@ -380,7 +378,7 @@ class PageNumberIndexPagination(PageNumberPagination):
     def page_has_next(self):
         if not self.page:
             return None
-        return self.page_number < self.num_pages
+        return self.page_number < self._num_pages
 
     def get_next_link(self):
         if not self.page_has_next():
@@ -390,7 +388,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         return replace_query_param(url, self.page_query_param, self.page_number + 1)
 
     def page_has_previous(self):
-        if not (self.page or self.num_results):
+        if not (self.page or self._num_results):
             return None
         return self.page_number > 1
 

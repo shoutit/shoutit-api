@@ -129,10 +129,7 @@ def send_push(user, notification_type, attached_object_dict):
                 })
             debug_logger.debug("Sent apns push to %s." % user)
         except APNSError, e:
-            error_logger.warn("Could not send apns push.", exc_info=True, extra={
-                'user': user.username,
-                'APNSError': str(e)
-            })
+            error_logger.warn("Could not send apns push.", exc_info=True)
 
     if user.gcm_device:
         try:
@@ -142,10 +139,7 @@ def send_push(user, notification_type, attached_object_dict):
             })
             debug_logger.debug("Sent gcm push to %s." % user)
         except GCMError, e:
-            error_logger.warn("Could not send gcm push.", exc_info=True, extra={
-                'user': user.username,
-                'GCMError': str(e)
-            })
+            error_logger.warn("Could not send gcm push.", exc_info=True)
 
 
 @job(settings.RQ_QUEUE_SSS)
@@ -302,14 +296,13 @@ def notify_cl_user2(cl_user, from_user, message):
                                         shout=message.conversation.about, ref=ref)
     reply_to = "%s <%s>" % (from_user.name, in_email)
     connection = get_google_smtp_connection()
-    email = EmailMultiAlternatives(subject=subject, body=message.text, to=[cl_user.cl_email],
+    cl_email = cl_user.cl_email
+    email = EmailMultiAlternatives(subject=subject, body=message.text, to=[cl_email],
                                    from_email=reply_to, reply_to=[reply_to], connection=connection)
     if email.send(True) == 1:
         debug_logger.debug("Sent message to cl user about his ad id: %s" % cl_user.cl_ad_id)
     else:
-        error_logger.warn("Error sending message to cl user.", exc_info=True, extra={
-            'cl_email': cl_user.cl_email
-        })
+        error_logger.warn("Error sending message to cl user.", exc_info=True)
 
 
 def notify_user_of_listen(user, listener, request=None):

@@ -143,8 +143,8 @@ def _set_profile_image(profile, image_url=None, image_data=None):
         profile.image = s3_image_url
         profile.save()
 
-    except Exception, e:
-        error_logger.warn(str(e), exc_info=True)
+    except Exception:
+        error_logger.warn("Setting user profile image failed", exc_info=True)
 
 
 def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, raise_exception=False):
@@ -169,11 +169,11 @@ def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, r
         # Construct public url
         s3_image_url = '%s/%s' % (public_url, filename)
         return s3_image_url
-    except Exception, e:
+    except Exception:
         if raise_exception:
             raise
         else:
-            error_logger.warn(str(e), exc_info=True)
+            error_logger.warn("Uploading image to S3 failed", exc_info=True)
 
 
 def alias(alias_id, original):
@@ -201,7 +201,7 @@ def _track(distinct_id, event_name, properties=None):
         shoutit_mp.track(distinct_id, event_name, properties)
         debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
     except Exception as e:
-        error_logger.warn("shoutit_mp.track failed", exc_info=True, extra={'reason': str(e)})
+        error_logger.warn("shoutit_mp.track failed", exc_info=True)
 
 
 def subscribe_to_master_list(user):
