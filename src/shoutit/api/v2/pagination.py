@@ -292,6 +292,10 @@ class PageNumberIndexPagination(PageNumberPagination):
                 else:
                     if isinstance(index_response[0], Result):
                         raise SerializationError("Results from different index")
+
+                extra = {'request': request._request, 'query_dict': index_queryset.__dict__}
+                error_logger.info('ES Success', extra=extra)
+
             except (ElasticsearchException, KeyError) as e:
                 msg = "ES Exception: " + str(type(e))
                 extra = {'detail': str(e), 'request': request._request, 'query_dict': index_queryset.__dict__}
