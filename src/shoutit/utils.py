@@ -330,6 +330,9 @@ def base64_to_text(b64, box=None, config=None):
     data = base64.b64decode(b64)
     image = Image.open(StringIO(data))
     if box:
+        w, h = image.size
+        cl, cu, cr, cd = box
+        box = [0 + cl, 0 + cu, w - cr, h - cd]
         image = image.crop(box)
     image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
     image_no_trans.paste(image, image)
