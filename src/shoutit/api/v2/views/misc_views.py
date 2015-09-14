@@ -249,8 +249,9 @@ class MiscViewSet(viewsets.ViewSet):
     def b64_to_text(self, request):
         b64 = request.data.get('b64')
         config = request.data.get('config')
+        box = request.data.get('box')
         try:
-            text = utils.base64_to_text(b64, config)
+            text = utils.base64_to_text(b64, box, config)
             return Response({'text': text})
         except Exception as e:
             return Response({'error': str(e)})

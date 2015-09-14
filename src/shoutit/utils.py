@@ -325,10 +325,12 @@ def text_from_html(text):
         return text
 
 
-def base64_to_text(b64, config=None):
+def base64_to_text(b64, box=None, config=None):
     import pytesseract as pytesseract
     data = base64.b64decode(b64)
     image = Image.open(StringIO(data))
+    if box:
+        image = image.crop(box)
     image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
     image_no_trans.paste(image, image)
     text = pytesseract.image_to_string(image_no_trans, config=config)
