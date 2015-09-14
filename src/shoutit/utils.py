@@ -338,3 +338,14 @@ def base64_to_text(b64, box=None, config=None):
     image_no_trans.paste(image, image)
     text = pytesseract.image_to_string(image_no_trans, config=config)
     return text
+
+
+def base64_to_texts(b64, configs):
+    texts = []
+    for conf in configs:
+        box = conf.get('box')
+        config = conf.get('config')
+        text = base64_to_text(b64, box, config)
+        texts.append(text)
+    return texts
+

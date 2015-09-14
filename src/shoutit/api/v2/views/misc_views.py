@@ -256,6 +256,16 @@ class MiscViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)})
 
+    @list_route(methods=['post'], suffix='Base64 to Text')
+    def b64_to_texts(self, request):
+        b64 = request.data.get('b64')
+        configs = request.data.get('configs')
+        try:
+            texts = utils.base64_to_texts(b64, configs)
+            return Response({'texts': texts})
+        except Exception as e:
+            return Response({'error': str(e)})
+
 
 def handle_dbz_reply(in_email, msg, request):
     from_email = msg.get('from_email')
