@@ -252,7 +252,8 @@ def correct_mobile(mobile, country):
         if country in ['KW', 'OM', 'BH', 'QA'] and not mobile.startswith('00') and mobile.startswith('0'):
             mobile = mobile[1:]
         p = phonenumbers.parse(mobile, country)
-        if phonenumbers.is_valid_number(p) and phonenumbers.number_type(p) != phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE:
+        if phonenumbers.is_valid_number(p) and phonenumbers.number_type(
+                p) != phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE:
             mobile = phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)
         else:
             raise ValueError()
@@ -322,3 +323,13 @@ def text_from_html(text):
         return parser.text()
     except:
         return text
+
+
+def base64_to_text(b64):
+    import pytesseract as pytesseract
+    data = base64.b64decode(b64)
+    image = Image.open(StringIO(data))
+    image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
+    image_no_trans.paste(image, image)
+    text = pytesseract.image_to_string(image_no_trans)
+    return text

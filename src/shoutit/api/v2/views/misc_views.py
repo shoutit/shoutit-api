@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import list_route
 from common.constants import POST_TYPE_OFFER
 from common.constants import POST_TYPE_REQUEST
+from shoutit import utils
 
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
@@ -243,6 +244,15 @@ class MiscViewSet(viewsets.ViewSet):
                 return Response({'error': "Unknown in_email"})
         else:
             return Response(data)
+
+    @list_route(methods=['post'], suffix='Base64 to Text')
+    def b64_to_text(self, request):
+        b64 = request.data.get('b64')
+        try:
+            text = utils.base64_to_text(b64)
+            return Response({'text': text})
+        except Exception as e:
+            return Response({'error': str(e)})
 
 
 def handle_dbz_reply(in_email, msg, request):
