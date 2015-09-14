@@ -248,8 +248,9 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], suffix='Base64 to Text')
     def b64_to_text(self, request):
         b64 = request.data.get('b64')
+        config = request.data.get('config')
         try:
-            text = utils.base64_to_text(b64)
+            text = utils.base64_to_text(b64, config)
             return Response({'text': text})
         except Exception as e:
             return Response({'error': str(e)})
