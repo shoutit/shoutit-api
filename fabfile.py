@@ -56,13 +56,13 @@ def remote_pull(env_short_name):
         run('git pull')
         if confirm("Update requirements?"):
             run('/opt/{0}/bin/pip install -r src/requirements/common_noupdate.txt'.format(remote_env))
-            run('/opt/{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(env_short_name))
+            run('/opt/{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(remote_env))
         # run('/opt/shoutit_api_{}/bin/python src/manage.py test'.format(env))
         if confirm("Migratey?"):
-            run('/opt/shoutit_api_{0}/bin/python src/manage.py migrate'.format(env_short_name))
+            run('/opt/shoutit_api_{0}/bin/python src/manage.py migrate'.format(remote_env))
         if confirm("Clear all logs?"):
-            run("find /opt/shoutit_api_{0}/log/. -type f -exec cp /dev/null {{}} \;".format(env_short_name))
-        run('chown shoutit_api_{0} -R /opt/shoutit_api_{0}/'.format(env_short_name))
+            run("find /opt/shoutit_api_{0}/log/. -type f -exec cp /dev/null {{}} \;".format(remote_env))
+        run('chown shoutit_api_{0} -R /opt/shoutit_api_{0}/'.format(remote_env))
         run('supervisorctl start all')
 
 
