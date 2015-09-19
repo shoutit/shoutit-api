@@ -594,7 +594,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 try:
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
-                except Exception as e:
+                except Exception:
                     return self.success_response("Your email has been verified.")
             except ConfirmToken.DoesNotExist:
                 return self.error_response("Token does not exist.")

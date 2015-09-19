@@ -2,17 +2,18 @@ from datetime import datetime
 import time
 
 from django.views.decorators.csrf import csrf_exempt
+
 from django.utils.translation import ugettext_lazy as _
 
 from common.constants import DEFAULT_PAGE_SIZE
 from shoutit.controllers.comment_controller import CommentOnPost, GetPostComments, DeleteComment
 from shoutit.controllers.shout_controller import get_post
 from shoutit.permissions import PERMISSION_COMMENT_ON_POST
-from shoutit.tiered_views.renderers import (comment_on_post_json_renderer, json_renderer,
+from shoutit.v1.tiered_views.renderers import (comment_on_post_json_renderer, json_renderer,
                                             post_comments_json_renderer)
 from shoutit.tiered_views.validators import (comment_on_post_validator, object_exists_validator,
                                              delete_comment_validator)
-from shoutit.tiers import non_cached_view, ResponseResult
+from shoutit.tiered_views.tiers import non_cached_view, ResponseResult
 
 
 @csrf_exempt

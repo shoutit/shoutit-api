@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
+
 from django.conf.urls import include, url
 from django.views.generic import RedirectView
 from django.contrib import admin
 from django.conf import settings
-from shoutit.tiered_views import general_views
+
+from shoutit.v1.tiered_views import general_views
 
 urlpatterns = [
     # current api root

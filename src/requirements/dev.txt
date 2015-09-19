@@ -3,5 +3,5 @@
 behave
 logging-tree==1.6
 mkdocs
-Fabric==1.10.1
+Fabric
 pytesseract

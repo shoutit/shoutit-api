@@ -6,7 +6,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django_rq import job
 from elasticsearch import RequestError, ConnectionTimeout, NotFoundError, ConflictError
-from elasticsearch_dsl import DocType, String, Double, Integer, Boolean, GeoPoint
+from elasticsearch_dsl import DocType, String, GeoPoint
 from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED
 from shoutit.models.base import UUIDModel, LocationMixin
 from shoutit.utils import error_logger, debug_logger
@@ -187,4 +187,3 @@ class SMSInvitation(UUIDModel):
 
     def __unicode__(self):
         return "%s %s for %s" % (self.country, self.status, self.mobile)
-

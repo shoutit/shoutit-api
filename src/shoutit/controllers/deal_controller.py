@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import StringIO
 from datetime import datetime
 import urllib2
+
 from django.core.exceptions import ObjectDoesNotExist
 from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
 from reportlab.lib.colors import orange
@@ -10,6 +11,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from geraldo.generators import PDFGenerator
 import reportlab.graphics.barcode
 from PIL.Image import open as image_open
+
 from shoutit.models import DealBuy, Voucher, Shout
 from shoutit.controllers import event_controller, item_controller
 
@@ -61,8 +63,8 @@ def get_image_for_voucher(voucher_band):
 
 
 def get_qr_for_voucher(voucher_band):
-    from common.PyQRNative import QRCode
-    from common.PyQRNative import QRErrorCorrectLevel
+    from common.lib.PyQRNative import QRCode
+    from common.lib.PyQRNative import QRErrorCorrectLevel
 
     qr = QRCode(3, QRErrorCorrectLevel.L)
     qr.addData(voucher_band.instance.code)

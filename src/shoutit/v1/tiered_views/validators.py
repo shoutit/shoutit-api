@@ -1,13 +1,15 @@
 from __future__ import unicode_literals
 import uuid
+
 from django.core.exceptions import ObjectDoesNotExist
+
 from django.utils.translation import ugettext_lazy as _
 
 from shoutit.models import Profile, Business
 from shoutit.controllers import shout_controller, comment_controller, experience_controller
 from shoutit.controllers.user_controller import get_profile
 from shoutit.forms import BusinessEditProfileForm, CreateTinyBusinessForm
-from shoutit.tiers import ValidationResult as VR, RESPONSE_RESULT_ERROR_404
+from shoutit.v1.tiered_views.tiers import ValidationResult as VR, RESPONSE_RESULT_ERROR_404
 
 
 def uuid_validator(uuid_string):

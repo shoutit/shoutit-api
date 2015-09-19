@@ -8,9 +8,9 @@ from django.conf import settings
 
 from common.constants import ENUM_XHR_RESULT, MESSAGE_HEAD, DEFAULT_LOCATION
 from shoutit.models import Profile, Business, PredefinedCity
-from shoutit.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, \
+from shoutit.v1.tiered_views.tiers import RESPONSE_RESULT_ERROR_NOT_LOGGED_IN, RESPONSE_RESULT_ERROR_NOT_ACTIVATED, RESPONSE_RESULT_ERROR_REDIRECT, \
     RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN, RESPONSE_RESULT_ERROR_PERMISSION_NEEDED
-from shoutit.xhr_utils import xhr_respond, redirect_to_modal_xhr
+from shoutit.v1.xhr_utils import xhr_respond, redirect_to_modal_xhr
 from common import constants
 
 

@@ -1,9 +1,9 @@
 # core
 gunicorn==19.3.0
-raven==5.5.0
+raven==5.7.2
 requests==2.7.0
 Django==1.8.4
-psycopg2==2.6
+psycopg2>=2.6
 
 # admin
 django-grappelli==2.7.1
@@ -29,10 +29,9 @@ boto==2.38.0
 
 # google
 httplib2==0.9.1
-google-api-python-client==1.4.1
+google-api-python-client==1.4.2
 
 # push + sockets
-git+https://github.com/mochawich/django-push-notifications
 pusher==1.2.3
 django-cors-headers==1.1.0
 django-pgjson==0.3.1
@@ -45,7 +44,7 @@ django-rest-swagger==0.3.4
 markdown==2.6.2
 
 # utils
-phonenumbers==7.0.9
+phonenumbers==7.0.11
 django-ipware
 twilio==4.4.0
 nexmo

@@ -128,7 +128,7 @@ def send_push(user, notification_type, attached_object_dict):
                     'object': attached_object_dict
                 })
             debug_logger.debug("Sent apns push to %s." % user)
-        except APNSError, e:
+        except APNSError:
             error_logger.warn("Could not send apns push.", exc_info=True)
 
     if user.gcm_device:
@@ -138,7 +138,7 @@ def send_push(user, notification_type, attached_object_dict):
                 'object': attached_object_dict
             })
             debug_logger.debug("Sent gcm push to %s." % user)
-        except GCMError, e:
+        except GCMError:
             error_logger.warn("Could not send gcm push.", exc_info=True)
 
 

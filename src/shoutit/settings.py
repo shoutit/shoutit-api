@@ -3,7 +3,7 @@
 
 """
 from __future__ import unicode_literals, print_function
-from .settings_env import *
+from .settings_env import *  # NOQA
 from common.utils import get_address_port, check_offline_mood
 from elasticsearch_dsl.connections import connections
 
@@ -492,13 +492,6 @@ SWAGGER_SETTINGS = {
     'doc_expansion': 'none',
 }
 
-# some monkey patching for global imports
-from common import monkey_patches
-
-info('Monkeys: Loaded')
-info("==================================================")
-
-
 # Logging
 LOG_SQL = False
 LOGGING = {
@@ -675,7 +668,6 @@ LOGGING = {
 }
 
 
-
 # PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
 PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
@@ -706,3 +698,5 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
+
+info("==================================================")

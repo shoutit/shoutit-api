@@ -51,7 +51,7 @@ class SMSViewSet(UUIDViewSetMixin, NoUpdateModelViewSet):
             try:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-            except ValidationError as e:
+            except ValidationError:
                 items.remove(item)
         return Response({'added': len(items)}, status=status.HTTP_201_CREATED)
 

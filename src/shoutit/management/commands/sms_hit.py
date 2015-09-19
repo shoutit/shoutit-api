@@ -3,12 +3,8 @@
 
 """
 from __future__ import unicode_literals
-import datetime
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from shoutit.controllers import message_controller
-from shoutit.models import Conversation, DBCLConversation, SMSInvitation
-import random
+from shoutit.models import SMSInvitation
 from shoutit.utils import nexmo_client, has_unicode
 
 

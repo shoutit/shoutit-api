@@ -13,4 +13,3 @@ SHOUTIT_PUSHER_SETTINGS.setdefault("cluster", None)
 SHOUTIT_PUSHER_SETTINGS.setdefault("json_encoder", None)
 SHOUTIT_PUSHER_SETTINGS.setdefault("json_decoder", None)
 SHOUTIT_PUSHER_SETTINGS.setdefault("backend", RequestsBackend)
-

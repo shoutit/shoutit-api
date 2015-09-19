@@ -21,8 +21,7 @@ class RecoverForm(forms.Form):
 
     def clean(self):
         if not user_controller.get_profile(
-                self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(
-                self.data['username_or_email'].strip()):
+                self.data['username_or_email'].strip()) and not user_controller.GetUserByEmail(self.data['username_or_email'].strip()):
             raise ValidationError(_('Invalid credentials.'))
         return self.cleaned_data
 
@@ -227,10 +226,8 @@ class DealForm(forms.Form):
 
     def clean_max_buyers(self):
         if 'max_buyers' in self.cleaned_data and 'min_buyers' in self.cleaned_data and \
-                self.cleaned_data['max_buyers'] and \
-                        self.cleaned_data['max_buyers'] < self.cleaned_data['min_buyers']:
-            raise forms.ValidationError(
-                _('Maximum number of buyres can\'t be less than the minimum number of buyers.'))
+                self.cleaned_data['max_buyers'] and self.cleaned_data['max_buyers'] < self.cleaned_data['min_buyers']:
+            raise forms.ValidationError(_('Maximum number of buyres can\'t be less than the minimum number of buyers.'))
         return 'max_buyers' in self.cleaned_data and self.cleaned_data['max_buyers'] or None
 
     def clean_expiry_date(self):
@@ -243,7 +240,7 @@ class DealForm(forms.Form):
     def clean_valid_to(self):
         try:
             valid_to = 'valid_to' in self.cleaned_data and self.cleaned_data['valid_to'] or None
-        except ValueError, e:
+        except ValueError:
             raise forms.ValidationError(_('Invalid expiry date.'))
         if valid_to and valid_to < datetime.now():
             raise forms.ValidationError(_('Valid to date can\'t be in the past.'))

@@ -37,7 +37,7 @@ class XMLLinkCRMSource(CRMSource):
     crm_shouts = GenericRelation('shoutit_crm.XMLCRMShout', related_query_name='xml_link_crm_source')
 
     def __unicode__(self):
-        return "%s: %s @ %s" %(self.pk, self.url, unicode(self.provider))
+        return "%s: %s @ %s" % (self.pk, self.url, unicode(self.provider))
 
 
 class CRMShout(UUIDModel, AttachedObjectMixin):

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import random
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q

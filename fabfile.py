@@ -1,7 +1,8 @@
 from __future__ import unicode_literals, with_statement
-
+import os
 from fabric.api import *
 from fabric.contrib.console import confirm
+
 
 env.user = 'root'
 env.use_ssh_config = True
@@ -10,25 +11,42 @@ env.roledefs = {
     'dev': ['root@dev.api.shoutit.com'],
     'prod': ['root@node-01.api.shoutit.com']
 }
+api_dir = os.getcwd()
+django_dir = os.path.join(api_dir, 'src')
+env_dir = os.path.dirname(api_dir)
+scripts_dir = os.path.join(env_dir, 'Scripts')
 
 
-def test():
+def local_flake8():
+    print("Running flake8...")
+    with lcd(scripts_dir):
+        local('flake8 %s ' % django_dir)
+
+
+def local_update():
+    print("Updating local requirements...")
+    with lcd(scripts_dir):
+        local('pip install -U -r %s' % os.path.join(django_dir, 'requirements', 'dev.txt'))
+
+
+def local_test():
     with settings(warn_only=True):
         result = local('python src/manage.py test', capture=True)
     if result.failed and not confirm("Tests failed. Continue anyway?"):
         abort("Aborting at user request.")
 
 
-def commit():
+def local_commit():
     local("git add -p && git commit")
 
 
-def push():
+def local_push(env_name):
     local("git push")
 
 
-def pull(env_name):
-    with cd('/opt/shoutit_api_{}/api'.format(env_name)):
+def remote_pull(env_short_name):
+    remote_env = 'shoutit_api_%s' % env_short_name
+    with cd('/opt/%s/api' % remote_env):
         if confirm('Fast deploy [pull then restart]?'):
             out = run('git pull')
             if out != 'Already up-to-date.':
@@ -37,31 +55,27 @@ def pull(env_name):
         run('supervisorctl stop all')
         run('git pull')
         if confirm("Update requirements?"):
-            run('/opt/shoutit_api_{}/bin/pip install    -r src/requirements/common_noupdate.txt'.format(env_name))
-            run('/opt/shoutit_api_{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(env_name))
+            run('/opt/{0}/bin/pip install -r src/requirements/common_noupdate.txt'.format(remote_env))
+            run('/opt/{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(env_short_name))
         # run('/opt/shoutit_api_{}/bin/python src/manage.py test'.format(env))
         if confirm("Migratey?"):
-            run('/opt/shoutit_api_{}/bin/python src/manage.py migrate'.format(env_name))
+            run('/opt/shoutit_api_{0}/bin/python src/manage.py migrate'.format(env_short_name))
         if confirm("Clear all logs?"):
-            run("find /opt/shoutit_api_{}/log/. -type f -exec cp /dev/null {{}} \;".format(env_name))
-        run('chown shoutit_api_{0} -R /opt/shoutit_api_{0}/'.format(env_name))
+            run("find /opt/shoutit_api_{0}/log/. -type f -exec cp /dev/null {{}} \;".format(env_short_name))
+        run('chown shoutit_api_{0} -R /opt/shoutit_api_{0}/'.format(env_short_name))
         run('supervisorctl start all')
 
 
 def prepare_deploy():
-    test()
-    # commit()
-    # push()
+    local_flake8()
+    local_update()
+    local_test()
 
 
 def deploy():
-    # with virtualenv():
-    #     prepare_deploy()
-    # with virtualenv():
     if 'dev' in env.roles:
-        pull('dev')
+        remote_pull('dev')
     elif 'prod' in env.roles:
-        pull('prod')
+        remote_pull('prod')
     else:
         print(':)')
-

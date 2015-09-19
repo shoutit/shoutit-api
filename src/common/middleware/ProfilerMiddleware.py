@@ -39,7 +39,7 @@ class ProfileMiddleware(object):
 
         res = "	  tottime\n"
         for item in list:
-            res += "%4.1f%% %7.3f %s\n" % ( 100 * item[0] / sum if sum else 0, item[0], item[1] )
+            res += "%4.1f%% %7.3f %s\n" % (100 * item[0] / sum if sum else 0, item[0], item[1])
 
         return res
 

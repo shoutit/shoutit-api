@@ -6,6 +6,11 @@ import uuid
 import base64
 import hashlib
 import hmac
+import time
+import logging
+from HTMLParser import HTMLParser
+from re import sub
+
 from PIL import Image
 import boto
 from django.core.mail import get_connection
@@ -14,15 +19,12 @@ from django_rq import job
 import nexmo as nexmo
 import phonenumbers
 import requests
-import time
-from shoutit import settings
-from shoutit.lib import mailchimp
 from mixpanel import Mixpanel
 from twilio.rest import TwilioRestClient
-import logging
-from common.IP2Location import IP2Location
-from HTMLParser import HTMLParser
-from re import sub
+
+from shoutit import settings
+from shoutit.lib import mailchimp
+from common.lib.IP2Location import IP2Location
 
 
 # Shoutit loggers
@@ -158,7 +160,7 @@ def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, r
         if not filename:
             filename = generate_image_name()
         # Check if an actual image
-        _ = Image.open(StringIO(data))
+        Image.open(StringIO(data))
         # Connect to S3
         s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
         bucket = s3.get_bucket(bucket)
@@ -200,7 +202,7 @@ def _track(distinct_id, event_name, properties=None):
     try:
         shoutit_mp.track(distinct_id, event_name, properties)
         debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
-    except Exception as e:
+    except Exception:
         error_logger.warn("shoutit_mp.track failed", exc_info=True)
 
 
@@ -348,4 +350,3 @@ def base64_to_texts(b64, configs):
         text = base64_to_text(b64, box, config)
         texts.append(text)
     return texts
-

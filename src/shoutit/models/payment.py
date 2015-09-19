@@ -8,7 +8,6 @@ from shoutit.models.base import UUIDModel, AttachedObjectMixin
 from shoutit.models.user import Profile
 from shoutit.models.business import Business
 
-
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
@@ -55,7 +54,8 @@ class Voucher(UUIDModel):
 
 class DealBuy(UUIDModel):
     Deal = models.ForeignKey('shoutit.Deal', related_name='Buys', on_delete=models.SET_NULL, null=True, blank=True)
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='DealsBought', on_delete=models.SET_NULL, null=True,
+                             blank=True)
     Amount = models.IntegerField(default=1)
     DateBought = models.DateTimeField(auto_now_add=True)
 
@@ -71,19 +71,19 @@ class ServiceManager(models.Manager):
         return self.values(ServiceBuy._meta.get_field_by_name('User')[0].column).filter(user=user,
                                                                                         Service__code__iexact=service_code).annotate(
             buys_count=Sum('Amount')).extra(select={
-            'used_count': 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(service_id)s" IN (%(sid)s)' % {
-                'table': ServiceUsage._meta.db_table,
-                'user_id': ServiceUsage._meta.get_field_by_name('User')[0].column,
-                'uid': user.pk,
-                'service_id': ServiceUsage._meta.get_field_by_name('Service')[0].column,
-                'sid': """SELECT "%(table)s"."id" FROM "%(table)s" WHERE "%(table)s"."%(code)s" = '%(service_code)s'""" % {
-                    'table': Service._meta.db_table,
-                    'code': Service._meta.get_field_by_name('code')[0].column,
-                    'service_code': service_code
-                },
-                'amount': ServiceUsage._meta.get_field_by_name('Amount')[0].column,
-            }
-        }).values('used_count', 'buys_count')
+                'used_count': 'SELECT SUM("%(table)s"."%(amount)s") FROM "%(table)s" WHERE "%(table)s"."%(user_id)s" = %(uid)d AND "%(table)s"."%(service_id)s" IN (%(sid)s)' % {
+                    'table': ServiceUsage._meta.db_table,
+                    'user_id': ServiceUsage._meta.get_field_by_name('User')[0].column,
+                    'uid': user.pk,
+                    'service_id': ServiceUsage._meta.get_field_by_name('Service')[0].column,
+                    'sid': """SELECT "%(table)s"."id" FROM "%(table)s" WHERE "%(table)s"."%(code)s" = '%(service_code)s'""" % {
+                        'table': Service._meta.db_table,
+                        'code': Service._meta.get_field_by_name('code')[0].column,
+                        'service_code': service_code
+                    },
+                    'amount': ServiceUsage._meta.get_field_by_name('Amount')[0].column,
+                }
+            }).values('used_count', 'buys_count')
 
 
 class ServiceBuy(UUIDModel):
@@ -109,7 +109,6 @@ class Subscription(UUIDModel):
     DeactivateDate = models.DateTimeField(null=True, blank=True)
     UserName = models.CharField(max_length=64)
     Password = models.CharField(max_length=24)
-
 
 # PAUSE: PAYPAL
 # PAUSE: Payment

@@ -4,7 +4,7 @@
 """
 from __future__ import unicode_literals
 from datetime import datetime
-from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -13,7 +13,7 @@ from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType,
     MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
-    REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT, DeviceOS)
+    REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT)
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 from shoutit.utils import track
 

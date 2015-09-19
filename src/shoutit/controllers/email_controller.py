@@ -163,13 +163,6 @@ def _send_db_invitation_email(db_user):
         error_logger.warn("Failed to send invitation to db user.", exc_info=True)
 
 
-def email_db_user(message):
-    to_user = message.ToUser
-    from_user = message.FromUser
-    shout = message.Conversation.AboutPost
-    message_text = message.text
-
-
 def send_template_email_test(template, email, context, use_google_connection=False):
     return _send_template_email_test.delay(template, email, context, use_google_connection)
 

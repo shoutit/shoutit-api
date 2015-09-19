@@ -7,7 +7,6 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
 from common.utils import any_in
 from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation,
                             Video)
-from shoutit.controllers import notifications_controller
 from shoutit.utils import error_logger
 
 
@@ -119,5 +118,5 @@ def save_message_attachments(message, attachments):
                     video = Video.create(url=v['url'], thumbnail_url=v['thumbnail_url'], provider=v['provider'],
                                          id_on_provider=v['id_on_provider'], duration=v['duration'])
                     ma.videos.add(video)
-                except Exception as e:
+                except Exception:
                     error_logger.warn("Error creating video", exc_info=True)

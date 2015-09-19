@@ -3,6 +3,7 @@ import math
 import time
 
 from django.utils.translation import ugettext_lazy as _
+
 from django.views.decorators.csrf import csrf_exempt
 
 from common.constants import DEFAULT_PAGE_SIZE, EXPERIENCE_UP, EXPERIENCE_DOWN
@@ -16,13 +17,13 @@ from shoutit.controllers.user_controller import get_profile
 from shoutit.forms import CreateTinyBusinessForm
 from shoutit.models import Profile, Business
 from shoutit.permissions import PERMISSION_POST_EXPERIENCE, PERMISSION_SHARE_EXPERIENCE
-from shoutit.tiered_views.renderers import (page_html, experiences_stream_json,
-                                            post_experience_json_renderer, json_renderer,
-                                            user_json_renderer)
+from shoutit.v1.tiered_views.renderers import (page_html, experiences_stream_json,
+                                               post_experience_json_renderer, json_renderer,
+                                               user_json_renderer)
 from shoutit.tiered_views.validators import (experience_validator, share_experience_validator,
                                              edit_experience_validator,
                                              object_exists_validator, experience_view_validator)
-from shoutit.tiers import ResponseResult, non_cached_view
+from shoutit.tiered_views.tiers import ResponseResult, non_cached_view
 
 
 @non_cached_view(methods=['GET'], validator=experience_view_validator,
@@ -48,7 +49,7 @@ def view_experience(request, exp_id):
         result.data['thumb_up_count'] = thumps_count['ups']
         result.data['thumb_down_count'] = thumps_count['downs']
         result.data['page_title'] = '%s Experience with %s' % (
-        'Bad' if experience.state == 0 else 'Good', experience.AboutBusiness.name)
+            'Bad' if experience.state == 0 else 'Good', experience.AboutBusiness.name)
         result.data['page_desc'] = experience.text
         result.data['is_fb_og'] = True
     return result
@@ -62,10 +63,10 @@ def view_experience(request, exp_id):
 # result = ResponseResult()
 # result.data['timestamp'] = time.mktime(datetime.now().timetuple())
 # result.data['business_name'] = business_name
-#	result.data['experiences'] = experience_controller.GetExperiences(request.user, business_name, start_index=0, end_index= DEFAULT_PAGE_SIZE)
-#	result.data['experience_form'] = ExperienceForm()
-#	result.data['comment_form'] = CommentForm()
-#	return result
+# result.data['experiences'] = experience_controller.GetExperiences(request.user, business_name, start_index=0, end_index= DEFAULT_PAGE_SIZE)
+# result.data['experience_form'] = ExperienceForm()
+# result.data['comment_form'] = CommentForm()
+# return result
 
 
 @non_cached_view(methods=['GET'],
@@ -121,12 +122,12 @@ def get_business_initials(username):
                                                                                  initial=get_business_initials(
                                                                                      args and args[
                                                                                          0] or (
-                                                                                     'username' in kwargs and
-                                                                                     kwargs[
-                                                                                         'username'] or '')),
+                                                                                             'username' in kwargs and
+                                                                                             kwargs[
+                                                                                                 'username'] or '')),
                                                                                  *args, **kwargs)
                  # form_validator(request,ExperienceForm),
-)
+                 )
 def post_exp(request, username=None):
     result = ResponseResult()
     form = ExperienceForm(request.POST)
@@ -169,7 +170,7 @@ def post_exp(request, username=None):
                  json_renderer=lambda request, result, exp_id: json_renderer(request, result,
                                                                              success_message=_(
                                                                                  'You have shared the experience successfully.'))
-)
+                 )
 def share_experience(request, exp_id):
     shared = ShareExperience(request.user, exp_id)
     result = ResponseResult()
@@ -182,7 +183,7 @@ def share_experience(request, exp_id):
                      request, result, message=_(
                          'Your experience was edit successfully.')),
                  validator=lambda request, exp_id: edit_experience_validator(request, exp_id)
-)
+                 )
 def edit_experience(request, exp_id):
     result = ResponseResult()
     form = ExperienceForm(request.POST)
@@ -197,7 +198,7 @@ def edit_experience(request, exp_id):
                  json_renderer=lambda request, result, exp_id: user_json_renderer(request, result),
                  validator=lambda request, exp_id: object_exists_validator(get_post, True, _(
                      'Experience dose not exist.'), exp_id),
-)
+                 )
 def users_shared_experience(request, exp_id):
     result = ResponseResult()
     result.data['users'] = GetUsersSharedExperience(exp_id)

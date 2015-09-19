@@ -456,7 +456,6 @@ admin.site.register(UserPermission)
 admin.site.register(Permission)
 
 
-
 # # Business
 # admin.site.register(StoredFile)
 # @admin.register(Business)

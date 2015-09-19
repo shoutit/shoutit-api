@@ -48,7 +48,7 @@ def from_location_index(lat, lon, ip=None, ip_location=None):
                     }, 'unit': 'km', 'order': 'asc'
                 }
             }).execute()[:1]
-        except (ElasticsearchException, KeyError) as e:
+        except (ElasticsearchException, KeyError):
             error_logger.warn("Location Index searching failed", exc_info=True)
             if ip_location:
                 location = ip_location
@@ -83,7 +83,6 @@ def from_google_geocode_response(latlng, ip=None, ip_location=None):
         'latlng': latlng,
         'language': "en"
     }
-    geocode_response = None
     try:
         if latlng in ['0,0', '0.0,0.0', '0.0,0', '0,0.0']:
             raise ValueError("Ignoring 0,0 lat lng")
@@ -91,7 +90,7 @@ def from_google_geocode_response(latlng, ip=None, ip_location=None):
         if geocode_response.get('status') != 'OK':
             raise Exception("Make sure you have a valid latlng param")
         location = parse_google_geocode_response(geocode_response)
-    except Exception as e:
+    except Exception:
         error_logger.warn("Google geocoding failed", exc_info=True)
         if ip_location:
             location = ip_location

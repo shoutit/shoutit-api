@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
-
 import re
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
+
 from django.views.decorators.csrf import csrf_exempt
 
 from common.constants import ENUM_XHR_RESULT, DEFAULT_PAGE_SIZE
 from shoutit.models import User
 from shoutit.models import Business, Deal, ServiceBuy
 from shoutit.forms import DealForm
-from shoutit.tiered_views.renderers import (get_initial_json_response, json_data_renderer,
+from shoutit.v1.tiered_views.renderers import (get_initial_json_response, json_data_renderer,
                                             deals_stream_json)
 from shoutit.tiered_views.validators import object_exists_validator
-from shoutit.xhr_utils import xhr_respond
+from shoutit.v1.xhr_utils import xhr_respond
 from renderers import page_html
 from shoutit.controllers import payment_controller, user_controller, deal_controller
 from validators import form_validator
-from shoutit.tiers import (non_cached_view, ResponseResult, ValidationResult,
+from shoutit.tiered_views.tiers import (non_cached_view, ResponseResult, ValidationResult,
                            RESPONSE_RESULT_ERROR_BAD_REQUEST, RESPONSE_RESULT_ERROR_FORBIDDEN)
 from shoutit.permissions import PERMISSION_SHOUT_DEAL
 

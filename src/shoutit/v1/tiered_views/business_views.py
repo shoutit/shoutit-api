@@ -12,13 +12,13 @@ from shoutit.forms import BusinessSignUpForm, StartBusinessForm, BusinessEditPro
     BusinessTempSignUpForm
 from shoutit.models import ConfirmToken, Business
 from shoutit.permissions import ANONYMOUS_USER_PERMISSIONS
-from shoutit.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, \
+from shoutit.v1.tiered_views.renderers import page_html, json_renderer, confirm_business_renderer_json, \
     edit_profile_renderer_json, \
     create_tiny_business_renderer_json
 from shoutit.tiered_views.validators import form_validator, user_edit_profile_validator
 from shoutit.controllers import business_controller, payment_controller, email_controller, \
     user_controller
-from shoutit.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_REDIRECT, \
+from shoutit.tiered_views.tiers import non_cached_view, ResponseResult, RESPONSE_RESULT_ERROR_REDIRECT, \
     RESPONSE_RESULT_ERROR_BAD_REQUEST
 
 
