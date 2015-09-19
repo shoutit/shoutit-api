@@ -46,6 +46,7 @@ def local_push(env_name):
 
 def remote_pull(env_short_name):
     remote_env = 'shoutit_api_%s' % env_short_name
+    remote_env_dir = '/opt/%s/' % remote_env
     with cd('/opt/%s/api' % remote_env):
         if confirm('Fast deploy [pull then restart]?'):
             out = run('git pull')
@@ -55,14 +56,14 @@ def remote_pull(env_short_name):
         run('supervisorctl stop all')
         run('git pull')
         if confirm("Update requirements?"):
-            run('/opt/{0}/bin/pip install -r src/requirements/common_noupdate.txt'.format(remote_env))
-            run('/opt/{0}/bin/pip install -U -r src/requirements/{0}.txt'.format(remote_env))
-        # run('/opt/shoutit_api_{}/bin/python src/manage.py test'.format(env))
-        if confirm("Migratey?"):
-            run('/opt/shoutit_api_{0}/bin/python src/manage.py migrate'.format(remote_env))
+            run('%sbin/pip install -r src/requirements/common_noupdate.txt' % remote_env_dir)
+            run('%sbin/pip install -U -r src/requirements/%s.txt' % (remote_env_dir, env_short_name))
+        # run('/opt/{}/bin/python src/manage.py test'.format(env))
+        if confirm("Migrate?"):
+            run('%sbin/python src/manage.py migrate' % remote_env_dir)
         if confirm("Clear all logs?"):
-            run("find /opt/shoutit_api_{0}/log/. -type f -exec cp /dev/null {{}} \;".format(remote_env))
-        run('chown shoutit_api_{0} -R /opt/shoutit_api_{0}/'.format(remote_env))
+            run("find {}log/. -type f -exec cp /dev/null {{}} \;".format(remote_env_dir))
+        run('chown %s -R %s' % (remote_env, remote_env_dir))
         run('supervisorctl start all')
 
 
