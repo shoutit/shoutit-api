@@ -451,7 +451,7 @@ class ShoutSerializer(serializers.ModelSerializer):
             data = {}
         try:
             category = data.get('category')
-            if not category or not category.get('name'):
+            if not (category and category.get('name')):
                 data['category'] = {'name': 'Other'}
             if data['category'] == 'cv-video':  # fix for current ios bug
                 data['category'] = {'name': 'Jobs Wanted'}
