@@ -1,8 +1,7 @@
 from __future__ import unicode_literals, with_statement
-import os
 from fabric.api import *
 from fabric.contrib.console import confirm
-
+from src.settings_env import *
 
 env.user = 'root'
 env.use_ssh_config = True
@@ -11,23 +10,20 @@ env.roledefs = {
     'dev': ['root@dev.api.shoutit.com'],
     'prod': ['root@node-01.api.shoutit.com']
 }
-api_dir = os.getcwd()
-django_dir = os.path.join(api_dir, 'src')
-manage_py = os.path.join(django_dir, 'manage.py')
-env_dir = os.path.dirname(api_dir)
-scripts_dir = os.path.join(env_dir, 'Scripts')
+manage_py = os.path.join(DJANGO_DIR, 'manage.py')
+scripts_dir = os.path.join(ENV_DIR, 'Scripts')
 
 
 def local_flake8():
     print("Running flake8...")
     with lcd(scripts_dir):
-        local('flake8 %s ' % django_dir)
+        local('flake8 %s ' % DJANGO_DIR)
 
 
 def local_update():
     print("Updating local requirements...")
     with lcd(scripts_dir):
-        local('pip install -U -r %s' % os.path.join(django_dir, 'requirements', 'dev.txt'))
+        local('pip install -U -r %s' % os.path.join(DJANGO_DIR, 'requirements', 'dev.txt'))
 
 
 def local_test():

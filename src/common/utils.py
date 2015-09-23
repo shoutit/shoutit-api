@@ -5,16 +5,18 @@ from __future__ import unicode_literals
 import sys
 import re
 from datetime import datetime
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 import requests
-import uuid
+
 from common.constants import NOT_ALLOWED_USERNAMES
 
 
 def get_address_port(using_gunicorn=False):
     if using_gunicorn:
-        from shoutit.settings_gunicorn import bind
+        from settings_gunicorn import bind
         return bind.split(':')
 
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":

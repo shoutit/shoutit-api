@@ -3,9 +3,10 @@
 
 """
 from __future__ import unicode_literals, print_function
-from .settings_env import *  # NOQA
-from common.utils import get_address_port, check_offline_mood
+from settings_env import *  # NOQA
 from elasticsearch_dsl.connections import connections
+from common.utils import get_address_port, check_offline_mood
+
 
 OFFLINE_MODE = check_offline_mood()
 # Quick-start development settings - unsuitable for production
