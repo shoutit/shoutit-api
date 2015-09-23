@@ -9,13 +9,14 @@ psycopg2>=2.6
 django-grappelli==2.7.1
 
 # django-rest-framework
-djangorestframework==3.2.3
-django-filter==0.10.0
+djangorestframework==3.2.4
+django-filter==0.11.0
 drf-extensions
 
 # cache search queues
 redis==2.10.3
 django-redis==4.2.0
+elasticsearch==1.7.0
 elasticsearch-dsl==0.0.8
 click==5.1
 rq==0.5.5
@@ -46,7 +47,7 @@ markdown==2.6.2
 # utils
 phonenumbers==7.0.11
 django-ipware
-twilio==4.4.0
+twilio==4.5.0
 nexmo
 
 # sss

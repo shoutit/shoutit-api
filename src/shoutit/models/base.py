@@ -143,7 +143,7 @@ class ShoutitUserManager(UserManager):
         if not username:
             raise ValueError('The given username must be set')
         email = self.normalize_email(email)
-        profile_fields = extra_fields.pop('profile_fields')
+        profile_fields = extra_fields.pop('profile_fields', {})
         user = self.model(username=username, email=email, is_staff=is_staff, is_active=True, is_superuser=is_superuser,
                           date_joined=now, **extra_fields)
         user.set_password(password)
