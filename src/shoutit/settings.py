@@ -699,10 +699,3 @@ SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
 
 CPSP_ID = 'syrexme'
 CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
-
-
-# some monkey patching for global imports
-import monkey_patches  # NOQA
-
-info('Monkeys: Loaded')
-info("==================================================")
