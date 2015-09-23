@@ -60,7 +60,7 @@ ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-WSGI_APPLICATION = 'shoutit.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com']
