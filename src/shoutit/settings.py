@@ -4,7 +4,6 @@
 """
 from __future__ import unicode_literals, print_function
 from settings_env import *  # NOQA
-from elasticsearch_dsl.connections import connections
 from common.utils import get_address_port, check_offline_mood
 
 
@@ -50,6 +49,8 @@ else:  # LOCAL
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+
+ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
 
 info("DEBUG:", DEBUG)
 info("SITE_LINK:", SITE_LINK)
@@ -170,16 +171,6 @@ if DEBUG or FORCE_SYNC_RQ:
 =================================
 """
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
-
-"""
-=================================
-          Elasticsearch
-=================================
-"""
-
-# Define a default global Elasticsearch client
-ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
-ES = connections.create_connection(hosts=[ES_URL])
 
 AUTH_USER_MODEL = 'shoutit.User'
 
