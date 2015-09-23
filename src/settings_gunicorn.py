@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
-import multiprocessing
-from settings_env import *  # NOQA
-
-
+import os
+import sys
 # include src dir in sys.path a.k.a PYTHONPATH to be able to use env_settings.
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+from settings_env import *  # NOQA
+import multiprocessing
+
 
 if LOCAL:
     bind = '0.0.0.0:8000'
