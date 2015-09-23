@@ -13,6 +13,7 @@ env.roledefs = {
 }
 api_dir = os.getcwd()
 django_dir = os.path.join(api_dir, 'src')
+manage_py = os.path.join(django_dir, 'manage.py')
 env_dir = os.path.dirname(api_dir)
 scripts_dir = os.path.join(env_dir, 'Scripts')
 
@@ -30,10 +31,9 @@ def local_update():
 
 
 def local_test():
-    with settings(warn_only=True):
-        result = local('python src/manage.py test', capture=True)
-    if result.failed and not confirm("Tests failed. Continue anyway?"):
-        abort("Aborting at user request.")
+    with lcd(scripts_dir):
+        with settings(warn_only=True):
+            result = local('python %s test shoutit --keepdb --verbosity=2' % manage_py)
 
 
 def local_commit():

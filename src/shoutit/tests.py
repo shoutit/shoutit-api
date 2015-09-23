@@ -6,7 +6,7 @@ from django.core.management import call_command
 
 from django.test import TestCase
 
-from .models import *
+from .models import *  # NOQA
 
 
 class QuestionMethodTests(TestCase):
@@ -27,4 +27,3 @@ class QuestionMethodTests(TestCase):
         """
         user = User.objects.create_user(username='testuser', password=None)
         self.assertIsInstance(user, User)
-
