@@ -4,6 +4,7 @@ raven==5.7.2
 requests==2.7.0
 Django==1.8.4
 psycopg2>=2.6
+kitchen==1.2.1
 
 # admin
 django-grappelli==2.7.1
