@@ -1,7 +1,7 @@
 from __future__ import unicode_literals, with_statement
+from src.settings_env import *
 from fabric.api import *
 from fabric.contrib.console import confirm
-from src.settings_env import *
 
 env.user = 'root'
 env.use_ssh_config = True

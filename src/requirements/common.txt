@@ -47,7 +47,7 @@ markdown==2.6.2
 # utils
 phonenumbers==7.0.11
 django-ipware
-twilio==4.5.0
+twilio==4.6.0
 nexmo
 
 # sss
