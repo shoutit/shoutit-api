@@ -4,13 +4,13 @@
 from __future__ import unicode_literals, print_function
 import os
 import sys
-import codecs
+from kitchen.text.converters import getwriter
 import datetime
 
 
 # very important when printing unicode strings
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+sys.stdout = getwriter('utf8')(sys.stdout)
+sys.stderr = getwriter('utf8')(sys.stderr)
 
 DJANGO_DIR = os.path.dirname(os.path.realpath(__file__))
 API_DIR = os.path.dirname(DJANGO_DIR)
