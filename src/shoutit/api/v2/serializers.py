@@ -139,11 +139,12 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField()
+    slug = serializers.CharField(read_only=True)
     main_tag = TagSerializer(read_only=True)
 
     class Meta:
         model = Category
-        fields = ('name', 'main_tag')
+        fields = ('name', 'slug', 'main_tag')
 
     def to_internal_value(self, data):
         if isinstance(data, basestring):

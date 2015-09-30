@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from django.core.management.base import BaseCommand
+from common.utils import process_tag
 from shoutit.controllers import tag_controller
 from shoutit.models import *  # NOQA
 from rest_framework.authtoken.models import Token
@@ -212,6 +213,7 @@ class Command(BaseCommand):
             main_tag = tag_controller.get_or_create_tag(main_tag)
             category, _ = Category.objects.get_or_create(name=category)
             category.main_tag = main_tag
+            category.slug = process_tag(category.name)
             category.save()
             for tag in tags:
                 tag = tag_controller.get_or_create_tag(tag)
