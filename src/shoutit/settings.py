@@ -225,7 +225,8 @@ if PROD:
     )
 
 RAVEN_CONFIG = {
-    'dsn': 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984',
+    # Use str according to this: https://github.com/getsentry/raven-python/issues/653
+    'dsn': str('https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984'),
     'string_max_length': 1000
 }
 
