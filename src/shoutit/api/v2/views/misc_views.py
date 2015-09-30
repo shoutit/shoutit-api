@@ -124,9 +124,7 @@ class MiscViewSet(viewsets.ViewSet):
                 suffix='Fake Error')
     def error(self, request):
         from ipware.ip import get_real_ip
-
-        error_logger.error("Fake error request from ip: " + get_real_ip(request) or 'undefined')
-        raise Exception("API v2 Fake Error")
+        raise Exception("Fake error request from ip: " + get_real_ip(request) or 'undefined')
 
     @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
                 suffix='IP')
