@@ -282,8 +282,6 @@ class Video(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
-
-
 # class DealManager(ShoutManager):
 # def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
 #         return ShoutManager.get_valid_shouts(self, [POST_TYPE_DEAL], country=country, city=city, get_expired=get_expired, get_muted=get_muted)

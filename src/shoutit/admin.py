@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter
-from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin
+from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links
 from shoutit.forms import PushBroadcastForm, ItemForm
 from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 from shoutit.models import (
@@ -446,8 +446,32 @@ class GoogleLocationAdmin(admin.ModelAdmin):
     list_filter = ('country', 'state', 'city', 'postal_code')
 
 
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'provider', 'link', 'duration', 'thumb', 'shout')
+    list_filter = ('provider',)
+    ordering = ('-created_at',)
+
+    def link(self, obj):
+        return '<a href="%s" about="_blank">%s</a>' % (obj.url, obj.id_on_provider)
+    link.allow_tags = True
+
+    def thumb(self, obj):
+        return '<img src="%s" width="120"/>' % obj.thumbnail_url.replace('.jpg', '_small.jpg')
+    thumb.allow_tags = True
+
+    def shout(self, obj):
+        try:
+            _shout = obj.items.all()[0].shout
+            _shout_admin_url = '<a href="%s">%s</a>' % (reverse('admin:shoutit_shout_change', args=(_shout.pk,)), _shout)
+            _shout_web_url = links(_shout)
+            return '%s | %s' % (_shout_admin_url, _shout_web_url)
+        except:
+            return 'None'
+    shout.allow_tags = True
+
+
 # Others
-admin.site.register(Video)
 admin.site.register(Stream)
 admin.site.register(Notification)
 admin.site.register(Currency)

@@ -12,7 +12,7 @@ class Item(UUIDModel):
     currency = models.ForeignKey('shoutit.Currency', null=True, blank=True)
     state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)
     images = ArrayField(models.URLField(), default=list, blank=True)
-    videos = models.ManyToManyField('shoutit.Video', blank=True)
+    videos = models.ManyToManyField('shoutit.Video', blank=True, related_name='items')
 
     def __unicode__(self):
         return unicode(self.name[:30])
