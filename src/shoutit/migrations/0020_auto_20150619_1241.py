@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterModelManagers(
             name='user',
             managers=[
-                ('objects', shoutit.models.base.ShoutitUserManager()),
+                ('objects', shoutit.models.auth.ShoutitUserManager()),
             ],
         ),
     ]

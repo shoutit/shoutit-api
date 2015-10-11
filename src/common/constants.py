@@ -210,13 +210,22 @@ USER_TYPE_FLAG_INDIVIDUAL = UserTypeFlag('Individual')
 USER_TYPE_FLAG_BUSINESS = UserTypeFlag('Business')
 
 
+class PageAdminType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+PAGE_ADMIN_TYPE_OWNER = PageAdminType('owner')
+PAGE_ADMIN_TYPE_ADMIN = PageAdminType('admin')
+PAGE_ADMIN_TYPE_EDITOR = PageAdminType('editor')
+
+
 class StreamType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
 
 Stream_TYPE_PROFILE = StreamType('Profile')
 Stream_TYPE_TAG = StreamType('Tag')
-Stream_TYPE_BUSINESS = StreamType('Business')
+Stream_TYPE_PAGE = StreamType('Page')
 Stream_TYPE_RELATED = StreamType('Related')
 Stream_TYPE_RECOMMENDED = StreamType('Recommended')
 

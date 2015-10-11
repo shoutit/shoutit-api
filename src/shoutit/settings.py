@@ -436,9 +436,9 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSION': 'v2',
     'ALLOWED_VERSIONS': ['v2'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework_oauth.authentication.OAuth2Authentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'shoutit.api.v2.authentication.ShoutitTokenAuthentication',
+        'shoutit.api.v2.authentication.ShoutitOAuth2Authentication',
+        'shoutit.api.v2.authentication.ShoutitSessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'shoutit.api.v2.permissions.IsSecure',

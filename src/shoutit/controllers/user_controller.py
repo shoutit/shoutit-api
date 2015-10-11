@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 import requests
 from rest_framework.exceptions import ValidationError as DRFValidationError
+from common.constants import USER_TYPE_PROFILE
 from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
 
 from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
@@ -36,7 +37,10 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
 
     # profile fields
     profile_fields = profile_fields or {}
-    extra_user_fields.update({'profile_fields': profile_fields})
+    extra_user_fields.update({
+        'type': USER_TYPE_PROFILE,
+        'profile_fields': profile_fields
+    })
     user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name,
                                     last_name=last_name, **extra_user_fields)
 

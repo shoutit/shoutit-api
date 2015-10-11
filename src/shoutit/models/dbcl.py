@@ -5,7 +5,8 @@ from django.dispatch import receiver
 from shoutit.controllers import email_controller
 from shoutit.models import Shout
 from shoutit.utils import debug_logger
-from shoutit.models.base import UUIDModel, User
+from shoutit.models.base import UUIDModel
+from shoutit.models.auth import User
 from django.conf import settings
 
 

@@ -1,9 +1,11 @@
-from shoutit.models.base import UUIDModel, LocationMixin, User  # NOQA
+from shoutit.models.base import UUIDModel, LocationMixin  # NOQA
+from shoutit.models.auth import User, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission  # NOQA
 from shoutit.models.item import Currency, Item  # NOQA
 from shoutit.models.stream import Stream, StreamMixin, Listen  # NOQA
 from shoutit.models.tag import Tag, Category, FeaturedTag  # NOQA
 from shoutit.models.misc import ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation, GoogleLocation, LocationIndex  # NOQA
-from shoutit.models.user import Profile, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission  # NOQA
+from shoutit.models.user import Profile  # NOQA
+from shoutit.models.page import Page, PageAdmin, PageCategory  # NOQA
 from shoutit.models.post import Event, Post, Shout, Video, ShoutIndex  # NOQA
 from shoutit.models.dbcl import DBUser, DBZ2User, CLUser, DBCLConversation  # NOQA
 from shoutit.models.message import Conversation, ConversationDelete, Message, MessageDelete, MessageRead  # NOQA

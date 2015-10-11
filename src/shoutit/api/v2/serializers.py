@@ -160,7 +160,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    image = serializers.URLField(source='profile.image', required=False)
+    image = serializers.URLField(source='ap.image', required=False)
     api_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -209,7 +209,7 @@ class UserDetailSerializer(UserSerializer):
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender', required=False)
     bio = serializers.CharField(source='profile.bio', required=False)
-    video = VideoSerializer(source='profile.video', required=False, allow_null=True)
+    video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
@@ -217,36 +217,35 @@ class UserDetailSerializer(UserSerializer):
         help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(
         help_text="Whether this user is one of the signed in user's listeners")
-    listeners_count = serializers.IntegerField(source='profile.listeners_count', required=False,
-                                               help_text="Number of Listeners to this user")
+    listeners_count = serializers.IntegerField(
+        source='ap.listeners_count', required=False, help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
-    listening_count = serializers.DictField(read_only=True, child=serializers.IntegerField(),
-                                            source='profile.listening_count',
-                                            help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
+    listening_count = serializers.DictField(
+        read_only=True, child=serializers.IntegerField(), source='ap.listening_count',
+        help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
-    is_owner = serializers.SerializerMethodField(
-        help_text="Whether the signed in user and this user are the same")
+    is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
     message_url = serializers.SerializerMethodField(
         help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
+    pages = UserSerializer(source='pages.all', many=True, read_only=True)
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email',
-                                  'linked_accounts', 'push_tokens', 'is_password_set',
-                                  'is_listening', 'is_listener', 'shouts_url', 'listeners_count',
-                                  'listeners_url',
-                                  'listening_count', 'listening_url', 'is_owner', 'message_url')
+        fields = parent_fields + (
+            'gender', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts', 'push_tokens',
+            'is_password_set', 'is_listening', 'is_listener', 'shouts_url', 'listeners_count', 'listeners_url',
+            'listening_count', 'listening_url', 'is_owner', 'message_url', 'pages')
 
     def get_is_listening(self, user):
         if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.profile.is_listening(self.root.context['request'].user)
+            return user.ap.is_listening(self.root.context['request'].user)
         return False
 
     def get_is_listener(self, user):
         if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.profile.is_listener(self.root.context['request'].user.profile.stream)
+            return user.ap.is_listener(self.root.context['request'].user.ap.stream)
         return False
 
     def get_shouts_url(self, user):
@@ -468,8 +467,7 @@ class ShoutSerializer(serializers.ModelSerializer):
 
 
 class ShoutDetailSerializer(ShoutSerializer):
-    images = serializers.ListField(source='item.images', child=serializers.URLField(),
-                                   required=False)
+    images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner.")
@@ -479,7 +477,8 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
+        fields = parent_fields + (
+            'images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -882,7 +881,7 @@ class ShoutitSigninSerializer(serializers.Serializer):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
         if initial_user and initial_user.get('location'):
-            update_profile_location(user.profile, initial_user.get('location'))
+            update_profile_location(user.ap, initial_user.get('location'))
         return ret
 
 
