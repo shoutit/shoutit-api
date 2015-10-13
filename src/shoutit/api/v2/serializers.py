@@ -162,10 +162,13 @@ class CategorySerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='profile.image', required=False)
     api_url = serializers.SerializerMethodField()
+    is_listening = serializers.SerializerMethodField(
+        help_text="Whether signed in user is listening to this user")
 
     class Meta:
         model = User
-        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated', 'image')
+        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated', 'image',
+                  'is_listening')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(UserSerializer, self).__init__(instance, data, **kwargs)
@@ -176,6 +179,11 @@ class UserSerializer(serializers.ModelSerializer):
         if request:
             return reverse('user-detail', kwargs={'username': user.username}, request=request)
         return "https://api.shoutit.com/v2/users/" + user.username
+
+    def get_is_listening(self, user):
+        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
+            return user.profile.is_listening(self.root.context['request'].user)
+        return False
 
     def to_internal_value(self, data):
         ret = super(UserSerializer, self).to_internal_value(data)
@@ -213,8 +221,6 @@ class UserDetailSerializer(UserSerializer):
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
-    is_listening = serializers.SerializerMethodField(
-        help_text="Whether signed in user is listening to this user")
     is_listener = serializers.SerializerMethodField(
         help_text="Whether this user is one of the signed in user's listeners")
     listeners_count = serializers.IntegerField(source='profile.listeners_count', required=False,
@@ -235,14 +241,9 @@ class UserDetailSerializer(UserSerializer):
         parent_fields = UserSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email',
                                   'linked_accounts', 'push_tokens', 'is_password_set',
-                                  'is_listening', 'is_listener', 'shouts_url', 'listeners_count',
+                                  'is_listener', 'shouts_url', 'listeners_count',
                                   'listeners_url',
                                   'listening_count', 'listening_url', 'is_owner', 'message_url')
-
-    def get_is_listening(self, user):
-        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.profile.is_listening(self.root.context['request'].user)
-        return False
 
     def get_is_listener(self, user):
         if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
