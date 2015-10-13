@@ -25,7 +25,6 @@ from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers import location_controller
-from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
@@ -344,7 +343,7 @@ class UserDetailSerializer(UserSerializer):
         user.save(update_fields=update_fields)
 
         if location_data:
-            user_controller.update_profile_location(profile, location_data)
+            location_controller.update_profile_location(profile, location_data)
 
         if profile_data:
 
@@ -881,7 +880,7 @@ class ShoutitSigninSerializer(serializers.Serializer):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
         if initial_user and initial_user.get('location'):
-            update_profile_location(user.ap, initial_user.get('location'))
+            location_controller.update_profile_location(user.ap, initial_user.get('location'))
         return ret
 
 

@@ -401,9 +401,10 @@ class DBCLConversationAdmin(admin.ModelAdmin):
 
 @admin.register(Listen)
 class ListenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'listener', 'stream')
-    readonly_fields = ('listener', 'stream')
+    list_display = ('id', 'user', 'stream', 'created_at')
+    readonly_fields = ('user', 'stream')
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    ordering = ('-created_at',)
 
 
 @admin.register(PredefinedCity)

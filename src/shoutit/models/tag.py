@@ -41,7 +41,7 @@ class Tag(UUIDModel, StreamMixin, APIModelMixin):
     _stream = GenericRelation('shoutit.Stream', related_query_name='tag')
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.name
+        return "%s: %s" % (self.pk, self.name)
 
     @property
     def is_category(self):

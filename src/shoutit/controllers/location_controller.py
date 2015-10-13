@@ -1,8 +1,9 @@
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from elasticsearch import ElasticsearchException
 import requests
 from common.constants import DEFAULT_LOCATION
-from shoutit.models import LocationIndex, GoogleLocation
+from shoutit.models import LocationIndex, GoogleLocation, PredefinedCity
 from shoutit.utils import ip2location, error_logger
 
 
@@ -137,7 +138,7 @@ def parse_google_geocode_response(response):
         'longitude': round(float(first_result['geometry']['location']['lng']), 6),
         'country': country,
         'postal_code': postal_code,
-        'state': administrative_area_level_1,
+        'state': administrative_area_level_1 or administrative_area_level_2 or postal_town or locality,
         'city': locality or postal_town or administrative_area_level_2 or administrative_area_level_1,
         'address': address
     }
@@ -146,3 +147,36 @@ def parse_google_geocode_response(response):
     except ValidationError:
         pass
     return location
+
+
+def update_profile_location(profile, location, add_pc=True, notify=True):
+    # determine whether the profile should send a notification about its location changes
+    setattr(profile, 'notify', notify)
+    update_object_location(profile, location)
+    if profile.country and profile.city and add_pc:
+        add_predefined_city(location)
+
+
+def add_predefined_city(location):
+    try:
+        pc = PredefinedCity()
+        update_object_location(pc, location)
+    except (ValidationError, IntegrityError):
+        pass
+
+
+def update_object_location(obj, location, save=True):
+    obj.latitude = location.get('latitude')
+    obj.longitude = location.get('longitude')
+    obj.country = location.get('country', '')
+    obj.postal_code = location.get('postal_code', '')
+    obj.state = location.get('state', '')
+    obj.city = location.get('city', '')
+    obj.address = location.get('address', '')
+    if not save:
+        return
+    # if obj already exits, only save location attributes otherwise save everything
+    if obj.created_at:
+        obj.save(update_fields=['latitude', 'longitude', 'country', 'postal_code', 'state', 'city', 'address'])
+    else:
+        obj.save()

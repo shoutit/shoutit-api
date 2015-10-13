@@ -322,13 +322,13 @@ class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
         """
         Check whether the user of this profile is listening to this stream or not
         """
-        return Listen.objects.filter(listener=self.user, stream=stream).exists()
+        return Listen.objects.filter(user=self.user, stream=stream).exists()
 
     @property
     def listening_count(self):
         return {
-            'users': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_PROFILE).count(),
-            'tags': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_TAG).count()
+            'users': Listen.objects.filter(user=self.user, stream__type=Stream_TYPE_PROFILE).count(),
+            'tags': Listen.objects.filter(user=self.user, stream__type=Stream_TYPE_TAG).count()
         }
 
     @property

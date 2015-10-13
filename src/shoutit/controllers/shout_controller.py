@@ -13,13 +13,12 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from elasticsearch import NotFoundError
 from common.utils import process_tags
-from shoutit.controllers.user_controller import update_object_location, add_predefined_city
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
 from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post
-from shoutit.controllers import event_controller, email_controller, item_controller
+from shoutit.controllers import event_controller, email_controller, item_controller, location_controller
 from shoutit.utils import debug_logger, track
 
 
@@ -106,7 +105,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
 
     shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
                          priority=priority, save=False)
-    update_object_location(shout, location, save=False)
+    location_controller.update_object_location(shout, location, save=False)
 
     if not date_published:
         date_published = datetime.today()
@@ -121,7 +120,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     user.profile.stream.add_post(shout)
 
     add_tags_to_shout(tags, shout)
-    add_predefined_city(location)
+    location_controller.add_predefined_city(location)
 
     event_type = EVENT_TYPE_SHOUT_OFFER if shout_type == POST_TYPE_OFFER else EVENT_TYPE_SHOUT_REQUEST
     event_controller.register_event(user, event_type, shout)
@@ -152,8 +151,8 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
         shout.tags = tags
         add_tags_to_shout(tags, shout)
     if location:
-        update_object_location(shout, location, save=False)
-        add_predefined_city(location)
+        location_controller.update_object_location(shout, location, save=False)
+        location_controller.add_predefined_city(location)
     shout.save()
     return shout
 

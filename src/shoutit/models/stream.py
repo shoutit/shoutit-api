@@ -4,7 +4,8 @@ from django.db import models, IntegrityError
 from django.dispatch import receiver
 from django.conf import settings
 from common.constants import StreamType, Stream_TYPE_PROFILE
-from shoutit.models.base import UUIDModel, AttachedObjectMixin
+from shoutit.models.action import Action
+from shoutit.models.base import UUIDModel, AttachedObjectMixin, LocationMixin
 from shoutit.utils import debug_logger, track
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -13,15 +14,14 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 class Stream(UUIDModel, AttachedObjectMixin):
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType.choices)
     posts = models.ManyToManyField('shoutit.Post', related_name='streams2')
-    listeners = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Listen',
-                                       related_name='listening')
+    # posts2 = models.ManyToManyField('shoutit.Post', through='shoutit.StreamPost', related_name='streams2')
+    listeners = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Listen', through_fields=('stream', 'user'), related_name='listening')
 
     class Meta(UUIDModel.Meta):
         unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
-        return unicode(self.pk) + ':' + StreamType.values[self.type] + ' (' + unicode(
-            self.attached_object) + ')'
+        return "%s: %s" % (self.pk, repr(self.attached_object))
 
     def __init__(self, *args, **kwargs):
         # attached_object is the owner
@@ -79,7 +79,7 @@ class StreamMixin(models.Model):
         """
         Check whether user is listening to this object's stream or not
         """
-        return Listen.objects.filter(listener=user, stream=self.stream).exists()
+        return Listen.objects.filter(user=user, stream=self.stream).exists()
 
     @property
     def listeners_count(self):
@@ -96,7 +96,7 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
     if created:
         stream = Stream(attached_object=instance)
         stream.save()
-        debug_logger.debug('Created Stream for: <%s: %s>' % (sender.__name__, instance))
+        debug_logger.debug('Created Stream for: <%s: %s>' % (instance.model_name, instance))
 
 
 @receiver(pre_delete)
@@ -113,13 +113,34 @@ def delete_attached_stream(sender, instance, using, **kwargs):
     # instance.stream.delete()
 
 
-class Listen(UUIDModel):
-    listener = models.ForeignKey(AUTH_USER_MODEL)
+class AbstractStreamPost(UUIDModel, LocationMixin):
     stream = models.ForeignKey('shoutit.Stream')
-    date_listened = models.DateTimeField(auto_now_add=True)
+    post = models.ForeignKey('shoutit.Post')
+    published_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    rank_1 = models.IntegerField(default=0)
+    rank_2 = models.IntegerField(default=0)
+    rank_3 = models.IntegerField(default=0)
 
     class Meta(UUIDModel.Meta):
-        unique_together = ('listener', 'stream')  # so the user can listen to the stream only once
+        abstract = True
+
+
+# class StreamPost(AbstractStreamPost):
+#     pass
+#
+#
+# class FeedPost(AbstractStreamPost):
+#     user = models.ForeignKey(AUTH_USER_MODEL)
+
+
+class Listen(Action):
+    stream = models.ForeignKey('shoutit.Stream')
+
+    class Meta(UUIDModel.Meta):
+        unique_together = ('user', 'stream')  # so the user can listen to the stream only once
+
+    def __unicode__(self):
+        return "%s to %s" % (self.user, repr(self.stream))
 
     @property
     def track_properties(self):
@@ -131,7 +152,8 @@ class Listen(UUIDModel):
         }
         return properties
 
+
 @receiver(post_save, sender=Listen)
 def post_save_listen(sender, instance=None, created=False, **kwargs):
     if created:
-        track(instance.listener.pk, 'new_listen', instance.track_properties)
+        track(instance.user.pk, 'new_listen', instance.track_properties)

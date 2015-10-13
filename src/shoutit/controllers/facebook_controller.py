@@ -11,11 +11,10 @@ from django.conf import settings
 from django.db.backends.postgresql_psycopg2.base import IntegrityError
 import requests
 from rest_framework.exceptions import ValidationError
-from shoutit.api.v2.exceptions import (FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EMAIL,
-                                       FB_LINK_ERROR_NO_LINK)
+from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EMAIL, FB_LINK_ERROR_NO_LINK
 
 from shoutit.models import LinkedFacebookAccount
-from shoutit.controllers.user_controller import auth_with_facebook, update_profile_location
+from shoutit.controllers import location_controller, user_controller
 from shoutit.utils import debug_logger
 
 
@@ -30,7 +29,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
         linked_account = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
         user = linked_account.user
         if initial_user and initial_user.get('location'):
-            update_profile_location(user.profile, initial_user.get('location'))
+            location_controller.update_profile_location(user.profile, initial_user.get('location'))
     except ObjectDoesNotExist:
         debug_logger.debug('LinkedGoogleAccount.DoesNotExist for facebook_id %s.' % facebook_id)
         if 'email' not in fb_user:
@@ -39,7 +38,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
             detail.update({'fb_user': fb_user})
             raise ValidationError(detail)
         long_lived_token = extend_token(access_token)
-        user = auth_with_facebook(fb_user, long_lived_token, initial_user)
+        user = user_controller.auth_with_facebook(fb_user, long_lived_token, initial_user)
 
     return user
 

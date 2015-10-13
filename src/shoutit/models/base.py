@@ -58,8 +58,8 @@ class UUIDModel(models.Model):
 class AttachedObjectMixinManager(models.Manager):
     def with_attached_object(self, attached_object):
         ct = ContentType.objects.get_for_model(attached_object)
-        return super(AttachedObjectMixinManager, self).get_queryset().filter(content_type=ct,
-                                                                             object_id=attached_object.id)
+        queryset = super(AttachedObjectMixinManager, self).get_queryset()
+        return queryset.filter(content_type=ct, object_id=attached_object.id)
 
 
 class AttachedObjectMixin(models.Model):
@@ -97,6 +97,10 @@ class AbstractLocationMixin(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def is_zero_coord(self):
+        return self.latitude == 0 and self.longitude == 0
+
 
 class NamedLocationMixin(models.Model):
     country = models.CharField(max_length=2, blank=True, db_index=True, choices=COUNTRY_ISO.items())
@@ -106,6 +110,10 @@ class NamedLocationMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def is_named_location(self):
+        return self.country != '' and self.state != '' and self.city != ''
 
 
 class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
@@ -123,3 +131,7 @@ class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
             'city': self.city,
             'address': self.address,
         }
+
+    @property
+    def is_full_location(self):
+        return not self.is_zero_coord and self.is_named_location

@@ -11,9 +11,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 from common.constants import (
-    ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType,
-    MESSAGE_ATTACHMENT_TYPE_SHOUT, ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION,
-    REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT)
+    ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
+    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT)
+from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
 from shoutit.utils import track
 
@@ -132,14 +132,12 @@ class ConversationDelete(UUIDModel):
         unique_together = ('user', 'conversation')
 
 
-class Message(UUIDModel):
+class Message(Action):
     """
     Message is a message from user into a Conversation
     """
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages')
-    read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageRead',
-                                     related_name='read_messages')
+    read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageRead', related_name='read_messages')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageDelete',
                                         related_name='deleted_messages')
     text = models.CharField(null=True, blank=True, max_length=2000,
