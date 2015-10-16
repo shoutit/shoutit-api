@@ -50,6 +50,7 @@ class LocationSerializer(serializers.Serializer):
         lng = 'longitude' in validated_data
         ggr = 'google_geocode_response' in validated_data
         google_geocode_response = validated_data.pop('google_geocode_response', None)
+        address = validated_data.pop('address', None)
         request = self.root.context.get('request')
         ip = get_real_ip(request) if request else None
 
@@ -66,6 +67,9 @@ class LocationSerializer(serializers.Serializer):
         elif ip:
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
+        elif address and request and request.user.is_authenticated():
+            location = request.user.location
+            location.update({'address': address})
         else:
             raise ValidationError({'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
 
