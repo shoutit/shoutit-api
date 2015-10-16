@@ -9,8 +9,8 @@ from django.conf import settings
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean
 
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST,
-                              POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, COUNTRY_ISO)
+from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE,
+                              PostType, COUNTRY_ISO)
 from common.utils import date_unix
 from shoutit.models import Tag
 from shoutit.models.action import Action
@@ -50,7 +50,7 @@ class PostManager(models.Manager):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
-            Q(type=POST_TYPE_EXPERIENCE) | Q(type=POST_TYPE_EVENT)
+            Q(type=POST_TYPE_EXPERIENCE)
             | (
                 (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER))
                 & (
@@ -87,12 +87,6 @@ class ShoutManager(PostManager):
         types = [POST_TYPE_OFFER]
         return self.get_valid_shouts(types=types, country=country, city=city,
                                      get_expired=get_expired, get_muted=get_muted)
-
-
-class EventManager(PostManager):
-    def get_valid_events(self, country=None, city=None, get_muted=False):
-        return PostManager.get_valid_posts(self, types=[POST_TYPE_EVENT], country=country,
-                                           city=city, get_expired=True, get_muted=get_muted)
 
 
 class Post(Action):
@@ -257,15 +251,6 @@ except RequestError:
     pass
 except ConnectionTimeout:
     error_logger.warn("ES Server is down.", exc_info=True)
-
-
-class Event(Post, AttachedObjectMixin):
-    event_type = models.IntegerField(default=0, choices=EventType.choices)
-
-    objects = EventManager()
-
-    def __unicode__(self):
-        return unicode(EventType.values[self.event_type])
 
 
 class Video(UUIDModel):

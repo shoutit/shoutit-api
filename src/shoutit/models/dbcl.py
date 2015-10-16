@@ -30,9 +30,9 @@ class DBCLUser(UUIDModel):
 def post_delete_dbcl_user(sender, instance, *args, **kwargs):
     if not issubclass(sender, DBCLUser):
         return
-    if instance.user:
-        instance.user.delete()
-        debug_logger.debug('Deleted User for: <%s>' % sender.__name__)
+    # if instance.user:
+    #     instance.user.delete()
+    #     debug_logger.debug('Deleted User for: <%s>' % sender.__name__)
 
 
 class CLUser(DBCLUser):

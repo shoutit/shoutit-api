@@ -16,9 +16,8 @@ from common.utils import process_tags
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
-from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post
-from shoutit.controllers import event_controller, email_controller, item_controller, location_controller
+from shoutit.controllers import email_controller, item_controller, location_controller
 from shoutit.utils import debug_logger, track
 
 
@@ -54,7 +53,6 @@ def get_post(post_id, find_muted=False, find_expired=False):
 def delete_post(post):
     post.is_disabled = True
     post.save()
-    event_controller.delete_event_about_obj(post)
 
 
 # todo: make api for renewing shouts
@@ -122,8 +120,6 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     add_tags_to_shout(tags, shout)
     location_controller.add_predefined_city(location)
 
-    event_type = EVENT_TYPE_SHOUT_OFFER if shout_type == POST_TYPE_OFFER else EVENT_TYPE_SHOUT_REQUEST
-    event_controller.register_event(user, event_type, shout)
     return shout
 
 

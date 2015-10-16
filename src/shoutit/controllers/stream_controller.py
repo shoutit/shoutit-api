@@ -1,12 +1,9 @@
 from __future__ import unicode_literals
-from common.constants import (DEFAULT_PAGE_SIZE,
-                              POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE,
-                              Stream_TYPE_TAG,
-                              EVENT_TYPE_LISTEN_TO_USER, EVENT_TYPE_LISTEN_TO_TAG)
+from common.constants import (DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE,
+                              Stream_TYPE_TAG)
 from common.utils import process_tags
-from shoutit.controllers import notifications_controller, event_controller
+from shoutit.controllers import notifications_controller
 from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
-
 
 post_types = {
     'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
@@ -54,7 +51,7 @@ def get_stream_shouts_qs(stream, shout_type=None):
     return the Shouts Queryset (offers/requests) in a stream
     """
     types = post_types[shout_type]
-    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream).order_by('-date_published')
+    qs = Shout.objects.get_valid_shouts(types=types).filter(streams=stream).order_by('-date_published')
     return qs
 
 
@@ -145,9 +142,6 @@ def listen_to_stream(user, stream, request=None):
         listen.save()
         if stream.type == Stream_TYPE_PROFILE:
             notifications_controller.notify_user_of_listen(stream.owner.user, user, request)
-            event_controller.register_event(user, EVENT_TYPE_LISTEN_TO_USER, stream.owner)
-        elif stream.type == Stream_TYPE_TAG:
-            event_controller.register_event(user, EVENT_TYPE_LISTEN_TO_TAG, stream.owner)
 
 
 def remove_listener_from_stream(listener, stream):

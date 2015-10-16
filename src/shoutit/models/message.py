@@ -88,8 +88,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
 
     def mark_as_unread(self, user):
         try:
-            MessageRead.objects.get(user=user, message_id=self.last_message.id,
-                                    conversation_id=self.id).delete()
+            MessageRead.objects.get(user=user, message_id=self.last_message.id, conversation_id=self.id).delete()
         except MessageRead.DoesNotExist:
             pass
 

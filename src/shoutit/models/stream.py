@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
-from django.db.models.signals import post_save, pre_delete
+from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save, pre_delete, pre_save
 from django.db import models, IntegrityError
 from django.dispatch import receiver
 from django.conf import settings
@@ -13,15 +14,14 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 class Stream(UUIDModel, AttachedObjectMixin):
     type = models.SmallIntegerField(null=False, db_index=True, choices=StreamType.choices)
-    posts = models.ManyToManyField('shoutit.Post', related_name='streams2')
-    # posts2 = models.ManyToManyField('shoutit.Post', through='shoutit.StreamPost', related_name='streams2')
+    posts = models.ManyToManyField('shoutit.Post', through='shoutit.StreamPost', related_name='streams')
     listeners = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.Listen', through_fields=('stream', 'user'), related_name='listening')
 
     class Meta(UUIDModel.Meta):
         unique_together = ('content_type', 'object_id', 'type')  # so each model can have only one stream
 
     def __unicode__(self):
-        return "%s: %s" % (self.pk, repr(self.attached_object))
+        return "%s: %s" % (self.pk, repr(self.attached_object).decode('utf8'))
 
     def __init__(self, *args, **kwargs):
         # attached_object is the owner
@@ -31,20 +31,17 @@ class Stream(UUIDModel, AttachedObjectMixin):
         super(Stream, self).__init__(*args, **kwargs)
 
     def add_post(self, post):
-        from shoutit.models import Post
-
-        assert isinstance(post, Post)
         try:
-            self.posts.add(post)
-        except IntegrityError:
+            StreamPost.create(stream=self, post=post)
+        except (ValidationError, IntegrityError):
             # the post exists already in this stream
             pass
 
     def remove_post(self, post):
-        from shoutit.models import Post
-
-        assert isinstance(post, Post)
-        self.posts.remove(post)
+        try:
+            StreamPost.objects.get(stream=self, post=post).delete()
+        except StreamPost.DoesNotExist:
+            pass
 
     @property
     def owner(self):
@@ -125,12 +122,26 @@ class AbstractStreamPost(UUIDModel, LocationMixin):
         abstract = True
 
 
-# class StreamPost(AbstractStreamPost):
-#     pass
-#
-#
+class StreamPost(AbstractStreamPost):
+    class Meta:
+        db_table = 'shoutit_stream_posts'
+
+
 # class FeedPost(AbstractStreamPost):
 #     user = models.ForeignKey(AUTH_USER_MODEL)
+
+
+@receiver(pre_save)
+def abstract_stream_post_pre_save(sender, instance=None, created=False, **kwargs):
+    if not issubclass(sender, AbstractStreamPost):
+        return
+    # published_at
+    instance.published_at = instance.post.date_published
+    # location
+    from shoutit.controllers import location_controller
+    location_controller.update_object_location(instance, instance.post.location, save=False)
+    # rank
+    instance.rank_1 = instance.post.priority
 
 
 class Listen(Action):
@@ -140,7 +151,7 @@ class Listen(Action):
         unique_together = ('user', 'stream')  # so the user can listen to the stream only once
 
     def __unicode__(self):
-        return "%s to %s" % (self.user, repr(self.stream))
+        return "%s to %s" % (self.user, repr(self.stream).decode('utf8'))
 
     @property
     def track_properties(self):
