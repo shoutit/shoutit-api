@@ -402,7 +402,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'],
                                    help_text="'offer' or 'request'")
     location = LocationSerializer()
-    title = serializers.CharField(min_length=6, source='item.name')
+    title = serializers.CharField(min_length=6, max_length=500, source='item.name')
     text = serializers.CharField(min_length=10, max_length=5000)
     price = serializers.FloatField(source='item.price', allow_null=True)
     currency = serializers.CharField(source='item.currency_code', allow_null=True,
