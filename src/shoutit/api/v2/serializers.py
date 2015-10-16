@@ -216,7 +216,7 @@ class UserDetailSerializer(UserSerializer):
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender', required=False)
-    bio = serializers.CharField(source='profile.bio', required=False)
+    bio = serializers.CharField(source='profile.bio', required=False, allow_blank=True)
     video = VideoSerializer(source='profile.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
