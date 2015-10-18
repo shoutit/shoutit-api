@@ -127,10 +127,6 @@ class StreamPost(AbstractStreamPost):
         db_table = 'shoutit_stream_posts'
 
 
-# class FeedPost(AbstractStreamPost):
-#     user = models.ForeignKey(AUTH_USER_MODEL)
-
-
 @receiver(pre_save)
 def abstract_stream_post_pre_save(sender, instance=None, created=False, **kwargs):
     if not issubclass(sender, AbstractStreamPost):

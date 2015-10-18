@@ -284,7 +284,6 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
 class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
     user = models.OneToOneField(User, related_name='%(class)s', db_index=True)
     _stream = GenericRelation('shoutit.Stream')
-    # feed = models.ManyToManyField('shoutit.Post', through='shoutit.FeedPost')
 
     image = models.URLField(blank=True, default='')
     cover = models.URLField(blank=True, default='')
