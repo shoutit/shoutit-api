@@ -199,17 +199,17 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - form
         """
         user = self.get_object()
-        profile = user.profile
+        ap = user.ap
 
         if request.user == user:
             raise ValidationError({'error': "You can not listen to your self"})
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, profile.stream, request)
+            stream_controller.listen_to_stream(request.user, ap.stream, request)
             msg = "you started listening to {} shouts.".format(user.name)
             _status = status.HTTP_201_CREATED
         else:
-            stream_controller.remove_listener_from_stream(request.user, profile.stream)
+            stream_controller.remove_listener_from_stream(request.user, ap.stream)
             msg = "you stopped listening to {} shouts.".format(user.name)
             _status = status.HTTP_202_ACCEPTED
         ret = {
@@ -248,7 +248,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               paramType: query
         """
         user = self.get_object()
-        listeners = stream_controller.get_stream_listeners(user.profile.stream)
+        listeners = stream_controller.get_stream_listeners(user.ap.stream)
         page = self.paginate_queryset(listeners)
         serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
@@ -358,7 +358,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         after_query_param = request.query_params.get('after')
         if before_query_param or after_query_param:
             self.pagination_class = ReverseDateTimePagination
-            shouts = stream_controller.get_stream_shouts_qs(user.profile.stream, shout_type)
+            shouts = stream_controller.get_stream_shouts_qs(user.ap.stream, shout_type)
         else:
             self.pagination_class = PageNumberIndexPagination
             self.model = Shout
@@ -414,30 +414,28 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: body
               paramType: body
         """
+        # Todo: move validation to the serializer
         user = self.get_object()
         if request.user == user:
             raise ValidationError({'error': "You can not start a conversation with your self"})
         if not (
-            message_controller.conversation_exist(users=[user, request.user]) or user.profile.is_listener(request.user.profile.stream)
+            message_controller.conversation_exist(users=[user, request.user]) or user.ap.is_listener(request.user.ap.stream)
         ):
             raise ValidationError({'error': "You can only start a conversation with your listeners"})
-
-        serializer = MessageSerializer(data=request.data, partial=False, context={'request': request})
+        context = {
+            'request': request,
+            'conversation': None,
+            'to_users': [user]
+        }
+        serializer = MessageSerializer(data=request.data, partial=False, context=context)
         serializer.is_valid(raise_exception=True)
-        text = serializer.validated_data['text']
-        attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message(
-            conversation=None, user=request.user, to_users=[user], text=text,
-            attachments=attachments, request=request)
-        message = MessageSerializer(instance=message, context={'request': request})
-        headers = self.get_success_message_headers(message.data)
-        return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
+        serializer.save()
+        headers = self.get_success_message_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {
-            'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']},
-                                request=self.request)
-        }
+        loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
+        return {'Location': loc}
 
     @detail_route(methods=['put', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):

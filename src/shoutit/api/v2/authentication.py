@@ -61,7 +61,7 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             raise exceptions.AuthenticationFailed('Page inactive or deleted.')
 
         setattr(request, '_user', page.user)
-        setattr(request, 'page_admin', ret[0])
+        setattr(request, 'page_admin_user', ret[0])
         return page.user, ret[1]
 
 

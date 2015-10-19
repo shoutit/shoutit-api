@@ -353,4 +353,4 @@ import shoutit.controllers.email_controller
 import shoutit.controllers.item_controller
 import shoutit.controllers.payment_controller
 from shoutit.models import Deal
-from common.constants import POST_TYPE_DEAL, EVENT_TYPE_POST_DEAL, EVENT_TYPE_BUY_DEAL
+from common.constants import POST_TYPE_DEAL

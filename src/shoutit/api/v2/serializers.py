@@ -28,7 +28,7 @@ from shoutit.controllers import location_controller
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
-from shoutit.controllers import shout_controller, user_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
 
 
@@ -537,16 +537,18 @@ class ShoutDetailSerializer(ShoutSerializer):
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
 
+        request = self.root.context.get('request')
+        user = getattr(request, 'user', None) or self.root.context.get('user')
+        page_admin_user = getattr(request, 'page_admin_user', None)
+
         if not shout:
-            request = self.root.context.get('request')
-            user = request.user if request else self.root.context.get('user')
-            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text,
-                                                  price=price, currency=currency, category=category, tags=tags,
-                                                  location=location, images=images, videos=videos)
+            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text, price=price,
+                                                  currency=currency, category=category, tags=tags, location=location,
+                                                  images=images, videos=videos, page_admin_user=page_admin_user)
         else:
             shout = shout_controller.edit_shout(shout, shout_type=shout_type, title=title, text=text, price=price,
-                                                currency=currency, category=category, tags=tags,
-                                                location=location, images=images, videos=videos)
+                                                currency=currency, category=category, tags=tags, location=location,
+                                                images=images, videos=videos, page_admin_user=page_admin_user)
         return shout
 
 
@@ -653,6 +655,19 @@ class MessageSerializer(serializers.ModelSerializer):
             if client_id:
                 ret['client_id'] = request.data.get('client_id')
         return ret
+
+    def create(self, validated_data):
+        request = self.root.context.get('request')
+        user = getattr(request, 'user', None)
+        page_admin_user = getattr(request, 'page_admin_user', None)
+        conversation = self.root.context.get('conversation')
+        to_users = self.root.context.get('to_users')
+        about = self.root.context.get('about')
+        text = validated_data['text']
+        attachments = validated_data['attachments']
+        message = message_controller.send_message(conversation, user, to_users=to_users, about=about, text=text,
+                                                  attachments=attachments,request=request, page_admin_user=page_admin_user)
+        return message
 
 
 class ConversationSerializer(serializers.ModelSerializer):

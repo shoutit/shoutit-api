@@ -277,22 +277,22 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
             - name: body
               paramType: body
         """
+        # Todo: move validation to the serializer
         shout = self.get_object()
         if request.user == shout.owner:
             raise ValidationError({'error': "You can not start a conversation about your own shout"})
-        serializer = MessageSerializer(data=request.data, partial=True, context={'request': request})
+        context = {
+            'request': request,
+            'conversation': None,
+            'to_users': [shout.owner],
+            'about': shout
+        }
+        serializer = MessageSerializer(data=request.data, partial=True, context=context)
         serializer.is_valid(raise_exception=True)
-        text = serializer.validated_data['text']
-        attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message(
-            conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
-            attachments=attachments, request=request)
-        message = MessageSerializer(instance=message, context={'request': request})
-        headers = self.get_success_message_headers(message.data)
-        return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
+        serializer.save()
+        headers = self.get_success_message_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {
-            'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']},
-                                request=self.request)
-        }
+        loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
+        return {'Location': loc}

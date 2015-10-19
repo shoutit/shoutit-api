@@ -120,5 +120,5 @@ def getDetailedExperience(user, experience, sharedExperiences, comments):
     experience.isOwner = True if experience.user == user else False
 
 
-from shoutit.controllers import event_controller, shout_controller, notifications_controller
+from shoutit.controllers import shout_controller, notifications_controller
 from shoutit.models import Experience, Post, Business, SharedExperience, Comment, Profile

@@ -14,7 +14,7 @@ from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST
 from common.utils import date_unix
 from shoutit.models import Tag
 from shoutit.models.action import Action
-from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, LocationMixin
+from shoutit.models.base import UUIDModel
 from shoutit.utils import error_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')

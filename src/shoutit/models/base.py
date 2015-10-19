@@ -30,8 +30,7 @@ class UUIDModel(models.Model):
     @classmethod
     def create(cls, save=True, **kwargs):
         """
-        Creates a new object with the given kwargs, saving it to the database
-        and returning the created object.
+        Creates a new object with the given kwargs, saving it to the database and returning the created object.
         """
         obj = cls(**kwargs)
         if save:

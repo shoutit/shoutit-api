@@ -85,8 +85,8 @@ def NotifyPreExpiry():
 
 
 # todo: handle exception on each step and in case of errors, rollback!
-def create_shout(user, shout_type, title, text, price, currency, category, tags, location,
-                 images=None, videos=None, date_published=None, is_sss=False, exp_days=None, priority=0):
+def create_shout(user, shout_type, title, text, price, currency, category, tags, location, images=None, videos=None,
+                 date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -99,10 +99,11 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
     # item
-    item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images, videos=videos)
+    item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
+                                       videos=videos)
 
     shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
-                         priority=priority, save=False)
+                         priority=priority, save=False, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
 
     if not date_published:
@@ -115,7 +116,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
 
     shout.save()
-    user.profile.stream.add_post(shout)
+    user.ap.stream.add_post(shout)
 
     add_tags_to_shout(tags, shout)
     location_controller.add_predefined_city(location)
@@ -124,7 +125,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
 
 
 def edit_shout(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
-               images=None, videos=None, location=None):
+               images=None, videos=None, location=None, page_admin_user=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images, videos=videos)
     if shout_type:
         shout.type = shout_type
@@ -149,6 +150,8 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
     if location:
         location_controller.update_object_location(shout, location, save=False)
         location_controller.add_predefined_city(location)
+    if page_admin_user:
+        shout.page_admin_user = page_admin_user
     shout.save()
     return shout
 

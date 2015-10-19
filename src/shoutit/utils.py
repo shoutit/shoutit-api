@@ -15,8 +15,6 @@ from re import sub
 from PIL import Image
 import boto
 from django.core.mail import get_connection
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.http import HttpResponse
 from django_rq import job
 import nexmo as nexmo
@@ -364,4 +362,3 @@ def base64_to_texts(b64, configs):
 # @receiver(post_delete)
 # def model_post_delete(sender, instance=None, created=False, **kwargs):
 #     debug_logger.debug("Deleted %s" % repr(instance).decode('utf8'))
-
