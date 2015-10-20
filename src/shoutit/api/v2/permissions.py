@@ -5,13 +5,13 @@
 from __future__ import unicode_literals
 from django.conf import settings
 
-from rest_framework import permissions
+from rest_framework.permissions import *  # NOQA
 from rest_framework.exceptions import ValidationError
 
 MODIFY_METHODS = ['PUT', 'PATCH', 'DELETE']
 
 
-class IsSecure(permissions.BasePermission):
+class IsSecure(BasePermission):
     """
     Custom permission to only allow secure connections.
     """
@@ -24,7 +24,7 @@ class IsSecure(permissions.BasePermission):
         return True
 
 
-class IsOwner(permissions.BasePermission):
+class IsOwner(BasePermission):
     """
     Custom permission to only allow owners of an object to view or edit it.
     Model instances are expected to include an `owner` attribute.
@@ -35,7 +35,7 @@ class IsOwner(permissions.BasePermission):
         return obj.owner == request.user
 
 
-class IsContributor(permissions.BasePermission):
+class IsContributor(BasePermission):
     """
     Custom permission to only allow contributors of an object to view or edit it.
     Model instances are expected to include an `owner` attribute.
@@ -46,7 +46,7 @@ class IsContributor(permissions.BasePermission):
         return request.user in obj.contributors
 
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
+class IsOwnerOrReadOnly(BasePermission):
     """
     Custom permission to only allow owners of an object to edit it. Others will be able to view it.
     Model instances are expected to include an `owner` attribute.
@@ -56,14 +56,14 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         assert hasattr(obj, 'owner'), "obj must have an `owner` attribute"
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
+        if request.method in SAFE_METHODS:
             return True
 
         # Write permissions are only allowed to the owner of the object.
         return obj.owner == request.user
 
 
-class IsOwnerOrContributorsReadOnly(permissions.BasePermission):
+class IsOwnerOrContributorsReadOnly(BasePermission):
     """
     Custom permission to only allow owners of an object to edit it. Contributors will be able to view it.
     Model instances are expected to include `owner` and `contributors` attributes.
@@ -75,14 +75,14 @@ class IsOwnerOrContributorsReadOnly(permissions.BasePermission):
 
         # Read permissions are only allowed to Contributors,
         # so we'll allow GET, HEAD or OPTIONS requests to them.
-        if request.method in permissions.SAFE_METHODS and request.user in obj.contributors:
+        if request.method in SAFE_METHODS and request.user in obj.contributors:
             return True
 
         # Write permissions are only allowed to the owner of the object.
         return obj.owner == request.user
 
 
-class IsOwnerModify(permissions.BasePermission):
+class IsOwnerModify(BasePermission):
     """
     Custom permission to only allow owner of an object to modify it.
     """

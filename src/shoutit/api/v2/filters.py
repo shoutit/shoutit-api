@@ -3,14 +3,16 @@
 
 """
 from __future__ import unicode_literals
+
 from django.conf import settings
 from django.db.models import Q
 import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
+from elasticsearch_dsl import F
+
 from common.utils import process_tags
 from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag
-from elasticsearch_dsl import F
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -108,6 +110,51 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         selected_sort = sort_types[sort]
         if search:
             selected_sort = ('_score',) + selected_sort
+        index_queryset = index_queryset.sort(*selected_sort)
+
+        debug_logger.debug(index_queryset.to_dict())
+        return index_queryset
+
+
+class HomeFilterBackend(filters.BaseFilterBackend):
+
+    def filter_queryset(self, request, index_queryset, view):
+        user = view.get_object()
+        country = user.location.get('country')
+        data = request.query_params
+        listening = []
+        if country:
+            index_queryset = index_queryset.filter('term', country=country)
+
+        # Listened Tags
+        # Todo: get list of tags the user is listening to
+        tags = []
+        if tags:
+            for t in tags:
+                listening.append(F('term', tags=t))
+
+        # Listened Users + user himself
+        # Todo: get list of user ids the user is listening to
+        users = [user.pk]
+        if users:
+            for u in users:
+                listening.append(F('term', uid=u))
+
+        listening_filter = F('bool', should=listening)
+        index_queryset = index_queryset.filter(listening_filter)
+
+        # sort
+        sort = data.get('sort')
+        sort_types = {
+            None: ('-date_published',),
+            'time': ('-date_published',),
+            'price_asc': ('price',),
+            'price_desc': ('-price',),
+        }
+        if sort and sort not in sort_types:
+                raise ValidationError({'sort': ["Invalid sort."]})
+        # selected_sort = ('-priority',) + sort_types[sort]
+        selected_sort = sort_types[sort]
         index_queryset = index_queryset.sort(*selected_sort)
 
         debug_logger.debug(index_queryset.to_dict())

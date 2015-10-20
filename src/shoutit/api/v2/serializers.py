@@ -666,7 +666,8 @@ class MessageSerializer(serializers.ModelSerializer):
         text = validated_data['text']
         attachments = validated_data['attachments']
         message = message_controller.send_message(conversation, user, to_users=to_users, about=about, text=text,
-                                                  attachments=attachments,request=request, page_admin_user=page_admin_user)
+                                                  attachments=attachments, request=request,
+                                                  page_admin_user=page_admin_user)
         return message
 
 
