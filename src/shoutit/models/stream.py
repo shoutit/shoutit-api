@@ -4,7 +4,9 @@ from django.db.models.signals import post_save, pre_delete, pre_save
 from django.db import models, IntegrityError
 from django.dispatch import receiver
 from django.conf import settings
-from common.constants import StreamType, Stream_TYPE_PROFILE
+from common.constants import (
+    StreamType, Stream_TYPE_PROFILE
+)
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, LocationMixin
 from shoutit.utils import debug_logger, track
@@ -91,8 +93,7 @@ def attach_stream(sender, instance, created, raw, using, update_fields, **kwargs
     if not issubclass(sender, StreamMixin):
         return
     if created:
-        stream = Stream(attached_object=instance)
-        stream.save()
+        Stream.create(id=instance.id, attached_object=instance)
         debug_logger.debug('Created Stream for: <%s: %s>' % (instance.model_name, instance))
 
 
@@ -145,6 +146,10 @@ class Listen(Action):
 
     class Meta(UUIDModel.Meta):
         unique_together = ('user', 'stream')  # so the user can listen to the stream only once
+
+    def __init__(self, *args, **kwargs):
+        super(Action, self).__init__(*args, **kwargs)
+        self._meta.get_field('user').blank = False
 
     def __unicode__(self):
         return "%s to %s" % (self.user, repr(self.stream).decode('utf8'))

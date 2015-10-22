@@ -87,6 +87,6 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
     if created:
         # Create page
         page_fields = getattr(instance, 'page_fields', {})
-        Page.create(user=instance, **page_fields)
+        Page.create(id=instance.id, user=instance, **page_fields)
 
         # Todo: give appropriate permissions
