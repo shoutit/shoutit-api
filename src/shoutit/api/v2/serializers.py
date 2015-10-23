@@ -106,7 +106,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class TagDetailSerializer(TagSerializer):
-    is_listening = serializers.SerializerMethodField()
+    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this tag")
     listeners_url = serializers.SerializerMethodField()
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
 
@@ -116,9 +116,9 @@ class TagDetailSerializer(TagSerializer):
         fields = parent_fields + ('web_url', 'listeners_count', 'listeners_url', 'is_listening', 'shouts_url')
 
     def get_is_listening(self, tag):
-        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return tag.is_listening(self.root.context['request'].user)
-        return False
+        request = self.root.context.get('request')
+        user = request and request.user
+        return user and user.is_authenticated() and user.is_listening(tag)
 
     def get_listeners_url(self, tag):
         return reverse('tag-listeners', kwargs={'name': tag.name}, request=self.context['request'])
@@ -165,8 +165,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='ap.image', required=False)
     api_url = serializers.SerializerMethodField()
-    is_listening = serializers.SerializerMethodField(
-        help_text="Whether signed in user is listening to this user")
+    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
 
     class Meta:
         model = User
@@ -183,10 +182,10 @@ class UserSerializer(serializers.ModelSerializer):
             return reverse('user-detail', kwargs={'username': user.username}, request=request)
         return "https://api.shoutit.com/v2/users/" + user.username
 
-    def get_is_listening(self, user):
-        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.ap.is_listening(self.root.context['request'].user)
-        return False
+    def get_is_listening(self, tag):
+        request = self.root.context.get('request')
+        user = request and request.user
+        return user and user.is_authenticated() and user.is_listening(tag)
 
     def to_internal_value(self, data):
         ret = super(UserSerializer, self).to_internal_value(data)
@@ -224,13 +223,11 @@ class UserDetailSerializer(UserSerializer):
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
-    is_listener = serializers.SerializerMethodField(
-        help_text="Whether this user is one of the signed in user's listeners")
-    listeners_count = serializers.IntegerField(
-        source='ap.listeners_count', required=False, help_text="Number of Listeners to this user")
+    is_listener = serializers.SerializerMethodField(help_text="Whether this user is listening to signed in user")
+    listeners_count = serializers.IntegerField(required=False, help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
     listening_count = serializers.DictField(
-        read_only=True, child=serializers.IntegerField(), source='ap.listening_count',
+        read_only=True, child=serializers.IntegerField(),
         help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
@@ -242,16 +239,15 @@ class UserDetailSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email',
-                                  'linked_accounts', 'push_tokens', 'is_password_set',
-                                  'is_listener', 'shouts_url', 'listeners_count',
-                                  'listeners_url',
-                                  'listening_count', 'listening_url', 'is_owner', 'message_url', 'pages')
+        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts',
+                                  'push_tokens', 'is_password_set', 'is_listener', 'shouts_url', 'listeners_count',
+                                  'listeners_url', 'listening_count', 'listening_url', 'is_owner', 'message_url',
+                                  'pages')
 
     def get_is_listener(self, user):
-        if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.ap.is_listener(self.root.context['request'].user.ap.stream)
-        return False
+        request = self.root.context.get('request')
+        signed_user = request and request.user
+        return signed_user and signed_user.is_authenticated() and user.is_listening(signed_user)
 
     def get_shouts_url(self, user):
         return reverse('user-shouts', kwargs={'username': user.username}, request=self.context['request'])

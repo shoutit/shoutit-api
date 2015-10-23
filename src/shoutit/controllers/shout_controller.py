@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import random
+
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.conf import settings
@@ -12,6 +12,7 @@ from django_rq import job
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from elasticsearch import NotFoundError
+
 from common.utils import process_tags
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
@@ -22,9 +23,7 @@ from shoutit.utils import debug_logger, track
 
 
 def get_post(post_id, find_muted=False, find_expired=False):
-    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user',
-                                                                             'user__business',
-                                                                             'user__profile')
+    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user', 'user__business', 'user__profile')
     if not find_muted:
         post = post.filter(muted=False)
 

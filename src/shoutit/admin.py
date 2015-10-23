@@ -19,7 +19,7 @@ from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
-    Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
+    UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
     PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin)
 from django.utils.translation import ugettext_lazy as _
@@ -190,7 +190,7 @@ class TagChangeForm(forms.ModelForm):
 # Tag
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin, LinksMixin):
-    list_display = ('name', 'image', '_links', 'stream')
+    list_display = ('name', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     form = TagChangeForm
@@ -399,14 +399,6 @@ class DBCLConversationAdmin(admin.ModelAdmin):
     _to_user.allow_tags = True
 
 
-@admin.register(Listen)
-class ListenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'stream', 'created_at')
-    readonly_fields = ('user', 'stream')
-    list_filter = (('created_at', ShoutitDateFieldListFilter),)
-    ordering = ('-created_at',)
-
-
 @admin.register(PredefinedCity)
 class PredefinedCity(admin.ModelAdmin):
     list_display = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')
@@ -506,7 +498,6 @@ class PageCategoryAdmin(admin.ModelAdmin):
 
 
 # Others
-admin.site.register(Stream)
 admin.site.register(Notification)
 admin.site.register(Currency)
 admin.site.register(SharedLocation)

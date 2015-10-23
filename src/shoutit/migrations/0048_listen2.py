@@ -6,12 +6,10 @@ import uuid
 from django.db import models, migrations
 from django.conf import settings
 import django.core.validators
-from shoutit.models import Listen2, Listen
+from shoutit.models import Listen2, Tag
 
 import shoutit.models.base
-from common.constants import (
-    Stream_TYPE_PROFILE, Stream_TYPE_PAGE, Stream_TYPE_TAG, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG
-)
+from common.constants import (LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 
 
 def clear_listen2(apps, schema_editor):
@@ -19,17 +17,22 @@ def clear_listen2(apps, schema_editor):
 
 
 def fill_listen2(apps, schema_editor):
+    Listen = apps.get_model("shoutit", "Listen")
     d = {
-        Stream_TYPE_PROFILE: LISTEN_TYPE_PROFILE,
-        Stream_TYPE_PAGE: LISTEN_TYPE_PAGE,
-        Stream_TYPE_TAG: LISTEN_TYPE_TAG,
+        0: LISTEN_TYPE_PROFILE,
+        2: LISTEN_TYPE_PAGE,
+        1: LISTEN_TYPE_TAG,
     }
     # Fill Listen locations
     for l in Listen.objects.all().select_related('stream'):
+        if l.stream.type == 1:
+            target = Tag.objects.get(id=l.stream.object_id).name
+        else:
+            target = str(l.stream.object_id)
         data = {
             'user_id': l.user_id,
             'type': d[l.stream.type],
-            'target': str(l.stream.attached_object.name if l.stream.type == Stream_TYPE_TAG else l.stream.object_id)
+            'target': target
         }
         data.update(l.location)
         Listen2.create(**data)

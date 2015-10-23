@@ -10,12 +10,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
-from shoutit.api.v2.filters import HomeFilterBackend
 
+from shoutit.api.v2.filters import HomeFilterBackend
 from shoutit.api.v2.pagination import (
-    ShoutitPaginationMixin, ReverseDateTimePagination, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount
+    ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount
 )
-from shoutit.controllers import stream_controller, message_controller, facebook_controller, gplus_controller
+from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.api.v2.serializers import (
     UserSerializer, UserDetailSerializer, MessageSerializer, TagSerializer, ShoutSerializer
 )
@@ -207,13 +207,11 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'error': "You can not listen to your self"})
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, ap.stream, request)
-            stream_controller.listen_to_object(request.user, ap)
+            listen_controller.listen_to_object(request.user, ap, request)
             msg = "you started listening to {} shouts.".format(user.name)
             _status = status.HTTP_201_CREATED
         else:
-            stream_controller.remove_listener_from_stream(request.user, ap.stream)
-            stream_controller.stop_listening_to_object(request.user, ap)
+            listen_controller.stop_listening_to_object(request.user, ap)
             msg = "you stopped listening to {} shouts.".format(user.name)
             _status = status.HTTP_202_ACCEPTED
         ret = {
@@ -252,7 +250,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               paramType: query
         """
         user = self.get_object()
-        listeners = stream_controller.get_stream_listeners(user.ap.stream)
+        listeners = listen_controller.get_object_listeners(user.ap)
         page = self.paginate_queryset(listeners)
         serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
@@ -289,6 +287,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               defaultValue: users
               enum:
                 - users
+                - pages
                 - tags
             - name: page
               paramType: query
@@ -297,11 +296,11 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         """
 
         listening_type = request.query_params.get('type', 'users')
-        if listening_type not in ['users', 'tags']:
-            raise ValidationError({'type': "should be `users` or `tags`."})
+        if listening_type not in ['users', 'pages', 'tags']:
+            raise ValidationError({'type': "should be `users`, `pages` or `tags`."})
 
         user = self.get_object()
-        listening = stream_controller.get_user_listening_qs(user, listening_type)
+        listening = getattr(user, 'listening2_' + listening_type)
 
         # we do not use the view pagination class since we need one with custom results field
         self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(
@@ -310,6 +309,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         result_object_serializers = {
             'users': UserSerializer,
+            'pages': UserSerializer,
             'tags': TagSerializer,
         }
         result_object_serializer = result_object_serializers[listening_type]
@@ -373,12 +373,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                 - request
                 - offer
                 - all
-            - name: before
-              description: timestamp to get shouts before
-              paramType: query
-            - name: after
-              description: timestamp to get shouts after
-              paramType: query
             - name: page_size
               paramType: query
         """
@@ -388,24 +382,16 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
-        # todo: deprecate old method?
         # todo: refactor to use shout index filter
-        # temp compatibility for 'before' and 'after'
-        before_query_param = request.query_params.get('before')
-        after_query_param = request.query_params.get('after')
-        if before_query_param or after_query_param:
-            self.pagination_class = ReverseDateTimePagination
-            shouts = stream_controller.get_stream_shouts_qs(user.ap.stream, shout_type)
-        else:
-            self.pagination_class = PageNumberIndexPagination
-            setattr(self, 'model', Shout)
-            setattr(self, 'filters', {'is_disabled': False})
-            setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-            setattr(self, 'prefetch_related', ('item__videos',))
-            setattr(self, 'defer', ())
-            shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-date_published')
-            if shout_type != 'all':
-                shouts = shouts.query('match', type=shout_type)
+        self.pagination_class = PageNumberIndexPagination
+        setattr(self, 'model', Shout)
+        setattr(self, 'filters', {'is_disabled': False})
+        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
+        setattr(self, 'prefetch_related', ('item__videos',))
+        setattr(self, 'defer', ())
+        shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-date_published')
+        if shout_type != 'all':
+            shouts = shouts.query('match', type=shout_type)
 
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
@@ -452,10 +438,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         """
         # Todo: move validation to the serializer
         user = self.get_object()
-        if request.user == user:
+        logged_user = request.user
+        if logged_user == user:
             raise ValidationError({'error': "You can not start a conversation with your self"})
-        if not (message_controller.conversation_exist(users=[user, request.user]) or user.ap.is_listener(
-                request.user.ap.stream)):
+        if not (message_controller.conversation_exist(users=[user, logged_user]) or user.is_listening(logged_user)):
             raise ValidationError({'error': "You can only start a conversation with your listeners"})
         context = {
             'request': request,

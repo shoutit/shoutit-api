@@ -307,11 +307,12 @@ def notify_cl_user2(cl_user, from_user, message):
 
 
 def notify_user_of_listen(user, listener, request=None):
+    listener = deepcopy(listener)
     notify_user.delay(user, NOTIFICATION_TYPE_LISTEN, listener, listener, deepcopy(request))
 
 
 def notify_user_of_message(user, message, request=None):
-    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, deepcopy(request))
+    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, deepcopy(message.user), message, deepcopy(request))
 
 
 def notify_business_of_exp_posted(business, exp):

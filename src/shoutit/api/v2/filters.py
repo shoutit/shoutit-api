@@ -133,7 +133,7 @@ class HomeFilterBackend(filters.BaseFilterBackend):
                 listening.append(F('term', tags=t))
 
         # Listened Users + user himself
-        users = [user.pk] + user.listening2_pages_ids + user.listening2_profiles_ids
+        users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if users:
             for u in users:
                 listening.append(F('term', uid=u))

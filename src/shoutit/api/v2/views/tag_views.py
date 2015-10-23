@@ -10,10 +10,9 @@ from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.filters import TagFilter
-from shoutit.api.v2.pagination import (
-    ShoutitPageNumberPagination, ReverseDateTimePagination, PageNumberIndexPagination)
+from shoutit.api.v2.pagination import (ShoutitPageNumberPagination, PageNumberIndexPagination)
 from shoutit.api.v2.serializers import *  # NOQA
-from shoutit.controllers import stream_controller
+from shoutit.controllers import listen_controller
 from shoutit.models import ShoutIndex
 
 
@@ -76,6 +75,8 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             - name: category
               description: return tags that belong to this category only
               paramType: query
+        omit_parameters:
+            - form
         """
         tags_type = request.query_params.get('type')
         if tags_type == 'featured':
@@ -87,6 +88,9 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         Get tag
         ---
         serializer: TagDetailSerializer
+        omit_parameters:
+            - form
+            - query
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -110,17 +114,16 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         omit_serializer: true
         omit_parameters:
             - form
+            - query
         """
         tag = self.get_object()
 
         if request.method == 'POST':
-            stream_controller.listen_to_stream(request.user, tag.stream, request)
-            stream_controller.listen_to_object(request.user, tag)
+            listen_controller.listen_to_object(request.user, tag, request)
             msg = "you started listening to {} shouts.".format(tag.name)
 
         else:
-            stream_controller.remove_listener_from_stream(request.user, tag.stream)
-            stream_controller.stop_listening_to_object(request.user, tag)
+            listen_controller.stop_listening_to_object(request.user, tag)
             msg = "you stopped listening to {} shouts.".format(tag.name)
 
         ret = {
@@ -155,7 +158,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
               paramType: query
         """
         tag = self.get_object()
-        listeners = stream_controller.get_stream_listeners(tag.stream)
+        listeners = listen_controller.get_object_listeners(tag)
         page = self.paginate_queryset(listeners)
         serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
@@ -178,39 +181,25 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
                 - request
                 - offer
                 - all
-            - name: before
-              description: timestamp to get shouts before
-              paramType: query
-            - name: after
-              description: timestamp to get shouts after
-              paramType: query
             - name: page_size
               paramType: query
         """
         tag = self.get_object()
 
+        # todo: refactor to use shout index filter
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
 
-        # todo: deprecate old method?
-        # todo: refactor to use shout index filter
-        # temp compatibility for 'before' and 'after'
-        before_query_param = request.query_params.get('before')
-        after_query_param = request.query_params.get('after')
-        if before_query_param or after_query_param:
-            self.pagination_class = ReverseDateTimePagination
-            shouts = stream_controller.get_stream_shouts_qs(tag.stream, shout_type)
-        else:
-            self.pagination_class = PageNumberIndexPagination
-            setattr(self, 'model', Shout)
-            setattr(self, 'filters', {'is_disabled': False})
-            setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-            setattr(self, 'prefetch_related', ('item__videos',))
-            setattr(self, 'defer', ())
-            shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-date_published')
-            if shout_type != 'all':
-                shouts = shouts.query('match', type=shout_type)
+        self.pagination_class = PageNumberIndexPagination
+        setattr(self, 'model', Shout)
+        setattr(self, 'filters', {'is_disabled': False})
+        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
+        setattr(self, 'prefetch_related', ('item__videos',))
+        setattr(self, 'defer', ())
+        shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-date_published')
+        if shout_type != 'all':
+            shouts = shouts.query('match', type=shout_type)
 
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})

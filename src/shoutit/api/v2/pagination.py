@@ -159,8 +159,7 @@ class ShoutitPageNumberPaginationNoCount(ShoutitPageNumberPagination):
 
 
 class ShoutitPaginationMixin(object):
-    def get_custom_shoutit_page_number_pagination_class(self, custom_page_size=None,
-                                                        custom_results_field=None):
+    def get_custom_shoutit_page_number_pagination_class(self, custom_page_size=None, custom_results_field=None):
         class PageNumberPaginationClass(ShoutitPageNumberPagination):
             page_size = custom_page_size or ShoutitPageNumberPagination.page_size
             results_field = custom_results_field or ShoutitPageNumberPagination.results_field

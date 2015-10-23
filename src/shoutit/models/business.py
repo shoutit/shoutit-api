@@ -1,13 +1,11 @@
 from __future__ import unicode_literals
-from django.contrib.contenttypes.fields import GenericRelation
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.conf import settings
 
 from common.constants import BUSINESS_SOURCE_TYPE_NONE, BUSINESS_CONFIRMATION_STATUS_WAITING
 from shoutit.models.base import UUIDModel
-from shoutit.models.stream import StreamMixin
-
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -35,7 +33,7 @@ class BusinessCategory(UUIDModel):
         return unicode('%s > %s' % (self.Parent.PrintHierarchy(), self.name)) if self.Parent else unicode(self.name)
 
 
-class Business(UUIDModel, StreamMixin):
+class Business(UUIDModel):
     user = models.OneToOneField(AUTH_USER_MODEL, related_name='business', db_index=True)
 
     name = models.CharField(max_length=1024, db_index=True, null=False)
@@ -55,8 +53,6 @@ class Business(UUIDModel, StreamMixin):
     LastToken = models.ForeignKey('shoutit.ConfirmToken', null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     Confirmed = models.BooleanField(default=False)
-
-    _stream = GenericRelation('shoutit.Stream', related_query_name='business')
 
     def __unicode__(self):
         return '[BP_%s | %s | %s]' % (unicode(self.pk), unicode(self.name), unicode(self.user))

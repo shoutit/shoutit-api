@@ -219,16 +219,6 @@ PAGE_ADMIN_TYPE_ADMIN = PageAdminType('admin')
 PAGE_ADMIN_TYPE_EDITOR = PageAdminType('editor')
 
 
-class StreamType(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-
-Stream_TYPE_PROFILE = StreamType('Profile')
-Stream_TYPE_TAG = StreamType('Tag')
-Stream_TYPE_PAGE = StreamType('Page')
-Stream_TYPE_RELATED = StreamType('Related')
-Stream_TYPE_RECOMMENDED = StreamType('Recommended')
-
 rank_flags = {}
 
 

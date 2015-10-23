@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 import re
 
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core import validators
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
@@ -17,11 +16,10 @@ import sys
 
 from common.utils import AllowedUsernamesValidator
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
-                              Stream_TYPE_PROFILE, Stream_TYPE_TAG, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE,
-                              LISTEN_TYPE_TAG)
+                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 from shoutit.controllers import email_controller
 from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
-from shoutit.models.stream import StreamMixin, Listen, Listen2
+from shoutit.models.listen import Listen2
 from shoutit.utils import debug_logger
 
 
@@ -276,14 +274,29 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return self.has_usable_password()
 
     @property
-    def listening2_profiles_ids(self):
+    def listening_count(self):
+        return {
+            'users': Listen2.objects.filter(user=self, type=LISTEN_TYPE_PROFILE).count(),
+            'pages': Listen2.objects.filter(user=self, type=LISTEN_TYPE_PAGE).count(),
+            'tags': Listen2.objects.filter(user=self, type=LISTEN_TYPE_TAG).count(),
+        }
+
+    def is_listening(self, obj):
+        """
+        Check whether the user of this profile is listening to this obj or not
+        """
+        listen_type, target = Listen2.listen_type_and_target_from_object(obj)
+        return Listen2.objects.filter(user=self, type=listen_type, target=target).exists()
+
+    @property
+    def listening2_users_ids(self):
         ids = Listen2.objects.filter(user=self, type=LISTEN_TYPE_PROFILE).values_list('target', flat=True)
         return list(ids)
 
     @property
-    def listening2_profiles(self):
+    def listening2_users(self):
         from shoutit.models.user import Profile
-        return Profile.objects.filter(id__in=self.listening2_profiles_ids)
+        return Profile.objects.filter(id__in=self.listening2_users_ids)
 
     @property
     def listening2_pages_ids(self):
@@ -308,7 +321,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def listening2(self):
         return {
-            'profiles': self.listening2_profiles,
+            'users': self.listening2_users,
             'pages': self.listening2_pages,
             'tags': self.listening2_tags,
         }
@@ -320,10 +333,8 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
     debug_logger.debug('%s User: %s' % (action, instance))
 
 
-class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
+class AbstractProfile(UUIDModel, LocationMixin):
     user = models.OneToOneField(User, related_name='%(class)s', db_index=True)
-    _stream = GenericRelation('shoutit.Stream')
-
     image = models.URLField(blank=True, default='')
     cover = models.URLField(blank=True, default='')
     video = models.OneToOneField('shoutit.Video', related_name='%(class)s', null=True, blank=True,
@@ -332,13 +343,6 @@ class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
 
     class Meta(UUIDModel.Meta):
         abstract = True
-
-    def __init__(self, *args, **kwargs):
-        super(AbstractProfile, self).__init__(*args, **kwargs)
-
-        # Setting related_query_name to %(class)s is not permitted as it is in related_name
-        # https://code.djangoproject.com/ticket/25354
-        self._meta.get_field('_stream').related_query_name = lambda: self._meta.model_name
 
     def __getattribute__(self, item):
         """
@@ -356,22 +360,14 @@ class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
             except AttributeError:
                 six.reraise(info[0], info[1], info[2].tb_next)
 
-    def is_listener(self, stream):
-        """
-        Check whether the user of this profile is listening to this stream or not
-        """
-        return Listen.objects.filter(user=self.user, stream=stream).exists()
-
-    @property
-    def listening_count(self):
-        return {
-            'users': Listen.objects.filter(user=self.user, stream__type=Stream_TYPE_PROFILE).count(),
-            'tags': Listen.objects.filter(user=self.user, stream__type=Stream_TYPE_TAG).count()
-        }
-
     @property
     def owner(self):
         return self.user
+
+    @property
+    def listeners_count(self):
+        listen_type, target = Listen2.listen_type_and_target_from_object(self)
+        return Listen2.objects.filter(type=listen_type, target=target).count()
 
 
 @receiver(post_save)

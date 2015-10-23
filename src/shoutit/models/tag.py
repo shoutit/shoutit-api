@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 import re
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core import validators
 from django.db import models
 from shoutit.settings import AUTH_USER_MODEL
 from shoutit.models.base import UUIDModel, APIModelMixin, NamedLocationMixin
-from shoutit.models.stream import StreamMixin
+from shoutit.models.listen import Listen2
 
 
 class TagNameField(models.CharField):
@@ -23,22 +22,12 @@ class TagNameField(models.CharField):
         super(TagNameField, self).__init__(*args, **kwargs)
 
 
-TAG_NAME_FIELD = models.CharField(
-    max_length=30, unique=True, db_index=True,
-    help_text='Required. 2 to 30 characters and can only contain a-z, 0-9, and the dash (-)',
-    validators=[
-        validators.MinLengthValidator(2),
-        validators.RegexValidator(re.compile('^[0-9a-z-]+$'), "Enter a valid tag.", 'invalid'),
-    ])
-
-
-class Tag(UUIDModel, StreamMixin, APIModelMixin):
+class Tag(UUIDModel, APIModelMixin):
     name = TagNameField()
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True,
                                 on_delete=models.SET_NULL)
     image = models.URLField(max_length=1024, blank=True, default='https://tag-image.static.shoutit.com/default.jpg')
     definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')
-    _stream = GenericRelation('shoutit.Stream', related_query_name='tag')
 
     def __unicode__(self):
         return "%s: %s" % (self.pk, self.name)
@@ -47,7 +36,12 @@ class Tag(UUIDModel, StreamMixin, APIModelMixin):
     def is_category(self):
         return Category.objects.get(main_tag=self).exists()
 
-        # todo: filter the name before saving
+    @property
+    def listeners_count(self):
+        listen_type, target = Listen2.listen_type_and_target_from_object(self)
+        return Listen2.objects.filter(type=listen_type, target=target).count()
+
+    # todo: filter the name before saving
 
 
 class Category(UUIDModel):
