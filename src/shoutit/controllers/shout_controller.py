@@ -116,7 +116,6 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
 
     shout.save()
-    user.ap.stream.add_post(shout)
 
     add_tags_to_shout(tags, shout)
     location_controller.add_predefined_city(location)
@@ -146,7 +145,6 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
             category = shout.category
         tags.insert(0, category.main_tag.name)
         shout.tags = tags
-        add_tags_to_shout(tags, shout)
     if location:
         location_controller.update_object_location(shout, location, save=False)
         location_controller.add_predefined_city(location)
