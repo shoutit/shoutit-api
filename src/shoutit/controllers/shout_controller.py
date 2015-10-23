@@ -114,12 +114,9 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
             date_published += timedelta(hours=hours, minutes=minutes)
     shout.date_published = date_published
     shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
-
     shout.save()
 
-    add_tags_to_shout(tags, shout)
     location_controller.add_predefined_city(location)
-
     return shout
 
 
@@ -152,21 +149,6 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
         shout.page_admin_user = page_admin_user
     shout.save()
     return shout
-
-
-def add_tags_to_shout(tags, shout):
-    from shoutit.controllers import tag_controller
-    # todo: optimize
-    # remove old tags first if they exist
-    for tag in shout.tag_objects:
-        tag.stream.remove_post(shout)
-    # add new ones
-    for tag in tag_controller.get_or_create_tags(tags, shout.user):
-        # prevent adding existing tags
-        try:
-            tag.stream.add_post(shout)
-        except IntegrityError:
-            pass
 
 
 @receiver(post_save, sender=Shout)
