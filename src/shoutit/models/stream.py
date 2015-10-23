@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
+from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save, pre_delete, pre_save
 from django.db import models, IntegrityError
 from django.dispatch import receiver
 from django.conf import settings
 from common.constants import (
-    StreamType, Stream_TYPE_PROFILE
-)
+    StreamType, Stream_TYPE_PROFILE,
+    ListenType, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, LocationMixin
 from shoutit.utils import debug_logger, track
@@ -123,7 +124,10 @@ class AbstractStreamPost(UUIDModel, LocationMixin):
         abstract = True
 
 
-class StreamPost(AbstractStreamPost):
+class StreamPost(models.Model):
+    stream = models.ForeignKey('shoutit.Stream')
+    post = models.ForeignKey('shoutit.Post')
+
     class Meta:
         db_table = 'shoutit_stream_posts'
 
@@ -169,3 +173,36 @@ class Listen(Action):
 def post_save_listen(sender, instance=None, created=False, **kwargs):
     if created:
         track(instance.user.pk, 'new_listen', instance.track_properties)
+
+
+class Listen2(Action):
+    type = models.SmallIntegerField(choices=ListenType.choices)
+    target = models.CharField(db_index=True, max_length=36)
+
+    class Meta:
+        unique_together = ('user', 'type', 'target')
+
+    def __init__(self, *args, **kwargs):
+        super(Action, self).__init__(*args, **kwargs)
+        self._meta.get_field('user').blank = False
+
+    def __unicode__(self):
+        return "User: %s to %s: %s" % (self.user_id, self.get_type_display(), self.target)
+
+    @property
+    def target_object(self):
+        model = apps.get_model("shoutit", self.get_type_display())
+        return model.objects.get(**{Listen2.target_attr(self.type): self.target})
+
+    @classmethod
+    def target_and_type_from_object(cls, obj):
+        listen_type = ListenType.texts[obj.model_name]
+        return listen_type, getattr(obj, Listen2.target_attr(listen_type))
+
+    @classmethod
+    def target_attr(cls, listen_type):
+        return {
+            LISTEN_TYPE_PROFILE: 'pk',
+            LISTEN_TYPE_PAGE: 'pk',
+            LISTEN_TYPE_TAG: 'name',
+        }[listen_type]

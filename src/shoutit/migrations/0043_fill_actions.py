@@ -2,14 +2,10 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-from shoutit.models import Listen, Message
+from shoutit.models import Message
 
 
 def fill_actions(apps, schema_editor):
-
-    # Fill Listen locations
-    for l in Listen.objects.all():
-        l.save()
 
     # Fill Message locations
     for m in Message.objects.all():
@@ -19,7 +15,7 @@ def fill_actions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shoutit', '0042_auto_20151013_1718'),
+        ('shoutit', '0042_action_message'),
     ]
 
     operations = [

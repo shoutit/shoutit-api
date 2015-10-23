@@ -2,17 +2,17 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-from shoutit.models import Post
 
 
-def delete_event_posts():
+def delete_event_posts(apps, schema_editor):
+    Post = apps.get_model("shoutit", "Post")
     Post.objects.filter(type=4).delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shoutit', '0045_auto_20151016_1516'),
+        ('shoutit', '0043_fill_actions'),
     ]
 
     operations = [

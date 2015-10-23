@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations, connection
-from shoutit.models import Profile, User
+from django.db import migrations, connection
+from shoutit.models import User, Profile
+
+
+def nothing():
+    pass
 
 
 def unify_ids(apps, schema_editor):
     cursor = connection.cursor()
-    for user in User.objects.all().select_related('profile', 'page'):
+    for user in User.objects.all():
         try:
-            user_id = user.id.hex
-            ap_id = user.ap.id.hex
-            stream_id = user.ap.stream.id.hex
-            assert user_id == ap_id == stream_id
-        except AssertionError:
-            pass
-            continue
+            user_id = user.id
+            ap_id = user.ap.id
         except Exception as e:
             print "Error unifying ids for User: %s" % user
             print str(e)
@@ -30,19 +29,13 @@ def unify_ids(apps, schema_editor):
         # Update object_id in Stream to match user id
         cursor.execute('update shoutit_stream set object_id = %s where object_id = %s', [user_id, ap_id])
 
-        # Update id in Stream to match user id
-        cursor.execute('update shoutit_stream set id = %s where id = %s', [user_id, stream_id])
-
-        # Update stream_id in Listen to match user id
-        cursor.execute('update shoutit_listen set stream_id = %s where stream_id = %s', [user_id, stream_id])
-
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shoutit', '0046_auto_20151016_1838'),
+        ('shoutit', '0046_delete_events'),
     ]
 
     operations = [
-        migrations.RunPython(unify_ids)
+        migrations.RunPython(unify_ids, nothing)
     ]

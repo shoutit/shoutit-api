@@ -127,15 +127,13 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             index_queryset = index_queryset.filter('term', country=country)
 
         # Listened Tags
-        # Todo: get list of tags the user is listening to
-        tags = []
+        tags = user.listening2_tags_names
         if tags:
             for t in tags:
                 listening.append(F('term', tags=t))
 
         # Listened Users + user himself
-        # Todo: get list of user ids the user is listening to
-        users = [user.pk]
+        users = [user.pk] + user.listening2_pages_ids + user.listening2_profiles_ids
         if users:
             for u in users:
                 listening.append(F('term', uid=u))

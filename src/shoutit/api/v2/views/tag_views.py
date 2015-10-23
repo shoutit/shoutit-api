@@ -115,10 +115,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             stream_controller.listen_to_stream(request.user, tag.stream, request)
+            stream_controller.listen_to_object(request.user, tag)
             msg = "you started listening to {} shouts.".format(tag.name)
 
         else:
             stream_controller.remove_listener_from_stream(request.user, tag.stream)
+            stream_controller.stop_listening_to_object(request.user, tag)
             msg = "you stopped listening to {} shouts.".format(tag.name)
 
         ret = {

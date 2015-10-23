@@ -28,11 +28,12 @@ class Action(UUIDModel, APIModelMixin, LocationMixin):
 def action_pre_save(sender, instance=None, created=False, **kwargs):
     if not issubclass(sender, Action):
         return
-    ap = instance.user and instance.user.ap
-    location = ap and ap.is_full_location and ap.location
-    if instance.is_zero_coord and location:
-        from shoutit.controllers import location_controller
-        location_controller.update_object_location(instance, location, save=False)
+    if instance.is_zero_coord:
+        ap = instance.user and instance.user.ap
+        location = ap and ap.is_full_location and ap.location
+        if location:
+            from shoutit.controllers import location_controller
+            location_controller.update_object_location(instance, location, save=False)
 
 
 @receiver(post_save)

@@ -7,7 +7,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shoutit', '0037_auto_20151010_1907'),
+        ('shoutit', '0037_pages'),
     ]
 
     operations = [

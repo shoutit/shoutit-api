@@ -1,7 +1,7 @@
 from shoutit.models.base import UUIDModel  # NOQA
 from shoutit.models.auth import User, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission  # NOQA
 from shoutit.models.item import Currency, Item  # NOQA
-from shoutit.models.stream import Stream, Listen, StreamPost  # NOQA
+from shoutit.models.stream import Stream, Listen, StreamPost, Listen2  # NOQA
 from shoutit.models.tag import Tag, Category, FeaturedTag  # NOQA
 from shoutit.models.misc import (ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation, GoogleLocation,  # NOQA
                                  LocationIndex)  # NOQA

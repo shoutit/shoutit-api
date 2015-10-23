@@ -17,10 +17,11 @@ import sys
 
 from common.utils import AllowedUsernamesValidator
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
-                              Stream_TYPE_PROFILE, Stream_TYPE_TAG)
+                              Stream_TYPE_PROFILE, Stream_TYPE_TAG, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE,
+                              LISTEN_TYPE_TAG)
 from shoutit.controllers import email_controller
 from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
-from shoutit.models.stream import StreamMixin, Listen
+from shoutit.models.stream import StreamMixin, Listen, Listen2
 from shoutit.utils import debug_logger
 
 
@@ -273,6 +274,44 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def is_password_set(self):
         return self.has_usable_password()
+
+    @property
+    def listening2_profiles_ids(self):
+        ids = Listen2.objects.filter(user=self, type=LISTEN_TYPE_PROFILE).values_list('target', flat=True)
+        return list(ids)
+
+    @property
+    def listening2_profiles(self):
+        from shoutit.models.user import Profile
+        return Profile.objects.filter(id__in=self.listening2_profiles_ids)
+
+    @property
+    def listening2_pages_ids(self):
+        ids = Listen2.objects.filter(user=self, type=LISTEN_TYPE_PAGE).values_list('target', flat=True)
+        return list(ids)
+
+    @property
+    def listening2_pages(self):
+        from shoutit.models.page import Page
+        return Page.objects.filter(id__in=self.listening2_pages_ids)
+
+    @property
+    def listening2_tags_names(self):
+        names = Listen2.objects.filter(user=self, type=LISTEN_TYPE_TAG).values_list('target', flat=True)
+        return list(names)
+
+    @property
+    def listening2_tags(self):
+        from shoutit.models.tag import Tag
+        return Tag.objects.filter(name__in=self.listening2_tags_names)
+
+    @property
+    def listening2(self):
+        return {
+            'profiles': self.listening2_profiles,
+            'pages': self.listening2_pages,
+            'tags': self.listening2_tags,
+        }
 
 
 @receiver(post_save, sender=User)

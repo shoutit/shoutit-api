@@ -3,7 +3,7 @@ from common.constants import (DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, POST_TYPE_OF
                               Stream_TYPE_TAG)
 from common.utils import process_tags
 from shoutit.controllers import notifications_controller
-from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
+from shoutit.models import Tag, Shout, Stream, Listen, Profile, User, Listen2
 
 post_types = {
     'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
@@ -144,11 +144,28 @@ def listen_to_stream(user, stream, request=None):
             notifications_controller.notify_user_of_listen(stream.owner.user, user, request)
 
 
+def listen_to_object(user, obj):
+    """
+    """
+    listen_type, target = Listen2.target_and_type_from_object(obj)
+    try:
+        Listen2.objects.get(user=user, type=listen_type, target=target)
+    except Listen2.DoesNotExist:
+        Listen2.create(user=user, type=listen_type, target=target)
+
+
 def remove_listener_from_stream(listener, stream):
     """
     remove a stream from user listening
     """
     Listen.objects.filter(user=listener, stream=stream).delete()
+
+
+def stop_listening_to_object(user, obj):
+    """
+    """
+    listen_type, target = Listen2.target_and_type_from_object(obj)
+    Listen2.objects.filter(user=user, type=listen_type, target=target).delete()
 
 
 def filter_posts_qs(qs, post_type=None):

@@ -311,6 +311,15 @@ NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
 
 
+class ListenType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+LISTEN_TYPE_PROFILE = ListenType('Profile')
+LISTEN_TYPE_PAGE = ListenType('Page')
+LISTEN_TYPE_TAG = ListenType('Tag')
+
+
 report_types = {}
 
 

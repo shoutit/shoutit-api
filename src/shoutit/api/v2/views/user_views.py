@@ -208,10 +208,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         if request.method == 'POST':
             stream_controller.listen_to_stream(request.user, ap.stream, request)
+            stream_controller.listen_to_object(request.user, ap)
             msg = "you started listening to {} shouts.".format(user.name)
             _status = status.HTTP_201_CREATED
         else:
             stream_controller.remove_listener_from_stream(request.user, ap.stream)
+            stream_controller.stop_listening_to_object(request.user, ap)
             msg = "you stopped listening to {} shouts.".format(user.name)
             _status = status.HTTP_202_ACCEPTED
         ret = {
