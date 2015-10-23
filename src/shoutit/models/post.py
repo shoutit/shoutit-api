@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from datetime import timedelta, datetime
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
@@ -9,11 +10,12 @@ from django.conf import settings
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean
 
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST,
-                              POST_TYPE_EXPERIENCE, POST_TYPE_EVENT, PostType, EventType, COUNTRY_ISO)
+from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE,
+                              PostType, COUNTRY_ISO)
 from common.utils import date_unix
-from shoutit.models import Tag
-from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, LocationMixin
+from shoutit.models.action import Action
+from shoutit.models.base import UUIDModel
+from shoutit.models.tag import Tag, TagNameField
 from shoutit.utils import error_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -49,7 +51,7 @@ class PostManager(models.Manager):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
-            Q(type=POST_TYPE_EXPERIENCE) | Q(type=POST_TYPE_EVENT)
+            Q(type=POST_TYPE_EXPERIENCE)
             | (
                 (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER))
                 & (
@@ -88,17 +90,9 @@ class ShoutManager(PostManager):
                                      get_expired=get_expired, get_muted=get_muted)
 
 
-class EventManager(PostManager):
-    def get_valid_events(self, country=None, city=None, get_muted=False):
-        return PostManager.get_valid_posts(self, types=[POST_TYPE_EVENT], country=country,
-                                           city=city, get_expired=True, get_muted=get_muted)
-
-
-class Post(UUIDModel, APIModelMixin, LocationMixin):
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='posts')
+class Post(Action):
     text = models.TextField(max_length=10000, blank=True)
-    type = models.IntegerField(default=POST_TYPE_REQUEST.value, db_index=True,
-                               choices=PostType.choices)
+    type = models.IntegerField(choices=PostType.choices, default=POST_TYPE_REQUEST.value, db_index=True)
     date_published = models.DateTimeField(default=timezone.now, db_index=True)
 
     muted = models.BooleanField(default=False, db_index=True)
@@ -107,13 +101,13 @@ class Post(UUIDModel, APIModelMixin, LocationMixin):
     priority = models.SmallIntegerField(default=0)
     objects = PostManager()
 
+    def __init__(self, *args, **kwargs):
+        super(Action, self).__init__(*args, **kwargs)
+        self._meta.get_field('user').blank = False
+
     def mute(self):
         self.muted = True
         self.save()
-
-    @property
-    def owner(self):
-        return self.user
 
     @property
     def type_name(self):
@@ -139,11 +133,11 @@ class Post(UUIDModel, APIModelMixin, LocationMixin):
 
 
 class Shout(Post):
-    tags = ArrayField(Tag._meta.get_field('name'))
+    tags = ArrayField(TagNameField())
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
-    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True,
-                                blank=True)
+    # Todo: check why item can be null and make it not one to one
+    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
     renewal_count = models.PositiveSmallIntegerField(default=0)
 
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
@@ -262,15 +256,6 @@ except RequestError:
     pass
 except ConnectionTimeout:
     error_logger.warn("ES Server is down.", exc_info=True)
-
-
-class Event(Post, AttachedObjectMixin):
-    event_type = models.IntegerField(default=0, choices=EventType.choices)
-
-    objects = EventManager()
-
-    def __unicode__(self):
-        return unicode(EventType.values[self.event_type])
 
 
 class Video(UUIDModel):

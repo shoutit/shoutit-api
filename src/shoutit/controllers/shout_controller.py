@@ -13,13 +13,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from elasticsearch import NotFoundError
 from common.utils import process_tags
-from shoutit.controllers.user_controller import update_object_location, add_predefined_city
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
-from common.constants import EVENT_TYPE_SHOUT_OFFER, EVENT_TYPE_SHOUT_REQUEST
 from shoutit.models import Shout, Post
-from shoutit.controllers import event_controller, email_controller, item_controller
+from shoutit.controllers import email_controller, item_controller, location_controller
 from shoutit.utils import debug_logger, track
 
 
@@ -55,7 +53,6 @@ def get_post(post_id, find_muted=False, find_expired=False):
 def delete_post(post):
     post.is_disabled = True
     post.save()
-    event_controller.delete_event_about_obj(post)
 
 
 # todo: make api for renewing shouts
@@ -88,8 +85,8 @@ def NotifyPreExpiry():
 
 
 # todo: handle exception on each step and in case of errors, rollback!
-def create_shout(user, shout_type, title, text, price, currency, category, tags, location,
-                 images=None, videos=None, date_published=None, is_sss=False, exp_days=None, priority=0):
+def create_shout(user, shout_type, title, text, price, currency, category, tags, location, images=None, videos=None,
+                 date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -102,11 +99,12 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
     # item
-    item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images, videos=videos)
+    item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
+                                       videos=videos)
 
     shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
-                         priority=priority, save=False)
-    update_object_location(shout, location, save=False)
+                         priority=priority, save=False, page_admin_user=page_admin_user)
+    location_controller.update_object_location(shout, location, save=False)
 
     if not date_published:
         date_published = datetime.today()
@@ -118,18 +116,16 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
 
     shout.save()
-    user.profile.stream.add_post(shout)
+    user.ap.stream.add_post(shout)
 
     add_tags_to_shout(tags, shout)
-    add_predefined_city(location)
+    location_controller.add_predefined_city(location)
 
-    event_type = EVENT_TYPE_SHOUT_OFFER if shout_type == POST_TYPE_OFFER else EVENT_TYPE_SHOUT_REQUEST
-    event_controller.register_event(user, event_type, shout)
     return shout
 
 
 def edit_shout(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
-               images=None, videos=None, location=None):
+               images=None, videos=None, location=None, page_admin_user=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images, videos=videos)
     if shout_type:
         shout.type = shout_type
@@ -152,8 +148,10 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
         shout.tags = tags
         add_tags_to_shout(tags, shout)
     if location:
-        update_object_location(shout, location, save=False)
-        add_predefined_city(location)
+        location_controller.update_object_location(shout, location, save=False)
+        location_controller.add_predefined_city(location)
+    if page_admin_user:
+        shout.page_admin_user = page_admin_user
     shout.save()
     return shout
 

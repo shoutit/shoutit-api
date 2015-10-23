@@ -115,10 +115,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             stream_controller.listen_to_stream(request.user, tag.stream, request)
+            stream_controller.listen_to_object(request.user, tag)
             msg = "you started listening to {} shouts.".format(tag.name)
 
         else:
             stream_controller.remove_listener_from_stream(request.user, tag.stream)
+            stream_controller.stop_listening_to_object(request.user, tag)
             msg = "you stopped listening to {} shouts.".format(tag.name)
 
         ret = {
@@ -201,12 +203,11 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             shouts = stream_controller.get_stream_shouts_qs(tag.stream, shout_type)
         else:
             self.pagination_class = PageNumberIndexPagination
-            self.model = Shout
-            self.index_model = ShoutIndex
-            self.filters = {'is_disabled': False}
-            self.select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
-            self.prefetch_related = ('item__videos',)
-            self.defer = ()
+            setattr(self, 'model', Shout)
+            setattr(self, 'filters', {'is_disabled': False})
+            setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
+            setattr(self, 'prefetch_related', ('item__videos',))
+            setattr(self, 'defer', ())
             shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-date_published')
             if shout_type != 'all':
                 shouts = shouts.query('match', type=shout_type)

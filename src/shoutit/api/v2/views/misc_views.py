@@ -309,8 +309,7 @@ def handle_dbz_reply(in_email, msg, request):
         error_logger.info(error['error'], exc_info=True)
         return Response(error)
 
-    message = message_controller.send_message(conversation=None, user=from_user,
-                                              to_users=[from_user, to_user],
+    message = message_controller.send_message(conversation=None, user=from_user, to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
     # invitations
     if source == 'cl':
@@ -355,8 +354,7 @@ def handle_cl_reply(msg, request):
     from_user = dbcl_conversation.to_user
     to_user = dbcl_conversation.from_user
     shout = dbcl_conversation.shout
-    message = message_controller.send_message(conversation=None, user=from_user,
-                                              to_users=[from_user, to_user],
+    message = message_controller.send_message(conversation=None, user=from_user, to_users=[from_user, to_user],
                                               about=shout, text=text, request=request)
 
     return Response({'success': True, 'message_id': message.pk})

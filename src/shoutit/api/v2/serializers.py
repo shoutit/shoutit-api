@@ -25,11 +25,10 @@ from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers import location_controller
-from shoutit.controllers.user_controller import update_profile_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
-from shoutit.controllers import shout_controller, user_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
 
 
@@ -164,7 +163,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    image = serializers.URLField(source='profile.image', required=False)
+    image = serializers.URLField(source='ap.image', required=False)
     api_url = serializers.SerializerMethodField()
     is_listening = serializers.SerializerMethodField(
         help_text="Whether signed in user is listening to this user")
@@ -186,7 +185,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_listening(self, user):
         if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.profile.is_listening(self.root.context['request'].user)
+            return user.ap.is_listening(self.root.context['request'].user)
         return False
 
     def to_internal_value(self, data):
@@ -221,25 +220,25 @@ class UserDetailSerializer(UserSerializer):
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender', required=False)
     bio = serializers.CharField(source='profile.bio', required=False, allow_blank=True)
-    video = VideoSerializer(source='profile.video', required=False, allow_null=True)
+    video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(
         help_text="Whether this user is one of the signed in user's listeners")
-    listeners_count = serializers.IntegerField(source='profile.listeners_count', required=False,
-                                               help_text="Number of Listeners to this user")
+    listeners_count = serializers.IntegerField(
+        source='ap.listeners_count', required=False, help_text="Number of Listeners to this user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
-    listening_count = serializers.DictField(read_only=True, child=serializers.IntegerField(),
-                                            source='profile.listening_count',
-                                            help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
+    listening_count = serializers.DictField(
+        read_only=True, child=serializers.IntegerField(), source='ap.listening_count',
+        help_text="object specifying the number of user listening. It has 'users' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users' or 'tags'")
-    is_owner = serializers.SerializerMethodField(
-        help_text="Whether the signed in user and this user are the same")
+    is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
     message_url = serializers.SerializerMethodField(
         help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
+    pages = UserSerializer(source='pages.all', many=True, read_only=True)
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
@@ -247,11 +246,11 @@ class UserDetailSerializer(UserSerializer):
                                   'linked_accounts', 'push_tokens', 'is_password_set',
                                   'is_listener', 'shouts_url', 'listeners_count',
                                   'listeners_url',
-                                  'listening_count', 'listening_url', 'is_owner', 'message_url')
+                                  'listening_count', 'listening_url', 'is_owner', 'message_url', 'pages')
 
     def get_is_listener(self, user):
         if 'request' in self.root.context and self.root.context['request'].user.is_authenticated():
-            return user.profile.is_listener(self.root.context['request'].user.profile.stream)
+            return user.ap.is_listener(self.root.context['request'].user.ap.stream)
         return False
 
     def get_shouts_url(self, user):
@@ -350,7 +349,7 @@ class UserDetailSerializer(UserSerializer):
         user.save(update_fields=update_fields)
 
         if location_data:
-            user_controller.update_profile_location(profile, location_data)
+            location_controller.update_profile_location(profile, location_data)
 
         if profile_data:
 
@@ -473,8 +472,7 @@ class ShoutSerializer(serializers.ModelSerializer):
 
 
 class ShoutDetailSerializer(ShoutSerializer):
-    images = serializers.ListField(source='item.images', child=serializers.URLField(),
-                                   required=False)
+    images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner.")
@@ -484,7 +482,8 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + ('images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
+        fields = parent_fields + (
+            'images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -544,16 +543,18 @@ class ShoutDetailSerializer(ShoutSerializer):
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
 
+        request = self.root.context.get('request')
+        user = getattr(request, 'user', None) or self.root.context.get('user')
+        page_admin_user = getattr(request, 'page_admin_user', None)
+
         if not shout:
-            request = self.root.context.get('request')
-            user = request.user if request else self.root.context.get('user')
-            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text,
-                                                  price=price, currency=currency, category=category, tags=tags,
-                                                  location=location, images=images, videos=videos)
+            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text, price=price,
+                                                  currency=currency, category=category, tags=tags, location=location,
+                                                  images=images, videos=videos, page_admin_user=page_admin_user)
         else:
             shout = shout_controller.edit_shout(shout, shout_type=shout_type, title=title, text=text, price=price,
-                                                currency=currency, category=category, tags=tags,
-                                                location=location, images=images, videos=videos)
+                                                currency=currency, category=category, tags=tags, location=location,
+                                                images=images, videos=videos, page_admin_user=page_admin_user)
         return shout
 
 
@@ -660,6 +661,20 @@ class MessageSerializer(serializers.ModelSerializer):
             if client_id:
                 ret['client_id'] = request.data.get('client_id')
         return ret
+
+    def create(self, validated_data):
+        request = self.root.context.get('request')
+        user = getattr(request, 'user', None)
+        page_admin_user = getattr(request, 'page_admin_user', None)
+        conversation = self.root.context.get('conversation')
+        to_users = self.root.context.get('to_users')
+        about = self.root.context.get('about')
+        text = validated_data['text']
+        attachments = validated_data['attachments']
+        message = message_controller.send_message(conversation, user, to_users=to_users, about=about, text=text,
+                                                  attachments=attachments, request=request,
+                                                  page_admin_user=page_admin_user)
+        return message
 
 
 class ConversationSerializer(serializers.ModelSerializer):
@@ -887,7 +902,7 @@ class ShoutitSigninSerializer(serializers.Serializer):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
         if initial_user and initial_user.get('location'):
-            update_profile_location(user.profile, initial_user.get('location'))
+            location_controller.update_profile_location(user.ap, initial_user.get('location'))
         return ret
 
 

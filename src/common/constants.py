@@ -210,13 +210,22 @@ USER_TYPE_FLAG_INDIVIDUAL = UserTypeFlag('Individual')
 USER_TYPE_FLAG_BUSINESS = UserTypeFlag('Business')
 
 
+class PageAdminType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+PAGE_ADMIN_TYPE_OWNER = PageAdminType('owner')
+PAGE_ADMIN_TYPE_ADMIN = PageAdminType('admin')
+PAGE_ADMIN_TYPE_EDITOR = PageAdminType('editor')
+
+
 class StreamType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
 
 Stream_TYPE_PROFILE = StreamType('Profile')
 Stream_TYPE_TAG = StreamType('Tag')
-Stream_TYPE_BUSINESS = StreamType('Business')
+Stream_TYPE_PAGE = StreamType('Page')
 Stream_TYPE_RELATED = StreamType('Related')
 Stream_TYPE_RECOMMENDED = StreamType('Recommended')
 
@@ -285,7 +294,6 @@ POST_TYPE_REQUEST = PostType('request')
 POST_TYPE_OFFER = PostType('offer')
 POST_TYPE_EXPERIENCE = PostType('Experience')
 POST_TYPE_DEAL = PostType('Deal')
-POST_TYPE_EVENT = PostType('Event')
 
 TAGS_PER_POST = 20
 
@@ -303,23 +311,14 @@ NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
 
 
-class EventType(Constant):
+class ListenType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-    def __init__(self, text=''):
-        Constant.__init__(self, text)
 
+LISTEN_TYPE_PROFILE = ListenType('Profile')
+LISTEN_TYPE_PAGE = ListenType('Page')
+LISTEN_TYPE_TAG = ListenType('Tag')
 
-EVENT_TYPE_LISTEN_TO_USER = EventType('Listen to User')
-EVENT_TYPE_LISTEN_TO_TAG = EventType('Listen to Tag')  # x
-EVENT_TYPE_SHOUT_OFFER = EventType('Shout Offer')
-EVENT_TYPE_SHOUT_REQUEST = EventType('Shout Request')
-EVENT_TYPE_SHOUT_EXPERIENCE = EventType('Shout Experience')
-EVENT_TYPE_SHARE_EXPERIENCE = EventType('Share Experience')
-EVENT_TYPE_COMMENT = EventType('Comment')  # x
-EVENT_TYPE_POST_DEAL = EventType('Post Deal')
-EVENT_TYPE_BUY_DEAL = EventType('Buy Deal')
-EVENT_TYPE_LISTEN_TO_PAGE = EventType('Listen to Page')
 
 report_types = {}
 

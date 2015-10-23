@@ -11,12 +11,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
+
 from shoutit.api.v2.filters import ShoutIndexFilterBackend
 from shoutit.api.v2.pagination import ReverseDateTimeIndexPagination, PageNumberIndexPagination
 from shoutit.api.v2.serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet, UUIDViewSetMixin
-from shoutit.controllers import message_controller
-
 from shoutit.models import Shout
 from shoutit.api.v2.permissions import IsOwnerModify
 from shoutit.models.post import ShoutIndex
@@ -34,7 +33,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
-    index_model = ShoutIndex
     filters = {'is_disabled': False}
     select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
     prefetch_related = ('item__videos',)
@@ -43,10 +41,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        return Shout.objects.get_valid_shouts(get_expired=True).all()\
-            .select_related(*self.select_related)\
-            .prefetch_related(*self.prefetch_related)\
-            .defer(*self.defer)
+        return (Shout.objects.get_valid_shouts(get_expired=True).all()
+                .select_related(*self.select_related)
+                .prefetch_related(*self.prefetch_related)
+                .defer(*self.defer))
 
     def get_index_search(self):
         return ShoutIndex.search()
@@ -277,22 +275,22 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
             - name: body
               paramType: body
         """
+        # Todo: move validation to the serializer
         shout = self.get_object()
         if request.user == shout.owner:
             raise ValidationError({'error': "You can not start a conversation about your own shout"})
-        serializer = MessageSerializer(data=request.data, partial=True, context={'request': request})
+        context = {
+            'request': request,
+            'conversation': None,
+            'to_users': [shout.owner],
+            'about': shout
+        }
+        serializer = MessageSerializer(data=request.data, partial=True, context=context)
         serializer.is_valid(raise_exception=True)
-        text = serializer.validated_data['text']
-        attachments = serializer.validated_data['attachments']
-        message = message_controller.send_message(
-            conversation=None, user=request.user, to_users=[shout.owner], about=shout, text=text,
-            attachments=attachments, request=request)
-        message = MessageSerializer(instance=message, context={'request': request})
-        headers = self.get_success_message_headers(message.data)
-        return Response(message.data, status=status.HTTP_201_CREATED, headers=headers)
+        serializer.save()
+        headers = self.get_success_message_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_success_message_headers(self, data):
-        return {
-            'Location': reverse('conversation-messages', kwargs={'id': data['conversation_id']},
-                                request=self.request)
-        }
+        loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
+        return {'Location': loc}

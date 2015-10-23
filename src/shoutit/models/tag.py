@@ -34,15 +34,14 @@ TAG_NAME_FIELD = models.CharField(
 
 class Tag(UUIDModel, StreamMixin, APIModelMixin):
     name = TagNameField()
-    creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True,
-                                blank=True, on_delete=models.SET_NULL)
-    image = models.URLField(
-        max_length=1024, blank=True, default='https://tag-image.static.shoutit.com/default.jpg')
+    creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True,
+                                on_delete=models.SET_NULL)
+    image = models.URLField(max_length=1024, blank=True, default='https://tag-image.static.shoutit.com/default.jpg')
     definition = models.TextField(null=True, blank=True, max_length=512, default='New Tag!')
     _stream = GenericRelation('shoutit.Stream', related_query_name='tag')
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.name
+        return "%s: %s" % (self.pk, self.name)
 
     @property
     def is_category(self):

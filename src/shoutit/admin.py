@@ -10,8 +10,10 @@ from django.conf.urls import url
 from django.core.urlresolvers import reverse
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
+from common.constants import UserType
 from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter
-from shoutit.admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links
+from shoutit.admin_utils import (
+    UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
 from shoutit.forms import PushBroadcastForm, ItemForm
 from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 from shoutit.models import (
@@ -19,16 +21,19 @@ from shoutit.models import (
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     Stream, Listen, UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast, GoogleLocation)
+    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin)
 from django.utils.translation import ugettext_lazy as _
+
+
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
 
 
 # Shout
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
-    list_display = ('id', '_links', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled', 'priority',
-                    'date_published')
+    list_display = (
+        'id', '_links', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled', 'priority',
+        'date_published')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city',
                    ('created_at', ShoutitDateFieldListFilter))
     raw_id_fields = ('user',)
@@ -38,6 +43,7 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 
     def _item(self, obj):
         return item_link(obj.item)
+
     _item.allow_tags = True
     _item.short_description = 'Item'
 
@@ -73,7 +79,7 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
         '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
+        (None, {'fields': ('type', 'username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', '_profile')}),
         (_('Permissions'), {'fields': ('is_active', 'is_activated', 'is_staff', 'is_superuser',
                                        'is_test', 'groups', 'user_permissions')}),
@@ -82,7 +88,7 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     )
     list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter),
                    UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
-    readonly_fields = ('_devices', '_messaging', '_profile')
+    readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
 
@@ -93,18 +99,16 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
                 ] + super(UserAdmin, self).get_urls()
 
     def _profile(self, obj):
-        return '<a href="%s">Profile</a>' % (
-            reverse('admin:shoutit_profile_change', args=(obj.profile.pk,)))
+        ut = UserType.values[obj.type]
+        return '<a href="%s">%s</a>' % (reverse('admin:shoutit_%s_change' % ut.lower(), args=(obj.ap.pk,)), ut)
 
     _profile.allow_tags = True
-    _profile.short_description = 'Profile'
+    _profile.short_description = 'Profile / Page'
 
     def _messaging(self, user):
         conversations = '<a href="%s">Conversations</a>' % (
-            reverse('admin:shoutit_conversation_changelist')
-            + '?users=' + user.pk)
-        messages = '<a href="%s">Messages</a>' % (reverse('admin:shoutit_message_changelist')
-                                                  + '?user=' + user.pk)
+            reverse('admin:shoutit_conversation_changelist') + '?users=' + user.pk)
+        messages = '<a href="%s">Messages</a>' % (reverse('admin:shoutit_message_changelist') + '?user=' + user.pk)
         return conversations + '<br/>' + messages
 
     _messaging.allow_tags = True
@@ -113,10 +117,12 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     def _devices(self, user):
         apns_device = ''
         if user.apns_device:
-            apns_device = '<a href="%s">iPhone</a>' % (reverse('admin:push_notifications_apnsdevice_change', args=[user.apns_device.id]))
+            apns_device = '<a href="%s">iPhone</a>' % (
+                reverse('admin:push_notifications_apnsdevice_change', args=[user.apns_device.id]))
         gcm_device = ''
         if user.gcm_device:
-            gcm_device = '<a href="%s">Android</a>' % (reverse('admin:push_notifications_gcmdevice_change', args=[user.gcm_device.id]))
+            gcm_device = '<a href="%s">Android</a>' % (
+                reverse('admin:push_notifications_gcmdevice_change', args=[user.gcm_device.id]))
         return ((apns_device + '<br/>') if apns_device else '') + gcm_device
 
     _devices.allow_tags = True
@@ -136,8 +142,7 @@ class ProfileAdmin(admin.ModelAdmin, UserLinkMixin):
     search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email', 'bio']
     readonly_fields = ('video', '_user')
     exclude = ('user',)
-    list_filter = (
-        'country', 'city', 'gender', UserEmailFilter, ('created_at', ShoutitDateFieldListFilter))
+    list_filter = ('country', 'city', 'gender', UserEmailFilter, ('created_at', ShoutitDateFieldListFilter))
     ordering = ('-created_at',)
 
 
@@ -396,9 +401,10 @@ class DBCLConversationAdmin(admin.ModelAdmin):
 
 @admin.register(Listen)
 class ListenAdmin(admin.ModelAdmin):
-    list_display = ('id', 'listener', 'stream')
-    readonly_fields = ('listener', 'stream')
+    list_display = ('id', 'user', 'stream', 'created_at')
+    readonly_fields = ('user', 'stream')
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    ordering = ('-created_at',)
 
 
 @admin.register(PredefinedCity)
@@ -412,6 +418,7 @@ class CustomDeviceAdmin(DeviceAdmin, UserLinkMixin):
     search_fields = ('device_id', 'user__id', 'user__username')
     list_filter = ('active', ('date_created', ShoutitDateFieldListFilter))
     raw_id_fields = ('user',)
+
 
 admin.site.unregister(APNSDevice)
 admin.site.register(APNSDevice, CustomDeviceAdmin)
@@ -454,21 +461,48 @@ class VideoAdmin(admin.ModelAdmin):
 
     def link(self, obj):
         return '<a href="%s" about="_blank">%s</a>' % (obj.url, obj.id_on_provider)
+
     link.allow_tags = True
 
     def thumb(self, obj):
         return '<img src="%s" width="120"/>' % obj.thumbnail_url.replace('.jpg', '_small.jpg')
+
     thumb.allow_tags = True
 
     def shout(self, obj):
         try:
             _shout = obj.items.all()[0].shout
-            _shout_admin_url = '<a href="%s">%s</a>' % (reverse('admin:shoutit_shout_change', args=(_shout.pk,)), _shout)
+            _shout_admin_url = '<a href="%s">%s</a>' % (
+                reverse('admin:shoutit_shout_change', args=(_shout.pk,)), _shout)
             _shout_web_url = links(_shout)
             return '%s | %s' % (_shout_admin_url, _shout_web_url)
         except:
             return 'None'
+
     shout.allow_tags = True
+
+
+@admin.register(Page)
+class ShoutitPageAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', '_user', 'name', 'creator', 'category', 'country', 'city', 'created_at')
+    raw_id_fields = ('user', 'creator')
+    search_fields = ('name', 'user__email')
+    readonly_fields = ('video', '_user')
+    exclude = ('user',)
+    list_filter = ('country', 'city', 'category', ('created_at', ShoutitDateFieldListFilter))
+    ordering = ('-created_at',)
+
+
+@admin.register(PageAdmin)
+class PageAdminAdmin(admin.ModelAdmin):
+    list_display = ('page', 'admin', 'type')
+    raw_id_fields = ('page', 'admin')
+
+
+@admin.register(PageCategory)
+class PageCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'slug', 'parent')
+    list_filter = ('parent',)
 
 
 # Others

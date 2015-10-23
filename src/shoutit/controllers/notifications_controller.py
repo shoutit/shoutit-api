@@ -23,6 +23,7 @@ from shoutit_pusher.models import PusherChannel
 from shoutit_pusher.utils import pusher
 from antigate import AntiGate
 import re
+from copy import deepcopy
 
 
 class NotifySSSException(Exception):
@@ -306,11 +307,11 @@ def notify_cl_user2(cl_user, from_user, message):
 
 
 def notify_user_of_listen(user, listener, request=None):
-    notify_user.delay(user, NOTIFICATION_TYPE_LISTEN, listener, listener, request)
+    notify_user.delay(user, NOTIFICATION_TYPE_LISTEN, listener, listener, deepcopy(request))
 
 
 def notify_user_of_message(user, message, request=None):
-    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, request)
+    notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, message.user, message, deepcopy(request))
 
 
 def notify_business_of_exp_posted(business, exp):

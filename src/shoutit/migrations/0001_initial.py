@@ -234,6 +234,15 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='StreamPost',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+            ],
+            options={
+                'db_table': 'shoutit_stream_posts',
+            },
+        ),
+        migrations.CreateModel(
             name='Message',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
@@ -418,6 +427,7 @@ class Migration(migrations.Migration):
                 ('object_id', models.UUIDField(null=True, blank=True)),
                 ('type', models.SmallIntegerField(db_index=True, choices=[(0, 'Profile'), (1, 'Tag'), (2, 'Business'), (3, 'Related'), (4, 'Recommended')])),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
+                ('posts', models.ManyToManyField(related_name='streams', through='shoutit.StreamPost', to='shoutit.Post')),
                 ('listeners', models.ManyToManyField(related_name='listening', through='shoutit.Listen', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -500,11 +510,6 @@ class Migration(migrations.Migration):
             bases=('shoutit.post',),
         ),
         migrations.AddField(
-            model_name='stream',
-            name='posts',
-            field=models.ManyToManyField(related_name='streams2', to='shoutit.Post'),
-        ),
-        migrations.AddField(
             model_name='profile',
             name='video',
             field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.SET_NULL, blank=True, to='shoutit.Video'),
@@ -533,6 +538,16 @@ class Migration(migrations.Migration):
             model_name='listen',
             name='stream',
             field=models.ForeignKey(to='shoutit.Stream'),
+        ),
+        migrations.AddField(
+            model_name='streampost',
+            name='stream',
+            field=models.ForeignKey(to='shoutit.Stream'),
+        ),
+        migrations.AddField(
+            model_name='streampost',
+            name='post',
+            field=models.ForeignKey(to='shoutit.Post'),
         ),
         migrations.AddField(
             model_name='item',

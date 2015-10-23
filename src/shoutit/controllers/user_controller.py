@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
-from django.core.exceptions import ValidationError
+
 from django.db import IntegrityError
 import requests
-from rest_framework.exceptions import ValidationError as DRFValidationError
-from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
 
-from shoutit.models import (User, LinkedFacebookAccount, PredefinedCity,
-                            LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
+from common.constants import USER_TYPE_PROFILE
+from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
+from shoutit.models import (User, LinkedFacebookAccount, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 from shoutit.controllers import location_controller
 
@@ -36,7 +37,10 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
 
     # profile fields
     profile_fields = profile_fields or {}
-    extra_user_fields.update({'profile_fields': profile_fields})
+    extra_user_fields.update({
+        'type': USER_TYPE_PROFILE,
+        'profile_fields': profile_fields
+    })
     user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name,
                                     last_name=last_name, **extra_user_fields)
 
@@ -56,7 +60,7 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
     if initial_user:
         if initial_user.get('location'):
             location = initial_user.get('location')
-            add_predefined_city(location)
+            location_controller.add_predefined_city(location)
         elif initial_user.get('ip'):
             location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
@@ -76,7 +80,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
     if initial_user:
         if initial_user.get('location'):
             location = initial_user.get('location')
-            add_predefined_city(location)
+            location_controller.add_predefined_city(location)
         elif initial_user.get('ip'):
             location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
@@ -86,7 +90,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
         user = User.objects.get(email=email)
         debug_logger.debug('Found user: {} with same email of gplus_user: {}'.format(user, gplus_id))
         if location:
-            update_profile_location(user.profile, location, add_pc=False)
+            location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True,
                            profile_fields=profile_fields)
@@ -120,7 +124,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
     if initial_user:
         if initial_user.get('location'):
             location = initial_user.get('location')
-            add_predefined_city(location)
+            location_controller.add_predefined_city(location)
         elif initial_user.get('ip'):
             location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
@@ -130,7 +134,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
         user = User.objects.get(email=email)
         debug_logger.debug('Found user: {} with same email of fb_user: {}'.format(user, facebook_id))
         if location:
-            update_profile_location(user.profile, location, add_pc=False)
+            location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username,
                            is_activated=True, profile_fields=profile_fields)
@@ -185,36 +189,3 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link='', mob
         dbcl_user = DBZ2User(user=user, db_link=db_link)
     dbcl_user.save()
     return user
-
-
-def update_profile_location(profile, location, add_pc=True, notify=True):
-    # determine whether the profile should send a notification about its location changes
-    setattr(profile, 'notify', notify)
-    update_object_location(profile, location)
-    if profile.country and profile.city and add_pc:
-        add_predefined_city(location)
-
-
-def add_predefined_city(location):
-    try:
-        pc = PredefinedCity()
-        update_object_location(pc, location)
-    except (ValidationError, IntegrityError):
-        pass
-
-
-def update_object_location(obj, location, save=True):
-    obj.latitude = location.get('latitude')
-    obj.longitude = location.get('longitude')
-    obj.country = location.get('country', '')
-    obj.postal_code = location.get('postal_code', '')
-    obj.state = location.get('state', '')
-    obj.city = location.get('city', '')
-    obj.address = location.get('address', '')
-    if not save:
-        return
-    # if obj already exits, only save location attributes otherwise save everything
-    if obj.created_at:
-        obj.save(update_fields=['latitude', 'longitude', 'country', 'postal_code', 'state', 'city', 'address'])
-    else:
-        obj.save()

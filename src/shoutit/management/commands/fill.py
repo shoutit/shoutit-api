@@ -61,17 +61,6 @@ class Command(BaseCommand):
 
         # Tags, Categories
         categories = [
-            ('New Cars For Sale', 'new-car-for-sale', 'acura', 'alfa-Romeo', 'aston-martin', 'audi',
-             'bmw', 'bentley', 'bizzarrini',
-             'bufori', 'bugatti', 'buick', 'cmc', 'cadillac', 'chevrolet', 'chrysler', 'citroen',
-             'daewoo', 'dauihatsu', 'delorean',
-             'dodge', 'ferrari', 'fiat', 'fisker', 'ford', 'gmc', 'honda', 'hummer', 'hyundai',
-             'infinite', 'isuzu', 'jaguar', 'jeep',
-             'kia', 'lamborghini', 'Land-rover', 'lexus', 'lincoln', 'lotus', 'mini', 'maserati',
-             'maybach', 'mazda', 'mclaren',
-             'Mercedes-benz', 'mercury', 'mitsubishi', 'nissan', 'peugeot', 'pontiac', 'porsche',
-             'smart', 'subaru', 'suzuki', 'tata',
-             'toyota', 'volkswagen', 'volvo', 'other-make'),
             ('Cars For Sale', 'cars-for-sale', 'acura', 'alfa-romeo', 'aston-martin',
              'audi', 'bmw', 'bentley', 'bizzarrini',
              'bufori', 'bugatti', 'buick', 'cmc', 'cadillac', 'chevrolet', 'chrysler', 'citroen',
@@ -134,8 +123,7 @@ class Command(BaseCommand):
              'Activities'),
             ('Baby items', 'baby-items', 'baby-gear', 'baby-toys', 'feeding', 'nursery-furniture',
              'stroller', 'car-seat'),
-            (
-                'Books', 'books', 'audiobooks', 'book-accessories', 'children-books',
+            ('Books', 'books', 'audiobooks', 'book-accessories', 'children-books',
                 'digital/E-books',
                 'fiction', 'nonfiction', 'textbooks'),
             ('Business & Industrial', 'business-industrial', 'agriculture-forestry',
@@ -154,8 +142,7 @@ class Command(BaseCommand):
              'womens-accessories'),
             ('Collectibles', 'collectibles', 'antiques', 'art', 'decorations', 'memorabilia',
              'pens-writing-instrument', 'artifacts'),
-            (
-                'Computers & Networking', 'computers-networking', 'accessories',
+            ('Computers & Networking', 'computers-networking', 'accessories',
                 'computer-components', 'computers', 'networking-communication',
                 'software', 'monitors', 'printers'),
             ('DVD & Movies', 'dvd-movies', 'dvd', 'digital', 'vhs'),
@@ -167,8 +154,7 @@ class Command(BaseCommand):
              'lighting-fans', 'rugs-carpets', 'tools-home-improvement'),
             ('Gaming', 'gaming', 'gaming-accessories', 'gaming-merchandise', 'gaming-system',
              'video-games'),
-            (
-                'Home Appliances', 'outdoor-appliances', 'kitchen-appliances',
+            ('Home Appliances', 'outdoor-appliances', 'kitchen-appliances',
                 'bathroom-appliances '),
             ('Hotels', 'hotels', '5-star', '4-star', '3-star', '2-star', 'hotel-apartments'),
             ('Jewelry & Watches', 'jewelry-watches', 'diamonds-gems', 'mens-jewelry', 'watches',

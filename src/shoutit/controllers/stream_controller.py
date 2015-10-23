@@ -1,12 +1,9 @@
 from __future__ import unicode_literals
-from common.constants import (DEFAULT_PAGE_SIZE,
-                              POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE,
-                              Stream_TYPE_TAG,
-                              EVENT_TYPE_LISTEN_TO_USER, EVENT_TYPE_LISTEN_TO_TAG)
+from common.constants import (DEFAULT_PAGE_SIZE, POST_TYPE_REQUEST, POST_TYPE_OFFER, Stream_TYPE_PROFILE,
+                              Stream_TYPE_TAG)
 from common.utils import process_tags
-from shoutit.controllers import notifications_controller, event_controller
-from shoutit.models import Tag, Shout, Stream, Listen, Profile, User
-
+from shoutit.controllers import notifications_controller
+from shoutit.models import Tag, Shout, Stream, Listen, Profile, User, Listen2
 
 post_types = {
     'all': [POST_TYPE_REQUEST, POST_TYPE_OFFER],
@@ -54,8 +51,7 @@ def get_stream_shouts_qs(stream, shout_type=None):
     return the Shouts Queryset (offers/requests) in a stream
     """
     types = post_types[shout_type]
-    qs = Shout.objects.get_valid_shouts(types=types).filter(streams2=stream).order_by(
-        '-date_published')
+    qs = Shout.objects.get_valid_shouts(types=types).filter(streams=stream).order_by('-date_published')
     return qs
 
 
@@ -92,9 +88,9 @@ def get_user_listening(user, listening_type=None, count_only=False):
     stream_type = stream_types[listening_type]
 
     if stream_type:
-        qs = Listen.objects.filter(listener=user, stream__type=stream_type)
+        qs = Listen.objects.filter(user=user, stream__type=stream_type)
     else:
-        qs = Listen.objects.filter(listener=user)
+        qs = Listen.objects.filter(user=user)
 
     if count_only:
         return qs.count()
@@ -135,27 +131,41 @@ def get_user_listening_qs(user, listening_type):
         return Tag.objects.filter(id__in=object_ids)
 
 
-def listen_to_stream(listener, stream, request=None):
+def listen_to_stream(user, stream, request=None):
     """
     add a stream to user listening
     """
     try:
-        Listen.objects.get(listener=listener, stream=stream)
+        Listen.objects.get(user=user, stream=stream)
     except Listen.DoesNotExist:
-        listen = Listen(listener=listener, stream=stream)
+        listen = Listen(user=user, stream=stream)
         listen.save()
         if stream.type == Stream_TYPE_PROFILE:
-            notifications_controller.notify_user_of_listen(stream.owner.user, listener, request)
-            event_controller.register_event(listener, EVENT_TYPE_LISTEN_TO_USER, stream.owner)
-        elif stream.type == Stream_TYPE_TAG:
-            event_controller.register_event(listener, EVENT_TYPE_LISTEN_TO_TAG, stream.owner)
+            notifications_controller.notify_user_of_listen(stream.owner.user, user, request)
+
+
+def listen_to_object(user, obj):
+    """
+    """
+    listen_type, target = Listen2.target_and_type_from_object(obj)
+    try:
+        Listen2.objects.get(user=user, type=listen_type, target=target)
+    except Listen2.DoesNotExist:
+        Listen2.create(user=user, type=listen_type, target=target)
 
 
 def remove_listener_from_stream(listener, stream):
     """
     remove a stream from user listening
     """
-    Listen.objects.filter(listener=listener, stream=stream).delete()
+    Listen.objects.filter(user=listener, stream=stream).delete()
+
+
+def stop_listening_to_object(user, obj):
+    """
+    """
+    listen_type, target = Listen2.target_and_type_from_object(obj)
+    Listen2.objects.filter(user=user, type=listen_type, target=target).delete()
 
 
 def filter_posts_qs(qs, post_type=None):

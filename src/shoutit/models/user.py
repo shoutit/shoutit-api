@@ -1,53 +1,30 @@
 from __future__ import unicode_literals
-from django.contrib.contenttypes.fields import GenericRelation
+
+from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from common.constants import (Stream_TYPE_PROFILE, Stream_TYPE_TAG)
-from shoutit.models.base import UUIDModel, LocationMixin
-from shoutit.models.stream import StreamMixin, Listen
-from shoutit.utils import debug_logger, correct_mobile
-from shoutit.settings import AUTH_USER_MODEL
 
+from common.constants import USER_TYPE_PROFILE, TOKEN_TYPE_EMAIL
+from shoutit.models.auth import AbstractProfile
+from shoutit.models.misc import ConfirmToken
+from shoutit.utils import correct_mobile, subscribe_to_master_list
 
-class AbstractProfile(UUIDModel, StreamMixin, LocationMixin):
-    image = models.URLField(max_length=1024, blank=True,
-                            default='https://user-image.static.shoutit.com/default_male.jpg')
-    video = models.OneToOneField('shoutit.Video', null=True, blank=True, on_delete=models.SET_NULL)
-
-    class Meta(UUIDModel.Meta):
-        abstract = True
-
-    def is_listener(self, stream):
-        """
-        Check whether the user of this profile is listening to this stream or not
-        """
-        return Listen.objects.filter(listener=self.user, stream=stream).exists()
-
-    @property
-    def listening_count(self):
-        return {
-            'users': Listen.objects.filter(listener=self.user,
-                                           stream__type=Stream_TYPE_PROFILE).count(),
-            'tags': Listen.objects.filter(listener=self.user, stream__type=Stream_TYPE_TAG).count()
-        }
-
-    @property
-    def owner(self):
-        return self.user
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class Profile(AbstractProfile):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='profile', db_index=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     bio = models.TextField(blank=True, max_length=512, default='New Shouter!')
     mobile = models.CharField(blank=True, max_length=20, default='')
 
-    _stream = GenericRelation('shoutit.Stream', related_query_name='profile')
+    def __init__(self, *args, **kwargs):
+        super(Profile, self).__init__(*args, **kwargs)
+        self._meta.get_field('image').default = 'https://user-image.static.shoutit.com/default_male.jpg'
 
     def __unicode__(self):
-        return "{}".format(self.user)
+        return unicode(self.user)
 
     def update(self, gender=None, birthday=None, bio=None, mobile=None):
         update_fields = []
@@ -71,37 +48,57 @@ class Profile(AbstractProfile):
 
 @receiver(post_save, sender='shoutit.Profile')
 def profile_post_save(sender, instance=None, created=False, **kwargs):
-    action = 'Created' if created else 'Updated'
-    debug_logger.debug('{} Profile: {}'.format(action, instance))
+    pass
 
 
-class LinkedFacebookAccount(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_facebook', db_index=True)
-    facebook_id = models.CharField(max_length=24, db_index=True, unique=True)
-    access_token = models.CharField(max_length=512)
-    expires = models.BigIntegerField(default=0)
+@receiver(pre_save, sender=AUTH_USER_MODEL)
+def user_pre_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    """
 
-    def __unicode__(self):
-        return unicode(self.user)
-
-
-class LinkedGoogleAccount(UUIDModel):
-    user = models.OneToOneField(AUTH_USER_MODEL, related_name='linked_gplus', db_index=True)
-    gplus_id = models.CharField(max_length=64, db_index=True, unique=True)
-    credentials_json = models.CharField(max_length=4096)
-
-    def __unicode__(self):
-        return unicode(self.user)
-
-
-class Permission(UUIDModel):
-    name = models.CharField(max_length=512, unique=True, db_index=True)
-
-    def __unicode__(self):
-        return self.name
+    """
+    if instance.type != USER_TYPE_PROFILE:
+        return
+    if created:
+        return
+    if isinstance(update_fields, frozenset):
+        if 'email' in update_fields:
+            instance.take_activate_permission()
+            instance.is_activated = False
+        elif 'is_activated' in update_fields:
+            if instance.is_activated:
+                instance.give_activate_permission()
+            else:
+                instance.take_activate_permission()
 
 
-class UserPermission(UUIDModel):
-    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE)
-    permission = models.ForeignKey('shoutit.Permission', on_delete=models.CASCADE)
-    date_given = models.DateTimeField(auto_now_add=True)
+@receiver(post_save, sender=AUTH_USER_MODEL)
+def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    """
+
+    """
+    if instance.type != USER_TYPE_PROFILE:
+        return
+
+    if created:
+        # create profile
+        profile_fields = getattr(instance, 'profile_fields', {})
+        Profile.create(id=instance.id, user=instance, **profile_fields)
+
+        # todo: give appropriate permissions
+        # permissions = FULL_USER_PERMISSIONS if instance.is_activated else INITIAL_USER_PERMISSIONS
+        # give_user_permissions(user=instance, permissions=permissions)
+
+        # send signup email
+        if not (instance.is_activated or instance.is_test):
+            # create email confirmation token and send verification email
+            ConfirmToken.create(user=instance, type=TOKEN_TYPE_EMAIL)
+        if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
+            instance.send_signup_email()
+            # subscribe to mailchimp master list
+            subscribe_to_master_list(instance)
+    else:
+        if isinstance(update_fields, frozenset):
+            if 'is_activated' in update_fields and instance.is_activated:
+                instance.send_verified_email()
+            elif 'email' in update_fields:
+                instance.send_verification_email()

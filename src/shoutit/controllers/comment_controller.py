@@ -9,7 +9,6 @@ def CommentOnPost(user, post_id, text):
     if post:
         comment = Comment(AboutPost=post, user=user, text=text)
         comment.save()
-        event_controller.register_event(user, EVENT_TYPE_COMMENT, comment)
 
         seen = set()
         seen_add = seen.add
@@ -53,8 +52,7 @@ def DeleteComment(comment_id):
     if comment:
         comment.is_disabled = True
         comment.save()
-        event_controller.delete_event_about_obj(comment)
 
 
-from shoutit.controllers import event_controller, shout_controller, notifications_controller
+from shoutit.controllers import shout_controller, notifications_controller
 from shoutit.models import Comment
