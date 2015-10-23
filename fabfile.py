@@ -56,7 +56,7 @@ def remote_pull(env_short_name):
             run('%sbin/pip install -U -r src/requirements/%s.txt' % (remote_env_dir, env_short_name))
         # run('/opt/{}/bin/python src/manage.py test'.format(env))
         if confirm("Migrate?"):
-            run('%sbin/python src/manage.py migrate' % remote_env_dir)
+            run('%sbin/python src/manage.py migrate --noinput' % remote_env_dir)
         if confirm("Clear all logs?"):
             run("find {}log/. -type f -exec cp /dev/null {{}} \;".format(remote_env_dir))
         run('chown %s -R %s' % (remote_env, remote_env_dir))
