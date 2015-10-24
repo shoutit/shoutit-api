@@ -17,7 +17,7 @@ from shoutit.api.v2.pagination import (
 )
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.api.v2.serializers import (
-    UserSerializer, UserDetailSerializer, MessageSerializer, TagSerializer, ShoutSerializer
+    UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,TagDetailSerializer
 )
 from shoutit.api.v2.permissions import IsOwnerModify, IsAuthenticatedOrReadOnly, IsAuthenticated, IsOwner
 from shoutit.models import User, Shout, ShoutIndex
@@ -310,7 +310,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         result_object_serializers = {
             'users': UserSerializer,
             'pages': UserSerializer,
-            'tags': TagSerializer,
+            'tags': TagDetailSerializer,
         }
         result_object_serializer = result_object_serializers[listening_type]
         serializer = result_object_serializer(page, many=True, context={'request': request})
