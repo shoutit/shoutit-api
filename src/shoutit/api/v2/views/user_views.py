@@ -338,17 +338,16 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: page_size
               paramType: query
         """
-        self.pagination_class = PageNumberIndexPagination
-        self.filter_backends = (HomeFilterBackend,)
         setattr(self, 'model', Shout)
         setattr(self, 'filters', {'is_disabled': False})
         setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
         setattr(self, 'prefetch_related', ('item__videos',))
         setattr(self, 'defer', ())
-        shouts = self.filter_queryset(ShoutIndex.search())
-        page = self.paginate_queryset(shouts)
+        shouts = HomeFilterBackend().filter_queryset(request=request, index_queryset=ShoutIndex.search(), view=self)
+        paginator = PageNumberIndexPagination()
+        page = paginator.paginate_queryset(index_queryset=shouts, request=request, view=self)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
-        return self.get_paginated_response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
