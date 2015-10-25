@@ -326,6 +326,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             'tags': self.listening2_tags,
         }
 
+    @property
+    def listeners_count(self):
+        listen_type, target = Listen2.listen_type_and_target_from_object(self)
+        return Listen2.objects.filter(type=listen_type, target=target).count()
+
 
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
@@ -346,8 +351,7 @@ class AbstractProfile(UUIDModel, LocationMixin):
 
     def __getattribute__(self, item):
         """
-        If an attribute does not exist on this instance, then we also attempt to proxy it to the underlying
-        User object.
+        If an attribute does not exist on this instance, then we also attempt to proxy it to the underlying User object.
         """
         try:
             return super(AbstractProfile, self).__getattribute__(item)
@@ -363,11 +367,6 @@ class AbstractProfile(UUIDModel, LocationMixin):
     @property
     def owner(self):
         return self.user
-
-    @property
-    def listeners_count(self):
-        listen_type, target = Listen2.listen_type_and_target_from_object(self)
-        return Listen2.objects.filter(type=listen_type, target=target).count()
 
 
 @receiver(post_save)

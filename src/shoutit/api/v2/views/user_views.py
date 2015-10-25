@@ -17,7 +17,7 @@ from shoutit.api.v2.pagination import (
 )
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.api.v2.serializers import (
-    UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,TagDetailSerializer
+    UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer, TagDetailSerializer
 )
 from shoutit.api.v2.permissions import IsOwnerModify, IsAuthenticatedOrReadOnly, IsAuthenticated, IsOwner
 from shoutit.models import User, Shout, ShoutIndex
