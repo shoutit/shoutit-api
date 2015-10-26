@@ -339,9 +339,13 @@ def base64_to_text(b64, box=None, config=None):
         cl, cu, cr, cd = box
         box = [0 + cl, 0 + cu, w - cr, h - cd]
         image = image.crop(box)
-    image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
-    image_no_trans.paste(image, image)
-    text = pytesseract.image_to_string(image_no_trans, config=config)
+    try:
+        image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
+        image_no_trans.paste(image, image)
+        image = image_no_trans
+    except:
+        pass
+    text = pytesseract.image_to_string(image, config=config)
     return text
 
 
