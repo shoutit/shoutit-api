@@ -4,14 +4,14 @@ import uuid
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.forms import SplitArrayField
 from django.core import validators
-
 from django.db import models
-
 from django.utils.translation import ugettext_lazy as _
 
 from common.utils import date_unix
-from common.constants import COUNTRY_ISO
+from common.constants import COUNTRY_ISO, COUNTRY_CHOICES
 
 
 class UUIDModel(models.Model):
@@ -134,3 +134,33 @@ class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
     @property
     def is_full_location(self):
         return not self.is_zero_coord and self.is_named_location
+
+
+class CountryField(models.CharField):
+    description = "2 Characters of a country ISO representation"
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 2
+        kwargs['blank'] = kwargs.get('blank', True)
+        kwargs['db_index'] = kwargs.get('db_index', True)
+        kwargs['choices'] = COUNTRY_CHOICES
+        super(CountryField, self).__init__(*args, **kwargs)
+
+
+class CountriesField(ArrayField):
+    description = "List of country ISO representations"
+
+    def __init__(self, *args, **kwargs):
+        kwargs['base_field'] = CountryField()
+        kwargs['blank'] = kwargs.get('blank', True)
+        kwargs['default'] = kwargs.get('default', list)
+        super(CountriesField, self).__init__(*args, **kwargs)
+
+    def formfield(self, **kwargs):
+        defaults = {
+            'form_class': SplitArrayField,
+            'base_field': self.base_field.formfield(),
+            'size': 10,
+        }
+        defaults.update(kwargs)
+        return super(ArrayField, self).formfield(**defaults)

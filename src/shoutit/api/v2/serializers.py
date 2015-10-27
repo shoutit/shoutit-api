@@ -27,9 +27,11 @@ from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers import location_controller
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
+    DiscoverItem)
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
+from rest_framework.settings import api_settings
 
 
 class LocationSerializer(serializers.Serializer):
@@ -85,6 +87,35 @@ class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = ('url', 'thumbnail_url', 'provider', 'id_on_provider', 'duration')
+
+
+class DiscoverItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiscoverItem
+        fields = ('id', 'api_url', 'title', 'subtitle', 'position', 'image', 'icon')
+        extra_kwargs = {api_settings.URL_FIELD_NAME: {'view_name': 'discover-detail'}}
+
+
+class DiscoverItemDetailSerializer(serializers.ModelSerializer):
+    shouts_url = serializers.SerializerMethodField()
+    parents = DiscoverItemSerializer(many=True)
+    children = DiscoverItemSerializer(many=True)
+
+    class Meta(DiscoverItemSerializer.Meta):
+        model = DiscoverItem
+        parent_fields = DiscoverItemSerializer.Meta.fields
+        fields = parent_fields + (
+            'description', 'cover', 'countries', 'parents', 'children', 'shouts_url'
+        )
+
+    def to_representation(self, instance):
+        ret = super(DiscoverItemDetailSerializer, self).to_representation(instance)
+        if not instance.show_shouts:
+            ret.pop('shouts_url', None)
+        return ret
+
+    def get_shouts_url(self, tag):
+        return reverse('discover-shouts', kwargs={'pk': tag.pk}, request=self.context['request'])
 
 
 class TagSerializer(serializers.ModelSerializer):

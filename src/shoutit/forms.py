@@ -7,11 +7,11 @@ from django import forms
 from django.contrib.postgres.forms import SplitArrayField
 from django.forms import URLField
 from shoutit.models import PushBroadcast, Item
-from common.constants import DeviceOS, COUNTRIES
+from common.constants import DeviceOS, COUNTRY_CHOICES
 
 
 class PushBroadcastForm(forms.ModelForm):
-    countries = forms.MultipleChoiceField(choices=COUNTRIES, required=False)
+    countries = forms.MultipleChoiceField(choices=COUNTRY_CHOICES, required=False)
     devices = forms.MultipleChoiceField(choices=DeviceOS.choices, required=False)
 
     def save(self, commit=True):

@@ -182,6 +182,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.admin',
+    'django.contrib.postgres',
     'django.contrib.staticfiles',
     # 'paypal.standard.ipn',
     # 'paypal.standard.pdt',
@@ -206,6 +207,7 @@ INSTALLED_APPS = (
     'shoutit_pusher',
     'shoutit_crm',
     'shoutit',
+    'mptt',
 )
 # apps only on local development
 if LOCAL:

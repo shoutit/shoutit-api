@@ -8,6 +8,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from django.conf.urls import url
 from django.core.urlresolvers import reverse
+from mptt.admin import MPTTModelAdmin
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 from common.constants import UserType
@@ -21,7 +22,7 @@ from shoutit.models import (
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin)
+    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem)
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -495,6 +496,12 @@ class PageAdminAdmin(admin.ModelAdmin):
 class PageCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'parent')
     list_filter = ('parent',)
+
+
+@admin.register(DiscoverItem)
+class DiscoverItemAdmin(MPTTModelAdmin):
+    mptt_level_indent = 20
+    mptt_indent_field = "some_node_field"
 
 
 # Others
