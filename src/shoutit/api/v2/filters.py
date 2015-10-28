@@ -18,11 +18,10 @@ from shoutit.utils import debug_logger, error_logger
 
 
 class ShoutIndexFilterBackend(filters.BaseFilterBackend):
-    def filter_queryset(self, request, index_queryset, view):
-        if view.action != 'list':
-            return index_queryset
-
-        data = request.query_params
+    def filter_queryset(self, request, index_queryset, view, extra_query_params=None):
+        data = request.query_params.copy()
+        if isinstance(extra_query_params, dict):
+            data.update(extra_query_params)
 
         search = data.get('search')
         if search:
@@ -160,6 +159,9 @@ class HomeFilterBackend(filters.BaseFilterBackend):
 
 class DiscoverItemFilter(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
+        if view.action != 'list':
+            return queryset
+
         data = request.query_params
         country = data.get('country', '')
         if country not in COUNTRIES:

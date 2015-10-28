@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.forms import SplitArrayField
 from django.core import validators
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -155,12 +154,3 @@ class CountriesField(ArrayField):
         kwargs['blank'] = kwargs.get('blank', True)
         kwargs['default'] = kwargs.get('default', list)
         super(CountriesField, self).__init__(*args, **kwargs)
-
-    def formfield(self, **kwargs):
-        defaults = {
-            'form_class': SplitArrayField,
-            'base_field': self.base_field.formfield(),
-            'size': 10,
-        }
-        defaults.update(kwargs)
-        return super(ArrayField, self).formfield(**defaults)
