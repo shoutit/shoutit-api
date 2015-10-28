@@ -10,6 +10,7 @@ import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 from elasticsearch_dsl import F
+from common.constants import COUNTRIES
 
 from common.utils import process_tags
 from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag
@@ -17,12 +18,10 @@ from shoutit.utils import debug_logger, error_logger
 
 
 class ShoutIndexFilterBackend(filters.BaseFilterBackend):
-
-    def filter_queryset(self, request, index_queryset, view):
-        if view.action != 'list':
-            return index_queryset
-
-        data = request.query_params
+    def filter_queryset(self, request, index_queryset, view, extra_query_params=None):
+        data = request.query_params.copy()
+        if isinstance(extra_query_params, dict):
+            data.update(extra_query_params)
 
         search = data.get('search')
         if search:
@@ -105,7 +104,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             'price_desc': ('-price',),
         }
         if sort and sort not in sort_types:
-                raise ValidationError({'sort': ["Invalid sort."]})
+            raise ValidationError({'sort': ["Invalid sort."]})
         # selected_sort = ('-priority',) + sort_types[sort]
         selected_sort = sort_types[sort]
         if search:
@@ -117,7 +116,6 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
 
 class HomeFilterBackend(filters.BaseFilterBackend):
-
     def filter_queryset(self, request, index_queryset, view):
         user = view.get_object()
         country = user.location.get('country')
@@ -150,13 +148,32 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             'price_desc': ('-price',),
         }
         if sort and sort not in sort_types:
-                raise ValidationError({'sort': ["Invalid sort."]})
+            raise ValidationError({'sort': ["Invalid sort."]})
         # selected_sort = ('-priority',) + sort_types[sort]
         selected_sort = sort_types[sort]
         index_queryset = index_queryset.sort(*selected_sort)
 
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
+
+
+class DiscoverItemFilter(filters.BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        if view.action != 'list':
+            return queryset
+
+        data = request.query_params
+        country = data.get('country', '')
+        if country not in COUNTRIES:
+            raise ValidationError({'country': ["Invalid country code"]})
+
+        country_queryset = queryset.filter(countries__contains=[country])
+        no_country_queryset = queryset.filter(countries__contained_by=[''])
+        if country != '' and country_queryset.count() != 0:
+            queryset = country_queryset
+        else:
+            queryset = no_country_queryset
+        return queryset
 
 
 class TagFilter(django_filters.FilterSet):

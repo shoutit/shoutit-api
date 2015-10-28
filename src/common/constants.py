@@ -644,7 +644,9 @@ COUNTRY_ISO = {
     "": "None"
 }
 
-COUNTRIES = sorted(COUNTRY_ISO.items(), key=lambda tup: tup[1])
+COUNTRIES = COUNTRY_ISO.keys()
+
+COUNTRY_CHOICES = sorted(COUNTRY_ISO.items(), key=lambda tup: tup[1])
 
 NOT_ALLOWED_USERNAMES = [
     'activate',

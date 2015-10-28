@@ -5,6 +5,8 @@ requests==2.7.0
 Django==1.8.4
 psycopg2>=2.6
 kitchen==1.2.1
+django-mptt==0.7.4
+django-mptt-admin==0.3.0
 
 # admin
 django-grappelli==2.7.1
