@@ -180,7 +180,7 @@ def _save_shout_index(shout=None, created=False):
     except NotFoundError:
         shout_index = ShoutIndex()
         shout_index._id = shout.pk
-    shout_index.type = shout.type_name
+    shout_index.type = shout.get_type_display()
     shout_index.title = shout.item.name
     shout_index.text = shout.text
     shout_index.tags = shout.tags

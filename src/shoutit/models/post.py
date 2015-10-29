@@ -110,10 +110,6 @@ class Post(Action):
         self.save()
 
     @property
-    def type_name(self):
-        return PostType.values[self.type]
-
-    @property
     def date_published_unix(self):
         return date_unix(self.date_published)
 
@@ -201,7 +197,7 @@ class Shout(Post):
     @property
     def track_properties(self):
         return {
-            'type': self.type_name,
+            'type': self.get_type_display(),
             'category': self.category.name,
             'Country': COUNTRY_ISO.get(self.country),
             'Region': self.state,

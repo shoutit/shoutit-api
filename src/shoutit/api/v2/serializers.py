@@ -429,7 +429,7 @@ class UserDetailSerializer(UserSerializer):
 
 
 class ShoutSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'],
+    type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'],
                                    help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(min_length=6, max_length=500, source='item.name')
@@ -549,7 +549,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         return self.perform_save(shout=shout, validated_data=validated_data)
 
     def perform_save(self, shout, validated_data):
-        shout_type_name = validated_data.get('type_name')
+        shout_type_name = validated_data.get('get_type_display')
         shout_types = {
             'request': POST_TYPE_REQUEST,
             'offer': POST_TYPE_OFFER,
@@ -708,7 +708,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     users = UserSerializer(many=True, source='contributors',
                            help_text="List of users in this conversations")
     last_message = MessageSerializer(required=False)
-    type = serializers.CharField(source='type_name', help_text="Either 'chat' or 'about_shout'")
+    type = serializers.CharField(source='get_type_display', help_text="Either 'chat' or 'about_shout'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     about = serializers.SerializerMethodField(
@@ -764,8 +764,7 @@ class AttachedObjectSerializer(serializers.Serializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix')
-    type = serializers.CharField(source='type_name',
-                                 help_text="Currently, either 'listen' or 'message'")
+    type = serializers.CharField(source='get_type_display', help_text="Currently, either 'listen' or 'message'")
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'message' objects depending on notification type")
 
@@ -782,8 +781,8 @@ class CurrencySerializer(serializers.ModelSerializer):
 
 class ReportSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
-    type = serializers.CharField(source='type_name',
-                                 help_text="Currently, either 'user' or 'shout'", read_only=True)
+    type = serializers.CharField(source='get_type_display', help_text="Currently, either 'user' or 'shout'",
+                                 read_only=True)
     user = UserSerializer(read_only=True)
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'shout' objects depending on report type")

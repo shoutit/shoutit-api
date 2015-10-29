@@ -3,13 +3,14 @@
 
 """
 from __future__ import unicode_literals
+from collections import OrderedDict
 
 from django.conf import settings
 from django.db.models import Q
 import django_filters
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
-from elasticsearch_dsl import F
+from elasticsearch_dsl import F, Search
 from common.constants import COUNTRIES
 
 from common.utils import process_tags
@@ -19,9 +20,17 @@ from shoutit.utils import debug_logger, error_logger
 
 class ShoutIndexFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, index_queryset, view, extra_query_params=None):
+        if not isinstance(index_queryset, Search):
+            return index_queryset
+
         data = request.query_params.copy()
         if isinstance(extra_query_params, dict):
             data.update(extra_query_params)
+
+        exclude_ids = data.get('exclude_ids')
+        if exclude_ids:
+            for _id in exclude_ids:
+                index_queryset = index_queryset.filter(~F('term', _id=_id))
 
         search = data.get('search')
         if search:
@@ -79,21 +88,34 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if max_price:
             index_queryset = index_queryset.filter('range', **{'price': {'lte': max_price}})
 
+        latlng_errors = OrderedDict()
         down_left_lat = data.get('down_left_lat')
-        if down_left_lat:
-            index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
-
         down_left_lng = data.get('down_left_lng')
-        if down_left_lng:
-            index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
-
         up_right_lat = data.get('up_right_lat')
-        if up_right_lat:
-            index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
-
         up_right_lng = data.get('up_right_lng')
-        if up_right_lng:
-            index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
+        try:
+            if down_left_lat:
+                down_left_lat = float(down_left_lat)
+                if down_left_lat > float(up_right_lat) or not (90 >= down_left_lat >= -90):
+                    latlng_errors['down_left_lat'] = ["should be between -90 and 90, also not greater than 'up_right_lat'"]
+                    index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
+            if down_left_lng:
+                down_left_lng = float(down_left_lng)
+                if down_left_lng > float(up_right_lng) or not (180 >= down_left_lng >= -180):
+                    latlng_errors['down_left_lng'] = ["should be between -180 and 180, also not greater than 'up_right_lng'"]
+                index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
+            if up_right_lat:
+                if not (90 >= float(up_right_lat) >= -90):
+                    latlng_errors['up_right_lat'] = ["should be between -90 and 90"]
+                index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
+            if up_right_lng:
+                if not (180 >= float(up_right_lng) >= -180):
+                    latlng_errors['up_right_lng'] = ["should be between -180 and 180"]
+                index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
+        except ValueError:
+            latlng_errors['error'] = ["invalid lat or lng parameters"]
+        if latlng_errors:
+            raise ValidationError(latlng_errors)
 
         # sort
         sort = data.get('sort')

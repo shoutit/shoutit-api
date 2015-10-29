@@ -29,14 +29,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     serializer_class = ShoutSerializer
     serializer_detail_class = ShoutDetailSerializer
 
-    pagination_class = PageNumberIndexPagination
-
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
     filters = {'is_disabled': False}
     select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
     prefetch_related = ('item__videos',)
     defer = ()
+    pagination_class = PageNumberIndexPagination
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
@@ -45,6 +44,19 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
                 .select_related(*self.select_related)
                 .prefetch_related(*self.prefetch_related)
                 .defer(*self.defer))
+
+    def filter_queryset(self, queryset, *args, **kwargs):
+        """
+        Given a queryset, filter it with whichever filter backend is in use.
+
+        You are unlikely to want to override this method, although you may need
+        to call it either from a list view, or from a custom `get_object`
+        method if you want to apply the configured filtering backend to the
+        default queryset.
+        """
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self, *args, **kwargs)
+        return queryset
 
     def get_index_search(self):
         return ShoutIndex.search()
@@ -106,28 +118,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
               description: space or comma separated tags. returned shouts will contain ALL of them
               paramType: query
         """
-        errors = OrderedDict()
-        down_left_lat = float(request.query_params.get('down_left_lat', -90))
-        down_left_lng = float(request.query_params.get('down_left_lng', -180))
-        up_right_lat = float(request.query_params.get('up_right_lat', 90))
-        up_right_lng = float(request.query_params.get('up_right_lng', 180))
-        if down_left_lat > up_right_lat or not (90 >= down_left_lat >= -90):
-            errors['down_left_lat'] = "should be between -90 and 90, also not greater than 'up_right_lat'"
-        if down_left_lng > up_right_lng or not (180 >= down_left_lng >= -180):
-            errors['down_left_lng'] = "should be between -180 and 180, also not greater than 'up_right_lng'"
-        if not (90 >= up_right_lat >= -90):
-            errors['up_right_lat'] = "should be between -90 and 90"
-        if not (180 >= up_right_lng >= -180):
-            errors['up_right_lng'] = "should be between -180 and 180"
-        if errors:
-            raise ValidationError(errors)
-
-        # temp compatibility for 'before' and 'after'
-        before_query_param = request.query_params.get('before')
-        after_query_param = request.query_params.get('after')
-        if before_query_param or after_query_param:
-            self.pagination_class = ReverseDateTimeIndexPagination
-
         shouts = self.filter_queryset(self.get_index_search())
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
@@ -294,3 +284,39 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
+
+    @detail_route(methods=['get'], suffix='Related shouts')
+    def related(self, request, *args, **kwargs):
+        """
+        Related shouts
+
+        ---
+        serializer: ShoutSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: shout_type
+              paramType: query
+              defaultValue: all
+              enum:
+                - request
+                - offer
+                - all
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        shout = self.get_object()
+        extra_query_params = {
+            'search': "%s %s" % (shout.item.name, " ".join(shout.tags)),
+            'country': shout.country,
+            'shout_type': shout.get_type_display(),
+            'category': shout.category.name,
+            'exclude_ids': [shout.pk]
+        }
+        shouts = self.filter_queryset(self.get_index_search(), extra_query_params=extra_query_params)
+        page = self.paginate_queryset(shouts)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+

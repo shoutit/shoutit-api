@@ -313,7 +313,7 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
 # Report
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', 'type_name', '_user', 'text', 'attached_object', 'content_type',
+    list_display = ('id', 'type', '_user', 'text', 'attached_object', 'content_type',
                     'object_id', 'is_solved', 'is_disabled', 'created_at')
     list_filter = ('is_solved', 'is_disabled', ('created_at', ShoutitDateFieldListFilter))
     actions = ['mark_as_solved', 'mark_as_disabled']
