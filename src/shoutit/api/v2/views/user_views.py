@@ -266,12 +266,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer} same as in listeners or {TagSerializer}
+          "results": [] // list of {UserSerializer} same as in listeners or {TagDetailSerializer}
         }
         </code></pre>
 
         ---
-        serializer: TagSerializer
+        serializer: TagDetailSerializer
         omit_parameters:
             - form
         parameters:
