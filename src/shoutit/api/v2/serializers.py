@@ -12,7 +12,6 @@ from django.db.models import Q
 from django.conf import settings
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
-
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
@@ -72,7 +71,8 @@ class LocationSerializer(serializers.Serializer):
             location = request.user.location
             location.update({'address': address})
         else:
-            raise ValidationError({'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
+            raise ValidationError({
+                'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
 
         validated_data.update(location)
         return validated_data
@@ -441,12 +441,13 @@ class ShoutSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
     tags = TagSerializer(many=True, source='tag_objects')
+    tags2 = serializers.DictField()
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price',
-                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags')
+                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags', 'tags2')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -564,6 +565,7 @@ class ShoutDetailSerializer(ShoutSerializer):
 
         category = validated_data.get('category')
         tags = validated_data.get('tag_objects')
+        tags2 = validated_data.get('tags2')
 
         location = validated_data.get('location')
 
@@ -575,13 +577,16 @@ class ShoutDetailSerializer(ShoutSerializer):
         page_admin_user = getattr(request, 'page_admin_user', None)
 
         if not shout:
-            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text, price=price,
-                                                  currency=currency, category=category, tags=tags, location=location,
-                                                  images=images, videos=videos, page_admin_user=page_admin_user)
+            shout = shout_controller.create_shout(
+                user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
+                category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
+                page_admin_user=page_admin_user
+            )
         else:
-            shout = shout_controller.edit_shout(shout, shout_type=shout_type, title=title, text=text, price=price,
-                                                currency=currency, category=category, tags=tags, location=location,
-                                                images=images, videos=videos, page_admin_user=page_admin_user)
+            shout = shout_controller.edit_shout(
+                shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
+                tags=tags, tags2=tags2, location=location, images=images, videos=videos, page_admin_user=page_admin_user
+            )
         return shout
 
 

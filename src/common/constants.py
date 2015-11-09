@@ -288,6 +288,17 @@ POST_TYPE_DEAL = PostType('Deal')
 TAGS_PER_POST = 20
 
 
+class TagValueType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+    def __init__(self, text=''):
+        Constant.__init__(self, text)
+
+
+TAG_TYPE_INT = TagValueType('int')
+TAG_TYPE_STR = TagValueType('str')
+
+
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
