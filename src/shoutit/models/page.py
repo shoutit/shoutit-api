@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from common.constants import PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER
 from shoutit.models.base import UUIDModel
 from shoutit.models.auth import AbstractProfile
-from shoutit.models.tag import TagNameField
+from shoutit.models.tag import ShoutitSlugField
 from shoutit.utils import correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -18,7 +18,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 class PageCategory(UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
-    slug = TagNameField()
+    slug = ShoutitSlugField(unique=True)
     parent = models.ForeignKey('shoutit.PageCategory', null=True, blank=True)
 
     def __unicode__(self):

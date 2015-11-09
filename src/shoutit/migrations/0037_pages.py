@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
                 ('name', models.CharField(unique=True, max_length=100, db_index=True)),
-                ('slug', shoutit.models.tag.TagNameField(help_text='Required. 2 to 30 characters and can only contain a-z, 0-9, and the dash (-)', unique=True, max_length=30, db_index=True, validators=[django.core.validators.MinLengthValidator(2), django.core.validators.RegexValidator(re.compile('^[0-9a-z-]+$'), 'Enter a valid tag.', 'invalid')])),
+                ('slug', shoutit.models.tag.ShoutitSlugField(help_text='Required. 2 to 30 characters and can only contain a-z, 0-9, and the dash (-)', unique=True, max_length=30, db_index=True, validators=[django.core.validators.MinLengthValidator(2), django.core.validators.RegexValidator(re.compile('^[0-9a-z-]+$'), 'Enter a valid tag.', 'invalid')])),
                 ('parent', models.ForeignKey(blank=True, to='shoutit.PageCategory', null=True)),
             ],
             options={

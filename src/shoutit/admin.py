@@ -22,7 +22,7 @@ from shoutit.models import (
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem)
+    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem, TagKey)
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -195,6 +195,12 @@ class TagAdmin(admin.ModelAdmin, LinksMixin):
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     form = TagChangeForm
+
+
+@admin.register(TagKey)
+class TagKeyAdmin(admin.ModelAdmin):
+    list_display = ('key', 'values_type')
+    search_fields = ('key',)
 
 
 @admin.register(Category)
