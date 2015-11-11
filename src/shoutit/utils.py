@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+import urllib
+import urlparse
 from cStringIO import StringIO
 import random
 import json
@@ -358,6 +361,15 @@ def base64_to_texts(b64, configs):
         texts.append(text)
     return texts
 
+
+def url_with_querystring(url, params=None, **kwargs):
+    url_parts = list(urlparse.urlparse(url))
+    query = dict(urlparse.parse_qsl(url_parts[4]))
+    if isinstance(params, dict):
+        query.update(params)
+    query.update(kwargs)
+    url_parts[4] = urllib.urlencode(query)
+    return urlparse.urlunparse(url_parts)
 
 # @receiver(post_save)
 # def model_post_save(sender, instance=None, created=False, **kwargs):

@@ -29,7 +29,7 @@ from shoutit.models import (
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
     DiscoverItem)
 from shoutit.controllers import shout_controller, user_controller, message_controller
-from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
+from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
 from rest_framework.settings import api_settings
 
 
@@ -114,8 +114,9 @@ class DiscoverItemDetailSerializer(serializers.ModelSerializer):
             ret.pop('shouts_url', None)
         return ret
 
-    def get_shouts_url(self, tag):
-        return reverse('discover-shouts', kwargs={'pk': tag.pk}, request=self.context['request'])
+    def get_shouts_url(self, discover_item):
+        shouts_url = reverse('shout-list', request=self.context['request'])
+        return url_with_querystring(shouts_url, discover=discover_item.pk)
 
 
 class TagSerializer(serializers.ModelSerializer):
