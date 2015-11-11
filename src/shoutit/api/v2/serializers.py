@@ -58,6 +58,7 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using latitude, longitude or IP
             location = location_controller.from_location_index(validated_data.get('latitude'),
                                                                validated_data.get('longitude'), ip)
+        # Todo: Deprecate
         elif ggr:
             # Handle Google geocode response if provided
             try:
@@ -68,12 +69,14 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
         elif address and request and request.user.is_authenticated():
+            # Update the logged in user address
             location = request.user.location
-            location.update({'address': address})
         else:
             raise ValidationError({
-                'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
+                'non_field_errors': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
 
+        if address:
+            location.update({'address': address})
         validated_data.update(location)
         return validated_data
 
@@ -911,6 +914,7 @@ class ShoutitSigninSerializer(serializers.Serializer):
         email = ret.get('email').lower()
         password = ret.get('password')
         initial_user = ret.get('user', {})
+        location = initial_user.get('location') if initial_user else None
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
@@ -933,8 +937,8 @@ class ShoutitSigninSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
-        if initial_user and initial_user.get('location'):
-            location_controller.update_profile_location(user.ap, initial_user.get('location'))
+        if location:
+            location_controller.update_profile_location(user.ap, location)
         return ret
 
 

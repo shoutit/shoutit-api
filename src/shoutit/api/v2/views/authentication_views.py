@@ -70,10 +70,10 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         *400* stating the error as outlined in :rfc:`5.2`.
         """
         client = kwargs.get('client')
-        client_name = client.name if client else 'NoClient'
-        grant_type = kwargs.get('grant_type', 'NoGrant')
-        error_name = "oAuth2 Error - %s - %s" % (client_name, grant_type)
-        error_logger.warn(error_name, extra={'detail': error, 'request_data': self.request.data})
+        grant_type = kwargs.get('grant_type', 'no-grant')
+        client_name = client.name if client else 'no-client'
+        error_name = "oAuth2 Error - %s - %s - %s" % (client_name, grant_type, error)
+        error_logger.warn(error_name, extra={'request': self.request._request}, exc_info=True)
         return Response(error, status=400)
 
     def access_token_response(self, access_token, data=None):
@@ -281,7 +281,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Authorize the user and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup / signin calls is optional. It may have full location information, or better the JSON response from google geocode maps call.
+        The `user` attribute in all signup / signin calls is optional. It may have location dict with latitude and longitude.
         If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
 
         Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
@@ -295,7 +295,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI",
             "user": {
                 "location": {
-                    "google_geocode_response": {}
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
                 }
             },
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
@@ -312,7 +313,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy",
             "user": {
                 "location": {
-                    "google_geocode_response": {}
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
                 }
             },
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
@@ -330,7 +332,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "password": "iW@ntToPl*YaGam3",
             "user": {
                 "location": {
-                    "google_geocode_response": {}
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
                 }
             },
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
@@ -347,7 +350,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "password": "iW@ntToPl*YaGam3",
             "user": {
                 "location": {
-                    "google_geocode_response": {}
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
                 }
             },
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
@@ -427,7 +431,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         handler = self.get_handler(grant_type)
 
         try:
-            return handler(request, request.data, client)
+            return handler(request, request.data.copy(), client)
         except OAuthError, e:
             return self.error_response(e.args[0], client=client, grant_type=grant_type)
         except ValidationError as e:

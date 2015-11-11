@@ -109,13 +109,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             "location": {
                 "latitude": 25.1593957,
                 "longitude": 55.2338326,
-                "country": "AE",
-                "postal_code": "857",
-                "state": "Dubai",
-                "city": "Dubai",
                 "address": "Whatever Street 31",
-                "google_geocode_response": {}  // when passed server will auto calculate the location attributes except latitude and longitude
-            },
+            }
             "video": {
                 "url": "https://www.youtube.com/watch?v=Mp12bkOzO9Q",
                 "thumbnail_url": "https://i.ytimg.com/vi/jXa4QfICnOg/default.jpg",
