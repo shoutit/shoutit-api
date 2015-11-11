@@ -568,7 +568,9 @@ class ShoutDetailSerializer(ShoutSerializer):
         currency = item.get('currency_code')
 
         category = validated_data.get('category')
-        tags = validated_data.get('tag_objects')[:MAX_TAGS_PER_SHOUT]
+        tags = validated_data.get('tag_objects')
+        if isinstance(tags, list):
+            tags = tags[:MAX_TAGS_PER_SHOUT]
         tags2 = validated_data.get('tags2')
 
         location = validated_data.get('location')
