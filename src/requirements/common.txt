@@ -27,7 +27,7 @@ django_rq==0.8.0
 django-widget-tweaks
 
 # AWS imaging
-Pillow==3.0.0
+Pillow==2.8.1
 geraldo==0.4.17
 boto==2.38.0
 
