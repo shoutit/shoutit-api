@@ -230,8 +230,7 @@ if PROD:
     )
 
 RAVEN_CONFIG = {
-    # Use str according to this: https://github.com/getsentry/raven-python/issues/653
-    'dsn': str(RAVEN_DSN),
+    'dsn': RAVEN_DSN,
     'string_max_length': 1000
 }
 
