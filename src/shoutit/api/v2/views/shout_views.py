@@ -3,23 +3,22 @@
 
 """
 from __future__ import unicode_literals
-from collections import OrderedDict
 
 from rest_framework import permissions, status
+from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.filters import ShoutIndexFilterBackend
-from shoutit.api.v2.pagination import ReverseDateTimeIndexPagination, PageNumberIndexPagination
+from shoutit.api.v2.pagination import PageNumberIndexPagination
+from shoutit.api.v2.permissions import IsOwnerModify
 from shoutit.api.v2.serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import NoUpdateModelViewSet, UUIDViewSetMixin
-from shoutit.models import Shout
-from shoutit.api.v2.permissions import IsOwnerModify
-from shoutit.models.post import ShoutIndex
 from shoutit.controllers import shout_controller
+from shoutit.models import Shout
+from shoutit.models.post import ShoutIndex
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet):
@@ -316,4 +315,3 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
-

@@ -33,6 +33,7 @@ if PROD:
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+    RAVEN_DSN = 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984'
 
 elif DEV:
     DEBUG = True
@@ -41,6 +42,7 @@ elif DEV:
     DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+    RAVEN_DSN = 'https://559b227392004e0582ac719810af99bd:fe13c8a73f744a5a90346b08323ad102@app.getsentry.com/58087'
 
 else:  # LOCAL
     DEBUG = True
@@ -49,6 +51,7 @@ else:  # LOCAL
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+    RAVEN_DSN = 'https://dcb68ef95ab145d5a31c6f4ce6c0286a:9ca26cb110ae431f9b2d48cf24c62b44@app.getsentry.com/58134'
 
 ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
 
@@ -228,7 +231,7 @@ if PROD:
 
 RAVEN_CONFIG = {
     # Use str according to this: https://github.com/getsentry/raven-python/issues/653
-    'dsn': str('https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984'),
+    'dsn': str(RAVEN_DSN),
     'string_max_length': 1000
 }
 
@@ -488,6 +491,7 @@ SWAGGER_SETTINGS = {
 }
 
 # Logging
+FORCE_SENTRY = True
 LOG_SQL = False
 LOGGING = {
     'version': 1,
@@ -520,6 +524,9 @@ LOGGING = {
         },
         'level_below_warning': {
             '()': 'common.log.LevelBelowWarning',
+        },
+        'on_server_or_forced': {
+            '()': 'common.log.OnServerOrForced',
         },
     },
     'handlers': {
@@ -558,12 +565,12 @@ LOGGING = {
         'sentry': {
             'level': 'ERROR',
             'class': 'raven.contrib.django.handlers.SentryHandler',
-            'filters': ['require_debug_false'],
+            'filters': ['on_server_or_forced'],
         },
         'sentry_all': {
             'level': 'DEBUG',
             'class': 'raven.contrib.django.handlers.SentryHandler',
-            'filters': ['require_debug_false'],
+            'filters': ['on_server_or_forced'],
         },
         'sentry_file': {
             'level': 'WARNING',
