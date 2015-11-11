@@ -69,12 +69,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         ---
         serializer: ShoutSerializer
         parameters:
-            - name: before
-              description: timestamp to get shouts before
-              paramType: query
-            - name: after
-              description: timestamp to get shouts after
-              paramType: query
             - name: search
               description: space or comma separated keywords to search in title, text, tags
               paramType: query
@@ -116,6 +110,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
               paramType: query
             - name: tags
               description: space or comma separated tags. returned shouts will contain ALL of them
+              paramType: query
+            - name: discover
+              description: discover item id to list its shouts
               paramType: query
         """
         shouts = self.filter_queryset(self.get_index_search())

@@ -3,17 +3,19 @@
 
 """
 from __future__ import unicode_literals
+
 from collections import OrderedDict
 
+import django_filters
 from django.conf import settings
 from django.db.models import Q
-import django_filters
+from elasticsearch_dsl import F, Search
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
-from elasticsearch_dsl import F, Search
+
 from common.constants import COUNTRIES, TAG_TYPE_STR, TAG_TYPE_INT
 from common.utils import process_tags
-from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, TagKey
+from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, TagKey, DiscoverItem
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -22,20 +24,42 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if not isinstance(index_queryset, Search):
             return index_queryset
 
+        # Copy the query dict to be able to modify it as it is immutable, then update it with extra params
         data = request.query_params.copy()
         if isinstance(extra_query_params, dict):
             data.update(extra_query_params)
 
+        # Update data from discover item shouts query if discover is passed
+        discover = data.get('discover')
+        if discover:
+            try:
+                discover_item = DiscoverItem.objects.get(id=discover)
+            except DiscoverItem.DoesNotExist:
+                raise ValidationError({'discover': ["Discover Item with id '%s' does not exist" % discover]})
+            else:
+                data.update(discover_item.shouts_query)
+
+        # Exclude ids
         exclude_ids = data.get('exclude_ids')
         if exclude_ids:
             for _id in exclude_ids:
                 index_queryset = index_queryset.filter(~F('term', _id=_id))
 
+        # Shout type
+        shout_type = data.get('shout_type')
+        if shout_type:
+            if shout_type not in ['all', 'offer', 'request']:
+                raise ValidationError({'shout_type': ["should be `all`, `request` or `offer`."]})
+            if shout_type != 'all':
+                index_queryset = index_queryset.filter('term', type=shout_type)
+
+        # Search query
         search = data.get('search')
         if search:
             index_queryset = index_queryset.query(
                 'multi_match', query=search, fields=['title', 'text', 'tags'], fuzziness='AUTO')
 
+        # Tags
         tags = data.get('tags')
         if tags:
             tags = tags.replace(',', ' ').split()
@@ -43,10 +67,10 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             for tag_name in tag_names:
                 index_queryset = index_queryset.filter('term', tags=tag_name)
 
+        # Location: Country, State, City, Latitude, Longitude
         country = data.get('country')
         if country and country != 'all':
             index_queryset = index_queryset.filter('term', country=country)
-
             # todo: add state
             city = data.get('city')
             if city and city != 'all':
@@ -63,6 +87,38 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     city_f = F('bool', should=f)
                     index_queryset = index_queryset.filter(city_f)
 
+        latlng_errors = OrderedDict()
+        down_left_lat = data.get('down_left_lat')
+        down_left_lng = data.get('down_left_lng')
+        up_right_lat = data.get('up_right_lat')
+        up_right_lng = data.get('up_right_lng')
+        try:
+            if down_left_lat:
+                down_left_lat = float(down_left_lat)
+                if down_left_lat > float(up_right_lat) or not (90 >= down_left_lat >= -90):
+                    latlng_errors['down_left_lat'] = [
+                        "should be between -90 and 90, also not greater than 'up_right_lat'"]
+                    index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
+            if down_left_lng:
+                down_left_lng = float(down_left_lng)
+                if down_left_lng > float(up_right_lng) or not (180 >= down_left_lng >= -180):
+                    latlng_errors['down_left_lng'] = [
+                        "should be between -180 and 180, also not greater than 'up_right_lng'"]
+                index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
+            if up_right_lat:
+                if not (90 >= float(up_right_lat) >= -90):
+                    latlng_errors['up_right_lat'] = ["should be between -90 and 90"]
+                index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
+            if up_right_lng:
+                if not (180 >= float(up_right_lng) >= -180):
+                    latlng_errors['up_right_lng'] = ["should be between -180 and 180"]
+                index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
+        except ValueError:
+            latlng_errors['error'] = ["invalid lat or lng parameters"]
+        if latlng_errors:
+            raise ValidationError(latlng_errors)
+
+        # Category and Tags2
         category = data.get('category')
         if category and category != 'all':
             try:
@@ -85,13 +141,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                                 f = F('range', **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
                                 index_queryset = index_queryset.filter(f)
 
-        shout_type = data.get('shout_type')
-        if shout_type:
-            if shout_type not in ['all', 'offer', 'request']:
-                raise ValidationError({'shout_type': ["should be `all`, `request` or `offer`."]})
-            if shout_type != 'all':
-                index_queryset = index_queryset.filter('term', type=shout_type)
-
+        # Price
         min_price = data.get('min_price')
         if min_price:
             index_queryset = index_queryset.filter('range', **{'price': {'gte': min_price}})
@@ -100,36 +150,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if max_price:
             index_queryset = index_queryset.filter('range', **{'price': {'lte': max_price}})
 
-        latlng_errors = OrderedDict()
-        down_left_lat = data.get('down_left_lat')
-        down_left_lng = data.get('down_left_lng')
-        up_right_lat = data.get('up_right_lat')
-        up_right_lng = data.get('up_right_lng')
-        try:
-            if down_left_lat:
-                down_left_lat = float(down_left_lat)
-                if down_left_lat > float(up_right_lat) or not (90 >= down_left_lat >= -90):
-                    latlng_errors['down_left_lat'] = ["should be between -90 and 90, also not greater than 'up_right_lat'"]
-                    index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
-            if down_left_lng:
-                down_left_lng = float(down_left_lng)
-                if down_left_lng > float(up_right_lng) or not (180 >= down_left_lng >= -180):
-                    latlng_errors['down_left_lng'] = ["should be between -180 and 180, also not greater than 'up_right_lng'"]
-                index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
-            if up_right_lat:
-                if not (90 >= float(up_right_lat) >= -90):
-                    latlng_errors['up_right_lat'] = ["should be between -90 and 90"]
-                index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
-            if up_right_lng:
-                if not (180 >= float(up_right_lng) >= -180):
-                    latlng_errors['up_right_lng'] = ["should be between -180 and 180"]
-                index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
-        except ValueError:
-            latlng_errors['error'] = ["invalid lat or lng parameters"]
-        if latlng_errors:
-            raise ValidationError(latlng_errors)
-
-        # sort
+        # Sorting
         sort = data.get('sort')
         sort_types = {
             None: ('-date_published',),

@@ -105,7 +105,7 @@ class DiscoverItemDetailSerializer(serializers.ModelSerializer):
         model = DiscoverItem
         parent_fields = DiscoverItemSerializer.Meta.fields
         fields = parent_fields + (
-            'description', 'cover', 'countries', 'parents', 'children', 'shouts_url'
+            'description', 'cover', 'countries', 'parents', 'show_children', 'children', 'show_shouts', 'shouts_url'
         )
 
     def to_representation(self, instance):
