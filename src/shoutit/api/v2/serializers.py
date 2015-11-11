@@ -19,7 +19,7 @@ from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT)
 from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
@@ -444,8 +444,8 @@ class ShoutSerializer(serializers.ModelSerializer):
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
-    tags = TagSerializer(many=True, source='tag_objects')
-    tags2 = serializers.DictField()
+    tags = TagSerializer(default=list, many=True, source='tag_objects')
+    tags2 = serializers.DictField(default=dict)
     api_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -568,7 +568,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         currency = item.get('currency_code')
 
         category = validated_data.get('category')
-        tags = validated_data.get('tag_objects')
+        tags = validated_data.get('tag_objects')[:MAX_TAGS_PER_SHOUT]
         tags2 = validated_data.get('tags2')
 
         location = validated_data.get('location')

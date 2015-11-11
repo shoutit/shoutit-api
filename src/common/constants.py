@@ -285,7 +285,7 @@ POST_TYPE_OFFER = PostType('offer')
 POST_TYPE_EXPERIENCE = PostType('Experience')
 POST_TYPE_DEAL = PostType('Deal')
 
-TAGS_PER_POST = 20
+MAX_TAGS_PER_SHOUT = 5
 
 
 class TagValueType(Constant):
