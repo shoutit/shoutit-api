@@ -3,8 +3,9 @@
 
 """
 from __future__ import unicode_literals
-
 from django.core.management.base import BaseCommand
+
+from common.constants import TAG_TYPE_INT, TAG_TYPE_STR
 from common.utils import process_tag
 from shoutit.controllers import tag_controller
 from shoutit.models import *  # NOQA
@@ -59,6 +60,11 @@ class Command(BaseCommand):
         p2.gender = 'male'
         p2.save()
 
+        tti = TAG_TYPE_INT
+        tts = TAG_TYPE_STR
+        # Categories Filters
+        cars_filters = {'make': tts, 'model': tts, 'year': tti, 'color': tts}
+
         # Tags, Categories
         categories = [
             ('Cars For Sale', 'cars-for-sale', 'acura', 'alfa-romeo', 'aston-martin',
@@ -71,7 +77,7 @@ class Command(BaseCommand):
              'maybach', 'mazda', 'mclaren',
              'mercedes-benz', 'mercury', 'mitsubishi', 'nissan', 'peugeot', 'pontiac', 'porsche',
              'smart', 'subaru', 'suzuki', 'tata',
-             'toyota', 'volkswagen', 'volvo', 'other-make'),
+             'toyota', 'volkswagen', 'volvo', 'other-make', cars_filters),
             ('Auto Accessories & Parts', 'auto-accessories-parts', 'apparel', 'boat-accessories',
              'car-accessories', 'merchandise',
              'motorcycle-accessories'),
@@ -124,8 +130,8 @@ class Command(BaseCommand):
             ('Baby items', 'baby-items', 'baby-gear', 'baby-toys', 'feeding', 'nursery-furniture',
              'stroller', 'car-seat'),
             ('Books', 'books', 'audiobooks', 'book-accessories', 'children-books',
-                'digital/E-books',
-                'fiction', 'nonfiction', 'textbooks'),
+             'digital/E-books',
+             'fiction', 'nonfiction', 'textbooks'),
             ('Business & Industrial', 'business-industrial', 'agriculture-forestry',
              'business-for-sale', 'commercial-printing',
              'copy-machines', 'construction', 'electrical-equipment', 'food-beverage',
@@ -143,8 +149,8 @@ class Command(BaseCommand):
             ('Collectibles', 'collectibles', 'antiques', 'art', 'decorations', 'memorabilia',
              'pens-writing-instrument', 'artifacts'),
             ('Computers & Networking', 'computers-networking', 'accessories',
-                'computer-components', 'computers', 'networking-communication',
-                'software', 'monitors', 'printers'),
+             'computer-components', 'computers', 'networking-communication',
+             'software', 'monitors', 'printers'),
             ('DVD & Movies', 'dvd-movies', 'dvd', 'digital', 'vhs'),
             ('Electronics', 'electronics', 'car-electronics', 'dvd-home-theater',
              'electronic-accessories', 'gadgets', 'home-audio',
@@ -155,7 +161,7 @@ class Command(BaseCommand):
             ('Gaming', 'gaming', 'gaming-accessories', 'gaming-merchandise', 'gaming-system',
              'video-games'),
             ('Home Appliances', 'outdoor-appliances', 'kitchen-appliances',
-                'bathroom-appliances '),
+             'bathroom-appliances '),
             ('Hotels', 'hotels', '5-star', '4-star', '3-star', '2-star', 'hotel-apartments'),
             ('Jewelry & Watches', 'jewelry-watches', 'diamonds-gems', 'mens-jewelry', 'watches',
              'womens-jewelry'),
@@ -194,11 +200,13 @@ class Command(BaseCommand):
         for item in categories:
             category = item[0]
             main_tag = item[1]
-            tags = item[1:]
+            tags = item[1:-1]
+            filters = item[-1]
 
             main_tag = tag_controller.get_or_create_tag(main_tag)
             category, _ = Category.objects.get_or_create(name=category)
             category.main_tag = main_tag
+            category.filters = filters.keys()
             category.slug = process_tag(category.name)
             category.save()
             for tag in tags:
@@ -208,6 +216,8 @@ class Command(BaseCommand):
                         category.tags.add(tag)
                     except:
                         pass
+            for filter_tuple in filters.items():
+                TagKey.objects.get_or_create(key=filter_tuple[0], values_type=filter_tuple[1])
 
         # oauth clients
         Client.objects.get_or_create(user=u0, name='shoutit-android', client_id='shoutit-android',

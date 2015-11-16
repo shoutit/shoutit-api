@@ -244,7 +244,7 @@ class ShoutIndex(DocType):
             {
                 "tags2_integer_keys": {
                     "match_pattern": "regex",
-                    "match": "^(num_.*|.*_size|.*_length|.*_width|.*_area|.*_vol|.*_qty|.*_speed|.*_year|.*_age|.*_weight)$",
+                    "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
                     "mapping": {
                         "type": "integer"
                     }
