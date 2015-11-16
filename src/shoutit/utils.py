@@ -349,7 +349,7 @@ def base64_to_text(b64, box=None, config=None):
     except:
         pass
     text = pytesseract.image_to_string(image, config=config)
-    return text
+    return text.decode("utf8")
 
 
 def base64_to_texts(b64, configs):
