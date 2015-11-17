@@ -32,15 +32,14 @@ class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.L
 
     def list(self, request, *args, **kwargs):
         """
-        Get Discover Items based on `country` query param.
-
+        List DiscoverItems based on `country` query param.
         ###Response
         <pre><code>
         {
           "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {Discover Object}
+          "results": [] // list of {DiscoverItem Object}s
         }
         </code></pre>
         ---
@@ -57,12 +56,27 @@ class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.L
         """
         return super(DiscoverViewSet, self).list(request, *args, **kwargs)
 
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a DiscoverItem.
+        ---
+        serializer: DiscoverItemDetailSerializer
+        """
+        return super(DiscoverViewSet, self).retrieve(request, *args, **kwargs)
+
     @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
         """
-        Get discover shouts
-
+        List DiscoverItem shouts.
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {Shout Object}s
+        }
+        </code></pre>
         ---
         serializer: ShoutSerializer
         omit_parameters:
