@@ -15,7 +15,7 @@ from shoutit.models import SMSInvitation
 
 class SMSViewSet(UUIDViewSetMixin, NoUpdateModelViewSet):
     """
-    SMS API Resources.
+    SMSInvitation API Resources.
     """
     queryset = SMSInvitation.objects.all().order_by('-created_at')
     serializer_class = SMSInvitationSerializer
@@ -24,15 +24,31 @@ class SMSViewSet(UUIDViewSetMixin, NoUpdateModelViewSet):
     pagination_class = ShoutitPageNumberPagination
     permission_classes = ()
 
+    # Todo: add some kind of authentication to all methods
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Get an SMSInvitation
+        ---
+        omit_serializer: true
+        """
+        return super(SMSViewSet, self).retrieve(request, *args, **kwargs)
+
     def list(self, request, *args, **kwargs):
         """
-        Get SMS Invitations
+        List SMSInvitations
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - query
         """
         return super(SMSViewSet, self).list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         """
-        Create SMS Invitation
+        Create SMSInvitation
+        ---
+        omit_serializer: true
         """
         serializer = SMSInvitationSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -43,7 +59,9 @@ class SMSViewSet(UUIDViewSetMixin, NoUpdateModelViewSet):
     @list_route(methods=['post'], suffix='Bulk Create')
     def bulk_create(self, request, *args, **kwargs):
         """
-        Create Bulk SMS Invitations
+        Create Bulk SMSInvitations
+        ---
+        omit_serializer: true
         """
         items = request.data
         for item in items[:]:
@@ -57,10 +75,21 @@ class SMSViewSet(UUIDViewSetMixin, NoUpdateModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Modify SMS Invitation
+        Modify an SMSInvitation
+        ---
+        omit_serializer: true
         """
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete an SMSInvitation
+        ###NOT ALLOWED
+        ---
+        omit_serializer: true
+        """
+        return Response("Not allowed", status=status.HTTP_406_NOT_ACCEPTABLE)
