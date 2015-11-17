@@ -18,9 +18,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     Notification API Resource.
     """
     serializer_class = NotificationSerializer
-
     pagination_class = ReverseDateTimePagination
-
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
@@ -28,8 +26,8 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
 
     def list(self, request, *args, **kwargs):
         """
-        Get signed in user notifications
-
+        List the user notifications.
+        ###REQUIRES AUTH
         [Notifications Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.ix2g5tgh1m27)
         ---
         parameters:
@@ -47,7 +45,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     def reset(self, request, *args, **kwargs):
         """
         Mark all notification as read
-
+        ###REQUIRES AUTH
         ---
         omit_serializer: true
         omit_parameters:
@@ -59,8 +57,8 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     @detail_route(methods=['post', 'delete'])
     def read(self, request, *args, **kwargs):
         """
-        Mark notification as read/unread
-
+        Mark a notification as read/unread
+        ###REQUIRES AUTH
         ###Read
         <pre><code>
         POST: /v2/notifications/{id}/read
@@ -70,7 +68,6 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         <pre><code>
         DELETE: /v2/notification/{id}/read
         </code></pre>
-
         ---
         omit_serializer: true
         omit_parameters:
