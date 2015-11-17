@@ -15,7 +15,7 @@ from rest_framework.exceptions import ValidationError
 
 from common.constants import COUNTRIES, TAG_TYPE_STR, TAG_TYPE_INT
 from common.utils import process_tags
-from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, TagKey, DiscoverItem
+from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, TagKey, DiscoverItem, User
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -38,6 +38,16 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                 raise ValidationError({'discover': ["Discover Item with id '%s' does not exist" % discover]})
             else:
                 data.update(discover_item.shouts_query)
+
+        # Filter shouts by user id if user username or id are passed in `user` query param
+        user = data.get('user')
+        if user:
+            try:
+                user_id = User.objects.get(username=user).pk
+            except User.DoesNotExist:
+                raise ValidationError({'user': ["User with username '%s' does not exist" % user]})
+            else:
+                index_queryset = index_queryset.filter('term', uid=user_id)
 
         # Exclude ids
         exclude_ids = data.get('exclude_ids')

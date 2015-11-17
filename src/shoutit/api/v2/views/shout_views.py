@@ -27,7 +27,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     """
     serializer_class = ShoutSerializer
     serializer_detail_class = ShoutDetailSerializer
-
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
     filters = {'is_disabled': False}
@@ -35,7 +34,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     prefetch_related = ('item__videos',)
     defer = ()
     pagination_class = PageNumberIndexPagination
-
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
@@ -62,9 +60,16 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     def list(self, request, *args, **kwargs):
         """
-        Get shouts
-
+        List shouts.
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
         ---
         serializer: ShoutSerializer
         parameters:
@@ -108,10 +113,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
               description: the category name
               paramType: query
             - name: tags
-              description: space or comma separated tags. returned shouts will contain ALL of them
+              description: space or comma separated tags. returned shouts will contain ALL of them. passing single tag is also possible to list its shouts
               paramType: query
             - name: discover
               description: discover item id to list its shouts
+              paramType: query
+            - name: user
+              description: user username to list his shouts
               paramType: query
         """
         shouts = self.filter_queryset(self.get_index_search())
@@ -121,9 +129,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     def create(self, request, *args, **kwargs):
         """
-        Create shout
-
+        Create a Shout
+        ###REQUIRES AUTH
         ###Request
+        ####Body
         <pre><code>
         {
           "type": "offer", // `offer` or `request`
@@ -158,8 +167,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Get shout
-
+        Retrieve a Shout
         ---
         serializer: ShoutDetailSerializer
         """
@@ -167,8 +175,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Modify shout
-
+        Modify a Shout
+        ###REQUIRES AUTH
+        ###Request
+        ####Body
         <pre><code>
         {
           "title": "macbook pro 15",
@@ -202,8 +212,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete shout
-
+        Delete a Shout
+        ###REQUIRES AUTH
         ---
         omit_serializer: true
         omit_parameters:
@@ -217,8 +227,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):
         """
-        Reply to shout
-
+        Send message to the owner about this Shout
+        ###REQUIRES AUTH
         ###Request
         <pre><code>
         {
@@ -242,7 +252,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
             ]
         }
         </code></pre>
-
         ---
         serializer: MessageSerializer
         omit_parameters:
@@ -274,8 +283,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
     @detail_route(methods=['get'], suffix='Related shouts')
     def related(self, request, *args, **kwargs):
         """
-        Related shouts
-
+        List related shouts to this Shout
         ---
         serializer: ShoutSerializer
         omit_parameters:
