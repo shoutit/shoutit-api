@@ -141,9 +141,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class TagDetailSerializer(TagSerializer):
-    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this tag")
-    listeners_url = serializers.SerializerMethodField()
-    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
+    is_listening = serializers.SerializerMethodField(help_text="Whether logged in user is listening to this tag")
+    listeners_url = serializers.SerializerMethodField(help_text="URL to show listeners of this tag")
+    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts with this tag")
 
     class Meta(TagSerializer.Meta):
         model = Tag

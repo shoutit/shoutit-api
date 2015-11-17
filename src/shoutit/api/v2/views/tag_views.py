@@ -24,21 +24,16 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
     serializer_class = TagSerializer
     serializer_detail_class = TagDetailSerializer
-
     queryset = Tag.objects.all()
-
     pagination_class = ShoutitPageNumberPagination
-
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = TagFilter
     search_fields = ('=id', 'name')
-
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def list(self, request, *args, **kwargs):
         """
-        Get tags based on `search` query param.
-
+        List Tags based on `search` query param.
         ###Response
         <pre><code>
         {
@@ -77,6 +72,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
               paramType: query
         omit_parameters:
             - form
+            - path
         """
         tags_type = request.query_params.get('type')
         if tags_type == 'featured':
@@ -85,7 +81,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Get tag
+        Get a Tag
         ---
         serializer: TagDetailSerializer
         omit_parameters:
@@ -99,8 +95,8 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     @detail_route(methods=['post', 'delete'], suffix='Listen')
     def listen(self, request, *args, **kwargs):
         """
-        Start/Stop listening to tag
-
+        Start/Stop listening to a Tag
+        ###REQUIRES AUTH
         ###Listen
         <pre><code>
         POST: /v2/tags/{name}/listen
@@ -121,7 +117,6 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, tag, request)
             msg = "you started listening to {} shouts.".format(tag.name)
-
         else:
             listen_controller.stop_listening_to_object(request.user, tag)
             msg = "you stopped listening to {} shouts.".format(tag.name)
@@ -130,14 +125,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             'data': {'success': msg},
             'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
         }
-
         return Response(**ret)
 
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
-        Get tag listeners
-
+        List the Tag listeners
         ###Response
         <pre><code>
         {
@@ -166,8 +159,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
         """
-        Get tag shouts
-
+        List the Tag shouts.
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
         ---
         serializer: ShoutSerializer
