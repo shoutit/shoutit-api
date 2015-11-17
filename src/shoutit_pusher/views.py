@@ -11,6 +11,7 @@ from shoutit.utils import debug_logger
 from .utils import pusher
 from .controllers import add_member, remove_member, create_channel, delete_channel
 
+
 class ShoutitPusherViewSet(viewsets.ViewSet):
     """
     Shoutit Pusher API Resources.
@@ -19,7 +20,8 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], suffix='Authorize')
     def auth(self, request):
         """
-        Authorize channel subscriptions
+        Authorize channel subscriptions.
+        ###Not used directly by API clients.
         ---
         """
         channel = request.data.get('channel_name', '')
@@ -37,7 +39,8 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], permission_classes=(), suffix='Webhook')
     def webhook(self, request):
         """
-        Receive webhooks
+        Receive webhooks from Pusher.
+        ###Not used directly by API clients.
         """
         webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
                                           signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
