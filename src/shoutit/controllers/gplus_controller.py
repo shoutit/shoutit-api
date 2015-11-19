@@ -20,7 +20,7 @@ from shoutit.controllers import user_controller, location_controller
 from shoutit.utils import debug_logger
 
 
-def user_from_gplus_code(gplus_code, initial_user=None, client=None):
+def user_from_gplus_code(gplus_code, initial_user=None, client=None, is_test=False):
     debug_logger.debug('user_from_gplus_code')
     credentials = credentials_from_code_and_client(gplus_code, client)
     gplus_id = credentials.id_token.get('sub')
@@ -52,7 +52,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None):
             error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
             error.update({'error_description': str(e)})
             raise ValidationError(error)
-        user = user_controller.auth_with_gplus(gplus_user, credentials, initial_user)
+        user = user_controller.auth_with_gplus(gplus_user, credentials, initial_user, is_test)
 
     return user
 

@@ -51,18 +51,13 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     """
     OAuth2 Resource
     """
-
-    # client authentication
-    authentication = (
-        RequestParamsClientBackend,
-    )
+    # Client authentication
+    authentication = (RequestParamsClientBackend,)
     # DRF authentication is not needed here
     authentication_classes = ()
     permission_classes = ()
-
-    grant_types = ['authorization_code', 'refresh_token', 'client_credentials',
-                   'facebook_access_token', 'gplus_code', 'shoutit_signup', 'shoutit_signin',
-                   'sms_code']
+    grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
+                   'shoutit_signup', 'shoutit_signin', 'sms_code']
 
     def error_response(self, error, **kwargs):
         """
@@ -124,7 +119,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         return Response(response_data)
 
     def get_facebook_access_token_grant(self, request, data, client):
-        serializer = FacebookAuthSerializer(data=data, context={'request': request})
+        is_test = client.name == 'shoutit-test'
+        serializer = FacebookAuthSerializer(data=data, context={'request': request, 'is_test': is_test})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
 
@@ -132,7 +128,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Handle ``grant_type=facebook_access_token`` requests.
         """
-
         user = self.get_facebook_access_token_grant(request, data, client)
         self.request.user = user
         scope = provider_scope.to_int('read', 'write')
@@ -149,7 +144,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
     def get_gplus_code_grant(self, request, data, client):
         data.update({'client_name': client.name})
-        serializer = GplusAuthSerializer(data=data, context={'request': request})
+        is_test = client.name == 'shoutit-test'
+        serializer = GplusAuthSerializer(data=data, context={'request': request, 'is_test': is_test})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
 
@@ -157,7 +153,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Handle ``grant_type=gplus_code`` requests.
         """
-
         user = self.get_gplus_code_grant(request, data, client)
         self.request.user = user
         scope = provider_scope.to_int('read', 'write')
@@ -173,7 +168,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         return self.access_token_response(at)
 
     def get_shoutit_signup_grant(self, request, signup_data, client):
-        serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request})
+        is_test = client.name == 'shoutit-test'
+        serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request, 'is_test': is_test})
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return user
@@ -182,7 +178,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Handle ``grant_type=shoutit_signup`` requests.
         """
-
         user = self.get_shoutit_signup_grant(request, data, client)
         self.request.user = user
         scope = provider_scope.to_int('read', 'write')

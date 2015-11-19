@@ -49,7 +49,7 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
     return user
 
 
-def user_from_shoutit_signup_data(signup_data, initial_user=None):
+def user_from_shoutit_signup_data(signup_data, initial_user=None, is_test=False):
     email = signup_data.get('email')
     password = signup_data.get('password')
     first_name = signup_data.get('first_name')
@@ -65,10 +65,10 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None):
             location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
     return signup_user(email=email, password=password, first_name=first_name, last_name=last_name, username=username,
-                       profile_fields=profile_fields)
+                       is_test=bool(is_test), profile_fields=profile_fields)
 
 
-def auth_with_gplus(gplus_user, credentials, initial_user=None):
+def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     email = gplus_user.get('emails')[0].get('value').lower()
     name = gplus_user.get('name', {})
     first_name = name.get('givenName')
@@ -93,7 +93,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True,
-                           profile_fields=profile_fields)
+                           profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
         user.activate()
@@ -112,7 +112,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None):
     return user
 
 
-def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
+def auth_with_facebook(fb_user, long_lived_token, initial_user=None, is_test=False):
     email = fb_user.get('email').lower()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
@@ -137,7 +137,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None):
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
         user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username,
-                           is_activated=True, profile_fields=profile_fields)
+                           is_activated=True, profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
         user.activate()

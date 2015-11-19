@@ -158,7 +158,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         Delete a User and everything attached to him
         ###REQUIRES AUTH
         ```
-        NOT IMPLEMENTED
+        NOT IMPLEMENTED AND ONLY USED FOR TEST USERS
         ```
         ---
         omit_serializer: true
@@ -171,7 +171,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               required: true
               defaultValue: me
         """
-        # user = self.get_object()
+        user = self.get_object()
+        if user.is_test:
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(IsAuthenticatedOrReadOnly,))

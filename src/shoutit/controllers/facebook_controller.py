@@ -18,7 +18,7 @@ from shoutit.controllers import location_controller, user_controller
 from shoutit.utils import debug_logger
 
 
-def user_from_facebook_auth_response(auth_response, initial_user=None):
+def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=False):
     if 'accessToken' in auth_response:
         access_token = auth_response.get('accessToken')
     else:
@@ -38,7 +38,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None):
             detail.update({'fb_user': fb_user})
             raise ValidationError(detail)
         long_lived_token = extend_token(access_token)
-        user = user_controller.auth_with_facebook(fb_user, long_lived_token, initial_user)
+        user = user_controller.auth_with_facebook(fb_user, long_lived_token, initial_user, is_test)
 
     return user
 

@@ -848,7 +848,8 @@ class FacebookAuthSerializer(serializers.Serializer):
         facebook_access_token = ret.get('facebook_access_token')
         initial_user = ret.get('user', {})
         initial_user['ip'] = get_real_ip(self.context.get('request'))
-        user = user_from_facebook_auth_response(facebook_access_token, initial_user)
+        is_test = self.root.context.get('is_test')
+        user = user_from_facebook_auth_response(facebook_access_token, initial_user, is_test)
         self.instance = user
         return ret
 
@@ -862,7 +863,8 @@ class GplusAuthSerializer(serializers.Serializer):
         gplus_code = ret.get('gplus_code')
         initial_user = ret.get('user', {})
         initial_user['ip'] = get_real_ip(self.context.get('request'))
-        user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'))
+        is_test = self.root.context.get('is_test')
+        user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'), is_test)
         self.instance = user
         return ret
 
@@ -902,7 +904,8 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def create(self, validated_data):
         initial_user = validated_data.get('user', {})
         initial_user['ip'] = get_real_ip(self.context.get('request'))
-        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user)
+        is_test = self.root.context.get('is_test')
+        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user, is_test)
         return user
 
 
