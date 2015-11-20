@@ -54,7 +54,7 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None, is_test=False)
     password = signup_data.get('password')
     first_name = signup_data.get('first_name')
     last_name = signup_data.get('last_name')
-    username = signup_data.get('username')
+    username = initial_user.get('username')
     profile_fields = {}
     location = {}
     if initial_user:
@@ -73,6 +73,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     name = gplus_user.get('name', {})
     first_name = name.get('givenName')
     last_name = name.get('familyName')
+    username = initial_user.get('username')
     gplus_id = gplus_user.get('id')
     gender = gplus_user.get('gender')
     profile_fields = {}
@@ -92,7 +93,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
         if location:
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name, is_activated=True,
+        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username, is_activated=True,
                            profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
@@ -116,7 +117,7 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None, is_test=Fal
     email = fb_user.get('email').lower()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
-    username = fb_user.get('username')
+    username = fb_user.get('username') or initial_user.get('username')
     facebook_id = fb_user.get('id')
     gender = fb_user.get('gender')
     profile_fields = {}
@@ -136,8 +137,8 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None, is_test=Fal
         if location:
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username,
-                           is_activated=True, profile_fields=profile_fields, is_test=is_test)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username, is_activated=True,
+                           profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
         user.activate()
