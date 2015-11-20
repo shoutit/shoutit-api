@@ -27,7 +27,7 @@ from shoutit.controllers import location_controller
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
-    DiscoverItem)
+    DiscoverItem, Profile, Page)
 from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
 from rest_framework.settings import api_settings
@@ -349,63 +349,84 @@ class UserDetailSerializer(UserSerializer):
         return email
 
     def update(self, user, validated_data):
-        location_data = validated_data.get('location', {})
-        push_tokens_data = validated_data.get('push_tokens', {})
-        ap_data = validated_data.get('ap', {})
-        video_data = ap_data.get('video', {})
-
+        user_update_fields = []
         ap = user.ap
-        update_fields = []
+        ap_update_fields = []
 
+        # User
+        # Username
         new_username = validated_data.get('username')
         if new_username and new_username != user.username:
             user.username = new_username
-            update_fields.append('username')
-
+            user_update_fields.append('username')
+        # First name
         new_first_name = validated_data.get('first_name')
         if new_first_name and new_first_name != user.first_name:
             user.first_name = new_first_name
-            update_fields.append('first_name')
-
+            user_update_fields.append('first_name')
+        # Last name
         new_last_name = validated_data.get('last_name')
         if new_last_name and new_last_name != user.last_name:
             user.last_name = new_last_name
-            update_fields.append('last_name')
-
+            user_update_fields.append('last_name')
+        # Email
         new_email = validated_data.get('email')
         if new_email and new_email != user.email:
             user.email = new_email
-            update_fields.extend(['email', 'is_activated'])
+            user_update_fields.extend(['email', 'is_activated'])
+        # Save
+        user.save(update_fields=user_update_fields)
 
-        user.save(update_fields=update_fields)
-
+        # Location
+        location_data = validated_data.get('location', {})
         if location_data:
             location_controller.update_profile_location(ap, location_data)
 
-        if ap_data:
+        # AP
+        ap_data = validated_data.get('ap', {})
+        profile_data = validated_data.get('profile', {})
+        page_data = validated_data.get('page', {})
 
+        if isinstance(ap, Profile):
+            bio = profile_data.get('bio')
+            if bio:
+                ap.bio = bio
+                ap_update_fields.append('bio')
+            gender = profile_data.get('gender')
+            if gender:
+                ap.gender = gender
+                ap_update_fields.append('gender')
+        elif isinstance(ap, Page):
+            pass
+
+        if ap_data:
+            image = ap_data.get('image')
+            if image:
+                ap.image = image
+                ap_update_fields.append('image')
+
+            video_data = ap_data.get('video', {})
             if video_data:
-                video = Video(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
-                              provider=video_data['provider'],
-                              id_on_provider=video_data['id_on_provider'],
-                              duration=video_data['duration'])
-                video.save()
-                # delete existing video first
-                if ap.video:
-                    ap.video.delete()
+                video = Video.create(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
+                                     provider=video_data['provider'], id_on_provider=video_data['id_on_provider'],
+                                     duration=video_data['duration'])
+                # # delete existing video first
+                # if ap.video:
+                #     ap.video.delete()
                 ap.video = video
+                ap_update_fields.append('video')
 
             # if video sent as null, delete existing video
             elif video_data is None and ap.video:
-                ap.video.delete()
+                # ap.video.delete()
                 ap.video = None
+                ap_update_fields.append('video')
 
-            ap.bio = ap_data.get('bio', ap.bio)
-            ap.gender = ap_data.get('gender', ap.gender)
-            ap.image = ap_data.get('image', ap.image)
-            # todo: optimize
-            ap.save(update_fields=['bio', 'gender', 'image', 'video'])
+        if ap_data or profile_data or page_data:
+            ap.save(update_fields=ap_update_fields)
 
+        # Push Tokens
+        push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
             if 'apns' in push_tokens_data:
                 apns_token = push_tokens_data.get('apns')
@@ -677,7 +698,8 @@ class MessageSerializer(serializers.ModelSerializer):
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and (
-                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
+                                'location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
