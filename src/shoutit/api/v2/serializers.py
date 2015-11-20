@@ -351,10 +351,10 @@ class UserDetailSerializer(UserSerializer):
     def update(self, user, validated_data):
         location_data = validated_data.get('location', {})
         push_tokens_data = validated_data.get('push_tokens', {})
-        profile_data = validated_data.get('profile', {})
-        video_data = profile_data.get('video', {})
+        ap_data = validated_data.get('ap', {})
+        video_data = ap_data.get('video', {})
 
-        profile = user.profile
+        ap = user.ap
         update_fields = []
 
         new_username = validated_data.get('username')
@@ -380,9 +380,9 @@ class UserDetailSerializer(UserSerializer):
         user.save(update_fields=update_fields)
 
         if location_data:
-            location_controller.update_profile_location(profile, location_data)
+            location_controller.update_profile_location(ap, location_data)
 
-        if profile_data:
+        if ap_data:
 
             if video_data:
                 video = Video(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
@@ -391,20 +391,20 @@ class UserDetailSerializer(UserSerializer):
                               duration=video_data['duration'])
                 video.save()
                 # delete existing video first
-                if profile.video:
-                    profile.video.delete()
-                profile.video = video
+                if ap.video:
+                    ap.video.delete()
+                ap.video = video
 
             # if video sent as null, delete existing video
-            elif video_data is None and profile.video:
-                profile.video.delete()
-                profile.video = None
+            elif video_data is None and ap.video:
+                ap.video.delete()
+                ap.video = None
 
-            profile.bio = profile_data.get('bio', profile.bio)
-            profile.gender = profile_data.get('gender', profile.gender)
-            profile.image = profile_data.get('image', profile.image)
+            ap.bio = ap_data.get('bio', ap.bio)
+            ap.gender = ap_data.get('gender', ap.gender)
+            ap.image = ap_data.get('image', ap.image)
             # todo: optimize
-            profile.save(update_fields=['bio', 'gender', 'image', 'video'])
+            ap.save(update_fields=['bio', 'gender', 'image', 'video'])
 
         if push_tokens_data:
             if 'apns' in push_tokens_data:
