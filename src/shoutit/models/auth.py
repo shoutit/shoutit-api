@@ -268,6 +268,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     def clean(self):
         self.email = self.email.lower()
+        if self.is_test:
+            self.is_activated = True
 
     @property
     def is_password_set(self):
