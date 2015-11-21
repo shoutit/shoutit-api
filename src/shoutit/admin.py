@@ -37,7 +37,7 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
         'date_published')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city',
                    ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user',)
+    raw_id_fields = ('user', 'page_admin_user')
     exclude = ('item',)
     readonly_fields = ('_user', '_item')
     ordering = ('-date_published',)
@@ -55,7 +55,7 @@ class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
     list_display = ('id', '_user', 'type', 'text', '_location', 'muted', 'is_disabled')
     ordering = ('-created_at',)
     list_filter = ('type', 'is_disabled', 'country', 'city', ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user',)
+    raw_id_fields = ('user', 'page_admin_user')
 
 
 @admin.register(Item)
@@ -440,10 +440,11 @@ class PusherChannelJoinAdmin(admin.ModelAdmin):
 
 @admin.register(SMSInvitation)
 class SMSInvitationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status', 'country', 'mobile', 'user')
-    list_filter = ('status', 'country')
+    list_display = ('id', 'status', 'country', 'mobile', 'user', 'created_at')
+    list_filter = ('status', 'country', ('created_at', ShoutitDateFieldListFilter))
     search_fields = ('mobile', 'message')
     raw_id_fields = ('user',)
+    ordering = ('-created_at',)
 
 
 @admin.register(GoogleLocation)
