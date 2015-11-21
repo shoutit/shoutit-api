@@ -102,13 +102,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             "location": {
                 "latitude": 25.1593957,
                 "longitude": 55.2338326,
-                "address": "Whatever Street 31",
-            }
+                "address": "Whatever Street 31"
+            },
             "video": {
-                "url": "https://www.youtube.com/watch?v=Mp12bkOzO9Q",
-                "thumbnail_url": "https://i.ytimg.com/vi/jXa4QfICnOg/default.jpg",
-                "provider": "youtube",
-                "id_on_provider": "Mp12bkOzO9Q",
+                "url": "https://shout-image.static.shoutit.com/38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915.mp4",
+                "thumbnail_url": "https://shout-image.static.shoutit.com/38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915_thumbnail.jpg",
+                "provider": "shoutit_s3",
+                "id_on_provider": "38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915",
                 "duration": 12
             },
             "push_tokens": {

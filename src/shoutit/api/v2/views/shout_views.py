@@ -135,20 +135,20 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         ####Body
         <pre><code>
         {
-          "type": "offer", // `offer` or `request`
-          "title": "macbook pro 15",
-          "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
-          "price": 1000,
-          "currency": "EUR",
-          "images": [], // list of image urls
-          "videos": [], // list of {Video Object}s
-          "category": {"name": "Computers & Networking"},
-          "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
-          "location": {
-            "latitude": 25.1593957,
-            "longitude": 55.2338326,
-            "address": "Whatever Street 31",
-          }
+            "type": "offer", // `offer` or `request`
+            "title": "macbook pro 15",
+            "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
+            "price": 1000,
+            "currency": "EUR",
+            "images": [], // list of image urls
+            "videos": [], // list of {Video Object}s
+            "category": {"name": "Computers & Networking"},
+            "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
+            "location": {
+                "latitude": 25.1593957,
+                "longitude": 55.2338326,
+                "address": "Whatever Street 31"
+            }
         }
         </code></pre>
         ---
