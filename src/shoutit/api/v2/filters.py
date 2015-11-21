@@ -183,23 +183,23 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 class HomeFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, index_queryset, view):
         user = view.get_object()
-        country = user.location.get('country')
         data = request.query_params
         listening = []
-        if country:
-            index_queryset = index_queryset.filter('term', country=country)
+        # country = user.location.get('country')
+        # if country:
+        #     index_queryset = index_queryset.filter('term', country=country)
 
         # Listened Tags
         tags = user.listening2_tags_names
         if tags:
-            for t in tags:
-                listening.append(F('term', tags=t))
+            listening_tags = map(lambda t: F('term', tags=t), tags)
+            listening += listening_tags
 
         # Listened Users + user himself
         users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if users:
-            for u in users:
-                listening.append(F('term', uid=u))
+            listening_users = map(lambda u: F('term', uid=u), users)
+            listening += listening_users
 
         listening_filter = F('bool', should=listening)
         index_queryset = index_queryset.filter(listening_filter)
