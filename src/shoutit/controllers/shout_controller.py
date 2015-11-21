@@ -18,7 +18,7 @@ from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
 from shoutit.models import Shout, Post
-from shoutit.controllers import email_controller, item_controller, location_controller
+from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
 from shoutit.utils import debug_logger, track
 
 
@@ -97,6 +97,8 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     tags.insert(0, category.main_tag.name)
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
+    # Create actual tags objects (when necessary)
+    tag_controller.get_or_create_tags(tags, user)
     # tags2
     if not tags2:
         tags2 = {}
@@ -145,6 +147,8 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
             category = shout.category
         tags.insert(0, category.main_tag.name)
         shout.tags = tags
+        # Create actual tags objects (when necessary)
+        tag_controller.get_or_create_tags(tags, shout.user)
     if tags2:
         shout.tags2 = tags2
     if location:
