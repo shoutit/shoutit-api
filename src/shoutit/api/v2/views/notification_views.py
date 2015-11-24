@@ -38,7 +38,8 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
               description: timestamp to get notifications after
               paramType: query
         """
-        notifications_controller.mark_all_as_read(request.user)
+        # Todo: send the number of unread notifications along with results
+        # notifications_controller.mark_all_as_read(request.user)
         return super(NotificationViewSet, self).list(request, *args, **kwargs)
 
     @list_route(methods=['post'])
