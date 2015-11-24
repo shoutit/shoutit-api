@@ -142,7 +142,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
                 },
                 {
                     "images": [], // list of image urls
-                    "videos": [], // list of {Video Object}s
+                    "videos": [] // list of {Video Object}s
                 }
             ]
         }

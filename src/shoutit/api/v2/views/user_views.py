@@ -408,7 +408,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                 },
                 {
                     "images": [], // list of image urls
-                    "videos": [], // list of {Video Object}s
+                    "videos": [] // list of {Video Object}s
                 }
             ]
         }

@@ -247,7 +247,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
                 },
                 {
                     "images": [], // list of image urls
-                    "videos": [], // list of {Video Object}s
+                    "videos": [] // list of {Video Object}s
                 }
             ]
         }
