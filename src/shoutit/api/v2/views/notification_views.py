@@ -53,7 +53,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
             - form
         """
         notifications_controller.mark_all_as_read(request.user)
-        return Response(status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post', 'delete'])
     def read(self, request, *args, **kwargs):

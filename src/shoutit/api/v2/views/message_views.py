@@ -63,7 +63,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         """
         conversation = self.get_object()
         conversation.mark_as_deleted(request.user)
-        return Response(status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['get'], suffix='Messages')
     def messages(self, request, *args, **kwargs):
@@ -114,13 +114,9 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         conversation = self.get_object()
         if request.method == 'POST':
             conversation.mark_as_read(request.user)
-            return Response(status.HTTP_201_CREATED)
-
         elif request.method == 'DELETE':
             conversation.mark_as_unread(request.user)
-            return Response(status.HTTP_204_NO_CONTENT)
-        else:
-            return Response()
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):
