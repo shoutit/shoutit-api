@@ -3,6 +3,9 @@
 
 """
 from __future__ import unicode_literals
+
+import json
+
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
@@ -44,7 +47,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         """
         webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
                                           signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
-                                          body=request.body)
+                                          body=json.dumps(request.data))
         if webhook:
             events = webhook.get('events', [])
             events.sort(key=lambda e: e.get('name'))
