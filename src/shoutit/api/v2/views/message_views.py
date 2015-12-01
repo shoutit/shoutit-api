@@ -5,18 +5,17 @@
 from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, mixins, status
-from rest_framework.response import Response
 from rest_framework.decorators import detail_route
+from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from shoutit.api.v2.pagination import DateTimePagination, ReverseModifiedDateTimePagination
+from shoutit.api.v2.permissions import IsContributor
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import UUIDViewSetMixin
-
 from shoutit.controllers import message_controller
-
-from shoutit.models import Message
-from shoutit.api.v2.permissions import IsContributor
+from shoutit.models import Message, User
 
 
 class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -87,7 +86,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
               paramType: query
         """
         conversation = self.get_object()
-        messages_qs = conversation.get_messages_qs2()
+        messages_qs = conversation.get_messages_qs()
         self.pagination_class = DateTimePagination
         page = self.paginate_queryset(messages_qs)
 
@@ -164,6 +163,85 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         serializer.save()
         headers = self.get_success_message_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @detail_route(methods=['post'], suffix='Add User')
+    def add_user(self, request, *args, **kwargs):
+        """
+        Add user to this conversation
+        ###REQUIRES AUTH
+        The logged in user should be admin in the conversation and the newly added user should be one of his listeners.
+        ###Request
+        ####Body
+        <pre><code>
+        {
+            "user_id": "id of the user to be added"
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        conversation = self.get_object()
+        adder = request.user
+        if adder.id not in conversation.admins:
+            raise PermissionDenied()
+        new_user_id = request.data.get('user_id')
+        try:
+            if not new_user_id:
+                raise ValueError()
+            new_user = User.objects.get(id=new_user_id)
+        except User.DoesNotExist:
+            raise ValidationError({'user_id': "user with id '%s' does not exist" % new_user_id})
+        except:
+            raise ValidationError({'user_id': "Invalid user_id"})
+        if not new_user.is_listening(adder):
+            raise ValidationError({'user_id': "The user you are trying to add is not one of your listeners"})
+        conversation.users.add(new_user)
+        return Response({'success': "Added '%s' to the conversation" % new_user.name}, status=status.HTTP_202_ACCEPTED)
+
+    @detail_route(methods=['post'], suffix='Remove User')
+    def remove_user(self, request, *args, **kwargs):
+        """
+        Remove user from this conversation
+        ###REQUIRES AUTH
+        The logged in user should be admin in the conversation.
+        ###Request
+        ####Body
+        <pre><code>
+        {
+            "user_id": "id of the user to be removed"
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        conversation = self.get_object()
+        adder = request.user
+        if adder.id not in conversation.admins:
+            raise PermissionDenied()
+        existing_user_id = request.data.get('user_id')
+        try:
+            if not existing_user_id:
+                raise ValueError()
+            existing_user = User.objects.get(id=existing_user_id)
+        except User.DoesNotExist:
+            raise ValidationError({'user_id': "user with id '%s' does not exist" % existing_user_id})
+        except:
+            raise ValidationError({'user_id': "Invalid user_id"})
+        if not conversation.users.filter(id=existing_user.id).exists():
+            raise ValidationError({'user_id': "The user you are trying to remove is not a member of this conversation"})
+        conversation.users.remove(existing_user)
+        return Response({'success': "Removed '%s' from the conversation" % existing_user.name},
+                        status=status.HTTP_202_ACCEPTED)
 
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)

@@ -738,25 +738,20 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    users = UserSerializer(many=True, source='contributors',
-                           help_text="List of users in this conversations")
+    users = UserSerializer(many=True, source='contributors', help_text="List of users in this conversations")
     last_message = MessageSerializer(required=False)
     type = serializers.CharField(source='get_type_display', help_text="Either 'chat' or 'about_shout'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
-    about = serializers.SerializerMethodField(
-        help_text="Only set if the conversation of type 'about_shout'")
-    unread_messages_count = serializers.SerializerMethodField(
-        help_text="Number of unread messages in this conversation")
-    messages_url = serializers.SerializerMethodField(
-        help_text="URL to get the messages of this conversation")
+    about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
+    unread_messages_count = serializers.SerializerMethodField(help_text="Number of unread messages in this conversation")
+    messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
         model = Conversation
-        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count',
-                  'unread_messages_count', 'users',
-                  'last_message', 'about', 'messages_url', 'reply_url')
+        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count',
+                  'admins', 'users', 'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
         # todo: map types
