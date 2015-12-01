@@ -6,7 +6,6 @@ from __future__ import unicode_literals, print_function
 from settings_env import *  # NOQA
 from common.utils import get_address_port, check_offline_mood
 
-
 OFFLINE_MODE = check_offline_mood()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -296,7 +295,6 @@ LANGUAGES = (
 )
 DEFAULT_LANGUAGE_CODE = 'en'
 
-
 # Static files (CSS, JavaScript, Images)
 FORCE_S3 = True
 STATICFILES_FINDERS = (
@@ -433,7 +431,6 @@ GOOGLE_API = {
     }
 }
 
-
 # Rest FW
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
@@ -447,6 +444,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'shoutit.api.v2.permissions.IsSecure',
         'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'shoutit.api.v2.parsers.ShoutitJSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser'
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -667,7 +669,6 @@ LOGGING = {
         },
     }
 }
-
 
 # PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
