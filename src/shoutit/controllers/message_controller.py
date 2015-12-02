@@ -72,6 +72,7 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
         else:
             conversation = Conversation(type=CONVERSATION_TYPE_CHAT)
         conversation.creator_id = user.pk
+        conversation.admins.append(user.pk)
         conversation.save()
         conversation.users.add(*to_users)
 

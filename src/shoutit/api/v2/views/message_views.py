@@ -167,7 +167,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     @detail_route(methods=['post'], suffix='Add User')
     def add_user(self, request, *args, **kwargs):
         """
-        Add user to this conversation
+        Add user to this conversation.
         ###REQUIRES AUTH
         The logged in user should be admin in the conversation and the newly added user should be one of his listeners.
         ###Request
@@ -206,7 +206,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     @detail_route(methods=['post'], suffix='Remove User')
     def remove_user(self, request, *args, **kwargs):
         """
-        Remove user from this conversation
+        Remove user from this conversation.
         ###REQUIRES AUTH
         The logged in user should be admin in the conversation.
         ###Request
@@ -241,6 +241,47 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
             raise ValidationError({'user_id': "The user you are trying to remove is not a member of this conversation"})
         conversation.users.remove(existing_user)
         return Response({'success': "Removed '%s' from the conversation" % existing_user.name},
+                        status=status.HTTP_202_ACCEPTED)
+
+    @detail_route(methods=['post'], suffix='Promote User to admin')
+    def promote_admin(self, request, *args, **kwargs):
+        """
+        Promote user to admin in this conversation.
+        ###REQUIRES AUTH
+        The logged in user should be admin in the conversation.
+        ###Request
+        ####Body
+        <pre><code>
+        {
+            "user_id": "id of the user to be promoted"
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        conversation = self.get_object()
+        adder = request.user
+        if adder.id not in conversation.admins:
+            raise PermissionDenied()
+        existing_user_id = request.data.get('user_id')
+        try:
+            if not existing_user_id:
+                raise ValueError()
+            existing_user = User.objects.get(id=existing_user_id)
+        except User.DoesNotExist:
+            raise ValidationError({'user_id': "user with id '%s' does not exist" % existing_user_id})
+        except:
+            raise ValidationError({'user_id': "Invalid user_id"})
+        if not conversation.users.filter(id=existing_user.id).exists():
+            raise ValidationError({'user_id': "The user you are trying to promote is not a member of this conversation"})
+        conversation.admins.append(existing_user.pk)
+        conversation.save()
+        return Response({'success': "Promoted '%s' to admin in this conversation" % existing_user.name},
                         status=status.HTTP_202_ACCEPTED)
 
     def get_success_message_headers(self, data):
