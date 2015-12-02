@@ -255,7 +255,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         {
             "user_id": "id of the user to be promoted"
         }
-        </code></pre>
+        </code></pre>x
         ---
         omit_serializer: true
         omit_parameters:
