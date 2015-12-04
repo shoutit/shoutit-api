@@ -2,3 +2,4 @@
 -r common.txt
 django-storages==1.1.8
 setproctitle
+newrelic
