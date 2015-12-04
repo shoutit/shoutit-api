@@ -3,25 +3,27 @@
 
 """
 from __future__ import unicode_literals
+
 import json
 import re
-from django.conf import settings
 
+from django.conf import settings
+from django.db import IntegrityError
+from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.decorators import list_route
+
 from common.constants import POST_TYPE_OFFER
 from common.constants import POST_TYPE_REQUEST
 from shoutit import utils
-
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
-from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
-                            User, DBZ2User)
-from shoutit.utils import debug_logger, error_logger
-from ipware.ip import get_real_ip
+from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User,
+                            LinkedFacebookAccount)
+from shoutit.utils import debug_logger, error_logger, parse_signed_request
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -293,6 +295,25 @@ class MiscViewSet(viewsets.ViewSet):
             return Response({'texts': texts})
         except Exception as e:
             return Response({'error': str(e)})
+
+    @list_route(methods=['post'], suffix='Deauthorize a Facebook Installation')
+    def fb_deauth(self, request):
+        """
+        Deauthorize a Facebook Installation. This removes the LinkedFacebookAccount record from Shoutit Database.
+        ###NOT TO BE USED BY API CLIENTS
+        ###POST
+        Expects a POST body with signed_request to be parsed against Shoutit Facebook Application secret.
+        """
+        signed_request = request.data.get('signed_request')
+        if signed_request:
+            parsed_signed_request = parse_signed_request(signed_request)
+            user_id = parsed_signed_request.get('user_id')
+            if user_id:
+                try:
+                    LinkedFacebookAccount.objects.filter(facebook_id=user_id).delete()
+                except IntegrityError as e:
+                    debug_logger.info("LinkedFacebookAccount deletion error: %s." % str(e), exc_info=True)
+        return Response()
 
 
 def handle_dbz_reply(in_email, msg, request):
