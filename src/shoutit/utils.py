@@ -17,10 +17,12 @@ from re import sub
 
 import boto
 from PIL import Image
+from datetime import timedelta
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
 # from django.dispatch import receiver
 from django.http import HttpResponse
+from django.utils.timezone import now as django_now
 from django_rq import job
 import nexmo as nexmo
 import phonenumbers
@@ -376,3 +378,13 @@ def url_with_querystring(url, params=None, **kwargs):
 # @receiver(post_delete)
 # def model_post_delete(sender, instance=None, created=False, **kwargs):
 #     debug_logger.debug("Deleted %s" % repr(instance).decode('utf8'))
+
+
+def now_plus_delta(delta=None):
+    """
+    Returns an aware or naive datetime.datetime, depending on settings.USE_TZ with delta.
+    """
+    now = django_now()
+    if delta and isinstance(delta, timedelta):
+        return now + delta
+    return now

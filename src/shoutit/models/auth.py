@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 import re
 
+from datetime import timedelta
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
@@ -20,7 +22,7 @@ from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_
 from shoutit.controllers import email_controller
 from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
 from shoutit.models.listen import Listen2
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, now_plus_delta
 
 
 class ShoutitUserManager(UserManager):
@@ -384,6 +386,8 @@ class LinkedFacebookAccount(UUIDModel):
     facebook_id = models.CharField(max_length=24, db_index=True, unique=True)
     access_token = models.CharField(max_length=512)
     expires = models.BigIntegerField(default=0)
+    expires_at = models.DateTimeField(default=now_plus_delta(timedelta(hours=2)))
+    scopes = ArrayField(models.CharField(max_length=50), default=['email'], blank=True)
 
     def __unicode__(self):
         return unicode(self.user)
