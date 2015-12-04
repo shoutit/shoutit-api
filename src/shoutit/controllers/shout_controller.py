@@ -174,7 +174,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
     if created:
         # Publish to Facebook
         if getattr(instance, 'publish_to_facebook', False):
-            publish_to_facebook(instance)
+            publish_to_facebook.delay(instance)
         # track
         if not instance.is_sss:
             track(instance.user.pk, 'new_shout', instance.track_properties)
