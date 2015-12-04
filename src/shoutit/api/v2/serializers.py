@@ -527,6 +527,7 @@ class ShoutSerializer(serializers.ModelSerializer):
 class ShoutDetailSerializer(ShoutSerializer):
     images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
+    publish_to_facebook = serializers.BooleanField(write_only=True, required=False)
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner.")
     related_requests = ShoutSerializer(many=True, read_only=True)
@@ -535,8 +536,8 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + (
-            'images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
+        fields = parent_fields + ('images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url',
+                                  'related_requests', 'related_offers', 'conversations')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -595,6 +596,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         tags2 = validated_data.get('tags2')
 
         location = validated_data.get('location')
+        publish_to_facebook = validated_data.get('publish_to_facebook')
 
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
@@ -607,7 +609,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             shout = shout_controller.create_shout(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user
+                page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook
             )
         else:
             shout = shout_controller.edit_shout(

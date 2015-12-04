@@ -4,6 +4,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 import random
 
+import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
@@ -85,7 +86,8 @@ def NotifyPreExpiry():
 
 # todo: handle exception on each step and in case of errors, rollback!
 def create_shout(user, shout_type, title, text, price, currency, category, tags, location, tags2=None, images=None,
-                 videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None):
+                 videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
+                 publish_to_facebook=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -119,6 +121,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
             date_published += timedelta(hours=hours, minutes=minutes)
     shout.date_published = date_published
     shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
+    shout.publish_to_facebook = publish_to_facebook
     shout.save()
 
     location_controller.add_predefined_city(location)
@@ -127,7 +130,8 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
 
 def edit_shout(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
                tags2=None, images=None, videos=None, location=None, page_admin_user=None):
-    item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images, videos=videos)
+    item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
+                              videos=videos)
     if shout_type:
         shout.type = shout_type
     if text:
@@ -163,13 +167,17 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
 @receiver(post_save, sender=Shout)
 def shout_post_save(sender, instance=None, created=False, **kwargs):
     action = 'Created' if created else 'Updated'
-    debug_logger.debug('{} Shout: {}: {}, {}: {}'.format(action, instance.pk, instance.item.name,
-                                                         instance.country, instance.city))
-    # save index
+    log = '%s Shout: %s: %s, %s: %s' % (action, instance.pk, instance.item.name, instance.country, instance.city)
+    debug_logger.debug(log)
+    # Create / Update ShoutIndex
     save_shout_index(instance, created)
-    # track
-    if created and not instance.is_sss:
-        track(instance.user.pk, 'new_shout', instance.track_properties)
+    if created:
+        # Publish to Facebook
+        if getattr(instance, 'publish_to_facebook', False):
+            publish_to_facebook(instance)
+        # track
+        if not instance.is_sss:
+            track(instance.user.pk, 'new_shout', instance.track_properties)
 
 
 def save_shout_index(shout=None, created=False, delay=True):
@@ -226,3 +234,21 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.is_sss = shout.is_sss
     shout_index.priority = shout.priority
     return shout_index
+
+
+@job(settings.RQ_QUEUE)
+def publish_to_facebook(shout):
+    la = shout.user.linked_facebook
+    if not la or 'publish_actions' not in la.scopes:
+        return
+    actions_url = 'https://graph.facebook.com/me/shoutitcom:shout'
+    params = {
+        'access_token': la.access_token,
+        'method': 'POST',
+        shout.get_type_display(): shout.web_url
+    }
+    res = requests.post(actions_url, params=params).json()
+    id_on_facebook = res.get('id')
+    if id_on_facebook:
+        shout.published_on['facebook'] = id_on_facebook
+        shout.save(update_fields=['published_on'])
