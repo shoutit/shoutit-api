@@ -107,15 +107,16 @@ def debug_token(facebook_token):
     }
     try:
         response = requests.get(debug_url, params=params, timeout=20)
-        if response.status_code != 200:
-            raise ValueError("Invalid access token: %s" % response.content)
-        return response.json()['data']
+        data = response.json()['data']
+        if response.status_code != 200 or data.get('error'):
+            raise ValidationError({'error': data.get('error')})
+        return data
     except (requests.RequestException, ValueError, KeyError) as e:
         debug_logger.error("Facebook debug token error: %s" % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
 
-def link_facebook_account(user, facebook_access_token):
+def link_facebook_account(user, facebook_access_token, update=False):
     """
     Add LinkedFacebookAccount to user
     """
@@ -123,14 +124,15 @@ def link_facebook_account(user, facebook_access_token):
     facebook_id = fb_user.get('id')
 
     # check if the facebook account is already linked
-    try:
-        la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
-        debug_logger.error('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
-        if la.user == user:
-            raise ValidationError({'error': "Facebook account is already linked to your profile."})
-        raise ValidationError({'error': "Facebook account is already linked to somebody else's profile."})
-    except LinkedFacebookAccount.DoesNotExist:
-        pass
+    if not update:
+        try:
+            la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
+            debug_logger.error('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
+            if la.user == user:
+                raise ValidationError({'error': "Facebook account is already linked to your profile."})
+            raise ValidationError({'error': "Facebook account is already linked to somebody else's profile."})
+        except LinkedFacebookAccount.DoesNotExist:
+            pass
 
     # unlink previous facebook account
     unlink_facebook_user(user, False)
@@ -144,7 +146,8 @@ def link_facebook_account(user, facebook_access_token):
         raise FB_LINK_ERROR_TRY_AGAIN
 
     # activate the user
-    user.activate()
+    if not user.is_activated:
+        user.activate()
 
 
 def unlink_facebook_user(user, strict=True):
@@ -158,7 +161,7 @@ def unlink_facebook_user(user, strict=True):
             debug_logger.error("User: %s, tried to unlink non-existing facebook account." % user)
             raise FB_LINK_ERROR_NO_LINK
     else:
-        # todo: unlink from facebook services
+        # todo: unlink from facebook services?
         linked_account.delete()
 
 

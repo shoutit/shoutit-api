@@ -16,7 +16,7 @@ from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 import sys
 
-from common.utils import AllowedUsernamesValidator
+from common.utils import AllowedUsernamesValidator, date_unix
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 from shoutit.controllers import email_controller
@@ -164,11 +164,18 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def linked_accounts(self):
         if not hasattr(self, '_linked_accounts'):
+            facebook_la = hasattr(self, 'linked_facebook') and self.linked_facebook
             self._linked_accounts = {
-                'facebook': True if (
-                    hasattr(self, 'linked_facebook') and self.linked_facebook) else False,
+                'facebook': True if facebook_la else False,
                 'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
             }
+            if facebook_la:
+                self._linked_accounts['facebook_details'] = {
+                    'facebook_id': facebook_la.facebook_id,
+                    'access_token': facebook_la.access_token,
+                    'expires_at': date_unix(facebook_la.expires_at),
+                    'scopes': facebook_la.scopes
+                }
         return self._linked_accounts
 
     @property
@@ -385,9 +392,8 @@ class LinkedFacebookAccount(UUIDModel):
     user = models.OneToOneField(User, related_name='linked_facebook', db_index=True)
     facebook_id = models.CharField(max_length=24, db_index=True, unique=True)
     access_token = models.CharField(max_length=512)
-    expires = models.BigIntegerField(default=0)
-    expires_at = models.DateTimeField(default=now_plus_delta(timedelta(hours=2)))
-    scopes = ArrayField(models.CharField(max_length=50), default=['email'], blank=True)
+    expires_at = models.DateTimeField()
+    scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'])
 
     def __unicode__(self):
         return unicode(self.user)

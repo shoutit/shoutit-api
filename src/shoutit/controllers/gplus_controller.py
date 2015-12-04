@@ -57,7 +57,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None, is_test=Fal
     return user
 
 
-def link_gplus_account(user, gplus_code, client=None):
+def link_gplus_account(user, gplus_code, update=False, client=None):
     """
     Add LinkedGoogleAccount to user
     """
@@ -65,15 +65,16 @@ def link_gplus_account(user, gplus_code, client=None):
     gplus_id = credentials.id_token.get('sub')
 
     # check if the gplus account is already linked
-    try:
-        la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
-        debug_logger.error('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
-        if la.user == user:
-            raise ValidationError({'error': "G+ account is already linked to your profile."})
-        raise ValidationError(
-            {'error': "This gplus account is already linked to somebody else's profile."})
-    except LinkedGoogleAccount.DoesNotExist:
-        pass
+    if not update:
+        try:
+            la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
+            debug_logger.error('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
+            if la.user == user:
+                raise ValidationError({'error': "G+ account is already linked to your profile."})
+            raise ValidationError(
+                {'error': "This gplus account is already linked to somebody else's profile."})
+        except LinkedGoogleAccount.DoesNotExist:
+            pass
 
     # unlink previous gplus account
     unlink_gplus_user(user, False)
@@ -87,7 +88,8 @@ def link_gplus_account(user, gplus_code, client=None):
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 
     # activate the user
-    user.activate()
+    if not user.is_activated:
+        user.activate()
 
 
 def unlink_gplus_user(user, strict=True):
