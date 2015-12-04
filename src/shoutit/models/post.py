@@ -8,8 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType,
-                              COUNTRY_ISO)
+from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel

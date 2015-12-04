@@ -21,8 +21,8 @@ from shoutit.api.v2.renderers import PlainTextRenderer
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
-from shoutit.controllers.facebook_controller import (update_linked_facebook_account_scopes,
-    delete_linked_facebook_account)
+from shoutit.controllers.facebook_controller import (
+    update_linked_facebook_account_scopes, delete_linked_facebook_account)
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request
 

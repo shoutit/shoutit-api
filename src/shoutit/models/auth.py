@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 import re
 
-from datetime import timedelta
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
@@ -22,7 +21,7 @@ from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_
 from shoutit.controllers import email_controller
 from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
 from shoutit.models.listen import Listen2
-from shoutit.utils import debug_logger, now_plus_delta
+from shoutit.utils import debug_logger
 
 
 class ShoutitUserManager(UserManager):

@@ -3,34 +3,37 @@
 
 """
 from __future__ import unicode_literals
-from collections import OrderedDict
+
 import random
 import uuid
+from collections import OrderedDict
+
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
-from django.conf import settings
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
+from rest_framework.settings import api_settings
+
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT)
 from common.utils import any_in
+from shoutit.controllers import location_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
-from shoutit.controllers import location_controller
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
     DiscoverItem, Profile, Page)
-from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
-from rest_framework.settings import api_settings
 
 
 class LocationSerializer(serializers.Serializer):
@@ -699,9 +702,7 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
-                                'location']):
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -746,7 +747,8 @@ class ConversationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
-    unread_messages_count = serializers.SerializerMethodField(help_text="Number of unread messages in this conversation")
+    unread_messages_count = serializers.SerializerMethodField(
+        help_text="Number of unread messages in this conversation")
     messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
