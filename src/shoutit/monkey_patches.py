@@ -3,20 +3,22 @@
 
 """
 from __future__ import unicode_literals, print_function
+
+import ssl
 import uuid
+from functools import wraps
 from json import JSONEncoder
+
+import urllib3.contrib.pyopenssl
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl.result import Response
 from rest_framework.request import Request
-import urllib3.contrib.pyopenssl
-
 
 # tell urllib3 to switch the ssl backend to PyOpenSSL to avoid InsecurePlatformWarning
 # https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning
 urllib3.contrib.pyopenssl.inject_into_urllib3()
-
 
 default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
 
@@ -45,6 +47,7 @@ class ShoutitCustomJSONEncoder(JSONEncoder):
         # default:
         return default_json_encoder_default(obj)  # call the saved default function
 
+
 JSONEncoder.default = ShoutitCustomJSONEncoder().default  # replace the JSONEncoder default function with custom one
 
 
@@ -59,6 +62,8 @@ def __getstate__(self):
         'user': self.user,
     }
     return {'request': request, 'version': self.version, 'versioning_scheme': self.versioning_scheme}
+
+
 Request.__getstate__ = __getstate__
 
 
@@ -72,4 +77,20 @@ def __setstate__(self, state):
     self._request = request
     self.version = state['version']
     self.versioning_scheme = state['versioning_scheme']
+
+
 Request.__setstate__ = __setstate__
+
+
+# Monkey-patch ssl.wrap_socket() in the ssl module by overriding the ssl_version keyword parameter
+# http://stackoverflow.com/questions/14102416/python-requests-requests-exceptions-sslerror-errno-8-ssl-c504-eof-occurred
+def sslwrap(func):
+    @wraps(func)
+    def bar(*args, **kw):
+        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
+        return func(*args, **kw)
+
+    return bar
+
+
+ssl.wrap_socket = sslwrap(ssl.wrap_socket)
