@@ -4,21 +4,19 @@
 """
 from __future__ import unicode_literals, print_function
 
-import ssl
 import uuid
-from functools import wraps
 from json import JSONEncoder
 
-import urllib3.contrib.pyopenssl
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl.result import Response
 from rest_framework.request import Request
+from urllib3.contrib import pyopenssl
 
 # tell urllib3 to switch the ssl backend to PyOpenSSL to avoid InsecurePlatformWarning
 # https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning
-urllib3.contrib.pyopenssl.inject_into_urllib3()
+pyopenssl.inject_into_urllib3()
 
 default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
 
@@ -80,17 +78,3 @@ def __setstate__(self, state):
 
 
 Request.__setstate__ = __setstate__
-
-
-# Monkey-patch ssl.wrap_socket() in the ssl module by overriding the ssl_version keyword parameter
-# http://stackoverflow.com/questions/14102416/python-requests-requests-exceptions-sslerror-errno-8-ssl-c504-eof-occurred
-def sslwrap(func):
-    @wraps(func)
-    def bar(*args, **kw):
-        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
-        return func(*args, **kw)
-
-    return bar
-
-
-ssl.wrap_socket = sslwrap(ssl.wrap_socket)
