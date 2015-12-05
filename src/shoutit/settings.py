@@ -6,7 +6,6 @@ from __future__ import unicode_literals, print_function
 from settings_env import *  # NOQA
 from common.utils import get_address_port, check_offline_mood
 
-
 OFFLINE_MODE = check_offline_mood()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -33,6 +32,7 @@ if PROD:
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+    RAVEN_DSN = 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984'
 
 elif DEV:
     DEBUG = True
@@ -41,6 +41,7 @@ elif DEV:
     DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+    RAVEN_DSN = 'https://559b227392004e0582ac719810af99bd:fe13c8a73f744a5a90346b08323ad102@app.getsentry.com/58087'
 
 else:  # LOCAL
     DEBUG = True
@@ -49,6 +50,7 @@ else:  # LOCAL
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
+    RAVEN_DSN = 'https://dcb68ef95ab145d5a31c6f4ce6c0286a:9ca26cb110ae431f9b2d48cf24c62b44@app.getsentry.com/58134'
 
 ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
 
@@ -182,6 +184,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.admin',
+    'django.contrib.postgres',
     'django.contrib.staticfiles',
     # 'paypal.standard.ipn',
     # 'paypal.standard.pdt',
@@ -206,6 +209,7 @@ INSTALLED_APPS = (
     'shoutit_pusher',
     'shoutit_crm',
     'shoutit',
+    'mptt',
 )
 # apps only on local development
 if LOCAL:
@@ -225,8 +229,7 @@ if PROD:
     )
 
 RAVEN_CONFIG = {
-    # Use str according to this: https://github.com/getsentry/raven-python/issues/653
-    'dsn': str('https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984'),
+    'dsn': RAVEN_DSN,
     'string_max_length': 1000
 }
 
@@ -291,7 +294,6 @@ LANGUAGES = (
     ('en', ugettext('English')),
 )
 DEFAULT_LANGUAGE_CODE = 'en'
-
 
 # Static files (CSS, JavaScript, Images)
 FORCE_S3 = True
@@ -429,7 +431,6 @@ GOOGLE_API = {
     }
 }
 
-
 # Rest FW
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
@@ -443,6 +444,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'shoutit.api.v2.permissions.IsSecure',
         'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'shoutit.api.v2.parsers.ShoutitJSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser'
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -486,6 +492,7 @@ SWAGGER_SETTINGS = {
 }
 
 # Logging
+FORCE_SENTRY = True
 LOG_SQL = False
 LOGGING = {
     'version': 1,
@@ -518,6 +525,9 @@ LOGGING = {
         },
         'level_below_warning': {
             '()': 'common.log.LevelBelowWarning',
+        },
+        'on_server_or_forced': {
+            '()': 'common.log.OnServerOrForced',
         },
     },
     'handlers': {
@@ -556,12 +566,12 @@ LOGGING = {
         'sentry': {
             'level': 'ERROR',
             'class': 'raven.contrib.django.handlers.SentryHandler',
-            'filters': ['require_debug_false'],
+            'filters': ['on_server_or_forced'],
         },
         'sentry_all': {
             'level': 'DEBUG',
             'class': 'raven.contrib.django.handlers.SentryHandler',
-            'filters': ['require_debug_false'],
+            'filters': ['on_server_or_forced'],
         },
         'sentry_file': {
             'level': 'WARNING',
@@ -659,7 +669,6 @@ LOGGING = {
         },
     }
 }
-
 
 # PayPal and Payment
 PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'

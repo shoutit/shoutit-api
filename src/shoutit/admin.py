@@ -8,6 +8,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django import forms
 from django.conf.urls import url
 from django.core.urlresolvers import reverse
+from mptt.admin import MPTTModelAdmin
 from push_notifications.admin import DeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 from common.constants import UserType
@@ -21,7 +22,7 @@ from shoutit.models import (
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin)
+    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem, TagKey)
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -36,7 +37,7 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
         'date_published')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city',
                    ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user',)
+    raw_id_fields = ('user', 'page_admin_user')
     exclude = ('item',)
     readonly_fields = ('_user', '_item')
     ordering = ('-date_published',)
@@ -54,7 +55,7 @@ class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
     list_display = ('id', '_user', 'type', 'text', '_location', 'muted', 'is_disabled')
     ordering = ('-created_at',)
     list_filter = ('type', 'is_disabled', 'country', 'city', ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user',)
+    raw_id_fields = ('user', 'page_admin_user')
 
 
 @admin.register(Item)
@@ -196,6 +197,12 @@ class TagAdmin(admin.ModelAdmin, LinksMixin):
     form = TagChangeForm
 
 
+@admin.register(TagKey)
+class TagKeyAdmin(admin.ModelAdmin):
+    list_display = ('key', 'values_type')
+    search_fields = ('key',)
+
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     raw_id_fields = ('main_tag',)
@@ -312,7 +319,7 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
 # Report
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', 'type_name', '_user', 'text', 'attached_object', 'content_type',
+    list_display = ('id', 'type', '_user', 'text', 'attached_object', 'content_type',
                     'object_id', 'is_solved', 'is_disabled', 'created_at')
     list_filter = ('is_solved', 'is_disabled', ('created_at', ShoutitDateFieldListFilter))
     actions = ['mark_as_solved', 'mark_as_disabled']
@@ -433,10 +440,11 @@ class PusherChannelJoinAdmin(admin.ModelAdmin):
 
 @admin.register(SMSInvitation)
 class SMSInvitationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status', 'country', 'mobile', 'user')
-    list_filter = ('status', 'country')
+    list_display = ('id', 'status', 'country', 'mobile', 'user', 'created_at')
+    list_filter = ('status', 'country', ('created_at', ShoutitDateFieldListFilter))
     search_fields = ('mobile', 'message')
     raw_id_fields = ('user',)
+    ordering = ('-created_at',)
 
 
 @admin.register(GoogleLocation)
@@ -495,6 +503,12 @@ class PageAdminAdmin(admin.ModelAdmin):
 class PageCategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug', 'parent')
     list_filter = ('parent',)
+
+
+@admin.register(DiscoverItem)
+class DiscoverItemAdmin(MPTTModelAdmin):
+    mptt_level_indent = 20
+    mptt_indent_field = "some_node_field"
 
 
 # Others

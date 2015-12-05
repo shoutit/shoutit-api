@@ -29,19 +29,14 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z._]+'
-
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
-
     queryset = User.objects.filter(is_activated=True)
     queryset_detail = User.objects.filter().prefetch_related('profile')
-
     pagination_class = ShoutitPageNumberPaginationNoCount
-
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')
     search_fields = ('=id', 'username', 'first_name', 'last_name', '=email')
-
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_object(self):
@@ -54,7 +49,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def list(self, request, *args, **kwargs):
         """
-        Get users based on `search` query param.
+        List Users based on `search` query param
 
         ###Response
         <pre><code>
@@ -64,7 +59,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
           "results": [] // list of {UserSerializer}
         }
         </code></pre>
-
         ---
         serializer: UserSerializer
         parameters:
@@ -75,8 +69,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Get user
-
+        Retrieve a User
         ---
         serializer: UserDetailSerializer
         parameters:
@@ -92,11 +85,11 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Modify user
-
+        Modify a User
+        ###REQUIRES AUTH
         ###Request
         Specify any or all of these attributes to change them.
-
+        ####Body
         <pre><code>
         {
             "username": "mo",
@@ -109,18 +102,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             "location": {
                 "latitude": 25.1593957,
                 "longitude": 55.2338326,
-                "country": "AE",
-                "postal_code": "857",
-                "state": "Dubai",
-                "city": "Dubai",
-                "address": "Whatever Street 31",
-                "google_geocode_response": {}  // when passed server will auto calculate the location attributes except latitude and longitude
+                "address": "Whatever Street 31"
             },
             "video": {
-                "url": "https://www.youtube.com/watch?v=Mp12bkOzO9Q",
-                "thumbnail_url": "https://i.ytimg.com/vi/jXa4QfICnOg/default.jpg",
-                "provider": "youtube",
-                "id_on_provider": "Mp12bkOzO9Q",
+                "url": "https://shout-image.static.shoutit.com/38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915.mp4",
+                "thumbnail_url": "https://shout-image.static.shoutit.com/38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915_thumbnail.jpg",
+                "provider": "shoutit_s3",
+                "id_on_provider": "38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915",
                 "duration": 12
             },
             "push_tokens": {
@@ -130,7 +118,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         }
         </code></pre>
 
-        ####Deleting video and/or push_tokens
+        For `location` it is enough to pass `latitude` and `longitude` and the other location attributes such as:
+        `country`, `state`, `city`, `postal_code` and `address` will be automatically filled by the API. Passing `address`
+        will override the auto-filled one by server. `address` can be also sent alone, this way only saved address will be replaced not other attributes.
+
+        ###Deleting video and/or push_tokens
+        Set them as `null`
+        ####Body
         <pre><code>
         {
             "video": null,
@@ -140,7 +134,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             }
         }
         </code></pre>
-
         ---
         serializer: UserDetailSerializer
         omit_parameters:
@@ -162,10 +155,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete user and everything attached to him
-
+        Delete a User and everything attached to him
+        ###REQUIRES AUTH
         ```
-        NOT IMPLEMENTED
+        NOT IMPLEMENTED AND ONLY USED FOR TEST USERS
         ```
         ---
         omit_serializer: true
@@ -178,15 +171,18 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               required: true
               defaultValue: me
         """
-        # user = self.get_object()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        user = self.get_object()
+        if user.is_test:
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(IsAuthenticatedOrReadOnly,))
     def listen(self, request, *args, **kwargs):
         """
-        Start/Stop listening to user
-
-        ###Listen
+        Start/Stop listening to a User
+        ###REQUIRES AUTH
+        ###Start listening
         <pre><code>
         POST: /v2/users/{username}/listen
         </code></pre>
@@ -223,12 +219,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
-        Get user listeners
-
+        List the User listeners
         ###Response
         <pre><code>
         {
-          "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
           "results": [] // list of {UserSerializer}
@@ -258,12 +252,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], suffix='Listening')
     def listening(self, request, *args, **kwargs):
         """
-        Get user listening based on `type` query param. It could be either 'users' or 'tags', default is 'users'
-
+        List the User listening based on `type` query param. It could be either 'users' or 'tags', default is 'users'
         ###Response
         <pre><code>
         {
-          "count": 4, // number of results
           "next": null, // next results page url
           "previous": null, // previous results page url
           "results": [] // list of {UserSerializer} same as in listeners or {TagDetailSerializer}
@@ -320,11 +312,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], suffix='Home', permission_classes=(IsAuthenticated, IsOwner))
     def home(self, request, *args, **kwargs):
         """
-        Get user homepage shouts
-
-        User can't see the homepage of other users
-
+        List the User homepage shouts. User can't see the homepage of other users.
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
+        ###REQUIRES AUTH
         ---
         serializer: ShoutSerializer
         parameters:
@@ -352,8 +342,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], suffix='Shouts')
     def shouts(self, request, *args, **kwargs):
         """
-        Get user shouts
-
+        List the User shouts.
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
         ---
         serializer: ShoutSerializer
@@ -376,7 +365,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               paramType: query
         """
         user = self.get_object()
-
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
@@ -399,10 +387,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['post'], suffix='Message')
     def message(self, request, *args, **kwargs):
         """
-        Send user a message
-
-        > A user can only message his Listeners, or someone whom he already have an existing conversation with.
-
+        Send the User a message
+        ###REQUIRES AUTH
+        > A user can only message his Listeners, or someone whom he already has an existing conversation with.
         ###Request
         <pre><code>
         {
@@ -421,12 +408,11 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                 },
                 {
                     "images": [], // list of image urls
-                    "videos": [], // list of {Video Object}s
+                    "videos": [] // list of {Video Object}s
                 }
             ]
         }
         </code></pre>
-
         ---
         response_serializer: MessageSerializer
         omit_parameters:
@@ -461,13 +447,14 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
+        ###REQUIRES AUTH
 
         ###Link Facebook
         <pre><code>
         PUT: /v2/users/{username}/link
         {
             "account": "facebook",
-            "facebook_access_token": "facebook access token"
+            "facebook_access_token": "FACEBOOK_ACCESS_TOKEN"
         }
         </code></pre>
 
@@ -484,7 +471,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         PUT: /v2/users/{username}/link
         {
             "account": "gplus",
-            "gplus_code": "google grant code"
+            "gplus_code": "GOOGLE_GRANT_CODE"
         }
         </code></pre>
 

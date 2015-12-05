@@ -53,10 +53,6 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         return self.attached_object
 
     @property
-    def type_name(self):
-        return ConversationType.values[self.type]
-
-    @property
     def messages_count(self):
         return self.messages.count()
 
@@ -104,7 +100,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     def track_properties(self):
         properties = {
             'id': self.pk,
-            'type': self.type_name
+            'type': self.get_type_display()
         }
         if self.about and self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             properties.update({'shout': self.about.pk})
@@ -230,9 +226,6 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     def __unicode__(self):
         return self.pk + " for message: " + self.message.pk
 
-    def type_name(self):
-        return MessageAttachmentType.values[self.type]
-
     @property
     def shout(self):
         if self.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
@@ -257,11 +250,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
     is_read = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return self.pk + ": " + self.type_name
-
-    @property
-    def type_name(self):
-        return NotificationType.values[self.type]
+        return self.pk + ": " + self.get_type_display()
 
     def mark_as_read(self):
         self.is_read = True
@@ -276,11 +265,7 @@ class Report(UUIDModel, AttachedObjectMixin):
     is_disabled = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return "From user:%s about: %s:%s" % (self.user.pk, self.type_name, self.attached_object.pk)
-
-    @property
-    def type_name(self):
-        return ReportType.values[self.type]
+        return "From user:%s about: %s:%s" % (self.user.pk, self.get_type_display(), self.attached_object.pk)
 
 
 class PushBroadcast(UUIDModel, AttachedObjectMixin):

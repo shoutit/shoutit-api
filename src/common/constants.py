@@ -285,7 +285,18 @@ POST_TYPE_OFFER = PostType('offer')
 POST_TYPE_EXPERIENCE = PostType('Experience')
 POST_TYPE_DEAL = PostType('Deal')
 
-TAGS_PER_POST = 20
+MAX_TAGS_PER_SHOUT = 5
+
+
+class TagValueType(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+    def __init__(self, text=''):
+        Constant.__init__(self, text)
+
+
+TAG_TYPE_INT = TagValueType('int')
+TAG_TYPE_STR = TagValueType('str')
 
 
 class NotificationType(Constant):
@@ -644,7 +655,9 @@ COUNTRY_ISO = {
     "": "None"
 }
 
-COUNTRIES = sorted(COUNTRY_ISO.items(), key=lambda tup: tup[1])
+COUNTRIES = COUNTRY_ISO.keys()
+
+COUNTRY_CHOICES = sorted(COUNTRY_ISO.items(), key=lambda tup: tup[1])
 
 NOT_ALLOWED_USERNAMES = [
     'activate',

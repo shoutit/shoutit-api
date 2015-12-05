@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+import urllib
+import urlparse
 from cStringIO import StringIO
 import random
 import json
@@ -339,10 +342,14 @@ def base64_to_text(b64, box=None, config=None):
         cl, cu, cr, cd = box
         box = [0 + cl, 0 + cu, w - cr, h - cd]
         image = image.crop(box)
-    image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
-    image_no_trans.paste(image, image)
-    text = pytesseract.image_to_string(image_no_trans, config=config)
-    return text
+    try:
+        image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
+        image_no_trans.paste(image, image)
+        image = image_no_trans
+    except:
+        pass
+    text = pytesseract.image_to_string(image, config=config)
+    return text.decode("utf8")
 
 
 def base64_to_texts(b64, configs):
@@ -354,6 +361,15 @@ def base64_to_texts(b64, configs):
         texts.append(text)
     return texts
 
+
+def url_with_querystring(url, params=None, **kwargs):
+    url_parts = list(urlparse.urlparse(url))
+    query = dict(urlparse.parse_qsl(url_parts[4]))
+    if isinstance(params, dict):
+        query.update(params)
+    query.update(kwargs)
+    url_parts[4] = urllib.urlencode(query)
+    return urlparse.urlunparse(url_parts)
 
 # @receiver(post_save)
 # def model_post_save(sender, instance=None, created=False, **kwargs):

@@ -28,24 +28,23 @@ class MiscViewSet(viewsets.ViewSet):
     """
     Other API Resources.
     """
-
     permission_classes = ()
 
-    @list_route(methods=['get'], suffix='Currencies')
-    def currencies(self, request):
+    @list_route(methods=['get'], suffix='Categories')
+    def categories(self, request):
         """
-        Get currencies
+        List Categories
         ---
-        serializer: CurrencySerializer
+        serializer: CategorySerializer
         """
-        currencies = Currency.objects.all()
-        serializer = CurrencySerializer(currencies, many=True, context={'request': request})
+        categories = Category.objects.all().order_by('name').select_related('main_tag')
+        serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
 
     @list_route(methods=['get'], suffix='Cities')
     def cities(self, request):
         """
-        Get cities
+        List Cities
         ---
         serializer: PredefinedCitySerializer
         """
@@ -53,10 +52,21 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = PredefinedCitySerializer(cities, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @list_route(methods=['get'], suffix='Currencies')
+    def currencies(self, request):
+        """
+        List Currencies
+        ---
+        serializer: CurrencySerializer
+        """
+        currencies = Currency.objects.all()
+        serializer = CurrencySerializer(currencies, many=True, context={'request': request})
+        return Response(serializer.data)
+
     @list_route(methods=['get'], suffix='Shouts Sort Types')
     def shouts_sort_types(self, request):
         """
-        Get shouts sort types
+        List Sort types for shouts
         ---
         """
         return Response([
@@ -67,23 +77,13 @@ class MiscViewSet(viewsets.ViewSet):
             {'type': 'recommended', 'name': 'Recommended'},
         ])
 
-    @list_route(methods=['get'], suffix='Categories')
-    def categories(self, request):
-        """
-        Get categories
-        ---
-        serializer: CategorySerializer
-        """
-        categories = Category.objects.all().order_by('name').select_related('main_tag')
-        serializer = CategorySerializer(categories, many=True, context={'request': request})
-        return Response(serializer.data)
-
     @list_route(methods=['post'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,), suffix='Reports')
     def reports(self, request):
         """
-        Report
+        Create Report
 
-        ###Reporting Shout
+        ###REQUIRES AUTH
+        ###Report Shout
         <pre><code>
         {
             "text": "the reason of this report, any text.",
@@ -95,7 +95,7 @@ class MiscViewSet(viewsets.ViewSet):
         }
         </code></pre>
 
-        ###Reporting User
+        ###Report User
         <pre><code>
         {
             "text": "the reason of this report, any text.",
@@ -106,7 +106,6 @@ class MiscViewSet(viewsets.ViewSet):
             }
         }
         </code></pre>
-
         ---
         serializer: ReportSerializer
         omit_parameters:
@@ -120,21 +119,34 @@ class MiscViewSet(viewsets.ViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
-                suffix='Fake Error')
+    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='Fake Error')
     def error(self, request):
+        """
+        Create fake error
+        """
         from ipware.ip import get_real_ip
         raise Exception("Fake error request from ip: " + get_real_ip(request) or 'undefined')
 
-    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'],
-                suffix='IP')
+    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='IP')
     def ip(self, request):
+        """
+        Retrieve ip from request
+        """
         ip = get_real_ip(request) or 'undefined'
         debug_logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
 
     @list_route(methods=['get'])
     def geocode(self, request):
+        """
+        Retrieve full location attributes for `latlng` query param
+
+        ###Example
+
+        ```
+        GET: /v2/misc/geocode?latlng=40.722100,-74.046900
+        ```
+        """
         try:
             latlng = request.query_params.get('latlng', '')
             lat = float(latlng.split(',')[0])
@@ -147,6 +159,10 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['post'])
     def parse_google_geocode_response(self, request):
+        """
+        Retrieve full location attributes for `google_geocode_response`.
+        ###PENDING DEPRECATION
+        """
         google_geocode_response = request.data.get('google_geocode_response', {})
         try:
             location = location_controller.parse_google_geocode_response(google_geocode_response)
@@ -156,6 +172,10 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['post'], suffix='SSS4')
     def sss4(self, request):
+        """
+        Create sss shouts
+        ###NOT TO BE USED BY API CLIENTS
+        """
         shout = request.data.get('shout')
         # check of previous ad
         source = shout.get('source')
@@ -227,6 +247,10 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['get', 'post', 'head'], suffix='Inbound Email')
     def inbound(self, request):
+        """
+        Accept inbounding emails
+        ###NOT TO BE USED BY API CLIENTS
+        """
         data = request.POST or request.GET or {}
         if request.method == 'POST':
             if not data:
@@ -245,6 +269,9 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['post'], suffix='Base64 to Text')
     def b64_to_text(self, request):
+        """
+        Convert base64 string images to text
+        """
         b64 = request.data.get('b64')
         config = request.data.get('config')
         box = request.data.get('box')
@@ -256,6 +283,9 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['post'], suffix='Base64 to Text')
     def b64_to_texts(self, request):
+        """
+        Convert base64 string images to texts
+        """
         b64 = request.data.get('b64')
         configs = request.data.get('configs')
         try:

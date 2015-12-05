@@ -12,7 +12,6 @@ from django.db.models import Q
 from django.conf import settings
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
-
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
@@ -20,16 +19,18 @@ from rest_framework.reverse import reverse
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT)
 from common.utils import any_in
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.controllers import location_controller
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation)
+    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
+    DiscoverItem, Profile, Page)
 from shoutit.controllers import shout_controller, user_controller, message_controller
-from shoutit.utils import generate_username, upload_image_to_s3, debug_logger
+from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
+from rest_framework.settings import api_settings
 
 
 class LocationSerializer(serializers.Serializer):
@@ -57,6 +58,7 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using latitude, longitude or IP
             location = location_controller.from_location_index(validated_data.get('latitude'),
                                                                validated_data.get('longitude'), ip)
+        # Todo: Deprecate
         elif ggr:
             # Handle Google geocode response if provided
             try:
@@ -67,11 +69,14 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
         elif address and request and request.user.is_authenticated():
+            # Update the logged in user address
             location = request.user.location
-            location.update({'address': address})
         else:
-            raise ValidationError({'error': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
+            raise ValidationError({
+                'non_field_errors': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
 
+        if address:
+            location.update({'address': address})
         validated_data.update(location)
         return validated_data
 
@@ -85,6 +90,36 @@ class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = ('url', 'thumbnail_url', 'provider', 'id_on_provider', 'duration')
+
+
+class DiscoverItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiscoverItem
+        fields = ('id', 'api_url', 'title', 'subtitle', 'position', 'image', 'icon')
+        extra_kwargs = {api_settings.URL_FIELD_NAME: {'view_name': 'discover-detail'}}
+
+
+class DiscoverItemDetailSerializer(serializers.ModelSerializer):
+    shouts_url = serializers.SerializerMethodField()
+    parents = DiscoverItemSerializer(many=True)
+    children = DiscoverItemSerializer(many=True)
+
+    class Meta(DiscoverItemSerializer.Meta):
+        model = DiscoverItem
+        parent_fields = DiscoverItemSerializer.Meta.fields
+        fields = parent_fields + (
+            'description', 'cover', 'countries', 'parents', 'show_children', 'children', 'show_shouts', 'shouts_url'
+        )
+
+    def to_representation(self, instance):
+        ret = super(DiscoverItemDetailSerializer, self).to_representation(instance)
+        if not instance.show_shouts:
+            ret.pop('shouts_url', None)
+        return ret
+
+    def get_shouts_url(self, discover_item):
+        shouts_url = reverse('shout-list', request=self.context['request'])
+        return url_with_querystring(shouts_url, discover=discover_item.pk)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -106,9 +141,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class TagDetailSerializer(TagSerializer):
-    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this tag")
-    listeners_url = serializers.SerializerMethodField()
-    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
+    is_listening = serializers.SerializerMethodField(help_text="Whether logged in user is listening to this tag")
+    listeners_url = serializers.SerializerMethodField(help_text="URL to show listeners of this tag")
+    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts with this tag")
 
     class Meta(TagSerializer.Meta):
         model = Tag
@@ -314,63 +349,84 @@ class UserDetailSerializer(UserSerializer):
         return email
 
     def update(self, user, validated_data):
-        location_data = validated_data.get('location', {})
-        push_tokens_data = validated_data.get('push_tokens', {})
-        profile_data = validated_data.get('profile', {})
-        video_data = profile_data.get('video', {})
+        user_update_fields = []
+        ap = user.ap
+        ap_update_fields = []
 
-        profile = user.profile
-        update_fields = []
-
+        # User
+        # Username
         new_username = validated_data.get('username')
         if new_username and new_username != user.username:
             user.username = new_username
-            update_fields.append('username')
-
+            user_update_fields.append('username')
+        # First name
         new_first_name = validated_data.get('first_name')
         if new_first_name and new_first_name != user.first_name:
             user.first_name = new_first_name
-            update_fields.append('first_name')
-
+            user_update_fields.append('first_name')
+        # Last name
         new_last_name = validated_data.get('last_name')
         if new_last_name and new_last_name != user.last_name:
             user.last_name = new_last_name
-            update_fields.append('last_name')
-
+            user_update_fields.append('last_name')
+        # Email
         new_email = validated_data.get('email')
         if new_email and new_email != user.email:
             user.email = new_email
-            update_fields.extend(['email', 'is_activated'])
+            user_update_fields.extend(['email', 'is_activated'])
+        # Save
+        user.save(update_fields=user_update_fields)
 
-        user.save(update_fields=update_fields)
-
+        # Location
+        location_data = validated_data.get('location', {})
         if location_data:
-            location_controller.update_profile_location(profile, location_data)
+            location_controller.update_profile_location(ap, location_data)
 
-        if profile_data:
+        # AP
+        ap_data = validated_data.get('ap', {})
+        profile_data = validated_data.get('profile', {})
+        page_data = validated_data.get('page', {})
 
+        if isinstance(ap, Profile):
+            bio = profile_data.get('bio')
+            if bio:
+                ap.bio = bio
+                ap_update_fields.append('bio')
+            gender = profile_data.get('gender')
+            if gender:
+                ap.gender = gender
+                ap_update_fields.append('gender')
+        elif isinstance(ap, Page):
+            pass
+
+        if ap_data:
+            image = ap_data.get('image')
+            if image:
+                ap.image = image
+                ap_update_fields.append('image')
+
+            video_data = ap_data.get('video', {})
             if video_data:
-                video = Video(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
-                              provider=video_data['provider'],
-                              id_on_provider=video_data['id_on_provider'],
-                              duration=video_data['duration'])
-                video.save()
-                # delete existing video first
-                if profile.video:
-                    profile.video.delete()
-                profile.video = video
+                video = Video.create(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
+                                     provider=video_data['provider'], id_on_provider=video_data['id_on_provider'],
+                                     duration=video_data['duration'])
+                # # delete existing video first
+                # if ap.video:
+                #     ap.video.delete()
+                ap.video = video
+                ap_update_fields.append('video')
 
             # if video sent as null, delete existing video
-            elif video_data is None and profile.video:
-                profile.video.delete()
-                profile.video = None
+            elif video_data is None and ap.video:
+                # ap.video.delete()
+                ap.video = None
+                ap_update_fields.append('video')
 
-            profile.bio = profile_data.get('bio', profile.bio)
-            profile.gender = profile_data.get('gender', profile.gender)
-            profile.image = profile_data.get('image', profile.image)
-            # todo: optimize
-            profile.save(update_fields=['bio', 'gender', 'image', 'video'])
+        if ap_data or profile_data or page_data:
+            ap.save(update_fields=ap_update_fields)
 
+        # Push Tokens
+        push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
             if 'apns' in push_tokens_data:
                 apns_token = push_tokens_data.get('apns')
@@ -398,7 +454,7 @@ class UserDetailSerializer(UserSerializer):
 
 
 class ShoutSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(source='type_name', choices=['offer', 'request'],
+    type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'],
                                    help_text="'offer' or 'request'")
     location = LocationSerializer()
     title = serializers.CharField(min_length=6, max_length=500, source='item.name')
@@ -409,13 +465,14 @@ class ShoutSerializer(serializers.ModelSerializer):
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
-    tags = TagSerializer(many=True, source='tag_objects')
+    tags = TagSerializer(default=list, many=True, source='tag_objects')
+    tags2 = serializers.DictField(default=dict)
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price',
-                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags')
+                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags', 'tags2')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -518,7 +575,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         return self.perform_save(shout=shout, validated_data=validated_data)
 
     def perform_save(self, shout, validated_data):
-        shout_type_name = validated_data.get('type_name')
+        shout_type_name = validated_data.get('get_type_display')
         shout_types = {
             'request': POST_TYPE_REQUEST,
             'offer': POST_TYPE_OFFER,
@@ -533,6 +590,9 @@ class ShoutDetailSerializer(ShoutSerializer):
 
         category = validated_data.get('category')
         tags = validated_data.get('tag_objects')
+        if isinstance(tags, list):
+            tags = tags[:MAX_TAGS_PER_SHOUT]
+        tags2 = validated_data.get('tags2')
 
         location = validated_data.get('location')
 
@@ -544,13 +604,16 @@ class ShoutDetailSerializer(ShoutSerializer):
         page_admin_user = getattr(request, 'page_admin_user', None)
 
         if not shout:
-            shout = shout_controller.create_shout(user=user, shout_type=shout_type, title=title, text=text, price=price,
-                                                  currency=currency, category=category, tags=tags, location=location,
-                                                  images=images, videos=videos, page_admin_user=page_admin_user)
+            shout = shout_controller.create_shout(
+                user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
+                category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
+                page_admin_user=page_admin_user
+            )
         else:
-            shout = shout_controller.edit_shout(shout, shout_type=shout_type, title=title, text=text, price=price,
-                                                currency=currency, category=category, tags=tags, location=location,
-                                                images=images, videos=videos, page_admin_user=page_admin_user)
+            shout = shout_controller.edit_shout(
+                shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
+                tags=tags, tags2=tags2, location=location, images=images, videos=videos, page_admin_user=page_admin_user
+            )
         return shout
 
 
@@ -635,7 +698,8 @@ class MessageSerializer(serializers.ModelSerializer):
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and (
-                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
+                                'location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -677,7 +741,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     users = UserSerializer(many=True, source='contributors',
                            help_text="List of users in this conversations")
     last_message = MessageSerializer(required=False)
-    type = serializers.CharField(source='type_name', help_text="Either 'chat' or 'about_shout'")
+    type = serializers.CharField(source='get_type_display', help_text="Either 'chat' or 'about_shout'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     about = serializers.SerializerMethodField(
@@ -733,8 +797,7 @@ class AttachedObjectSerializer(serializers.Serializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix')
-    type = serializers.CharField(source='type_name',
-                                 help_text="Currently, either 'listen' or 'message'")
+    type = serializers.CharField(source='get_type_display', help_text="Currently, either 'listen' or 'message'")
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'message' objects depending on notification type")
 
@@ -751,8 +814,8 @@ class CurrencySerializer(serializers.ModelSerializer):
 
 class ReportSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
-    type = serializers.CharField(source='type_name',
-                                 help_text="Currently, either 'user' or 'shout'", read_only=True)
+    type = serializers.CharField(source='get_type_display', help_text="Currently, either 'user' or 'shout'",
+                                 read_only=True)
     user = UserSerializer(read_only=True)
     attached_object = AttachedObjectSerializer(
         help_text="Attached Object that contain either 'user' or 'shout' objects depending on report type")
@@ -807,7 +870,8 @@ class FacebookAuthSerializer(serializers.Serializer):
         facebook_access_token = ret.get('facebook_access_token')
         initial_user = ret.get('user', {})
         initial_user['ip'] = get_real_ip(self.context.get('request'))
-        user = user_from_facebook_auth_response(facebook_access_token, initial_user)
+        is_test = self.root.context.get('is_test')
+        user = user_from_facebook_auth_response(facebook_access_token, initial_user, is_test)
         self.instance = user
         return ret
 
@@ -821,7 +885,8 @@ class GplusAuthSerializer(serializers.Serializer):
         gplus_code = ret.get('gplus_code')
         initial_user = ret.get('user', {})
         initial_user['ip'] = get_real_ip(self.context.get('request'))
-        user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'))
+        is_test = self.root.context.get('is_test')
+        user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'), is_test)
         self.instance = user
         return ret
 
@@ -861,7 +926,8 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def create(self, validated_data):
         initial_user = validated_data.get('user', {})
         initial_user['ip'] = get_real_ip(self.context.get('request'))
-        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user)
+        is_test = self.root.context.get('is_test')
+        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user, is_test)
         return user
 
 
@@ -875,6 +941,7 @@ class ShoutitSigninSerializer(serializers.Serializer):
         email = ret.get('email').lower()
         password = ret.get('password')
         initial_user = ret.get('user', {})
+        location = initial_user.get('location') if initial_user else None
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
@@ -897,8 +964,8 @@ class ShoutitSigninSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
-        if initial_user and initial_user.get('location'):
-            location_controller.update_profile_location(user.ap, initial_user.get('location'))
+        if location:
+            location_controller.update_profile_location(user.ap, location)
         return ret
 
 

@@ -24,9 +24,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     Conversation API Resource.
     """
     serializer_class = ConversationSerializer
-
     pagination_class = ReverseModifiedDateTimePagination
-
     permission_classes = (permissions.IsAuthenticated, IsContributor)
 
     # todo: conversations / messages search
@@ -36,8 +34,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
 
     def list(self, request, *args, **kwargs):
         """
-        Get signed in user conversations
-
+        List the user conversations
+        ###REQUIRES AUTH
         [Conversations Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.abebl6lr97rm)
         ---
         serializer: ConversationSerializer
@@ -56,7 +54,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete conversation
+        Delete a conversation
+        ###REQUIRES AUTH
         ---
         omit_serializer: true
         omit_parameters:
@@ -64,13 +63,13 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         """
         conversation = self.get_object()
         conversation.mark_as_deleted(request.user)
-        return Response(status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['get'], suffix='Messages')
     def messages(self, request, *args, **kwargs):
         """
-        Get conversation messages
-
+        List the conversation messages
+        ###REQUIRES AUTH
         [Messages Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.xnc089w6znop)
         ---
         serializer: MessageSerializer
@@ -104,11 +103,9 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     @detail_route(methods=['post', 'delete'], suffix='Read')
     def read(self, request, *args, **kwargs):
         """
-        Mark Conversation as read/unread
-
-        Marking as read will mark `all` messages as read
-
-        Marking as unread will mark only `last_message` as unread
+        Mark the conversation as read/unread
+        ###REQUIRES AUTH
+        Marking a conversation as read will mark `all` its messages as read as well. On the other hand, marking it as unread will only mark its `last_message` as unread.
         ---
         omit_serializer: true
         omit_parameters:
@@ -117,20 +114,17 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         conversation = self.get_object()
         if request.method == 'POST':
             conversation.mark_as_read(request.user)
-            return Response(status.HTTP_201_CREATED)
-
         elif request.method == 'DELETE':
             conversation.mark_as_unread(request.user)
-            return Response(status.HTTP_204_NO_CONTENT)
-        else:
-            return Response()
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post'], suffix='Reply')
     def reply(self, request, *args, **kwargs):
         """
-        Reply in conversation
-
+        Reply in a conversation
+        ###REQUIRES AUTH
         ###Request
+        ####Body
         <pre><code>
         {
             "text": "text goes here",
@@ -148,12 +142,11 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
                 },
                 {
                     "images": [], // list of image urls
-                    "videos": [], // list of {Video Object}s
+                    "videos": [] // list of {Video Object}s
                 }
             ]
         }
         </code></pre>
-
         ---
         response_serializer: MessageSerializer
         omit_parameters:
@@ -182,7 +175,6 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
     API endpoint that allows conversations/messages to be viewed or added.
     """
     serializer_class = MessageSerializer
-
     permission_classes = (permissions.IsAuthenticated, IsContributor)
 
     def get_queryset(self):
@@ -190,7 +182,8 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete message
+        Delete a message
+        ###REQUIRES AUTH
         ---
         omit_serializer: true
         omit_parameters:

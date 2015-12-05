@@ -1,21 +1,19 @@
 from __future__ import unicode_literals
 from datetime import timedelta, datetime
-
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.postgres.fields import ArrayField
-from django.utils import timezone
+from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.db.models import Q
-from django.conf import settings
+from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
-from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean
-
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE,
-                              PostType, COUNTRY_ISO)
+from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
+from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType,
+                              COUNTRY_ISO)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel
-from shoutit.models.tag import Tag, TagNameField
+from shoutit.models.tag import Tag, ShoutitSlugField
 from shoutit.utils import error_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
@@ -110,10 +108,6 @@ class Post(Action):
         self.save()
 
     @property
-    def type_name(self):
-        return PostType.values[self.type]
-
-    @property
     def date_published_unix(self):
         return date_unix(self.date_published)
 
@@ -133,7 +127,8 @@ class Post(Action):
 
 
 class Shout(Post):
-    tags = ArrayField(TagNameField())
+    tags = ArrayField(ShoutitSlugField())
+    tags2 = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
     # Todo: check why item can be null and make it not one to one
@@ -201,7 +196,7 @@ class Shout(Post):
     @property
     def track_properties(self):
         return {
-            'type': self.type_name,
+            'type': self.get_type_display(),
             'category': self.category.name,
             'Country': COUNTRY_ISO.get(self.country),
             'Region': self.state,
@@ -221,6 +216,7 @@ class ShoutIndex(DocType):
     text = String(analyzer='snowball')
     tags_count = Integer()
     tags = String(index='not_analyzed')
+    tags2 = Object()
     category = String(index='not_analyzed')
     country = String(index='not_analyzed')
     postal_code = String(index='not_analyzed')
@@ -244,10 +240,31 @@ class ShoutIndex(DocType):
 
     class Meta:
         index = settings.ENV
+        dynamic_templates = MetaField([
+            {
+                "tags2_integer_keys": {
+                    "match_pattern": "regex",
+                    "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
+                    "mapping": {
+                        "type": "integer"
+                    }
+                }
+            },
+            {
+                "tags2_string_keys": {
+                    "path_match": "tags2.*",
+                    "mapping": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    }
+                }
+            }
+        ])
 
     @property
     def date_published_unix(self):
         return date_unix(self.date_published)
+
 
 # initiate the index if not initiated
 try:
@@ -267,6 +284,7 @@ class Video(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
+
 # class DealManager(ShoutManager):
 # def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
 #         return ShoutManager.get_valid_shouts(self, [POST_TYPE_DEAL], country=country, city=city, get_expired=get_expired, get_muted=get_muted)

@@ -18,7 +18,7 @@ from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
 from shoutit.models import Shout, Post
-from shoutit.controllers import email_controller, item_controller, location_controller
+from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
 from shoutit.utils import debug_logger, track
 
 
@@ -84,25 +84,31 @@ def NotifyPreExpiry():
 
 
 # todo: handle exception on each step and in case of errors, rollback!
-def create_shout(user, shout_type, title, text, price, currency, category, tags, location, images=None, videos=None,
-                 date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None):
+def create_shout(user, shout_type, title, text, price, currency, category, tags, location, tags2=None, images=None,
+                 videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
         if not isinstance(tags[0], basestring):
-            tags = [tag.get('name') for tag in tags]
+            tags = map(lambda t: t.get('name'), tags)
     # process tags
     tags = process_tags(tags)
     # add main_tag from category
     tags.insert(0, category.main_tag.name)
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
+    # Create actual tags objects (when necessary)
+    tag_controller.get_or_create_tags(tags, user)
+    # tags2
+    if not tags2:
+        tags2 = {}
+    for k, v in tags2.items():
+        tags2[k] = str(v)
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos)
-
-    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, item=item, is_sss=is_sss,
-                         priority=priority, save=False, page_admin_user=page_admin_user)
+    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
+                         is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
 
     if not date_published:
@@ -120,7 +126,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
 
 
 def edit_shout(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
-               images=None, videos=None, location=None, page_admin_user=None):
+               tags2=None, images=None, videos=None, location=None, page_admin_user=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images, videos=videos)
     if shout_type:
         shout.type = shout_type
@@ -141,6 +147,10 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
             category = shout.category
         tags.insert(0, category.main_tag.name)
         shout.tags = tags
+        # Create actual tags objects (when necessary)
+        tag_controller.get_or_create_tags(tags, shout.user)
+    if tags2:
+        shout.tags2 = tags2
     if location:
         location_controller.update_object_location(shout, location, save=False)
         location_controller.add_predefined_city(location)
@@ -180,11 +190,24 @@ def _save_shout_index(shout=None, created=False):
     except NotFoundError:
         shout_index = ShoutIndex()
         shout_index._id = shout.pk
-    shout_index.type = shout.type_name
+    shout_index = shout_index_from_shout(shout, shout_index)
+    if shout_index.save():
+        debug_logger.debug('Created ShoutIndex: %s' % shout.pk)
+    else:
+        debug_logger.debug('Updated ShoutIndex: %s' % shout.pk)
+
+
+def shout_index_from_shout(shout, shout_index=None):
+    if shout_index is None:
+        shout_index = ShoutIndex()
+        shout_index._id = shout.pk
+    shout_index.type = shout.get_type_display()
     shout_index.title = shout.item.name
     shout_index.text = shout.text
     shout_index.tags = shout.tags
     shout_index.tags_count = len(shout.tags)
+    for k, v in shout.tags2.items():
+        shout_index.tags2[k] = v
     shout_index.category = shout.category.name
     shout_index.country = shout.country
     shout_index.postal_code = shout.postal_code
@@ -202,7 +225,4 @@ def _save_shout_index(shout=None, created=False):
     shout_index.video_url = shout.video_url
     shout_index.is_sss = shout.is_sss
     shout_index.priority = shout.priority
-    if shout_index.save():
-        debug_logger.debug('Created ShoutIndex: %s' % shout.pk)
-    else:
-        debug_logger.debug('Updated ShoutIndex: %s' % shout.pk)
+    return shout_index
