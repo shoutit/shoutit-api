@@ -3,34 +3,37 @@
 
 """
 from __future__ import unicode_literals
-from collections import OrderedDict
+
 import random
 import uuid
+from collections import OrderedDict
+
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
-from django.conf import settings
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
+from rest_framework.settings import api_settings
+
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT)
 from common.utils import any_in
+from shoutit.controllers import location_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
-from shoutit.controllers import location_controller
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
     DiscoverItem, Profile, Page)
-from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
-from rest_framework.settings import api_settings
 
 
 class LocationSerializer(serializers.Serializer):
@@ -527,6 +530,7 @@ class ShoutSerializer(serializers.ModelSerializer):
 class ShoutDetailSerializer(ShoutSerializer):
     images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
+    publish_to_facebook = serializers.BooleanField(write_only=True, required=False)
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner.")
     related_requests = ShoutSerializer(many=True, read_only=True)
@@ -535,8 +539,8 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + (
-            'images', 'videos', 'reply_url', 'related_requests', 'related_offers', 'conversations')
+        fields = parent_fields + ('images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url',
+                                  'related_requests', 'related_offers', 'conversations')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -595,6 +599,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         tags2 = validated_data.get('tags2')
 
         location = validated_data.get('location')
+        publish_to_facebook = validated_data.get('publish_to_facebook')
 
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
@@ -607,7 +612,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             shout = shout_controller.create_shout(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user
+                page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook
             )
         else:
             shout = shout_controller.edit_shout(
@@ -697,9 +702,7 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
-                                'location']):
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -738,25 +741,21 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    users = UserSerializer(many=True, source='contributors',
-                           help_text="List of users in this conversations")
+    users = UserSerializer(many=True, source='contributors', help_text="List of users in this conversations")
     last_message = MessageSerializer(required=False)
     type = serializers.CharField(source='get_type_display', help_text="Either 'chat' or 'about_shout'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
-    about = serializers.SerializerMethodField(
-        help_text="Only set if the conversation of type 'about_shout'")
+    about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
     unread_messages_count = serializers.SerializerMethodField(
         help_text="Number of unread messages in this conversation")
-    messages_url = serializers.SerializerMethodField(
-        help_text="URL to get the messages of this conversation")
+    messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
         model = Conversation
-        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count',
-                  'unread_messages_count', 'users',
-                  'last_message', 'about', 'messages_url', 'reply_url')
+        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count',
+                  'admins', 'users', 'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
         # todo: map types

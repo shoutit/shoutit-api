@@ -6,8 +6,8 @@ import requests
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE
-from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_TRY_AGAIN
-from shoutit.models import (User, LinkedFacebookAccount, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
+from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN
+from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 from shoutit.controllers import location_controller
 
@@ -113,7 +113,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     return user
 
 
-def auth_with_facebook(fb_user, long_lived_token, initial_user=None, is_test=False):
+def auth_with_facebook(fb_user, access_token, initial_user=None, is_test=False):
     email = fb_user.get('email').lower()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
@@ -137,23 +137,14 @@ def auth_with_facebook(fb_user, long_lived_token, initial_user=None, is_test=Fal
         if location:
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username, is_activated=True,
-                           profile_fields=profile_fields, is_test=is_test)
+        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username,
+                           is_activated=True, profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
         user.activate()
 
     if not user.profile.gender and gender:
         user.profile.update(gender=gender)
-
-    access_token = long_lived_token.get('access_token')
-    expires = long_lived_token.get('expires')
-    try:
-        LinkedFacebookAccount.objects.create(user=user, facebook_id=facebook_id, access_token=access_token,
-                                             expires=expires)
-    except IntegrityError as e:
-        error_logger.warn(str(e), exc_info=True)
-        raise FB_LINK_ERROR_TRY_AGAIN
 
     # todo: move the entire logic to rq
     std_male = '10354686_10150004552801856_220367501106153455_n.jpg'

@@ -3,25 +3,28 @@
 
 """
 from __future__ import unicode_literals
+
 import json
 import re
-from django.conf import settings
 
+from django.conf import settings
+from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.decorators import list_route
+
 from common.constants import POST_TYPE_OFFER
 from common.constants import POST_TYPE_REQUEST
 from shoutit import utils
-
+from shoutit.api.v2.renderers import PlainTextRenderer
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
-from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation,
-                            User, DBZ2User)
-from shoutit.utils import debug_logger, error_logger
-from ipware.ip import get_real_ip
+from shoutit.controllers.facebook_controller import (
+    update_linked_facebook_account_scopes, delete_linked_facebook_account)
+from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User)
+from shoutit.utils import debug_logger, error_logger, parse_signed_request
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -293,6 +296,42 @@ class MiscViewSet(viewsets.ViewSet):
             return Response({'texts': texts})
         except Exception as e:
             return Response({'error': str(e)})
+
+    @list_route(methods=['post'], suffix='Deauthorize a Facebook Installation')
+    def fb_deauth(self, request):
+        """
+        Deauthorize a Facebook Installation. This removes the LinkedFacebookAccount record from Shoutit Database.
+        ###NOT TO BE USED BY API CLIENTS
+        ###POST
+        Expects a POST body with signed_request to be parsed against Shoutit Facebook Application secret.
+        """
+        signed_request = request.data.get('signed_request')
+        if signed_request:
+            parsed_signed_request = parse_signed_request(signed_request)
+            facebook_user_id = parsed_signed_request.get('user_id')
+            if facebook_user_id:
+                delete_linked_facebook_account(facebook_user_id)
+        return Response()
+
+    @list_route(methods=['get', 'post'], renderer_classes=(PlainTextRenderer,), suffix='Deauthorize a Facebook Installation')
+    def fb_scopes_changed(self, request):
+        """
+        Get notified about a Facebook user changing Shoutit App scopes. This updates the LinkedFacebookAccount record with new scopes.
+        ###NOT TO BE USED BY API CLIENTS
+        ###POST
+        Expects a POST body with entry as list of objects each which has a uid and other attributes.
+        https://developers.facebook.com/docs/graph-api/webhooks/v2.5
+        """
+        hub_challenge = request.query_params.get('hub.challenge')
+        if request.method == 'GET':
+            return Response(hub_challenge)
+
+        entries = request.data.get('entry', [])
+        for entry in entries:
+            facebook_user_id = entry.get('uid')
+            if facebook_user_id:
+                update_linked_facebook_account_scopes(facebook_user_id)
+        return Response("OK")
 
 
 def handle_dbz_reply(in_email, msg, request):

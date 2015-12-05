@@ -8,8 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType,
-                              COUNTRY_ISO)
+from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel
@@ -92,6 +91,7 @@ class Post(Action):
     text = models.TextField(max_length=10000, blank=True)
     type = models.IntegerField(choices=PostType.choices, default=POST_TYPE_REQUEST.value, db_index=True)
     date_published = models.DateTimeField(default=timezone.now, db_index=True)
+    published_on = HStoreField(blank=True, default=dict)
 
     muted = models.BooleanField(default=False, db_index=True)
     is_disabled = models.BooleanField(default=False, db_index=True)
@@ -198,14 +198,15 @@ class Shout(Post):
         return {
             'type': self.get_type_display(),
             'category': self.category.name,
-            'Country': COUNTRY_ISO.get(self.country),
+            'Country': self.get_country_display(),
             'Region': self.state,
             'City': self.city,
             'images': len(self.images),
             'videos': self.videos.count(),
             'price': self.item.price,
             'currency': self.item.currency.name if self.item.currency else None,
-            'shout_id': self.pk
+            'shout_id': self.pk,
+            'published_to_facebook': self.published_on.get('facebook')
         }
 
 

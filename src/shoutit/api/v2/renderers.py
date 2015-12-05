@@ -4,7 +4,7 @@
 """
 from __future__ import unicode_literals
 from django.utils.encoding import smart_text
-from rest_framework.renderers import BrowsableAPIRenderer
+from rest_framework.renderers import BrowsableAPIRenderer, BaseRenderer
 from rest_framework.utils import formatting
 
 
@@ -22,3 +22,12 @@ class ShoutitBrowsableAPIRenderer(BrowsableAPIRenderer):
             return formatting.markup_description(description)
         except (AttributeError, TypeError):
             return super(ShoutitBrowsableAPIRenderer, self).get_description(view, status_code)
+
+
+class PlainTextRenderer(BaseRenderer):
+    media_type = 'text/plain'
+    format = 'txt'
+    charset = 'iso-8859-1'
+
+    def render(self, data, media_type=None, renderer_context=None):
+        return data.encode(self.charset)

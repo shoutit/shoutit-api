@@ -148,7 +148,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
                 "latitude": 25.1593957,
                 "longitude": 55.2338326,
                 "address": "Whatever Street 31"
-            }
+            },
+            "publish_to_facebook": true
         }
         </code></pre>
         ---

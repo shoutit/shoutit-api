@@ -149,9 +149,8 @@ class ProfileAdmin(admin.ModelAdmin, UserLinkMixin):
 
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'facebook_id', 'access_token', 'expires', 'created_at')
-    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
-                     'facebook_id']
+    list_display = ('id', '_user', 'facebook_id', 'access_token', 'scopes', 'expires_at', 'created_at')
+    search_fields = ('user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id')
     ordering = ('-created_at',)
     readonly_fields = ('_user',)
     exclude = ('user',)
@@ -160,8 +159,7 @@ class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
 @admin.register(LinkedGoogleAccount)
 class LinkedGoogleAccountAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'gplus_id', 'created_at')
-    search_fields = ['user__first_name', 'user__last_name', 'user__username', 'user__email',
-                     'facebook_id']
+    search_fields = ('user__first_name', 'user__last_name', 'user__username', 'user__email', 'gplus_id')
     ordering = ('-created_at',)
     readonly_fields = ('_user',)
     exclude = ('user',)

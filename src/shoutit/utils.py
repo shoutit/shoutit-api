@@ -1,37 +1,37 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import urllib
-import urlparse
-from cStringIO import StringIO
-import random
-import json
-import uuid
 import base64
 import hashlib
 import hmac
-import time
+import json
 import logging
+import random
+import time
+import urllib
+import urlparse
+import uuid
 from HTMLParser import HTMLParser
+from cStringIO import StringIO
 from re import sub
 
-from PIL import Image
 import boto
+from PIL import Image
+from datetime import timedelta
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
 # from django.dispatch import receiver
 from django.http import HttpResponse
+from django.utils.timezone import now as django_now
 from django_rq import job
 import nexmo as nexmo
 import phonenumbers
 import requests
 from mixpanel import Mixpanel
 from twilio.rest import TwilioRestClient
-
 from shoutit import settings
 from shoutit.lib import mailchimp
 from common.lib.IP2Location import IP2Location
-
 
 # Shoutit loggers
 error_logger = logging.getLogger('shoutit.error')
@@ -90,19 +90,17 @@ def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECR
     l = signed_request.split('.', 2)
     encoded_sig = l[0]
     payload = l[1]
-
     sig = base64_url_decode(encoded_sig)
     data = json.loads(base64_url_decode(payload))
-
     if data.get('algorithm').upper() != 'HMAC-SHA256':
-        return None
-    else:
-        expected_sig = hmac.new(secret, msg=payload, digestmod=hashlib.sha256).digest()
+        return {}
 
+    # http://stackoverflow.com/questions/20849805/python-hmac-typeerror-character-mapping-must-return-integer-none-or-unicode
+    expected_sig = hmac.new(str(secret), msg=str(payload), digestmod=hashlib.sha256).digest()
     if sig != expected_sig:
-        return None
-    else:
-        return data
+        return {}
+
+    return data
 
 
 class JsonResponse(HttpResponse):
@@ -380,3 +378,13 @@ def url_with_querystring(url, params=None, **kwargs):
 # @receiver(post_delete)
 # def model_post_delete(sender, instance=None, created=False, **kwargs):
 #     debug_logger.debug("Deleted %s" % repr(instance).decode('utf8'))
+
+
+def now_plus_delta(delta=None):
+    """
+    Returns an aware or naive datetime.datetime, depending on settings.USE_TZ with delta.
+    """
+    now = django_now()
+    if delta and isinstance(delta, timedelta):
+        return now + delta
+    return now

@@ -27,6 +27,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     """
     type = models.SmallIntegerField(choices=ConversationType.choices, blank=False)
     users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations2')
+    admins = ArrayField(models.UUIDField(), default=list, blank=True)
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.ConversationDelete',
                                         related_name='deleted_conversations2')
     last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True)
@@ -43,9 +44,6 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
         return messages[:limit][::-1]
 
     def get_messages_qs(self, ):
-        return self.messages.order_by('-created_at')
-
-    def get_messages_qs2(self, ):
         return self.messages.all()
 
     @property
