@@ -1,23 +1,25 @@
 from __future__ import unicode_literals
+
 import re
+import sys
+from collections import OrderedDict
 
 from django.conf import settings
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager, AnonymousUser
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.core.mail import send_mail
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone, six
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
-import sys
 
-from common.utils import AllowedUsernamesValidator, date_unix
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
+from common.utils import AllowedUsernamesValidator, date_unix
 from shoutit.controllers import email_controller
 from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
 from shoutit.models.listen import Listen2
@@ -366,6 +368,23 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
                 instance.un_mute_shouts()
             else:
                 instance.mute_shouts()
+
+
+class InactiveUser(AnonymousUser):
+    # Todo: add init function that accepts the actual inactive user
+    @property
+    def to_dict(self):
+        return OrderedDict({
+            "id": "",
+            "api_url": "",
+            "web_url": "",
+            "username": "",
+            "name": "Shoutit User",
+            "is_activated": False,
+            "image": "https://user-image.static.shoutit.com/default_male.jpg",
+        })
+
+# Todo: Add DeletedUser class
 
 
 class AbstractProfile(UUIDModel, LocationMixin):

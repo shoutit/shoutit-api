@@ -33,6 +33,8 @@ from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
     DiscoverItem, Profile, Page)
+from shoutit.models.auth import InactiveUser
+from shoutit.models.post import InactiveShout
 from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
 
 
@@ -249,6 +251,11 @@ class UserSerializer(serializers.ModelSerializer):
 
         return ret
 
+    def to_representation(self, instance):
+        if not instance.is_active:
+            return InactiveUser().to_dict
+        return super(UserSerializer, self).to_representation(instance)
+
 
 class UserDetailSerializer(UserSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False,
@@ -303,6 +310,8 @@ class UserDetailSerializer(UserSerializer):
         return reverse('user-message', kwargs={'username': user.username}, request=self.context['request'])
 
     def to_representation(self, instance):
+        if not instance.is_active:
+            return InactiveUser().to_dict
         ret = super(UserDetailSerializer, self).to_representation(instance)
 
         # hide sensitive attributes from other users than owner
@@ -526,6 +535,11 @@ class ShoutSerializer(serializers.ModelSerializer):
         ret = super(ShoutSerializer, self).to_internal_value(data)
         return ret
 
+    def to_representation(self, instance):
+        if instance.muted or instance.is_disabled:
+            return InactiveShout().to_dict
+        return super(ShoutSerializer, self).to_representation(instance)
+
 
 class ShoutDetailSerializer(ShoutSerializer):
     images = serializers.ListField(source='item.images', child=serializers.URLField(), required=False)
@@ -553,6 +567,8 @@ class ShoutDetailSerializer(ShoutSerializer):
         return ConversationSerializer(conversations, many=True, context=self.root.context).data
 
     def to_representation(self, instance):
+        if instance.muted or instance.is_disabled:
+            return InactiveShout().to_dict
         ret = super(ShoutDetailSerializer, self).to_representation(instance)
         if self.root.context['request'].user == instance.owner:
             del ret['reply_url']

@@ -31,8 +31,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     lookup_value_regex = '[0-9a-zA-Z._]+'
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
-    queryset = User.objects.filter(is_activated=True)
-    queryset_detail = User.objects.filter().prefetch_related('profile')
+    queryset = User.objects.filter(is_active=True, is_activated=True)
+    queryset_detail = User.objects.filter(is_active=True).prefetch_related('profile', 'page')
     pagination_class = ShoutitPageNumberPaginationNoCount
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')
@@ -44,7 +44,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if self.request.user.is_authenticated():
             if username == 'me' or username == self.request.user.username:
                 return self.request.user
-
         return super(UserViewSet, self).get_object()
 
     def list(self, request, *args, **kwargs):
