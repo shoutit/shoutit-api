@@ -5,20 +5,19 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
-
 from provider import constants as provider_constants, scope as provider_scope
 from provider.oauth2.forms import ClientAuthForm
+from provider.oauth2.models import AccessToken, RefreshToken, Client
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.utils import now
 from provider.views import OAuthError
-from provider.oauth2.models import AccessToken, RefreshToken, Client
-
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
-from rest_framework.exceptions import ValidationError
+
 from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
 from shoutit.api.v2.serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
@@ -76,13 +75,14 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Returns a successful response after creating the access token
         as defined in :rfc:`5.1`.
         """
+        user = access_token.user
+        if not user.is_active:
+            raise AuthenticationFailed('User inactive or deleted.')
 
         # set the request user in case it is not set [refresh_token, password, etc grants]
-        user = access_token.user
         self.request.user = user
         user_dict = UserDetailSerializer(user, context={'request': self.request}).data
         new_signup = getattr(user, 'new_signup', False)
-
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,
@@ -469,12 +469,13 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         Returns a successful response after creating the access token
         as defined in :rfc:`5.1`.
         """
+        user = access_token.user
+        if not user.is_active:
+            raise AuthenticationFailed('User inactive or deleted.')
 
         # set the request user in case it is not set
-        user = access_token.user
         self.request.user = user
         user_dict = UserDetailSerializer(user, context={'request': self.request}).data
-
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,
@@ -515,8 +516,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             - name: body
               paramType: body
         """
-        serializer = ShoutitChangePasswordSerializer(data=request.data,
-                                                     context={'request': request})
+        serializer = ShoutitChangePasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return self.success_response("Password changed.")
 
@@ -655,6 +655,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             - name: token
               paramType: query
         """
+        # Todo: Utilize serializers
         if request.method == 'GET':
             token = request.query_params.get('token')
             if not token:
@@ -664,6 +665,8 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 if cf.is_disabled:
                     raise ValueError()
                 user = cf.user
+                if not user.is_active:
+                    raise AuthenticationFailed('User inactive or deleted.')
                 user.activate()
                 cf.is_disabled = True
                 cf.save(update_fields=['is_disabled'])

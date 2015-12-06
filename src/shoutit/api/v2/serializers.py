@@ -15,7 +15,7 @@ from django.db.models import Q
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
@@ -999,6 +999,8 @@ class ShoutitResetPasswordSerializer(serializers.Serializer):
         email = ret.get('email').lower()
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
+            if not user.is_active:
+                raise AuthenticationFailed('User inactive or deleted.')
         except User.DoesNotExist:
             raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
         self.instance = user
@@ -1056,9 +1058,10 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
 
     def validate_reset_token(self, value):
         try:
-            cf = ConfirmToken.objects.get(type=TOKEN_TYPE_RESET_PASSWORD, token=value,
-                                          is_disabled=False)
-            self.instance = cf.user
+            user = ConfirmToken.objects.get(type=TOKEN_TYPE_RESET_PASSWORD, token=value, is_disabled=False).user
+            if not user.is_active:
+                raise AuthenticationFailed('User inactive or deleted.')
+            self.instance = user
         except ConfirmToken.DoesNotExist:
             raise ValidationError(['Reset token is invalid.'])
 
