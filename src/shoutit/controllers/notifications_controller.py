@@ -1,29 +1,32 @@
 from __future__ import unicode_literals
+
+import re
 import uuid
+from copy import deepcopy
+
 import requests
+from antigate import AntiGate
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db.models.query_utils import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import HttpRequest
 from django.utils.translation import ugettext as _
-from django.db.models.query_utils import Q
+from django_rq import job
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
-from django_rq import job
 from rest_framework.request import Request
+
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED,
                               NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, DEVICE_ANDROID, DEVICE_IOS,
-                              NOTIFICATION_TYPE_BROADCAST)
+                              NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_USER_UPDATE)
 from shoutit.api.versioning import ShoutitNamespaceVersioning
 from shoutit.models import Notification, DBCLConversation, Message, User, PushBroadcast
 from shoutit.utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, send_nexmo_sms
 from shoutit_pusher.models import PusherChannel
 from shoutit_pusher.utils import pusher
-from antigate import AntiGate
-import re
-from copy import deepcopy
 
 
 class NotifySSSException(Exception):
@@ -52,7 +55,10 @@ def serialize_attached_object(attached_object, user, request):
     request.user = user
 
     if isinstance(attached_object, User):
-        attached_object_dict = serializers.UserSerializer(attached_object, context={'request': request}).data
+        if getattr(attached_object, 'detailed', False):
+            attached_object_dict = serializers.UserDetailSerializer(attached_object, context={'request': request}).data
+        else:
+            attached_object_dict = serializers.UserSerializer(attached_object, context={'request': request}).data
     elif isinstance(attached_object, Message):
         attached_object_dict = serializers.MessageSerializer(attached_object, context={'request': request}).data
     else:
@@ -87,14 +93,15 @@ def get_dbz_base_url(db_link):
 
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None, request=None):
-    # send notification to pusher
+    # Send notification to pusher
     attached_object_dict = serialize_attached_object(attached_object, user, request)
     send_pusher.delay(user, notification_type, attached_object_dict)
 
-    # create notification object
-    Notification.create(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object)
+    # Create notification object
+    if notification_type != NOTIFICATION_TYPE_USER_UPDATE:
+        Notification.create(ToUser=user, type=notification_type, FromUser=from_user, attached_object=attached_object)
 
-    # send appropriate notification
+    # Send appropriate notification
     if check_sss(user, notification_type, attached_object, from_user):
         send_sss(user, attached_object, notification_type, from_user)
     elif check_push() and not check_pusher(user):
@@ -174,7 +181,8 @@ def sms_sss_user(sss_user, from_user, message, sms_anyway=False):
         # create dbcl conversation
         ref = uuid.uuid4().hex
         sms_code = ref[-6:]
-        dbcl_conversation = DBCLConversation(from_user=from_user, to_user=sss_user, shout=shout, ref=ref, sms_code=sms_code)
+        dbcl_conversation = DBCLConversation(from_user=from_user, to_user=sss_user, shout=shout, ref=ref,
+                                             sms_code=sms_code)
         dbcl_conversation.save()
     except DBCLConversation.MultipleObjectsReturned:
         dbcl_conversation = DBCLConversation.objects.filter(from_user=from_user, to_user=sss_user, shout=shout)[0]
@@ -315,6 +323,12 @@ def notify_user_of_message(user, message, request=None):
     notify_user.delay(user, NOTIFICATION_TYPE_MESSAGE, deepcopy(message.user), message, deepcopy(request))
 
 
+def notify_user_of_user_update(user, request=None):
+    user.detailed = True
+    # Todo: activate after notifying clients about changes and checking with older clients to prevent crash!
+    # notify_user.delay(user, NOTIFICATION_TYPE_USER_UPDATE, attached_object=deepcopy(user), request=deepcopy(request))
+
+
 def notify_business_of_exp_posted(business, exp):
     notify_user.delay(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.user, attached_object=exp)
 
@@ -365,7 +379,8 @@ def prepare_push_broadcast(push_broadcast):
 
 @job(settings.RQ_QUEUE_PUSH_BROADCAST)
 def send_push_broadcast(push_broadcast, devices, user_ids):
-    assert isinstance(user_ids, list) and len(user_ids) <= settings.MAX_BROADCAST_RECIPIENTS, "user_ids shout be a list <= 1000"
+    assert isinstance(user_ids, list) and len(
+        user_ids) <= settings.MAX_BROADCAST_RECIPIENTS, "user_ids shout be a list <= 1000"
 
     if DEVICE_IOS.value in devices:
         apns_devices = APNSDevice.objects.filter(user__in=user_ids)

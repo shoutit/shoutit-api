@@ -26,7 +26,7 @@ from common.constants import (
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT)
 from common.utils import any_in
 from shoutit.controllers import location_controller
-from shoutit.controllers import shout_controller, user_controller, message_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import (
@@ -387,6 +387,7 @@ class UserDetailSerializer(UserSerializer):
             user.email = new_email
             user_update_fields.extend(['email', 'is_activated'])
         # Save
+        user.notify = False
         user.save(update_fields=user_update_fields)
 
         # Location
@@ -435,6 +436,7 @@ class UserDetailSerializer(UserSerializer):
                 ap_update_fields.append('video')
 
         if ap_data or profile_data or page_data:
+            ap.notify = False
             ap.save(update_fields=ap_update_fields)
 
         # Push Tokens
@@ -462,6 +464,8 @@ class UserDetailSerializer(UserSerializer):
                     # create new device for user with gcm_token
                     GCMDevice(registration_id=gcm_token, user=user).save()
 
+        # Notify about updates
+        notifications_controller.notify_user_of_user_update(user)
         return user
 
 

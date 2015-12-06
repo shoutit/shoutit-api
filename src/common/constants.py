@@ -306,7 +306,7 @@ class NotificationType(Constant):
 NOTIFICATION_TYPE_LISTEN = NotificationType('new_listen')
 NOTIFICATION_TYPE_MESSAGE = NotificationType('new_message')
 NOTIFICATION_TYPE_BROADCAST = NotificationType('broadcast')
-NOTIFICATION_TYPE_PROFILE_UPDATE = NotificationType('profile_update')
+NOTIFICATION_TYPE_USER_UPDATE = NotificationType('user_update')
 NOTIFICATION_TYPE_EXP_POSTED = NotificationType('Experience')
 NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
 NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')

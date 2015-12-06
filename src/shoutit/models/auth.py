@@ -358,6 +358,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    from shoutit.controllers import notifications_controller
     action = 'Created' if created else 'Updated'
     debug_logger.debug('%s User: %s' % (action, instance))
 
@@ -368,6 +369,11 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
                 instance.un_mute_shouts()
             else:
                 instance.mute_shouts()
+
+    if not created:
+        if getattr(instance, 'notify', True):
+            # Send notification about user changes
+            notifications_controller.notify_user_of_user_update(instance)
 
 
 class InactiveUser(AnonymousUser):
@@ -420,10 +426,16 @@ class AbstractProfile(UUIDModel, LocationMixin):
 
 @receiver(post_save)
 def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
+    from shoutit.controllers import notifications_controller
     if not issubclass(sender, AbstractProfile):
         return
     action = 'Created' if created else 'Updated'
     debug_logger.debug('%s %s: %s' % (action, instance.model_name, instance))
+
+    if not created:
+        if getattr(instance, 'notify', True):
+            # Send notification about user changes
+            notifications_controller.notify_user_of_user_update(instance.user)
 
 
 class LinkedFacebookAccount(UUIDModel):
