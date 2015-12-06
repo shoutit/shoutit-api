@@ -166,9 +166,6 @@ def edit_shout(shout, shout_type=None, title=None, text=None, price=None, curren
 
 @receiver(post_save, sender=Shout)
 def shout_post_save(sender, instance=None, created=False, **kwargs):
-    action = 'Created' if created else 'Updated'
-    log = '%s Shout: %s: %s, %s: %s' % (action, instance.pk, instance.item.name, instance.country, instance.city)
-    debug_logger.debug(log)
     # Create / Update ShoutIndex
     save_shout_index(instance, created)
     if created:
@@ -192,7 +189,7 @@ def _save_shout_index(shout=None, created=False):
     try:
         if created:
             raise NotFoundError()
-        if shout.is_disabled:
+        if shout.is_disabled or shout.muted:
             return delete_object_index(ShoutIndex, shout)
         shout_index = ShoutIndex.get(shout.pk)
     except NotFoundError:

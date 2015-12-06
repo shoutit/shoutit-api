@@ -225,6 +225,18 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         # give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
         pass
 
+    def mute_shouts(self):
+        # Todo: optimize
+        from shoutit.models import Shout
+        for shout in Shout.objects.filter(user_id=self.id):
+            shout.mute()
+
+    def un_mute_shouts(self):
+        # Todo: optimize
+        from shoutit.models import Shout
+        for shout in Shout.objects.filter(user_id=self.id):
+            shout.unmute()
+
     def deactivate(self):
         self.is_activated = False
         self.save(update_fields=['is_activated'])
@@ -346,6 +358,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     action = 'Created' if created else 'Updated'
     debug_logger.debug('%s User: %s' % (action, instance))
+
+    # Mute / unmute user shouts if his active state was changed
+    if isinstance(update_fields, frozenset):
+        if 'is_active' in update_fields:
+            if instance.is_active:
+                instance.un_mute_shouts()
+            else:
+                instance.mute_shouts()
 
 
 class AbstractProfile(UUIDModel, LocationMixin):

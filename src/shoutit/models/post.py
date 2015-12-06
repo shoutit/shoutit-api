@@ -19,28 +19,18 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
 class PostManager(models.Manager):
-    def get_valid_posts(self, types=None, country=None, city=None, get_expired=False,
-                        get_muted=False):
-
-        qs = self
-        qs = qs.distinct().filter(is_disabled=False)
-
+    def get_valid_posts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
+        qs = self.distinct().filter(is_disabled=False)
         if types:
             qs = qs.filter(type__in=types)
-
         if country:
             qs = qs.filter(country__iexact=country)
-
         if city:
             qs = qs.filter(city__iexact=city)
-
         if not get_muted:
             qs = qs.filter(muted=False)
-
         if not get_expired:
             qs = self.filter_expired_out(qs)
-
-        # todo: filter out posts by disabled / deactivated users
         return qs
 
     def filter_expired_out(self, qs):
@@ -61,13 +51,12 @@ class PostManager(models.Manager):
 
 
 class ShoutManager(PostManager):
-    def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False,
-                         get_muted=False):
+    def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
         if not types:
             types = [POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]
         types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]))
-        return PostManager.get_valid_posts(self, types, country=country, city=city,
-                                           get_expired=get_expired, get_muted=get_muted)
+        return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired,
+                                           get_muted=get_muted)
 
     def filter_expired_out(self, qs):
         today = datetime.today()
@@ -78,13 +67,13 @@ class ShoutManager(PostManager):
 
     def get_valid_requests(self, country=None, city=None, get_expired=False, get_muted=False):
         types = [POST_TYPE_REQUEST]
-        return self.get_valid_shouts(types=types, country=country, city=city,
-                                     get_expired=get_expired, get_muted=get_muted)
+        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired,
+                                     get_muted=get_muted)
 
     def get_valid_offers(self, country=None, city=None, get_expired=False, get_muted=False):
         types = [POST_TYPE_OFFER]
-        return self.get_valid_shouts(types=types, country=country, city=city,
-                                     get_expired=get_expired, get_muted=get_muted)
+        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired,
+                                     get_muted=get_muted)
 
 
 class Post(Action):
@@ -105,6 +94,10 @@ class Post(Action):
 
     def mute(self):
         self.muted = True
+        self.save()
+
+    def unmute(self):
+        self.muted = False
         self.save()
 
     @property
@@ -145,7 +138,7 @@ class Shout(Post):
     objects = ShoutManager()
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.item)
+        return unicode("%s: %s, %s: %s" % (self.pk, self.item.name, self.country, self.city))
 
     @property
     def images(self):
