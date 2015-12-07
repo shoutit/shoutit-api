@@ -1086,6 +1086,19 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
             raise ValidationError(['Reset token is invalid.'])
 
 
+class UserDeactivationSerializer(serializers.Serializer):
+    password = serializers.CharField()
+
+    def to_internal_value(self, data):
+        ret = super(UserDeactivationSerializer, self).to_internal_value(data)
+        password = ret.get('password')
+        user = self.context.get('user')
+        if not user.check_password(password):
+            raise ValidationError({'password': ['The password you entered is incorrect.']})
+        user.update(is_active=False)
+        return ret
+
+
 class SMSCodeSerializer(serializers.Serializer):
     sms_code = serializers.CharField(max_length=10, min_length=6)
 

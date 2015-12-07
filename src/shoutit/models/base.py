@@ -21,11 +21,6 @@ class UUIDModel(models.Model):
     class Meta:
         abstract = True
 
-    def save(self, force_insert=False, force_update=False, **kwargs):
-        if not (force_insert or force_update):
-            self.full_clean()
-        super(UUIDModel, self).save(force_insert, force_update, **kwargs)
-
     @classmethod
     def create(cls, save=True, **kwargs):
         """
@@ -35,6 +30,21 @@ class UUIDModel(models.Model):
         if save:
             obj.save()
         return obj
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if not (force_insert or force_update):
+            self.full_clean()
+        super(UUIDModel, self).save(force_insert, force_update, using=None, update_fields=None)
+
+    def update(self, **kwargs):
+        field_names = self._meta.get_all_field_names()
+        update_fields = []
+        for k in kwargs.keys():
+            if k in field_names:
+                setattr(self, k, kwargs[k])
+                update_fields.append(k)
+        self.save(update_fields=update_fields)
+        return self
 
     @property
     def pk(self):

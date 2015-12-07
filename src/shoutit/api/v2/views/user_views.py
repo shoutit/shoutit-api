@@ -17,8 +17,8 @@ from shoutit.api.v2.pagination import (
 )
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.api.v2.serializers import (
-    UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer, TagDetailSerializer
-)
+    UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer, TagDetailSerializer,
+    UserDeactivationSerializer)
 from shoutit.api.v2.permissions import IsOwnerModify, IsAuthenticatedOrReadOnly, IsAuthenticated, IsOwner
 from shoutit.models import User, Shout, ShoutIndex
 
@@ -176,7 +176,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    @detail_route(methods=['post', 'delete'], suffix='Listen', permission_classes=(IsAuthenticatedOrReadOnly,))
+    @detail_route(methods=['post', 'delete'], permission_classes=(IsAuthenticatedOrReadOnly,), suffix='Listen')
     def listen(self, request, *args, **kwargs):
         """
         Start/Stop listening to a User
@@ -308,7 +308,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         return self.get_paginated_response(serializer.data)
 
-    @detail_route(methods=['get'], suffix='Home', permission_classes=(IsAuthenticated, IsOwner))
+    @detail_route(methods=['get'], permission_classes=(IsAuthenticated, IsOwner), suffix='Home')
     def home(self, request, *args, **kwargs):
         """
         List the User homepage shouts. User can't see the homepage of other users.
@@ -535,3 +535,25 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         # return Response(**ret)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+
+    @detail_route(methods=['post'], permission_classes=(IsAuthenticated, IsOwner), suffix="Deactivate user's account")
+    def deactivate(self, request, *args, **kwargs):
+        """
+        Deactivate user's account
+        ###REQUIRES AUTH, Account owner
+
+        ####Body
+        <pre><code>
+        {
+            "password": "current password"
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        user = self.get_object()
+        serializer = UserDeactivationSerializer(data=request.data, context={'user': user})
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
