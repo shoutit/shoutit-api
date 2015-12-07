@@ -3,20 +3,21 @@
 
 """
 from __future__ import unicode_literals
+
 import json
 
 import httplib2
-from django.conf import settings
-from django.db import IntegrityError
 from apiclient import discovery
+from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 from oauth2client.client import (AccessTokenRefreshError, FlowExchangeError, credentials_from_clientsecrets_and_code,
                                  OOB_CALLBACK_URN)
-
 from rest_framework.exceptions import ValidationError
 
 from shoutit.api.v2.exceptions import (GPLUS_LINK_ERROR_TRY_AGAIN, GPLUS_LINK_ERROR_NO_LINK, GPLUS_LINK_ERROR_EMAIL)
-from shoutit.models import LinkedGoogleAccount
 from shoutit.controllers import user_controller, location_controller
+from shoutit.models import LinkedGoogleAccount
 from shoutit.utils import debug_logger
 
 
@@ -57,7 +58,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None, is_test=Fal
     return user
 
 
-def link_gplus_account(user, gplus_code, strict=True, client=None):
+def link_gplus_account(user, gplus_code, client=None):
     """
     Add LinkedGoogleAccount to user
     """
@@ -65,16 +66,13 @@ def link_gplus_account(user, gplus_code, strict=True, client=None):
     gplus_id = credentials.id_token.get('sub')
 
     # check if the gplus account is already linked
-    if strict:
-        try:
-            la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
-            debug_logger.error('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
-            if la.user == user:
-                raise ValidationError({'error': "G+ account is already linked to your profile."})
-            raise ValidationError(
-                {'error': "This gplus account is already linked to somebody else's profile."})
-        except LinkedGoogleAccount.DoesNotExist:
-            pass
+    try:
+        la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
+        debug_logger.warning('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
+        if la.user != user:
+            raise ValidationError({'error': "This gplus account is already linked to somebody else's profile."})
+    except LinkedGoogleAccount.DoesNotExist:
+        pass
 
     # unlink previous gplus account
     unlink_gplus_user(user, False)
@@ -83,7 +81,7 @@ def link_gplus_account(user, gplus_code, strict=True, client=None):
     # todo: get info, pic, etc about user
     try:
         LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
-    except IntegrityError as e:
+    except (DjangoValidationError, IntegrityError) as e:
         debug_logger.error("LinkedGoogleAccount creation error: %s." % str(e))
         raise GPLUS_LINK_ERROR_TRY_AGAIN
 
@@ -100,7 +98,7 @@ def unlink_gplus_user(user, strict=True):
         linked_account = LinkedGoogleAccount.objects.get(user=user)
     except LinkedGoogleAccount.DoesNotExist:
         if strict:
-            debug_logger.error("User: %s, tried to unlink non-existing gplus account." % user)
+            debug_logger.warning("User: %s, tried to unlink non-existing gplus account." % user)
             raise GPLUS_LINK_ERROR_NO_LINK
     else:
         # todo: unlink from google services

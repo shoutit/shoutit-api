@@ -10,8 +10,8 @@ import urlparse
 
 import requests
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.backends.postgresql_psycopg2.base import IntegrityError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
 
 from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EMAIL, FB_LINK_ERROR_NO_LINK
@@ -32,7 +32,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
         user = linked_account.user
         if initial_user and initial_user.get('location'):
             location_controller.update_profile_location(user.profile, initial_user.get('location'))
-    except ObjectDoesNotExist:
+    except LinkedFacebookAccount.DoesNotExist:
         debug_logger.debug('LinkedFacebookAccount.DoesNotExist for facebook_id %s.' % facebook_id)
         if 'email' not in fb_user:
             debug_logger.error('Facebook user has no email: %s' % json.dumps(fb_user))
@@ -116,7 +116,7 @@ def debug_token(facebook_token):
         raise FB_LINK_ERROR_TRY_AGAIN
 
 
-def link_facebook_account(user, facebook_access_token, strict=True):
+def link_facebook_account(user, facebook_access_token):
     """
     Add LinkedFacebookAccount to user
     """
@@ -124,15 +124,13 @@ def link_facebook_account(user, facebook_access_token, strict=True):
     facebook_id = fb_user.get('id')
 
     # check if the facebook account is already linked
-    if strict:
-        try:
-            la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
-            debug_logger.error('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
-            if la.user == user:
-                raise ValidationError({'error': "Facebook account is already linked to your profile."})
+    try:
+        la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
+        debug_logger.warning('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
+        if la.user != user:
             raise ValidationError({'error': "Facebook account is already linked to somebody else's profile."})
-        except LinkedFacebookAccount.DoesNotExist:
-            pass
+    except LinkedFacebookAccount.DoesNotExist:
+        pass
 
     # unlink previous facebook account
     unlink_facebook_user(user, False)
@@ -141,7 +139,7 @@ def link_facebook_account(user, facebook_access_token, strict=True):
     # todo: get info, pic, etc about user
     try:
         create_linked_facebook_account(user, facebook_access_token)
-    except ValidationError as e:
+    except (DjangoValidationError, IntegrityError) as e:
         debug_logger.error("LinkedFacebookAccount creation error: %s." % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 
@@ -158,7 +156,7 @@ def unlink_facebook_user(user, strict=True):
         linked_account = LinkedFacebookAccount.objects.get(user=user)
     except LinkedFacebookAccount.DoesNotExist:
         if strict:
-            debug_logger.error("User: %s, tried to unlink non-existing facebook account." % user)
+            debug_logger.warning("User: %s, tried to unlink non-existing facebook account." % user)
             raise FB_LINK_ERROR_NO_LINK
     else:
         # todo: unlink from facebook services?
@@ -205,4 +203,4 @@ def delete_linked_facebook_account(facebook_user_id):
     try:
         LinkedFacebookAccount.objects.filter(facebook_id=facebook_user_id).delete()
     except IntegrityError as e:
-        debug_logger.info("LinkedFacebookAccount deletion error: %s." % str(e), exc_info=True)
+        debug_logger.warning("LinkedFacebookAccount deletion error: %s." % str(e), exc_info=True)

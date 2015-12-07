@@ -447,12 +447,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         """
         Link/Unlink external social accounts
         ###REQUIRES AUTH
-        The Difference between using PATCH and POST is that with PATCH it allows updating the current linked account while with POST it fails if an account is already linked.
 
         ###Link Facebook
         <pre><code>
-        POST: /v2/users/{username}/link
-        or
         PATCH: /v2/users/{username}/link
         {
             "account": "facebook",
@@ -470,8 +467,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Link G+
         <pre><code>
-        POST: /v2/users/{username}/link
-        or
         PATCH: /v2/users/{username}/link
         {
             "account": "gplus",
@@ -502,19 +497,18 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'account': "Unsupported social account."})
 
         if request.method in ['PATCH', 'POST']:
-            strict = request.method == 'POST'
             if account == 'gplus':
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
                     raise ValidationError({'gplus_code': "provide a valid `gplus_code`"})
                 client = hasattr(request.auth, 'client') and request.auth.client.name or None
-                gplus_controller.link_gplus_account(user, gplus_code, strict, client)
+                gplus_controller.link_gplus_account(user, gplus_code, client)
 
             elif account == 'facebook':
                 facebook_access_token = request.data.get('facebook_access_token')
                 if not facebook_access_token:
                     raise ValidationError({'facebook_access_token': "provide a valid `facebook_access_token`"})
-                facebook_controller.link_facebook_account(user, facebook_access_token, strict)
+                facebook_controller.link_facebook_account(user, facebook_access_token)
 
             # msg = "{} linked successfully.".format(account.capitalize())
 
