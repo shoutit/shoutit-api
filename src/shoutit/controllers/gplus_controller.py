@@ -57,7 +57,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None, is_test=Fal
     return user
 
 
-def link_gplus_account(user, gplus_code, update=False, client=None):
+def link_gplus_account(user, gplus_code, strict=True, client=None):
     """
     Add LinkedGoogleAccount to user
     """
@@ -65,7 +65,7 @@ def link_gplus_account(user, gplus_code, update=False, client=None):
     gplus_id = credentials.id_token.get('sub')
 
     # check if the gplus account is already linked
-    if not update:
+    if strict:
         try:
             la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
             debug_logger.error('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))

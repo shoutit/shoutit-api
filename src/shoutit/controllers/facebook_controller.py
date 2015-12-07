@@ -116,7 +116,7 @@ def debug_token(facebook_token):
         raise FB_LINK_ERROR_TRY_AGAIN
 
 
-def link_facebook_account(user, facebook_access_token, update=False):
+def link_facebook_account(user, facebook_access_token, strict=True):
     """
     Add LinkedFacebookAccount to user
     """
@@ -124,7 +124,7 @@ def link_facebook_account(user, facebook_access_token, update=False):
     facebook_id = fb_user.get('id')
 
     # check if the facebook account is already linked
-    if not update:
+    if strict:
         try:
             la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
             debug_logger.error('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
@@ -141,7 +141,7 @@ def link_facebook_account(user, facebook_access_token, update=False):
     # todo: get info, pic, etc about user
     try:
         create_linked_facebook_account(user, facebook_access_token)
-    except IntegrityError as e:
+    except ValidationError as e:
         debug_logger.error("LinkedFacebookAccount creation error: %s." % str(e))
         raise FB_LINK_ERROR_TRY_AGAIN
 

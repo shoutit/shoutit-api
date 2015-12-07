@@ -442,18 +442,18 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
 
-    @detail_route(methods=['post', 'put', 'delete'], suffix='Link / Unlink Accounts')
+    @detail_route(methods=['post', 'patch', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
         ###REQUIRES AUTH
-        The Difference between using PUT and POST is that with PUT it allows updating the current linked account while with POST it fails if an account is already linked.
+        The Difference between using PATCH and POST is that with PATCH it allows updating the current linked account while with POST it fails if an account is already linked.
 
         ###Link Facebook
         <pre><code>
         POST: /v2/users/{username}/link
         or
-        PUT: /v2/users/{username}/link
+        PATCH: /v2/users/{username}/link
         {
             "account": "facebook",
             "facebook_access_token": "FACEBOOK_ACCESS_TOKEN"
@@ -472,7 +472,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         <pre><code>
         POST: /v2/users/{username}/link
         or
-        PUT: /v2/users/{username}/link
+        PATCH: /v2/users/{username}/link
         {
             "account": "gplus",
             "gplus_code": "GOOGLE_GRANT_CODE"
@@ -501,20 +501,20 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if account not in ['facebook', 'gplus']:
             raise ValidationError({'account': "Unsupported social account."})
 
-        if request.method in ['PUT', 'POST']:
-            update = request.method == 'PUT'
+        if request.method in ['PATCH', 'POST']:
+            strict = request.method == 'POST'
             if account == 'gplus':
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
                     raise ValidationError({'gplus_code': "provide a valid `gplus_code`"})
                 client = hasattr(request.auth, 'client') and request.auth.client.name or None
-                gplus_controller.link_gplus_account(user, gplus_code, update, client)
+                gplus_controller.link_gplus_account(user, gplus_code, strict, client)
 
             elif account == 'facebook':
                 facebook_access_token = request.data.get('facebook_access_token')
                 if not facebook_access_token:
                     raise ValidationError({'facebook_access_token': "provide a valid `facebook_access_token`"})
-                facebook_controller.link_facebook_account(user, facebook_access_token, update)
+                facebook_controller.link_facebook_account(user, facebook_access_token, strict)
 
             # msg = "{} linked successfully.".format(account.capitalize())
 
