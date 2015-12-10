@@ -322,7 +322,7 @@ class MiscViewSet(viewsets.ViewSet):
         Expects a POST body with entry as list of objects each which has a uid and other attributes.
         https://developers.facebook.com/docs/graph-api/webhooks/v2.5
         """
-        hub_challenge = request.query_params.get('hub.challenge')
+        hub_challenge = request.query_params.get('hub.challenge', '')
         if request.method == 'GET':
             return Response(hub_challenge)
 
