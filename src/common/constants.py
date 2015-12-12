@@ -262,6 +262,7 @@ class ConversationType(Constant):
 
 CONVERSATION_TYPE_CHAT = ConversationType('chat')
 CONVERSATION_TYPE_ABOUT_SHOUT = ConversationType('about_shout')
+CONVERSATION_TYPE_PUBLIC_CHAT = ConversationType('public_chat')
 
 
 class MessageAttachmentType(Constant):

@@ -12,24 +12,28 @@ from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
-    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT)
+    ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
+    CONVERSATION_TYPE_PUBLIC_CHAT)
 from shoutit.models.action import Action
-from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin
+from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from shoutit.utils import track
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
+class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin):
     """
     Conversation will introduce group chat where a conversation can have many users, each will contribute by creating Message
     the attached_object is the topic of the conversation and it is allowed not to have a topic.
     """
     type = models.SmallIntegerField(choices=ConversationType.choices, blank=False)
-    users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations2')
+    users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations')
+    creator = models.ForeignKey(AUTH_USER_MODEL, related_name='created_conversations', null=True, blank=True)
+    subject = models.CharField(max_length=25, blank=True, default='')
+    icon = models.URLField(blank=True, default='')
     admins = ArrayField(models.UUIDField(), default=list, blank=True)
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.ConversationDelete',
-                                        related_name='deleted_conversations2')
+                                        related_name='deleted_conversations')
     last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True)
 
     def __unicode__(self):
@@ -94,6 +98,12 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
     def contributors(self):
         return self.users.all()
 
+    def can_contribute(self, user):
+        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            return True
+        else:
+            return user in self.contributors
+
     @property
     def track_properties(self):
         properties = {
@@ -110,14 +120,14 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin):
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
     if created:
-        track(getattr(instance, 'creator_id'), 'new_conversation', instance.track_properties)
+        track(getattr(instance, 'creator_id', 'system'), 'new_conversation', instance.track_properties)
 
 
 class ConversationDelete(UUIDModel):
     """
     ConversationDelete is to record a user deleting a Conversation
     """
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_conversations2_set')
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='deleted_conversations_set')
     conversation = models.ForeignKey('shoutit.Conversation', related_name='deleted_set')
 
     class Meta(UUIDModel.Meta):
@@ -176,6 +186,11 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         conversation = instance.conversation
         conversation.last_message = instance
         conversation.save()
+        # Add the message user to conversation users if he isn't already
+        try:
+            conversation.users.add(instance.user)
+        except IntegrityError:
+            pass
 
         # read the message by its owner if exists (not by system)
         if instance.user:

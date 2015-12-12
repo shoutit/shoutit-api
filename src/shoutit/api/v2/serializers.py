@@ -23,12 +23,13 @@ from rest_framework.settings import api_settings
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import location_controller
 from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
+from shoutit.controllers.location_controller import update_object_location
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
     Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
@@ -761,11 +762,14 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    users = UserSerializer(many=True, source='contributors', help_text="List of users in this conversations")
+    users = UserSerializer(many=True, source='contributors', help_text="List of users in this conversations",
+                           read_only=True)
     last_message = MessageSerializer(required=False)
-    type = serializers.CharField(source='get_type_display', help_text="Either 'chat' or 'about_shout'")
+    type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display',
+                                   help_text="'chat', 'about_shout' or 'public_chat'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
+    subject = serializers.CharField(max_length=25)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
     unread_messages_count = serializers.SerializerMethodField(
         help_text="Number of unread messages in this conversation")
@@ -775,7 +779,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conversation
         fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count',
-                  'admins', 'users', 'last_message', 'about', 'messages_url', 'reply_url')
+                  'subject', 'icon', 'admins', 'users', 'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
         # todo: map types
@@ -791,6 +795,31 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     def get_reply_url(self, conversation):
         return reverse('conversation-reply', kwargs={'id': conversation.id}, request=self.context['request'])
+
+    def to_internal_value(self, data):
+        validated_data = super(ConversationSerializer, self).to_internal_value(data)
+        return validated_data
+
+    def validate_type(self, conversation_type):
+        if conversation_type != 'public_chat':
+            raise ValidationError({'type': "Only 'public_chat' conversations can be directly created"})
+        return conversation_type
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        conversation_type = ConversationType.texts[validated_data['get_type_display']]
+        subject = validated_data['subject']
+        icon = validated_data.get('icon', '')
+        conversation = Conversation(creator=user, type=conversation_type, subject=subject, icon=icon, admins=[user.id])
+        update_object_location(conversation, user.location)
+        conversation.save()
+        conversation.users.add(user)
+        return conversation
+
+
+class PublicChatSerializer(serializers.Serializer):
+    subject = serializers.CharField(max_length=25, allow_blank=True, default='')
+    type = serializers.ChoiceField(choices=['public_chat'], help_text="Only 'public_chat' is allowed")
 
 
 class AttachedObjectSerializer(serializers.Serializer):
@@ -869,11 +898,9 @@ class ReportSerializer(serializers.ModelSerializer):
         report_type = ReportType.texts[validated_data['type']]
 
         if report_type == REPORT_TYPE_USER:
-            attached_object = User.objects.get(
-                id=validated_data['attached_object']['attached_user']['id'])
+            attached_object = User.objects.get(id=validated_data['attached_object']['attached_user']['id'])
         if report_type == REPORT_TYPE_SHOUT:
-            attached_object = Shout.objects.get(
-                id=validated_data['attached_object']['attached_shout']['id'])
+            attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
         text = validated_data['text'] if 'text' in validated_data else None
         report = Report.objects.create(user=self.root.context['request'].user, text=text,
                                        attached_object=attached_object, type=report_type)

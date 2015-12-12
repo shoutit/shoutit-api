@@ -65,13 +65,11 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
     if not conversation:
         conversation = conversation_exist(users=to_users, about=about)
 
-    # creator_id is temp attributes used only for tracking
     if not conversation:
         if about:
-            conversation = Conversation(attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)
+            conversation = Conversation(creator=user, attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)
         else:
-            conversation = Conversation(type=CONVERSATION_TYPE_CHAT)
-        conversation.creator_id = user.pk
+            conversation = Conversation(creator=user, type=CONVERSATION_TYPE_CHAT)
         conversation.admins.append(user.pk)
         conversation.save()
         conversation.users.add(*to_users)

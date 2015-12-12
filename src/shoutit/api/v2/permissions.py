@@ -38,12 +38,23 @@ class IsOwner(BasePermission):
 class IsContributor(BasePermission):
     """
     Custom permission to only allow contributors of an object to view or edit it.
-    Model instances are expected to include an `owner` attribute.
+    Model instances are expected to include an `contributors` attribute.
     """
 
     def has_object_permission(self, request, view, obj):
         assert hasattr(obj, 'contributors'), "obj must have a `contributors` attribute"
         return request.user in obj.contributors
+
+
+class CanContribute(BasePermission):
+    """
+    Custom permission to check whether the logged in user can contribute to it or not.
+    Model instances are expected to include an `can_contribute` attribute.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        assert hasattr(obj, 'can_contribute'), "obj must have a `can_contribute` attribute"
+        return obj.can_contribute(request.user)
 
 
 class IsOwnerOrReadOnly(BasePermission):

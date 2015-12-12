@@ -10,26 +10,42 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
+from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
 from shoutit.api.v2.pagination import DateTimePagination, ReverseModifiedDateTimePagination
-from shoutit.api.v2.permissions import IsContributor
+from shoutit.api.v2.permissions import IsContributor, CanContribute
 from shoutit.api.v2.serializers import ConversationSerializer, MessageSerializer
 from shoutit.api.v2.views.viewsets import UUIDViewSetMixin
 from shoutit.controllers import message_controller
-from shoutit.models import Message, User
+from shoutit.models import Message, User, Conversation
 
 
-class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
     serializer_class = ConversationSerializer
     pagination_class = ReverseModifiedDateTimePagination
-    permission_classes = (permissions.IsAuthenticated, IsContributor)
+    permission_classes = (permissions.IsAuthenticated, CanContribute)
 
     # todo: conversations / messages search
 
-    def get_queryset(self):
-        return self.request.user.conversations2.all().order_by('-modified_at')
+    def get_queryset(self, *args, **kwargs):
+        if self._is_request_to_detail_endpoint():
+            return Conversation.objects.all()
+        else:
+            conversation_type = self.request.query_params.get('type')
+            if conversation_type == 'public_chat':
+                filters = {
+                    'type': CONVERSATION_TYPE_PUBLIC_CHAT,
+                    'country': self.request.user.location['country']
+                }
+                return Conversation.objects.filter(**filters)
+            else:
+                return self.request.user.conversations.all().order_by('-modified_at')
+
+    def _is_request_to_detail_endpoint(self):
+        lookup = self.lookup_url_kwarg or self.lookup_field
+        return lookup and lookup in self.kwargs
 
     def list(self, request, *args, **kwargs):
         """
