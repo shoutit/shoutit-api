@@ -696,40 +696,32 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
-
-        # todo: better validation
+        attachments = validated_data.get('attachments')
+        text = validated_data.get('text')
         errors = OrderedDict()
-        if 'text' not in validated_data:
-            validated_data['text'] = None
-        else:
-            if validated_data['text'] == "":
-                errors['text'] = "text can not be empty"
 
-        if 'attachments' not in validated_data:
-            validated_data['attachments'] = None
-        else:
-            if isinstance(validated_data['attachments'], list) and len(
-                    validated_data['attachments']):
-
-                for attachment in validated_data['attachments']:
+        if attachments is not None:
+            if isinstance(attachments, list) and len(attachments):
+                for attachment in attachments:
                     if not any_in(['shout', 'location', 'images', 'videos'], attachment):
-                        errors[
-                            'attachments'] = "attachment should have at least a 'shout', 'location', 'images' or 'videos'"
+                        errors['attachments'] = "attachment should have at least a 'shout', 'location', 'images' or 'videos'"
                         continue
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
                         elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
-                            errors['attachments'] = {
-                                'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
+                            errors['attachments'] = {'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
 
-        if not (validated_data['text'] or validated_data['attachments']):
-            errors['error'] = "please provide 'text' or 'attachments'"
+        if text is not None and text == "" and attachments is None:
+            errors['text'] = "text can not be empty"
+
+        if attachments is None and text is None:
+            errors['error'] = "Provide 'text' or 'attachments'"
 
         if errors:
             raise ValidationError(errors)
@@ -753,8 +745,8 @@ class MessageSerializer(serializers.ModelSerializer):
         conversation = self.root.context.get('conversation')
         to_users = self.root.context.get('to_users')
         about = self.root.context.get('about')
-        text = validated_data['text']
-        attachments = validated_data['attachments']
+        text = validated_data.get('text')
+        attachments = validated_data.get('attachments')
         message = message_controller.send_message(conversation, user, to_users=to_users, about=about, text=text,
                                                   attachments=attachments, request=request,
                                                   page_admin_user=page_admin_user)
