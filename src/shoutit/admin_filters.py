@@ -86,6 +86,24 @@ class APIClientFilter(admin.SimpleListFilter):
             return queryset.filter(accesstoken__client__name=client_name)
 
 
+class PublishedOnFilter(admin.SimpleListFilter):
+    title = _('Published On')
+    parameter_name = 'published_on'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('facebook', 'Facebook'),
+            ('none', 'None'),
+        )
+
+    def queryset(self, request, queryset):
+        published_on = self.value()
+        if published_on == 'none':
+            return queryset.filter(published_on={})
+        elif published_on:
+            return queryset.filter(published_on__has_key=published_on)
+
+
 class ShoutitDateFieldListFilter(DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super(ShoutitDateFieldListFilter, self).__init__(field, request, params, model, model_admin,
