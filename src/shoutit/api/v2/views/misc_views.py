@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import json
 import re
+from collections import OrderedDict
 
 from django.conf import settings
 from ipware.ip import get_real_ip
@@ -14,16 +15,17 @@ from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from common.constants import POST_TYPE_OFFER
+from common.constants import POST_TYPE_OFFER, USER_TYPE_PAGE, USER_TYPE_PROFILE
 from common.constants import POST_TYPE_REQUEST
 from shoutit import utils
 from shoutit.api.v2.renderers import PlainTextRenderer
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
-                                        PredefinedCitySerializer)
+                                        PredefinedCitySerializer, UserSerializer, TagSerializer, ShoutSerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
 from shoutit.controllers.facebook_controller import (
     update_linked_facebook_account_scopes, delete_linked_facebook_account)
-from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User)
+from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
+                            Tag)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request
 
 
@@ -79,6 +81,44 @@ class MiscViewSet(viewsets.ViewSet):
             {'type': 'price_desc', 'name': 'Price Decreasing'},
             {'type': 'recommended', 'name': 'Recommended'},
         ])
+
+    @list_route(methods=['get'], suffix='Suggestions')
+    def suggestions(self, request):
+        """
+        Get suggestions for Users, Pages, Tags and Shouts. `type` query param can be passed to limit the returned fields.
+
+        ###Request
+        ```
+        GET: /v2/misc/suggestions?type=users,pages,tags,shouts&country=AE&state=Dubai&city=Dubai&page_size=5
+        ```
+
+        ###Response
+        <pre><code>
+        {
+            "users": [],
+            "pages": [],
+            "tags": [],
+            "shouts": []
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        page_size = 5
+        users = User.objects.filter(type=USER_TYPE_PROFILE)[:page_size]
+        pages = User.objects.filter(type=USER_TYPE_PAGE)[:page_size]
+        tags = Tag.objects.filter()[:page_size]
+        shouts = Shout.objects.filter()[:page_size]
+        suggestions = OrderedDict({
+            'users': UserSerializer(users, many=True, context={'request': request}).data,
+            'pages': UserSerializer(pages, many=True, context={'request': request}).data,
+            'tags': TagSerializer(tags, many=True, context={'request': request}).data,
+            'shouts': ShoutSerializer(shouts, many=True, context={'request': request}).data,
+        })
+        return Response(suggestions)
 
     @list_route(methods=['post'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,), suffix='Reports')
     def reports(self, request):

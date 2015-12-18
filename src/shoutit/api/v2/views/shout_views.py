@@ -68,6 +68,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
           "next": null, // next results page url
           "previous": null, // previous results page url
           "results": [] // list of {ShoutSerializer}
+          "related_searches": [] // list of keywords related to the current search [currently dummy text is being returned]
         }
         </code></pre>
         ---
@@ -125,7 +126,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, NoUpdateModelViewSet
         shouts = self.filter_queryset(self.get_index_search())
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        result = self.get_paginated_response(serializer.data)
+        result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
+        return result
 
     def create(self, request, *args, **kwargs):
         """

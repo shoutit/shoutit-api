@@ -196,3 +196,23 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         page = self.paginate_queryset(shouts)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Related tags')
+    def related(self, request, *args, **kwargs):
+        """
+        List related tags to this tag
+        ---
+        serializer: TagSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        tag = self.get_object()
+        tags = Tag.objects.filter(category__in=tag.category.values_list('id', flat=True))
+        page = self.paginate_queryset(tags)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
