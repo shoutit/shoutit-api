@@ -204,13 +204,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    type = serializers.CharField(source='get_type_display', help_text="'Profile' or 'Page'", read_only=True)
     image = serializers.URLField(source='ap.image', required=False)
     api_url = serializers.SerializerMethodField()
     is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
 
     class Meta:
         model = User
-        fields = ('id', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated', 'image',
+        fields = ('id', 'type', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated', 'image',
                   'is_listening')
 
     def __init__(self, instance=None, data=empty, **kwargs):
@@ -282,13 +283,14 @@ class UserDetailSerializer(UserSerializer):
     message_url = serializers.SerializerMethodField(
         help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
     pages = UserSerializer(source='pages.all', many=True, read_only=True)
+    admins = UserSerializer(source='ap.admins.all', many=True, read_only=True)
 
     class Meta(UserSerializer.Meta):
         parent_fields = UserSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'linked_accounts',
                                   'push_tokens', 'is_password_set', 'is_listener', 'shouts_url', 'listeners_count',
                                   'listeners_url', 'listening_count', 'listening_url', 'is_owner', 'message_url',
-                                  'pages')
+                                  'pages', 'admins')
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
