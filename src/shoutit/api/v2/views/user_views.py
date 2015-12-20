@@ -93,11 +93,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         {
             "username": "mo",
             "email": "mo.chawich@gmail.com",
+            "website": "https://www.shoutit.com",
             "first_name": "Mo",
             "last_name": "Chawich",
             "bio": "I'm a good shouter",
             "gender": 1,
-            "image": "http://2ed106c1d72e039a6300-f673136b865c774b4127f2d581b9f607.r83.cf5.rackcdn.com/1NHUqCeh94NaWb8hlu74L7.jpg",
+            "image": "https://user-image.static.shoutit.com/user_uuid-timestamp.jpg",
+            "cover": "https://user-image.static.shoutit.com/user_uuid-timestamp.jpg",
             "location": {
                 "latitude": 25.1593957,
                 "longitude": 55.2338326,
