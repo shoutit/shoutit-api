@@ -13,11 +13,11 @@ import urlparse
 import uuid
 from HTMLParser import HTMLParser
 from cStringIO import StringIO
+from datetime import timedelta
 from re import sub
 
 import boto
 from PIL import Image
-from datetime import timedelta
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
 # from django.dispatch import receiver
@@ -33,13 +33,16 @@ from shoutit import settings
 from shoutit.lib import mailchimp
 from common.lib.IP2Location import IP2Location
 
+from shoutit.monkey_patches import ShoutitCustomJSONEncoder
+
+
 # Shoutit loggers
 error_logger = logging.getLogger('shoutit.error')
 debug_logger = logging.getLogger('shoutit.debug')
 sss_logger = logging.getLogger('shoutit.sss')
 
 # Shoutit mixpanel
-shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN)
+shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitCustomJSONEncoder)
 
 # IP2Location instant
 ip2location = IP2Location(filename=settings.IP2LOCATION_DB_BIN)

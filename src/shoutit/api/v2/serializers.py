@@ -712,6 +712,9 @@ class MessageSerializer(serializers.ModelSerializer):
         text = validated_data.get('text')
         errors = OrderedDict()
 
+        if text is None and attachments == []:
+            raise ValidationError({'error': "Provide 'text' or 'attachments'"})
+
         if attachments is not None:
             if isinstance(attachments, list) and len(attachments):
                 for attachment in attachments:

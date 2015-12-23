@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
-from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
-                              MESSAGE_ATTACHMENT_TYPE_MEDIA)
+from django.db.models import Q
+
 from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
+from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
+                              MESSAGE_ATTACHMENT_TYPE_MEDIA, CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import any_in
 from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation,
                             Video)
@@ -24,7 +27,7 @@ def get_message(message_id):
         return None
 
 
-def conversation_exist(conversation_id=None, users=None, about=None):
+def conversation_exist(conversation_id=None, users=None, about=None, include_public=False):
     """
     Check whether a conversation with same id or both users and about exists
     """
@@ -39,6 +42,9 @@ def conversation_exist(conversation_id=None, users=None, about=None):
             conversations = Conversation.objects.with_attached_object(about)
         else:
             conversations = Conversation.objects.filter(object_id=None)
+
+        if not include_public:
+            conversations = conversations.filter(~Q(type=CONVERSATION_TYPE_PUBLIC_CHAT))
 
         for user in users:
             conversations = conversations.filter(users=user)

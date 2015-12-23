@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals, print_function
 
+import datetime
 import uuid
 from json import JSONEncoder
 
@@ -37,6 +38,10 @@ class ShoutitCustomJSONEncoder(JSONEncoder):
 
         if isinstance(obj, DocType):
             return dict(obj)
+
+        if isinstance(obj, datetime.datetime):
+            fmt = '%Y-%m-%dT%H:%M:%S'
+            return obj.strftime(fmt)
 
         # case: Class
         # if isinstance(obj, Class):
