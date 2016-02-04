@@ -164,8 +164,11 @@ def unlink_facebook_user(user, strict=True):
 
 
 def fb_user_from_facebook_access_token(facebook_access_token):
-    graph_url = 'https://graph.facebook.com/me'
-    params = {'access_token': facebook_access_token}
+    graph_url = 'https://graph.facebook.com/v2.5/me'
+    params = {
+        'fields': "id,",
+        'access_token': facebook_access_token
+    }
     try:
         fb_user = requests.get(graph_url, params=params, timeout=20).json()
         return fb_user

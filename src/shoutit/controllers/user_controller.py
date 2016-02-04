@@ -117,7 +117,7 @@ def auth_with_facebook(fb_user, access_token, initial_user=None, is_test=False):
     email = fb_user.get('email').lower()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
-    username = fb_user.get('username') or initial_user.get('username')
+    username = fb_user.get('username') or initial_user.get('username')  # todo: Facebook OAuthException "(#12) username field is deprecated for versions v2.0 and higher"
     facebook_id = fb_user.get('id')
     gender = fb_user.get('gender')
     profile_fields = {}
