@@ -28,8 +28,24 @@ def listen_to_object(user, obj, request=None):
             notifications_controller.notify_user_of_listen(obj.user, user, request)
 
 
+def listen_to_objects(user, objects, request=None):
+    """
+    """
+    # Todo: optimize!
+    for obj in objects:
+        listen_to_object(user, obj, request)
+
+
 def stop_listening_to_object(user, obj):
     """
     """
     listen_type, target = Listen2.listen_type_and_target_from_object(obj)
     Listen2.objects.filter(user=user, type=listen_type, target=target).delete()
+
+
+def stop_listening_to_objects(user, objects):
+    """
+    """
+    # Todo: optimize!
+    for obj in objects:
+        stop_listening_to_object(user, obj)

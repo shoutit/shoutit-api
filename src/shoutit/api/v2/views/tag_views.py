@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.response import Response
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.v2.filters import TagFilter
@@ -78,6 +78,77 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         if tags_type == 'featured':
             self.serializer_class = FeaturedTagSerializer
         return super(TagViewSet, self).list(request, *args, **kwargs)
+
+    @list_route(methods=['post', 'delete'], suffix='Batch listen')
+    def batch_listen(self, request, *args, **kwargs):
+        """
+        Start/Stop listening to a multiple Tags
+        ###REQUIRES AUTH
+        ###Listen
+        <pre><code>
+        POST: /v2/tags/listen
+        </code></pre>
+        <pre><code>
+        {
+          "tags": [
+            {
+              "name": "2002-honda-cbr-954rr"
+            },
+            {
+              "name": "paradox"
+            },
+            {
+              "name": "shanghai"
+            }
+          ]
+        }
+        </code></pre>
+
+        ###Stop listening
+        <pre><code>
+        DELETE: /v2/tags/listen
+        </code></pre>
+        <pre><code>
+        {
+          "tags": [
+            {
+              "name": "2002-honda-cbr-954rr"
+            },
+            {
+              "name": "paradox"
+            },
+            {
+              "name": "shanghai"
+            }
+          ]
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+            - query
+        parameters:
+            - name: body
+              paramType: body
+        """
+        tag_dicts = request.data.get('tags', [])
+        TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
+        tag_names = map(lambda x: str(x['name']), tag_dicts)
+        tags = Tag.objects.filter(name__in=tag_names)
+
+        if request.method == 'POST':
+            listen_controller.listen_to_objects(request.user, tags, request)
+            msg = "you started listening to {} shouts.".format(tag_names)
+        else:
+            listen_controller.stop_listening_to_objects(request.user, tags)
+            msg = "you stopped listening to {} shouts.".format(tag_names)
+
+        ret = {
+            'data': {'success': msg},
+            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
+        }
+        return Response(**ret)
 
     def retrieve(self, request, *args, **kwargs):
         """
