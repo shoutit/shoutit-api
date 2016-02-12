@@ -69,3 +69,6 @@ pyasn1
 bpython==0.14.2
 
 # django-paypal==0.2
+
+# http://stackoverflow.com/questions/34646942/ssl3-get-server-certificate-certificate-verify-failed-on-python-when-requesting
+certifi==2015.04.28
