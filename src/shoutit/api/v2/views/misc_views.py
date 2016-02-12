@@ -89,7 +89,7 @@ class MiscViewSet(viewsets.ViewSet):
 
         ###Request
         ```
-        GET: /v2/misc/suggestions?type=users,pages,tags,shouts&country=AE&state=Dubai&city=Dubai&page_size=5
+        GET: /v2/misc/suggestions?type=users,pages,tags,shouts,shout&country=AE&state=Dubai&city=Dubai&page_size=5
         ```
 
         ###Response
@@ -98,7 +98,8 @@ class MiscViewSet(viewsets.ViewSet):
             "users": [],
             "pages": [],
             "tags": [],
-            "shouts": []
+            "shouts": [],
+            "shout": {}
         }
         </code></pre>
 
@@ -117,6 +118,7 @@ class MiscViewSet(viewsets.ViewSet):
             'pages': UserSerializer(pages, many=True, context={'request': request}).data,
             'tags': TagDetailSerializer(tags, many=True, context={'request': request}).data,
             'shouts': ShoutSerializer(shouts, many=True, context={'request': request}).data,
+            'shout': ShoutSerializer(shouts[0], context={'request': request}).data,
         })
         return Response(suggestions)
 
