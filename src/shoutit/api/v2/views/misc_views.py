@@ -20,7 +20,7 @@ from common.constants import POST_TYPE_REQUEST
 from shoutit import utils
 from shoutit.api.v2.renderers import PlainTextRenderer
 from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
-                                        PredefinedCitySerializer, UserSerializer, TagSerializer, ShoutSerializer)
+                                        PredefinedCitySerializer, UserSerializer, ShoutSerializer, TagDetailSerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
 from shoutit.controllers.facebook_controller import (
     update_linked_facebook_account_scopes, delete_linked_facebook_account)
@@ -115,7 +115,7 @@ class MiscViewSet(viewsets.ViewSet):
         suggestions = OrderedDict({
             'users': UserSerializer(users, many=True, context={'request': request}).data,
             'pages': UserSerializer(pages, many=True, context={'request': request}).data,
-            'tags': TagSerializer(tags, many=True, context={'request': request}).data,
+            'tags': TagDetailSerializer(tags, many=True, context={'request': request}).data,
             'shouts': ShoutSerializer(shouts, many=True, context={'request': request}).data,
         })
         return Response(suggestions)
