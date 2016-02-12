@@ -106,11 +106,16 @@ def unlink_gplus_user(user, strict=True):
 
 
 def redirect_uri_from_client(client='shoutit-test'):
-    redirect_uri = 'https://developers.google.com/oauthplayground'
     if client in ['shoutit-android', 'shoutit-ios']:
         redirect_uri = OOB_CALLBACK_URN
-    if client == 'shoutit-web':
+    elif client == 'shoutit-web':
         redirect_uri = 'postmessage'
+    elif client == 'shoutit-test':
+        redirect_uri = 'https://developers.google.com/oauthplayground'
+    else:
+        error = GPLUS_LINK_ERROR_TRY_AGAIN.detail.copy()
+        error.update({'error_description': "Invalid API client '%s'" % client})
+        raise ValidationError(error)
     debug_logger.debug("client: %s, redirect_uri: %s" % (client, redirect_uri))
     return redirect_uri
 
