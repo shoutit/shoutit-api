@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import json
+import random
 import re
 from collections import OrderedDict
 
@@ -43,8 +44,12 @@ class MiscViewSet(viewsets.ViewSet):
         serializer: CategorySerializer
         """
         categories = Category.objects.all().order_by('name').select_related('main_tag')
-        serializer = CategorySerializer(categories, many=True, context={'request': request})
-        return Response(serializer.data)
+        categories_data = CategorySerializer(categories, many=True, context={'request': request}).data
+        # Everyday I'm shuffling!
+        shuffle = request.query_params.get('shuffle')
+        if shuffle:
+            random.shuffle(categories_data)
+        return Response(categories_data)
 
     @list_route(methods=['get'], suffix='Cities')
     def cities(self, request):
