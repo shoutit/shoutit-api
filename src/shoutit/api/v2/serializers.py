@@ -197,6 +197,9 @@ class CategorySerializer(serializers.ModelSerializer):
         return self.instance
 
     def validate_name(self, value):
+        # Todo: HACK until new apps are released
+        if value == "Jobs Wanted":
+            value == "Jobs"
         try:
             self.instance = Category.objects.get(name=value)
         except (Category.DoesNotExist, AttributeError):
