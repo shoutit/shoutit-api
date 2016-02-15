@@ -207,14 +207,15 @@ class TagKeyAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     raw_id_fields = ('main_tag',)
-    list_display = ('name', 'main_tag_name', 'tag_names')
+    list_display = ('name', '_main_tag', 'tag_names')
     ordering = ('name',)
     filter_horizontal = ('tags',)
 
-    def main_tag_name(self, category):
-        return category.main_tag.name
+    def _main_tag(self, category):
+        return tag_link(category.main_tag)
 
-    main_tag_name.short_description = 'Main Tag'
+    _main_tag.allow_tags = True
+    _main_tag.short_description = 'Main Tag'
 
     def tag_names(self, category):
         return ', '.join([tag.name for tag in category.tags.all()])
