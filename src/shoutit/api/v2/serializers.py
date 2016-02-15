@@ -188,7 +188,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('name', 'slug', 'main_tag')
+        fields = ('name', 'slug', 'icon', 'image', 'main_tag')
 
     def to_internal_value(self, data):
         if isinstance(data, basestring):

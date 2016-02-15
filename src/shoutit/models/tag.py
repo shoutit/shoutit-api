@@ -80,9 +80,14 @@ class Category(UUIDModel):
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
     tags = models.ManyToManyField('shoutit.Tag', related_name='category')
     filters = ArrayField(ShoutitSlugField(), size=10, blank=True, default=list)
+    icon = models.URLField(max_length=1024, blank=True, default='')
 
     def __unicode__(self):
         return self.name
+
+    @property
+    def image(self):
+        return self.main_tag.image
 
 
 class FeaturedTag(UUIDModel, NamedLocationMixin):
