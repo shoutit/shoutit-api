@@ -64,8 +64,14 @@ def fill_actions(apps, schema_editor):
         main_tag = Tag.objects.get_or_create(name=slug)[0]
         # Create the new Category
         category = Category.objects.get_or_create(name=name, slug=slug, main_tag=main_tag)[0]
+        try:
+            with transaction.atomic():
+                category.tags.add(main_tag)
+        except:
+            pass
         old_categories = Category.objects.filter(name__in=cat["old"])
         for old_category in old_categories:
+            # Add tags from old category to the new one
             for tag in old_category.tags.all():
                 try:
                     with transaction.atomic():
@@ -74,6 +80,12 @@ def fill_actions(apps, schema_editor):
                     pass
         # Update Shouts category
         Shout.objects.filter(category__in=old_categories).update(category=category)
+
+        # Add the main_tag to all the shouts of the old category
+        for shout in Shout.objects.filter(category=category):
+            if slug not in shout.tags:
+                shout.tags.append(slug)
+                shout.save(force_update=True)
 
 
 def reverse_fill_actions(apps, schema_editor):
