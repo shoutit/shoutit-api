@@ -48,7 +48,6 @@ class Page(AbstractProfile):
 
     def __init__(self, *args, **kwargs):
         super(Page, self).__init__(*args, **kwargs)
-        self._meta.get_field('image').default = 'https://user-image.static.shoutit.com/default_page.jpg'
 
     def __unicode__(self):
         return unicode(self.user)

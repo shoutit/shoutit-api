@@ -387,7 +387,7 @@ class InactiveUser(AnonymousUser):
             "username": "",
             "name": "Shoutit User",
             "is_activated": False,
-            "image": "https://user-image.static.shoutit.com/default_male.jpg",
+            "image": "",
         })
 
 # Todo: Add DeletedUser class

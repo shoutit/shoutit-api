@@ -145,6 +145,12 @@ class TagSerializer(serializers.ModelSerializer):
     def get_api_url(self, tag):
         return reverse('tag-detail', kwargs={'name': tag.name}, request=self.context['request'])
 
+    def to_representation(self, instance):
+        ret = super(TagSerializer, self).to_representation(instance)
+        if not ret.get('image'):
+            ret['image'] = None
+        return ret
+
 
 class TagDetailSerializer(TagSerializer):
     is_listening = serializers.SerializerMethodField(help_text="Whether logged in user is listening to this tag")
@@ -260,8 +266,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         if not instance.is_active:
-            return InactiveUser().to_dict
-        return super(UserSerializer, self).to_representation(instance)
+            ret = InactiveUser().to_dict
+        else:
+            ret = super(UserSerializer, self).to_representation(instance)
+        if not ret.get('image'):
+            ret['image'] = None
+        return ret
 
 
 class UserDetailSerializer(UserSerializer):

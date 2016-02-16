@@ -46,7 +46,7 @@ class Tag(UUIDModel, APIModelMixin):
     key = ShoutitSlugField(blank=True, default='')
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True,
                                 on_delete=models.SET_NULL)
-    image = models.URLField(max_length=1024, blank=True, default='https://tag-image.static.shoutit.com/default.jpg')
+    image = models.URLField(max_length=1024, blank=True, default='')
     definition = models.TextField(blank=True, max_length=512, default='New Tag!')
 
     class Meta:
