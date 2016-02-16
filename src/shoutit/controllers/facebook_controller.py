@@ -42,7 +42,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
         user = user_controller.auth_with_facebook(fb_user, facebook_access_token, initial_user, is_test)
         try:
             create_linked_facebook_account(user, facebook_access_token)
-        except IntegrityError as e:
+        except (DjangoValidationError, IntegrityError) as e:
             error_logger.warn(str(e), exc_info=True)
             raise FB_LINK_ERROR_TRY_AGAIN
 
