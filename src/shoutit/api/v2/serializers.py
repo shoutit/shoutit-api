@@ -108,6 +108,8 @@ class DiscoverItemSerializer(serializers.ModelSerializer):
         ret = super(DiscoverItemSerializer, self).to_representation(instance)
         if not ret.get('image'):
             ret['image'] = None
+        if not ret.get('cover'):
+            ret['cover'] = None
         return ret
 
 
@@ -127,6 +129,10 @@ class DiscoverItemDetailSerializer(serializers.ModelSerializer):
         ret = super(DiscoverItemDetailSerializer, self).to_representation(instance)
         if not instance.show_shouts:
             ret.pop('shouts_url', None)
+        if not ret.get('image'):
+            ret['image'] = None
+        if not ret.get('cover'):
+            ret['cover'] = None
         return ret
 
     def get_shouts_url(self, discover_item):
@@ -221,6 +227,8 @@ class CategorySerializer(serializers.ModelSerializer):
         ret = super(CategorySerializer, self).to_representation(instance)
         if not ret.get('image'):
             ret['image'] = None
+        if not ret.get('icon'):
+            ret['icon'] = None
         return ret
 
 
@@ -283,6 +291,8 @@ class UserSerializer(serializers.ModelSerializer):
             ret = super(UserSerializer, self).to_representation(instance)
         if not ret.get('image'):
             ret['image'] = None
+        if not ret.get('cover'):
+            ret['cover'] = None
         return ret
 
 
@@ -361,6 +371,8 @@ class UserDetailSerializer(UserSerializer):
             del ret['is_listener']
             del ret['message_url']
 
+        if not ret.get('image'):
+            ret['image'] = None
         return ret
 
     def to_internal_value(self, data):
