@@ -104,6 +104,12 @@ class DiscoverItemSerializer(serializers.ModelSerializer):
         fields = ('id', 'api_url', 'title', 'subtitle', 'position', 'image', 'icon')
         extra_kwargs = {api_settings.URL_FIELD_NAME: {'view_name': 'discover-detail'}}
 
+    def to_representation(self, instance):
+        ret = super(DiscoverItemSerializer, self).to_representation(instance)
+        if not ret.get('image'):
+            ret['image'] = None
+        return ret
+
 
 class DiscoverItemDetailSerializer(serializers.ModelSerializer):
     shouts_url = serializers.SerializerMethodField()
@@ -210,6 +216,12 @@ class CategorySerializer(serializers.ModelSerializer):
             self.instance = Category.objects.get(name=value)
         except (Category.DoesNotExist, AttributeError):
             raise ValidationError(["Category %s does not exist" % value])
+
+    def to_representation(self, instance):
+        ret = super(CategorySerializer, self).to_representation(instance)
+        if not ret.get('image'):
+            ret['image'] = None
+        return ret
 
 
 class UserSerializer(serializers.ModelSerializer):
