@@ -110,6 +110,8 @@ class DiscoverItemSerializer(serializers.ModelSerializer):
             ret['image'] = None
         if not ret.get('cover'):
             ret['cover'] = None
+        if not ret.get('icon'):
+            ret['icon'] = None
         return ret
 
 
@@ -133,6 +135,8 @@ class DiscoverItemDetailSerializer(serializers.ModelSerializer):
             ret['image'] = None
         if not ret.get('cover'):
             ret['cover'] = None
+        if not ret.get('icon'):
+            ret['icon'] = None
         return ret
 
     def get_shouts_url(self, discover_item):
