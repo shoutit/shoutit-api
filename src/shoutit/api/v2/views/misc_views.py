@@ -114,7 +114,10 @@ class MiscViewSet(viewsets.ViewSet):
             - form
         """
         data = request.query_params
-        page_size = data.get('page_size', 5)
+        try:
+            page_size = int(data.get('page_size', 5))
+        except ValueError:
+            raise ValidationError({'error': "Invalid `page_size`"})
         type_qp = data.get('type', 'users,pages,tags,shouts,shout')
         country = data.get('country')
         try:
