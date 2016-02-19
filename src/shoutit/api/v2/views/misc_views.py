@@ -19,8 +19,8 @@ from rest_framework.response import Response
 from common.constants import POST_TYPE_OFFER, USER_TYPE_PAGE, USER_TYPE_PROFILE
 from common.constants import POST_TYPE_REQUEST
 from shoutit import utils
-from shoutit.api.v2.renderers import PlainTextRenderer
-from shoutit.api.v2.serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
+from ..renderers import PlainTextRenderer
+from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer,
                                         PredefinedCitySerializer, UserSerializer, ShoutSerializer, TagDetailSerializer)
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
 from shoutit.controllers.facebook_controller import (
@@ -113,18 +113,48 @@ class MiscViewSet(viewsets.ViewSet):
         omit_parameters:
             - form
         """
-        page_size = 5
-        users = User.objects.filter(type=USER_TYPE_PROFILE)[:page_size]
-        pages = User.objects.filter(type=USER_TYPE_PAGE)[:page_size]
-        tags = Tag.objects.filter()[:page_size]
-        shouts = Shout.objects.filter()[:page_size]
-        suggestions = OrderedDict({
-            'users': UserSerializer(users, many=True, context={'request': request}).data,
-            'pages': UserSerializer(pages, many=True, context={'request': request}).data,
-            'tags': TagDetailSerializer(tags, many=True, context={'request': request}).data,
-            'shouts': ShoutSerializer(shouts, many=True, context={'request': request}).data,
-            'shout': ShoutSerializer(shouts[0], context={'request': request}).data,
-        })
+        data = request.query_params
+        try:
+            page_size = int(data.get('page_size', 5))
+        except ValueError:
+            raise ValidationError({'error': "Invalid `page_size`"})
+        type_qp = data.get('type', 'users,pages,tags,shouts,shout')
+        country = data.get('country')
+        try:
+            types = type_qp.split(',')
+        except:
+            raise ValidationError({'error': "Invalid `type` parameter"})
+
+        suggestions = OrderedDict()
+
+        if 'users' in types:
+            users_qs = User.objects.filter(type=USER_TYPE_PROFILE, is_activated=True).order_by('-date_joined')
+            if country:
+                users_qs = users_qs.filter(profile__country=country)
+            users = UserSerializer(users_qs[:page_size], many=True, context={'request': request}).data
+            suggestions['users'] = users
+        if 'pages' in types:
+            pages_qs = User.objects.filter(type=USER_TYPE_PAGE).order_by('-date_joined')
+            if country:
+                pages_qs = pages_qs.filter(page__country=country)
+            pages = UserSerializer(pages_qs[:page_size], many=True, context={'request': request}).data
+            suggestions['pages'] = pages
+        if 'tags' in types:
+            tag_names = list(Category.objects.all().values_list("main_tag__name", flat=True))
+            random.shuffle(tag_names)
+            tags_qs = Tag.objects.filter(name__in=tag_names[:page_size])
+            tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
+            suggestions['tags'] = tags
+        if 'shouts' in types or 'shout' in types:
+            shouts_qs = Shout.objects.filter().order_by('-date_published')
+            if country:
+                shouts_qs = shouts_qs.filter(country=country)
+            if 'shouts' in types:
+                shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
+                suggestions['shouts'] = shouts
+            if 'shout' in types:
+                shout = ShoutSerializer(shouts_qs[0], context={'request': request}).data
+                suggestions['shout'] = shout
         return Response(suggestions)
 
     @list_route(methods=['post'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,), suffix='Reports')
