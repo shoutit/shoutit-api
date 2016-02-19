@@ -128,7 +128,7 @@ class MiscViewSet(viewsets.ViewSet):
         suggestions = OrderedDict()
 
         if 'users' in types:
-            users_qs = User.objects.filter(type=USER_TYPE_PROFILE).order_by('-date_joined')
+            users_qs = User.objects.filter(type=USER_TYPE_PROFILE, is_activated=True).order_by('-date_joined')
             if country:
                 users_qs = users_qs.filter(profile__country=country)
             users = UserSerializer(users_qs[:page_size], many=True, context={'request': request}).data
