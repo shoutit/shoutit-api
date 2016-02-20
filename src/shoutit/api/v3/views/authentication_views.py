@@ -24,7 +24,8 @@ from shoutit.utils import track, alias, error_logger
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
-    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer)
+    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer,
+    GuestSerializer)
 
 
 class RequestParamsClientBackend(object):
@@ -56,7 +57,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     authentication_classes = ()
     permission_classes = ()
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
-                   'shoutit_signup', 'shoutit_login', 'sms_code']
+                   'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest']
 
     def error_response(self, error, **kwargs):
         """
@@ -81,7 +82,10 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
-        user_dict = UserDetailSerializer(user, context={'request': self.request}).data
+        if user.is_guest:
+            user_dict = GuestSerializer(user, context={'request': self.request}).data
+        else:
+            user_dict = UserDetailSerializer(user, context={'request': self.request}).data
         new_signup = getattr(user, 'new_signup', False)
         response_data = {
             'access_token': access_token.token,
@@ -119,8 +123,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         return Response(response_data)
 
     def get_facebook_access_token_grant(self, request, data, client):
-        is_test = client.name == 'shoutit-test'
-        serializer = FacebookAuthSerializer(data=data, context={'request': request, 'is_test': is_test})
+        serializer = FacebookAuthSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
 
@@ -143,9 +146,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         return self.access_token_response(at)
 
     def get_gplus_code_grant(self, request, data, client):
-        data.update({'client_name': client.name})
-        is_test = client.name == 'shoutit-test'
-        serializer = GplusAuthSerializer(data=data, context={'request': request, 'is_test': is_test})
+        serializer = GplusAuthSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
 
@@ -168,8 +169,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         return self.access_token_response(at)
 
     def get_shoutit_signup_grant(self, request, signup_data, client):
-        is_test = client.name == 'shoutit-test'
-        serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request, 'is_test': is_test})
+        serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return user
@@ -193,7 +193,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         return self.access_token_response(at)
 
     def get_shoutit_login_grant(self, request, login_data, client):
-        login_data.update({'client_name': client.name})
         serializer = ShoutitLoginSerializer(data=login_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
@@ -206,6 +205,29 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         user = self.get_shoutit_login_grant(request, data, client)
         self.request.user = user
         scope = provider_scope.to_int('read', 'write')
+
+        if provider_constants.SINGLE_ACCESS_TOKEN:
+            at = self.get_access_token(request, user, scope, client)
+        else:
+            at = self.create_access_token(request, user, scope, client)
+            # Public clients don't get refresh tokens
+            if client.client_type == provider_constants.CONFIDENTIAL:
+                self.create_refresh_token(request, user, scope, at, client)
+
+        return self.access_token_response(at)
+
+    def get_shoutit_guest_grant(self, request, guest_data, client):
+        serializer = ShoutitGuestSerializer(data=guest_data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return serializer.instance
+
+    def shoutit_guest(self, request, data, client):
+        """
+        Handle ``grant_type=shoutit_guest`` requests.
+        """
+        user = self.get_shoutit_guest_grant(request, data, client)
+        self.request.user = user
+        scope = provider_scope.to_int('read')
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
             at = self.get_access_token(request, user, scope, client)
@@ -265,6 +287,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             return self.shoutit_signup
         elif grant_type == 'shoutit_login':
             return self.shoutit_login
+        elif grant_type == 'shoutit_guest':
+            return self.shoutit_guest
         elif grant_type == 'sms_code':
             return self.sms_code
         return None
@@ -354,6 +378,26 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         }
         </code></pre>
 
+        ###Creating Guest Account
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_guest",
+            "user": {
+                "location": {
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
+                },
+                "push_tokens": {
+                    "apns": "APNS_PUSH_TOKEN",
+                    "gcm": "GCM_PUSH_TOKEN"
+                },
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+        }
+        </code></pre>
+        `push_tokens` is reuired to have either `gcm` or `apns` tokens. They will be used to create the guest user.
         ###Using SMS Code
         <pre><code>
         {
@@ -425,7 +469,9 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         handler = self.get_handler(grant_type)
 
         try:
-            return handler(request, request.data.copy(), client)
+            data = request.data.copy()
+            request.is_test = client.name == 'shoutit-test'
+            return handler(request, data, client)
         except OAuthError, e:
             return self.error_response(e.args[0], client=client, grant_type=grant_type)
         except ValidationError as e:

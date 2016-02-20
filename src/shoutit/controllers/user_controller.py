@@ -5,14 +5,14 @@ import requests
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from common.constants import USER_TYPE_PROFILE
+from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
 from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN
 from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 from shoutit.controllers import location_controller
 
 
-def signup_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
+def create_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
                 **extra_user_fields):
     # email
     if email and User.objects.filter(email=email.lower()).exists():
@@ -37,6 +37,8 @@ def signup_user(email=None, password=None, first_name='', last_name='', username
 
     # profile fields
     profile_fields = profile_fields or {}
+    if not profile_fields.get('location'):
+        profile_fields.update(DEFAULT_LOCATION)
     extra_user_fields.update({
         'type': USER_TYPE_PROFILE,
         'profile_fields': profile_fields
@@ -64,8 +66,20 @@ def user_from_shoutit_signup_data(signup_data, initial_user=None, is_test=False)
         elif initial_user.get('ip'):
             location = location_controller.from_ip(initial_user.get('ip'))
     profile_fields.update(location)
-    return signup_user(email=email, password=password, first_name=first_name, last_name=last_name, username=username,
+    return create_user(email=email, password=password, first_name=first_name, last_name=last_name, username=username,
                        is_test=bool(is_test), profile_fields=profile_fields)
+
+
+def user_from_guest_data(initial_gust_user, is_test=False):
+    profile_fields = {}
+    location = {}
+    if initial_gust_user.get('location'):
+        location = initial_gust_user.get('location')
+        location_controller.add_predefined_city(location)
+    elif initial_gust_user.get('ip'):
+        location = location_controller.from_ip(initial_gust_user.get('ip'))
+    profile_fields.update(location)
+    return create_user(is_test=bool(is_test), is_guest=True, profile_fields=profile_fields)
 
 
 def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
@@ -93,7 +107,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
         if location:
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username, is_activated=True,
+        user = create_user(email=email, first_name=first_name, last_name=last_name, username=username, is_activated=True,
                            profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
@@ -137,7 +151,7 @@ def auth_with_facebook(fb_user, access_token, initial_user=None, is_test=False):
         if location:
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = signup_user(email=email, first_name=first_name, last_name=last_name, username=username,
+        user = create_user(email=email, first_name=first_name, last_name=last_name, username=username,
                            is_activated=True, profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
@@ -172,7 +186,7 @@ def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link='', mob
     profile_fields.update(location)
     if mobile:
         profile_fields.update({'mobile': mobile})
-    user = signup_user(email, None, profile_fields=profile_fields)
+    user = create_user(email, None, profile_fields=profile_fields)
     if dbcl_type == 'cl':
         dbcl_user = CLUser(user=user, cl_email=email)
     elif dbcl_type == 'dbz':
