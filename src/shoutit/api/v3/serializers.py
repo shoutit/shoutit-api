@@ -1027,13 +1027,13 @@ class ShoutitSignupSerializer(serializers.Serializer):
         return user
 
 
-class ShoutitSigninSerializer(serializers.Serializer):
+class ShoutitLoginSerializer(serializers.Serializer):
     email = serializers.CharField()
     password = serializers.CharField()
     user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
-        ret = super(ShoutitSigninSerializer, self).to_internal_value(data)
+        ret = super(ShoutitLoginSerializer, self).to_internal_value(data)
         email = ret.get('email').lower()
         password = ret.get('password')
         initial_user = ret.get('user', {})

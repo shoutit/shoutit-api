@@ -23,7 +23,7 @@ from shoutit.models import ConfirmToken
 from shoutit.utils import track, alias, error_logger
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
-    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
+    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
     UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer)
 
 
@@ -56,7 +56,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     authentication_classes = ()
     permission_classes = ()
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
-                   'shoutit_signup', 'shoutit_signin', 'sms_code']
+                   'shoutit_signup', 'shoutit_login', 'sms_code']
 
     def error_response(self, error, **kwargs):
         """
@@ -192,18 +192,18 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
         return self.access_token_response(at)
 
-    def get_shoutit_signin_grant(self, request, signin_data, client):
-        signin_data.update({'client_name': client.name})
-        serializer = ShoutitSigninSerializer(data=signin_data, context={'request': request})
+    def get_shoutit_login_grant(self, request, login_data, client):
+        login_data.update({'client_name': client.name})
+        serializer = ShoutitLoginSerializer(data=login_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         return serializer.instance
 
-    def shoutit_signin(self, request, data, client):
+    def shoutit_login(self, request, data, client):
         """
-        Handle ``grant_type=shoutit_signin`` requests.
+        Handle ``grant_type=shoutit_login`` requests.
         """
 
-        user = self.get_shoutit_signin_grant(request, data, client)
+        user = self.get_shoutit_login_grant(request, data, client)
         self.request.user = user
         scope = provider_scope.to_int('read', 'write')
 
@@ -263,8 +263,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             return self.gplus_code
         elif grant_type == 'shoutit_signup':
             return self.shoutit_signup
-        elif grant_type == 'shoutit_signin':
-            return self.shoutit_signin
+        elif grant_type == 'shoutit_login':
+            return self.shoutit_login
         elif grant_type == 'sms_code':
             return self.sms_code
         return None
@@ -276,13 +276,12 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Authorize the user and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup / signin calls is optional. It may have location dict with latitude and longitude.
+        The `user` attribute in all signup / login calls is optional. It may have location dict with latitude and longitude.
         If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
 
         Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
 
         ###Using Google Code
-        ####Body
         <pre><code>
         {
             "client_id": "shoutit-test",
@@ -300,7 +299,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         </code></pre>
 
         ###Using Facebook Access Token
-        ####Body
         <pre><code>
         {
             "client_id": "shoutit-test",
@@ -317,8 +315,27 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         }
         </code></pre>
 
+        ###Using Shoutit Account
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_login",
+            "email": "i.also.shout@whitehouse.gov",
+            "password": "iW@ntToPl*YaGam3",
+            "user": {
+                "location": {
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
+                }
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+        }
+        </code></pre>
+
+        `email` can be email or username
+
         ###Creating Shoutit Account
-        ####Body
         <pre><code>
         {
             "client_id": "shoutit-test",
@@ -337,27 +354,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         }
         </code></pre>
 
-        ###Signin with Shoutit Account
-        ####Body
-        <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "shoutit_signin",
-            "email": "i.also.shout@whitehouse.gov",
-            "password": "iW@ntToPl*YaGam3",
-            "user": {
-                "location": {
-                    "latitude": 48.7533744,
-                    "longitude": 11.3796516
-                }
-            },
-            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
-        }
-        </code></pre>
-
-        ###Signin with SMS Code
-        ####Body
+        ###Using SMS Code
         <pre><code>
         {
             "client_id": "shoutit-test",
@@ -367,10 +364,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         }
         </code></pre>
 
-        `email` can be email or username
-
         ###Refreshing the Token
-        ####Body
         <pre><code>
         {
             "client_id": "shoutit-test",
