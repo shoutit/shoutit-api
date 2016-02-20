@@ -296,7 +296,7 @@ LANGUAGES = (
 DEFAULT_LANGUAGE_CODE = 'en'
 
 # Static files (CSS, JavaScript, Images)
-FORCE_S3 = True
+FORCE_S3 = False
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -434,25 +434,25 @@ GOOGLE_API = {
 # Rest FW
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
-    'DEFAULT_VERSION': 'v2',
-    'ALLOWED_VERSIONS': ['v2'],
+    'DEFAULT_VERSION': 'v3',
+    'ALLOWED_VERSIONS': ['v2', 'v3'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'shoutit.api.v2.authentication.ShoutitTokenAuthentication',
-        'shoutit.api.v2.authentication.ShoutitOAuth2Authentication',
-        'shoutit.api.v2.authentication.ShoutitSessionAuthentication',
+        'shoutit.api.authentication.ShoutitTokenAuthentication',
+        'shoutit.api.authentication.ShoutitOAuth2Authentication',
+        'shoutit.api.authentication.ShoutitSessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'shoutit.api.v2.permissions.IsSecure',
+        'shoutit.api.permissions.IsSecure',
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PARSER_CLASSES': (
-        'shoutit.api.v2.parsers.ShoutitJSONParser',
+        'shoutit.api.parsers.ShoutitJSONParser',
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser'
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'shoutit.api.v2.renderers.ShoutitBrowsableAPIRenderer',
+        'shoutit.api.renderers.ShoutitBrowsableAPIRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': [],
     'URL_FIELD_NAME': 'api_url',
