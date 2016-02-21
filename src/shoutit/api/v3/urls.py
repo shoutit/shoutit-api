@@ -32,6 +32,5 @@ router.register('discover', discover_views.DiscoverViewSet, 'discover')
 
 urlpatterns = [
     url(r'^oauth2/access_token$', authentication_views.AccessTokenView.as_view(), name='access_token'),
-    url(r'^docs/', include('rest_framework_swagger.urls')),
     url(r'^', include(router.urls)),
 ]

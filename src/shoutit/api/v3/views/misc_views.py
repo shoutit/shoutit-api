@@ -207,7 +207,7 @@ class MiscViewSet(viewsets.ViewSet):
         from ipware.ip import get_real_ip
         raise Exception("Fake error request from ip: " + get_real_ip(request) or 'undefined')
 
-    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='IP')
+    @list_route(methods=['get'], suffix='Get IP')
     def ip(self, request):
         """
         Retrieve ip from request
@@ -216,7 +216,7 @@ class MiscViewSet(viewsets.ViewSet):
         debug_logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
 
-    @list_route(methods=['get'])
+    @list_route(methods=['get'], suffix='Geocode')
     def geocode(self, request):
         """
         Retrieve full location attributes for `latlng` query param
