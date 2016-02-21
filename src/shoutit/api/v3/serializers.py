@@ -1084,7 +1084,7 @@ class ShoutitGuestSerializer(serializers.Serializer):
         gcm = push_tokens.get('gcm')
         try:
             if apns:
-                user = User.objects.get(apnsdevice__registration_id=gcm)
+                user = User.objects.get(apnsdevice__registration_id=apns)
             elif gcm:
                 user = User.objects.get(gcmdevice__registration_id=gcm)
             else:
