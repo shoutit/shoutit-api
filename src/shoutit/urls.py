@@ -23,6 +23,9 @@ urlpatterns = [
     # API v3
     url(r'^v3/', include('shoutit.api.v3.urls', namespace='v3')),
 
+    # API Docs
+    url(r'^docs/', include('rest_framework_swagger.urls')),
+
     # DRF API Auth
     url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
 

@@ -468,17 +468,16 @@ OAUTH_ENFORCE_CLIENT_SECURE = True
 OAUTH_DELETE_EXPIRED = True
 
 SWAGGER_SETTINGS = {
-    'exclude_namespaces': [],
-    'api_version': '2.0',
+    'api_version': '3',
     'api_path': '/',
     'protocol': 'https' if PROD else 'http',
     'enabled_methods': [
         'get',
         'post',
-        'put',
         'patch',
         'delete',
     ],
+    'exclude_namespaces': [],
     'api_key': '',
     # 'is_authenticated': True,
     'is_superuser': False,
@@ -486,7 +485,7 @@ SWAGGER_SETTINGS = {
     'info': {
         # 'contact': 'mo.chawich@gmail.com',
         'description': '',
-        'title': 'Shoutit API V2 Documentation',
+        'title': 'Shoutit API Documentation',
     },
     'doc_expansion': 'none',
 }
