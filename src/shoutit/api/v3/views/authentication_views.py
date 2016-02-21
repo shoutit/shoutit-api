@@ -300,10 +300,13 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Authorize the user and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup / login calls is optional. It may have location dict with latitude and longitude.
+        The `user` attribute in all signup / login calls is optional (except when creating guest account). It may have location dict with latitude and longitude.
         If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
 
         Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
+
+        ##Requesting the access token
+        There are various methods to do that. Each has different `grant_type` and attributes.
 
         ###Using Google Code
         <pre><code>
@@ -397,7 +400,9 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
+
         `push_tokens` is reuired to have either `gcm` or `apns` tokens. They will be used to create the guest user.
+
         ###Using SMS Code
         <pre><code>
         {
@@ -408,7 +413,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         }
         </code></pre>
 
-        ###Refreshing the Token
+        ##Refreshing the Token
         <pre><code>
         {
             "client_id": "shoutit-test",
@@ -418,7 +423,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         }
         </code></pre>
 
-        ###Response
+        ##Response
         <pre><code>
         {
             "access_token": "1bd93abdbe4e5b4949e17dce114d94d96f21fe4a",
@@ -426,14 +431,41 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write",
-            "user": {Detailed User Object},
+            "user": {Detailed or Guest user object},
             "new_signup": true
         }
         </code></pre>
 
         If the user newly signed up `new_signup` will be set to true otherwise false.
 
-        ###Using the Token in header for later API calls.
+        ###Guest user object
+        <pre><code>
+        {
+            "user": {
+                "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
+                "type": "Profile",
+                "api_url": "http://shoutit.dev:8000/v3/users/14969084019",
+                "username": "14969084019",
+                "is_guest": true,
+                "date_joined": 1456090930,
+                "location": {
+                    "latitude": 25.1993957,
+                    "longitude": 55.2738326,
+                    "country": "AE",
+                    "postal_code": "Dubai",
+                    "state": "Dubai",
+                    "city": "Dubai",
+                    "address": ""
+                },
+                "push_tokens": {
+                    "apns": "asdlfjorjrjrslfsfwrewrwejrlwejrwlrjwlrjwelrjwl",
+                    "gcm": null
+                }
+            }
+        }
+        </code></pre>
+
+        ##Using the Token in header for later API calls.
         ```
         Authorization: Bearer 1bd93abdbe4e5b4949e17dce114d94d96f21fe4a
         ```
