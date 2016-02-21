@@ -17,6 +17,8 @@ def create_page(creator, name, category, page_fields=None, **extra_user_fields):
 
     # Page fields
     page_fields = page_fields or {}
+    if not page_fields.get('location'):
+        page_fields.update(creator.location)
     page_fields.update({
         'creator': creator,
         'name': name,

@@ -8,23 +8,26 @@ from django.conf import settings
 from shoutit.v1.tiered_views import general_views
 
 urlpatterns = [
-    # current api root
-    url(r'^$', RedirectView.as_view(url='/v2/', permanent=False)),
-
-    # admin
+    # Admin
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/rq/', include('django_rq.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
-    # return fake error
-    url(r'^error$', general_views.fake_error),
+    # Current API root
+    url(r'^$', RedirectView.as_view(url='/v3/', permanent=False)),
 
-    # drf api auth
+    # API v2
+    url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
+
+    # API v3
+    url(r'^v3/', include('shoutit.api.v3.urls', namespace='v3')),
+
+    # DRF API Auth
     url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
 
-    # api v2
-    url(r'^v2/', include('shoutit.api.v2.urls', namespace='v2')),
+    # return fake error
+    url(r'^error$', general_views.fake_error),
 
     # todo: move to web
     url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL + 'img/icon.png', permanent=True)),

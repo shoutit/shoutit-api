@@ -106,6 +106,8 @@ def unlink_gplus_user(user, strict=True):
 
 
 def redirect_uri_from_client(client='shoutit-test'):
+    if hasattr(client, 'name'):
+        client = client.name
     if client in ['shoutit-android', 'shoutit-ios']:
         redirect_uri = OOB_CALLBACK_URN
     elif client == 'shoutit-web':

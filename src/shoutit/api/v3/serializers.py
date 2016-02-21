@@ -87,8 +87,16 @@ class LocationSerializer(serializers.Serializer):
 
 
 class PushTokensSerializer(serializers.Serializer):
-    apns = serializers.CharField(max_length=64, allow_null=True)
-    gcm = serializers.CharField(allow_null=True)
+    apns = serializers.CharField(max_length=64, allow_null=True, required=False)
+    gcm = serializers.CharField(allow_null=True, required=False)
+
+    def to_internal_value(self, data):
+        apns = data.get('apns')
+        gcm = data.get('gcm')
+        if not (apns or gcm) or (apns and gcm):
+            raise ValidationError({'error': "either one of `apns` or `gcm` is required"})
+        ret = super(PushTokensSerializer, self).to_internal_value(data)
+        return ret
 
 
 class VideoSerializer(serializers.ModelSerializer):
@@ -522,6 +530,18 @@ class UserDetailSerializer(UserSerializer):
         return user
 
 
+class GuestSerializer(UserSerializer):
+    location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
+    push_tokens = PushTokensSerializer()
+    date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
+
+    class Meta(UserSerializer.Meta):
+        fields = ('id', 'type', 'api_url', 'username', 'is_guest', 'date_joined', 'location', 'push_tokens')
+
+    def to_representation(self, instance):
+        ret = super(UserSerializer, self).to_representation(instance)
+        return ret
+
 class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'],
                                    help_text="'offer' or 'request'")
@@ -770,7 +790,8 @@ class MessageSerializer(serializers.ModelSerializer):
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and (
-                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
+                                'location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -963,11 +984,11 @@ class FacebookAuthSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         ret = super(FacebookAuthSerializer, self).to_internal_value(data)
+        request = self.context.get('request')
         facebook_access_token = ret.get('facebook_access_token')
         initial_user = ret.get('user', {})
-        initial_user['ip'] = get_real_ip(self.context.get('request'))
-        is_test = self.root.context.get('is_test')
-        user = user_from_facebook_auth_response(facebook_access_token, initial_user, is_test)
+        initial_user['ip'] = get_real_ip(request)
+        user = user_from_facebook_auth_response(facebook_access_token, initial_user, request.is_test)
         self.instance = user
         return ret
 
@@ -978,11 +999,11 @@ class GplusAuthSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         ret = super(GplusAuthSerializer, self).to_internal_value(data)
+        request = self.context.get('request')
         gplus_code = ret.get('gplus_code')
         initial_user = ret.get('user', {})
-        initial_user['ip'] = get_real_ip(self.context.get('request'))
-        is_test = self.root.context.get('is_test')
-        user = user_from_gplus_code(gplus_code, initial_user, data.get('client_name'), is_test)
+        initial_user['ip'] = get_real_ip(request)
+        user = user_from_gplus_code(gplus_code, initial_user, request.client, request.is_test)
         self.instance = user
         return ret
 
@@ -1021,19 +1042,19 @@ class ShoutitSignupSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         initial_user = validated_data.get('user', {})
-        initial_user['ip'] = get_real_ip(self.context.get('request'))
-        is_test = self.root.context.get('is_test')
-        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user, is_test)
+        request = self.context.get('request')
+        initial_user['ip'] = get_real_ip(request)
+        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user, request.is_test)
         return user
 
 
-class ShoutitSigninSerializer(serializers.Serializer):
+class ShoutitLoginSerializer(serializers.Serializer):
     email = serializers.CharField()
     password = serializers.CharField()
     user = UserDetailSerializer(required=False)
 
     def to_internal_value(self, data):
-        ret = super(ShoutitSigninSerializer, self).to_internal_value(data)
+        ret = super(ShoutitLoginSerializer, self).to_internal_value(data)
         email = ret.get('email').lower()
         password = ret.get('password')
         initial_user = ret.get('user', {})
@@ -1041,27 +1062,51 @@ class ShoutitSigninSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            client_name = data.get('client_name')
-            if client_name and client_name == 'shoutit-ios':
-                # signup hack! act as signup if email is new and from ios only!
-                request = self.root.context.get('request')
-                username = generate_username()
-                data.update({
-                    'name': "user " + username
-                })
-                serializer = ShoutitSignupSerializer(data=data, context={'request': request})
-                serializer.is_valid(raise_exception=True)
-                serializer.validated_data['username'] = username
-                self.instance = serializer.save()
-                return serializer.validated_data
-            else:
-                raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
 
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         self.instance = user
         if location:
             location_controller.update_profile_location(user.ap, location)
+        return ret
+
+
+class ShoutitGuestSerializer(serializers.Serializer):
+    user = GuestSerializer()
+
+    def to_internal_value(self, data):
+        ret = super(ShoutitGuestSerializer, self).to_internal_value(data)
+        request = self.context.get('request')
+        initial_guest_user = ret.get('user', {})
+        push_tokens = initial_guest_user.get('push_tokens')
+        apns = push_tokens.get('apns')
+        gcm = push_tokens.get('gcm')
+        try:
+            if apns:
+                user = User.objects.get(apnsdevice__registration_id=gcm)
+            elif gcm:
+                user = User.objects.get(gcmdevice__registration_id=gcm)
+            else:
+                user = None
+        except User.DoesNotExist:
+            initial_guest_user['ip'] = get_real_ip(request)
+            user = user_controller.user_from_guest_data(initial_gust_user=initial_guest_user, is_test=request.is_test)
+            if apns:
+                # delete devices with same apns_token
+                APNSDevice.objects.filter(registration_id=apns).delete()
+                # create new device for user with apns_token
+                APNSDevice(registration_id=apns, user=user).save()
+            elif gcm:
+                # delete devices with same gcm_token
+                GCMDevice.objects.filter(registration_id=gcm).delete()
+                # create new device for user with gcm_token
+                GCMDevice(registration_id=gcm, user=user).save()
+            else:
+                user.delete()
+        if not user:
+            raise ValidationError({"error": "Could not create user"})
+        self.instance = user
         return ret
 
 

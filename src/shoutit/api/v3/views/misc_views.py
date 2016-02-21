@@ -282,7 +282,7 @@ class MiscViewSet(viewsets.ViewSet):
             if source == 'cl':
                 user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
                                                     lng=shout['lng'], city=shout['city'],
-                                                    country=shout['country'], dbcl_type='cl')
+                                                    country=shout['country'], dbcl_type='cl', )
             elif source in ['dbz', 'dbz2']:
                 user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
                                                     city=shout['city'], country=shout['country'],
