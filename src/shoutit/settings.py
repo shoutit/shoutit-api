@@ -477,7 +477,7 @@ SWAGGER_SETTINGS = {
         'patch',
         'delete',
     ],
-    'exclude_namespaces': [],
+    'exclude_namespaces': ['v2'],
     'api_key': '',
     # 'is_authenticated': True,
     'is_superuser': False,
