@@ -35,7 +35,7 @@ from shoutit.models import (
     DiscoverItem, Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
-from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
+from shoutit.utils import upload_image_to_s3, debug_logger, url_with_querystring
 
 
 class LocationSerializer(serializers.Serializer):
@@ -194,7 +194,8 @@ class TagDetailSerializer(TagSerializer):
         return reverse('tag-listeners', kwargs={'name': tag.name}, request=self.context['request'])
 
     def get_shouts_url(self, tag):
-        return reverse('tag-shouts', kwargs={'name': tag.name}, request=self.context['request'])
+        shouts_url = reverse('shout-list', request=self.context['request'])
+        return url_with_querystring(shouts_url, tags=tag.name)
 
 
 class FeaturedTagSerializer(serializers.ModelSerializer):
@@ -346,7 +347,8 @@ class UserDetailSerializer(UserSerializer):
         return signed_user and signed_user.is_authenticated() and user.is_listening(signed_user)
 
     def get_shouts_url(self, user):
-        return reverse('user-shouts', kwargs={'username': user.username}, request=self.context['request'])
+        shouts_url = reverse('shout-list', request=self.context['request'])
+        return url_with_querystring(shouts_url, user=user.username)
 
     def get_listening_url(self, user):
         return reverse('user-listening', kwargs={'username': user.username}, request=self.context['request'])
@@ -789,9 +791,7 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
-                                'location']):
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"

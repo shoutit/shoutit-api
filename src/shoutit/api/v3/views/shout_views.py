@@ -66,10 +66,11 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         ###Response
         <pre><code>
         {
-          "next": null, // next results page url
-          "previous": null, // previous results page url
-          "results": [] // list of {ShoutSerializer}
-          "related_searches": [] // list of keywords related to the current search [currently dummy text is being returned]
+            "count": 59, // number of results
+            "next": null, // next results page url
+            "previous": null, // previous results page url
+            "results": [] // list of {ShoutSerializer}
+            "related_searches": [] // list of keywords related to the current search [currently dummy text is being returned]
         }
         </code></pre>
         ---
