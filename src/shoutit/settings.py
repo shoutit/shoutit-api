@@ -296,7 +296,7 @@ LANGUAGES = (
 DEFAULT_LANGUAGE_CODE = 'en'
 
 # Static files (CSS, JavaScript, Images)
-FORCE_S3 = False
+FORCE_S3 = True
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
