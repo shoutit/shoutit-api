@@ -5,13 +5,12 @@
 from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, mixins
-from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
-from shoutit.models import ShoutIndex, DiscoverItem, Shout
-from ..filters import DiscoverItemFilter, ShoutIndexFilterBackend
-from ..pagination import ShoutitPageNumberPagination, PageNumberIndexPagination
-from ..serializers import (DiscoverItemSerializer, DiscoverItemDetailSerializer, ShoutSerializer)
+from shoutit.models import DiscoverItem
+from ..filters import DiscoverItemFilter
+from ..pagination import ShoutitPageNumberPagination
+from ..serializers import (DiscoverItemSerializer, DiscoverItemDetailSerializer)
 
 
 class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):

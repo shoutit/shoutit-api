@@ -35,7 +35,7 @@ from shoutit.models import (
     DiscoverItem, Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
-from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
+from shoutit.utils import upload_image_to_s3, debug_logger, url_with_querystring
 
 
 class LocationSerializer(serializers.Serializer):
@@ -791,9 +791,7 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
-                                'location']):
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"

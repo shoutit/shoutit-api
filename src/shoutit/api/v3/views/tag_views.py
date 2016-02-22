@@ -6,15 +6,14 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.controllers import listen_controller
-from shoutit.models import ShoutIndex, Tag, Shout
+from shoutit.models import Tag
 from ..filters import TagFilter
-from ..pagination import (ShoutitPageNumberPagination, PageNumberIndexPagination)
-from ..serializers import (TagSerializer, TagDetailSerializer, FeaturedTagSerializer, UserSerializer, ShoutSerializer)
+from ..pagination import (ShoutitPageNumberPagination)
+from ..serializers import (TagSerializer, TagDetailSerializer, FeaturedTagSerializer, UserSerializer)
 
 
 class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
