@@ -228,47 +228,6 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         serializer = UserSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
-    @detail_route(methods=['get'], suffix='Shouts')
-    def shouts(self, request, *args, **kwargs):
-        """
-        List the Tag shouts.
-        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
-        ---
-        serializer: ShoutSerializer
-        omit_parameters:
-            - form
-        parameters:
-            - name: shout_type
-              paramType: query
-              defaultValue: all
-              enum:
-                - request
-                - offer
-                - all
-            - name: page_size
-              paramType: query
-        """
-        tag = self.get_object()
-
-        # todo: refactor to use shout index filter
-        shout_type = request.query_params.get('shout_type', 'all')
-        if shout_type not in ['offer', 'request', 'all']:
-            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
-
-        self.pagination_class = PageNumberIndexPagination
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
-        shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-date_published')
-        if shout_type != 'all':
-            shouts = shouts.query('match', type=shout_type)
-
-        page = self.paginate_queryset(shouts)
-        serializer = ShoutSerializer(page, many=True, context={'request': request})
-        return self.get_paginated_response(serializer.data)
-
     @detail_route(methods=['get'], suffix='Related tags')
     def related(self, request, *args, **kwargs):
         """
