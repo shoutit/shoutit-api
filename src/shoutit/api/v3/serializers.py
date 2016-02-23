@@ -265,7 +265,7 @@ class UserSerializer(serializers.ModelSerializer):
         request = self.root.context.get('request')
         if request:
             return reverse('user-detail', kwargs={'username': user.username}, request=request)
-        return "https://api.shoutit.com/v2/users/" + user.username
+        return "https://api.shoutit.com/v3/users/" + user.username
 
     def get_is_listening(self, tag):
         request = self.root.context.get('request')
