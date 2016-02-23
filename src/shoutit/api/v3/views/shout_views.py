@@ -154,7 +154,21 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                 "longitude": 55.2338326,
                 "address": "Whatever Street 31"
             },
-            "publish_to_facebook": true
+            "publish_to_facebook": true,
+            "filters": [
+                {
+                    "slug": "color",
+                    "value": {
+                        "slug": "red"
+                    }
+                },
+                {
+                    "slug": "model",
+                    "value": {
+                        "slug": "1990"
+                    }
+                }
+            ]
         }
         </code></pre>
         ---
@@ -174,6 +188,95 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def retrieve(self, request, *args, **kwargs):
         """
         Retrieve a Shout
+
+        <pre><code>
+        {
+            "id": "7c8229c2-35ab-4ace-8761-4a27c7e266e4",
+            "api_url": "https://www.shoutit.com/v3/shouts/7c8229c2-35ab-4ace-8761-4a27c7e266e4",
+            "web_url": "https://www.shoutit.com/shout/7c8229c2-35ab-4ace-8761-4a27c7e266e4",
+            "type": "offer",
+            "location": {
+                "latitude": 30.793444,
+                "longitude": 31.011542,
+                "country": "EG",
+                "postal_code": "",
+                "state": "Gharbia Governorate",
+                "city": "Tanta",
+                "address": "Hasan Saed Allah Al Sharki, Tanta Qism 2, Tanta, Gharbia Governorate, Egypt"
+            },
+            "title": "Female dog for Sale"
+            "text": "Nice female dog for sale"
+            "price": 3.2,
+            "currency": "EGP",
+            "thumbnail": "https://shout-image.static.shoutit.com/B5D40BE4-2EA9-4478-A353-5FD6A6919C6E-1441939846.jpg",
+            "video_url": null,
+            "user": {
+                "id": "992e9cc1-0870-4c58-8b6c-ef91e851bd54",
+                "type": "Profile",
+                "api_url": "https://www.shoutit.com/v3/users/13780512296",
+                "web_url": "https://www.shoutit.com/user/13780512296",
+                "username": "13780512296",
+                "name": "أحمد أبا يزيد",
+                "first_name": "أحمد",
+                "last_name": "أبا يزيد",
+                "is_activated": true,
+                "image": "https://user-image.static.shoutit.com/992e9cc1-0870-4c58-8b6c-ef91e851bd54.jpg",
+                "cover": null,
+                "is_listening": false,
+                "listeners_count": 0
+            },
+            "date_published": 1441939912,
+            "category": {
+                "name": "Pets",
+                "slug": "pets",
+                "icon": null,
+                "image": "https://tag-image.static.shoutit.com/c3e98c4d-0830-42f0-84fb-b0348ba11e26-pets.jpg",
+                "main_tag": {
+                    "id": "b2206f3c-54b5-4ce0-bb6c-61bc9b8bc478",
+                    "name": "pets",
+                    "api_url": "https://www.shoutit.com/v3/tags/pets",
+                    "image": "https://tag-image.static.shoutit.com/c3e98c4d-0830-42f0-84fb-b0348ba11e26-pets.jpg"
+                }
+            },
+            "tags": [
+                {
+                    "id": "b2206f3c-54b5-4ce0-bb6c-61bc9b8bc478",
+                    "name": "pets",
+                    "api_url": "https://www.shoutit.com/v3/tags/pets",
+                    "image": "https://tag-image.static.shoutit.com/c3e98c4d-0830-42f0-84fb-b0348ba11e26-pets.jpg"
+                }
+            ],
+            "filters": [
+                {
+                    "name": "Color",
+                    "slug": "color",
+                    "value": {
+                        "name": "Red",
+                        "slug": "red"
+                    }
+                },
+                {
+                    "name": "Model",
+                    "slug": "model",
+                    "value": {
+                        "name": "1990",
+                        "slug": "1990"
+                    }
+                }
+            ],
+            "images": [
+                "https://shout-image.static.shoutit.com/B5D40BE4-2EA9-4478-A353-5FD6A6919C6E-1441939846.jpg",
+                "https://shout-image.static.shoutit.com/2AD2A2AA-99F5-4E4E-84BF-3FB553547BFF-1441939846.jpg",
+            ],
+            "videos": [],
+            "published_on": {},
+            "reply_url": "https://www.shoutit.com/v3/shouts/7c8229c2-35ab-4ace-8761-4a27c7e266e4/reply",
+            "related_requests": [],
+            "related_offers": [],
+            "conversations": []
+        }
+        </code></pre>
+
         ---
         serializer: ShoutDetailSerializer
         """
@@ -187,19 +290,35 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         ####Body
         <pre><code>
         {
-          "title": "macbook pro 15",
-          "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
-          "price": 1000,
-          "currency": "EUR",
-          "images": [], // list of image urls
-          "videos": [], // list of {Video Object}s
-          "category": {"name": "Computers & Networking"},
-          "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
-          "location": {
-            "latitude": 25.1593957,
-            "longitude": 55.2338326,
-            "address": "Whatever Street 31",
-          }
+            "type": "offer", // `offer` or `request`
+            "title": "macbook pro 15",
+            "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
+            "price": 1000,
+            "currency": "EUR",
+            "images": [], // list of image urls
+            "videos": [], // list of {Video Object}s
+            "category": {"name": "Computers & Networking"},
+            "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
+            "location": {
+                "latitude": 25.1593957,
+                "longitude": 55.2338326,
+                "address": "Whatever Street 31"
+            },
+            "publish_to_facebook": true,
+            "filters": [
+                {
+                    "slug": "color",
+                    "value": {
+                        "slug": "red"
+                    }
+                },
+                {
+                    "slug": "model",
+                    "value": {
+                        "slug": "1990"
+                    }
+                }
+            ]
         }
         </code></pre>
         ---

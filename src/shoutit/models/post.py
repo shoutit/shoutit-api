@@ -207,6 +207,20 @@ class Shout(Post):
             'published_to_facebook': self.published_on.get('facebook')
         }
 
+    @property
+    def tags2_list(self):
+        l = []
+        for key, value in self.tags2.items():
+            l.append({
+                'name': key.title() if isinstance(key, basestring) else key,
+                'slug': key,
+                'value': {
+                    'name': value.title() if isinstance(value, basestring) else key,
+                    'slug': value
+                }
+            })
+        return l
+
 
 class InactiveShout(object):
     @property
