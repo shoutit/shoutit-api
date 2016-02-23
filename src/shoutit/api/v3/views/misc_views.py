@@ -153,7 +153,7 @@ class MiscViewSet(viewsets.ViewSet):
                 shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
                 suggestions['shouts'] = shouts
             if 'shout' in types:
-                shout = ShoutSerializer(shouts_qs[0], context={'request': request}).data
+                shout = ShoutSerializer(shouts_qs.first(), context={'request': request}).data
                 suggestions['shout'] = shout
         return Response(suggestions)
 
