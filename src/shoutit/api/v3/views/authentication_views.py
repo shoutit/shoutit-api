@@ -300,8 +300,10 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Authorize the user and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup / login calls is optional (except when creating guest account). It may have location dict with latitude and longitude.
+        The `user` attribute in all signup / login calls is optional. It may have location dict with latitude and longitude.
         If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
+
+        When signing up and if there was a guest account saved, pass its `id` under the `user` attribute. This will make sure the guest account is no longer guest. The Api will convert it to a normal user.
 
         Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
 
@@ -400,8 +402,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
         }
         </code></pre>
-
-        `push_tokens` is reuired to have either `gcm` or `apns` tokens. They will be used to create the guest user.
 
         ###Using SMS Code
         <pre><code>
