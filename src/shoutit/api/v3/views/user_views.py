@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 
+from django.http import HttpRequest
 from rest_framework import viewsets, filters, status, mixins
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import detail_route
@@ -45,6 +46,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         return super(UserViewSet, self).get_object()
 
     def get_serializer_class(self):
+        # Avoid error caused by Swagger passing HttpRequest from django instead of DRF one
+        if isinstance(self.request, HttpRequest):
+            return super(UserViewSet, self).get_serializer_class()
         user = self.get_object()
         if user and user.is_guest:
             return GuestSerializer
