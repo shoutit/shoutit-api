@@ -18,7 +18,7 @@ from shoutit.models import User, Shout, ShoutIndex
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
 from ..serializers import (UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,
-                           TagDetailSerializer, UserDeactivationSerializer)
+                           TagDetailSerializer, UserDeactivationSerializer, GuestSerializer)
 
 
 class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -43,6 +43,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             if username == 'me' or username == self.request.user.username:
                 return self.request.user
         return super(UserViewSet, self).get_object()
+
+    def get_serializer_class(self):
+        user = self.get_object()
+        if user and user.is_guest:
+            return GuestSerializer
+        return super(UserViewSet, self).get_serializer_class()
 
     def list(self, request, *args, **kwargs):
         """

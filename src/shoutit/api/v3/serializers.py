@@ -93,8 +93,8 @@ class PushTokensSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         apns = data.get('apns')
         gcm = data.get('gcm')
-        if not (apns or gcm) or (apns and gcm):
-            raise ValidationError({'error': "either one of `apns` or `gcm` is required"})
+        if apns and gcm:
+            raise ValidationError({'error': "Only one of `apns` or `gcm` is required not both"})
         ret = super(PushTokensSerializer, self).to_internal_value(data)
         return ret
 
@@ -265,7 +265,7 @@ class UserSerializer(serializers.ModelSerializer):
         request = self.root.context.get('request')
         if request:
             return reverse('user-detail', kwargs={'username': user.username}, request=request)
-        return "https://api.shoutit.com/v2/users/" + user.username
+        return "https://api.shoutit.com/v3/users/" + user.username
 
     def get_is_listening(self, tag):
         request = self.root.context.get('request')
@@ -534,7 +534,7 @@ class UserDetailSerializer(UserSerializer):
 
 class GuestSerializer(UserSerializer):
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
-    push_tokens = PushTokensSerializer()
+    push_tokens = PushTokensSerializer(required=False)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
 
     class Meta(UserSerializer.Meta):
@@ -543,6 +543,7 @@ class GuestSerializer(UserSerializer):
     def to_representation(self, instance):
         ret = super(UserSerializer, self).to_representation(instance)
         return ret
+
 
 class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'],
@@ -1073,13 +1074,13 @@ class ShoutitLoginSerializer(serializers.Serializer):
 
 
 class ShoutitGuestSerializer(serializers.Serializer):
-    user = GuestSerializer()
+    user = GuestSerializer(required=False)
 
     def to_internal_value(self, data):
         ret = super(ShoutitGuestSerializer, self).to_internal_value(data)
         request = self.context.get('request')
         initial_guest_user = ret.get('user', {})
-        push_tokens = initial_guest_user.get('push_tokens')
+        push_tokens = initial_guest_user.get('push_tokens', {})
         apns = push_tokens.get('apns')
         gcm = push_tokens.get('gcm')
         try:
@@ -1088,7 +1089,7 @@ class ShoutitGuestSerializer(serializers.Serializer):
             elif gcm:
                 user = User.objects.get(gcmdevice__registration_id=gcm)
             else:
-                user = None
+                raise User.DoesNotExist()
         except User.DoesNotExist:
             initial_guest_user['ip'] = get_real_ip(request)
             user = user_controller.user_from_guest_data(initial_gust_user=initial_guest_user, is_test=request.is_test)
@@ -1102,8 +1103,6 @@ class ShoutitGuestSerializer(serializers.Serializer):
                 GCMDevice.objects.filter(registration_id=gcm).delete()
                 # create new device for user with gcm_token
                 GCMDevice(registration_id=gcm, user=user).save()
-            else:
-                user.delete()
         if not user:
             raise ValidationError({"error": "Could not create user"})
         self.instance = user
