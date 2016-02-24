@@ -28,7 +28,7 @@ info("BIND: {}:{}".format(ADDRESS, PORT))
 if PROD:
     DEBUG = False
     SITE_LINK = 'https://www.shoutit.com/'
-    API_LINK = 'https://api.shoutit.com/v2/'
+    API_LINK = 'https://api.shoutit.com/v3/'
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
@@ -37,7 +37,7 @@ if PROD:
 elif DEV:
     DEBUG = True
     SITE_LINK = 'http://dev.www.shoutit.com/'
-    API_LINK = 'http://dev.api.shoutit.com/v2/'
+    API_LINK = 'http://dev.api.shoutit.com/v3/'
     DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
@@ -46,7 +46,7 @@ elif DEV:
 else:  # LOCAL
     DEBUG = True
     SITE_LINK = 'http://shoutit.dev:8080/'
-    API_LINK = 'http://shoutit.dev:8000/v2/'
+    API_LINK = 'http://shoutit.dev:8000/v3/'
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
@@ -206,6 +206,7 @@ INSTALLED_APPS = (
     'widget_tweaks',
     'corsheaders',
 
+    'shoutit_twilio',
     'shoutit_pusher',
     'shoutit_crm',
     'shoutit',
