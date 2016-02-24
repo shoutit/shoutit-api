@@ -80,18 +80,18 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     save_on_top = True
     list_display = (
         'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_name',
-        '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'last_login', 'created_at')
+        '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'is_guest', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
         (None, {'fields': ('type', 'username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', '_profile')}),
         (_('Permissions'), {'fields': ('is_active', 'is_activated', 'is_staff', 'is_superuser',
-                                       'is_test', 'groups', 'user_permissions')}),
+                                       'is_test', 'is_guest', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
     list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter),
-                   UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
+                   UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
