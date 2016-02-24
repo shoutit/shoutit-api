@@ -45,14 +45,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                 return self.request.user
         return super(UserViewSet, self).get_object()
 
-    def get_serializer_class(self):
-        # Avoid error caused by Swagger passing HttpRequest from django instead of DRF one
-        if isinstance(self.request, HttpRequest):
-            return super(UserViewSet, self).get_serializer_class()
-        user = self.get_object()
-        if user and user.is_guest:
-            return GuestSerializer
-        return super(UserViewSet, self).get_serializer_class()
+    def get_serializer(self, *args, **kwargs):
+        if 'instance' in kwargs:
+            instance = kwargs['instance']
+            if isinstance(instance, User) and instance.is_guest:
+                self.serializer_class = GuestSerializer
+        return super(UserViewSet, self).get_serializer(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         """
