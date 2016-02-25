@@ -8,8 +8,8 @@ from collections import OrderedDict
 
 import django_filters
 from django.conf import settings
-from django.db.models import Q
-from elasticsearch_dsl import F, Search
+from django.db.models import Q as DQ
+from elasticsearch_dsl import Search, Q
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
@@ -53,7 +53,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         exclude_ids = data.get('exclude_ids')
         if exclude_ids:
             for _id in exclude_ids:
-                index_queryset = index_queryset.filter(~F('term', _id=_id))
+                index_queryset = index_queryset.filter(~Q('term', _id=_id))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -84,18 +84,17 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             # todo: add state
             city = data.get('city')
             if city and city != 'all':
-                f = [F('term', city=city)]
+                cities = [city]
                 # todo: use other means of finding the surrounding cities like state.
                 try:
                     pd_city = PredefinedCity.objects.filter(city=city, country=country)[0]
                 except IndexError:
                     pass
                 else:
-                    cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
-                    for nearby_city in cities:
-                        f.append(F('term', city=nearby_city.city))
-                    city_f = F('bool', should=f)
-                    index_queryset = index_queryset.filter(city_f)
+                    nearby_cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
+                    for nearby_city in nearby_cities:
+                        cities.append(nearby_city.city)
+                    index_queryset = index_queryset.filter('term', city=cities)
 
         latlng_errors = OrderedDict()
         down_left_lat = data.get('down_left_lat')
@@ -132,7 +131,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         category = data.get('category')
         if category and category != 'all':
             try:
-                category = Category.objects.get(Q(name=category) | Q(slug=category))
+                category = Category.objects.get(DQ(name=category) | DQ(slug=category))
             except Category.DoesNotExist:
                 raise ValidationError({'category': ["Category with name or slug '%s' does not exist" % category]})
             else:
@@ -142,14 +141,12 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     if cat_f_type == TAG_TYPE_STR:
                         cat_f_param = data.get(cat_f_key)
                         if cat_f_param:
-                            f = F('term', **{'tags2__%s' % cat_f_key: cat_f_param})
-                            index_queryset = index_queryset.filter(f)
+                            index_queryset = index_queryset.filter('term', **{'tags2__%s' % cat_f_key: cat_f_param})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
                             if cat_f_param:
-                                f = F('range', **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
-                                index_queryset = index_queryset.filter(f)
+                                index_queryset = index_queryset.filter('range', **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')
@@ -197,17 +194,16 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         # Listened Tags
         tags = user.listening2_tags_names
         if tags:
-            listening_tags = map(lambda t: F('term', tags=t), tags)
-            listening += listening_tags
+            listening_tags = Q('terms', tags=tags)
+            listening.append(listening_tags)
 
         # Listened Users + user himself
         users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if users:
-            listening_users = map(lambda u: F('term', uid=u), users)
-            listening += listening_users
+            listening_users = Q('terms', uid=users)
+            listening.append(listening_users)
 
-        listening_filter = F('bool', should=listening)
-        index_queryset = index_queryset.filter(listening_filter)
+        index_queryset = index_queryset.query('bool', should=listening)
 
         # sort
         sort = data.get('sort')
