@@ -74,8 +74,9 @@ class FBMiddleware(object):
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
-        # do not apply on api v2
-        if '/v2/' in request.META.get('PATH_INFO'):
+        # do not apply on api v2 or v3
+        # Todo: check and deprecate if not needed anymore!
+        if '/v2/' in request.META.get('PATH_INFO') or '/v3/' in request.META.get('PATH_INFO'):
             return
 
         # add the json_data attribute to all POST requests.
