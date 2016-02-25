@@ -375,6 +375,8 @@ class UserDetailSerializer(UserSerializer):
 
         if not ret.get('image'):
             ret['image'] = None
+        if not ret.get('cover'):
+            ret['cover'] = None
         return ret
 
     def to_internal_value(self, data):

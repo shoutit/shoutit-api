@@ -106,11 +106,11 @@ class DiscoverItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super(DiscoverItemSerializer, self).to_representation(instance)
         if not ret.get('image'):
-            ret['image'] = None
+            ret['image'] = ""
         if not ret.get('cover'):
-            ret['cover'] = None
+            ret['cover'] = ""
         if not ret.get('icon'):
-            ret['icon'] = None
+            ret['icon'] = ""
         return ret
 
 
@@ -131,11 +131,11 @@ class DiscoverItemDetailSerializer(serializers.ModelSerializer):
         if not instance.show_shouts:
             ret.pop('shouts_url', None)
         if not ret.get('image'):
-            ret['image'] = None
+            ret['image'] = ""
         if not ret.get('cover'):
-            ret['cover'] = None
+            ret['cover'] = ""
         if not ret.get('icon'):
-            ret['icon'] = None
+            ret['icon'] = ""
         return ret
 
     def get_shouts_url(self, discover_item):
@@ -163,7 +163,7 @@ class TagSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super(TagSerializer, self).to_representation(instance)
         if not ret.get('image'):
-            ret['image'] = None
+            ret['image'] = "https://tag-image.static.shoutit.com/default.jpg"
         return ret
 
 
@@ -229,9 +229,9 @@ class CategorySerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)
         if not ret.get('image'):
-            ret['image'] = None
+            ret['image'] = ""
         if not ret.get('icon'):
-            ret['icon'] = None
+            ret['icon'] = ""
         return ret
 
 
@@ -293,9 +293,9 @@ class UserSerializer(serializers.ModelSerializer):
         else:
             ret = super(UserSerializer, self).to_representation(instance)
         if not ret.get('image'):
-            ret['image'] = None
+            ret['image'] = "https://user-image.static.shoutit.com/default_male.jpg"
         if not ret.get('cover'):
-            ret['cover'] = None
+            ret['cover'] = ""
         return ret
 
 
@@ -375,7 +375,9 @@ class UserDetailSerializer(UserSerializer):
             del ret['message_url']
 
         if not ret.get('image'):
-            ret['image'] = None
+            ret['image'] = "https://user-image.static.shoutit.com/default_male.jpg"
+        if not ret.get('cover'):
+            ret['cover'] = ""
         return ret
 
     def to_internal_value(self, data):
