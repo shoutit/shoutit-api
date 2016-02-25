@@ -61,9 +61,14 @@ class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
     raw_id_fields = ('user', 'page_admin_user')
 
 
+# Item
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     form = ItemForm
+    list_display = ('id', 'name', 'price', 'currency', 'state', 'created_at')
+    list_filter = ('currency', 'state', ('created_at', ShoutitDateFieldListFilter))
+    raw_id_fields = ('videos',)
+    ordering = ('-created_at',)
 
 
 class CustomUserChangeForm(UserChangeForm):

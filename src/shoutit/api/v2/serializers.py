@@ -530,7 +530,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     location = LocationSerializer()
     title = serializers.CharField(min_length=6, max_length=500, source='item.name')
     text = serializers.CharField(min_length=10, max_length=5000)
-    price = serializers.FloatField(source='item.price', allow_null=True)
+    price = serializers.FloatField(source='item.v2_price', allow_null=True)
     currency = serializers.CharField(source='item.currency_code', allow_null=True,
                                      help_text='Currency code taken from list of available currencies')
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
@@ -664,7 +664,9 @@ class ShoutDetailSerializer(ShoutSerializer):
         text = validated_data.get('text')
         item = validated_data.get('item', {})
         title = item.get('name')
-        price = item.get('price')
+        price = item.get('v2_price')
+        if price:
+            price = int(float(price) * 100)
         currency = item.get('currency_code')
 
         category = validated_data.get('category')
