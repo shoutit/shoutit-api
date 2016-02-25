@@ -47,14 +47,10 @@ class LocationSerializer(serializers.Serializer):
     city = serializers.CharField(max_length=100, required=False, allow_blank=True)
     address = serializers.CharField(max_length=200, required=False, allow_blank=True)
 
-    google_geocode_response = serializers.DictField(required=False, allow_null=True)
-
     def to_internal_value(self, data):
         validated_data = super(LocationSerializer, self).to_internal_value(data)
         lat = 'latitude' in validated_data
         lng = 'longitude' in validated_data
-        ggr = 'google_geocode_response' in validated_data
-        google_geocode_response = validated_data.pop('google_geocode_response', None)
         address = validated_data.pop('address', None)
         request = self.root.context.get('request')
         ip = get_real_ip(request) if request else None
@@ -63,13 +59,6 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using latitude, longitude or IP
             location = location_controller.from_location_index(validated_data.get('latitude'),
                                                                validated_data.get('longitude'), ip)
-        # Todo: Deprecate
-        elif ggr:
-            # Handle Google geocode response if provided
-            try:
-                location = location_controller.parse_google_geocode_response(google_geocode_response)
-            except (IndexError, KeyError, ValueError):
-                raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
         elif ip:
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
@@ -78,7 +67,7 @@ class LocationSerializer(serializers.Serializer):
             location = request.user.location
         else:
             raise ValidationError({
-                'non_field_errors': "Could not find [latitude and longitude] or [google_geocode_response] or figure the IP Address"})
+                'non_field_errors': "Could not find [latitude and longitude] or figure the IP Address"})
 
         if address:
             location.update({'address': address})

@@ -239,19 +239,6 @@ class MiscViewSet(viewsets.ViewSet):
         location = location_controller.from_location_index(lat, lng, ip)
         return Response(location)
 
-    @list_route(methods=['post'])
-    def parse_google_geocode_response(self, request):
-        """
-        Retrieve full location attributes for `google_geocode_response`.
-        ###PENDING DEPRECATION
-        """
-        google_geocode_response = request.data.get('google_geocode_response', {})
-        try:
-            location = location_controller.parse_google_geocode_response(google_geocode_response)
-        except (IndexError, KeyError, ValueError):
-            raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
-        return Response(location)
-
     @list_route(methods=['post'], suffix='SSS4')
     def sss4(self, request):
         """
