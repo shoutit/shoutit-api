@@ -4,11 +4,10 @@
 """
 from __future__ import unicode_literals
 
-from django.http import HttpRequest
 from rest_framework import viewsets, filters, status, mixins
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
