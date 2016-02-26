@@ -92,30 +92,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
               paramType: query
             - name: city
               paramType: query
-            - name: min_price
-              type: float
-              paramType: query
-              type: float
-            - name: max_price
-              paramType: query
-            - name: down_left_lat
-              description: -90 to 90, can not be greater than up_right_lat
-              type: float
-              paramType: query
-            - name: down_left_lng
-              description: -180 to 180, can not be greater than up_right_lng
-              type: float
-              paramType: query
-            - name: up_right_lat
-              description: -90 to 90
-              type: float
-              paramType: query
-            - name: up_right_lng
-              description: -180 to 180
-              type: float
+            - name: state
               paramType: query
             - name: category
-              description: the category name
+              description: the category slug
               paramType: query
             - name: tags
               description: space or comma separated tags. returned shouts will contain ALL of them. passing single tag is also possible to list its shouts
@@ -125,6 +105,22 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
               paramType: query
             - name: user
               description: user username to list his shouts
+              paramType: query
+            - name: min_price
+              paramType: query
+            - name: max_price
+              paramType: query
+            - name: down_left_lat
+              description: -90 to 90, can not be greater than up_right_lat
+              paramType: query
+            - name: down_left_lng
+              description: -180 to 180, can not be greater than up_right_lng
+              paramType: query
+            - name: up_right_lat
+              description: -90 to 90
+              paramType: query
+            - name: up_right_lng
+              description: -180 to 180
               paramType: query
         """
         shouts = self.filter_queryset(self.get_index_search())
@@ -138,6 +134,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def categories(self, request):
         """
         List Categories
+
+        Passing `shuffle=1` will return randomized results
         ---
         serializer: CategoryDetailSerializer
         """
