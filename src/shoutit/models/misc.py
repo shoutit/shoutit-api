@@ -63,6 +63,10 @@ class SharedLocation(LocationMixin, UUIDModel):
 
 class GoogleLocation(LocationMixin, UUIDModel):
     geocode_response = models.TextField(max_length=5000)
+    is_indexed = models.BooleanField(default=False, db_index=True)
+
+    def __unicode__(self):
+        return "%s [%0.6f,%0.6f]: %s, %s" % (self.country, self.latitude, self.longitude, self.state, self.city)
 
     class Meta:
         unique_together = ('country', 'state', 'city', 'postal_code', 'latitude', 'longitude')
@@ -134,7 +138,19 @@ def _save_location_index(location=None, created=False):
         location_index = LocationIndex()
         location_index._id = location.pk
         location_index.source = type(location).__name__
+    location_index = location_index_from_location(location, location_index)
+    if location_index.save():
+        debug_logger.debug('Created LocationIndex: %s' % location)
+    else:
+        debug_logger.debug('Updated LocationIndex: %s' % location)
+    location.update(is_indexed=True)
 
+
+def location_index_from_location(location, location_index=None):
+    if location_index is None:
+        location_index = LocationIndex()
+        location_index._id = location.pk
+        location_index.source = type(location).__name__
     location_index.location = {
         'lat': location.latitude,
         'lon': location.longitude
@@ -144,10 +160,7 @@ def _save_location_index(location=None, created=False):
     location_index.state = location.state
     location_index.city = location.city
     location_index.address = location.address
-    if location_index.save():
-        debug_logger.debug('Created LocationIndex: %s' % location)
-    else:
-        debug_logger.debug('Updated LocationIndex: %s' % location)
+    return location_index
 
 
 @job(settings.RQ_QUEUE)

@@ -299,7 +299,7 @@ class MiscViewSet(viewsets.ViewSet):
                 'country': shout['country'],
                 'city': shout['city']
             }
-            shout_controller.create_shout(
+            shout_controller.create_shout_v2(
                 user=user, shout_type=shout_type,
                 title=title, text=text, price=price, currency=currency, location=location,
                 category=category, tags=tags, images=shout['images'],

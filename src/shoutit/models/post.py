@@ -128,6 +128,7 @@ class Shout(Post):
     tags = ArrayField(ShoutitSlugField(), blank=True, default=list)
     tags2 = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
+    is_indexed = models.BooleanField(default=False, db_index=True)
 
     # Todo: check why item can be null and make it not one to one
     item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
@@ -278,7 +279,7 @@ class ShoutIndex(DocType):
     priority = Integer()
 
     class Meta:
-        index = settings.ENV
+        index = settings.ENV + '_shout'
         dynamic_templates = MetaField([
             {
                 "tags2_integer_keys": {

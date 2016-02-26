@@ -223,7 +223,6 @@ class CategoryAdmin(admin.ModelAdmin):
     _main_tag.short_description = 'Main Tag'
 
 
-
 @admin.register(FeaturedTag)
 class FeaturedTagAdmin(admin.ModelAdmin):
     list_display = ('title', '_tag', 'country', 'state', 'city', 'rank')
