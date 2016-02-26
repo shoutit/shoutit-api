@@ -97,7 +97,7 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
     # process tags
     tags = process_tags(tags)
     # add main_tag from category
-    tags.insert(0, category.main_tag.name)
+    tags.insert(0, category.slug)
     # remove duplicates
     tags = list(OrderedDict.fromkeys(tags))
     # Create actual tags objects (when necessary)
@@ -138,10 +138,14 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
         filters = []
     for f in filters:
         tags2[f['slug']] = str(f['value']['slug'])
+    # tags
+    tags = tags2.values()
+    tags = list(OrderedDict.fromkeys(tags))
+    tags.insert(0, category.slug)
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos)
-    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags2=tags2, item=item,
+    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
                          is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
 
@@ -176,6 +180,13 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
         for f in filters:
             tags2[f['slug']] = str(f['value']['slug'])
         shout.tags2 = tags2
+
+        tags = tags2.values()
+        tags = list(OrderedDict.fromkeys(tags))
+        tags.insert(0, shout.category.slug)
+        shout.tags = tags
+        # Create actual tags objects (when necessary)
+        tag_controller.get_or_create_tags(tags, shout.user)
     if location:
         location_controller.update_object_location(shout, location, save=False)
         location_controller.add_predefined_city(location)
@@ -204,9 +215,7 @@ def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, cur
         # process tags
         tags = process_tags(tags)
         # add main_tag from category
-        if not category:
-            category = shout.category
-        tags.insert(0, category.main_tag.name)
+        tags.insert(0, shout.category.slug)
         shout.tags = tags
         # Create actual tags objects (when necessary)
         tag_controller.get_or_create_tags(tags, shout.user)
@@ -270,7 +279,7 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.tags_count = len(shout.tags)
     for k, v in shout.tags2.items():
         shout_index.tags2[k] = v
-    shout_index.category = shout.category.name
+    shout_index.category = shout.category.slug
     shout_index.country = shout.country
     shout_index.postal_code = shout.postal_code
     shout_index.state = shout.state

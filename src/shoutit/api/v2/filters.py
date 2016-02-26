@@ -51,9 +51,10 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         # Exclude ids
         exclude_ids = data.get('exclude_ids')
+        if isinstance(exclude_ids, basestring):
+            exclude_ids = exclude_ids.split(',')
         if exclude_ids:
-            for _id in exclude_ids:
-                index_queryset = index_queryset.filter(~Q('term', _id=_id))
+            index_queryset = index_queryset.filter(~Q('terms', _id=exclude_ids))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -74,8 +75,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if tags:
             tags = tags.replace(',', ' ').split()
             tag_names = process_tags(tags)
-            for tag_name in tag_names:
-                index_queryset = index_queryset.filter('term', tags=tag_name)
+            index_queryset = index_queryset.filter('terms', tags=tag_names)
 
         # Location: Country, State, City, Latitude, Longitude
         country = data.get('country')
@@ -94,7 +94,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     nearby_cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
                     for nearby_city in nearby_cities:
                         cities.append(nearby_city.city)
-                    index_queryset = index_queryset.filter('term', city=cities)
+                    index_queryset = index_queryset.filter('terms', city=cities)
 
         latlng_errors = OrderedDict()
         down_left_lat = data.get('down_left_lat')
@@ -135,7 +135,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             except Category.DoesNotExist:
                 raise ValidationError({'category': ["Category with name or slug '%s' does not exist" % category]})
             else:
-                index_queryset = index_queryset.filter('term', category=category.name)
+                index_queryset = index_queryset.filter('terms', category=[category.name, category.slug])
                 cat_filters = TagKey.objects.filter(key__in=category.filters).values_list('key', 'values_type')
                 for cat_f_key, cat_f_type in cat_filters:
                     if cat_f_type == TAG_TYPE_STR:
@@ -146,7 +146,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
                             if cat_f_param:
-                                index_queryset = index_queryset.filter('range', **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
+                                index_queryset = index_queryset.filter('range',
+                                                                       **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')
