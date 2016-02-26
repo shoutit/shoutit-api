@@ -1,7 +1,8 @@
 # development requirements
 -r prod.txt
 behave
-logging-tree==1.6
+logging-tree==1.7
 mkdocs
 Fabric
 pytesseract
+pip-review

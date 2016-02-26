@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 from django.db import migrations, transaction
 
 from common.utils import process_tag
-from shoutit.models import Category, Tag, Shout
 
 
 def fill_actions(apps, schema_editor):
+    Category = apps.get_model("shoutit", "Category")
+    Tag = apps.get_model("shoutit", "Tag")
+    Shout = apps.get_model("shoutit", "Shout")
     categories = [
         {
             "new": "Fashion & Accessories",

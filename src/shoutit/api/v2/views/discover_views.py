@@ -8,10 +8,10 @@ from rest_framework import permissions, viewsets, mixins
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
-from shoutit.api.v2.filters import DiscoverItemFilter, ShoutIndexFilterBackend
-from shoutit.api.v2.pagination import ShoutitPageNumberPagination, PageNumberIndexPagination
-from shoutit.api.v2.serializers import *  # NOQA
-from shoutit.models import ShoutIndex, DiscoverItem
+from shoutit.models import ShoutIndex, DiscoverItem, Shout
+from ..filters import DiscoverItemFilter, ShoutIndexFilterBackend
+from ..pagination import ShoutitPageNumberPagination, PageNumberIndexPagination
+from ..serializers import (DiscoverItemSerializer, DiscoverItemDetailSerializer, ShoutSerializer)
 
 
 class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet):

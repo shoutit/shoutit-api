@@ -27,7 +27,7 @@ class PageCategory(UUIDModel):
 
 class Page(AbstractProfile):
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='pages_created')
-    admins = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.PageAdmin', related_name='pages')
+    admins = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.PageAdmin', related_name='pages')
     name = models.CharField(_('name'), max_length=75, validators=[validators.MinLengthValidator(2)])
     category = models.ForeignKey('shoutit.PageCategory', related_name='pages', on_delete=models.PROTECT)
 
@@ -48,7 +48,6 @@ class Page(AbstractProfile):
 
     def __init__(self, *args, **kwargs):
         super(Page, self).__init__(*args, **kwargs)
-        self._meta.get_field('image').default = 'https://user-image.static.shoutit.com/default_page.jpg'
 
     def __unicode__(self):
         return unicode(self.user)

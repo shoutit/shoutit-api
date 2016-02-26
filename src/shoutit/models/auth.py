@@ -94,10 +94,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         _('activated'), default=False, help_text=_('Designates whether this user have a verified email.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
-    permissions = models.ManyToManyField(Permission, through=UserPermission)
+    permissions = models.ManyToManyField(Permission, blank=True, through=UserPermission)
     type = models.PositiveSmallIntegerField(choices=UserType.choices, default=USER_TYPE_PROFILE.value, db_index=True)
     is_test = models.BooleanField(
         _('testuser status'), default=False, help_text=_('Designates whether this user is a test user.'))
+    is_guest = models.BooleanField(
+        _('guest user status'), default=False, help_text=_('Designates whether this user is a guest user.'))
     objects = ShoutitUserManager()
 
     USERNAME_FIELD = 'username'
@@ -387,7 +389,7 @@ class InactiveUser(AnonymousUser):
             "username": "",
             "name": "Shoutit User",
             "is_activated": False,
-            "image": "https://user-image.static.shoutit.com/default_male.jpg",
+            "image": "",
         })
 
 # Todo: Add DeletedUser class

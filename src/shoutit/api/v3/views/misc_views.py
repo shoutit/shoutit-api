@@ -25,9 +25,9 @@ from shoutit.controllers.facebook_controller import (update_linked_facebook_acco
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request, base64_to_text, base64_to_texts
-from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
+from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
                            UserSerializer, ShoutSerializer,
-                           TagDetailSerializer)
+                           TagDetailSerializer, CategoryDetailSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -41,10 +41,10 @@ class MiscViewSet(viewsets.ViewSet):
         """
         List Categories
         ---
-        serializer: CategorySerializer
+        serializer: CategoryDetailSerializer
         """
         categories = Category.objects.all().order_by('name').select_related('main_tag')
-        categories_data = CategorySerializer(categories, many=True, context={'request': request}).data
+        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
         # Everyday I'm shuffling!
         shuffle = request.query_params.get('shuffle')
         if shuffle:
@@ -209,7 +209,7 @@ class MiscViewSet(viewsets.ViewSet):
         from ipware.ip import get_real_ip
         raise Exception("Fake error request from ip: " + get_real_ip(request) or 'undefined')
 
-    @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='IP')
+    @list_route(methods=['get'], suffix='Get IP')
     def ip(self, request):
         """
         Retrieve ip from request
@@ -218,7 +218,7 @@ class MiscViewSet(viewsets.ViewSet):
         debug_logger.debug("IP request from : " + ip)
         return Response({'ip': ip})
 
-    @list_route(methods=['get'])
+    @list_route(methods=['get'], suffix='Geocode')
     def geocode(self, request):
         """
         Retrieve full location attributes for `latlng` query param
@@ -237,19 +237,6 @@ class MiscViewSet(viewsets.ViewSet):
             raise ValidationError({'latlng': ['missing or wrong latlng parameter']})
         ip = get_real_ip(request)
         location = location_controller.from_location_index(lat, lng, ip)
-        return Response(location)
-
-    @list_route(methods=['post'])
-    def parse_google_geocode_response(self, request):
-        """
-        Retrieve full location attributes for `google_geocode_response`.
-        ###PENDING DEPRECATION
-        """
-        google_geocode_response = request.data.get('google_geocode_response', {})
-        try:
-            location = location_controller.parse_google_geocode_response(google_geocode_response)
-        except (IndexError, KeyError, ValueError):
-            raise ValidationError({'google_geocode_response': "Malformed Google geocode response"})
         return Response(location)
 
     @list_route(methods=['post'], suffix='SSS4')
@@ -284,7 +271,7 @@ class MiscViewSet(viewsets.ViewSet):
             if source == 'cl':
                 user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
                                                     lng=shout['lng'], city=shout['city'],
-                                                    country=shout['country'], dbcl_type='cl')
+                                                    country=shout['country'], dbcl_type='cl', )
             elif source in ['dbz', 'dbz2']:
                 user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
                                                     city=shout['city'], country=shout['country'],

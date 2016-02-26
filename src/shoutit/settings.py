@@ -28,7 +28,7 @@ info("BIND: {}:{}".format(ADDRESS, PORT))
 if PROD:
     DEBUG = False
     SITE_LINK = 'https://www.shoutit.com/'
-    API_LINK = 'https://api.shoutit.com/v2/'
+    API_LINK = 'https://api.shoutit.com/v3/'
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
@@ -37,7 +37,7 @@ if PROD:
 elif DEV:
     DEBUG = True
     SITE_LINK = 'http://dev.www.shoutit.com/'
-    API_LINK = 'http://dev.api.shoutit.com/v2/'
+    API_LINK = 'http://dev.api.shoutit.com/v3/'
     DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
@@ -46,7 +46,7 @@ elif DEV:
 else:  # LOCAL
     DEBUG = True
     SITE_LINK = 'http://shoutit.dev:8080/'
-    API_LINK = 'http://shoutit.dev:8000/v2/'
+    API_LINK = 'http://shoutit.dev:8000/v3/'
     DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
@@ -206,6 +206,7 @@ INSTALLED_APPS = (
     'widget_tweaks',
     'corsheaders',
 
+    'shoutit_twilio',
     'shoutit_pusher',
     'shoutit_crm',
     'shoutit',
@@ -419,8 +420,8 @@ info("FORCE_SMTP:", FORCE_SMTP)
 info("EMAIL_HOST:", EMAIL_HOST)
 
 # Facebook App
-FACEBOOK_APP_ID = '353625811317277'
-FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d'
+FACEBOOK_APP_ID = '353625811317277' if PROD else '1151546964858487'
+FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d' if PROD else '8fb7b12351091e8c59c723fc3105d05a'
 
 # Google App
 GOOGLE_API = {
@@ -434,25 +435,25 @@ GOOGLE_API = {
 # Rest FW
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
-    'DEFAULT_VERSION': 'v2',
-    'ALLOWED_VERSIONS': ['v2'],
+    'DEFAULT_VERSION': 'v3',
+    'ALLOWED_VERSIONS': ['v2', 'v3'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'shoutit.api.v2.authentication.ShoutitTokenAuthentication',
-        'shoutit.api.v2.authentication.ShoutitOAuth2Authentication',
-        'shoutit.api.v2.authentication.ShoutitSessionAuthentication',
+        'shoutit.api.authentication.ShoutitTokenAuthentication',
+        'shoutit.api.authentication.ShoutitOAuth2Authentication',
+        'shoutit.api.authentication.ShoutitSessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'shoutit.api.v2.permissions.IsSecure',
+        'shoutit.api.permissions.IsSecure',
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_PARSER_CLASSES': (
-        'shoutit.api.v2.parsers.ShoutitJSONParser',
+        'shoutit.api.parsers.ShoutitJSONParser',
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser'
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'shoutit.api.v2.renderers.ShoutitBrowsableAPIRenderer',
+        'shoutit.api.renderers.ShoutitBrowsableAPIRenderer',
     ),
     'DEFAULT_FILTER_BACKENDS': [],
     'URL_FIELD_NAME': 'api_url',
@@ -468,17 +469,16 @@ OAUTH_ENFORCE_CLIENT_SECURE = True
 OAUTH_DELETE_EXPIRED = True
 
 SWAGGER_SETTINGS = {
-    'exclude_namespaces': [],
-    'api_version': '2.0',
+    'api_version': '3',
     'api_path': '/',
     'protocol': 'https' if PROD else 'http',
     'enabled_methods': [
         'get',
         'post',
-        'put',
         'patch',
         'delete',
     ],
+    'exclude_namespaces': ['v2'],
     'api_key': '',
     # 'is_authenticated': True,
     'is_superuser': False,
@@ -486,7 +486,7 @@ SWAGGER_SETTINGS = {
     'info': {
         # 'contact': 'mo.chawich@gmail.com',
         'description': '',
-        'title': 'Shoutit API V2 Documentation',
+        'title': 'Shoutit API Documentation',
     },
     'doc_expansion': 'none',
 }

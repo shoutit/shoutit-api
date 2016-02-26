@@ -27,7 +27,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     the attached_object is the topic of the conversation and it is allowed not to have a topic.
     """
     type = models.SmallIntegerField(choices=ConversationType.choices, blank=False)
-    users = models.ManyToManyField(AUTH_USER_MODEL, related_name='conversations')
+    users = models.ManyToManyField(AUTH_USER_MODEL, blank=True, related_name='conversations')
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='created_conversations', null=True, blank=True)
     subject = models.CharField(max_length=25, blank=True, default='')
     icon = models.URLField(blank=True, default='')
@@ -140,8 +140,8 @@ class Message(Action):
     Message is a message from user into a Conversation
     """
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages')
-    read_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageRead', related_name='read_messages')
-    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.MessageDelete',
+    read_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageRead', related_name='read_messages')
+    deleted_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageDelete',
                                         related_name='deleted_messages')
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")

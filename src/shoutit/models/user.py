@@ -21,7 +21,6 @@ class Profile(AbstractProfile):
 
     def __init__(self, *args, **kwargs):
         super(Profile, self).__init__(*args, **kwargs)
-        self._meta.get_field('image').default = 'https://user-image.static.shoutit.com/default_male.jpg'
 
     def __unicode__(self):
         return unicode(self.user)

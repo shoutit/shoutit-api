@@ -3,6 +3,7 @@
 
 """
 from __future__ import unicode_literals
+
 from django.utils.encoding import smart_text
 from rest_framework.renderers import BrowsableAPIRenderer, BaseRenderer
 from rest_framework.utils import formatting

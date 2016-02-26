@@ -2,10 +2,13 @@
 
 """
 from __future__ import unicode_literals
+
 import uuid
+
+from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from rest_framework.authentication import BaseAuthentication, TokenAuthentication, SessionAuthentication
 from rest_framework_oauth.authentication import OAuth2Authentication
-from rest_framework import HTTP_HEADER_ENCODING, exceptions
+
 from shoutit.models import Page
 
 

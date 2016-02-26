@@ -125,7 +125,7 @@ class Post(Action):
 
 
 class Shout(Post):
-    tags = ArrayField(ShoutitSlugField())
+    tags = ArrayField(ShoutitSlugField(), blank=True, default=list)
     tags2 = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
@@ -206,6 +206,20 @@ class Shout(Post):
             'shout_id': self.pk,
             'published_to_facebook': self.published_on.get('facebook')
         }
+
+    @property
+    def filters(self):
+        filters = []
+        for key, value in self.tags2.items():
+            filters.append({
+                'name': key.title() if isinstance(key, basestring) else key,
+                'slug': key,
+                'value': {
+                    'name': value.title() if isinstance(value, basestring) else key,
+                    'slug': value
+                }
+            })
+        return filters
 
 
 class InactiveShout(object):

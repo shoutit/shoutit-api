@@ -20,7 +20,7 @@ from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, U
     PublishedOnFilter
 from shoutit.admin_utils import (
     UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
-from shoutit.forms import PushBroadcastForm, ItemForm
+from shoutit.forms import PushBroadcastForm, ItemForm, CategoryForm
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
@@ -61,9 +61,14 @@ class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
     raw_id_fields = ('user', 'page_admin_user')
 
 
+# Item
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     form = ItemForm
+    list_display = ('id', 'name', 'price', 'currency', 'state', 'created_at')
+    list_filter = ('currency', 'state', ('created_at', ShoutitDateFieldListFilter))
+    raw_id_fields = ('videos',)
+    ordering = ('-created_at',)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -80,18 +85,18 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     save_on_top = True
     list_display = (
         'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_name',
-        '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'last_login', 'created_at')
+        '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'is_guest', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
         (None, {'fields': ('type', 'username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', '_profile')}),
         (_('Permissions'), {'fields': ('is_active', 'is_activated', 'is_staff', 'is_superuser',
-                                       'is_test', 'groups', 'user_permissions')}),
+                                       'is_test', 'is_guest', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
     list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter),
-                   UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_staff', 'is_superuser')
+                   UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
@@ -206,10 +211,10 @@ class TagKeyAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    raw_id_fields = ('main_tag',)
-    list_display = ('name', '_main_tag', 'tag_names')
+    list_display = ('name', '_main_tag', 'filters', 'image', 'icon')
+    raw_id_fields = ('main_tag', 'tags')
     ordering = ('name',)
-    filter_horizontal = ('tags',)
+    form = CategoryForm
 
     def _main_tag(self, category):
         return tag_link(category.main_tag)
@@ -217,10 +222,6 @@ class CategoryAdmin(admin.ModelAdmin):
     _main_tag.allow_tags = True
     _main_tag.short_description = 'Main Tag'
 
-    def tag_names(self, category):
-        return ', '.join([tag.name for tag in category.tags.all()])
-
-    tag_names.short_description = 'Tags'
 
 
 @admin.register(FeaturedTag)

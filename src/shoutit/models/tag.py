@@ -46,7 +46,7 @@ class Tag(UUIDModel, APIModelMixin):
     key = ShoutitSlugField(blank=True, default='')
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True,
                                 on_delete=models.SET_NULL)
-    image = models.URLField(max_length=1024, blank=True, default='https://tag-image.static.shoutit.com/default.jpg')
+    image = models.URLField(max_length=1024, blank=True, default='')
     definition = models.TextField(blank=True, max_length=512, default='New Tag!')
 
     class Meta:
@@ -78,7 +78,7 @@ class Category(UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
     slug = ShoutitSlugField(unique=True)
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
-    tags = models.ManyToManyField('shoutit.Tag', related_name='category')
+    tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='category')
     filters = ArrayField(ShoutitSlugField(), size=10, blank=True, default=list)
     icon = models.URLField(max_length=1024, blank=True, default='')
 
@@ -88,6 +88,17 @@ class Category(UUIDModel):
     @property
     def image(self):
         return self.main_tag.image
+
+    @property
+    def filter_objects(self):
+        filters = []
+        for f in self.filters:
+            filters.append({
+                'name': f.title(),
+                'slug': f,
+                'values': map(lambda v: {'name': v.title(), 'value': v}, Tag.objects.filter(key=f).values_list('name', flat=True))
+            })
+        return filters
 
 
 class FeaturedTag(UUIDModel, NamedLocationMixin):

@@ -20,9 +20,6 @@ class BadRequestsMiddleware(object):
             req_data = drf_request.data if drf_request else {}
             res_data = getattr(response, 'data', {})
             api_client = drf_request.auth.client.name if drf_request and hasattr(drf_request.auth, 'client') else None
-            location = req_data.get('location')
-            if location and 'google_geocode_response' in location:
-                req_data['location']['google_geocode_response'] = '<stripped>'
             extra = {
                 'request': request,
                 'req_data': req_data,
@@ -77,8 +74,9 @@ class FBMiddleware(object):
 class JsonPostMiddleware(object):
     @staticmethod
     def process_request(request):
-        # do not apply on api v2
-        if '/v2/' in request.META.get('PATH_INFO'):
+        # do not apply on api v2 or v3
+        # Todo: check and deprecate if not needed anymore!
+        if '/v2/' in request.META.get('PATH_INFO') or '/v3/' in request.META.get('PATH_INFO'):
             return
 
         # add the json_data attribute to all POST requests.

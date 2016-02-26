@@ -3,11 +3,12 @@
 
 """
 from __future__ import unicode_literals
+
 from django.conf import settings
-
-from rest_framework.permissions import *  # NOQA
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import (BasePermission)
 
+SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
 MODIFY_METHODS = ['PUT', 'PATCH', 'DELETE']
 
 

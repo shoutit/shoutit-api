@@ -5,9 +5,9 @@
 from __future__ import unicode_literals
 
 from rest_framework import viewsets, filters, status, mixins
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
@@ -18,7 +18,7 @@ from shoutit.models import User, Shout, ShoutIndex
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
 from ..serializers import (UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,
-                           TagDetailSerializer, UserDeactivationSerializer)
+                           TagDetailSerializer, UserDeactivationSerializer, GuestSerializer)
 
 
 class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -43,6 +43,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             if username == 'me' or username == self.request.user.username:
                 return self.request.user
         return super(UserViewSet, self).get_object()
+
+    def get_serializer(self, *args, **kwargs):
+        if 'instance' in kwargs:
+            instance = kwargs['instance']
+            if isinstance(instance, User) and instance.is_guest:
+                self.serializer_class = GuestSerializer
+        return super(UserViewSet, self).get_serializer(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         """
@@ -337,51 +344,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         page = paginator.paginate_queryset(index_queryset=shouts, request=request, view=self)
         serializer = ShoutSerializer(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
-
-    @detail_route(methods=['get'], suffix='Shouts')
-    def shouts(self, request, *args, **kwargs):
-        """
-        List the User shouts.
-        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
-        ---
-        serializer: ShoutSerializer
-        omit_parameters:
-            - form
-        parameters:
-            - name: username
-              description: me for logged in user
-              paramType: path
-              required: true
-              defaultValue: me
-            - name: shout_type
-              paramType: query
-              defaultValue: all
-              enum:
-                - request
-                - offer
-                - all
-            - name: page_size
-              paramType: query
-        """
-        user = self.get_object()
-        shout_type = request.query_params.get('shout_type', 'all')
-        if shout_type not in ['offer', 'request', 'all']:
-            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
-
-        # todo: refactor to use shout index filter
-        self.pagination_class = PageNumberIndexPagination
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
-        shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-date_published')
-        if shout_type != 'all':
-            shouts = shouts.query('match', type=shout_type)
-
-        page = self.paginate_queryset(shouts)
-        serializer = ShoutSerializer(page, many=True, context={'request': request})
-        return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Message')
     def message(self, request, *args, **kwargs):

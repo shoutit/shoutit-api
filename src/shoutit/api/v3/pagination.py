@@ -256,7 +256,7 @@ class PageNumberIndexPagination(PageNumberPagination):
     max_results = 1000
     results_field = 'results'
     template = 'rest_framework/pagination/previous_and_next.html'
-    show_count = False
+    show_count = True
 
     # private
     _max_page_number_exceeded = False

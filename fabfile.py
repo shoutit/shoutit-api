@@ -26,6 +26,12 @@ def local_update():
         local('pip install -U -r %s' % os.path.join(DJANGO_DIR, 'requirements', 'dev.txt'))
 
 
+def preview_local_updates():
+    print("Checking local requirements...")
+    with lcd(scripts_dir):
+        local('python pip-review --local')
+
+
 def local_test():
     with lcd(scripts_dir):
         with settings(warn_only=True):

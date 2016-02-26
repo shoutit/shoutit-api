@@ -4,8 +4,10 @@
 """
 from __future__ import unicode_literals
 
+import random
+
 from rest_framework import permissions, status, mixins, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -13,11 +15,11 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify
 from shoutit.controllers import shout_controller
-from shoutit.models import Shout
+from shoutit.models import Shout, Category
 from shoutit.models.post import ShoutIndex
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
-from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
+from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -66,10 +68,11 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         ###Response
         <pre><code>
         {
-          "next": null, // next results page url
-          "previous": null, // previous results page url
-          "results": [] // list of {ShoutSerializer}
-          "related_searches": [] // list of keywords related to the current search [currently dummy text is being returned]
+            "count": 59, // number of results
+            "next": null, // next results page url
+            "previous": null, // previous results page url
+            "results": [] // list of {ShoutSerializer}
+            "related_searches": [] // list of keywords related to the current search [currently dummy text is being returned]
         }
         </code></pre>
         ---
@@ -131,31 +134,68 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
         return result
 
+    @list_route(methods=['get'], suffix='Categories')
+    def categories(self, request):
+        """
+        List Categories
+        ---
+        serializer: CategoryDetailSerializer
+        """
+        categories = Category.objects.all().order_by('name').select_related('main_tag')
+        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
+        # Everyday I'm shuffling!
+        shuffle = request.query_params.get('shuffle')
+        if shuffle:
+            random.shuffle(categories_data)
+        return Response(categories_data)
+
     def create(self, request, *args, **kwargs):
         """
         Create a Shout
         ###REQUIRES AUTH
         ###Request
-        ####Body
+        ####Body Example
         <pre><code>
         {
-            "type": "offer", // `offer` or `request`
-            "title": "macbook pro 15",
-            "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
+            "type": "offer",
+            "title": "BMW M6",
+            "text": "Brand new black bmw m6 2016.",
             "price": 1000,
             "currency": "EUR",
-            "images": [], // list of image urls
-            "videos": [], // list of {Video Object}s
-            "category": {"name": "Computers & Networking"},
-            "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
+            "images": [],
+            "videos": [],
+            "category": {
+                "slug": "cars-motors"
+            },
             "location": {
                 "latitude": 25.1593957,
                 "longitude": 55.2338326,
                 "address": "Whatever Street 31"
             },
-            "publish_to_facebook": true
+            "publish_to_facebook": true,
+            "filters": [
+                {
+                    "slug": "color",
+                    "value": {
+                        "slug": "white"
+                    }
+                },
+                {
+                    "slug": "model",
+                    "value": {
+                        "slug": "2016"
+                    }
+                }
+            ]
         }
         </code></pre>
+
+        ###Valid cases
+        1. Offer with either one of the following: `title`, `images` or `videos` *
+        2. Request with a `title`
+
+        * For `images` and `videos` at least a single item is required
+
         ---
         serializer: ShoutDetailSerializer
         omit_parameters:
@@ -173,6 +213,81 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def retrieve(self, request, *args, **kwargs):
         """
         Retrieve a Shout
+        <pre><code>
+        {
+            "id": "cd2ae206-3a3d-4758-85b6-fe95612aeda0",
+            "api_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
+            "web_url": "https://www.shoutit.com/shout/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
+            "type": "offer",
+            "location": {
+                "latitude": 25.2321179865413,
+                "longitude": 51.4795259383137,
+                "country": "QA",
+                "postal_code": "",
+                "state": "",
+                "city": "Ain Khaled",
+                "address": ""
+            },
+            "title": "Chevrolet Cruze 2011 Perfect Condition low mileage 59000 KM",
+            "text": "Chevrolet Cruze 2011 \nPerfect Condition\nVery Low Mileage 59000 KM\nEngine is 1.8 CC\nInterior is like New \nSecond Owner\nESTMARA UP to 8/2017\nPRICE IS 25500\nشفرولية كروز موديل 2011\nبحالة ممتازة جدا جدا\nقاطع 59000 كيلومتر فقط\nنظيفة جدا من الداخل ومن الخارج\nاستمارة حتي شهر8 2017 \nالسعر 25500",
+            "price": 24500.0,
+            "currency": "QAR",
+            "thumbnail": "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
+            "video_url": null,
+            "user": {
+                "id": "6590865d-b395-4cea-8382-68fbc5f048ce",
+                "type": "Profile",
+                "api_url": "https://api.shoutit.com/v2/users/15214428592",
+                "web_url": "https://www.shoutit.com/user/15214428592",
+                "username": "15214428592",
+                "name": "user 15214428592",
+                "first_name": "user",
+                "last_name": "15214428592",
+                "is_activated": false,
+                "image": "https://user-image.static.shoutit.com/default_male.jpg",
+                "cover": "",
+                "is_listening": false,
+                "listeners_count": 0
+            },
+            "date_published": 1456431892,
+            "category": {
+                "name": "Cars & Motors",
+                "slug": "cars-motors",
+                "icon": "https://tag-image.static.shoutit.com/categories/cars-i.png",
+                "image": "https://tag-image.static.shoutit.com/bb4f3137-48f2-4c86-89b8-0635ed6d426e-cars-motors.jpg"
+            },
+            "filters": [
+                {
+                    "name": "Color",
+                    "slug": "color",
+                    "value": {
+                        "name": "White",
+                        "slug": "white"
+                    }
+                },
+                {
+                    "name": "Model",
+                    "slug": "model",
+                    "value": {
+                        "name": "2016",
+                        "slug": "2016"
+                    }
+                }
+            ],
+            "images": [
+                "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
+                "https://shout-image.static.shoutit.com/fac19243-2680-4971-ab52-d90b2f525c19-1456441369.jpg",
+                "https://shout-image.static.shoutit.com/bc40f2ca-fc5b-4fe0-8d13-1a0865f4b38b-1456441370.jpg"
+            ],
+            "videos": [],
+            "published_on": {},
+            "reply_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
+            "related_requests": [],
+            "related_offers": [],
+            "conversations": []
+        }
+        </code></pre>
+
         ---
         serializer: ShoutDetailSerializer
         """
@@ -184,22 +299,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         ###REQUIRES AUTH
         ###Request
         ####Body
-        <pre><code>
-        {
-          "title": "macbook pro 15",
-          "text": "apple macbook pro 15-inch in good condition for sale.", // 10 to 1000 chars
-          "price": 1000,
-          "currency": "EUR",
-          "images": [], // list of image urls
-          "videos": [], // list of {Video Object}s
-          "category": {"name": "Computers & Networking"},
-          "tags": [{"name":"macbook-pro"}, {"name":"apple"}, {"name":"used"}],
-          "location": {
-            "latitude": 25.1593957,
-            "longitude": 55.2338326,
-            "address": "Whatever Street 31",
-          }
-        }
+        Just like creating shouts, however all attributes are optional. `type` changing is not allowed and will be ignored
         </code></pre>
         ---
         serializer: ShoutDetailSerializer

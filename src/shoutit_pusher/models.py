@@ -28,7 +28,7 @@ class PusherChannel(UUIDModel):
     name = models.CharField(max_length=164, unique=True, validators=[
         validators.RegexValidator(channel_name_re)
     ])
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='channels',
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='channels',
                                    through='shoutit_pusher.PusherChannelJoin')
 
     def __unicode__(self):

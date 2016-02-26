@@ -1,10 +1,10 @@
 {% extends "rest_framework/base.html" %}
 
 
-{% block title %}Shoutit API v2.0{% endblock %}
+{% block title %}Shoutit API {{ request.version }}{% endblock %}
 
 {% block branding %}
-    <a class='navbar-brand' rel="nofollow" href='/v2/'>
-        Shoutit API <span class="version">2.0</span>
+    <a class='navbar-brand' rel="nofollow" href='/{{ request.version }}/'>
+        Shoutit API <span style="font-size: 70%; opacity: 0.7;">{{ request.version }}</span>
     </a>
 {% endblock %}

@@ -42,6 +42,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         # Filter shouts by user id if user username or id are passed in `user` query param
         user = data.get('user')
         if user:
+            if user == 'me' and request.user.is_authenticated():
+                user = request.user.username
             try:
                 user_id = User.objects.get(username=user).pk
             except User.DoesNotExist:

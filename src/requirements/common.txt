@@ -1,39 +1,39 @@
 # core
-gunicorn==19.3.0
-raven==5.8.1
-requests==2.8.1
-Django==1.8.6
+gunicorn==19.4.5
+raven==5.10.2
+requests==2.9.1
+Django==1.8.9
 psycopg2>=2.6
-kitchen==1.2.2
-django-mptt==0.7.4
-django-mptt-admin==0.3.0
+kitchen==1.2.4
+django-mptt==0.8.0
+django-mptt-admin==0.3.3
 
 # admin
-django-grappelli==2.7.2
+django-grappelli==2.7.3
 
 # django-rest-framework
-djangorestframework==3.3.1
-django-filter==0.11.0
+djangorestframework==3.3.2
+django-filter==0.12.0
 drf-extensions
 
 # cache search queues
-redis==2.10.3
+redis==2.10.5
 django-redis==4.3.0
-elasticsearch==2.1.0
-elasticsearch-dsl==0.0.9
-click==5.1
+elasticsearch==2.2.0
+elasticsearch-dsl==2.0.0
+click==6.3
 rq==0.5.6
-django_rq==0.8.0
+django_rq==0.9.0
 django-widget-tweaks
 
 # AWS imaging
 Pillow==2.8.1
 geraldo==0.4.17
-boto==2.38.0
+boto==2.39.0
 
 # google
 httplib2==0.9.2
-google-api-python-client==1.4.2
+google-api-python-client==1.5.0
 
 # push + sockets
 pusher==1.2.3
@@ -41,16 +41,16 @@ django-cors-headers==1.1.0
 django-pgjson==0.3.1
 
 # tracking
-mixpanel==4.2.0
+mixpanel==4.3.0
 
 # docs
 django-rest-swagger==0.3.4
-markdown==2.6.4
+markdown==2.6.5
 
 # utils
-phonenumbers==7.1.1
+phonenumbers==7.2.5
 django-ipware
-twilio==4.9.0
+twilio==6.2.dev0
 nexmo
 
 # sss
@@ -66,7 +66,7 @@ ndg-httpsclient
 pyasn1
 
 # python interface for django-admin shell
-bpython==0.14.2
+bpython==0.15
 
 # django-paypal==0.2
 
