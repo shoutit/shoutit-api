@@ -5,9 +5,11 @@ from __future__ import unicode_literals
 import json
 from django import forms
 from django.contrib.postgres.forms import SplitArrayField
+from django.core.exceptions import ValidationError
 from django.forms import URLField, SlugField
 from shoutit.models import PushBroadcast, Item
 from common.constants import DeviceOS, COUNTRY_CHOICES
+from django.utils.translation import string_concat
 
 
 class PushBroadcastForm(forms.ModelForm):
@@ -51,8 +53,43 @@ class PushBroadcastForm(forms.ModelForm):
         fields = ('message', 'countries', 'devices', 'conditions', 'data')
 
 
+class ShoutitSplitArrayField(SplitArrayField):
+    def clean(self, value):
+        cleaned_data = []
+        errors = []
+        if not any(value) and self.required:
+            raise ValidationError(self.error_messages['required'])
+        max_size = max(self.size, len(value))
+        for i in range(max_size):
+            item = value[i]
+            try:
+                cleaned_data.append(self.base_field.clean(item))
+                errors.append(None)
+            except ValidationError as error:
+                errors.append(ValidationError(
+                    string_concat(self.error_messages['item_invalid'], ' '.join(error.messages)),
+                    code='item_invalid',
+                    params={'nth': i},
+                ))
+                cleaned_data.append(None)
+        if self.remove_trailing_nulls:
+            null_index = None
+            for i, value in reversed(list(enumerate(cleaned_data))):
+                if value in self.base_field.empty_values:
+                    null_index = i
+                else:
+                    break
+            if null_index is not None:
+                cleaned_data = cleaned_data[:null_index]
+                errors = errors[:null_index]
+        errors = list(filter(None, errors))
+        if errors:
+            raise ValidationError(errors)
+        return cleaned_data
+
+
 class ItemForm(forms.ModelForm):
-    images = SplitArrayField(URLField(required=False), size=10, remove_trailing_nulls=True)
+    images = ShoutitSplitArrayField(URLField(required=False), required=False, size=10, remove_trailing_nulls=True)
 
     class Meta:
         model = Item
@@ -60,7 +97,7 @@ class ItemForm(forms.ModelForm):
 
 
 class CategoryForm(forms.ModelForm):
-    filters = SplitArrayField(SlugField(required=False), size=10, remove_trailing_nulls=True)
+    filters = ShoutitSplitArrayField(SlugField(required=False), required=False, size=10, remove_trailing_nulls=True)
 
     class Meta:
         model = Item
