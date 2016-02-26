@@ -65,8 +65,8 @@ pyopenssl
 ndg-httpsclient
 pyasn1
 
-# python interface for django-admin shell
-bpython==0.15
+# python interface for django-admin shell (v 0.15 breaks)
+bpython==0.14.2
 
 # django-paypal==0.2
 
