@@ -23,7 +23,7 @@ from rest_framework.settings import api_settings
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import location_controller
 from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
@@ -51,23 +51,28 @@ class LocationSerializer(serializers.Serializer):
         validated_data = super(LocationSerializer, self).to_internal_value(data)
         lat = 'latitude' in validated_data
         lng = 'longitude' in validated_data
+        country = 'country' in validated_data
+        city = 'city' in validated_data
         address = validated_data.pop('address', None)
         request = self.root.context.get('request')
         ip = get_real_ip(request) if request else None
 
-        if lat and lng:
+        if lat and lng and country and city:
+            location = validated_data
+        elif lat and lng:
             # Get location attributes using latitude, longitude or IP
             location = location_controller.from_location_index(validated_data.get('latitude'),
                                                                validated_data.get('longitude'), ip)
+        elif request and request.user.is_authenticated():
+            # Update the logged in user address
+            location = request.user.location
         elif ip:
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
-        elif address and request and request.user.is_authenticated():
-            # Update the logged in user address
-            location = request.user.location
         else:
             raise ValidationError({
-                'non_field_errors': "Could not find [latitude and longitude] or figure the IP Address"})
+                'non_field_errors': "Could not find [latitude and longitude] or figure the IP Address"
+            })
 
         if address:
             location.update({'address': address})
@@ -201,8 +206,8 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-    slug = serializers.CharField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    slug = serializers.CharField()
     main_tag = TagSerializer(read_only=True)
 
     class Meta:
@@ -211,18 +216,15 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         if isinstance(data, basestring):
-            data = {'name': data}
+            data = {'slug': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance
 
-    def validate_name(self, value):
-        # Todo: HACK until new apps are released
-        if value == "Jobs Wanted":
-            value == "Jobs"
+    def validate_slug(self, value):
         try:
-            self.instance = Category.objects.get(name=value)
+            self.instance = Category.objects.get(slug=value)
         except (Category.DoesNotExist, AttributeError):
-            raise ValidationError(["Category %s does not exist" % value])
+            raise ValidationError(["Category with slug '%s' does not exist" % value])
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)
@@ -231,6 +233,14 @@ class CategorySerializer(serializers.ModelSerializer):
         if not ret.get('icon'):
             ret['icon'] = None
         return ret
+
+
+class CategoryDetailSerializer(CategorySerializer):
+    filters = serializers.ListField(source='filter_objects')
+
+    class Meta(CategorySerializer.Meta):
+        parent_fields = CategorySerializer.Meta.fields
+        fields = parent_fields + ('filters',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -537,25 +547,25 @@ class GuestSerializer(UserSerializer):
 
 
 class ShoutSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'],
-                                   help_text="'offer' or 'request'")
-    location = LocationSerializer()
-    title = serializers.CharField(min_length=6, max_length=500, source='item.name')
-    text = serializers.CharField(min_length=10, max_length=5000)
-    price = serializers.IntegerField(source='item.price', allow_null=True)
-    currency = serializers.CharField(source='item.currency_code', allow_null=True,
-                                     help_text='Currency code taken from list of available currencies')
+    type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
+    location = LocationSerializer(
+        help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
+    title = serializers.CharField(min_length=6, max_length=50, source='item.name', default='',
+                                  help_text="Max 50 characters")
+    text = serializers.CharField(min_length=10, max_length=1000, default='', help_text="Max 1000 characters")
+    price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
+    currency = serializers.CharField(source='item.currency_code', allow_null=True, required=False,
+                                     help_text="3 characters currency code taken from the list of available currencies")
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
     user = UserSerializer(read_only=True)
-    category = CategorySerializer()
-    tags = TagSerializer(default=list, many=True, source='tag_objects')
-    filters = serializers.ListField(default=list, source='tags2_list')
+    category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
+    filters = serializers.ListField(default=list, )
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price',
-                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags', 'filters')
+                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'filters')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -565,10 +575,8 @@ class ShoutSerializer(serializers.ModelSerializer):
             if not value:
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
-        except Currency.DoesNotExist:
+        except (Currency.DoesNotExist, ValueError):
             raise ValidationError(['Invalid currency'])
-        except ValueError:
-            return None
 
     def to_internal_value(self, data):
         # validate the id only when sharing the shout as message attachment
@@ -587,22 +595,17 @@ class ShoutSerializer(serializers.ModelSerializer):
             else:
                 raise ValidationError({'id': ["This field is required."]})
 
-        # todo: hack!
-        if not data:
-            data = {}
-        try:
-            category = data.get('category')
-            if not (category and category.get('name')):
-                data['category'] = {'name': 'Other'}
-            if data['category'] == 'cv-video':  # fix for current ios bug
-                data['category'] = {'name': 'Jobs Wanted'}
-        except AttributeError:
-            pass
-        # optional price and currency
+        # Optional price and currency
         price_is_none = data.get('price') is None
         currency_is_none = data.get('currency') is None
         if price_is_none != currency_is_none:
             raise ValidationError({'price': ["price and currency must be either both set or both null"]})
+        # Optional category defaults to "Other"
+        if data.get('category') is None:
+            data['category'] = 'other'
+        # Optional location defaults to user's saved location
+        if data.get('location') is None:
+            data['location'] = {}
         ret = super(ShoutSerializer, self).to_internal_value(data)
         return ret
 
@@ -617,15 +620,13 @@ class ShoutDetailSerializer(ShoutSerializer):
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     publish_to_facebook = serializers.BooleanField(write_only=True, required=False)
     reply_url = serializers.SerializerMethodField(
-        help_text="URL to reply to this shout if possible, not set for shout owner.")
-    related_requests = ShoutSerializer(many=True, read_only=True)
-    related_offers = ShoutSerializer(many=True, read_only=True)
+        help_text="URL to reply to this shout if possible, not set for shout owner")
     conversations = serializers.SerializerMethodField()
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + ('images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url',
-                                  'related_requests', 'related_offers', 'conversations')
+        fields = parent_fields + (
+            'images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url', 'conversations')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -680,10 +681,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         currency = item.get('currency_code')
 
         category = validated_data.get('category')
-        tags = validated_data.get('tag_objects')
-        if isinstance(tags, list):
-            tags = tags[:MAX_TAGS_PER_SHOUT]
-        tags2 = validated_data.get('tags2')
+        filters = validated_data.get('filters')
 
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
@@ -696,15 +694,19 @@ class ShoutDetailSerializer(ShoutSerializer):
         page_admin_user = getattr(request, 'page_admin_user', None)
 
         if not shout:
+            case_1 = shout_type is POST_TYPE_REQUEST and title
+            case_2 = shout_type is POST_TYPE_OFFER and (title or images or videos)
+            if not (case_1 or case_2):
+                raise ValidationError({'error': "Not enough information to create a shout"})
             shout = shout_controller.create_shout(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
-                category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
+                category=category, filters=filters, location=location, images=images, videos=videos,
                 page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook
             )
         else:
             shout = shout_controller.edit_shout(
                 shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
-                tags=tags, tags2=tags2, location=location, images=images, videos=videos, page_admin_user=page_admin_user
+                filters=filters, location=location, images=images, videos=videos, page_admin_user=page_admin_user
             )
         return shout
 
@@ -783,7 +785,9 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                    if 'location' in attachment and (
+                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
+                                'location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"

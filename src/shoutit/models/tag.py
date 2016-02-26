@@ -89,6 +89,17 @@ class Category(UUIDModel):
     def image(self):
         return self.main_tag.image
 
+    @property
+    def filter_objects(self):
+        filters = []
+        for f in self.filters:
+            filters.append({
+                'name': f.title(),
+                'slug': f,
+                'values': map(lambda v: {'name': v.title(), 'value': v}, Tag.objects.filter(key=f).values_list('name', flat=True))
+            })
+        return filters
+
 
 class FeaturedTag(UUIDModel, NamedLocationMixin):
     title = models.CharField(max_length=100)

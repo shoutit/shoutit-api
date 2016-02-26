@@ -686,13 +686,13 @@ class ShoutDetailSerializer(ShoutSerializer):
         page_admin_user = getattr(request, 'page_admin_user', None)
 
         if not shout:
-            shout = shout_controller.create_shout(
+            shout = shout_controller.create_shout_v2(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
                 page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook
             )
         else:
-            shout = shout_controller.edit_shout(
+            shout = shout_controller.edit_shout_v2(
                 shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
                 tags=tags, tags2=tags2, location=location, images=images, videos=videos, page_admin_user=page_admin_user
             )

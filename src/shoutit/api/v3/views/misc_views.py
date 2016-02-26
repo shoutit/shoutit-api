@@ -25,9 +25,9 @@ from shoutit.controllers.facebook_controller import (update_linked_facebook_acco
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request, base64_to_text, base64_to_texts
-from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
+from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
                            UserSerializer, ShoutSerializer,
-                           TagDetailSerializer)
+                           TagDetailSerializer, CategoryDetailSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -41,10 +41,10 @@ class MiscViewSet(viewsets.ViewSet):
         """
         List Categories
         ---
-        serializer: CategorySerializer
+        serializer: CategoryDetailSerializer
         """
         categories = Category.objects.all().order_by('name').select_related('main_tag')
-        categories_data = CategorySerializer(categories, many=True, context={'request': request}).data
+        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
         # Everyday I'm shuffling!
         shuffle = request.query_params.get('shuffle')
         if shuffle:

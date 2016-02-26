@@ -6,8 +6,8 @@ from shoutit.models.base import UUIDModel
 
 
 class Item(UUIDModel):
-    name = models.CharField(max_length=500)
-    description = models.TextField(max_length=10000, blank=False)
+    name = models.CharField(max_length=500, blank=True, default='')
+    description = models.TextField(max_length=10000, blank=True, default='')
     price = models.BigIntegerField(null=True, blank=True)
     currency = models.ForeignKey('shoutit.Currency', null=True, blank=True)
     state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)

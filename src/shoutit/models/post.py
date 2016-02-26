@@ -125,7 +125,7 @@ class Post(Action):
 
 
 class Shout(Post):
-    tags = ArrayField(ShoutitSlugField())
+    tags = ArrayField(ShoutitSlugField(), blank=True, default=list)
     tags2 = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
 
@@ -208,10 +208,10 @@ class Shout(Post):
         }
 
     @property
-    def tags2_list(self):
-        l = []
+    def filters(self):
+        filters = []
         for key, value in self.tags2.items():
-            l.append({
+            filters.append({
                 'name': key.title() if isinstance(key, basestring) else key,
                 'slug': key,
                 'value': {
@@ -219,7 +219,7 @@ class Shout(Post):
                     'slug': value
                 }
             })
-        return l
+        return filters
 
 
 class InactiveShout(object):

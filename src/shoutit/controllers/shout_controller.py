@@ -1,25 +1,26 @@
 from __future__ import unicode_literals
 
+import random
 from collections import OrderedDict
 from datetime import datetime, timedelta
-import random
 
 import requests
-from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db import IntegrityError
 from django.db.models.expressions import F
 from django.db.models.query_utils import Q
-from django.conf import settings
-from django_rq import job
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_rq import job
 from elasticsearch import NotFoundError
 
+from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
 from common.utils import process_tags
+from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
+from shoutit.models import Shout, Post
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
-from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
-from shoutit.models import Shout, Post
-from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
 from shoutit.utils import debug_logger, track
 
 
@@ -85,9 +86,9 @@ def NotifyPreExpiry():
 
 
 # todo: handle exception on each step and in case of errors, rollback!
-def create_shout(user, shout_type, title, text, price, currency, category, tags, location, tags2=None, images=None,
-                 videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
-                 publish_to_facebook=None):
+def create_shout_v2(user, shout_type, title, text, price, currency, category, tags, location, tags2=None, images=None,
+                    videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
+                    publish_to_facebook=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -128,8 +129,64 @@ def create_shout(user, shout_type, title, text, price, currency, category, tags,
     return shout
 
 
-def edit_shout(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
-               tags2=None, images=None, videos=None, location=None, page_admin_user=None):
+def create_shout(user, shout_type, title, text, price, currency, category, location, filters=None, images=None,
+                 videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
+                 publish_to_facebook=None):
+    # tags2
+    tags2 = {}
+    if not filters:
+        filters = []
+    for f in filters:
+        tags2[f['slug']] = str(f['value']['slug'])
+    # item
+    item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
+                                       videos=videos)
+    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags2=tags2, item=item,
+                         is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user)
+    location_controller.update_object_location(shout, location, save=False)
+
+    if not date_published:
+        date_published = datetime.today()
+        if is_sss:
+            hours = random.randrange(-5, 0)
+            minutes = random.randrange(-59, 0)
+            date_published += timedelta(hours=hours, minutes=minutes)
+    shout.date_published = date_published
+    shout.expiry_date = exp_days and (date_published + timedelta(days=exp_days)) or None
+    shout.publish_to_facebook = publish_to_facebook
+    try:
+        shout.save()
+    except (ValidationError, IntegrityError):
+        item.delete()
+        raise
+    location_controller.add_predefined_city(location)
+    return shout
+
+
+def edit_shout(shout, title=None, text=None, price=None, currency=None, category=None, filters=None, images=None,
+               videos=None, location=None, page_admin_user=None):
+    item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
+                              videos=videos)
+    if text:
+        shout.text = text
+    if category:
+        shout.category = category
+    if filters:
+        tags2 = {}
+        for f in filters:
+            tags2[f['slug']] = str(f['value']['slug'])
+        shout.tags2 = tags2
+    if location:
+        location_controller.update_object_location(shout, location, save=False)
+        location_controller.add_predefined_city(location)
+    if page_admin_user:
+        shout.page_admin_user = page_admin_user
+    shout.save()
+    return shout
+
+
+def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
+                  tags2=None, images=None, videos=None, location=None, page_admin_user=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
                               videos=videos)
     if shout_type:
@@ -171,7 +228,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
     if created:
         # Publish to Facebook
         if getattr(instance, 'publish_to_facebook', False):
-            publish_to_facebook.delay(instance)
+            publish_shout_to_facebook.delay(instance)
         # track
         if not instance.is_sss:
             track(instance.user.pk, 'new_shout', instance.track_properties)
@@ -234,7 +291,7 @@ def shout_index_from_shout(shout, shout_index=None):
 
 
 @job(settings.RQ_QUEUE)
-def publish_to_facebook(shout):
+def publish_shout_to_facebook(shout):
     la = shout.user.linked_facebook
     if not la or 'publish_actions' not in la.scopes:
         return
