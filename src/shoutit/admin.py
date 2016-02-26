@@ -20,7 +20,7 @@ from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, U
     PublishedOnFilter
 from shoutit.admin_utils import (
     UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
-from shoutit.forms import PushBroadcastForm, ItemForm
+from shoutit.forms import PushBroadcastForm, ItemForm, CategoryForm
 from shoutit.models import (
     User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
@@ -211,10 +211,10 @@ class TagKeyAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    raw_id_fields = ('main_tag',)
-    list_display = ('name', '_main_tag', 'tag_names')
+    list_display = ('name', '_main_tag', 'filters', 'image', 'icon')
+    raw_id_fields = ('main_tag', 'tags')
     ordering = ('name',)
-    filter_horizontal = ('tags',)
+    form = CategoryForm
 
     def _main_tag(self, category):
         return tag_link(category.main_tag)
@@ -222,10 +222,6 @@ class CategoryAdmin(admin.ModelAdmin):
     _main_tag.allow_tags = True
     _main_tag.short_description = 'Main Tag'
 
-    def tag_names(self, category):
-        return ', '.join([tag.name for tag in category.tags.all()])
-
-    tag_names.short_description = 'Tags'
 
 
 @admin.register(FeaturedTag)

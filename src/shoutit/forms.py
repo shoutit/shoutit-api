@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import json
 from django import forms
 from django.contrib.postgres.forms import SplitArrayField
-from django.forms import URLField
+from django.forms import URLField, SlugField
 from shoutit.models import PushBroadcast, Item
 from common.constants import DeviceOS, COUNTRY_CHOICES
 
@@ -53,6 +53,14 @@ class PushBroadcastForm(forms.ModelForm):
 
 class ItemForm(forms.ModelForm):
     images = SplitArrayField(URLField(required=False), size=10, remove_trailing_nulls=True)
+
+    class Meta:
+        model = Item
+        fields = '__all__'
+
+
+class CategoryForm(forms.ModelForm):
+    filters = SplitArrayField(SlugField(required=False), size=10, remove_trailing_nulls=True)
 
     class Meta:
         model = Item
