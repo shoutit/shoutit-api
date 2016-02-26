@@ -78,7 +78,7 @@ class Category(UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
     slug = ShoutitSlugField(unique=True)
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
-    tags = models.ManyToManyField('shoutit.Tag', related_name='category')
+    tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='category')
     filters = ArrayField(ShoutitSlugField(), size=10, blank=True, default=list)
     icon = models.URLField(max_length=1024, blank=True, default='')
 
