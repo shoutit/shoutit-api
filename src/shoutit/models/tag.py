@@ -3,7 +3,10 @@ import re
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
-from common.constants import TagValueType
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from common.constants import TagValueType, TAG_TYPE_STR
 from shoutit.settings import AUTH_USER_MODEL
 from shoutit.models.base import UUIDModel, APIModelMixin, NamedLocationMixin
 from shoutit.models.listen import Listen2
@@ -66,12 +69,24 @@ class Tag(UUIDModel, APIModelMixin):
 
 
 class TagKey(UUIDModel):
-    key = ShoutitSlugField(unique=True)
-    values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices)
+    key = ShoutitSlugField()
+    values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices, default=TAG_TYPE_STR.value)
+    category = models.ForeignKey('shoutit.Category', related_name='tag_keys')
     definition = models.CharField(max_length=100, blank=True, default='')
 
     def __unicode__(self):
         return self.key
+
+    class Meta:
+        unique_together = ['key', 'category']
+
+
+@receiver(post_save, sender='shoutit.TagKey')
+def tag_key_post_save(sender, instance=None, created=False, **kwargs):
+    category = instance.category
+    if instance.key not in category.filters:
+        category.filters.append(instance.key)
+        category.save()
 
 
 class Category(UUIDModel):
@@ -99,6 +114,12 @@ class Category(UUIDModel):
                 'values': map(lambda v: {'name': v.title(), 'value': v}, Tag.objects.filter(key=f).values_list('name', flat=True))
             })
         return filters
+
+
+@receiver(post_save, sender='shoutit.Category')
+def category_post_save(sender, instance=None, created=False, **kwargs):
+    for f in instance.filters:
+        TagKey.objects.get_or_create(key=f, category=instance)
 
 
 class FeaturedTag(UUIDModel, NamedLocationMixin):

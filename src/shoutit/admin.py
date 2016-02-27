@@ -205,8 +205,9 @@ class TagAdmin(admin.ModelAdmin, LinksMixin):
 
 @admin.register(TagKey)
 class TagKeyAdmin(admin.ModelAdmin):
-    list_display = ('key', 'values_type')
+    list_display = ('category', 'key', 'values_type')
     search_fields = ('key',)
+    list_filter = ('category', 'values_type')
 
 
 @admin.register(Category)
