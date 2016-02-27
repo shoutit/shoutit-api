@@ -143,7 +143,8 @@ def _save_location_index(location=None, created=False):
         debug_logger.debug('Created LocationIndex: %s' % location)
     else:
         debug_logger.debug('Updated LocationIndex: %s' % location)
-    location.update(is_indexed=True)
+    # Update the location object without dispatching signals
+    location._meta.model.objects.filter(id=location.id).update(is_indexed=True)
 
 
 def location_index_from_location(location, location_index=None):

@@ -266,7 +266,8 @@ def _save_shout_index(shout=None, created=False):
         debug_logger.debug('Created ShoutIndex: %s' % shout.pk)
     else:
         debug_logger.debug('Updated ShoutIndex: %s' % shout.pk)
-    shout.update(is_indexed=True)
+    # Update the location object without dispatching signals
+    shout._meta.model.objects.filter(id=shout.id).update(is_indexed=True)
 
 
 def shout_index_from_shout(shout, shout_index=None):
