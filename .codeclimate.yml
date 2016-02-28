@@ -1,10 +1,10 @@
 engines:
   radon: true
   config:
-   threshold: "B"
+    threshold: "B"
   pep8:
     enabled: true
 
 ratings:
-   paths:
-   - "**.py"
+  paths:
+  - "**.py"
