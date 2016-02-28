@@ -15,6 +15,7 @@ from shoutit.api.permissions import IsOwnerModify
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout
 from shoutit.models.post import ShoutIndex
+from shoutit.utils import has_unicode
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
@@ -308,7 +309,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         shout = self.get_object()
         extra_query_params = {
-            'search': "%s %s" % (shout.item.name, " ".join(shout.tags)),
+            'search': "%s %s" % (shout.item.name if not has_unicode(shout.item.name) else "", " ".join(shout.tags)),
             'country': shout.country,
             'shout_type': shout.get_type_display(),
             'category': shout.category.name,
