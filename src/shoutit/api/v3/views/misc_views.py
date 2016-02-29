@@ -10,6 +10,7 @@ import re
 from collections import OrderedDict
 
 from django.conf import settings
+from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
@@ -36,6 +37,7 @@ class MiscViewSet(viewsets.ViewSet):
     """
     permission_classes = ()
 
+    @cache_control(max_age=60 * 60)
     @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """
@@ -62,6 +64,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = PredefinedCitySerializer(cities, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @cache_control(max_age=60 * 60 * 24)
     @list_route(methods=['get'], suffix='Currencies')
     def currencies(self, request):
         """
@@ -73,6 +76,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = CurrencySerializer(currencies, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @cache_control(max_age=60 * 60 * 24)
     @list_route(methods=['get'], suffix='Shouts Sort Types')
     def shouts_sort_types(self, request):
         """

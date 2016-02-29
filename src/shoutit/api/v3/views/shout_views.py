@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import random
 
+from django.views.decorators.cache import cache_control
 from rest_framework import permissions, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ValidationError
@@ -131,6 +132,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
         return result
 
+    @cache_control(max_age=60 * 60 * 24)
     @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """
