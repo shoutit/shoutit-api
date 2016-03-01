@@ -150,6 +150,21 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             random.shuffle(categories_data)
         return Response(categories_data)
 
+    @cache_control(max_age=60 * 60 * 24)
+    @list_route(methods=['get'], suffix='Shouts Sort Types')
+    def sort_types(self, request):
+        """
+        List Sort types for shouts
+        ---
+        """
+        return Response([
+            {'type': 'time', 'name': 'Latest'},
+            {'type': 'distance', 'name': 'Nearest'},
+            {'type': 'price_asc', 'name': 'Price Increasing'},
+            {'type': 'price_desc', 'name': 'Price Decreasing'},
+            {'type': 'recommended', 'name': 'Recommended'},
+        ])
+
     def create(self, request, *args, **kwargs):
         """
         Create a Shout
