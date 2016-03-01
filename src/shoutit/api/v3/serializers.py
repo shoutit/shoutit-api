@@ -705,7 +705,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             )
         else:
             shout = shout_controller.edit_shout(
-                shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
+                shout, title=title, text=text, price=price, currency=currency, category=category,
                 filters=filters, location=location, images=images, videos=videos, page_admin_user=page_admin_user
             )
         return shout
