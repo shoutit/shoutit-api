@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 import re
+from collections import OrderedDict
+
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
@@ -106,14 +108,21 @@ class Category(UUIDModel):
 
     @property
     def filter_objects(self):
-        filters = []
-        for f in self.filters:
-            filters.append({
-                'name': f.title(),
-                'slug': f,
-                'values': map(lambda v: {'name': v.title(), 'value': v}, Tag.objects.filter(key=f).values_list('name', flat=True))
-            })
-        return filters
+        objects = []
+        # Get all the tags in one call
+        tags = Tag.objects.filter(key__in=self.filters).values('name', 'key')
+        for cat_filter in self.filters:
+            filter_tags = filter(lambda t: t['key'] == cat_filter, tags)
+            filter_tag_names = map(lambda t: t['name'], filter_tags)
+            values = map(lambda ftn: {'name': ftn.title(), 'value': ftn}, filter_tag_names)
+            values.sort(key=lambda v: v['name'])
+            filter_object = OrderedDict()
+            filter_object['name'] = cat_filter.title()
+            filter_object['slug'] = cat_filter
+            filter_object['values'] = values
+            objects.append(filter_object)
+        objects.sort(key=lambda e: e.get('name'))
+        return objects
 
 
 @receiver(post_save, sender='shoutit.Category')
