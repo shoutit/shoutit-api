@@ -502,6 +502,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
         try:
             data = request.data.copy()
+            request.client = client
             request.is_test = client.name == 'shoutit-test'
             return handler(request, data, client)
         except OAuthError, e:
