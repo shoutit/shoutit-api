@@ -142,6 +142,8 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     tags = tags2.values()
     tags = list(OrderedDict.fromkeys(tags))
     tags.insert(0, category.slug)
+    # Create actual tags objects (when necessary)
+    tag_controller.get_or_create_tags(tags, user)
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos)
