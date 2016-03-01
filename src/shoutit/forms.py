@@ -106,5 +106,5 @@ class CategoryForm(forms.ModelForm):
         fields = '__all__'
 
     def clean_filters(self):
-        filters = process_tags(self.cleaned_data['filters'])
+        filters = process_tags(self.cleaned_data['filters'], snake_case=True)
         return filters
