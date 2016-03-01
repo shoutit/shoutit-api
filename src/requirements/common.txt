@@ -20,7 +20,7 @@ drf-extensions
 # cache search queues
 redis==2.10.5
 django-redis==4.3.0
-elasticsearch==2.2.0
+elasticsearch==2.3.0
 elasticsearch-dsl==2.0.0
 click==6.3
 rq==0.5.6
