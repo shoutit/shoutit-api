@@ -348,28 +348,3 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
-
-
-class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    """
-    API endpoint that allows conversations/messages to be viewed or added.
-    """
-    serializer_class = MessageSerializer
-    permission_classes = (permissions.IsAuthenticated, IsContributor)
-
-    def get_queryset(self):
-        return Message.objects.all()
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Delete a message
-        ###REQUIRES AUTH
-        ---
-        omit_serializer: true
-        omit_parameters:
-            - form
-        """
-        return super(MessageViewSet, self).destroy(request, *args, **kwargs)
-
-    def perform_destroy(self, message):
-        message_controller.hide_message_from_user(message, self.request.user)
