@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from rest_framework import permissions, viewsets, status, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
+from django.conf import settings
 
 from shoutit.controllers import notifications_controller
 from ..pagination import ReverseDateTimePagination
@@ -18,6 +19,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     """
     Notification API Resource.
     """
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
     serializer_class = NotificationSerializer
     pagination_class = ReverseDateTimePagination
     permission_classes = (permissions.IsAuthenticated,)

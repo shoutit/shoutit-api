@@ -17,7 +17,7 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
-
+from django.conf import settings
 from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
 from shoutit.models import ConfirmToken
 from shoutit.utils import track, alias, error_logger
@@ -50,6 +50,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     """
     OAuth2 Resource
     """
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
     # Client authentication
     authentication = (RequestParamsClientBackend,)
     # DRF authentication is not needed here
@@ -444,6 +445,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     """
     ShoutitAuth Resource
     """
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
 
     def error_response(self, error):
         """

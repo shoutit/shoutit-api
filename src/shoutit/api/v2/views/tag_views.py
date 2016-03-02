@@ -8,6 +8,7 @@ from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from django.conf import settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.controllers import listen_controller
@@ -22,7 +23,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     Tag API Resource.
     """
     lookup_field = 'name'
-
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
     serializer_class = TagSerializer
     serializer_detail_class = TagDetailSerializer
     queryset = Tag.objects.all()

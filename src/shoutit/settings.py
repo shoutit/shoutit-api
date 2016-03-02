@@ -446,10 +446,13 @@ REST_FRAMEWORK = {
         'shoutit.api.permissions.IsSecure',
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'DEFAULT_PARSER_CLASSES': (
+    'DEFAULT_PARSER_CLASSES_v2': (
         'shoutit.api.parsers.ShoutitJSONParser',
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser'
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'shoutit.api.parsers.ShoutitJSONParser',
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',

@@ -34,6 +34,7 @@ class MiscViewSet(viewsets.ViewSet):
     """
     Other API Resources.
     """
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
     permission_classes = ()
 
     @list_route(methods=['get'], suffix='Categories')

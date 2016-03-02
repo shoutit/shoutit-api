@@ -10,6 +10,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from django.conf import settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
@@ -27,6 +28,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z._]+'
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True)

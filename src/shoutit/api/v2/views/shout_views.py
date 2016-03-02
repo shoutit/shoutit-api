@@ -9,6 +9,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from django.conf import settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify
@@ -27,6 +28,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     """
     Shout API Resource
     """
+    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
     serializer_class = ShoutSerializer
     serializer_detail_class = ShoutDetailSerializer
     filter_backends = (ShoutIndexFilterBackend,)
