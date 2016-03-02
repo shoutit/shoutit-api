@@ -392,18 +392,15 @@ class ProfileDetailSerializer(ProfileSerializer):
     def to_internal_value(self, data):
         validated_data = super(ProfileDetailSerializer, self).to_internal_value(data)
 
-        # force partial=false validation for location and video
+        # Force partial=false validation for video
+        errors = OrderedDict()
+        has_video = 'video' in data
         profile_data = validated_data.get('profile', {})
         video_data = profile_data.get('video', {})
-
-        errors = OrderedDict()
-
-        has_video = 'video' in data
         if has_video and isinstance(video_data, OrderedDict):
             vs = VideoSerializer(data=video_data)
             if not vs.is_valid():
                 errors['video'] = vs.errors
-
         if errors:
             raise ValidationError(errors)
 
@@ -544,6 +541,43 @@ class GuestSerializer(ProfileSerializer):
     def to_representation(self, instance):
         ret = super(ProfileSerializer, self).to_representation(instance)
         return ret
+
+    def update(self, user, validated_data):
+        ap = user.ap
+
+        # Location
+        location_data = validated_data.get('location', {})
+        if location_data:
+            location_controller.update_profile_location(ap, location_data)
+
+        # Push Tokens
+        push_tokens_data = validated_data.get('push_tokens', {})
+        if push_tokens_data:
+            if 'apns' in push_tokens_data:
+                apns_token = push_tokens_data.get('apns')
+                # delete user device if exists
+                if user.apns_device:
+                    user.delete_apns_device()
+                if apns_token is not None:
+                    # delete devices with same apns_token
+                    APNSDevice.objects.filter(registration_id=apns_token).delete()
+                    # create new device for user with apns_token
+                    APNSDevice(registration_id=apns_token, user=user).save()
+
+            if 'gcm' in push_tokens_data:
+                gcm_token = push_tokens_data.get('gcm')
+                # delete user device if exists
+                if user.gcm_device:
+                    user.delete_gcm_device()
+                if gcm_token is not None:
+                    # delete devices with same gcm_token
+                    GCMDevice.objects.filter(registration_id=gcm_token).delete()
+                    # create new device for user with gcm_token
+                    GCMDevice(registration_id=gcm_token, user=user).save()
+
+        # Notify about updates
+        notifications_controller.notify_user_of_user_update(user)
+        return user
 
 
 class ShoutSerializer(serializers.ModelSerializer):

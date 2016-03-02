@@ -45,10 +45,11 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         return super(ProfileViewSet, self).get_object()
 
     def get_serializer(self, *args, **kwargs):
-        if 'instance' in kwargs:
-            instance = kwargs['instance']
+        if args:
+            instance = args[0]
             if isinstance(instance, User) and instance.is_guest:
                 self.serializer_class = GuestSerializer
+                self.serializer_detail_class = GuestSerializer
         return super(ProfileViewSet, self).get_serializer(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
@@ -451,7 +452,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             - name: body
               paramType: body
         """
-        user = self.get_object()
+        instance = self.get_object()
         account = request.data.get('account') or request.query_params.get('account')
         if not account:
             raise ValidationError({'account': "This field is required."})
@@ -464,22 +465,22 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
                 if not gplus_code:
                     raise ValidationError({'gplus_code': "provide a valid `gplus_code`"})
                 client = hasattr(request.auth, 'client') and request.auth.client.name or None
-                gplus_controller.link_gplus_account(user, gplus_code, client)
+                gplus_controller.link_gplus_account(instance, gplus_code, client)
 
             elif account == 'facebook':
                 facebook_access_token = request.data.get('facebook_access_token')
                 if not facebook_access_token:
                     raise ValidationError({'facebook_access_token': "provide a valid `facebook_access_token`"})
-                facebook_controller.link_facebook_account(user, facebook_access_token)
+                facebook_controller.link_facebook_account(instance, facebook_access_token)
 
                 # msg = "{} linked successfully.".format(account.capitalize())
 
         else:
             if account == 'gplus':
-                gplus_controller.unlink_gplus_user(user)
+                gplus_controller.unlink_gplus_user(instance)
 
             elif account == 'facebook':
-                facebook_controller.unlink_facebook_user(user)
+                facebook_controller.unlink_facebook_user(instance)
 
                 # msg = "{} unlinked successfully.".format(account.capitalize())
 
@@ -489,7 +490,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         #     'status': status.HTTP_202_ACCEPTED
         # }
         # return Response(**ret)
-        serializer = self.get_serializer(user)
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     @detail_route(methods=['post'], permission_classes=(IsAuthenticated, IsOwner), suffix="Deactivate user's account")
