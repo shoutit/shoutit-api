@@ -580,6 +580,9 @@ class ShoutSerializer(serializers.ModelSerializer):
             raise ValidationError(['Invalid currency'])
 
     def to_internal_value(self, data):
+        # Make sure no empty JSON body was posted
+        if not data:
+            data = {}
         # validate the id only when sharing the shout as message attachment
         if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
             shout_id = data.get('id')
