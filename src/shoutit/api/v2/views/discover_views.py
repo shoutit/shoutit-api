@@ -6,10 +6,10 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, mixins
 from rest_framework.decorators import detail_route
-from django.conf import settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.models import ShoutIndex, DiscoverItem, Shout
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import DiscoverItemFilter, ShoutIndexFilterBackend
 from ..pagination import ShoutitPageNumberPagination, PageNumberIndexPagination
 from ..serializers import (DiscoverItemSerializer, DiscoverItemDetailSerializer, ShoutSerializer)
@@ -19,7 +19,7 @@ class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.L
     """
     Discover API Resource.
     """
-    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = DiscoverItemSerializer
     serializer_detail_class = DiscoverItemDetailSerializer
     pagination_class = ShoutitPageNumberPagination

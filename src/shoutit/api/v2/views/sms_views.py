@@ -8,9 +8,9 @@ from rest_framework import filters, status, mixins, viewsets
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from django.conf import settings
 
 from shoutit.models import SMSInvitation
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..pagination import ShoutitPageNumberPagination
 from ..serializers import SMSInvitationSerializer
 from ..views.viewsets import UUIDViewSetMixin
@@ -21,7 +21,7 @@ class SMSViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMi
     """
     SMSInvitation API Resources.
     """
-    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     queryset = SMSInvitation.objects.all().order_by('-created_at')
     serializer_class = SMSInvitationSerializer
     filter_backends = (filters.DjangoFilterBackend,)

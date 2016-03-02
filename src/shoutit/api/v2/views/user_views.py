@@ -5,17 +5,17 @@
 from __future__ import unicode_literals
 
 from rest_framework import viewsets, filters, status, mixins
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from django.conf import settings
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.models import User, Shout, ShoutIndex
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
 from ..serializers import (UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,
@@ -28,7 +28,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z._]+'
-    parser_classes = settings.REST_FRAMEWORK['DEFAULT_PARSER_CLASSES_v2']
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True)
