@@ -346,9 +346,9 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         return paginator.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Message')
-    def message(self, request, *args, **kwargs):
+    def chat(self, request, *args, **kwargs):
         """
-        Send the Profile a message
+        Start or continue chatting (conversation whose its `type` is `chat`) with the Profile
         ###REQUIRES AUTH
         > A user can only message his Listeners, or someone whom he already has an existing conversation with.
         ###Request
