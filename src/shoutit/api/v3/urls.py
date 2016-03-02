@@ -9,7 +9,7 @@ from rest_framework import routers
 
 from shoutit_pusher.views import ShoutitPusherViewSet
 from shoutit_twilio.views import ShoutitTwilioViewSet
-from .views import (user_views, misc_views, message_views, shout_views, notification_views, tag_views, sms_views,
+from .views import (user_views, misc_views, message_views, shout_views, notification_views, tag_views,
                     authentication_views, discover_views)
 
 
@@ -26,7 +26,6 @@ router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('conversations', message_views.ConversationViewSet, 'conversation')
 router.register('notifications', notification_views.NotificationViewSet, 'notification')
 router.register('misc', misc_views.MiscViewSet, 'misc')
-router.register('sms', sms_views.SMSViewSet, 'sms')
 router.register('auth', authentication_views.ShoutitAuthViewSet, 'shoutit_auth')
 router.register('pusher', ShoutitPusherViewSet, 'pusher')
 router.register('twilio', ShoutitTwilioViewSet, 'twilio')
