@@ -328,7 +328,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
     is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
-    message_url = serializers.SerializerMethodField(
+    chat_url = serializers.SerializerMethodField(
         help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
     pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
     admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
@@ -338,7 +338,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
                                   'listeners_url', 'listening_count', 'listening_url', 'is_owner',
-                                  'message_url', 'pages', 'admins')
+                                  'chat_url', 'pages', 'admins')
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -350,16 +350,16 @@ class ProfileDetailSerializer(ProfileSerializer):
         return url_with_querystring(shouts_url, user=user.username)
 
     def get_listening_url(self, user):
-        return reverse('user-listening', kwargs={'username': user.username}, request=self.context['request'])
+        return reverse('profile-listening', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_listeners_url(self, user):
-        return reverse('user-listeners', kwargs={'username': user.username}, request=self.context['request'])
+        return reverse('profile-listeners', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_is_owner(self, user):
         return self.root.context['request'].user == user
 
-    def get_message_url(self, user):
-        return reverse('user-message', kwargs={'username': user.username}, request=self.context['request'])
+    def get_chat_url(self, user):
+        return reverse('profile-chat', kwargs={'username': user.username}, request=self.context['request'])
 
     def to_representation(self, instance):
         if not instance.is_active:
@@ -375,13 +375,13 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['push_tokens']
             del ret['linked_accounts']
             if not ret['is_listener']:
-                del ret['message_url']
+                del ret['chat_url']
 
         # hide obvious attributes if the user `is_owner`
         else:
             del ret['is_listening']
             del ret['is_listener']
-            del ret['message_url']
+            del ret['chat_url']
 
         if not ret.get('image'):
             ret['image'] = None
