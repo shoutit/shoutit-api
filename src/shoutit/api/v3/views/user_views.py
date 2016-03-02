@@ -190,12 +190,12 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         ###REQUIRES AUTH
         ###Start listening
         <pre><code>
-        POST: /v2/users/{username}/listen
+        POST: /users/{username}/listen
         </code></pre>
 
         ###Stop listening
         <pre><code>
-        DELETE: /v2/users/{username}/listen
+        DELETE: /users/{username}/listen
         </code></pre>
         ---
         omit_serializer: true
@@ -404,7 +404,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
 
-    @detail_route(methods=['post', 'patch', 'delete'], suffix='Link / Unlink Accounts')
+    @detail_route(methods=['patch', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
@@ -412,7 +412,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
         ###Link Facebook
         <pre><code>
-        PATCH: /v2/users/{username}/link
+        PATCH: /users/{username}/link
         {
             "account": "facebook",
             "facebook_access_token": "FACEBOOK_ACCESS_TOKEN"
@@ -421,7 +421,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
         ###Unlink Facebook
         <pre><code>
-        DELETE: /v2/users/{username}/link
+        DELETE: /users/{username}/link
         {
             "account": "facebook"
         }
@@ -429,7 +429,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
         ###Link G+
         <pre><code>
-        PATCH: /v2/users/{username}/link
+        PATCH: /users/{username}/link
         {
             "account": "gplus",
             "gplus_code": "GOOGLE_GRANT_CODE"
@@ -438,7 +438,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
         ###Unlink G+
         <pre><code>
-        DELETE: /v2/users/{username}/link
+        DELETE: /users/{username}/link
         {
             "account": "gplus"
         }
