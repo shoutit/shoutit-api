@@ -39,14 +39,14 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                 data.update(discover_item.shouts_query)
 
         # Filter shouts by user id if user username or id are passed in `user` query param
-        user = data.get('user')
+        user = data.get('profile') or data.get('user')
         if user:
             if user == 'me' and request.user.is_authenticated():
                 user = request.user.username
             try:
                 user_id = User.objects.get(username=user).pk
             except User.DoesNotExist:
-                raise ValidationError({'user': ["User with username '%s' does not exist" % user]})
+                raise ValidationError({'user': ["Profile with username '%s' does not exist" % user]})
             else:
                 index_queryset = index_queryset.filter('term', uid=user_id)
 
