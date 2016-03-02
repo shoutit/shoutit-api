@@ -13,7 +13,7 @@ from shoutit.controllers import listen_controller
 from shoutit.models import Tag
 from ..filters import TagFilter
 from ..pagination import (ShoutitPageNumberPagination)
-from ..serializers import (TagSerializer, TagDetailSerializer, FeaturedTagSerializer, UserSerializer)
+from ..serializers import (TagSerializer, TagDetailSerializer, FeaturedTagSerializer, ProfileSerializer)
 
 
 class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -212,7 +212,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         }
         </code></pre>
         ---
-        serializer: UserSerializer
+        serializer: ProfileSerializer
         omit_parameters:
             - form
         parameters:
@@ -224,7 +224,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tag = self.get_object()
         listeners = listen_controller.get_object_listeners(tag)
         page = self.paginate_queryset(listeners)
-        serializer = UserSerializer(page, many=True, context={'request': request})
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Related tags')

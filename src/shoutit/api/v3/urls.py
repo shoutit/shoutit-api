@@ -19,7 +19,8 @@ class ShoutitRouter(routers.DefaultRouter):
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = ShoutitRouter(trailing_slash=False)
-router.register('users', user_views.UserViewSet, 'user')
+router.register('users', user_views.ProfileViewSet, 'user')
+router.register('profiles', user_views.ProfileViewSet, 'profile')
 router.register('tags', tag_views.TagViewSet, 'tag')
 router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('conversations', message_views.ConversationViewSet, 'conversation')

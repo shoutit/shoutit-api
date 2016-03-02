@@ -17,18 +17,18 @@ from shoutit.controllers import listen_controller, message_controller, facebook_
 from shoutit.models import User, Shout, ShoutIndex
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
-from ..serializers import (UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,
-                           TagDetailSerializer, UserDeactivationSerializer, GuestSerializer)
+from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, ShoutSerializer,
+                           TagDetailSerializer, ProfileDeactivationSerializer, GuestSerializer)
 
 
-class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    User API Resource.
+    Profiles API Resource.
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z._]+'
-    serializer_class = UserSerializer
-    serializer_detail_class = UserDetailSerializer
+    serializer_class = ProfileSerializer
+    serializer_detail_class = ProfileDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True)
     queryset_detail = User.objects.filter(is_active=True).prefetch_related('profile', 'page')
     pagination_class = ShoutitPageNumberPaginationNoCount
@@ -42,43 +42,43 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if self.request.user.is_authenticated():
             if username == 'me' or username == self.request.user.username:
                 return self.request.user
-        return super(UserViewSet, self).get_object()
+        return super(ProfileViewSet, self).get_object()
 
     def get_serializer(self, *args, **kwargs):
         if 'instance' in kwargs:
             instance = kwargs['instance']
             if isinstance(instance, User) and instance.is_guest:
                 self.serializer_class = GuestSerializer
-        return super(UserViewSet, self).get_serializer(*args, **kwargs)
+        return super(ProfileViewSet, self).get_serializer(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         """
-        List Users based on `search` query param
+        List Profiles based on `search` query param
 
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer}
+          "results": [] // list of {ProfileSerializer}
         }
         </code></pre>
         ---
-        serializer: UserSerializer
+        serializer: ProfileSerializer
         parameters:
             - name: search
               paramType: query
         """
-        return super(UserViewSet, self).list(request, *args, **kwargs)
+        return super(ProfileViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Retrieve a User
+        Retrieve a Profile
         ---
-        serializer: UserDetailSerializer
+        serializer: ProfileDetailSerializer
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -89,7 +89,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Modify a User
+        Modify a Profile
         ###REQUIRES AUTH
         ###Request
         Specify any or all of these attributes to change them.
@@ -141,12 +141,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         }
         </code></pre>
         ---
-        serializer: UserDetailSerializer
+        serializer: ProfileDetailSerializer
         omit_parameters:
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -161,7 +161,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete a User and everything attached to him
+        Delete a Profile and everything attached to it
         ###REQUIRES AUTH
         ```
         NOT IMPLEMENTED AND ONLY USED FOR TEST USERS
@@ -172,7 +172,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -186,7 +186,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['post', 'delete'], permission_classes=(IsAuthenticatedOrReadOnly,), suffix='Listen')
     def listen(self, request, *args, **kwargs):
         """
-        Start/Stop listening to a User
+        Start/Stop listening to a Profile
         ###REQUIRES AUTH
         ###Start listening
         <pre><code>
@@ -225,22 +225,22 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
-        List the User listeners
+        List the Profile listeners
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer}
+          "results": [] // list of {ProfileSerializer}
         }
         </code></pre>
         ---
-        serializer: UserSerializer
+        serializer: ProfileSerializer
         omit_parameters:
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -252,29 +252,30 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         listeners = listen_controller.get_object_listeners(user.ap)
         page = self.paginate_queryset(listeners)
-        serializer = UserSerializer(page, many=True, context={'request': request})
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Listening')
     def listening(self, request, *args, **kwargs):
         """
-        List the User listening based on `type` query param. It could be either 'users' or 'tags', default is 'users'
+        List the Profile listening based on `type` query param.
+        It could be either `users`, `pages` or `tags`. The default is `users`
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer} same as in listeners or {TagDetailSerializer}
+          "results": [] // list of {ProfileSerializer} same as in listeners or {TagDetailSerializer}
         }
         </code></pre>
 
         ---
-        serializer: TagDetailSerializer
+        omit_serializer: true
         omit_parameters:
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -301,13 +302,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         listening = getattr(user, 'listening2_' + listening_type)
 
         # we do not use the view pagination class since we need one with custom results field
-        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(
-            custom_results_field=listening_type)
+        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(custom_results_field=listening_type)
         page = self.paginate_queryset(listening)
 
         result_object_serializers = {
-            'users': UserSerializer,
-            'pages': UserSerializer,
+            'users': ProfileSerializer,
+            'pages': ProfileSerializer,
             'tags': TagDetailSerializer,
         }
         result_object_serializer = result_object_serializers[listening_type]
@@ -318,14 +318,14 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], permission_classes=(IsAuthenticated, IsOwner), suffix='Home')
     def home(self, request, *args, **kwargs):
         """
-        List the User homepage shouts. User can't see the homepage of other users.
+        List the Profile homepage shouts. Profile can't see the homepage of other profiles.
         [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
         ###REQUIRES AUTH
         ---
         serializer: ShoutSerializer
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -348,7 +348,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['post'], suffix='Message')
     def message(self, request, *args, **kwargs):
         """
-        Send the User a message
+        Send the Profile a message
         ###REQUIRES AUTH
         > A user can only message his Listeners, or someone whom he already has an existing conversation with.
         ###Request
@@ -444,7 +444,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         }
         </code></pre>
         ---
-        serializer: UserDetailSerializer
+        serializer: ProfileDetailSerializer
         omit_parameters:
             - form
         parameters:
@@ -495,7 +495,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['post'], permission_classes=(IsAuthenticated, IsOwner), suffix="Deactivate user's account")
     def deactivate(self, request, *args, **kwargs):
         """
-        Deactivate user's account
+        Deactivate profile
         ###REQUIRES AUTH, Account owner
 
         ####Body
@@ -510,6 +510,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - form
         """
         user = self.get_object()
-        serializer = UserDeactivationSerializer(data=request.data, context={'user': user})
+        serializer = ProfileDeactivationSerializer(data=request.data, context={'profile': user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

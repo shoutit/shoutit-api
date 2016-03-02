@@ -24,7 +24,7 @@ from shoutit.utils import track, alias, error_logger
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
-    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer,
+    ProfileDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer,
     GuestSerializer)
 
 
@@ -85,7 +85,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         if user.is_guest:
             user_dict = GuestSerializer(user, context={'request': self.request}).data
         else:
-            user_dict = UserDetailSerializer(user, context={'request': self.request}).data
+            user_dict = ProfileDetailSerializer(user, context={'request': self.request}).data
         new_signup = getattr(user, 'new_signup', False)
         response_data = {
             'access_token': access_token.token,
@@ -548,7 +548,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
 
         # set the request user in case it is not set
         self.request.user = user
-        user_dict = UserDetailSerializer(user, context={'request': self.request}).data
+        user_dict = ProfileDetailSerializer(user, context={'request': self.request}).data
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,

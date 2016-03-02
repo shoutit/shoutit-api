@@ -27,7 +27,7 @@ from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, 
                             Tag)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request, base64_to_text, base64_to_texts
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           UserSerializer, ShoutSerializer,
+                           ProfileSerializer, ShoutSerializer,
                            TagDetailSerializer, CategoryDetailSerializer)
 
 
@@ -135,13 +135,13 @@ class MiscViewSet(viewsets.ViewSet):
             users_qs = User.objects.filter(type=USER_TYPE_PROFILE, is_activated=True).order_by('-date_joined')
             if country:
                 users_qs = users_qs.filter(profile__country=country)
-            users = UserSerializer(users_qs[:page_size], many=True, context={'request': request}).data
+            users = ProfileSerializer(users_qs[:page_size], many=True, context={'request': request}).data
             suggestions['users'] = users
         if 'pages' in types:
             pages_qs = User.objects.filter(type=USER_TYPE_PAGE).order_by('-date_joined')
             if country:
                 pages_qs = pages_qs.filter(page__country=country)
-            pages = UserSerializer(pages_qs[:page_size], many=True, context={'request': request}).data
+            pages = ProfileSerializer(pages_qs[:page_size], many=True, context={'request': request}).data
             suggestions['pages'] = pages
         if 'tags' in types:
             tag_names = list(Category.objects.all().values_list("main_tag__name", flat=True))
