@@ -373,6 +373,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             ]
         }
         </code></pre>
+
+        Either `text`, `attachments` or both has to be provided. Images and videos are to be compressed and uploaded before submitting. CDN urls should be sent.
         ---
         serializer: MessageSerializer
         omit_parameters:

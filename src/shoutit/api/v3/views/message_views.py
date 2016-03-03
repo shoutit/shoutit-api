@@ -206,6 +206,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
             ]
         }
         </code></pre>
+
+        Either `text`, `attachments` or both has to be provided. Images and videos are to be compressed and uploaded before submitting. CDN urls should be sent.
         ---
         response_serializer: MessageSerializer
         omit_parameters:

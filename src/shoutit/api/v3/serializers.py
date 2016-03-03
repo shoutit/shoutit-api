@@ -786,8 +786,7 @@ class MessageSerializer(serializers.ModelSerializer):
     user = ProfileSerializer(read_only=True, required=False)
     profile = ProfileSerializer(source='user', read_only=True, required=False)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
-    attachments = MessageAttachmentSerializer(many=True, required=False,
-                                              help_text="List of either {'shout': {Shout}} or {'location': {SharedLocation}}")
+    attachments = MessageAttachmentSerializer(many=True, required=False)
     is_read = serializers.SerializerMethodField()
 
     class Meta:
