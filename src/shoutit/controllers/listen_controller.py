@@ -20,12 +20,10 @@ def listen_to_object(user, obj, request=None):
     """
     """
     listen_type, target = Listen2.listen_type_and_target_from_object(obj)
-    try:
-        Listen2.objects.get(user=user, type=listen_type, target=target)
-    except Listen2.DoesNotExist:
-        Listen2.create(user=user, type=listen_type, target=target)
-        if listen_type in [LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE]:
-            notifications_controller.notify_user_of_listen(obj.user, user, request)
+
+    _, created = Listen2.objects.get_or_create(user=user, type=listen_type, target=target)
+    if created and listen_type in [LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE]:
+        notifications_controller.notify_user_of_listen(obj.user, user, request)
 
 
 def listen_to_objects(user, objects, request=None):
