@@ -787,18 +787,11 @@ class MessageSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(source='user', read_only=True, required=False)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     attachments = MessageAttachmentSerializer(many=True, required=False)
-    is_read = serializers.SerializerMethodField()
+    read_by = serializers.ListField(source='read_by_objects')
 
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'conversation_id', 'user', 'profile', 'text', 'attachments', 'is_read')
-
-    def get_is_read(self, message):
-        request = self.root.context.get('request')
-        user = request and getattr(request, 'user', None)
-        if user and user.is_authenticated():
-            return message.is_read(user)
-        return False
+        fields = ('id', 'created_at', 'conversation_id', 'user', 'profile', 'text', 'attachments', 'read_by')
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)

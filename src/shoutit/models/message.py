@@ -14,6 +14,7 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT)
+from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from shoutit.utils import track
@@ -167,6 +168,12 @@ class Message(Action):
 
     def is_read(self, user):
         return MessageRead.objects.filter(user=user, message=self, conversation=self.conversation).exists()
+
+    def read_by_objects(self):
+        read_by = []
+        for read in self.read_set.all().values('user_id', 'created_at'):
+            read_by.append({'profile_id': read['user_id'], 'read_at': date_unix(read['created_at'])})
+        return read_by
 
 
 @receiver(post_save, sender=Message)
