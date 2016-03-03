@@ -114,7 +114,7 @@ class Category(UUIDModel):
         for cat_filter in self.filters:
             filter_tags = filter(lambda t: t['key'] == cat_filter, tags)
             filter_tag_names = map(lambda t: t['name'], filter_tags)
-            values = map(lambda ftn: {'name': ftn.title(), 'value': ftn}, filter_tag_names)
+            values = map(lambda ftn: {'name': ftn.title(), 'slug': ftn}, filter_tag_names)
             values.sort(key=lambda v: v['name'])
             filter_object = OrderedDict()
             filter_object['name'] = cat_filter.title()
