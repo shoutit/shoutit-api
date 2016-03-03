@@ -51,7 +51,7 @@ class DateTimePagination(CursorPagination):
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__lt': datetime.fromtimestamp(int(before_query_param) - 1)
+                    self.datetime_attribute + '__lt': datetime.utcfromtimestamp(int(before_query_param) - 1 )
                 }
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 
@@ -60,7 +60,7 @@ class DateTimePagination(CursorPagination):
         elif after_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__gt': datetime.fromtimestamp(int(after_query_param) + 1)
+                    self.datetime_attribute + '__gt': datetime.utcfromtimestamp(int(after_query_param) + 1)
                 }
                 queryset = queryset.filter(**filters).order_by(self.datetime_attribute)
             except (TypeError, ValueError):
@@ -191,7 +191,7 @@ class DateTimeIndexPagination(DateTimePagination):
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute: {'lt': datetime.fromtimestamp(int(before_query_param) - 1)}
+                    self.datetime_attribute: {'lt': datetime.utcfromtimestamp(int(before_query_param) - 1)}
                 }
                 index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'desc'})
 
@@ -200,7 +200,7 @@ class DateTimeIndexPagination(DateTimePagination):
         elif after_query_param:
             try:
                 filters = {
-                    self.datetime_attribute: {'gt': datetime.fromtimestamp(int(after_query_param) + 1)}
+                    self.datetime_attribute: {'gt': datetime.utcfromtimestamp(int(after_query_param) + 1)}
                 }
                 index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'asc'})
             except (TypeError, ValueError):

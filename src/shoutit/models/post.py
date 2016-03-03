@@ -39,7 +39,7 @@ class PostManager(models.Manager):
         return qs
 
     def filter_expired_out(self, qs):
-        today = datetime.today()
+        today = timezone.now()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
@@ -64,7 +64,7 @@ class ShoutManager(PostManager):
                                            get_muted=get_muted)
 
     def filter_expired_out(self, qs):
-        today = datetime.today()
+        today = timezone.now()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(Q(expiry_date__isnull=True, date_published__range=(day, today)) | Q(
@@ -172,7 +172,7 @@ class Shout(Post):
 
     @property
     def is_expired(self):
-        now = datetime.now()
+        now = timezone.now()
         if (not self.expiry_date and now > self.date_published + timedelta(
                 days=int(settings.MAX_EXPIRY_DAYS))) or (
                     self.expiry_date and now > self.expiry_date):

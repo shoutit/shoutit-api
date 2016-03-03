@@ -1,14 +1,16 @@
 from __future__ import unicode_literals
-from datetime import datetime
+
 import re
+
 from django import forms
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.utils import timezone
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.translation import ugettext_lazy as _
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
-from shoutit.models import User, Currency, Business, BusinessCategory, BusinessCreateApplication
 from shoutit.controllers import user_controller
+from shoutit.models import User, Currency, Business, BusinessCategory, BusinessCreateApplication
 
 
 def _get_currencies():
@@ -233,7 +235,7 @@ class DealForm(forms.Form):
     def clean_expiry_date(self):
         expiry_date = 'expiry_date' in self.cleaned_data and self.cleaned_data[
             'expiry_date'] or None
-        if expiry_date and expiry_date < datetime.now():
+        if expiry_date and expiry_date < timezone.now():
             raise forms.ValidationError(_('Expiry date can\'t be in the past.'))
         return expiry_date
 
@@ -242,7 +244,7 @@ class DealForm(forms.Form):
             valid_to = 'valid_to' in self.cleaned_data and self.cleaned_data['valid_to'] or None
         except ValueError:
             raise forms.ValidationError(_('Invalid expiry date.'))
-        if valid_to and valid_to < datetime.now():
+        if valid_to and valid_to < timezone.now():
             raise forms.ValidationError(_('Valid to date can\'t be in the past.'))
         valid_from = 'valid_from' in self.cleaned_data and self.cleaned_data['valid_from'] or None
         if valid_to and valid_from and valid_from >= valid_to:

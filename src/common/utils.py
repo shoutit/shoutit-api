@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 import uuid
 
+import pytz
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 import requests
@@ -65,7 +66,7 @@ def process_tags(names, snake_case=False):
 
 
 def date_unix(date):
-    return int((date - datetime(1970, 1, 1)).total_seconds())
+    return int((date - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
 
 
 def any_in(a, b):

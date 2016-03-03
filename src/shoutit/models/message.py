@@ -43,9 +43,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def get_messages(self, before=None, after=None, limit=25):
         messages = self.messages.order_by('-created_at')
         if before:
-            messages = messages.filter(created_at__lt=datetime.fromtimestamp(before))
+            messages = messages.filter(created_at__lt=datetime.utcfromtimestamp(before))
         if after:
-            messages = messages.filter(created_at__gt=datetime.fromtimestamp(after))
+            messages = messages.filter(created_at__gt=datetime.utcfromtimestamp(after))
         return messages[:limit][::-1]
 
     def get_messages_qs(self, ):
