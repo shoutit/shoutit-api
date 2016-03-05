@@ -205,6 +205,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                     }
                 }
             ]
+            "mobile": "01701700555"
         }
         </code></pre>
 
@@ -302,7 +303,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             "videos": [],
             "published_on": {},
             "reply_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
-            "conversations": []
+            "conversations": [],
+            "mobile_hint": "01701...",
+            "is_mobile_set": true
         }
         </code></pre>
 
@@ -439,3 +442,23 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Call')
+    def call(self, request, *args, **kwargs):
+        """
+        Get the mobile of this Shout
+        ##Response
+        <pre><code>
+        {
+            "mobile": "01701700555"
+        }
+        </code></pre>
+
+        This endpoint will be throttled to prevent multiple requests from same client in short time.
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        shout = self.get_object()
+        return Response({'mobile': shout.mobile if shout.is_mobile_set else None})

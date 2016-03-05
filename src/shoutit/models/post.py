@@ -138,7 +138,7 @@ class Shout(Post):
     expiry_notified = models.BooleanField(default=False)
 
     is_sss = models.BooleanField(default=False)
-
+    mobile = models.CharField(blank=True, max_length=20, default='')
     conversations = GenericRelation('shoutit.Conversation', related_query_name='shout')
 
     objects = ShoutManager()
@@ -229,6 +229,14 @@ class Shout(Post):
                 }
             })
         return filters
+
+    @property
+    def mobile_hint(self):
+        return (self.mobile[:5] + "...") if self.is_mobile_set else None
+
+    @property
+    def is_mobile_set(self):
+        return bool(self.mobile)
 
 
 class InactiveShout(object):

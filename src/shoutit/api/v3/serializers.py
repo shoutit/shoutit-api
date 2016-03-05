@@ -662,11 +662,14 @@ class ShoutDetailSerializer(ShoutSerializer):
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner")
     conversations = serializers.SerializerMethodField()
+    mobile = serializers.CharField(min_length=4, max_length=20, allow_blank=True, default='', write_only=True)
+    mobile_hint = serializers.CharField(read_only=True)
+    is_mobile_set = serializers.BooleanField(read_only=True)
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
-        fields = parent_fields + (
-            'images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url', 'conversations')
+        fields = parent_fields + ('images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url',
+                                  'conversations', 'mobile', 'mobile_hint', 'is_mobile_set')
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -727,6 +730,7 @@ class ShoutDetailSerializer(ShoutSerializer):
 
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
+        mobile = validated_data.get('mobile')
 
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
@@ -743,14 +747,15 @@ class ShoutDetailSerializer(ShoutSerializer):
             shout = shout_controller.create_shout(
                 user=profile, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,
-                images=images, videos=videos, page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook
+                images=images, videos=videos, page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
+                mobile=mobile
             )
         else:
             # Todo: Check when updating shouts not to break requirements [case_1, case_2] better have that done at class level
             shout = shout_controller.edit_shout(
                 shout, title=title, text=text, price=price, currency=currency, available_count=available_count,
                 is_sold=is_sold, category=category, filters=filters, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user
+                page_admin_user=page_admin_user, mobile=mobile
             )
         return shout
 
