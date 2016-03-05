@@ -11,11 +11,10 @@ class Item(UUIDModel):
     price = models.BigIntegerField(null=True, blank=True)
     currency = models.ForeignKey('shoutit.Currency', null=True, blank=True)
     state = models.IntegerField(default=ITEM_STATE_AVAILABLE.value, db_index=True)
+    available_count = models.PositiveSmallIntegerField(default=1)
+    is_sold = models.BooleanField(default=False, db_index=True)
     images = ArrayField(models.URLField(), default=list, blank=True)
     videos = models.ManyToManyField('shoutit.Video', blank=True, related_name='items')
-
-    # available_count = models.PositiveSmallIntegerField(default=1)
-    # sold_count = models.PositiveSmallIntegerField(default=0)
 
     def __unicode__(self):
         return unicode(self.name[:30])

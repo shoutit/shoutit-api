@@ -178,6 +178,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             "text": "Brand new black bmw m6 2016.",
             "price": 1000,
             "currency": "EUR",
+            "available_count": 4,
+            "is_sold": false,
             "images": [],
             "videos": [],
             "category": {
@@ -235,6 +237,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             "api_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
             "web_url": "https://www.shoutit.com/shout/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
             "type": "offer",
+            "category": {
+                "name": "Cars & Motors",
+                "slug": "cars-motors",
+                "icon": "https://tag-image.static.shoutit.com/categories/cars-i.png",
+                "image": "https://tag-image.static.shoutit.com/bb4f3137-48f2-4c86-89b8-0635ed6d426e-cars-motors.jpg"
+            },
+            "title": "Chevrolet Cruze 2011 Perfect Condition low mileage 59000 KM",
             "location": {
                 "latitude": 25.2321179865413,
                 "longitude": 51.4795259383137,
@@ -244,13 +253,14 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                 "city": "Ain Khaled",
                 "address": ""
             },
-            "title": "Chevrolet Cruze 2011 Perfect Condition low mileage 59000 KM",
             "text": "Chevrolet Cruze 2011 \nPerfect Condition\nVery Low Mileage 59000 KM\nEngine is 1.8 CC\nInterior is like New \nSecond Owner\nESTMARA UP to 8/2017\nPRICE IS 25500\nشفرولية كروز موديل 2011\nبحالة ممتازة جدا جدا\nقاطع 59000 كيلومتر فقط\nنظيفة جدا من الداخل ومن الخارج\nاستمارة حتي شهر8 2017 \nالسعر 25500",
             "price": 24500.0,
             "currency": "QAR",
+            "available_count": 1,
+            "is_sold": false,
             "thumbnail": "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
             "video_url": null,
-            "user": {
+            "profile": {
                 "id": "6590865d-b395-4cea-8382-68fbc5f048ce",
                 "type": "Profile",
                 "api_url": "https://api.shoutit.com/v2/users/15214428592",
@@ -266,12 +276,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                 "listeners_count": 0
             },
             "date_published": 1456431892,
-            "category": {
-                "name": "Cars & Motors",
-                "slug": "cars-motors",
-                "icon": "https://tag-image.static.shoutit.com/categories/cars-i.png",
-                "image": "https://tag-image.static.shoutit.com/bb4f3137-48f2-4c86-89b8-0635ed6d426e-cars-motors.jpg"
-            },
             "filters": [
                 {
                     "name": "Color",
@@ -298,8 +302,6 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             "videos": [],
             "published_on": {},
             "reply_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
-            "related_requests": [],
-            "related_offers": [],
             "conversations": []
         }
         </code></pre>

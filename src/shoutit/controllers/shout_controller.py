@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import random
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import requests
 from django.conf import settings
@@ -132,7 +132,7 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
 
 def create_shout(user, shout_type, title, text, price, currency, category, location, filters=None, images=None,
                  videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
-                 publish_to_facebook=None):
+                 publish_to_facebook=None, available_count=None, is_sold=None):
     # tags2
     tags2 = {}
     if not filters:
@@ -147,7 +147,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     tag_controller.get_or_create_tags(tags, user)
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
-                                       videos=videos)
+                                       videos=videos, available_count=available_count, is_sold=is_sold)
     shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
                          is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
@@ -171,9 +171,9 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
 
 
 def edit_shout(shout, title=None, text=None, price=None, currency=None, category=None, filters=None, images=None,
-               videos=None, location=None, page_admin_user=None):
+               videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
-                              videos=videos)
+                              videos=videos, available_count=available_count, is_sold=is_sold)
     if text:
         shout.text = text
     if category:
@@ -292,6 +292,8 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.latitude = shout.latitude
     shout_index.longitude = shout.longitude
     shout_index.price = shout.item.price if shout.item.price is not None else 0
+    shout_index.available_count = shout.available_count
+    shout_index.is_sold = shout.is_sold
     shout_index.uid = shout.user.pk
     shout_index.username = shout.user.username
     shout_index.date_published = shout.date_published

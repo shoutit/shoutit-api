@@ -155,6 +155,14 @@ class Shout(Post):
         return self.item.videos.all()
 
     @property
+    def available_count(self):
+        return self.item.available_count
+
+    @property
+    def is_sold(self):
+        return self.item.is_sold
+
+    @property
     def tag_objects(self):
         return Tag.objects.filter(name__in=self.tags)
 
@@ -265,6 +273,8 @@ class ShoutIndex(DocType):
     latitude = Double()
     longitude = Double()
     price = Double()
+    available_count = Integer()
+    is_sold = Boolean()
     uid = String(index='not_analyzed')
     username = String(index='not_analyzed')
     date_published = Date()
