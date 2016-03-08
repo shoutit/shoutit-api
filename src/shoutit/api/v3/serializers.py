@@ -308,6 +308,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         return ret
 
 
+# Todo: create two subclasses UserSerializer/UserDetailSerializer and PageSerializer/PageDetailSerializer
 class ProfileDetailSerializer(ProfileSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False,
                                    help_text="Only shown for owner")
@@ -315,7 +316,8 @@ class ProfileDetailSerializer(ProfileSerializer):
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender', required=False)
-    bio = serializers.CharField(source='profile.bio', allow_blank=True, default='')
+    bio = serializers.CharField(source='profile.bio', allow_blank=True, default='', max_length=150)
+    about = serializers.CharField(source='page.about', allow_blank=True, default='', max_length=150)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     website = serializers.CharField(source='ap.website', allow_blank=True, default='')
@@ -337,7 +339,7 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'mobile', 'website',
+        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
                                   'listeners_url', 'listening_count', 'listening_url', 'is_owner',
                                   'chat_url', 'pages', 'admins')
