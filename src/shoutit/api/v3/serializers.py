@@ -11,6 +11,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
+from django.core.validators import URLValidator
 from django.db.models import Q
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
@@ -35,7 +36,7 @@ from shoutit.models import (
     DiscoverItem, Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
-from shoutit.utils import upload_image_to_s3, debug_logger, url_with_querystring
+from shoutit.utils import upload_image_to_s3, debug_logger, url_with_querystring, correct_mobile
 
 
 class LocationSerializer(serializers.Serializer):
@@ -317,7 +318,7 @@ class ProfileDetailSerializer(ProfileSerializer):
     bio = serializers.CharField(source='profile.bio', allow_blank=True, default='')
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
-    website = serializers.URLField(source='ap.website', allow_blank=True, default='')
+    website = serializers.CharField(source='ap.website', allow_blank=True, default='')
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is listening to signed in user")
@@ -415,6 +416,22 @@ class ProfileDetailSerializer(ProfileSerializer):
             raise ValidationError(["Email is already used by another user."])
         return email
 
+    def validate_website(self, website):
+        website = website.lower()
+        # If no URL scheme given, assume http://
+        if website and '://' not in website:
+            website = u'http://%s' % website
+        if website:
+            URLValidator()(website)
+        return website
+
+    def validate_mobile(self, mobile):
+        mobile = mobile.lower()
+        if mobile:
+            user = self.context['request'].user
+            mobile = correct_mobile(mobile, user.location['country'], raise_exception=True)
+        return mobile
+
     def update(self, user, validated_data):
         user_update_fields = []
         ap = user.ap
@@ -457,15 +474,15 @@ class ProfileDetailSerializer(ProfileSerializer):
 
         if isinstance(ap, Profile):
             bio = profile_data.get('bio')
-            if bio:
+            if bio is not None:
                 ap.bio = bio
                 ap_update_fields.append('bio')
             gender = profile_data.get('gender')
-            if gender:
+            if gender is not None:
                 ap.gender = gender
                 ap_update_fields.append('gender')
             mobile = profile_data.get('mobile')
-            if mobile:
+            if mobile is not None:
                 ap.mobile = mobile
                 ap_update_fields.append('mobile')
         elif isinstance(ap, Page):
@@ -481,7 +498,7 @@ class ProfileDetailSerializer(ProfileSerializer):
                 ap.cover = cover
                 ap_update_fields.append('cover')
             website = ap_data.get('website')
-            if website:
+            if website is not None:
                 ap.website = website
                 ap_update_fields.append('website')
 
