@@ -14,6 +14,7 @@ from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
 from shoutit.api.permissions import IsContributor, CanContribute
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination
 from ..serializers import ConversationSerializer, MessageSerializer
 from ..views.viewsets import UUIDViewSetMixin
@@ -23,6 +24,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
     """
     Conversation API Resource.
     """
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = ConversationSerializer
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, CanContribute)
@@ -310,6 +312,7 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
     """
     API endpoint that allows conversations/messages to be viewed or added.
     """
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = MessageSerializer
     permission_classes = (permissions.IsAuthenticated, IsContributor)
 

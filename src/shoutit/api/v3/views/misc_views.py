@@ -10,6 +10,7 @@ import re
 from collections import OrderedDict
 
 from django.conf import settings
+from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
@@ -26,7 +27,7 @@ from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, 
                             Tag)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request, base64_to_text, base64_to_texts
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           UserSerializer, ShoutSerializer,
+                           ProfileSerializer, ShoutSerializer,
                            TagDetailSerializer, CategoryDetailSerializer)
 
 
@@ -36,6 +37,7 @@ class MiscViewSet(viewsets.ViewSet):
     """
     permission_classes = ()
 
+    @cache_control(max_age=60 * 60)
     @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """
@@ -62,6 +64,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = PredefinedCitySerializer(cities, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @cache_control(max_age=60 * 60 * 24)
     @list_route(methods=['get'], suffix='Currencies')
     def currencies(self, request):
         """
@@ -73,6 +76,7 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = CurrencySerializer(currencies, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @cache_control(max_age=60 * 60 * 24)
     @list_route(methods=['get'], suffix='Shouts Sort Types')
     def shouts_sort_types(self, request):
         """
@@ -131,13 +135,13 @@ class MiscViewSet(viewsets.ViewSet):
             users_qs = User.objects.filter(type=USER_TYPE_PROFILE, is_activated=True).order_by('-date_joined')
             if country:
                 users_qs = users_qs.filter(profile__country=country)
-            users = UserSerializer(users_qs[:page_size], many=True, context={'request': request}).data
+            users = ProfileSerializer(users_qs[:page_size], many=True, context={'request': request}).data
             suggestions['users'] = users
         if 'pages' in types:
             pages_qs = User.objects.filter(type=USER_TYPE_PAGE).order_by('-date_joined')
             if country:
                 pages_qs = pages_qs.filter(page__country=country)
-            pages = UserSerializer(pages_qs[:page_size], many=True, context={'request': request}).data
+            pages = ProfileSerializer(pages_qs[:page_size], many=True, context={'request': request}).data
             suggestions['pages'] = pages
         if 'tags' in types:
             tag_names = list(Category.objects.all().values_list("main_tag__name", flat=True))

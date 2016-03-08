@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import random
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import requests
 from django.conf import settings
@@ -12,6 +12,7 @@ from django.db.models.expressions import F
 from django.db.models.query_utils import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
 
@@ -30,13 +31,13 @@ def get_post(post_id, find_muted=False, find_expired=False):
         post = post.filter(muted=False)
 
     if not find_expired:
-        today = datetime.today()
+        _today = timezone.now()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        begin = today - days
+        begin = _today - days
         post = post.filter(
             (~Q(type=POST_TYPE_REQUEST) & ~Q(type=POST_TYPE_OFFER))
             |
-            ((Q(shout__expiry_date__isnull=True, date_published__range=(begin, today))
+            ((Q(shout__expiry_date__isnull=True, date_published__range=(begin, _today))
 
               | Q(shout__expiry_date__isnull=False, date_published__lte=F('shout__expiry_date')))
              & (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)))
@@ -62,7 +63,7 @@ def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
     if not shout:
         raise ObjectDoesNotExist()
     else:
-        now = datetime.now()
+        now = timezone.now()
         shout.date_published = now
         shout.expiry_date = now + timedelta(days=days)
         shout.renewal_count += 1
@@ -78,7 +79,7 @@ def NotifyPreExpiry():
             expiry_date = shout.expiry_date
             if not expiry_date:
                 expiry_date = shout.date_published + timedelta(days=settings.MAX_EXPIRY_DAYS)
-            if (expiry_date - datetime.now()).days < settings.SHOUT_EXPIRY_NOTIFY:
+            if (expiry_date - timezone.now()).days < settings.SHOUT_EXPIRY_NOTIFY:
                 if shout.user.email:
                     email_controller.SendExpiryNotificationEmail(shout.user, shout)
                     shout.expiry_notified = True
@@ -115,7 +116,7 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
     location_controller.update_object_location(shout, location, save=False)
 
     if not date_published:
-        date_published = datetime.today()
+        date_published = timezone.now()
         if is_sss:
             hours = random.randrange(-5, 0)
             minutes = random.randrange(-59, 0)
@@ -131,7 +132,7 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
 
 def create_shout(user, shout_type, title, text, price, currency, category, location, filters=None, images=None,
                  videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
-                 publish_to_facebook=None):
+                 publish_to_facebook=None, available_count=None, is_sold=None, mobile=None):
     # tags2
     tags2 = {}
     if not filters:
@@ -142,15 +143,17 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     tags = tags2.values()
     tags = list(OrderedDict.fromkeys(tags))
     tags.insert(0, category.slug)
+    # Create actual tags objects (when necessary)
+    tag_controller.get_or_create_tags(tags, user)
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
-                                       videos=videos)
+                                       videos=videos, available_count=available_count, is_sold=is_sold)
     shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
-                         is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user)
+                         is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user, mobile=mobile)
     location_controller.update_object_location(shout, location, save=False)
 
     if not date_published:
-        date_published = datetime.today()
+        date_published = timezone.now()
         if is_sss:
             hours = random.randrange(-5, 0)
             minutes = random.randrange(-59, 0)
@@ -168,9 +171,9 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
 
 
 def edit_shout(shout, title=None, text=None, price=None, currency=None, category=None, filters=None, images=None,
-               videos=None, location=None, page_admin_user=None):
+               videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None, mobile=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
-                              videos=videos)
+                              videos=videos, available_count=available_count, is_sold=is_sold)
     if text:
         shout.text = text
     if category:
@@ -192,6 +195,8 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
         location_controller.add_predefined_city(location)
     if page_admin_user:
         shout.page_admin_user = page_admin_user
+    if mobile is not None:
+        shout.mobile = mobile
     shout.save()
     return shout
 
@@ -289,6 +294,8 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.latitude = shout.latitude
     shout_index.longitude = shout.longitude
     shout_index.price = shout.item.price if shout.item.price is not None else 0
+    shout_index.available_count = shout.available_count
+    shout_index.is_sold = shout.is_sold
     shout_index.uid = shout.user.pk
     shout_index.username = shout.user.username
     shout_index.date_published = shout.date_published

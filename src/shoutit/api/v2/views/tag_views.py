@@ -12,6 +12,7 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.controllers import listen_controller
 from shoutit.models import ShoutIndex, Tag, Shout
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import TagFilter
 from ..pagination import (ShoutitPageNumberPagination, PageNumberIndexPagination)
 from ..serializers import (TagSerializer, TagDetailSerializer, FeaturedTagSerializer, UserSerializer, ShoutSerializer)
@@ -22,7 +23,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     Tag API Resource.
     """
     lookup_field = 'name'
-
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = TagSerializer
     serializer_detail_class = TagDetailSerializer
     queryset = Tag.objects.all()

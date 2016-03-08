@@ -7,9 +7,11 @@ import re
 from datetime import datetime
 import uuid
 
+import pytz
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 import requests
+from pydash import strings
 
 from common.constants import NOT_ALLOWED_USERNAMES
 
@@ -44,31 +46,27 @@ def check_offline_mood():
         return True
 
 
-def process_tag(name):
+def process_tag(name, fn=strings.kebab_case):
     if not isinstance(name, basestring):
         return None
-    name = name.lower()[:30]
-    name = re.sub('[+&/\s]', '-', name)
-    name = re.sub('[^a-z0-9-]', '', name)
-    name = re.sub('([-]){2,}', '-', name)
-    name = name[1:] if name.startswith('-') else name
-    name = name[0:-1] if name.endswith('-') else name
+    name = fn(name)
     if len(name) < 2:
         return None
     return name
 
 
-def process_tags(names):
+def process_tags(names, snake_case=False):
     processed_tags = []
+    fn = strings.snake_case if snake_case else strings.kebab_case
     for name in names:
-        processed_tag = process_tag(name)
+        processed_tag = process_tag(name, fn)
         if processed_tag:
             processed_tags.append(processed_tag)
     return processed_tags
 
 
 def date_unix(date):
-    return int((date - datetime(1970, 1, 1)).total_seconds())
+    return int((date - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
 
 
 def any_in(a, b):

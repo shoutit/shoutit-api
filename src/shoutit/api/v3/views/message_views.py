@@ -115,6 +115,50 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
         conversation.mark_as_read(request.user)
         return self.get_paginated_response(serializer.data)
 
+    @detail_route(methods=['post'], suffix='Delete Messages')
+    def delete_messages(self, request, *args, **kwargs):
+        """
+        <pre><code>
+        POST: /conversations/{conversation_id}/delete_messages
+        </code></pre>
+        <pre><code>
+        {
+            "messages": [
+                {
+                    "id": "message_id"
+                },
+                {
+                    "id": "message_id"
+                },
+                {
+                    "id": "message_id"
+                }
+            ]
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        conversation = self.get_object()
+        message_dicts = request.data.get('messages', [])
+        # Todo: validate message ids
+        message_ids = map(lambda x: str(x.get('id')), message_dicts)
+        messages = Message.objects.filter(conversation_id=conversation.id, id__in=message_ids)
+        message_controller.hide_messages_from_user(messages, request.user)
+        ret = {
+            'data': {
+                'success': "You deleted these messages ",
+                'deleted_messages': map(lambda m: {'id': m}, message_ids)
+            },
+            'status': status.HTTP_202_ACCEPTED
+        }
+        return Response(**ret)
+
     @detail_route(methods=['post', 'delete'], suffix='Read')
     def read(self, request, *args, **kwargs):
         """
@@ -162,6 +206,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
             ]
         }
         </code></pre>
+
+        Either `text`, `attachments` or both has to be provided. Images and videos are to be compressed and uploaded before submitting. CDN urls should be sent.
         ---
         response_serializer: MessageSerializer
         omit_parameters:
@@ -304,28 +350,3 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
-
-
-class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
-    """
-    API endpoint that allows conversations/messages to be viewed or added.
-    """
-    serializer_class = MessageSerializer
-    permission_classes = (permissions.IsAuthenticated, IsContributor)
-
-    def get_queryset(self):
-        return Message.objects.all()
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Delete a message
-        ###REQUIRES AUTH
-        ---
-        omit_serializer: true
-        omit_parameters:
-            - form
-        """
-        return super(MessageViewSet, self).destroy(request, *args, **kwargs)
-
-    def perform_destroy(self, message):
-        message_controller.hide_message_from_user(message, self.request.user)

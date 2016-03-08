@@ -113,6 +113,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return "{} [{}:{}]".format(self.name, self.pk, self.username)
 
     @property
+    def type_name_v3(self):
+        return "user" if self.type == USER_TYPE_PROFILE else "page"
+
+    @property
     def ap(self):
         return getattr(self, UserType.values[self.type].lower(), None)
 

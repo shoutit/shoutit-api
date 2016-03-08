@@ -1,0 +1,11 @@
+engines:
+  radon:
+    enabled: true
+    config:
+      threshold: "C"
+  pep8:
+    enabled: true
+
+ratings:
+  paths:
+  - "**.py"

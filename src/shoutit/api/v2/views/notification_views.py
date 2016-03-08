@@ -9,6 +9,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
 
 from shoutit.controllers import notifications_controller
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..pagination import ReverseDateTimePagination
 from ..serializers import NotificationSerializer
 from ..views.viewsets import UUIDViewSetMixin
@@ -18,6 +19,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     """
     Notification API Resource.
     """
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = NotificationSerializer
     pagination_class = ReverseDateTimePagination
     permission_classes = (permissions.IsAuthenticated,)

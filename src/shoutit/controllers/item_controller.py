@@ -1,18 +1,27 @@
 from __future__ import unicode_literals
+
 from django.conf import settings
 from django.db import IntegrityError
+
 from shoutit.models import Item, Video
 from shoutit.utils import error_logger
 
 
-def create_item(name, description, price, currency, images=None, videos=None):
+def create_item(name, description, price, currency, images=None, videos=None, available_count=None, is_sold=None):
     images = images or []
-    item = Item.create(name=name, description=description, price=price, currency=currency, images=images[:settings.MAX_IMAGES_PER_ITEM])
+    item = Item.create(save=False, name=name, description=description, price=price, currency=currency,
+                       images=images[:settings.MAX_IMAGES_PER_ITEM])
+    if available_count is not None:
+        item.available_count = available_count
+    if is_sold is not None:
+        item.is_sold = is_sold
+    item.save()
     add_videos_to_item(item, videos)
     return item
 
 
-def edit_item(item, name=None, description=None, price=None, currency=None, images=None, videos=None):
+def edit_item(item, name=None, description=None, price=None, currency=None, images=None, videos=None,
+              available_count=None, is_sold=None):
     if name:
         item.name = name
     if description:
@@ -23,6 +32,10 @@ def edit_item(item, name=None, description=None, price=None, currency=None, imag
         item.currency = currency
     if images is not None:
         item.images = images
+    if available_count is not None:
+        item.available_count = available_count
+    if is_sold is not None:
+        item.is_sold = is_sold
     item.save()
     add_videos_to_item(item, videos, remove_existing=True)
     return item

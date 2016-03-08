@@ -8,8 +8,7 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import any_in
-from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation,
-                            Video)
+from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation, Video)
 from shoutit.utils import error_logger
 
 
@@ -58,6 +57,11 @@ def hide_message_from_user(message, user):
         MessageDelete(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
     except IntegrityError:
         pass
+
+
+def hide_messages_from_user(messages, user):
+    for message in messages:
+        hide_message_from_user(message, user)
 
 
 def send_message(conversation, user, to_users=None, about=None, text=None, attachments=None, request=None,

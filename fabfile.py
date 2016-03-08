@@ -20,6 +20,12 @@ def local_flake8():
         local('flake8 %s ' % DJANGO_DIR)
 
 
+def local_radon():
+    print("Running radon...")
+    with lcd(scripts_dir):
+        local('radon cc -s -n B %s ' % DJANGO_DIR)
+
+
 def local_update():
     print("Updating local requirements...")
     with lcd(scripts_dir):
@@ -70,6 +76,7 @@ def remote_pull(env_short_name):
 
 
 def prepare_deploy():
+    local_radon()
     local_flake8()
     local_update()
     local_test()

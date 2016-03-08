@@ -6,7 +6,7 @@ import re
 from django.contrib.contenttypes.models import ContentType
 from paypal.standard.forms import PayPalEncryptedPaymentsForm
 from django.conf import settings
-
+from django.utils import timezone
 from shoutit.models import User
 from shoutit import utils
 from shoutit.models import Payment, Deal, Transaction, DealBuy, Service, ServiceBuy, Currency
@@ -146,7 +146,7 @@ def MakePaymentToken(user, payment_type, timestamp=None):
     from django.utils.crypto import salted_hmac
 
     if not timestamp:
-        delta = datetime.today() - datetime(2012, 3, 1)
+        delta = timezone.now() - datetime(2012, 3, 1)
         timestamp = int_to_base36(int(delta.total_seconds()))
     value = (unicode(user.pk) + unicode(user.email) + unicode(payment_type) + unicode(timestamp))
     key_salt = "Sh0u+1t-payment-token-generator"
@@ -171,7 +171,7 @@ def CheckPaymentToken(user, payment_type, token):
     if not token == MakePaymentToken(user, payment_type, ts_b36):
         return False
 
-    delta = datetime.today() - datetime(2012, 3, 1)
+    delta = timezone.now() - datetime(2012, 3, 1)
     if (delta.total_seconds() - ts) > 900:  # 60 * 15
         return False
 

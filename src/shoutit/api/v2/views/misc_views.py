@@ -25,6 +25,7 @@ from shoutit.controllers.facebook_controller import (update_linked_facebook_acco
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, error_logger, parse_signed_request, base64_to_text, base64_to_texts
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
                            UserSerializer, ShoutSerializer,
                            TagDetailSerializer)
@@ -34,6 +35,7 @@ class MiscViewSet(viewsets.ViewSet):
     """
     Other API Resources.
     """
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     permission_classes = ()
 
     @list_route(methods=['get'], suffix='Categories')

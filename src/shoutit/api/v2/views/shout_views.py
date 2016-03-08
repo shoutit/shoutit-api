@@ -16,6 +16,7 @@ from shoutit.controllers import shout_controller
 from shoutit.models import Shout
 from shoutit.models.post import ShoutIndex
 from shoutit.utils import has_unicode
+from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer
@@ -27,6 +28,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     """
     Shout API Resource
     """
+    parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = ShoutSerializer
     serializer_detail_class = ShoutDetailSerializer
     filter_backends = (ShoutIndexFilterBackend,)

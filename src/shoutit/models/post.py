@@ -39,7 +39,7 @@ class PostManager(models.Manager):
         return qs
 
     def filter_expired_out(self, qs):
-        today = datetime.today()
+        today = timezone.now()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
@@ -64,7 +64,7 @@ class ShoutManager(PostManager):
                                            get_muted=get_muted)
 
     def filter_expired_out(self, qs):
-        today = datetime.today()
+        today = timezone.now()
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(Q(expiry_date__isnull=True, date_published__range=(day, today)) | Q(
@@ -138,7 +138,7 @@ class Shout(Post):
     expiry_notified = models.BooleanField(default=False)
 
     is_sss = models.BooleanField(default=False)
-
+    mobile = models.CharField(blank=True, max_length=20, default='')
     conversations = GenericRelation('shoutit.Conversation', related_query_name='shout')
 
     objects = ShoutManager()
@@ -153,6 +153,14 @@ class Shout(Post):
     @property
     def videos(self):
         return self.item.videos.all()
+
+    @property
+    def available_count(self):
+        return self.item.available_count
+
+    @property
+    def is_sold(self):
+        return self.item.is_sold
 
     @property
     def tag_objects(self):
@@ -172,7 +180,7 @@ class Shout(Post):
 
     @property
     def is_expired(self):
-        now = datetime.now()
+        now = timezone.now()
         if (not self.expiry_date and now > self.date_published + timedelta(
                 days=int(settings.MAX_EXPIRY_DAYS))) or (
                     self.expiry_date and now > self.expiry_date):
@@ -222,6 +230,14 @@ class Shout(Post):
             })
         return filters
 
+    @property
+    def mobile_hint(self):
+        return (self.mobile[:5] + "...") if self.is_mobile_set else None
+
+    @property
+    def is_mobile_set(self):
+        return bool(self.mobile)
+
 
 class InactiveShout(object):
     @property
@@ -265,6 +281,8 @@ class ShoutIndex(DocType):
     latitude = Double()
     longitude = Double()
     price = Double()
+    available_count = Integer()
+    is_sold = Boolean()
     uid = String(index='not_analyzed')
     username = String(index='not_analyzed')
     date_published = Date()
