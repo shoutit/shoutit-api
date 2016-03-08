@@ -99,6 +99,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         {
             "username": "mo",
             "email": "mo.chawich@gmail.com",
+            "mobile": "01501578444",
             "website": "https://www.shoutit.com",
             "first_name": "Mo",
             "last_name": "Chawich",

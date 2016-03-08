@@ -310,6 +310,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class ProfileDetailSerializer(ProfileSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False,
                                    help_text="Only shown for owner")
+    mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, allow_blank=True, default='')
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender', required=False)
@@ -335,7 +336,7 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'website',
+        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
                                   'listeners_url', 'listening_count', 'listening_url', 'is_owner',
                                   'chat_url', 'pages', 'admins')
@@ -369,6 +370,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         # hide sensitive attributes from other users than owner
         if not ret['is_owner']:
             del ret['email']
+            del ret['mobile']
             del ret['location']['latitude']
             del ret['location']['longitude']
             del ret['location']['address']
@@ -462,6 +464,10 @@ class ProfileDetailSerializer(ProfileSerializer):
             if gender:
                 ap.gender = gender
                 ap_update_fields.append('gender')
+            mobile = profile_data.get('mobile')
+            if mobile:
+                ap.mobile = mobile
+                ap_update_fields.append('mobile')
         elif isinstance(ap, Page):
             pass
 
