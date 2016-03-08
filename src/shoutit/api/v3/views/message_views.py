@@ -51,7 +51,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
         """
         List the user conversations
         ###REQUIRES AUTH
-        [Conversations Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.abebl6lr97rm)
+        [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
         serializer: ConversationSerializer
         parameters:
@@ -85,7 +85,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
         """
         List the conversation messages
         ###REQUIRES AUTH
-        [Messages Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.xnc089w6znop)
+        [Messages Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#messages-pagination)
         ---
         serializer: MessageSerializer
         parameters:

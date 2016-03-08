@@ -86,7 +86,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         ###REQUIRES AUTH
         ###Listen
         <pre><code>
-        POST: /v2/tags/listen
+        POST: /tags/listen
         </code></pre>
         <pre><code>
         {
@@ -106,7 +106,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         ###Stop listening
         <pre><code>
-        DELETE: /v2/tags/listen
+        DELETE: /tags/listen
         </code></pre>
         <pre><code>
         {
@@ -170,12 +170,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         ###REQUIRES AUTH
         ###Listen
         <pre><code>
-        POST: /v2/tags/{name}/listen
+        POST: /tags/{name}/listen
         </code></pre>
 
         ###Stop listening
         <pre><code>
-        DELETE: /v2/tags/{name}/listen
+        DELETE: /tags/{name}/listen
         </code></pre>
         ---
         omit_serializer: true

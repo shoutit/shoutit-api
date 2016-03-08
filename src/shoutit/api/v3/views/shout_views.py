@@ -66,7 +66,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def list(self, request, *args, **kwargs):
         """
         List shouts.
-        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
+        [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
         ###Response
         <pre><code>
         {
@@ -235,7 +235,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         <pre><code>
         {
             "id": "cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "api_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
+            "api_url": "https://api.shoutit.com/v3/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
             "web_url": "https://www.shoutit.com/shout/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
             "type": "offer",
             "category": {
@@ -264,7 +264,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             "profile": {
                 "id": "6590865d-b395-4cea-8382-68fbc5f048ce",
                 "type": "Profile",
-                "api_url": "https://api.shoutit.com/v2/users/15214428592",
+                "api_url": "https://api.shoutit.com/v3/profiles/15214428592",
                 "web_url": "https://www.shoutit.com/user/15214428592",
                 "username": "15214428592",
                 "name": "user 15214428592",
@@ -302,7 +302,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             ],
             "videos": [],
             "published_on": {},
-            "reply_url": "https://api.shoutit.com/v2/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
+            "reply_url": "https://api.shoutit.com/v3/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
             "conversations": [],
             "mobile_hint": "01701...",
             "is_mobile_set": true
