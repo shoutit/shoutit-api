@@ -204,7 +204,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                         "slug": "2016"
                     }
                 }
-            ]
+            ],
             "mobile": "01701700555"
         }
         </code></pre>
