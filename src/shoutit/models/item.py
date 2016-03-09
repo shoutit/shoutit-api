@@ -19,6 +19,12 @@ class Item(UUIDModel):
     def __unicode__(self):
         return unicode(self.name[:30])
 
+    def clean(self):
+        if self.name is None:
+            self.name = ""
+        if self.description is None:
+            self.description = ""
+
     @property
     def thumbnail(self):
         if self.images:

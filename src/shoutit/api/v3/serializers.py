@@ -11,6 +11,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
+from django.core.validators import URLValidator
 from django.db.models import Q
 from ipware.ip import get_real_ip
 from push_notifications.models import APNSDevice, GCMDevice
@@ -35,7 +36,7 @@ from shoutit.models import (
     DiscoverItem, Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
-from shoutit.utils import upload_image_to_s3, debug_logger, url_with_querystring
+from shoutit.utils import upload_image_to_s3, debug_logger, url_with_querystring, correct_mobile
 
 
 class LocationSerializer(serializers.Serializer):
@@ -307,16 +308,19 @@ class ProfileSerializer(serializers.ModelSerializer):
         return ret
 
 
+# Todo: create two subclasses UserSerializer/UserDetailSerializer and PageSerializer/PageDetailSerializer
 class ProfileDetailSerializer(ProfileSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False,
                                    help_text="Only shown for owner")
+    mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, allow_blank=True, default='')
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.CharField(source='profile.gender', required=False)
-    bio = serializers.CharField(source='profile.bio', required=False, allow_blank=True)
+    bio = serializers.CharField(source='profile.bio', allow_blank=True, default='', max_length=150)
+    about = serializers.CharField(source='page.about', allow_blank=True, default='', max_length=150)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
-    website = serializers.URLField(source='ap.website', required=False)
+    website = serializers.CharField(source='ap.website', allow_blank=True, default='')
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is listening to signed in user")
@@ -335,7 +339,7 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'location', 'email', 'website',
+        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
                                   'listeners_url', 'listening_count', 'listening_url', 'is_owner',
                                   'chat_url', 'pages', 'admins')
@@ -369,6 +373,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         # hide sensitive attributes from other users than owner
         if not ret['is_owner']:
             del ret['email']
+            del ret['mobile']
             del ret['location']['latitude']
             del ret['location']['longitude']
             del ret['location']['address']
@@ -413,6 +418,22 @@ class ProfileDetailSerializer(ProfileSerializer):
             raise ValidationError(["Email is already used by another user."])
         return email
 
+    def validate_website(self, website):
+        website = website.lower()
+        # If no URL scheme given, assume http://
+        if website and '://' not in website:
+            website = u'http://%s' % website
+        if website:
+            URLValidator()(website)
+        return website
+
+    def validate_mobile(self, mobile):
+        mobile = mobile.lower()
+        if mobile:
+            user = self.context['request'].user
+            mobile = correct_mobile(mobile, user.location['country'], raise_exception=True)
+        return mobile
+
     def update(self, user, validated_data):
         user_update_fields = []
         ap = user.ap
@@ -455,13 +476,17 @@ class ProfileDetailSerializer(ProfileSerializer):
 
         if isinstance(ap, Profile):
             bio = profile_data.get('bio')
-            if bio:
+            if bio is not None:
                 ap.bio = bio
                 ap_update_fields.append('bio')
             gender = profile_data.get('gender')
-            if gender:
+            if gender is not None:
                 ap.gender = gender
                 ap_update_fields.append('gender')
+            mobile = profile_data.get('mobile')
+            if mobile is not None:
+                ap.mobile = mobile
+                ap_update_fields.append('mobile')
         elif isinstance(ap, Page):
             pass
 
@@ -475,7 +500,7 @@ class ProfileDetailSerializer(ProfileSerializer):
                 ap.cover = cover
                 ap_update_fields.append('cover')
             website = ap_data.get('website')
-            if website:
+            if website is not None:
                 ap.website = website
                 ap_update_fields.append('website')
 
@@ -584,8 +609,8 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
     location = LocationSerializer(
         help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
-    title = serializers.CharField(source='item.name', min_length=4, max_length=50, default='', allow_blank=True, help_text="Max 50 characters")
-    text = serializers.CharField(min_length=10, max_length=1000, default='', allow_blank=True, help_text="Max 1000 characters")
+    title = serializers.CharField(source='item.name', min_length=4, max_length=50, default='', allow_blank=True, allow_null=True, help_text="Max 50 characters")
+    text = serializers.CharField(min_length=10, max_length=1000, default='', allow_null=True, allow_blank=True, help_text="Max 1000 characters")
     price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
     available_count = serializers.IntegerField(default=1, help_text="Only used for Offers")
     is_sold = serializers.BooleanField(default=False, help_text="Only used for Offers")

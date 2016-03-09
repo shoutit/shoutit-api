@@ -18,6 +18,7 @@ from re import sub
 
 import boto
 from PIL import Image
+from django.core.exceptions import ValidationError
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
 # from django.dispatch import receiver
@@ -29,6 +30,8 @@ import phonenumbers
 import requests
 from mixpanel import Mixpanel
 from twilio.rest import TwilioRestClient
+
+from common.constants import COUNTRY_ISO
 from shoutit import settings
 from shoutit.lib import mailchimp
 from common.lib.IP2Location import IP2Location
@@ -255,7 +258,7 @@ def _subscribe_to_master_list(user):
         raise
 
 
-def correct_mobile(mobile, country):
+def correct_mobile(mobile, country, raise_exception=False):
     try:
         country = country.upper()
         if country in ['KW', 'OM', 'BH', 'QA'] and not mobile.startswith('00') and mobile.startswith('0'):
@@ -267,6 +270,8 @@ def correct_mobile(mobile, country):
         else:
             raise ValueError()
     except (phonenumbers.NumberParseException, ValueError):
+        if raise_exception:
+            raise ValidationError("Invalid mobile for %s" % COUNTRY_ISO[country])
         mobile = ''
     return mobile
 

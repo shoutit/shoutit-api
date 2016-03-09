@@ -99,6 +99,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         {
             "username": "mo",
             "email": "mo.chawich@gmail.com",
+            "mobile": "01501578444",
             "website": "https://www.shoutit.com",
             "first_name": "Mo",
             "last_name": "Chawich",
@@ -320,7 +321,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     def home(self, request, *args, **kwargs):
         """
         List the Profile homepage shouts. Profile can't see the homepage of other profiles.
-        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
+        [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
         ###REQUIRES AUTH
         ---
         serializer: ShoutSerializer

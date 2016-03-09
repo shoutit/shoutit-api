@@ -29,7 +29,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         """
         List the user notifications.
         ###REQUIRES AUTH
-        [Notifications Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.ix2g5tgh1m27)
+        [Notifications Pagination](https://github.com/shoutit/shoutit-api/wiki/Notifications)
         ---
         parameters:
             - name: before
@@ -63,12 +63,12 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         ###REQUIRES AUTH
         ###Read
         <pre><code>
-        POST: /v2/notifications/{id}/read
+        POST: /notifications/{id}/read
         </code></pre>
 
         ###Unread
         <pre><code>
-        DELETE: /v2/notification/{id}/read
+        DELETE: /notification/{id}/read
         </code></pre>
         ---
         omit_serializer: true

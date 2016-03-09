@@ -98,7 +98,7 @@ class MiscViewSet(viewsets.ViewSet):
 
         ###Request
         ```
-        GET: /v2/misc/suggestions?type=users,pages,tags,shouts,shout&country=AE&state=Dubai&city=Dubai&page_size=5
+        GET: /misc/suggestions?type=users,pages,tags,shouts,shout&country=AE&state=Dubai&city=Dubai&page_size=5
         ```
 
         ###Response
@@ -230,7 +230,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Example
 
         ```
-        GET: /v2/misc/geocode?latlng=40.722100,-74.046900
+        GET: /misc/geocode?latlng=40.722100,-74.046900
         ```
         """
         try:

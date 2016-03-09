@@ -97,6 +97,10 @@ class Post(Action):
         super(Action, self).__init__(*args, **kwargs)
         self._meta.get_field('user').blank = False
 
+    def clean(self):
+        if self.text is None:
+            self.text = ""
+
     def mute(self):
         self.muted = True
         self.save()
