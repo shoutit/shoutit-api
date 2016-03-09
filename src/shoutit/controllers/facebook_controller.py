@@ -194,12 +194,17 @@ def create_linked_facebook_account(user, access_token):
 def update_linked_facebook_account_scopes(facebook_user_id):
     try:
         la = LinkedFacebookAccount.objects.get(facebook_id=facebook_user_id)
-        token_data = debug_token(la.access_token)
-        scopes = token_data.get('scopes')
-        la.scopes = scopes
-        la.save(update_fields=['scopes'])
-    except LinkedFacebookAccount.DoesNotExist as e:
-        debug_logger.error("LinkedFacebookAccount for facebook id: %s does not exist" % str(e))
+    except LinkedFacebookAccount.DoesNotExist:
+        debug_logger.error("LinkedFacebookAccount for facebook id: %s does not exist" % facebook_user_id)
+    else:
+        try:
+            token_data = debug_token(la.access_token)
+            scopes = token_data.get('scopes')
+            la.scopes = scopes
+            la.save(update_fields=['scopes'])
+        except ValidationError:
+            la.delete()
+            debug_logger.error("LinkedFacebookAccount for facebook id: %s is expired. Deleting it." % facebook_user_id)
 
 
 def delete_linked_facebook_account(facebook_user_id):

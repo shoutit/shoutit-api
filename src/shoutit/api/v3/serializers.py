@@ -249,13 +249,14 @@ class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='ap.image', required=False)
     cover = serializers.URLField(source='ap.cover', required=False)
     api_url = serializers.SerializerMethodField()
-    is_listening = serializers.SerializerMethodField(help_text="Whether signed in user is listening to this user")
-    listeners_count = serializers.IntegerField(required=False, help_text="Number of Listeners to this user")
+    is_listening = serializers.SerializerMethodField(help_text="Whether logged in Profile is listening to this Profile")
+    listeners_count = serializers.IntegerField(required=False, help_text="Number of Listeners to this Profile")
+    is_owner = serializers.SerializerMethodField(help_text="Whether the logged in Profile and this Profile are the same")
 
     class Meta:
         model = User
         fields = ('id', 'type', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated',
-                  'image', 'cover', 'is_listening', 'listeners_count')
+                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ProfileSerializer, self).__init__(instance, data, **kwargs)
@@ -271,6 +272,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         request = self.root.context.get('request')
         user = request and request.user
         return user and user.is_authenticated() and user.is_listening(tag)
+
+    def get_is_owner(self, user):
+        return self.root.context['request'].user == user
 
     def to_internal_value(self, data):
         ret = super(ProfileSerializer, self).to_internal_value(data)
@@ -330,7 +334,6 @@ class ProfileDetailSerializer(ProfileSerializer):
         help_text="object specifying the number of user listening. It has 'users', 'pages' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
-    is_owner = serializers.SerializerMethodField(help_text="Whether the signed in user and this user are the same")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
     chat_url = serializers.SerializerMethodField(
         help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
@@ -341,8 +344,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
-                                  'listeners_url', 'listening_count', 'listening_url', 'is_owner',
-                                  'chat_url', 'pages', 'admins')
+                                  'listeners_url', 'listening_count', 'listening_url', 'chat_url', 'pages', 'admins')
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -358,9 +360,6 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     def get_listeners_url(self, user):
         return reverse('profile-listeners', kwargs={'username': user.username}, request=self.context['request'])
-
-    def get_is_owner(self, user):
-        return self.root.context['request'].user == user
 
     def get_chat_url(self, user):
         return reverse('profile-chat', kwargs={'username': user.username}, request=self.context['request'])
