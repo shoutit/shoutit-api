@@ -609,8 +609,8 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
     location = LocationSerializer(
         help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
-    title = serializers.CharField(source='item.name', min_length=4, max_length=50, default='', allow_blank=True, help_text="Max 50 characters")
-    text = serializers.CharField(min_length=10, max_length=1000, default='', allow_blank=True, help_text="Max 1000 characters")
+    title = serializers.CharField(source='item.name', min_length=4, max_length=50, default='', allow_blank=True, allow_null=True, help_text="Max 50 characters")
+    text = serializers.CharField(min_length=10, max_length=1000, default='', allow_null=True, allow_blank=True, help_text="Max 1000 characters")
     price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
     available_count = serializers.IntegerField(default=1, help_text="Only used for Offers")
     is_sold = serializers.BooleanField(default=False, help_text="Only used for Offers")
