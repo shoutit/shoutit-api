@@ -134,7 +134,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name(self):
-        return self.get_full_name()
+        return self.get_full_name() if self.type == USER_TYPE_PROFILE else self.page.name
 
     @property
     def apns_device(self):
