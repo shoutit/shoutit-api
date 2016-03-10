@@ -283,15 +283,13 @@ class MiscViewSet(viewsets.ViewSet):
 
         # user creation
         try:
+            location = location_controller.from_location_index(shout['lat'], shout['lng'])
+            mobile = shout.get('mobile')
             if source == 'cl':
-                user = user_controller.sign_up_sss4(email=shout['cl_email'], lat=shout['lat'],
-                                                    lng=shout['lng'], city=shout['city'],
-                                                    country=shout['country'], dbcl_type='cl')
+                user = user_controller.sign_up_sss4(email=shout['cl_email'], location=location, dbcl_type='cl')
             elif source in ['dbz', 'dbz2']:
-                user = user_controller.sign_up_sss4(None, lat=shout['lat'], lng=shout['lng'],
-                                                    city=shout['city'], country=shout['country'],
-                                                    dbcl_type=source, db_link=shout['link'],
-                                                    mobile=shout.get('mobile'))
+                user = user_controller.sign_up_sss4(None, location=location, dbcl_type=source, db_link=shout['link'],
+                                                    mobile=mobile)
             else:
                 raise Exception('Unknown ad source.')
         except Exception, e:
@@ -304,21 +302,14 @@ class MiscViewSet(viewsets.ViewSet):
             shout_type = POST_TYPE_OFFER if shout['type'] == 'offer' else POST_TYPE_REQUEST
             title = shout['title']
             text = shout['description']
-            price = float(shout['price'])
+            price = float(shout['price']) * 100
             currency = Currency.objects.get(code=shout['currency'])
             category = Category.objects.get(name=shout['category'])
-            tags = shout['tags']
-            location = {
-                'latitude': float(shout['lat']),
-                'longitude': float(shout['lng']),
-                'country': shout['country'],
-                'city': shout['city']
-            }
-            shout_controller.create_shout_v2(
+            shout_controller.create_shout(
                 user=user, shout_type=shout_type,
                 title=title, text=text, price=price, currency=currency, location=location,
-                category=category, tags=tags, images=shout['images'],
-                is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10
+                category=category, images=shout['images'],
+                is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10, mobile=mobile
             )
         except Exception, e:
             msg = "Shout Creation Error. Deleting user."
