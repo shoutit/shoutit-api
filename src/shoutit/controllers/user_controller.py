@@ -175,14 +175,8 @@ def auth_with_facebook(fb_user, access_token, initial_user=None, is_test=False):
     return user
 
 
-def sign_up_sss4(email, lat, lng, city, country, dbcl_type='cl', db_link='', mobile=''):
+def sign_up_sss4(email, location, dbcl_type='cl', db_link='', mobile=''):
     profile_fields = {}
-    location = {
-        'country': country,
-        'city': city,
-        'latitude': float(lat),
-        'longitude': float(lng)
-    }
     profile_fields.update(location)
     if mobile:
         profile_fields.update({'mobile': mobile})
