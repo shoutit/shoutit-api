@@ -36,8 +36,8 @@ if PROD:
 
 elif DEV:
     DEBUG = True
-    SITE_LINK = 'http://dev.www.shoutit.com/'
-    API_LINK = 'http://dev.api.shoutit.com/v3/'
+    SITE_LINK = 'https://stage.www.shoutit.com/'
+    API_LINK = 'https://dev.api.shoutit.com/v3/'
     DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
     REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
