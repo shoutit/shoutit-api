@@ -66,7 +66,11 @@ def process_tags(names, snake_case=False):
 
 
 def date_unix(date):
-    return int((date - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
+    try:
+        return int((date - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
+    except TypeError:
+        # Todo: find when this occurs
+        return int((date - datetime(1970, 1, 1)).total_seconds())
 
 
 def any_in(a, b):
