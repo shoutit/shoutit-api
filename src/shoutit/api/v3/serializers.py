@@ -818,11 +818,11 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     conversation_id = serializers.UUIDField(read_only=True)
-    user = ProfileSerializer(read_only=True, required=False)
-    profile = ProfileSerializer(source='user', read_only=True, required=False)
+    user = ProfileSerializer(read_only=True)
+    profile = ProfileSerializer(source='user', read_only=True)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     attachments = MessageAttachmentSerializer(many=True, required=False)
-    read_by = serializers.ListField(source='read_by_objects')
+    read_by = serializers.ListField(source='read_by_objects', read_only=True)
 
     class Meta:
         model = Message

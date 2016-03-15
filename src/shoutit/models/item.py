@@ -44,7 +44,7 @@ class Item(UUIDModel):
 
     @property
     def v2_price(self):
-        return round(float(self.price / 100.0), 2)
+        return round(float(self.price / 100.0), 2) if self.price is not None else 0
 
 
 class Currency(UUIDModel):
