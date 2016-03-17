@@ -126,7 +126,7 @@ def _send_cl_invitation_email(cl_user):
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
         'shout': cl_user.shout.item.name[:30] + '...',
-        'link': 'http://hyperurl.co/shoutitcl',
+        'link': 'https://www.shoutit.com/app',
     })
     text_template = get_template('cl_user_invitation_email.txt')
     text_message = text_template.render(context)
@@ -150,7 +150,7 @@ def _send_db_invitation_email(db_user):
     from_email = settings.DEFAULT_FROM_EMAIL
     context = Context({
         'shout': db_user.shout.item.name[:30] + '...',
-        'link': 'http://hyperurl.co/shoutitdbz',
+        'link': 'https://www.shoutit.com/app',
     })
     html_template = get_template('email/db_user_invitation_email.html')
     html_message = html_template.render(context)
