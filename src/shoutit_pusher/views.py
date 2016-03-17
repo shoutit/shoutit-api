@@ -5,8 +5,11 @@
 from __future__ import unicode_literals
 
 from rest_framework import viewsets
+from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
+
+from shoutit.api.parsers import ShoutitJSONParser
 from shoutit.api.v2.serializers import UserSerializer
 from shoutit.utils import debug_logger
 from .utils import pusher
@@ -17,6 +20,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
     """
     Shoutit Pusher API Resources.
     """
+    parser_classes = (ShoutitJSONParser, FormParser)
 
     @list_route(methods=['post'], suffix='Authorize')
     def auth(self, request):
