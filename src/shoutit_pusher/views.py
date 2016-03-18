@@ -32,6 +32,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         ---
         """
         channel = request.data.get('channel_name', '')
+        # Todo: check if the user is allowed to subscribe to the channel
         socket_id = request.data.get('socket_id', '')
         api_version = request.version
         data = {
@@ -40,6 +41,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
                 'user': v2_serializers.UserSerializer(request.user, context={'request': request}).data
             },
             'v3': {
+                'user_id': request.user.pk,
                 'profile': v3_serializers.ProfileSerializer(request.user, context={'request': request}).data
             }
         }
