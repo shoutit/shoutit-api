@@ -42,25 +42,36 @@ def mark_notifications_as_read_by_ids(notification_ids):
 
 
 def serialize_attached_object(attached_object, user, request):
-    from shoutit.api.v2 import serializers
+    from shoutit.api.v2 import serializers as v2_serializers
+    from shoutit.api.v3 import serializers as v3_serializers
+
+    # Todo: serialize based on user's api client version
     if not request:
         # todo: create general fake request
         django_request = HttpRequest()
         django_request.META['SERVER_NAME'] = 'api.shoutit.com'
         django_request.META['SERVER_PORT'] = '80'
         request = Request(django_request)
-        request.version = 'v2'
+        request.version = 'v3'
         request.versioning_scheme = ShoutitNamespaceVersioning()
     # set the request.user to the notified user as if he was asking for it.
     request.user = user
-
+    # if isinstance(attached_object, User):
+    #     if getattr(attached_object, 'detailed', False):
+    #         attached_object_dict = v2_serializers.UserDetailSerializer(attached_object, context={'request': request}).data
+    #     else:
+    #         attached_object_dict = v2_serializers.UserSerializer(attached_object, context={'request': request}).data
+    # elif isinstance(attached_object, Message):
+    #     attached_object_dict = v2_serializers.MessageSerializer(attached_object, context={'request': request}).data
+    # else:
+    #     attached_object_dict = {}
     if isinstance(attached_object, User):
         if getattr(attached_object, 'detailed', False):
-            attached_object_dict = serializers.UserDetailSerializer(attached_object, context={'request': request}).data
+            attached_object_dict = v3_serializers.ProfileDetailSerializer(attached_object, context={'request': request}).data
         else:
-            attached_object_dict = serializers.UserSerializer(attached_object, context={'request': request}).data
+            attached_object_dict = v3_serializers.ProfileSerializer(attached_object, context={'request': request}).data
     elif isinstance(attached_object, Message):
-        attached_object_dict = serializers.MessageSerializer(attached_object, context={'request': request}).data
+        attached_object_dict = v3_serializers.MessageSerializer(attached_object, context={'request': request}).data
     else:
         attached_object_dict = {}
     return attached_object_dict

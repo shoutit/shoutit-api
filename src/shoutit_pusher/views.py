@@ -5,12 +5,14 @@
 from __future__ import unicode_literals
 
 from rest_framework import viewsets
+from rest_framework.settings import api_settings
 from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 from rest_framework.decorators import list_route
 
 from shoutit.api.parsers import ShoutitJSONParser
-from shoutit.api.v2.serializers import UserSerializer
+from shoutit.api.v2 import serializers as v2_serializers
+from shoutit.api.v3 import serializers as v3_serializers
 from shoutit.utils import debug_logger
 from .utils import pusher
 from .controllers import add_member, remove_member, create_channel, delete_channel
@@ -31,10 +33,17 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         """
         channel = request.data.get('channel_name', '')
         socket_id = request.data.get('socket_id', '')
-        custom_data = {
-            'user_id': request.user.pk,
-            'user': UserSerializer(request.user, context={'request': request}).data
+        api_version = request.version
+        data = {
+            'v2': {
+                'user_id': request.user.pk,
+                'user': v2_serializers.UserSerializer(request.user, context={'request': request}).data
+            },
+            'v3': {
+                'profile': v3_serializers.ProfileSerializer(request.user, context={'request': request}).data
+            }
         }
+        custom_data = data[api_version]
         try:
             auth = pusher.authenticate(channel=channel, socket_id=socket_id, custom_data=custom_data)
         except ValueError as e:
