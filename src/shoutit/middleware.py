@@ -1,13 +1,11 @@
 from __future__ import unicode_literals
-import json
 
 from django.conf import settings
-from django.utils import datastructures
 
 from common.constants import DEFAULT_LOCATION
-from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
-from shoutit.utils import JsonResponseBadRequest, error_logger
 from shoutit.controllers import facebook_controller
+from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
+from shoutit.utils import error_logger
 
 
 class BadRequestsMiddleware(object):
@@ -56,44 +54,6 @@ class FBMiddleware(object):
             auth_response = facebook_controller.exchange_code(request, request.GET['code'])
             if auth_response:
                 facebook_controller.user_from_facebook_auth_response(request, auth_response)
-
-
-class JsonPostMiddleware(object):
-    @staticmethod
-    def process_request(request):
-        # do not apply on api v2 or v3
-        # Todo: check and deprecate if not needed anymore!
-        if '/v2/' in request.META.get('PATH_INFO') or '/v3/' in request.META.get('PATH_INFO'):
-            return
-
-        # add the json_data attribute to all POST requests.
-        if request.method in ['POST', 'PUT'] and 'CONTENT_TYPE' in request.META and 'json' in request.META['CONTENT_TYPE']:
-            try:
-                request.json_data = json.loads(request.body)
-                request.json_to_post_fill = True
-                request.json_to_post_filled = False
-            except ValueError, e:
-                return JsonResponseBadRequest({'error': 'invalid json format: ' + e.message})
-            except Exception, e:
-                return JsonResponseBadRequest({'error': e.message})
-
-        elif request.method == 'POST':
-            request.json_data = {}
-        else:
-            pass
-
-    @staticmethod
-    def fill_request_post(request, data=None):
-        if getattr(request, 'json_to_post_fill', False) and not getattr(request, 'json_to_post_filled', True):
-            if not data:
-                data = request.json_data
-            request.POST = request.POST.copy()
-            for item in data:
-                request.POST[item] = data[item]
-
-            request._request = datastructures.MergeDict(request.POST, request.GET)
-            request.json_to_post_fill = False
-            request.json_to_post_filled = True
 
 
 def default_location(request):

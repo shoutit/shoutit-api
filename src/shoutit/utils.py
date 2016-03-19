@@ -109,22 +109,6 @@ def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECR
     return data
 
 
-class JsonResponse(HttpResponse):
-    """
-    An HTTP response class that consumes data to be serialized to JSON.
-    """
-    status_code = 200
-
-    def __init__(self, data, **kwargs):
-        kwargs.setdefault('content_type', 'application/json')
-        data = json.dumps(data)
-        super(JsonResponse, self).__init__(content=data, **kwargs)
-
-
-class JsonResponseBadRequest(JsonResponse):
-    status_code = 400
-
-
 def get_google_smtp_connection():
     return get_connection(**settings.EMAIL_BACKENDS['google'])
 

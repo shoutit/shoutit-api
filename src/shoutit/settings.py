@@ -261,7 +261,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.locale.LocaleMiddleware',
     # Shoutit Custom Middleware
     'shoutit.middleware.BadRequestsMiddleware',
-    'shoutit.middleware.JsonPostMiddleware',
     'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
