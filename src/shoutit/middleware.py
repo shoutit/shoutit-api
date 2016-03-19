@@ -32,19 +32,6 @@ class BadRequestsMiddleware(object):
         return response
 
 
-class APIDetectionMiddleware(object):
-    @staticmethod
-    def process_request(request):
-        # do not apply on api v2
-        if '/v2/' in request.META.get('PATH_INFO'):
-            request.is_api = False
-            request.api_client = 'other'
-            return
-        request.is_api = "/api/" in request.META.get('PATH_INFO') or "/oauth/" in request.META.get('PATH_INFO')
-        request.api_client = request.META.get('HTTP_SHOUTIT_CLIENT', 'other')
-        pass
-
-
 class UserPermissionsMiddleware(object):
     @staticmethod
     def attach_permissions_to_request(request):
