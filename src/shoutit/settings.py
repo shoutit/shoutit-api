@@ -489,7 +489,7 @@ SWAGGER_SETTINGS = {
 }
 
 # Logging
-FORCE_SENTRY = True
+FORCE_SENTRY = False
 LOG_SQL = False
 LOGGING = {
     'version': 1,
