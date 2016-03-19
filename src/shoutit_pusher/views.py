@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 
@@ -48,7 +49,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         try:
             auth = pusher.authenticate(channel=channel, socket_id=socket_id, custom_data=custom_data)
         except ValueError as e:
-            auth = {'error': str(e)}
+            raise ValidationError(str(e))
         return Response(auth)
 
     @list_route(methods=['post'], permission_classes=(), suffix='Webhook')
