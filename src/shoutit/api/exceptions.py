@@ -15,7 +15,13 @@ def exception_handler(exc, context):
     """
     Returns the response that should be used for any given exception based on the request version.
     """
-    version = context['request'].version
+    view = context['view']
+    request = context['request']
+    if not hasattr(request, 'version'):
+        version, scheme = view.determine_version(request, *view.args, **view.kwargs)
+        request.version, request.versioning_scheme = version, scheme
+
+    version = request.version
     if version == 'v3':
         return v3_exception_handler(exc, context)
     else:

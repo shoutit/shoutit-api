@@ -59,18 +59,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
                    'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest']
 
-    def error_response(self, error, **kwargs):
-        """
-        Return an error response to the client with default status code of
-        *400* stating the error as outlined in :rfc:`5.2`.
-        """
-        client = kwargs.get('client')
-        grant_type = kwargs.get('grant_type', 'no-grant')
-        client_name = client.name if client else 'no-client'
-        error_name = "oAuth2 Error - %s - %s - %s" % (client_name, grant_type, error)
-        error_logger.warn(error_name, extra={'request': self.request._request}, exc_info=True)
-        return Response(error, status=400)
-
     def access_token_response(self, access_token, data=None):
         """
         Returns a successful response after creating the access token
@@ -476,57 +464,42 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             - name: body
               paramType: body
         """
+        # Set `action` to be used when handling exceptions
+        self.action = 'post'
+
         if provider_constants.ENFORCE_SECURE and not request.is_secure():
-            return self.error_response({
+            raise ValidationError({
                 'error': 'invalid_request',
                 'error_description': "A secure connection is required."
             })
 
         if 'grant_type' not in request.data:
-            return self.error_response({
+            raise ValidationError({
                 'error': 'invalid_request',
                 'error_description': "No 'grant_type' included in the request."
             })
 
         grant_type = request.data.get('grant_type')
-
         if grant_type not in self.grant_types:
-            return self.error_response({'error': 'unsupported_grant_type'})
+            raise ValidationError({'grant_type': 'unsupported_grant_type'})
 
         client = self.authenticate(request)
-
         if client is None:
-            return self.error_response({'error': 'invalid_client'})
+            raise ValidationError({'client': 'invalid_client'})
+        request.client = client
+        request.is_test = client.name == 'shoutit-test'
 
         handler = self.get_handler(grant_type)
-
-        try:
-            data = request.data.copy()
-            request.client = client
-            request.is_test = client.name == 'shoutit-test'
-            return handler(request, data, client)
-        except OAuthError, e:
-            return self.error_response(e.args[0], client=client, grant_type=grant_type)
-        except ValidationError as e:
-            return self.error_response(e.detail, client=client, grant_type=grant_type)
-        except Exception as e:
-            return self.error_response(str(e), client=client, grant_type=grant_type)
+        data = request.data.copy()
+        # Update the `action` and set it as the `grant_type` before calling the handler
+        self.action = grant_type
+        return handler(request, data, client)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):
     """
     ShoutitAuth Resource
     """
-
-    def error_response(self, error):
-        """
-        Return an error response to the client with default status code of
-        *400* stating the error as outlined in :rfc:`5.2`.
-        """
-        response_data = {
-            'error': error,
-        }
-        return Response(response_data, status=400)
 
     def success_response(self, success):
         """
@@ -751,9 +724,9 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 except Exception:
                     return self.success_response("Your email has been verified.")
             except ConfirmToken.DoesNotExist:
-                return self.error_response("Token does not exist.")
+                raise ValidationError("Token does not exist.")
             except ValueError:
-                return self.error_response("Email address is already verified.")
+                raise ValidationError("Email address is already verified.")
 
         elif request.method == 'POST':
             if request.user.is_anonymous():

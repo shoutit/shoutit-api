@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
+from django.conf import settings
 from django.core import exceptions as django_exceptions
 from django.http import Http404, JsonResponse
 from django.utils.translation import ugettext_lazy as _
@@ -50,6 +51,8 @@ def drf_exception_handler(exc, context):
         errors = [{'message': unicode(message)}]
 
     else:
+        if settings.DEBUG and not settings.FORCE_SENTRY:
+            return None
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         message = _('Server Error, please try again later.')
         developer_message = unicode(exc)
@@ -57,7 +60,7 @@ def drf_exception_handler(exc, context):
 
     data = exception_response_date(status_code, message, developer_message, request_id, errors)
     log_drf_exception(exc, data, status_code, context)
-    return exception_response(data, status_code, headers, django=True)
+    return exception_response(data, status_code, headers)
 
 
 def django_exception_handler(response):
@@ -73,7 +76,7 @@ def django_exception_handler(response):
 
 def set_django_response_headers(res, headers):
     if isinstance(headers, dict):
-        for header, value in headers:
+        for header, value in headers.items():
             res[header] = value
 
 
@@ -117,7 +120,7 @@ def log_drf_exception(exc, data, status_code, context):
         client = 'Token' if hasattr(drf_request.auth, 'key') else None
 
     view_name = context['view'].__class__.__name__
-    view_action = context['view'].action
+    view_action = getattr(context['view'], 'action', 'None')
     exc_name = exc.__class__.__name__
     msg = "%s:%s:%s -> %s" % (drf_request.version, view_name, view_action, exc_name)
     extra = {
