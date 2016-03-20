@@ -260,9 +260,10 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     # Shoutit Custom Middleware
-    'shoutit.middleware.BadRequestsMiddleware',
     'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
+    'shoutit.middleware.BadRequestsMiddleware',
+    'shoutit.api.exceptions.APIExceptionMiddleware',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
@@ -451,6 +452,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'shoutit.api.renderers.ShoutitBrowsableAPIRenderer',
     ),
+    'EXCEPTION_HANDLER': 'shoutit.api.exceptions.exception_handler',
     'DEFAULT_FILTER_BACKENDS': [],
     'URL_FIELD_NAME': 'api_url',
 }

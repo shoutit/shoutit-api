@@ -3,19 +3,17 @@
 
 """
 from __future__ import unicode_literals
-from v3.exceptions import exception_handler as v3_exception_handler
+
+from rest_framework.exceptions import APIException
+from rest_framework.response import Response as DRFResponse
 from rest_framework.views import exception_handler as v2_exception_handler
+
+from v3.exceptions import drf_exception_handler as v3_exception_handler, django_exception_handler
 
 
 def exception_handler(exc, context):
     """
-    Returns the response that should be used for any given exception.
-
-    By default we handle the REST framework `APIException`, and also
-    Django's built-in `Http404` and `PermissionDenied` exceptions.
-
-    Any unhandled exceptions may return `None`, which will cause a 500 error
-    to be raised.
+    Returns the response that should be used for any given exception based on the request version.
     """
     version = context['request'].version
     if version == 'v3':
@@ -24,3 +22,24 @@ def exception_handler(exc, context):
         return v2_exception_handler(exc, context)
 
 
+class APIExceptionMiddleware(object):
+    @staticmethod
+    def process_response(request, response):
+        # Skip processing responses coming from exception handlers
+        if getattr(response, 'is_final', False):
+            return response
+        if 400 <= response.status_code <= 599:
+            # DRF Response (API call)
+            if isinstance(response, DRFResponse):
+                version = response.renderer_context['request'].version
+                if version == 'v3':
+                    exc = APIException()
+                    exc.status_code = response.status_code
+                    context = getattr(response, 'renderer_context', {})
+                    return v3_exception_handler(exc, context)
+
+            # Django Response (Other call)
+            else:
+                return django_exception_handler(response)
+
+        return response
