@@ -13,7 +13,7 @@ class BadRequestsMiddleware(object):
     def process_response(request, response):
         path = request.path
         excluded_paths = ['/v2/sms', '/v2/misc/sss4']
-        if response.status_code in [400] and path not in excluded_paths:
+        if '/v2/' in path and response.status_code in [400] and path not in excluded_paths:
             drf_request = response.renderer_context.get('request') if hasattr(response, 'renderer_context') else None
             req_data = drf_request.data if drf_request else {}
             res_data = getattr(response, 'data', {})
