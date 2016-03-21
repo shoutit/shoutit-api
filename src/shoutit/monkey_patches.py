@@ -8,6 +8,7 @@ import datetime
 import uuid
 from json import JSONEncoder
 
+import request_id
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from elasticsearch_dsl import DocType
@@ -83,3 +84,9 @@ def __setstate__(self, state):
 
 
 Request.__setstate__ = __setstate__
+
+
+def patched_generate_request_id():
+    return uuid.uuid4().hex
+
+request_id.__dict__['generate_request_id'] = patched_generate_request_id

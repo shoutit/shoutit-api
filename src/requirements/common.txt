@@ -49,6 +49,7 @@ django-rest-swagger==0.3.4
 markdown==2.6.5
 
 # utils
+django-request-id
 pydash
 phonenumbers==7.2.5
 django-ipware

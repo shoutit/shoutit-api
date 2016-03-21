@@ -4,6 +4,8 @@
 """
 from __future__ import unicode_literals
 
+from raven.contrib.django import DjangoClient
+from request_id import get_current_request_id
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response as DRFResponse
 from rest_framework.views import exception_handler as v2_exception_handler
@@ -49,3 +51,11 @@ class APIExceptionMiddleware(object):
                 return django_exception_handler(response)
 
         return response
+
+
+class ShoutitRavenClient(DjangoClient):
+    def build_msg(self, *args, **kwargs):
+        data = super(ShoutitRavenClient, self).build_msg(*args, **kwargs)
+        event_id = get_current_request_id()
+        data['event_id'] = event_id
+        return data

@@ -248,8 +248,10 @@ info('FORCE_PUSH:', FORCE_PUSH)
 info('APNS_SANDBOX:', APNS_SANDBOX)
 
 CORS_ORIGIN_ALLOW_ALL = True
+REQUEST_ID_HEADER = None
 
 MIDDLEWARE_CLASSES = (
+    'request_id.middleware.RequestIdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -491,6 +493,7 @@ SWAGGER_SETTINGS = {
 
 # Logging
 FORCE_SENTRY = False
+SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
 LOG_SQL = False
 LOGGING = {
     'version': 1,

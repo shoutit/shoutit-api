@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core import exceptions as django_exceptions
 from django.http import Http404, JsonResponse
 from django.utils.translation import ugettext_lazy as _
+from request_id import get_current_request_id
 from rest_framework import exceptions as drf_exceptions, status
 from rest_framework.compat import set_rollback
 from rest_framework.request import _hasattr
@@ -24,7 +25,6 @@ def drf_exception_handler(exc, context):
     """
     headers = {}
     developer_message = ""
-    request_id = None
 
     if isinstance(exc, drf_exceptions.APIException):
         status_code = exc.status_code
@@ -58,7 +58,7 @@ def drf_exception_handler(exc, context):
         developer_message = unicode(exc)
         errors = [{'message': unicode(message)}]
 
-    data = exception_response_date(status_code, message, developer_message, request_id, errors)
+    data = exception_response_date(status_code, message, developer_message, errors)
     log_drf_exception(exc, data, status_code, context)
     return exception_response(data, status_code, headers)
 
@@ -68,9 +68,8 @@ def django_exception_handler(response):
     status_code = response.status_code
     message = _("Error")
     developer_message = ""
-    request_id = None
     errors = {}
-    data = exception_response_date(status_code, message, developer_message, request_id, errors)
+    data = exception_response_date(status_code, message, developer_message, errors)
     return exception_response(data, status_code, headers, django=True)
 
 
@@ -80,13 +79,13 @@ def set_django_response_headers(res, headers):
             res[header] = value
 
 
-def exception_response_date(status_code, message, developer_message, request_id, errors):
+def exception_response_date(status_code, message, developer_message, errors):
     error_data = {
         'error': OrderedDict([
             ('code', status_code),
             ('message', unicode(message)),
             ('developer_message', developer_message),
-            ('request_id', request_id),
+            ('request_id', get_current_request_id()),
             ('errors', errors)
         ])
     }
