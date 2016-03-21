@@ -115,9 +115,16 @@ def log_drf_exception(exc, data, status_code, context):
         body = django_request.body
 
     if hasattr(drf_request.auth, 'client'):
+        # Authorized (AccessToken) DRF requests
         client = drf_request.auth.client.name
+    elif hasattr(drf_request.auth, 'key'):
+        # Authorized (Token) DRF requests
+        client = 'Token'
+    elif hasattr(drf_request, 'client'):
+        # Requests to `access_token` endpoint
+        client = drf_request.client.name
     else:
-        client = 'Token' if hasattr(drf_request.auth, 'key') else None
+        client = None
 
     view_name = context['view'].__class__.__name__
     view_action = getattr(context['view'], 'action', 'None')
