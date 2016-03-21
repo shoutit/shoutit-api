@@ -54,6 +54,7 @@ class APIExceptionMiddleware(object):
 
 
 class ShoutitRavenClient(DjangoClient):
+    # Override the original `build_msg` to use global request_id using `django-request-id`
     def build_msg(self, *args, **kwargs):
         data = super(ShoutitRavenClient, self).build_msg(*args, **kwargs)
         event_id = get_current_request_id()

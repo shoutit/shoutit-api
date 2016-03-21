@@ -86,6 +86,7 @@ def __setstate__(self, state):
 Request.__setstate__ = __setstate__
 
 
+# Monkey Patching django-request-id to generate id's that can be used for Sentry as `event_id`
 def patched_generate_request_id():
     return uuid.uuid4().hex
 
