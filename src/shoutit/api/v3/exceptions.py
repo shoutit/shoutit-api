@@ -110,7 +110,7 @@ def log_drf_exception(exc, data, status_code, context):
 
     if _hasattr(drf_request, '_full_data'):
         # Parsed and should have `raw_body` as it would be set by `ShoutitJsonParser`
-        body = django_request.raw_body
+        body = getattr(django_request, 'raw_body', None)
     else:
         body = django_request.body
 
