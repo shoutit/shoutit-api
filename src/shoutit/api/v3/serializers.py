@@ -249,9 +249,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.URLField(source='ap.image', required=False)
     cover = serializers.URLField(source='ap.cover', required=False)
     api_url = serializers.SerializerMethodField()
-    is_listening = serializers.SerializerMethodField(help_text="Whether logged in Profile is listening to this Profile")
-    listeners_count = serializers.IntegerField(required=False, help_text="Number of Listeners to this Profile")
-    is_owner = serializers.SerializerMethodField(help_text="Whether the logged in Profile and this Profile are the same")
+    is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
+    listeners_count = serializers.IntegerField(required=False, help_text="Number of profiles (users, pages) Listening to this Profile")
+    is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
 
     class Meta:
         model = User
@@ -327,16 +327,17 @@ class ProfileDetailSerializer(ProfileSerializer):
     website = serializers.CharField(source='ap.website', allow_blank=True, default='')
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
-    is_listener = serializers.SerializerMethodField(help_text="Whether this user is listening to signed in user")
-    listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
+    is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
+    listeners_url = serializers.SerializerMethodField(help_text="URL to get this profile listeners")
     listening_count = serializers.DictField(
         read_only=True, child=serializers.IntegerField(),
-        help_text="object specifying the number of user listening. It has 'users', 'pages' and 'tags' attributes")
+        help_text="object specifying the number of profile listening. It has 'users', 'pages' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
-        help_text="URL to get the listening of this user. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
-    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this user")
+        help_text="URL to get the listening of this profile. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
+    shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this profile")
+    conversation = serializers.SerializerMethodField(help_text="Conversation with type `chat` between you and this profile if exists")
     chat_url = serializers.SerializerMethodField(
-        help_text="URL to message this user if is possible. This is the case when user is one of the signed in user's listeners")
+        help_text="URL to message this profile if it is possible. This is the case when the profile is one of your listeners or an existing previous conversation")
     pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
     admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
 
@@ -344,7 +345,8 @@ class ProfileDetailSerializer(ProfileSerializer):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
-                                  'listeners_url', 'listening_count', 'listening_url', 'chat_url', 'pages', 'admins')
+                                  'listeners_url', 'listening_count', 'listening_url', 'conversation', 'chat_url',
+                                  'pages', 'admins')
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -363,6 +365,15 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     def get_chat_url(self, user):
         return reverse('profile-chat', kwargs={'username': user.username}, request=self.context['request'])
+
+    def get_conversation(self, user):
+        request_user = self.root.context['request'].user
+        if isinstance(request_user, AnonymousUser) or request_user.id == user.id:
+            return None
+        conversation = message_controller.conversation_exist(users=[request_user, user])
+        if not conversation:
+            return None
+        return ConversationSerializer(conversation, context=self.root.context).data
 
     def to_representation(self, instance):
         if not instance.is_active:
@@ -385,6 +396,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         else:
             del ret['is_listening']
             del ret['is_listener']
+            del ret['conversation']
             del ret['chat_url']
 
         if not ret.get('image'):

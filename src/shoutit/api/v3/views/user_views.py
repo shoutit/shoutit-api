@@ -75,6 +75,15 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     def retrieve(self, request, *args, **kwargs):
         """
         Retrieve a Profile
+
+        ####These attributes will only show for Profile owner
+        `email`, `mobile`, `location.latitude`, `location.longitude`, `location.address`, `push_tokens`, `linked_accounts`
+
+        ####These attributes will not show for profile owner
+        `is_listening`, `is_listener`, `conversation`
+
+        ####This attribute will only show when it is possible to *start* chat with the profile
+        `chat_url`
         ---
         serializer: ProfileDetailSerializer
         parameters:
