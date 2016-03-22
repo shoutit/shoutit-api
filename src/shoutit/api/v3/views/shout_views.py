@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import random
 
 from django.views.decorators.cache import cache_control
+from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ValidationError
@@ -16,7 +17,7 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify
 from shoutit.controllers import shout_controller
-from shoutit.models import Shout, Category
+from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
 from shoutit.utils import has_unicode
 from ..filters import ShoutIndexFilterBackend
@@ -164,6 +165,48 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             {'type': 'price_desc', 'name': 'Price Decreasing'},
             {'type': 'recommended', 'name': 'Recommended'},
         ])
+
+    @list_route(methods=['get'], suffix='Shouts Auto-completion')
+    def autocomplete(self, request):
+        """
+        List autocomplete terms that can be used for search suggestions (to be improved)
+
+        `search` is required while `category` and `country` are optional.
+        ###Response
+        <pre><code>
+        [
+          {
+            "term": "bmw-z4"
+          },
+          {
+            "term": "bmw"
+          },
+        ]
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: search
+              description: At least two characters
+              paramType: query
+            - name: category
+              description: Slug for the Category to return terms within it
+              paramType: query
+            - name: country
+              description: Code for the Country to return terms used in it
+              paramType: query
+        """
+        # Todo: improve!
+        search = request.query_params.get('search', '')
+        category = request.query_params.get('category')
+        country = request.query_params.get('country')
+        if len(search) >= 2:
+            terms = list(Tag.objects.filter(name__istartswith=search).values_list('name', flat=True)[:10])
+            random.shuffle(terms)
+            terms = map(lambda t: {'term': strings.human_case(t)}, terms)
+        else:
+            raise ValidationError({'search': "At least two characters are required"})
+        return Response(terms)
 
     def create(self, request, *args, **kwargs):
         """
