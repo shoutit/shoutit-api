@@ -9,14 +9,47 @@ from collections import OrderedDict
 from django.conf import settings
 from django.core import exceptions as django_exceptions
 from django.http import Http404, JsonResponse
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from request_id import get_current_request_id
 from rest_framework import exceptions as drf_exceptions, status
 from rest_framework.compat import set_rollback
+from rest_framework.exceptions import _force_text_recursive
 from rest_framework.request import _hasattr
 from rest_framework.response import Response
 
+from common.utils import flatten
 from shoutit.utils import error_logger
+
+
+class ShoutitAPIException(drf_exceptions.APIException):
+    """
+    Base class for Shoutit API exceptions.
+    """
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_message = _('A server error occurred.')
+    default_developer_message = 'Contact API admin and mention the `request_id`'
+
+    def __init__(self, message=None, developer_message=None, errors=None):
+        if message is not None:
+            self.message = force_text(message)
+        else:
+            self.message = force_text(self.default_message)
+
+        if developer_message is not None:
+            self.developer_message = force_text(developer_message)
+
+        if errors is not None:
+            self.errors = _force_text_recursive(errors)
+        else:
+            self.errors = [{'message': self.message}]
+
+    def __str__(self):
+        return self.message
+
+
+class ShoutitValidationError(ShoutitAPIException):
+    status_code = status.HTTP_400_BAD_REQUEST
 
 
 def drf_exception_handler(exc, context):
@@ -26,16 +59,49 @@ def drf_exception_handler(exc, context):
     headers = {}
     developer_message = ""
 
-    if isinstance(exc, drf_exceptions.APIException):
+    if isinstance(exc, ShoutitAPIException):
+        status_code = exc.status_code
+        message = exc.message
+        developer_message = exc.developer_message
+        errors = exc.errors
+
+    elif isinstance(exc, drf_exceptions.APIException):
         status_code = exc.status_code
         if getattr(exc, 'auth_header', None):
             headers['WWW-Authenticate'] = exc.auth_header
         if getattr(exc, 'wait', None):
             headers['Retry-After'] = '%d' % exc.wait
 
-        if isinstance(exc.detail, (list, dict)):
-            message = "Multiple errors"
-            errors = [exc.detail]
+        if isinstance(exc.detail, dict):
+            message = _("Invalid input")
+            errors = []
+            # Flatten the errors dict not to worry about errors of nested fields
+            items = flatten(exc.detail).items()
+            for key, value in items:
+                if '.non_field_errors' in key:
+                    key = key.split('.')[0]
+                error_location_type = 'body'
+                error_reason = 'invalid'
+
+                if isinstance(value, basestring):
+                    error_message = value
+                elif isinstance(value, list):
+                    error_message = ". ".join(value)
+                else:
+                    error_message = ". ".join(value[0])
+                    error_reason = value[1]
+                    error_location_type = value[2]
+
+                error = {
+                    'location': key,
+                    'location_type': error_location_type,
+                    'reason': error_reason,
+                    'message': error_message
+                }
+                errors.append(error)
+        elif isinstance(exc.detail, list):
+            message = exc.detail
+            errors = [{'message': unicode(message)}]
         else:
             message = exc.detail
             errors = [{'message': unicode(message)}]

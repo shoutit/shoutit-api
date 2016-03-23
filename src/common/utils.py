@@ -2,15 +2,16 @@
 Utils that are independent of Apps and their models
 """
 from __future__ import unicode_literals
+
+import collections
 import sys
-import re
-from datetime import datetime
 import uuid
+from datetime import datetime
 
 import pytz
+import requests
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
-import requests
 from pydash import strings
 
 from common.constants import NOT_ALLOWED_USERNAMES
@@ -75,6 +76,19 @@ def date_unix(date):
 
 def any_in(a, b):
     return any(i in b for i in a)
+
+collections.MutableMapping.register(collections.OrderedDict)
+
+
+def flatten(d, parent_key='', sep='.'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
 @deconstructible
