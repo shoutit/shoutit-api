@@ -19,7 +19,8 @@ from ..serializers import ConversationSerializer, MessageSerializer
 from ..views.viewsets import UUIDViewSetMixin
 
 
-class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
+                          viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
@@ -66,6 +67,36 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
               paramType: query
         """
         return super(ConversationViewSet, self).list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a Conversation
+        ###Example Response
+        <pre><code>
+        {
+          "id": "73e43221-1f65-42c3-8c3e-82325a3e23ff",
+          "created_at": 1458658338,
+          "modified_at": 1458742115,
+          "web_url": "http://shoutit.dev:8080/conversation/73e43221-1f65-42c3-8c3e-82325a3e23ff",
+          "type": "chat",
+          "messages_count": 3,
+          "unread_messages_count": 0,
+          "subject": "",
+          "icon": "",
+          "admins": [
+            "9fc0be8e-a92f-4113-975d-148def4fb2e4"
+          ],
+          "profiles": "[List of Profile Objects]",
+          "last_message": "{Message Object}",
+          "about": null,
+          "messages_url": "http://shoutit.dev:8000/v3/conversations/73e43221-1f65-42c3-8c3e-82325a3e23ff/messages",
+          "reply_url": "http://shoutit.dev:8000/v3/conversations/73e43221-1f65-42c3-8c3e-82325a3e23ff/reply"
+        }
+        </code></pre>
+        ---
+        serializer: ConversationSerializer
+        """
+        return super(ConversationViewSet, self).retrieve(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         """
