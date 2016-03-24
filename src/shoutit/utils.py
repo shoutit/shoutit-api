@@ -22,7 +22,6 @@ from django.core.exceptions import ValidationError
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
 # from django.dispatch import receiver
-from django.http import HttpResponse
 from django.utils.timezone import now as django_now
 from django_rq import job
 import nexmo as nexmo

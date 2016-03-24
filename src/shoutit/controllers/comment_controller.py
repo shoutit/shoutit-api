@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
+
 from django.core.exceptions import ObjectDoesNotExist
 
-from common.constants import *  # NOQA
+from shoutit.controllers import shout_controller, notifications_controller
+from shoutit.models import Comment
 
 
 def CommentOnPost(user, post_id, text):
@@ -52,7 +54,3 @@ def DeleteComment(comment_id):
     if comment:
         comment.is_disabled = True
         comment.save()
-
-
-from shoutit.controllers import shout_controller, notifications_controller
-from shoutit.models import Comment

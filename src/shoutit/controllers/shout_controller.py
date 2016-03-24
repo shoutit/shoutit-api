@@ -35,12 +35,10 @@ def get_post(post_id, find_muted=False, find_expired=False):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         begin = _today - days
         post = post.filter(
-            (~Q(type=POST_TYPE_REQUEST) & ~Q(type=POST_TYPE_OFFER))
-            |
-            ((Q(shout__expiry_date__isnull=True, date_published__range=(begin, _today))
-
-              | Q(shout__expiry_date__isnull=False, date_published__lte=F('shout__expiry_date')))
-             & (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)))
+            (~Q(type=POST_TYPE_REQUEST) & ~Q(type=POST_TYPE_OFFER)) |
+            ((Q(shout__expiry_date__isnull=True, date_published__range=(begin, _today)) |
+              Q(shout__expiry_date__isnull=False, date_published__lte=F('shout__expiry_date'))) &
+             (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)))
         ).select_related()
     if post:
         post = post[0]

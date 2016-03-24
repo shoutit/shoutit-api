@@ -198,8 +198,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         # Todo: improve!
         search = request.query_params.get('search', '')
-        category = request.query_params.get('category')
-        country = request.query_params.get('country')
+        # category = request.query_params.get('category')
+        # country = request.query_params.get('country')
         if len(search) >= 2:
             terms = list(Tag.objects.filter(name__istartswith=search).values_list('name', flat=True)[:10])
             random.shuffle(terms)

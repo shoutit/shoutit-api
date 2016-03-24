@@ -42,7 +42,7 @@ def mark_notifications_as_read_by_ids(notification_ids):
 
 
 def serialize_attached_object(attached_object, user, request):
-    from shoutit.api.v2 import serializers as v2_serializers
+    # from shoutit.api.v2 import serializers as v2_serializers
     from shoutit.api.v3 import serializers as v3_serializers
 
     # Todo: serialize based on user's api client version

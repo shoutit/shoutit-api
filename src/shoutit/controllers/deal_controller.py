@@ -1,19 +1,26 @@
 from __future__ import unicode_literals
-import StringIO
-from datetime import datetime
-import urllib2
 
-from django.core.exceptions import ObjectDoesNotExist
-from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
-from reportlab.lib.colors import orange
-from geraldo.utils import cm, BAND_WIDTH, TA_RIGHT
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
-from geraldo.generators import PDFGenerator
+import StringIO
+import urllib2
+from datetime import datetime
+
 import reportlab.graphics.barcode
 from PIL.Image import open as image_open
+from django.core.exceptions import ObjectDoesNotExist
+from geraldo import Report, ReportBand, DetailBand, SystemField, Label, ObjectValue, Image, Rect
+from geraldo.generators import PDFGenerator
+from geraldo.utils import cm, BAND_WIDTH, TA_RIGHT
+from reportlab.lib.colors import orange
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 
-from shoutit.models import DealBuy, Voucher, Shout
+import shoutit.controllers.email_controller
+import shoutit.controllers.item_controller
+import shoutit.controllers.payment_controller
+import shoutit.controllers.tag_controller
+from common.constants import POST_TYPE_DEAL
 from shoutit.controllers import item_controller
+from shoutit.models import Deal
+from shoutit.models import DealBuy, Voucher, Shout
 
 
 def ShoutDeal(name, description, price, images, currency, tags, expiry_date, min_buyers, max_buyers,
@@ -346,11 +353,3 @@ def GetOpenDeals(user=None, business=None, start_index=None, end_index=None, cou
 
 def HasUserBoughtDeal(user, deal):
     return len(DealBuy.objects.filter(user=user, Deal=deal)) > 0
-
-
-import shoutit.controllers.tag_controller
-import shoutit.controllers.email_controller
-import shoutit.controllers.item_controller
-import shoutit.controllers.payment_controller
-from shoutit.models import Deal
-from common.constants import POST_TYPE_DEAL

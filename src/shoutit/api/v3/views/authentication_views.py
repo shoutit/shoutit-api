@@ -10,7 +10,6 @@ from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.models import AccessToken, RefreshToken, Client
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.utils import now
-from provider.views import OAuthError
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
@@ -20,7 +19,7 @@ from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
 from shoutit.models import ConfirmToken
-from shoutit.utils import track, alias, error_logger
+from shoutit.utils import track, alias
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,

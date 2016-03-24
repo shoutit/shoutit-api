@@ -51,7 +51,7 @@ class DateTimePagination(CursorPagination):
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__lt': datetime.utcfromtimestamp(int(before_query_param) - 1 )
+                    self.datetime_attribute + '__lt': datetime.utcfromtimestamp(int(before_query_param) - 1)
                 }
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 

@@ -1,6 +1,10 @@
 from __future__ import unicode_literals
+
 from django.core.exceptions import ObjectDoesNotExist
+
 from common.constants import *  # NOQA
+from shoutit.controllers import shout_controller, notifications_controller
+from shoutit.models import Experience, Post, Business, SharedExperience, Comment, Profile
 
 
 def PostExperience(user, state, text, businessProfile):
@@ -118,7 +122,3 @@ def getDetailedExperience(user, experience, sharedExperiences, comments):
     experience.canShare = user != experience.user and user != experience.AboutBusiness.user and user not in experience.usersSharedExperience
     experience.canEdit = user == experience.user and not experience.sharedExpsCount and not experience.commentsCount
     experience.isOwner = True if experience.user == user else False
-
-
-from shoutit.controllers import shout_controller, notifications_controller
-from shoutit.models import Experience, Post, Business, SharedExperience, Comment, Profile

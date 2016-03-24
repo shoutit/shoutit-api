@@ -5,6 +5,7 @@
 from __future__ import unicode_literals, print_function
 from settings_env import *  # NOQA
 from common.utils import get_address_port, check_offline_mood
+from django.utils.translation import ugettext_lazy as _
 
 OFFLINE_MODE = check_offline_mood()
 # Quick-start development settings - unsuitable for production
@@ -291,9 +292,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-ugettext = lambda s: s
 LANGUAGES = (
-    ('en', ugettext('English')),
+    ('en', _('English')),
 )
 DEFAULT_LANGUAGE_CODE = 'en'
 

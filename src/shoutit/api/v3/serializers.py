@@ -23,7 +23,7 @@ from rest_framework.settings import api_settings
 
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
-    ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
+    TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import location_controller
@@ -910,7 +910,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     users = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                               read_only=True)
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
-                              read_only=True)
+                                 read_only=True)
     last_message = MessageSerializer(required=False)
     type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display',
                                    help_text="'chat', 'about_shout' or 'public_chat'")

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -43,12 +43,9 @@ class PostManager(models.Manager):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
-            Q(type=POST_TYPE_EXPERIENCE)
-            | (
-                (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER))
-                & (
-                    Q(shout__expiry_date__isnull=True, date_published__range=(day, today))
-                    |
+            Q(type=POST_TYPE_EXPERIENCE) | (
+                (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)) & (
+                    Q(shout__expiry_date__isnull=True, date_published__range=(day, today)) |
                     Q(shout__expiry_date__isnull=False, shout__expiry_date__gte=today)
                 )
             )
