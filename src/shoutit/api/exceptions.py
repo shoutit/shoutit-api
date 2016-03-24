@@ -10,7 +10,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response as DRFResponse
 from rest_framework.views import exception_handler as v2_exception_handler
 
-from v3.exceptions import drf_exception_handler as v3_exception_handler, django_exception_handler
+from v3.views.exception_views import drf_exception_handler as v3_exception_handler, django_exception_handler
 
 
 def exception_handler(exc, context):
@@ -37,7 +37,7 @@ class APIExceptionMiddleware(object):
         if getattr(response, 'is_final', False):
             return response
         if 400 <= response.status_code <= 599:
-            # DRF Response (API call)
+            # DRF Response (API call) e.g. those returned from views directly without raising exceptions
             if isinstance(response, DRFResponse):
                 version = response.renderer_context['request'].version
                 if version == 'v3':
@@ -46,7 +46,7 @@ class APIExceptionMiddleware(object):
                     context = getattr(response, 'renderer_context', {})
                     return v3_exception_handler(exc, context)
 
-            # Django Response (Other call)
+            # Django Response (Other call) e.g. those returned by Django on internal server errors
             else:
                 return django_exception_handler(response)
 

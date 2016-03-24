@@ -77,18 +77,34 @@ def date_unix(date):
 def any_in(a, b):
     return any(i in b for i in a)
 
-collections.MutableMapping.register(collections.OrderedDict)
 
-
-def flatten(d, parent_key='', sep='.'):
+def dict_flatten(d, parent_key='', sep='.'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
         if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
+            items.extend(dict_flatten(v, new_key, sep=sep).items())
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+def json_flatten(y, sep='.'):
+    out = {}
+
+    def _flatten(x, name=''):
+        if isinstance(x, dict):
+            for a in x:
+                _flatten(x[a], name + a + sep)
+        elif isinstance(x, list):
+            i = 0
+            for a in x:
+                _flatten(a, name + str(i) + sep)
+                i += 1
+        else:
+            out[str(name[:-1])] = str(x)
+    _flatten(y)
+    return out
 
 
 @deconstructible
