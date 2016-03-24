@@ -73,10 +73,10 @@ def drf_exception_handler(exc, context):
     return exception_response(data, status_code, headers)
 
 
-def process_validation_dict_errors(detail, key_suffix='', sep='.'):
+def process_validation_dict_errors(detail, parent_key='', sep='.'):
     errors = []
     # Flatten the errors dict not to worry about errors of nested fields
-    items = dict_flatten(detail).items()
+    items = dict_flatten(detail, sep=sep).items()
     for key, value in items:
         if '.non_field_errors' in key:
             key = key.split('.non_field_errors')[0]
@@ -95,7 +95,7 @@ def process_validation_dict_errors(detail, key_suffix='', sep='.'):
             elif all(isinstance(item, dict) for item in value):
                 i = 0
                 for item in value:
-                    errors.extend(process_validation_dict_errors(item, key + sep + str(i) + sep))
+                    errors.extend(process_validation_dict_errors(item, key + sep + str(i)))
                 continue
 
             # List with single tuple ([message], reason, type)
@@ -125,12 +125,12 @@ def process_validation_dict_errors(detail, key_suffix='', sep='.'):
             error_logger.warning("Unexpected exception detail", extra={'detail': detail})
             continue
 
-        # Todo: Check with developers about returning list of messages or should it be concatenated
-        if isinstance(error_message, list) and len(error_message) == 1:
+        # Return single message for each inner error
+        if isinstance(error_message, list):
             error_message = error_message[0]
 
         error = {
-            'location': key_suffix + key,
+            'location': parent_key + sep + key if parent_key else key,
             'location_type': error_location_type,
             'reason': error_reason,
             'message': error_message
