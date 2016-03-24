@@ -86,11 +86,11 @@ class PushTokensSerializer(serializers.Serializer):
     gcm = serializers.CharField(allow_null=True, required=False)
 
     def to_internal_value(self, data):
-        apns = data.get('apns')
-        gcm = data.get('gcm')
-        if apns and gcm:
-            raise ValidationError({'error': "Only one of `apns` or `gcm` is required not both"})
         ret = super(PushTokensSerializer, self).to_internal_value(data)
+        apns = ret.get('apns')
+        gcm = ret.get('gcm')
+        if apns and gcm:
+            raise ValidationError((["Only one of `apns` or `gcm` is required not both"], 'required', 'body'))
         return ret
 
 
@@ -657,6 +657,8 @@ class ShoutSerializer(serializers.ModelSerializer):
             data = {}
         # validate the id only when sharing the shout as message attachment
         if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
+            if not isinstance(data, dict):
+                raise ValidationError(['Invalid data. Expected a dictionary, but got %s' % type(data).__name__])
             shout_id = data.get('id')
             if shout_id == '':
                 raise ValidationError({'id': ['This field can not be empty.']})
@@ -666,10 +668,10 @@ class ShoutSerializer(serializers.ModelSerializer):
                     if not Shout.objects.filter(id=shout_id).exists():
                         raise ValidationError({'id': ["shout with id '%s' does not exist" % shout_id]})
                     return {'id': shout_id}
-                except (ValueError, TypeError):
+                except (ValueError, TypeError, AttributeError):
                     raise ValidationError({'id': ["'%s' is not a valid id." % shout_id]})
             else:
-                raise ValidationError({'id': ["This field is required."]})
+                raise ValidationError({'id': ("This field is required.", 'required', 'body')})
 
         # Optional price and currency
         price_is_none = data.get('price') is None
