@@ -11,11 +11,11 @@ from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
 from shoutit.api.renderers import PlainTextRenderer
+from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
 from shoutit.controllers import location_controller
 from shoutit.controllers.facebook_controller import (update_linked_facebook_account_scopes,
                                                      delete_linked_facebook_account)
@@ -117,13 +117,13 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             page_size = int(data.get('page_size', 5))
         except ValueError:
-            raise ValidationError({'error': "Invalid `page_size`"})
+            raise InvalidParameter('page_size', "Invalid `page_size`")
         type_qp = data.get('type', 'users,pages,tags,shouts,shout')
         country = data.get('country')
         try:
             types = type_qp.split(',')
         except:
-            raise ValidationError({'error': "Invalid `type` parameter"})
+            raise InvalidParameter('type', "Invalid `type`")
 
         suggestions = OrderedDict()
 
@@ -229,12 +229,14 @@ class MiscViewSet(viewsets.ViewSet):
         GET: /misc/geocode?latlng=40.722100,-74.046900
         ```
         """
+        latlng = request.query_params.get('latlng')
+        if not latlng:
+            raise RequiredParameter('latlng')
         try:
-            latlng = request.query_params.get('latlng', '')
             lat = float(latlng.split(',')[0])
             lng = float(latlng.split(',')[1])
         except Exception:
-            raise ValidationError({'latlng': ['missing or wrong latlng parameter']})
+            raise InvalidParameter('latlng', 'Invalid `latlng`')
         ip = get_real_ip(request)
         location = location_controller.from_location_index(lat, lng, ip)
         return Response(location)

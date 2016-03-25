@@ -6,7 +6,7 @@ import requests
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
-from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN
+from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 from shoutit.controllers import location_controller
@@ -120,8 +120,8 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     try:
         LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
     except IntegrityError as e:
-        print "create g+ la error", str(e)
-        raise GPLUS_LINK_ERROR_TRY_AGAIN
+        raise ShoutitBadRequest(message="Could not access your G+ account, try again later",
+                                developer_message=str(e))
 
     set_profile_image(user.profile, gplus_user['image']['url'].split('?')[0])
     return user

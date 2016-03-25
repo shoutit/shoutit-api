@@ -6,12 +6,13 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.decorators import detail_route
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
 from shoutit.api.permissions import CanContribute
+from shoutit.api.v3.exceptions import RequiredBody, InvalidBody
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination
@@ -257,17 +258,18 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         headers = self.get_success_message_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['post'], suffix='Add User')
-    def add_user(self, request, *args, **kwargs):
+    # Todo: refactor and move validation to Serializer since the logic is being repeated in three methods
+    @detail_route(methods=['post'], suffix='Add Profile')
+    def add_profile(self, request, *args, **kwargs):
         """
-        Add user to this conversation.
+        Add profile to this conversation.
         ###REQUIRES AUTH
-        The logged in user should be admin in the conversation and the newly added user should be one of his listeners.
+        The logged in profile should be admin in the conversation and the newly added profile should be one of his listeners.
         ###Request
         ####Body
         <pre><code>
         {
-            "user_id": "id of the user to be added"
+            "profile_id": "id of the profile to be added"
         }
         </code></pre>
         ---
@@ -282,31 +284,32 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         adder = request.user
         if adder.id not in conversation.admins:
             raise PermissionDenied()
-        new_user_id = request.data.get('user_id')
+        new_profile_id = request.data.get('profile_id')
         try:
-            if not new_user_id:
-                raise ValueError()
-            new_user = User.objects.get(id=new_user_id)
+            if not new_profile_id:
+                raise RequiredBody('new_profile_id')
+            new_profile = User.objects.get(id=new_profile_id)
         except User.DoesNotExist:
-            raise ValidationError({'user_id': "user with id '%s' does not exist" % new_user_id})
+            raise InvalidBody('profile_id', "Profile with id '%s' does not exist" % new_profile_id)
         except:
-            raise ValidationError({'user_id': "Invalid user_id"})
-        if not new_user.is_listening(adder):
-            raise ValidationError({'user_id': "The user you are trying to add is not one of your listeners"})
-        conversation.users.add(new_user)
-        return Response({'success': "Added '%s' to the conversation" % new_user.name}, status=status.HTTP_202_ACCEPTED)
+            raise InvalidBody('profile_id', "Invalid profile_id")
+        if not new_profile.is_listening(adder):
+            msg = "The profile you are trying to add is not one of your listeners"
+            raise InvalidBody('profile_id', msg)
+        conversation.users.add(new_profile)
+        return Response({'success': "Added '%s' to the conversation" % new_profile.name}, status=status.HTTP_202_ACCEPTED)
 
-    @detail_route(methods=['post'], suffix='Remove User')
-    def remove_user(self, request, *args, **kwargs):
+    @detail_route(methods=['post'], suffix='Remove Profile')
+    def remove_profile(self, request, *args, **kwargs):
         """
-        Remove user from this conversation.
+        Remove profile from this conversation.
         ###REQUIRES AUTH
-        The logged in user should be admin in the conversation.
+        The logged in profile should be admin in the conversation.
         ###Request
         ####Body
         <pre><code>
         {
-            "user_id": "id of the user to be removed"
+            "profile_id": "id of the profile to be removed"
         }
         </code></pre>
         ---
@@ -321,32 +324,33 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         adder = request.user
         if adder.id not in conversation.admins:
             raise PermissionDenied()
-        existing_user_id = request.data.get('user_id')
+        existing_profile_id = request.data.get('profile_id')
         try:
-            if not existing_user_id:
-                raise ValueError()
-            existing_user = User.objects.get(id=existing_user_id)
+            if not existing_profile_id:
+                raise RequiredBody('new_profile_id')
+            existing_profile = User.objects.get(id=existing_profile_id)
         except User.DoesNotExist:
-            raise ValidationError({'user_id': "user with id '%s' does not exist" % existing_user_id})
+            raise InvalidBody('profile_id', "Profile with id '%s' does not exist" % existing_profile_id)
         except:
-            raise ValidationError({'user_id': "Invalid user_id"})
-        if not conversation.users.filter(id=existing_user.id).exists():
-            raise ValidationError({'user_id': "The user you are trying to remove is not a member of this conversation"})
-        conversation.users.remove(existing_user)
-        return Response({'success': "Removed '%s' from the conversation" % existing_user.name},
+            raise InvalidBody('profile_id', "Invalid profile_id")
+        if not conversation.users.filter(id=existing_profile.id).exists():
+            msg = "The profile you are trying to remove is not a member of this conversation"
+            raise InvalidBody('profile_id', msg)
+        conversation.users.remove(existing_profile)
+        return Response({'success': "Removed '%s' from the conversation" % existing_profile.name},
                         status=status.HTTP_202_ACCEPTED)
 
-    @detail_route(methods=['post'], suffix='Promote User to admin')
+    @detail_route(methods=['post'], suffix='Promote Profile to admin')
     def promote_admin(self, request, *args, **kwargs):
         """
-        Promote user to admin in this conversation.
+        Promote profile to admin in this conversation.
         ###REQUIRES AUTH
-        The logged in user should be admin in the conversation.
+        The logged in profile should be admin in the conversation.
         ###Request
         ####Body
         <pre><code>
         {
-            "user_id": "id of the user to be promoted"
+            "profile_id": "id of the profile to be promoted"
         }
         </code></pre>x
         ---
@@ -361,21 +365,21 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         adder = request.user
         if adder.id not in conversation.admins:
             raise PermissionDenied()
-        existing_user_id = request.data.get('user_id')
+        existing_profile_id = request.data.get('profile_id')
         try:
-            if not existing_user_id:
-                raise ValueError()
-            existing_user = User.objects.get(id=existing_user_id)
+            if not existing_profile_id:
+                raise RequiredBody('new_profile_id')
+            existing_profile = User.objects.get(id=existing_profile_id)
         except User.DoesNotExist:
-            raise ValidationError({'user_id': "user with id '%s' does not exist" % existing_user_id})
+            raise InvalidBody('profile_id', "Profile with id '%s' does not exist" % existing_profile_id)
         except:
-            raise ValidationError({'user_id': "Invalid user_id"})
-        if not conversation.users.filter(id=existing_user.id).exists():
-            raise ValidationError(
-                {'user_id': "The user you are trying to promote is not a member of this conversation"})
-        conversation.admins.append(existing_user.pk)
+            raise InvalidBody('profile_id', "Invalid profile_id")
+        if not conversation.users.filter(id=existing_profile.id).exists():
+            msg = "The profile you are trying to promote is not a member of this conversation"
+            raise InvalidBody('profile_id', msg)
+        conversation.admins.append(existing_profile.pk)
         conversation.save()
-        return Response({'success': "Promoted '%s' to admin in this conversation" % existing_user.name},
+        return Response({'success': "Promoted '%s' to admin in this conversation" % existing_profile.name},
                         status=status.HTTP_202_ACCEPTED)
 
     def get_success_message_headers(self, data):

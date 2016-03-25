@@ -12,12 +12,14 @@ from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.utils import now
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
-from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
+from shoutit.api.v3.exceptions import (ERROR_REASON, ShoutitBadRequest, RequiredBody, InvalidBody,
+                                       RequiredParameter, InvalidParameter)
 from shoutit.models import ConfirmToken
 from shoutit.utils import track, alias
 from ..serializers import (
@@ -65,7 +67,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = access_token.user
         if not user.is_active:
-            raise AuthenticationFailed('User inactive or deleted.')
+            raise AuthenticationFailed('Account inactive or deleted.')
 
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
@@ -467,24 +469,20 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         self.action = 'post'
 
         if provider_constants.ENFORCE_SECURE and not request.is_secure():
-            raise ValidationError({
-                'error': 'invalid_request',
-                'error_description': "A secure connection is required."
-            })
+            raise ShoutitBadRequest(message="Authentication failed",
+                                    developer_message="A secure connection is required",
+                                    reason=ERROR_REASON.INSECURE_CONNECTION)
 
         if 'grant_type' not in request.data:
-            raise ValidationError({
-                'error': 'invalid_request',
-                'error_description': "No 'grant_type' included in the request."
-            })
+            raise RequiredBody('grant_type', message="Authentication failed")
 
         grant_type = request.data.get('grant_type')
         if grant_type not in self.grant_types:
-            raise ValidationError({'grant_type': 'unsupported_grant_type'})
+            raise InvalidBody('grant_type', message="Unsupported grant_type")
 
         client = self.authenticate(request)
         if client is None:
-            raise ValidationError({'client': 'invalid_client'})
+            raise InvalidBody('client', message="Authentication failed", developer_message="Invalid client")
         request.client = client
         request.is_test = client.name == 'shoutit-test'
 
@@ -516,7 +514,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         user = access_token.user
         if not user.is_active:
-            raise AuthenticationFailed('User inactive or deleted.')
+            raise AuthenticationFailed("Account inactive or deleted.")
 
         # set the request user in case it is not set
         self.request.user = user
@@ -704,14 +702,14 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         if request.method == 'GET':
             token = request.query_params.get('token')
             if not token:
-                raise ValidationError({'token': "This parameter is required."})
+                raise RequiredParameter('token')
             try:
                 cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token)
                 if cf.is_disabled:
                     raise ValueError()
                 user = cf.user
                 if not user.is_active:
-                    raise AuthenticationFailed('User inactive or deleted.')
+                    raise AuthenticationFailed("Account inactive or deleted")
                 user.activate()
                 cf.is_disabled = True
                 cf.save(update_fields=['is_disabled'])
@@ -721,15 +719,15 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
                 except Exception:
-                    return self.success_response("Your email has been verified.")
+                    return self.success_response("Your email has been verified")
             except ConfirmToken.DoesNotExist:
-                raise ValidationError("Token does not exist.")
+                raise InvalidParameter('token', "Token does not exist")
             except ValueError:
-                raise ValidationError("Email address is already verified.")
+                raise ShoutitBadRequest("Email address is already verified")
 
         elif request.method == 'POST':
             if request.user.is_anonymous():
-                return Response({"detail": "Authentication credentials were not provided."},
+                return Response({"detail": "Authentication credentials were not provided"},
                                 status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
                 return self.success_response("Your email '{}' is already verified.".format(request.user.email))

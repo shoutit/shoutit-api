@@ -5,10 +5,12 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
+import sys
 from django.conf import settings
 from django.core import exceptions as django_exceptions
 from django.http import Http404, JsonResponse
 from django.utils.translation import ugettext_lazy as _
+from raven.utils.encoding import force_text
 from request_id import get_current_request_id
 from rest_framework import exceptions as drf_exceptions, status
 from rest_framework.compat import set_rollback
@@ -16,8 +18,27 @@ from rest_framework.request import _hasattr
 from rest_framework.response import Response
 
 from common.utils import dict_flatten
-from shoutit.api.v3.exceptions import ShoutitAPIException, ERROR_REASON, ERROR_LOCATION_TYPE
+from shoutit.api.v3.exceptions import ShoutitAPIException, ERROR_REASON, ERROR_LOCATION_TYPE, _force_text_recursive
 from shoutit.utils import error_logger
+
+# key: (message, reason)
+drf_exceptions_map = {
+    drf_exceptions.ParseError: ("Bad request", ERROR_REASON.PARSE_ERROR),
+    drf_exceptions.AuthenticationFailed: ("Authentication failed", ERROR_REASON.AUTH_FAILED),
+    drf_exceptions.NotAuthenticated: ("Not authenticated", ERROR_REASON.NOT_AUTHENTICATED),
+    drf_exceptions.PermissionDenied: ("Action not allowed", ERROR_REASON.PERMISSION_DENIED),
+    drf_exceptions.NotFound: ("Resource not found", ERROR_REASON.NOT_FOUND),
+    drf_exceptions.MethodNotAllowed: ("Request not allowed", ERROR_REASON.METHOD_NOT_ALLOWED),
+    drf_exceptions.UnsupportedMediaType: ("Bad request", ERROR_REASON.UNSUPPORTED_MEDIA_TYPE),
+    drf_exceptions.Throttled: ("Too many requests", ERROR_REASON.THROTTLED),
+}
+
+# key: (code, message, developer_message, reason)
+other_exceptions_map = {
+    Http404: (status.HTTP_400_BAD_REQUEST, _('Resource not found.'), "", ERROR_REASON.NOT_FOUND),
+    django_exceptions.PermissionDenied: (status.HTTP_403_FORBIDDEN,
+                                         _('Permission denied.'), "", ERROR_REASON.PERMISSION_DENIED)
+}
 
 
 def drf_exception_handler(exc, context):
@@ -35,38 +56,37 @@ def drf_exception_handler(exc, context):
 
     elif isinstance(exc, drf_exceptions.APIException):
         status_code = exc.status_code
+        reason = ERROR_REASON.BAD_REQUEST if status.is_client_error(status_code) else ERROR_REASON.SERVER_ERROR
+
         if getattr(exc, 'auth_header', None):
             headers['WWW-Authenticate'] = exc.auth_header
         if getattr(exc, 'wait', None):
             headers['Retry-After'] = '%d' % exc.wait
 
-        if isinstance(exc.detail, dict):
+        if exc.__class__ in drf_exceptions_map:
+            message, reason = drf_exceptions_map[exc.__class__]
+            developer_message = exc.detail
+            errors = [{'message': message, 'reason': reason}]
+
+        elif isinstance(exc.detail, dict):
             message = _("Invalid input")
             errors = process_validation_dict_errors(exc.detail)
-        elif isinstance(exc.detail, list):
-            message = exc.detail
-            errors = [{'message': unicode(message)}]
+
         else:
             message = exc.detail
-            errors = [{'message': unicode(message)}]
+            errors = [{'message': message, 'reason': reason}]
 
-    elif isinstance(exc, Http404):
-        status_code = status.HTTP_400_BAD_REQUEST
-        message = _('Resource not found.')
-        errors = [{'message': unicode(message)}]
-
-    elif isinstance(exc, django_exceptions.PermissionDenied):
-        status_code = status.HTTP_403_FORBIDDEN
-        message = _('Permission denied.')
-        errors = [{'message': unicode(message)}]
+    elif exc.__class__ in other_exceptions_map:
+        status_code, message, developer_message, reason = other_exceptions_map[exc.__class__]
+        errors = [{'message': message, 'developer_message': developer_message, 'reason': reason}]
 
     else:
         if settings.DEBUG and not settings.FORCE_SENTRY:
             return None
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        message = _('Server Error, please try again later.')
+        message = _('Server Error, try again later.')
         developer_message = unicode(exc)
-        errors = [{'message': unicode(message)}]
+        errors = [{'message': message}]
 
     data = exception_response_date(status_code, message, developer_message, errors)
     log_drf_exception(exc, data, status_code, context)
@@ -78,8 +98,7 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
     # Flatten the errors dict not to worry about errors of nested fields
     items = dict_flatten(detail, sep=sep).items()
     for key, value in items:
-        if '.non_field_errors' in key:
-            key = key.split('.non_field_errors')[0]
+        key = key.replace('non_field_errors', '').replace('..', '.')
         error_location_type = ERROR_LOCATION_TYPE.BODY
         error_reason = ERROR_REASON.INVALID
 
@@ -96,6 +115,7 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
                 i = 0
                 for item in value:
                     errors.extend(process_validation_dict_errors(item, key + sep + str(i)))
+                    i += 1
                 continue
 
             # List with single tuple ([message], reason, type)
@@ -125,12 +145,11 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
             error_logger.warning("Unexpected exception detail", extra={'detail': detail})
             continue
 
-        # Return single message for each inner error
-        if isinstance(error_message, list):
-            error_message = error_message[0]
-
+        key = parent_key + sep + key if parent_key else key
+        if key.endswith('.'):
+            key = key[:-1]
         error = {
-            'location': parent_key + sep + key if parent_key else key,
+            'location': key,
             'location_type': error_location_type,
             'reason': error_reason,
             'message': error_message
@@ -140,15 +159,29 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
 
 
 def django_exception_handler(response):
-    headers = {}
-    status_code = response.status_code
-    message = _("Server Error, Try again later.")
-    developer_message = response.content
-    if getattr(response, 'reason_phrase', None):
-        developer_message = response.reason_phrase
-    errors = {'message': developer_message}
+    exc = sys.exc_info()[1]
+    if any(map(lambda c: isinstance(exc, c), other_exceptions_map.keys())):
+        status_code, message, developer_message, reason = (None, None, None, None)
+        for other_exception, value in other_exceptions_map.items():
+            if isinstance(exc, other_exception):
+                status_code, message, developer_message, reason = value
+                break
+    else:
+        status_code = response.status_code
+        if status.is_server_error(status_code):
+            message = _("Server Error, try again later")
+            reason = ERROR_REASON.SERVER_ERROR
+        else:
+            message = _("Bad request")
+            reason = ERROR_REASON.BAD_REQUEST
+        if exc:
+            developer_message = "%s: %s" % (exc.__class__.__name__, str(exc))
+        else:
+            developer_message = getattr(response, 'reason_phrase', "Contact server admin with `request_id`")
+
+    errors = [{'message': message, 'reason': reason}]
     data = exception_response_date(status_code, message, developer_message, errors)
-    return exception_response(data, status_code, headers, django=True)
+    return exception_response(data, status_code, headers={}, django=True)
 
 
 def set_django_response_headers(res, headers):
@@ -158,13 +191,18 @@ def set_django_response_headers(res, headers):
 
 
 def exception_response_date(status_code, message, developer_message, errors):
+    # Return single message for each inner error
+    for inner_error in errors:
+        if isinstance(inner_error, dict) and isinstance(inner_error.get('message'), list):
+            inner_error['message'] = inner_error['message'][0]
+
     error_data = {
         'error': OrderedDict([
             ('code', status_code),
-            ('message', unicode(message)),
-            ('developer_message', developer_message),
+            ('message', force_text(message)),
+            ('developer_message', force_text(developer_message)),
             ('request_id', get_current_request_id()),
-            ('errors', errors)
+            ('errors', _force_text_recursive(errors))
         ])
     }
     return error_data

@@ -26,6 +26,7 @@ from common.constants import (
     TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType)
 from common.utils import any_in
+from shoutit.api.v3.exceptions import ERROR_REASON, ERROR_LOCATION_TYPE
 from shoutit.controllers import location_controller
 from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
@@ -71,9 +72,7 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
         else:
-            raise ValidationError({
-                'non_field_errors': "Could not find [latitude and longitude] or figure the IP Address"
-            })
+            raise ValidationError("Could not find (`latitude` and `longitude`) or figure the IP Address")
 
         if address:
             location.update({'address': address})
@@ -90,7 +89,7 @@ class PushTokensSerializer(serializers.Serializer):
         apns = ret.get('apns')
         gcm = ret.get('gcm')
         if apns and gcm:
-            raise ValidationError((["Only one of `apns` or `gcm` is required not both"], 'required', 'body'))
+            raise ValidationError("Only one of `apns` or `gcm` is required not both")
         return ret
 
 
@@ -225,7 +224,7 @@ class CategorySerializer(serializers.ModelSerializer):
         try:
             self.instance = Category.objects.get(slug=value)
         except (Category.DoesNotExist, AttributeError):
-            raise ValidationError(["Category with slug '%s' does not exist" % value])
+            raise ValidationError("Category with slug '%s' does not exist" % value)
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)
@@ -286,17 +285,17 @@ class ProfileSerializer(serializers.ModelSerializer):
         # todo: refactor
         user_id = data.get('id')
         if user_id == '':
-            raise ValidationError({'id': 'This field can not be empty.'})
+            raise ValidationError({'id': 'This field can not be empty'})
         if user_id:
             try:
                 uuid.UUID(user_id)
                 if not User.objects.filter(id=user_id).exists():
-                    raise ValidationError("user with id '{}' does not exist".format(user_id))
+                    raise ValidationError({'id': "Profile with id '%s' does not exist" % user_id})
                 ret['id'] = user_id
             except (ValueError, TypeError):
-                raise ValidationError({'id': "'%s' is not a valid id." % user_id})
+                raise ValidationError({'id': "'%s' is not a valid id" % user_id})
         else:
-            raise ValidationError({'id': "This field is required."})
+            raise ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED, ERROR_LOCATION_TYPE.BODY)})
 
         return ret
 
@@ -411,7 +410,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         # Force partial=false validation for video
         errors = OrderedDict()
         has_video = 'video' in data
-        profile_data = validated_data.get('profile', {})
+        profile_data = validated_data.get('ap', {})
         video_data = profile_data.get('video', {})
         if has_video and isinstance(video_data, OrderedDict):
             vs = VideoSerializer(data=video_data)
@@ -426,7 +425,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         user = self.context['request'].user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise ValidationError(["Email is already used by another user."])
+            raise ValidationError("Email is already used by another profile")
         return email
 
     def validate_website(self, website):
@@ -649,7 +648,7 @@ class ShoutSerializer(serializers.ModelSerializer):
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except (Currency.DoesNotExist, ValueError):
-            raise ValidationError(['Invalid currency'])
+            raise ValidationError('Invalid currency')
 
     def to_internal_value(self, data):
         # Make sure no empty JSON body was posted
@@ -658,26 +657,26 @@ class ShoutSerializer(serializers.ModelSerializer):
         # validate the id only when sharing the shout as message attachment
         if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
             if not isinstance(data, dict):
-                raise ValidationError(['Invalid data. Expected a dictionary, but got %s' % type(data).__name__])
+                raise ValidationError('Invalid data. Expected a dictionary, but got %s' % type(data).__name__)
             shout_id = data.get('id')
             if shout_id == '':
-                raise ValidationError({'id': ['This field can not be empty.']})
+                raise ValidationError({'id': 'This field can not be empty'})
             if shout_id:
                 try:
                     uuid.UUID(shout_id)
                     if not Shout.objects.filter(id=shout_id).exists():
-                        raise ValidationError({'id': ["shout with id '%s' does not exist" % shout_id]})
+                        raise ValidationError({'id': "Shout with id '%s' does not exist" % shout_id})
                     return {'id': shout_id}
                 except (ValueError, TypeError, AttributeError):
-                    raise ValidationError({'id': ["'%s' is not a valid id." % shout_id]})
+                    raise ValidationError({'id': "'%s' is not a valid id" % shout_id})
             else:
-                raise ValidationError({'id': ("This field is required.", 'required', 'body')})
+                raise ValidationError({'id': ("This field is required", 'required', 'body')})
 
         # Optional price and currency
         price_is_none = data.get('price') is None
         currency_is_none = data.get('currency') is None
         if price_is_none != currency_is_none:
-            raise ValidationError({'price': ["price and currency must be either both set or both null"]})
+            raise ValidationError({'price': "price and currency must be either both set or both `null`"})
         # Optional category defaults to "Other"
         if data.get('category') is None:
             data['category'] = 'other'
@@ -781,7 +780,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             case_1 = shout_type is POST_TYPE_REQUEST and title
             case_2 = shout_type is POST_TYPE_OFFER and (title or images or videos)
             if not (case_1 or case_2):
-                raise ValidationError({'error': "Not enough information to create a shout"})
+                raise ValidationError("Not enough info to create a shout")
             shout = shout_controller.create_shout(
                 user=profile, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,
@@ -848,33 +847,33 @@ class MessageSerializer(serializers.ModelSerializer):
         text = validated_data.get('text')
         errors = OrderedDict()
 
-        if text is None and attachments == []:
-            raise ValidationError({'error': "Provide 'text' or 'attachments'"})
+        if not text and not attachments:
+            # Todo: check why having string as the detail results in exception
+            # raise ValidationError("Provide 'text' or 'attachments'")
+            raise ValidationError({'': "Provide 'text' or 'attachments'"})
 
         if attachments is not None:
             if isinstance(attachments, list) and len(attachments):
+                i = 0
+                errors['attachments'] = []
                 for attachment in attachments:
+                    attachment_error = None
                     if not any_in(['shout', 'location', 'images', 'videos'], attachment):
-                        errors[
-                            'attachments'] = "attachment should have at least a 'shout', 'location', 'images' or 'videos'"
+                        attachment_error = {'': "attachment should have at least a 'shout', 'location', 'images' or 'videos'"}
+                        errors['attachments'].insert(i, attachment_error)
+                        i += 1
                         continue
-                    if 'shout' in attachment:
-                        if 'id' not in attachment['shout']:
-                            errors['attachments'] = {'shout': "shout object should have 'id'"}
-                        elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
-                            errors['attachments'] = {
-                                'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
-                        errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
-            else:
-                errors['attachments'] = "'attachments' should be a non empty list"
+                        attachment_error = {'location': "location object should have 'latitude' and 'longitude'"}
+
+                    errors['attachments'].insert(i, attachment_error or None)
+                    i += 1
+                if not any(errors['attachments']):
+                    del errors['attachments']
 
         if text is not None and text == "" and attachments is None:
             errors['text'] = "text can not be empty"
-
-        if attachments is None and text is None:
-            errors['error'] = "Provide 'text' or 'attachments'"
 
         if errors:
             raise ValidationError(errors)
@@ -1029,7 +1028,9 @@ class ReportSerializer(serializers.ModelSerializer):
         if 'attached_object' in validated_data:
             attached_object = validated_data['attached_object']
             if not ('attached_profile' in attached_object or 'attached_shout' in attached_object):
-                errors['attached_object'] = "attached_object should have either 'profile' or 'shout'"
+                error_tuple = ("attached_object should have either 'profile' or 'shout'", ERROR_REASON.REQUIRED,
+                               ERROR_LOCATION_TYPE.BODY)
+                errors['attached_object'] = error_tuple
 
             if 'attached_shout' in attached_object:
                 validated_data['type'] = 'shout'
@@ -1037,7 +1038,8 @@ class ReportSerializer(serializers.ModelSerializer):
             if 'attached_profile' in attached_object:
                 validated_data['type'] = 'profile'
         else:
-            errors['attached_object'] = ["This field is required."]
+            error_tuple = ("This field is required", ERROR_REASON.REQUIRED, ERROR_LOCATION_TYPE.BODY)
+            errors['attached_object'] = error_tuple
         if errors:
             raise ValidationError(errors)
 
@@ -1116,7 +1118,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def validate_email(self, email):
         email = email.lower()
         if User.objects.filter(email=email).exists():
-            raise ValidationError(['Email is already used by another user.'])
+            raise ValidationError('Email is already used by another user')
         return email
 
     def create(self, validated_data):
@@ -1141,10 +1143,10 @@ class ShoutitLoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+            raise ValidationError({'email': 'The email or username you entered do not belong to any account'})
 
         if not user.check_password(password):
-            raise ValidationError({'password': ['The password you entered is incorrect.']})
+            raise ValidationError({'password': 'The password you entered is incorrect'})
         self.instance = user
         if location:
             location_controller.update_profile_location(user.ap, location)
@@ -1181,8 +1183,9 @@ class ShoutitGuestSerializer(serializers.Serializer):
                 GCMDevice.objects.filter(registration_id=gcm).delete()
                 # create new device for user with gcm_token
                 GCMDevice(registration_id=gcm, user=user).save()
+        # Todo: Check when this case happens
         if not user:
-            raise ValidationError({"error": "Could not create user"})
+            raise ValidationError("Could not create guest account")
         self.instance = user
         return ret
 
@@ -1194,7 +1197,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         user = self.context.get('request').user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise ValidationError(['Email is already used by another user.'])
+            raise ValidationError('Email is already used by another account')
         return email
 
     def to_internal_value(self, data):
@@ -1221,7 +1224,7 @@ class ShoutitResetPasswordSerializer(serializers.Serializer):
             if not user.is_active:
                 raise AuthenticationFailed('User inactive or deleted.')
         except User.DoesNotExist:
-            raise ValidationError({'email': ['The email or username you entered do not belong to any account.']})
+            raise ValidationError({'email': 'The email or username you entered do not belong to any account'})
         self.instance = user
         return ret
 
@@ -1242,7 +1245,7 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         new_password2 = ret.get('new_password2')
 
         if new_password != new_password2:
-            raise ValidationError({'new_password': ['New passwords did not match.']})
+            raise ValidationError({'new_password': 'New passwords did not match'})
 
         user.set_password(new_password)
         user.save(update_fields=['password'])
@@ -1254,7 +1257,7 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         user = self.context.get('request').user
         if user.is_password_set:
             if not user.check_password(value):
-                raise ValidationError(['Old password does not match.'])
+                raise ValidationError('Old password is incorrect')
 
 
 class ShoutitSetPasswordSerializer(serializers.Serializer):
@@ -1267,7 +1270,7 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
         new_password = ret.get('new_password')
         new_password2 = ret.get('new_password2')
         if new_password != new_password2:
-            raise ValidationError({'new_password': ['New passwords did not match.']})
+            raise ValidationError({'new_password': 'New passwords did not match'})
         user = self.instance
         user.set_password(new_password)
         user.save(update_fields=['password'])
@@ -1279,10 +1282,10 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
         try:
             user = ConfirmToken.objects.get(type=TOKEN_TYPE_RESET_PASSWORD, token=value, is_disabled=False).user
             if not user.is_active:
-                raise AuthenticationFailed('User inactive or deleted.')
+                raise AuthenticationFailed('Account inactive or deleted')
             self.instance = user
         except ConfirmToken.DoesNotExist:
-            raise ValidationError(['Reset token is invalid.'])
+            raise ValidationError('Reset token is invalid')
 
 
 class ProfileDeactivationSerializer(serializers.Serializer):
@@ -1293,7 +1296,7 @@ class ProfileDeactivationSerializer(serializers.Serializer):
         password = ret.get('password')
         user = self.context.get('user')
         if not user.check_password(password):
-            raise ValidationError({'password': ['The password you entered is incorrect.']})
+            raise ValidationError({'password': 'The password you entered is incorrect'})
         user.update(is_active=False)
         return ret
 
@@ -1308,7 +1311,7 @@ class SMSCodeSerializer(serializers.Serializer):
             dbcl_conversation = DBCLConversation.objects.get(sms_code__iexact=sms_code)
             self.instance = dbcl_conversation.to_user
         except DBCLConversation.DoesNotExist:
-            raise ValidationError({'sms_code': ["Invalid sms_code"]})
+            raise ValidationError({'sms_code': "Invalid sms_code"})
         return ret
 
 

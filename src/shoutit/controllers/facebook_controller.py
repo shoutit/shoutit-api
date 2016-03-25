@@ -14,10 +14,14 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
 
-from shoutit.api.v2.exceptions import FB_LINK_ERROR_TRY_AGAIN, FB_LINK_ERROR_EMAIL, FB_LINK_ERROR_NO_LINK
+from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.controllers import location_controller, user_controller
 from shoutit.models import LinkedFacebookAccount
-from shoutit.utils import debug_logger, now_plus_delta, error_logger
+from shoutit.utils import debug_logger, now_plus_delta
+
+FB_LINK_ERROR_TRY_AGAIN = "Could not link Facebook account, try again later."
+FB_LINK_ERROR_EMAIL = "Could not access user email, make sure you allowed it."
+FB_LINK_ERROR_NO_LINK = "No Facebook account to unlink."
 
 
 def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=False):
@@ -35,16 +39,14 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
     except LinkedFacebookAccount.DoesNotExist:
         debug_logger.debug('LinkedFacebookAccount.DoesNotExist for facebook_id %s.' % facebook_id)
         if 'email' not in fb_user:
-            debug_logger.error('Facebook user has no email: %s' % json.dumps(fb_user))
-            detail = FB_LINK_ERROR_EMAIL.detail
-            detail.update({'fb_user': fb_user})
-            raise ValidationError(detail)
+            dev_msg = 'Facebook user has no email: %s' % json.dumps(fb_user)
+            debug_logger.error(dev_msg)
+            raise ShoutitBadRequest(message=FB_LINK_ERROR_EMAIL, developer_message=dev_msg)
         user = user_controller.auth_with_facebook(fb_user, facebook_access_token, initial_user, is_test)
         try:
             create_linked_facebook_account(user, facebook_access_token)
         except (DjangoValidationError, IntegrityError) as e:
-            error_logger.warn(str(e), exc_info=True)
-            raise FB_LINK_ERROR_TRY_AGAIN
+            raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(e))
 
     return user
 
@@ -92,10 +94,10 @@ def extend_token(short_lived_token):
         access_token = response_params.get('access_token')
         expires = response_params.get('expires')
         if not any((access_token, expires)):
-            raise ValueError('access_token or expires not in response: %s' % response.content)
+            raise ValueError('`access_token` or `expires` not in response: %s' % response.content)
     except (requests.RequestException, ValueError) as e:
         debug_logger.error("Facebook token extend error: %s" % str(e))
-        raise FB_LINK_ERROR_TRY_AGAIN
+        raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(e))
     return response_params
 
 
@@ -109,11 +111,12 @@ def debug_token(facebook_token):
         response = requests.get(debug_url, params=params, timeout=20)
         data = response.json()['data']
         if response.status_code != 200 or data.get('error'):
-            raise ValidationError({'error': data.get('error')})
+            raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(data.get('error')))
         return data
     except (requests.RequestException, ValueError, KeyError) as e:
-        debug_logger.error("Facebook debug token error: %s" % str(e))
-        raise FB_LINK_ERROR_TRY_AGAIN
+        dev_msg = "Facebook debug token error: %s" % str(e)
+        debug_logger.error(dev_msg)
+        raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)
 
 
 def link_facebook_account(user, facebook_access_token):
@@ -128,7 +131,7 @@ def link_facebook_account(user, facebook_access_token):
         la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
         debug_logger.warning('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
         if la.user != user:
-            raise ValidationError({'error': "Facebook account is already linked to somebody else's profile."})
+            raise ShoutitBadRequest("Facebook account is already linked to somebody else's profile.")
     except LinkedFacebookAccount.DoesNotExist:
         pass
 
@@ -141,7 +144,7 @@ def link_facebook_account(user, facebook_access_token):
         create_linked_facebook_account(user, facebook_access_token)
     except (DjangoValidationError, IntegrityError) as e:
         debug_logger.error("LinkedFacebookAccount creation error: %s." % str(e))
-        raise FB_LINK_ERROR_TRY_AGAIN
+        raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(e))
 
     # activate the user
     if not user.is_activated:
@@ -157,7 +160,7 @@ def unlink_facebook_user(user, strict=True):
     except LinkedFacebookAccount.DoesNotExist:
         if strict:
             debug_logger.warning("User: %s, tried to unlink non-existing facebook account." % user)
-            raise FB_LINK_ERROR_NO_LINK
+            raise ShoutitBadRequest(FB_LINK_ERROR_NO_LINK)
     else:
         # todo: unlink from facebook services?
         linked_account.delete()
@@ -173,8 +176,9 @@ def fb_user_from_facebook_access_token(facebook_access_token):
         fb_user = requests.get(graph_url, params=params, timeout=20).json()
         return fb_user
     except (requests.RequestException, ValueError) as e:
-        debug_logger.error("Facebook Graph error: %s" % str(e))
-        raise FB_LINK_ERROR_TRY_AGAIN
+        dev_msg = "Facebook Graph error: %s" % str(e)
+        debug_logger.error(dev_msg)
+        raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)
 
 
 def create_linked_facebook_account(user, access_token):

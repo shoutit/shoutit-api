@@ -10,12 +10,12 @@ from django.views.decorators.cache import cache_control
 from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify
+from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
@@ -198,6 +198,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         # Todo: improve!
         search = request.query_params.get('search', '')
+        if not search:
+            raise RequiredParameter('search', "This parameter is required")
         # category = request.query_params.get('category')
         # country = request.query_params.get('country')
         if len(search) >= 2:
@@ -205,7 +207,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             random.shuffle(terms)
             terms = map(lambda t: {'term': strings.human_case(t)}, terms)
         else:
-            raise ValidationError({'search': "At least two characters are required"})
+            raise InvalidParameter('search', "At least two characters are required")
         return Response(terms)
 
     def create(self, request, *args, **kwargs):
@@ -431,10 +433,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             - name: body
               paramType: body
         """
-        # Todo: move validation to the serializer
         shout = self.get_object()
         if request.user == shout.owner:
-            raise ValidationError({'error': "You can not start a conversation about your own shout"})
+            raise ShoutitBadRequest("You can not start a conversation about your own shout")
         context = {
             'request': request,
             'conversation': None,

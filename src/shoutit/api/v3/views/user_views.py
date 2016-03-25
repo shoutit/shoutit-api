@@ -6,13 +6,14 @@ from __future__ import unicode_literals
 
 from rest_framework import viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
+from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter, InvalidBody, \
+    RequiredBody
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.models import User, Shout, ShoutIndex
 from ..filters import HomeFilterBackend
@@ -217,7 +218,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         ap = user.ap
 
         if request.user == user:
-            raise ValidationError({'error': "You can not listen to your self"})
+            raise ShoutitBadRequest("You can't listen to your self")
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap, request)
@@ -305,9 +306,11 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
               paramType: query
         """
 
-        listening_type = request.query_params.get('type', 'users')
+        listening_type = request.query_params.get('type')
+        if not listening_type:
+            raise RequiredParameter('type')
         if listening_type not in ['users', 'pages', 'tags']:
-            raise ValidationError({'type': "should be `users`, `pages` or `tags`."})
+            raise InvalidParameter('type', "Should be either `users`, `pages` or `tags`.")
 
         user = self.get_object()
         listening = getattr(user, 'listening2_' + listening_type)
@@ -399,9 +402,9 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         user = self.get_object()
         logged_user = request.user
         if logged_user == user:
-            raise ValidationError({'error': "You can not start a conversation with your self"})
+            raise ShoutitBadRequest("You can not start a conversation with your self")
         if not (message_controller.conversation_exist(users=[user, logged_user]) or user.is_listening(logged_user)):
-            raise ValidationError({'error': "You can only start a conversation with your listeners"})
+            raise ShoutitBadRequest("You can only start a conversation with your listeners")
         context = {
             'request': request,
             'conversation': None,
@@ -464,25 +467,28 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             - name: body
               paramType: body
         """
+        # Todo: move validation to serializer
         instance = self.get_object()
         account = request.data.get('account') or request.query_params.get('account')
         if not account:
-            raise ValidationError({'account': "This field is required."})
+            raise RequiredBody('account')
         if account not in ['facebook', 'gplus']:
-            raise ValidationError({'account': "Unsupported social account."})
+            raise InvalidBody('account', "Unsupported social account")
 
         if request.method in ['PATCH', 'POST']:
             if account == 'gplus':
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
-                    raise ValidationError({'gplus_code': "provide a valid `gplus_code`"})
-                client = hasattr(request.auth, 'client') and request.auth.client.name or None
+                    raise RequiredBody('gplus_code', message="Couldn't link your G+ account",
+                                       developer_message="provide a valid `gplus_code`")
+                client = (hasattr(request.auth, 'client') and request.auth.client.name) or 'shoutit-test'
                 gplus_controller.link_gplus_account(instance, gplus_code, client)
 
             elif account == 'facebook':
                 facebook_access_token = request.data.get('facebook_access_token')
                 if not facebook_access_token:
-                    raise ValidationError({'facebook_access_token': "provide a valid `facebook_access_token`"})
+                    raise RequiredBody('facebook_access_token', message="Couldn't link your Facebook account",
+                                       developer_message="provide a valid `facebook_access_token`")
                 facebook_controller.link_facebook_account(instance, facebook_access_token)
 
                 # msg = "{} linked successfully.".format(account.capitalize())
