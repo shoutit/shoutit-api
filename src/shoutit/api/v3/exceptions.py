@@ -11,6 +11,34 @@ from rest_framework import exceptions as drf_exceptions, status
 from rest_framework.utils.serializer_helpers import ReturnList, ReturnDict
 
 
+class ErrorReason(object):
+    REQUIRED = 'required'
+    INVALID = 'invalid'
+    INVALID_IDENTIFIER = 'invalid_identifier'
+    INVALID_HEADER = 'invalid_header'
+    INVALID_PARAMETER = 'invalid_parameter'
+    INVALID_BODY = 'invalid_body'
+    INSECURE_CONNECTION = 'insecure_connection'
+    BAD_REQUEST = 'bad_request'
+    PARSE_ERROR = 'parse_error'
+    AUTH_FAILED = 'auth_failed'
+    NOT_AUTHENTICATED = 'not_authenticated'
+    PERMISSION_DENIED = 'permission_denied'
+    NOT_FOUND = 'not_found'
+    METHOD_NOT_ALLOWED = 'method_not_allowed'
+    UNSUPPORTED_MEDIA_TYPE = 'unsupported_media_type'
+    THROTTLED = 'throttled'
+    SERVER_ERROR = 'server_error'
+ERROR_REASON = ErrorReason()
+
+
+class ErrorLocationType(object):
+    HEADER = 'header'
+    PARAMETER = 'parameter'
+    BODY = 'body'
+ERROR_LOCATION_TYPE = ErrorLocationType()
+
+
 def _force_text_recursive(data):
     """
     Descend into a nested data structure, forcing any
@@ -35,36 +63,6 @@ def _force_text_recursive(data):
             return ReturnDict(ret, serializer=data.serializer)
         return ret
     return force_text(data)
-
-
-class ErrorReason(object):
-    INVALID = 'invalid'
-    INVALID_HEADER = 'invalid_header'
-    INVALID_PARAMETER = 'invalid_header'
-    INVALID_BODY = 'invalid_header'
-    REQUIRED = 'required'
-    INSECURE_CONNECTION = 'insecure_connection'
-    BAD_REQUEST = 'bad_request'
-    INVALID_IDENTIFIER = 'invalid_identifier'
-
-    PARSE_ERROR = 'parse_error'
-    AUTH_FAILED = 'auth_failed'
-    NOT_AUTHENTICATED = 'not_authenticated'
-    PERMISSION_DENIED = 'permission_denied'
-    NOT_FOUND = 'not_found'
-    METHOD_NOT_ALLOWED = 'method_not_allowed'
-    UNSUPPORTED_MEDIA_TYPE = 'unsupported_media_type'
-    THROTTLED = 'throttled'
-
-    SERVER_ERROR = 'server_error'
-ERROR_REASON = ErrorReason()
-
-
-class ErrorLocationType(object):
-    HEADER = 'header'
-    PARAMETER = 'parameter'
-    BODY = 'body'
-ERROR_LOCATION_TYPE = ErrorLocationType()
 
 
 class ShoutitAPIException(drf_exceptions.APIException):
