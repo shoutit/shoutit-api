@@ -28,7 +28,10 @@ class ErrorReason(object):
     METHOD_NOT_ALLOWED = 'method_not_allowed'
     UNSUPPORTED_MEDIA_TYPE = 'unsupported_media_type'
     THROTTLED = 'throttled'
-    SERVER_ERROR = 'server_error'
+    INTERNAL_ERROR = 'internal_error'
+    BACKEND_ERROR = 'backend_error'
+    CONNECTION = 'connection_error'
+    NOT_READY = 'not_ready'
 ERROR_REASON = ErrorReason()
 
 

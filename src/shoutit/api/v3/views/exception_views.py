@@ -56,7 +56,7 @@ def drf_exception_handler(exc, context):
 
     elif isinstance(exc, drf_exceptions.APIException):
         status_code = exc.status_code
-        reason = ERROR_REASON.BAD_REQUEST if status.is_client_error(status_code) else ERROR_REASON.SERVER_ERROR
+        reason = ERROR_REASON.BAD_REQUEST if status.is_client_error(status_code) else ERROR_REASON.INTERNAL_ERROR
 
         if getattr(exc, 'auth_header', None):
             headers['WWW-Authenticate'] = exc.auth_header
@@ -170,7 +170,7 @@ def django_exception_handler(response):
         status_code = response.status_code
         if status.is_server_error(status_code):
             message = _("Server Error, try again later")
-            reason = ERROR_REASON.SERVER_ERROR
+            reason = ERROR_REASON.INTERNAL_ERROR
         else:
             message = _("Bad request")
             reason = ERROR_REASON.BAD_REQUEST
