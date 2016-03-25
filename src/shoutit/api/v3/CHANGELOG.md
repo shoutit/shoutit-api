@@ -1,6 +1,19 @@
 # shoutit-api v3 changelog
 
 
+## New Error responses (2016-03-25)
+
+V3 of the API is now returning a standard error responses according to this [wiki page](https://github.com/shoutit/shoutit-api/wiki/Error-Responses)
+
+## Update (2016-03-21)
+
+- Added `conversation/{id}`
+- Added `conversation` to **Profile** object. This helps identifying if there was a previous conversation between the caller and the requested profile
+- Added `/shouts/autocomplete` endpoint. Check live docs: [Shouts Autocomplete](https://dev.api.shoutit.com/docs/#!/shouts/Shout_autocomplete)
+- Added `read_by` to **Message** objects
+- Started only accepting `application/json` as `contente_type` in requests headers to all endpoints unless explicitly stated otherwise
+- Added `Cache-Control` headers to `/shouts/categories`, `/shouts/sort_types` and `/misc/currencies` endpoints
+
 
 ## Initial commits (2016-02-22)
 
@@ -16,7 +29,7 @@
 
 ### Profiles
 
-**Profile** is the base account for _Users_ and _Pages_. Profile has `type` property which can be either `user` or `page`. All previous **User** endpoints are ported to similar Profile endpoints. 
+**Profile** is the base account for _Users_ and _Pages_. Profile has `type` property which can be either `user` or `page`. All previous **User** endpoints are ported to similar Profile endpoints
 
 - `/profiles`
 
@@ -24,23 +37,23 @@
 ###Users
 
 - Removed `/users/{USERNAME}/shouts` use `/shouts?profile={USERNAME}` instead
-- For each endpoint that has `user` or `users` there is respective and totally equal `profile` or `profiles`. The later properties are pending deprecation and clients should use the new ones.
+- For each endpoint that has `user` or `users` there is respective and totally equal `profile` or `profiles`. The later properties are pending deprecation and clients should use the new ones
 
 
 ###Tags
 
-- Removed `/tags/{TAGNAME}/shouts` use `/shouts?tags={TAGNAME}` instead.
+- Removed `/tags/{TAGNAME}/shouts` use `/shouts?tags={TAGNAME}` instead
 
 
 ###Discover
-- Removed `/discover/{DISCOVER_ID}/shouts` use `/shouts?discover={DISCOVER_ID}` instead.
+- Removed `/discover/{DISCOVER_ID}/shouts` use `/shouts?discover={DISCOVER_ID}` instead
 
 
 ###Shouts
 
-- Removed `tags` property from **Shout** object and replaced it with `filters`.
-- `filters` is a list of **Filter** objects.
-- **Shout Filter** is an object used to describe the shouts in more details.
+- Removed `tags` property from **Shout** object and replaced it with `filters`
+- `filters` is a list of **Filter** objects
+- **Shout Filter** is an object used to describe the shouts in more details
 ```
 {
     "name": "Disk Size",
@@ -51,8 +64,8 @@
     }
 }
 ```
-- `price` is now a big integer field and deals with cents!
-- Added categories endpoint `/shouts/categories` which along with the categories it returns `filters` property. The only difference between **Shout Filter** and **Category Filter** is that category filters have `values` instead of `value`. This helps when creating or editing shouts, also when filtering the search by passing those as query parameters.
+- `price` is now a big integer field and deals with *cents*
+- Added categories endpoint `/shouts/categories` which along with the categories it returns `filters` property. The only difference between **Shout Filter** and **Category Filter** is that category filters have `values` instead of `value`. This helps when creating or editing shouts, also when filtering the search by passing those as query parameters
 
 **Category example**
 ```
@@ -80,13 +93,13 @@
 }
 ```
 
-- Added `available_count` and `is_sold` to Shout object. They can be set when creating or updating shouts and should be only used with offers.
-- Added `mobile` which can be set when creating or updating shouts. Returned shouts don't have it and clients should ask for it using `/shouts/{id}/call`.
-- Added `mobile_hint` and `is_mobile_set`. 
-	- Mobile apps should display the Call button when `is_mobile_set` is true.
-	- Webapp can use the `mobile_hint` to display part of the mobile.
-	- When the user wants to view (on webapp) or call (on mobile apps), the clients should request `mobile` using `/shouts/{id}/call`.
-	- Added `/shouts/{id}/call` which returns the `mobile` of that shout to contact its owner.
+- Added `available_count` and `is_sold` to Shout object. They can be set when creating or updating shouts and should be only used with offers
+- Added `mobile` which can be set when creating or updating shouts. Returned shouts don't have it and clients should ask for it using `/shouts/{id}/call`
+- Added `mobile_hint` and `is_mobile_set`
+	- Mobile apps should display the Call button when `is_mobile_set` is true
+	- Webapp can use the `mobile_hint` to display part of the mobile
+	- When the user wants to view (on webapp) or call (on mobile apps), the clients should request `mobile` using `/shouts/{id}/call`
+	- Added `/shouts/{id}/call` which returns the `mobile` of that shout to contact its owner
 
 
 ###Creating and editing Shouts
@@ -99,7 +112,7 @@ Check the live docs: [Shout create](http://dev.api.shoutit.com/docs/#!/shouts/Sh
 - Setting the category can be only done using its slug. Either:
 	- directly i.e. `"category": "car-motors"`
 	- passing the entire category object which has `slug` in it
-- Empty fields should be passed as `null`.
+- Empty fields should be passed as `null`
 
 
 ###Search
@@ -109,12 +122,12 @@ Check the live docs: [Shout create](http://dev.api.shoutit.com/docs/#!/shouts/Sh
 
 ###Misc
 
-- Removed `google_geocode_response` from `location` objects and stopped accepting it as a valid location. clients should pass `latitude` and `longitude` to represent a location.
-- Deprecated the misc endpoint `/misc/parse_google_geocode_response`.
+- Removed `google_geocode_response` from `location` objects and stopped accepting it as a valid location. clients should pass `latitude` and `longitude` to represent a location
+- Deprecated the misc endpoint `/misc/parse_google_geocode_response`
 
 
 ###Pending deprecation
 
-- `/misc/categories`, use `/shouts/categories` instead.
-- `main_tag` property of a category, the category `slug` can be used to know the main tag as they are identical.
-- Remove `user` and `users` properties from all endpoints in favor of `profile` and `profiles` respectively. This also applies on receiving objects. Clients should use the profile attributes. This will make sure no confusion about profiles, users and pages in the future. For more information check [Profiles wiki](https://github.com/shoutit/shoutit-api/wiki/Profiles).
+- `/misc/categories`, use `/shouts/categories` instead
+- `main_tag` property of a category, the category `slug` can be used to know the main tag as they are identical
+- Remove `user` and `users` properties from all endpoints in favor of `profile` and `profiles` respectively. This also applies on receiving objects. Clients should use the profile attributes. This will make sure no confusion about profiles, users and pages in the future. For more information check [Profiles wiki](https://github.com/shoutit/shoutit-api/wiki/Profiles)
