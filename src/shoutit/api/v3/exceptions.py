@@ -23,6 +23,8 @@ def _force_text_recursive(data):
         ]
         if isinstance(data, ReturnList):
             return ReturnList(ret, serializer=data.serializer)
+        if isinstance(data, tuple):
+            return tuple(ret)
         return ret
     elif isinstance(data, dict):
         ret = {

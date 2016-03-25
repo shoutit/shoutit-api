@@ -118,13 +118,13 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
                     i += 1
                 continue
 
-            # List with single tuple ([message], reason, type)
+            # List with single tuple ([message], reason)
             # raising such exception *inside* a field or serializer
-            # raise ValidationError((["Only one of `apns` or `gcm` is required not both"], 'required', 'body'))
+            # raise ValidationError((["Only one of `apns` or `gcm` is required not both"], 'required'))
             # or more complicated *outside* fields or serializers
-            # raise ValidationError({'field': [(["Error message"], 'invalid', 'body')]})
+            # raise ValidationError({'field': [(["Error message"], 'invalid')]})
             elif len(value) == 1 and isinstance(value[0], tuple):
-                error_message, error_reason, error_location_type = value[0]
+                error_message, error_reason = value[0]
 
             # Ignore other kinds of lists
             else:
@@ -135,10 +135,10 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
         elif isinstance(value, basestring):
             error_message = value
 
-        # Tuple ([message], reason, type)
-        # raise ValidationError({'field': (["Error message"], 'invalid', 'body')})
+        # Tuple ([message], reason)
+        # raise ValidationError({'field': (["Error message"], 'invalid')})
         elif isinstance(value, tuple):
-            error_message, error_reason, error_location_type = value
+            error_message, error_reason = value
 
         # Unknown exception detail schema, log that!
         else:

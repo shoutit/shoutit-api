@@ -26,7 +26,7 @@ from common.constants import (
     TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType)
 from common.utils import any_in
-from shoutit.api.v3.exceptions import ERROR_REASON, ERROR_LOCATION_TYPE
+from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.controllers import location_controller
 from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
@@ -295,7 +295,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             except (ValueError, TypeError):
                 raise ValidationError({'id': "'%s' is not a valid id" % user_id})
         else:
-            raise ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED, ERROR_LOCATION_TYPE.BODY)})
+            raise ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
 
         return ret
 
@@ -670,7 +670,7 @@ class ShoutSerializer(serializers.ModelSerializer):
                 except (ValueError, TypeError, AttributeError):
                     raise ValidationError({'id': "'%s' is not a valid id" % shout_id})
             else:
-                raise ValidationError({'id': ("This field is required", 'required', 'body')})
+                raise ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
 
         # Optional price and currency
         price_is_none = data.get('price') is None
@@ -1028,8 +1028,7 @@ class ReportSerializer(serializers.ModelSerializer):
         if 'attached_object' in validated_data:
             attached_object = validated_data['attached_object']
             if not ('attached_profile' in attached_object or 'attached_shout' in attached_object):
-                error_tuple = ("attached_object should have either 'profile' or 'shout'", ERROR_REASON.REQUIRED,
-                               ERROR_LOCATION_TYPE.BODY)
+                error_tuple = ("attached_object should have either 'profile' or 'shout'", ERROR_REASON.REQUIRED)
                 errors['attached_object'] = error_tuple
 
             if 'attached_shout' in attached_object:
@@ -1038,7 +1037,7 @@ class ReportSerializer(serializers.ModelSerializer):
             if 'attached_profile' in attached_object:
                 validated_data['type'] = 'profile'
         else:
-            error_tuple = ("This field is required", ERROR_REASON.REQUIRED, ERROR_LOCATION_TYPE.BODY)
+            error_tuple = ("This field is required", ERROR_REASON.REQUIRED)
             errors['attached_object'] = error_tuple
         if errors:
             raise ValidationError(errors)
