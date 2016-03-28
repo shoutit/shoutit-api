@@ -60,6 +60,7 @@ class Page(AbstractProfile):
         self.save(update_fields=update_fields)
 
     def clean(self):
+        super(Page, self).clean()
         self.phone = correct_mobile(self.phone, self.country)
 
 

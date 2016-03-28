@@ -8,7 +8,7 @@ from django.dispatch import receiver
 from common.constants import USER_TYPE_PROFILE, TOKEN_TYPE_EMAIL
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.misc import ConfirmToken
-from shoutit.utils import correct_mobile, subscribe_to_master_list
+from shoutit.utils import correct_mobile, subscribe_to_master_list, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -42,7 +42,10 @@ class Profile(AbstractProfile):
         self.save(update_fields=update_fields)
 
     def clean(self):
-        self.mobile = correct_mobile(self.mobile, self.country)
+        super(Profile, self).clean()
+        if self.mobile:
+            self.mobile = correct_mobile(self.mobile, self.country)
+        none_to_blank(self, ['gender', 'bio', 'mobile'])
 
 
 @receiver(post_save, sender='shoutit.Profile')

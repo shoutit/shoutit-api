@@ -7,7 +7,9 @@ from collections import OrderedDict
 
 from rest_framework import serializers
 
+from common.constants import REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT
 from shoutit.models import Notification, Report, User, Shout
+from shoutit.utils import blank_to_none
 from .message import MessageSerializer
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
@@ -71,11 +73,11 @@ class ReportSerializer(serializers.ModelSerializer):
                 error_tuple = ("attached_object should have either 'profile' or 'shout'", ERROR_REASON.REQUIRED)
                 errors['attached_object'] = error_tuple
 
-            if 'attached_shout' in attached_object:
-                validated_data['type'] = 'shout'
-
             if 'attached_profile' in attached_object:
-                validated_data['type'] = 'profile'
+                validated_data['type'] = REPORT_TYPE_PROFILE
+
+            if 'attached_shout' in attached_object:
+                validated_data['type'] = REPORT_TYPE_SHOUT
         else:
             error_tuple = ("This field is required", ERROR_REASON.REQUIRED)
             errors['attached_object'] = error_tuple
@@ -88,11 +90,16 @@ class ReportSerializer(serializers.ModelSerializer):
         attached_object = None
         report_type = validated_data['type']
 
-        if report_type == 'profile':
+        if report_type == REPORT_TYPE_PROFILE:
             attached_object = User.objects.get(id=validated_data['attached_object']['attached_profile']['id'])
-        if report_type == 'shout':
+        if report_type == REPORT_TYPE_SHOUT:
             attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
         text = validated_data['text'] if 'text' in validated_data else None
         report = Report.objects.create(user=self.root.context['request'].user, text=text,
                                        attached_object=attached_object, type=report_type)
         return report
+
+    def to_representation(self, instance):
+        ret = super(ReportSerializer, self).to_representation(instance)
+        blank_to_none(ret, ['text'])
+        return ret

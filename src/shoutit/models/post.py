@@ -18,7 +18,7 @@ from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
 from shoutit.models.base import UUIDModel
 from shoutit.models.tag import Tag, ShoutitSlugField
-from shoutit.utils import error_logger
+from shoutit.utils import error_logger, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -95,8 +95,8 @@ class Post(Action):
         self._meta.get_field('user').blank = False
 
     def clean(self):
-        if self.text is None:
-            self.text = ""
+        super(Post, self).clean()
+        none_to_blank(self, ['text'])
 
     def mute(self):
         self.muted = True
@@ -146,6 +146,10 @@ class Shout(Post):
 
     def __unicode__(self):
         return unicode("%s: %s, %s: %s" % (self.pk, self.item.name, self.country, self.city))
+
+    def clean(self):
+        super(Shout, self).clean()
+        none_to_blank(self, ['mobile'])
 
     @property
     def images(self):

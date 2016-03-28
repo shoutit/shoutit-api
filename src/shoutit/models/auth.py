@@ -23,7 +23,7 @@ from common.utils import AllowedUsernamesValidator, date_unix
 from shoutit.controllers import email_controller
 from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
 from shoutit.models.listen import Listen2
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, none_to_blank
 
 
 class ShoutitUserManager(UserManager):
@@ -167,6 +167,29 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             self.gcm_device.delete()
             if hasattr(self, '_gcm_device'):
                 delattr(self, '_gcm_device')
+
+    def update_push_tokens(self, push_tokens_data):
+        if 'apns' in push_tokens_data:
+            apns_token = push_tokens_data.get('apns')
+            # delete user device if exists
+            if self.apns_device:
+                self.delete_apns_device()
+            if apns_token is not None:
+                # delete devices with same apns_token
+                APNSDevice.objects.filter(registration_id=apns_token).delete()
+                # create new device for user with apns_token
+                APNSDevice(registration_id=apns_token, user=self).save()
+
+        if 'gcm' in push_tokens_data:
+            gcm_token = push_tokens_data.get('gcm')
+            # delete user device if exists
+            if self.gcm_device:
+                self.delete_gcm_device()
+            if gcm_token is not None:
+                # delete devices with same gcm_token
+                GCMDevice.objects.filter(registration_id=gcm_token).delete()
+                # create new device for user with gcm_token
+                GCMDevice(registration_id=gcm_token, user=self).save()
 
     @property
     def linked_accounts(self):
@@ -424,6 +447,9 @@ class AbstractProfile(UUIDModel, LocationMixin):
                 return getattr(self.user, item)
             except AttributeError:
                 six.reraise(info[0], info[1], info[2].tb_next)
+
+    def clean(self):
+        none_to_blank(self, ['image', 'cover', 'website'])
 
     @property
     def owner(self):

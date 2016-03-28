@@ -9,10 +9,12 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION,
-                              MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT)
+                              MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT,
+                              MessageAttachmentType)
 from common.utils import any_in
 from shoutit.controllers import location_controller, message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
+from shoutit.utils import blank_to_none
 from .base import VideoSerializer
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
@@ -25,6 +27,7 @@ class SharedLocationSerializer(serializers.ModelSerializer):
 
 
 class MessageAttachmentSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(choices=MessageAttachmentType.texts, source='get_type_display', read_only=True)
     shout = ShoutSerializer(required=False)
     location = SharedLocationSerializer(required=False)
     images = serializers.ListField(child=serializers.URLField(), required=False)
@@ -32,7 +35,7 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MessageAttachment
-        fields = ['shout', 'location', 'images', 'videos']
+        fields = ['type', 'shout', 'location', 'images', 'videos']
 
     def to_representation(self, instance):
         ret = super(MessageAttachmentSerializer, self).to_representation(instance)
@@ -88,6 +91,12 @@ class MessageSerializer(serializers.ModelSerializer):
                     if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         attachment_error = {'location': "location object should have 'latitude' and 'longitude'"}
 
+                    if 'images' in attachment or 'videos' in attachment:
+                        images = attachment.get('images')
+                        videos = attachment.get('videos')
+                        if not (images or videos):
+                            attachment_error = {
+                                '': "attachment should have at least one item in a 'images' or 'videos'"}
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1
                 if not any(errors['attachments']):
@@ -96,6 +105,7 @@ class MessageSerializer(serializers.ModelSerializer):
         if text is not None and text == "" and attachments is None:
             errors['text'] = "text can not be empty"
 
+        # Todo: Raise errors directly that is fine
         if errors:
             raise serializers.ValidationError(errors)
 
@@ -103,6 +113,9 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super(MessageSerializer, self).to_representation(instance)
+        blank_to_none(ret, ['text'])
+
+        # Client id, Todo: check if it is still used by any client
         request = self.root.context.get('request')
         if request and request.method == 'POST':
             data = getattr(request, 'data', {})
@@ -149,7 +162,6 @@ class ConversationSerializer(serializers.ModelSerializer):
                   'subject', 'icon', 'admins', 'users', 'profiles', 'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
-        # todo: map types
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             return ShoutSerializer(instance.attached_object, context=self.root.context).data
         return None
@@ -178,12 +190,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         subject = validated_data['subject']
         icon = validated_data.get('icon', '')
         conversation = Conversation(creator=user, type=conversation_type, subject=subject, icon=icon, admins=[user.id])
-        location_controller.update_object_location(conversation, user.location)
+        location_controller.update_object_location(conversation, user.location, save=False)
         conversation.save()
         conversation.users.add(user)
         return conversation
-
-
-class PublicChatSerializer(serializers.Serializer):
-    subject = serializers.CharField(max_length=25, allow_blank=True, default='')
-    type = serializers.ChoiceField(choices=['public_chat'], help_text="Only 'public_chat' is allowed")

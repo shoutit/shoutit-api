@@ -1,5 +1,47 @@
 # shoutit-api v3 changelog
 
+## Dev (2016-03-29)
+
+- `type` is now required query parameter when retrieving list of listening on `/profiles/{username}/listening`
+- Added `type` property to **MessageAttachment** which can be either `shout`, `location` or `media`
+    - `shout` attachment has `shout` property
+    - `location` attachment has `location` property
+    - `media` attachment has `images` and `videos` properties
+- Unified the inputs and outputs of empty string values according to the following
+
+### Profile
+on `PATCH: /profiles/{id}`
+
+- `image`, `cover`, `mobile`, `gender`, `bio` / `about`, `video`, `website`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+- `push_tokens.apns`, `push_tokens.gcm`
+    - input: `null`
+    - output: `null`
+  
+### Shout
+on `POST: /shouts` and `PATCH: /shouts/{id}`
+
+- `title`, `text`, `mobile`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+- `mobile_hint`
+    - output: `null`
+    
+### Message and Report
+on `POST: /conversations/{id}/reply`, `POST: /shouts/{id}/reply` and `POST: /profiles/{id}/chat`
+
+- `text`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+
+### Report
+on `POST: /misc/reports`
+
+- `text`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+
 
 ## New Error responses (2016-03-25)
 

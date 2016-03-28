@@ -22,7 +22,7 @@ from rest_framework.settings import api_settings
 
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
-    ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
+    REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import location_controller
@@ -935,11 +935,11 @@ class ReportSerializer(serializers.ModelSerializer):
             if not ('attached_user' in attached_object or 'attached_shout' in attached_object):
                 errors['attached_object'] = "attached_object should have either 'user' or 'shout'"
 
-            if 'attached_shout' in attached_object:
-                validated_data['type'] = 'shout'
-
             if 'attached_user' in attached_object:
-                validated_data['type'] = 'user'
+                validated_data['type'] = REPORT_TYPE_PROFILE
+
+            if 'attached_shout' in attached_object:
+                validated_data['type'] = REPORT_TYPE_SHOUT
         else:
             errors['attached_object'] = ["This field is required."]
         if errors:
@@ -949,9 +949,9 @@ class ReportSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         attached_object = None
-        report_type = ReportType.texts[validated_data['type']]
+        report_type = validated_data['type']
 
-        if report_type == REPORT_TYPE_USER:
+        if report_type == REPORT_TYPE_PROFILE:
             attached_object = User.objects.get(id=validated_data['attached_object']['attached_user']['id'])
         if report_type == REPORT_TYPE_SHOUT:
             attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])

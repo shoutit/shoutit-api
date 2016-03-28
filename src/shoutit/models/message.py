@@ -17,7 +17,7 @@ from common.constants import (
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
-from shoutit.utils import track
+from shoutit.utils import track, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -149,6 +149,9 @@ class Message(Action):
 
     def __unicode__(self):
         return "%s  at:%s" % (self.summary, self.created_at_unix)
+
+    def clean(self):
+        none_to_blank(self, ['text'])
 
     @property
     def summary(self):
@@ -286,6 +289,9 @@ class Report(UUIDModel, AttachedObjectMixin):
 
     def __unicode__(self):
         return "From user:%s about: %s:%s" % (self.user.pk, self.get_type_display(), self.attached_object.pk)
+
+    def clean(self):
+        none_to_blank(self, ['text'])
 
 
 class PushBroadcast(UUIDModel, AttachedObjectMixin):

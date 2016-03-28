@@ -18,6 +18,7 @@ from shoutit.models import User, DBCLConversation, ConfirmToken
 from .profile import ProfileDetailSerializer, GuestSerializer
 
 
+# Todo: change `user` to `profile` in all serializers
 class FacebookAuthSerializer(serializers.Serializer):
     facebook_access_token = serializers.CharField(max_length=500)
     user = ProfileDetailSerializer(required=False)
@@ -163,7 +164,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         ret = super(ShoutitVerifyEmailSerializer, self).to_internal_value(data)
         user = self.context.get('request').user
         email = ret.get('email')
-        # if the email changed the model will take care of sending the verification emal
+        # if the email changed the model will take care of sending the verification email
         if email:
             user.email = email.lower()
             user.save(update_fields=['email', 'is_activated'])
@@ -208,6 +209,7 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
 
         user.set_password(new_password)
         user.save(update_fields=['password'])
+        # Todo: Do we really need to log the user in?
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(self.context.get('request'), user)
         return ret

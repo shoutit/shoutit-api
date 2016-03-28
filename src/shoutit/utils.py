@@ -243,6 +243,7 @@ def _subscribe_to_master_list(user):
 
 def correct_mobile(mobile, country, raise_exception=False):
     try:
+        mobile = mobile.lower()
         country = country.upper()
         if country in ['KW', 'OM', 'BH', 'QA'] and not mobile.startswith('00') and mobile.startswith('0'):
             mobile = mobile[1:]
@@ -379,3 +380,15 @@ def now_plus_delta(delta=None):
     if delta and isinstance(delta, timedelta):
         return now + delta
     return now
+
+
+def blank_to_none(ret, fields):
+    for field in fields:
+        if field in ret and ret[field] == '':
+            ret[field] = None
+
+
+def none_to_blank(obj, attribute):
+    for attr in attribute:
+        if hasattr(obj, attr) and getattr(obj, attr) is None:
+            setattr(obj, attr, '')
