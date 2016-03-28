@@ -18,7 +18,10 @@ DJANGO_DIR = os.path.dirname(os.path.realpath(__file__))
 API_DIR = os.path.dirname(DJANGO_DIR)
 ENV_DIR = os.path.dirname(API_DIR)
 ENV = os.path.basename(ENV_DIR)
-LOG_DIR = os.path.join(ENV_DIR, 'log')
+LOG_DIR = os.path.join('/var', 'log', ENV)
+
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
 
 # Local or Dev or Prod
 LOCAL = ENV == 'shoutit_api_local'
