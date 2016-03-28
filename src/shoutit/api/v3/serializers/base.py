@@ -6,9 +6,8 @@ from __future__ import unicode_literals
 from ipware.ip import get_real_ip
 from rest_framework import serializers
 
-from shoutit.admin import PredefinedCity
 from shoutit.controllers import location_controller
-from shoutit.models import Video
+from shoutit.models import Video, PredefinedCity
 
 
 class LocationSerializer(serializers.Serializer):
