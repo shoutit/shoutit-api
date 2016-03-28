@@ -11,7 +11,7 @@ env.roledefs = {
     'prod': ['root@node-01.api.shoutit.com']
 }
 manage_py = os.path.join(DJANGO_DIR, 'manage.py')
-scripts_dir = os.path.join(ENV_DIR, 'Scripts')
+scripts_dir = os.path.join(os.path.dirname(API_DIR), 'Scripts')  # Todo: This works only on Windows (specifically my machine)
 
 
 def local_flake8():

@@ -16,8 +16,7 @@ sys.stderr = getwriter('utf8')(sys.stderr)
 
 DJANGO_DIR = os.path.dirname(os.path.realpath(__file__))
 API_DIR = os.path.dirname(DJANGO_DIR)
-ENV_DIR = os.path.dirname(API_DIR)
-ENV = os.path.basename(ENV_DIR)
+ENV = os.environ.get('ENV', 'shoutit_api_local')
 LOG_DIR = os.path.join('/var', 'log', ENV)
 
 if not os.path.exists(LOG_DIR):

@@ -316,7 +316,9 @@ if ON_SERVER or FORCE_S3:
     STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(ENV_DIR, 'static')
+    STATIC_ROOT = os.path.join('/var', 'static')
+    if not os.path.exists(STATIC_ROOT):
+        os.makedirs(STATIC_ROOT)
 
 STATICFILES_DIRS = (
     os.path.join(DJANGO_DIR, 'static'),
