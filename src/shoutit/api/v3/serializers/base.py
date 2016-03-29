@@ -9,6 +9,8 @@ from rest_framework import serializers
 from shoutit.controllers import location_controller
 from shoutit.models import Video, PredefinedCity
 
+empty_char_input = {'allow_blank': True, 'allow_null': True, 'required': False}
+
 
 class LocationSerializer(serializers.Serializer):
     latitude = serializers.FloatField(min_value=-90, max_value=90, required=False)

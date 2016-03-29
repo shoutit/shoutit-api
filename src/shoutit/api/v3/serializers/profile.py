@@ -15,15 +15,14 @@ from rest_framework.reverse import reverse
 from shoutit.controllers import message_controller, location_controller, notifications_controller
 from shoutit.models import User, InactiveUser, Profile, Page, Video
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
-from .base import VideoSerializer, LocationSerializer, PushTokensSerializer
+from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input
 from ..exceptions import ERROR_REASON
-empty_input = {'allow_blank': True, 'allow_null': True}
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
-    image = serializers.URLField(source='ap.image', required=False, **empty_input)
-    cover = serializers.URLField(source='ap.cover', required=False, **empty_input)
+    image = serializers.URLField(source='ap.image', **empty_char_input)
+    cover = serializers.URLField(source='ap.cover', **empty_char_input)
     api_url = serializers.SerializerMethodField()
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
     listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
@@ -89,15 +88,15 @@ class ProfileSerializer(serializers.ModelSerializer):
 # Todo: create two subclasses UserSerializer/UserDetailSerializer and PageSerializer/PageDetailSerializer
 class ProfileDetailSerializer(ProfileSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
-    mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, **empty_input)
+    mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, **empty_char_input)
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    gender = serializers.CharField(source='profile.gender', required=False, **empty_input)
-    bio = serializers.CharField(source='profile.bio', max_length=150, **empty_input)
-    about = serializers.CharField(source='page.about', max_length=150, **empty_input)
+    gender = serializers.CharField(source='profile.gender', **empty_char_input)
+    bio = serializers.CharField(source='profile.bio', max_length=150, **empty_char_input)
+    about = serializers.CharField(source='page.about', max_length=150, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
-    website = serializers.CharField(source='ap.website', **empty_input)
+    website = serializers.CharField(source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
