@@ -35,7 +35,7 @@ class FacebookAuthSerializer(serializers.Serializer):
 
 
 class GplusAuthSerializer(serializers.Serializer):
-    gplus_code = serializers.CharField(max_length=1000)
+    gplus_code = serializers.CharField(max_length=4096)
     user = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
