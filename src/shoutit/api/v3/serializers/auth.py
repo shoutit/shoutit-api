@@ -20,7 +20,7 @@ from .profile import ProfileDetailSerializer, GuestSerializer
 
 # Todo: change `user` to `profile` in all serializers
 class FacebookAuthSerializer(serializers.Serializer):
-    facebook_access_token = serializers.CharField(max_length=500)
+    facebook_access_token = serializers.CharField(max_length=512)
     user = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
@@ -35,7 +35,7 @@ class FacebookAuthSerializer(serializers.Serializer):
 
 
 class GplusAuthSerializer(serializers.Serializer):
-    gplus_code = serializers.CharField(max_length=500)
+    gplus_code = serializers.CharField(max_length=1000)
     user = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
