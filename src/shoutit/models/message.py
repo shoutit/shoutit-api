@@ -189,7 +189,8 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
 
         from shoutit.controllers import notifications_controller, push_controller
         # push the message to the conversation presence channel
-        push_controller.send_pusher(user=None, notification_type=NOTIFICATION_TYPE_MESSAGE, version='v3')
+        push_controller.send_pusher(user=None, notification_type=NOTIFICATION_TYPE_MESSAGE, attached_object=instance,
+                                    version='v3')
 
         # update the conversation
         conversation = instance.conversation
