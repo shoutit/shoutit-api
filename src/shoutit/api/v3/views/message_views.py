@@ -385,3 +385,32 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
+
+
+class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    API endpoint that allows conversations/messages to be viewed or added.
+    """
+    serializer_class = MessageSerializer
+    permission_classes = (permissions.IsAuthenticated, CanContribute)
+
+    def get_queryset(self):
+        return Message.objects.all()
+
+    @detail_route(methods=['post', 'delete'], suffix='Read')
+    def read(self, request, *args, **kwargs):
+        """
+        Mark the message as read/unread
+        ###REQUIRES AUTH
+        Marking a message as read will trigger a `new_read_by` event on conversation pusher channel.
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        message = self.get_object()
+        if request.method == 'POST':
+            message.mark_as_read(request.user)
+        elif request.method == 'DELETE':
+            message.mark_as_unread(request.user)
+        return Response(status=status.HTTP_202_ACCEPTED)
