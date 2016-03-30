@@ -250,12 +250,11 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', '_users', '_messages', 'content_type', 'object_id', 'modified_at',
-                    'created_at')
-    readonly_fields = ('last_message', '_messages')
+    list_display = ('id', 'type', '_users', '_messages', '_attached_object', 'modified_at', 'created_at')
+    readonly_fields = ('_last_message', '_attached_object', '_messages')
     fieldsets = (
-        (None, {'fields': ('content_type', 'object_id', 'type', 'users', 'last_message')}),
-        (_('Extra'), {'fields': ('_messages',)}),
+        (None, {'fields': ('type', 'users', '_attached_object', '_last_message')}),
+        (_('Extra'), {'fields': ('_messages', 'subject', 'admins')}),
     )
     raw_id_fields = ('users',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
@@ -278,6 +277,21 @@ class ConversationAdmin(admin.ModelAdmin):
     _messages.allow_tags = True
     _messages.short_description = 'Messages'
 
+    def _attached_object(self, instance):
+        if not instance.attached_object:
+            return ''
+        return '<a href="%s">%s</a>' % (instance.attached_object.admin_url, unicode(instance.attached_object))
+
+    _attached_object.allow_tags = True
+    _attached_object.short_description = 'About'
+
+    def _last_message(self, instance):
+        if not instance.last_message:
+            return ''
+        return '<a href="%s">%s</a>' % (instance.last_message.admin_url, unicode(instance.last_message))
+
+    _last_message.allow_tags = True
+    _last_message.short_description = 'Last Message'
 
 admin.site.register(ConversationDelete)
 
