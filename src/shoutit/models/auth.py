@@ -474,7 +474,7 @@ def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
 
     if not created:
         if getattr(instance, 'notify', True):
-            # Send notification about user changes
+            # Send `profile_update` notification
             notifications_controller.notify_user_of_profile_update(instance.user)
 
 

@@ -8,7 +8,7 @@ from django_rq import job
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED,
                               NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, NOTIFICATION_TYPE_PROFILE_UPDATE)
-from ..controllers import push_controller, sss_controller
+from ..controllers import push_controller, pusher_controller, sss_controller
 from ..models import Notification
 
 
@@ -26,9 +26,9 @@ def get_user_notifications_without_messages_count(user):
 
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None):
-    # Send notification to pusher
-    push_controller.send_pusher.delay(user, notification_type, attached_object, 'v2')
-    push_controller.send_pusher.delay(user, notification_type, attached_object, 'v3')
+    # Trigger event on Pusher profile channel
+    pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v2')
+    pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v3')
 
     # Create notification object
     if notification_type != NOTIFICATION_TYPE_PROFILE_UPDATE:
@@ -37,7 +37,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     # Send appropriate notification
     if sss_controller.check_sss(user, notification_type, attached_object, from_user):
         sss_controller.send_sss(user, attached_object, notification_type, from_user)
-    elif push_controller.check_push(notification_type) and not push_controller.check_pusher(user):
+    elif push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
         push_controller.send_push(user, notification_type, attached_object, 'v2')
         push_controller.send_push(user, notification_type, attached_object, 'v3')
 

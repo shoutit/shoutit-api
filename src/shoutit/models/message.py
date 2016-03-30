@@ -3,17 +3,21 @@
 
 """
 from __future__ import unicode_literals
+
 from datetime import datetime
+
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
-from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
+
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
-    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE)
+    CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -60,6 +64,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         return self.messages.count()
 
     def unread_messages_count(self, user):
+        if isinstance(user, AnonymousUser):
+            return 0
         return self.messages_count - user.read_messages.filter(conversation=self).count()
 
     def mark_as_deleted(self, user):
@@ -120,8 +126,15 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
+    from shoutit.controllers import pusher_controller
+
     if created:
         track(getattr(instance, 'creator_id', 'system'), 'new_conversation', instance.track_properties)
+
+    else:
+        if getattr(instance, 'notify', True):
+            # Trigger `conversation_update` event in the conversation channel
+            pusher_controller.trigger_conversation_update(instance, 'v3')
 
 
 class ConversationDelete(UUIDModel):
@@ -169,14 +182,33 @@ class Message(Action):
     def contributors(self):
         return self.conversation.contributors
 
+    def can_contribute(self, user):
+        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            return True
+        else:
+            return user in self.contributors
+
     def is_read(self, user):
         return MessageRead.objects.filter(user=user, message=self, conversation=self.conversation).exists()
 
+    @property
     def read_by_objects(self):
         read_by = []
         for read in self.read_set.all().values('user_id', 'created_at'):
             read_by.append({'profile_id': read['user_id'], 'read_at': date_unix(read['created_at'])})
         return read_by
+
+    def mark_as_read(self, user):
+        try:
+            MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
+        except IntegrityError:
+            pass
+
+    def mark_as_unread(self, user):
+        try:
+            MessageRead.objects.get(user=user, message_id=self.id, conversation_id=self.conversation_id).delete()
+        except MessageRead.DoesNotExist:
+            pass
 
 
 @receiver(post_save, sender=Message)
@@ -187,10 +219,9 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         attachments = getattr(instance, 'raw_attachments', [])
         save_message_attachments(instance, attachments)
 
-        from shoutit.controllers import notifications_controller, push_controller
+        from shoutit.controllers import notifications_controller, pusher_controller
         # push the message to the conversation presence channel
-        push_controller.send_pusher(user=None, notification_type=NOTIFICATION_TYPE_MESSAGE, attached_object=instance,
-                                    version='v3')
+        pusher_controller.trigger_new_message(instance, version='v3')
 
         # update the conversation
         conversation = instance.conversation
@@ -223,6 +254,14 @@ class MessageRead(UUIDModel):
     class Meta(UUIDModel.Meta):
         # user can mark the message as 'read' only once
         unique_together = ('user', 'message', 'conversation')
+
+
+@receiver(post_save, sender=MessageRead)
+def post_save_message_read(sender, instance=None, created=False, **kwargs):
+    if created:
+        from shoutit.controllers import pusher_controller
+        # Trigger `new_read_by` event in the conversation channel
+        pusher_controller.trigger_new_read_by(message=instance.message, version='v3')
 
 
 class MessageDelete(UUIDModel):

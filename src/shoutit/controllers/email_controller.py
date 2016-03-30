@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
+
+from django.conf import settings
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.context import Context
 from django.template.loader import get_template
 from django.utils.translation import ugettext as _
-from django.core.mail import get_connection
-from django.conf import settings
 from django_rq import job
+
 from common import constants
 from shoutit.utils import get_google_smtp_connection, error_logger, sss_logger
 

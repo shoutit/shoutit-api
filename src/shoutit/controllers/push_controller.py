@@ -12,30 +12,8 @@ from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS,
                               NOTIFICATION_TYPE_BROADCAST)
-from shoutit_pusher.models import PusherChannel
-from shoutit_pusher.utils import pusher
 from ..models import User, PushBroadcast
 from ..utils import error_logger, debug_logger, serialize_attached_object
-
-
-@job(settings.RQ_QUEUE_PUSHER)
-def send_pusher(user, notification_type, attached_object, version):
-    """
-    Trigger event on pusher channel. Cases:
-    - No `user` and `notification_type` is `NOTIFICATION_TYPE_MESSAGE`
-    - Everything else on `v2`
-    - Everything else on other versions
-    """
-    attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
-
-    if user is None and notification_type == NOTIFICATION_TYPE_MESSAGE:
-        channel_name = '%s_presence-c-%s' % (version, attached_object.conversation.pk)
-    elif version == 'v2':
-        channel_name = 'presence-u-%s' % user.pk
-    else:
-        channel_name = '%s_presence-u-%s' % (version, user.pk)
-
-    pusher.trigger(channel_name, str(notification_type), attached_object_dict)
 
 
 @job(settings.RQ_QUEUE_PUSH)
@@ -77,11 +55,6 @@ def send_push(user, notification_type, attached_object, version):
             debug_logger.debug("Sent gcm push to %s." % user)
         except GCMError:
             error_logger.warn("Could not send gcm push.", exc_info=True)
-
-
-def check_pusher(user):
-    user_channel = 'presence-u-%s' % user.pk
-    return PusherChannel.objects.filter(name__iendswith=user_channel).exists()
 
 
 def check_push(notification_type):
