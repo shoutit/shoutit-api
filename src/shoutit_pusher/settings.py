@@ -9,9 +9,9 @@ if settings.PROD:
     SHOUTIT_PUSHER_SETTINGS.setdefault("secret", "e7ef2a69a659f642fe0b")
 elif settings.DEV:
     # shoutit-api-dev
-    SHOUTIT_PUSHER_SETTINGS.setdefault("app_id", "193537")
-    SHOUTIT_PUSHER_SETTINGS.setdefault("key", "afde270c82795bdc4ad0")
-    SHOUTIT_PUSHER_SETTINGS.setdefault("secret", "da808243ac99a592e070")
+    SHOUTIT_PUSHER_SETTINGS.setdefault("app_id", "193632")
+    SHOUTIT_PUSHER_SETTINGS.setdefault("key", "7bee1e468fabb6287fc5")
+    SHOUTIT_PUSHER_SETTINGS.setdefault("secret", "727dcefd63d526113aa5")
 else:
     # shoutit-api-local
     SHOUTIT_PUSHER_SETTINGS.setdefault("app_id", "193590")
