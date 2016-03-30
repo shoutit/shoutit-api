@@ -410,13 +410,15 @@ def create_fake_request(version):
 
 
 def serialize_attached_object(attached_object, version, user=None):
-    from .models import Message, User
+    from .models import Conversation, Message, User
     serializers = import_module('shoutit.api.%s.serializers' % version)
 
     # Create fake Request and set request.user to the notified user as if he was requesting it.
     request = create_fake_request(version)
     request.user = user or AnonymousUser()
 
+    if isinstance(attached_object, dict):
+        return attached_object
     if isinstance(attached_object, User):
         if getattr(attached_object, 'detailed', False):
             serializer = serializers.ProfileDetailSerializer
@@ -424,6 +426,8 @@ def serialize_attached_object(attached_object, version, user=None):
             serializer = serializers.ProfileSerializer
     elif isinstance(attached_object, Message):
         serializer = serializers.MessageSerializer
+    elif isinstance(attached_object, Conversation):
+        serializer = serializers.ConversationSerializer
     else:
         serializer = None
 
