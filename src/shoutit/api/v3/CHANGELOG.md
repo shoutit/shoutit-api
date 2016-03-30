@@ -1,5 +1,17 @@
 # shoutit-api v3 changelog
 
+
+## Push (2016-03-30)
+
+Check the latest [Notifications wiki](https://github.com/shoutit/shoutit-api/wiki/Notifications#push-and-pusher).
+
+- Pusher channel names in v3 should include the version e.g `presence-v3-c-conversationid`
+- Profile channel name is now uses `p` instead of `u` i.e. `presence-v3-p-profileid`
+- Added new push events: `new_read_by`, `profile_update`, and `conversation_update`
+- Check the new Pusher credentials for development in the wiki.
+- Added `/messages/{id}/read` endpoint to mark messages as read / unread
+
+
 ## Dev (2016-03-29)
 
 - `type` is now required query parameter when retrieving list of listening on `/profiles/{username}/listening`
