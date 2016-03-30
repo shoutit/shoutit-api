@@ -60,7 +60,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         """
         webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
                                           signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
-                                          body=request.raw_body)
+                                          body=getattr(request, 'raw_body', ''))
         if webhook:
             events = webhook.get('events', [])
             events.sort(key=lambda e: e.get('name'))
