@@ -45,12 +45,15 @@ def add_member(channel_name, user_id):
         channel = create_channel(channel_name)
     if channel:
         try:
-            PusherChannelJoin.objects.create(channel=channel, user_id=user_id)
+            PusherChannelJoin.create(channel=channel, user_id=user_id)
             debug_logger.debug('Added User: %s to PusherChannel: %s' % (user_id, channel.name))
-        except IntegrityError as e:
+        except (ValidationError, IntegrityError, ValueError) as e:
             debug_logger.warn(e)
 
 
 def remove_member(channel_name, user_id):
-    PusherChannelJoin.objects.filter(channel__name=channel_name, user_id=user_id).delete()
-    debug_logger.debug('Removed User: %s from PusherChannel: %s' % (user_id, channel_name))
+    try:
+        PusherChannelJoin.objects.filter(channel__name=channel_name, user_id=user_id).delete()
+        debug_logger.debug('Removed User: %s from PusherChannel: %s' % (user_id, channel_name))
+    except ValueError as e:
+        debug_logger.warn(e)
