@@ -13,7 +13,7 @@ from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
-    CONVERSATION_TYPE_PUBLIC_CHAT)
+    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -187,10 +187,9 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         attachments = getattr(instance, 'raw_attachments', [])
         save_message_attachments(instance, attachments)
 
-        from shoutit.controllers import notifications_controller
+        from shoutit.controllers import notifications_controller, push_controller
         # push the message to the conversation presence channel
-        # request = getattr(instance, 'request', None)
-        # notifications_controller.send_pusher_message.delay(instance, request)
+        push_controller.send_pusher(user=None, notification_type=NOTIFICATION_TYPE_MESSAGE, version='v3')
 
         # update the conversation
         conversation = instance.conversation
@@ -265,12 +264,10 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
 
 class Notification(UUIDModel, AttachedObjectMixin):
-    ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
-    FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True,
-                                 default=None)
-    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value,
-                               choices=NotificationType.choices)
+    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
+    to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
     is_read = models.BooleanField(default=False)
+    from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
 
     def __unicode__(self):
         return self.pk + ": " + self.get_type_display()

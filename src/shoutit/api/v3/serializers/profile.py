@@ -292,10 +292,10 @@ class ProfileDetailSerializer(ProfileSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            user.update_push_tokens(push_tokens_data)
+            user.update_push_tokens(push_tokens_data, 'v3')
 
         # Notify about updates
-        notifications_controller.notify_user_of_user_update(user)
+        notifications_controller.notify_user_of_profile_update(user)
         return user
 
 
@@ -322,8 +322,8 @@ class GuestSerializer(ProfileSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            user.update_push_tokens(push_tokens_data)
+            user.update_push_tokens(push_tokens_data, 'v3')
 
         # Notify about updates
-        notifications_controller.notify_user_of_user_update(user)
+        notifications_controller.notify_user_of_profile_update(user)
         return user

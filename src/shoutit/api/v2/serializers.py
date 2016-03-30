@@ -13,7 +13,6 @@ from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from ipware.ip import get_real_ip
-from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.fields import empty
@@ -26,7 +25,7 @@ from common.constants import (
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import location_controller
-from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import (
@@ -497,30 +496,8 @@ class UserDetailSerializer(UserSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            if 'apns' in push_tokens_data:
-                apns_token = push_tokens_data.get('apns')
-                # delete user device if exists
-                if user.apns_device:
-                    user.delete_apns_device()
-                if apns_token is not None:
-                    # delete devices with same apns_token
-                    APNSDevice.objects.filter(registration_id=apns_token).delete()
-                    # create new device for user with apns_token
-                    APNSDevice(registration_id=apns_token, user=user).save()
+            user.update_push_tokens(push_tokens_data, 'v2')
 
-            if 'gcm' in push_tokens_data:
-                gcm_token = push_tokens_data.get('gcm')
-                # delete user device if exists
-                if user.gcm_device:
-                    user.delete_gcm_device()
-                if gcm_token is not None:
-                    # delete devices with same gcm_token
-                    GCMDevice.objects.filter(registration_id=gcm_token).delete()
-                    # create new device for user with gcm_token
-                    GCMDevice(registration_id=gcm_token, user=user).save()
-
-        # Notify about updates
-        notifications_controller.notify_user_of_user_update(user)
         return user
 
 
@@ -1219,3 +1196,8 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
             ret['message'] = message[:160]
         ret.pop('title', None)
         return ret
+
+
+# Backward compatibility with v3
+ProfileDetailSerializer = UserDetailSerializer
+ProfileSerializer = UserSerializer

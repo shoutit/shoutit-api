@@ -140,7 +140,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tags = Tag.objects.filter(name__in=tag_names)
 
         if request.method == 'POST':
-            listen_controller.listen_to_objects(request.user, tags, request)
+            listen_controller.listen_to_objects(request.user, tags)
             msg = "you started listening to {} shouts.".format(tag_names)
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)
@@ -188,7 +188,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tag = self.get_object()
 
         if request.method == 'POST':
-            listen_controller.listen_to_object(request.user, tag, request)
+            listen_controller.listen_to_object(request.user, tag)
             msg = "you started listening to {} shouts.".format(tag.name)
         else:
             listen_controller.stop_listening_to_object(request.user, tag)

@@ -10,9 +10,10 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.core.urlresolvers import reverse
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from mptt.admin import MPTTModelAdmin
-from push_notifications.admin import DeviceAdmin
+from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import UserType
@@ -26,11 +27,17 @@ from shoutit.models import (
     LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
     UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
     ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem, TagKey)
+    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem, TagKey, Device)
 from shoutit_pusher.models import PusherChannel, PusherChannelJoin
 
 
 # from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
+
+
+@property
+def admin_url(self):
+    return reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=(self.pk,))
+models.Model.add_to_class('admin_url', admin_url)
 
 
 # Shout
@@ -415,17 +422,40 @@ class PredefinedCity(admin.ModelAdmin):
 
 
 # Django Push Notification
-class CustomDeviceAdmin(DeviceAdmin, UserLinkMixin):
-    list_display = ('__unicode__', 'device_id', '_user', 'active', 'date_created')
+class CustomPushDeviceAdmin(PushDeviceAdmin, UserLinkMixin):
+    list_display = ('__unicode__', '_device', 'device_id', '_user', 'active', 'date_created')
     search_fields = ('device_id', 'user__id', 'user__username')
     list_filter = ('active', ('date_created', ShoutitDateFieldListFilter))
     raw_id_fields = ('user',)
+    readonly_fields = ('_device',)
+
+    def _device(self, obj):
+        device = obj.devices.first()
+        if device:
+            return '<a href="%s">Device</a>' % device.admin_url
+    _device.allow_tags = True
 
 
 admin.site.unregister(APNSDevice)
-admin.site.register(APNSDevice, CustomDeviceAdmin)
+admin.site.register(APNSDevice, CustomPushDeviceAdmin)
 admin.site.unregister(GCMDevice)
-admin.site.register(GCMDevice, CustomDeviceAdmin)
+admin.site.register(GCMDevice, CustomPushDeviceAdmin)
+
+
+@admin.register(Device)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'type', 'api_version', '_push_device')
+    fieldsets = (
+        (None, {'fields': ('type', 'api_version', '_push_device')}),
+    )
+    readonly_fields = ('type', '_push_device')
+    list_filter = ('type', 'api_version')
+    search_fields = ('apns_devices__user__id', 'apns_devices__user__username',
+                     'gcm_devices__user__id', 'gcm_devices__user__username')
+
+    def _push_device(self, obj):
+        return '<a href="%s">%s</a>' % (obj.push_device.admin_url, unicode(obj.push_device))
+    _push_device.allow_tags = True
 
 
 # Pusher

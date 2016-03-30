@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 import uuid
+
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save, post_delete
@@ -7,9 +10,9 @@ from django.dispatch import receiver
 from django_rq import job
 from elasticsearch import RequestError, ConnectionTimeout, NotFoundError, ConflictError
 from elasticsearch_dsl import DocType, String, GeoPoint
-from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED
+from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED, DeviceOS
 from shoutit.models.base import UUIDModel, LocationMixin
-from shoutit.utils import error_logger, debug_logger
+from ..utils import error_logger, debug_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -196,3 +199,15 @@ class SMSInvitation(UUIDModel):
 
     def __unicode__(self):
         return "%s %s for %s" % (self.country, self.status, self.mobile)
+
+
+class Device(UUIDModel):
+    type = models.SmallIntegerField(choices=DeviceOS.choices, db_index=True)
+    api_version = models.CharField(max_length=10, db_index=True)
+    push_device = GenericForeignKey('content_type', 'object_id')
+
+    content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    object_id = models.IntegerField(null=True, blank=True)
+
+    def __unicode__(self):
+        return "%s:%s" % (self.api_version, self.get_type_display())
