@@ -202,6 +202,7 @@ class SMSInvitation(UUIDModel):
 
 
 class Device(UUIDModel):
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='devices')
     type = models.SmallIntegerField(choices=DeviceOS.choices, db_index=True)
     api_version = models.CharField(max_length=10, db_index=True)
     push_device = GenericForeignKey('content_type', 'object_id')

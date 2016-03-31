@@ -12,6 +12,10 @@ def remove_unused_perms(apps, schema_editor):
     Permission.objects.filter(name='LISTEN_TO_USER').update(name='LISTEN_TO_PROFILE')
 
 
+def reverse(apps, schema_editor):
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -34,5 +38,5 @@ class Migration(migrations.Migration):
             name='type',
             field=models.IntegerField(default=0, choices=[(0, 'general'), (1, 'web_app'), (2, 'iphone_app'), (3, 'android_app'), (4, 'profile'), (5, 'shout')]),
         ),
-        migrations.RunPython(remove_unused_perms)
+        migrations.RunPython(remove_unused_perms, reverse)
     ]

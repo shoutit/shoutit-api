@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import uuid
 
+from django.conf import settings
 from django.db import migrations, models
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -13,14 +14,18 @@ from shoutit.models import Device
 def create_devices(apps, schema_editor):
     for apns in APNSDevice.objects.all():
         try:
-            Device.objects.create(type=DEVICE_IOS, api_version='v2', push_device=apns)
+            Device.objects.create(usrt_id=apns.user_id, type=DEVICE_IOS, api_version='v2', push_device=apns)
         except:
             pass
     for gcm in GCMDevice.objects.all():
         try:
-            Device.objects.create(type=DEVICE_ANDROID, api_version='v2', push_device=gcm)
+            Device.objects.create(user_id=gcm.user_id, type=DEVICE_ANDROID, api_version='v2', push_device=gcm)
         except:
             pass
+
+
+def reverse(apps, schema_editor):
+    pass
 
 
 class Migration(migrations.Migration):
@@ -34,6 +39,7 @@ class Migration(migrations.Migration):
             name='Device',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
+                ('user', models.ForeignKey(related_name='devices', to=settings.AUTH_USER_MODEL)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
                 ('type', models.SmallIntegerField(db_index=True, choices=[(0, 'android'), (1, 'ios')])),
@@ -45,5 +51,5 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
-        migrations.RunPython(create_devices)
+        migrations.RunPython(create_devices, reverse)
     ]
