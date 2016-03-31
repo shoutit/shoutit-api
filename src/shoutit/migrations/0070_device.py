@@ -9,19 +9,20 @@ from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import DEVICE_ANDROID, DEVICE_IOS
 from shoutit.models import Device
+from shoutit.utils import debug_logger
 
 
 def create_devices(apps, schema_editor):
     for apns in APNSDevice.objects.all():
         try:
-            Device.objects.create(usrt_id=apns.user_id, type=DEVICE_IOS, api_version='v2', push_device=apns)
-        except:
-            pass
+            Device.objects.create(user_id=apns.user_id, type=DEVICE_IOS, api_version='v2', push_device=apns)
+        except Exception as e:
+            debug_logger.debug(e)
     for gcm in GCMDevice.objects.all():
         try:
             Device.objects.create(user_id=gcm.user_id, type=DEVICE_ANDROID, api_version='v2', push_device=gcm)
-        except:
-            pass
+        except Exception as e:
+            debug_logger.debug(e)
 
 
 def reverse(apps, schema_editor):
