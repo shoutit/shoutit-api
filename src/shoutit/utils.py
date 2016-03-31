@@ -37,8 +37,7 @@ from twilio.rest import TwilioRestClient
 from common.constants import COUNTRY_ISO
 from shoutit import settings
 from shoutit.api.versioning import ShoutitNamespaceVersioning
-from shoutit.lib import mailchimp
-from common.lib.IP2Location import IP2Location
+from common.lib import mailchimp, ip2location
 
 from shoutit.monkey_patches import ShoutitCustomJSONEncoder
 
@@ -52,7 +51,7 @@ sss_logger = logging.getLogger('shoutit.sss')
 shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitCustomJSONEncoder)
 
 # IP2Location instant
-ip2location = IP2Location(filename=settings.IP2LOCATION_DB_BIN)
+ip2location = ip2location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 
 # Shoutit twilio
 shoutit_twilio = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)

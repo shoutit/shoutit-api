@@ -12,7 +12,7 @@ from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
 
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType)
+from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, PostType)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
@@ -43,11 +43,9 @@ class PostManager(models.Manager):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
-            Q(type=POST_TYPE_EXPERIENCE) | (
-                (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)) & (
-                    Q(shout__expiry_date__isnull=True, date_published__range=(day, today)) |
-                    Q(shout__expiry_date__isnull=False, shout__expiry_date__gte=today)
-                )
+            (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)) & (
+                Q(shout__expiry_date__isnull=True, date_published__range=(day, today)) |
+                Q(shout__expiry_date__isnull=False, shout__expiry_date__gte=today)
             )
         )
 
@@ -55,8 +53,8 @@ class PostManager(models.Manager):
 class ShoutManager(PostManager):
     def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
         if not types:
-            types = [POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]
-        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]))
+            types = [POST_TYPE_OFFER, POST_TYPE_REQUEST]
+        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST]))
         return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired,
                                            get_muted=get_muted)
 
@@ -347,56 +345,3 @@ class Video(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
-
-# class DealManager(ShoutManager):
-# def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
-#         return ShoutManager.get_valid_shouts(self, [POST_TYPE_DEAL], country=country, city=city, get_expired=get_expired, get_muted=get_muted)
-#
-#
-# class ExperienceManager(PostManager):
-#     def get_valid_experiences(self, country=None, city=None, get_muted=False):
-#         return PostManager.get_valid_posts(self, types=[POST_TYPE_EXPERIENCE], country=country, city=city, get_expired=True, get_muted=get_muted)
-
-# class Deal(Shout):
-#     MinBuyers = models.IntegerField(default=0)
-#     MaxBuyers = models.IntegerField(null=True, blank=True)
-#     OriginalPrice = models.FloatField()
-#     IsClosed = models.BooleanField(default=False)
-#     ValidFrom = models.DateTimeField(null=True, blank=True)
-#     ValidTo = models.DateTimeField(null=True, blank=True)
-#
-#     objects = DealManager()
-#
-#     def BuyersCount(self):
-#         return self.Buys.aggregate(buys=Sum('Amount'))['buys']
-#
-#     def AvailableCount(self):
-#         return self.MaxBuyers - self.BuyersCount()
-
-
-# class Experience(Post):
-#     AboutBusiness = models.ForeignKey('shoutit.Business', related_name='Experiences')
-#     state = models.IntegerField(null=False)
-#
-#     objects = ExperienceManager()
-#
-#     def __unicode__(self):
-#         return unicode(self.pk)
-#
-#
-# class SharedExperience(UUIDModel):
-#     Experience = models.ForeignKey('shoutit.Experience', related_name='SharedExperiences')
-#     user = models.ForeignKey(AUTH_USER_MODEL, related_name='SharedExperiences')
-#
-#     class Meta(UUIDModel.Meta):
-#         unique_together = ('Experience', 'user',)
-
-
-# class Comment(UUIDModel):
-#     AboutPost = models.ForeignKey('shoutit.Post', related_name='Comments', null=True, blank=True)
-#     user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
-#     is_disabled = models.BooleanField(default=False)
-#     text = models.TextField(max_length=300)
-#
-#     def __unicode__(self):
-#         return unicode(self.pk) + ": " + unicode(self.text)

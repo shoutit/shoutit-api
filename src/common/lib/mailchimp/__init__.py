@@ -42,7 +42,7 @@ def find_credentials():
 class Client(object):
     def __init__(self, api_key=None, host="api.mailchimp.com", api_version="3.0", verify=True):
         """
-        Create SMSGlobal API client.
+        Create MailChimp API client.
         """
 
         # Get account credentials

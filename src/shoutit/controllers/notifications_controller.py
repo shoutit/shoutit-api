@@ -6,8 +6,7 @@ from django.conf import settings
 from django.db.models.query_utils import Q
 from django_rq import job
 
-from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_EXP_POSTED,
-                              NOTIFICATION_TYPE_EXP_SHARED, NOTIFICATION_TYPE_COMMENT, NOTIFICATION_TYPE_PROFILE_UPDATE)
+from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE)
 from ..controllers import push_controller, pusher_controller, sss_controller
 from ..models import Notification
 
@@ -56,17 +55,3 @@ def notify_user_of_profile_update(user):
     user.detailed = True
     attached_object = deepcopy(user)
     notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=attached_object)
-
-
-# Todo: remove!
-def notify_business_of_exp_posted(business, exp):
-    notify_user.delay(business, NOTIFICATION_TYPE_EXP_POSTED, from_user=exp.user, attached_object=exp)
-
-
-def notify_user_of_exp_shared(user, shared_exp):
-    notify_user.delay(user, NOTIFICATION_TYPE_EXP_SHARED, from_user=shared_exp.user, attached_object=shared_exp)
-
-
-def notify_users_of_comment(users, comment):
-    for user in users:
-        notify_user.delay(user, NOTIFICATION_TYPE_COMMENT, from_user=comment.user, attached_object=comment)

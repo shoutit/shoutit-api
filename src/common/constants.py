@@ -1,58 +1,14 @@
 from __future__ import unicode_literals
 
-# URLS
-# todo: rebase on web app
-LOGIN_URL = 'signin'
-LOGOUT_URL = 'signout'
-PROFILE_URL = 'user/%s'
-SHOUT_URL = 'shout/%s'
-DEAL_URL = 'deal/%s'
-MUTE_URL = 'shout/%s/mute'
-
-# message headings
-MESSAGE_HEAD = {
-    'error': 'Oh snap!',
-    'warning': 'Holy gaucamole!',
-    'success': 'Well done!',
-    'info': 'Heads up!'
-}
-
-DEFAULT_PAGE_SIZE = 30
-DEFAULT_HOME_SHOUT_COUNT = 1000
-
-
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type(str('Enum'), (), enums)
-
-
-ENUM_XHR_RESULT = enum('SUCCESS',
-                       'FAIL',
-                       'BAD_REQUEST',
-                       'REDIRECT',
-                       'FORBIDDEN')
-
-
-class Setting(object):
-    def __int__(self):
-        return self.value
-
-    def __init__(self, value=0):
-        self.value = value
-
-    def __eq__(self, other):
-        return self.value == int(other)
-
-    def __hash__(self):
-        return self.value
-
 
 class Constant(object):
-    # should be redefined inside the classes who inherited Constant
-    # counter: is the number of specific type of constants
-    # values: is a dict of value:text
-    # texts: is a dict of text:value. if there is no text the value will be used as key
-    # choices: is tuple of (value, text) used for Model choices attribute
+    """
+    should be redefined inside the classes who inherited Constant
+    counter: is the number of specific type of constants
+    values: is a dict of value:text
+    texts: is a dict of text:value. if there is no text the value will be used as key
+    choices: is tuple of (value, text) used for Model choices attribute
+    """
     counter, values, texts, choices = 0, {}, {}, ()
 
     def __init__(self, text='', value=None):
@@ -90,32 +46,6 @@ class Constant(object):
 
     def get_text(self):
         return self.__class__.values[self.value]
-
-
-class Flag(object):
-    def __int__(self):
-        return self.value
-
-    def __init__(self, text=''):
-        self.value = self.__class__.counter
-        self.__class__.values[self.value] = text
-        self.__class__.counter *= 2
-
-    def __hash__(self):
-        return self.value
-
-    def __str__(self):
-        return self.__class__.values[self.value]
-
-    def __and__(self, other):
-        flag = self.__class__()
-        flag.value = self.value & other.value
-        return flag
-
-    def __or__(self, other):
-        flag = self.__class__()
-        flag.value = self.value | other.value
-        return flag
 
 
 TOKEN_LONG = ('abcdefghkmnopqrstuvwxyzABCDEFGHKMNPQRSTUVWXYZ23456789', 24)  # for emails
@@ -156,22 +86,14 @@ class BusinessConfirmationState(Constant):
 
 BUSINESS_CONFIRMATION_STATUS_WAITING = BusinessConfirmationState("Waiting")
 BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT = BusinessConfirmationState("Waiting Payment")
-BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION = BusinessConfirmationState(
-    "Waiting Payment Confirmation")
-BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION = BusinessConfirmationState(
-    "Waiting Confirmation")
+BUSINESS_CONFIRMATION_STATUS_WAITING_PAYMENT_CONFIRMATION = BusinessConfirmationState("Waiting Payment Confirmation")
+BUSINESS_CONFIRMATION_STATUS_WAITING_CONFIRMATION = BusinessConfirmationState("Waiting Confirmation")
 BUSINESS_CONFIRMATION_STATUS_ACCEPTED = BusinessConfirmationState("Confirmed")
 BUSINESS_CONFIRMATION_STATUS_REJECTED = BusinessConfirmationState("Rejected")
-
-business_source_types = {}
 
 
 class BusinessSourceType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
-    def __init__(self, text=''):
-        Constant.__init__(self, text)
-        business_source_types[text] = self.value
 
 
 BUSINESS_SOURCE_TYPE_NONE = BusinessSourceType('None')
@@ -186,30 +108,6 @@ USER_TYPE_PROFILE = UserType('Profile')
 USER_TYPE_PAGE = UserType('Page')
 
 
-class UserState(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-
-# USER_STATE_INACTIVE = UserState("Inactive")
-USER_STATE_ACTIVE = UserState("Active")
-USER_STATE_VALID = UserState("Valid")
-# USER_STATE_VERIFIED = UserState("Verified")
-
-user_type_flags = {}
-
-
-class UserTypeFlag(Flag):
-    counter, values, texts, choices = 1, {}, {}, ()
-
-    def __init__(self, text=''):
-        Flag.__init__(self, text)
-        user_type_flags[text] = self.value
-
-
-USER_TYPE_FLAG_INDIVIDUAL = UserTypeFlag('Individual')
-USER_TYPE_FLAG_BUSINESS = UserTypeFlag('Business')
-
-
 class PageAdminType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
@@ -217,25 +115,6 @@ class PageAdminType(Constant):
 PAGE_ADMIN_TYPE_OWNER = PageAdminType('owner')
 PAGE_ADMIN_TYPE_ADMIN = PageAdminType('admin')
 PAGE_ADMIN_TYPE_EDITOR = PageAdminType('editor')
-
-
-rank_flags = {}
-
-
-class ShoutsSortTypeFlag(Flag):
-    counter = 1
-    values = {}
-
-    def __init__(self, text=''):
-        Flag.__init__(self, text)
-        rank_flags[text] = self.value
-
-
-SORT_TYPE_TIME = ShoutsSortTypeFlag('time')
-SORT_TYPE_DISTANCE = ShoutsSortTypeFlag('distance')
-SORT_TYPE_PRICE_ASC = ShoutsSortTypeFlag('price_asc')
-SORT_TYPE_PRICE_DESC = ShoutsSortTypeFlag('price_desc')
-SORT_TYPE_RECOMMENDED = ShoutsSortTypeFlag('recommended')
 
 
 class ItemState(Constant):
@@ -246,14 +125,6 @@ ITEM_STATE_AVAILABLE = ItemState('Available')
 ITEM_STATE_SOLD_OUT = ItemState('Sold Out')
 ITEM_STATE_DISABLED = ItemState('Disabled')
 ITEM_STATE_EXPIRED = ItemState('Expired')
-
-
-class ExperienceState(Constant):
-    counter, values, texts, choices = 0, {}, {}, ()
-
-
-EXPERIENCE_DOWN = ExperienceState('Thumbs down')
-EXPERIENCE_UP = ExperienceState('Thumbs up')
 
 
 class ConversationType(Constant):
@@ -277,23 +148,15 @@ MESSAGE_ATTACHMENT_TYPE_MEDIA = MessageAttachmentType('media')
 class PostType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
 
-    def __init__(self, text=''):
-        Constant.__init__(self, text)
-
 
 POST_TYPE_REQUEST = PostType('request')
 POST_TYPE_OFFER = PostType('offer')
-POST_TYPE_EXPERIENCE = PostType('Experience')
-POST_TYPE_DEAL = PostType('Deal')
 
 MAX_TAGS_PER_SHOUT = 5
 
 
 class TagValueType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
-    def __init__(self, text=''):
-        Constant.__init__(self, text)
 
 
 TAG_TYPE_INT = TagValueType('int')
@@ -310,9 +173,6 @@ NOTIFICATION_TYPE_BROADCAST = NotificationType('broadcast')
 NOTIFICATION_TYPE_PROFILE_UPDATE = NotificationType('profile_update')
 NOTIFICATION_TYPE_CONVERSATION_UPDATE = NotificationType('conversation_update')
 NOTIFICATION_TYPE_READ_BY = NotificationType('new_read_by')
-NOTIFICATION_TYPE_EXP_POSTED = NotificationType('Experience')
-NOTIFICATION_TYPE_EXP_SHARED = NotificationType('Experience Shared')
-NOTIFICATION_TYPE_COMMENT = NotificationType('Comment')
 
 
 class ListenType(Constant):
@@ -324,15 +184,8 @@ LISTEN_TYPE_PAGE = ListenType('Page')
 LISTEN_TYPE_TAG = ListenType('Tag')
 
 
-report_types = {}
-
-
 class ReportType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-
-    def __init__(self, text=''):
-        Constant.__init__(self, text)
-        report_types[text] = self.value
 
 
 REPORT_TYPE_GENERAL = ReportType('general')
@@ -341,10 +194,7 @@ REPORT_TYPE_IPHONE_APP = ReportType('iphone_app')
 REPORT_TYPE_ANDROID_APP = ReportType('android_app')
 REPORT_TYPE_PROFILE = ReportType('profile')
 REPORT_TYPE_SHOUT = ReportType('shout')
-REPORT_TYPE_BUSINESS = ReportType('business')
-REPORT_TYPE_ITEM = ReportType('item')
-REPORT_TYPE_EXPERIENCE = ReportType('experience')
-REPORT_TYPE_COMMENT = ReportType('comment')
+
 
 DEFAULT_LOCATIONS_LATLNG = {
     'Dubai': [25.1993957, 55.2738326],
