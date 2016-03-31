@@ -15,12 +15,16 @@ def mark_all_as_read(user):
     Notification.objects.filter(is_read=False, to_user=user).update(is_read=True)
 
 
-def get_user_notifications_count(user):
+def get_all_unread_notifications_count(user):
     return Notification.objects.filter(is_read=False, to_user=user).count()
 
 
-def get_user_notifications_without_messages_count(user):
+def get_unread_notifications_count(user):
     return Notification.objects.filter(Q(is_read=False) & Q(to_user=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()
+
+
+def get_unread_conversations_count(user):
+    return Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE).count()
 
 
 @job(settings.RQ_QUEUE)

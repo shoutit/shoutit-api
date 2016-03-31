@@ -18,7 +18,7 @@ from ..utils import error_logger, debug_logger, serialize_attached_object
 
 @job(settings.RQ_QUEUE_PUSH)
 def send_push(user, notification_type, attached_object, version):
-    from shoutit.controllers.notifications_controller import get_user_notifications_count
+    from shoutit.controllers.notifications_controller import get_all_unread_notifications_count
 
     attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
 
@@ -42,7 +42,7 @@ def send_push(user, notification_type, attached_object, version):
         }
 
     if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
-        badge = get_user_notifications_count(user)
+        badge = get_all_unread_notifications_count(user)
         try:
             user.apns_device.send_message(message, extra=extra, sound='default', badge=badge)
             debug_logger.debug("Sent apns push to %s." % user)

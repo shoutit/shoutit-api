@@ -390,6 +390,16 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         listen_type, target = Listen2.listen_type_and_target_from_object(self)
         return Listen2.objects.filter(type=listen_type, target=target).count()
 
+    @property
+    def stats(self):
+        from ..controllers import notifications_controller
+        if not hasattr(self, '_stats'):
+            self._stats = {
+                'unread_conversations_count': notifications_controller.get_unread_conversations_count(self),
+                'unread_notifications_count': notifications_controller.get_unread_notifications_count(self)
+            }
+        return self._stats
+
 
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):

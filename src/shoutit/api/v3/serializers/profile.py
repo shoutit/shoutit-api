@@ -111,13 +111,14 @@ class ProfileDetailSerializer(ProfileSerializer):
         help_text="URL to message this profile if it is possible. This is the case when the profile is one of your listeners or an existing previous conversation")
     pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
     admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
+    stats = serializers.ReadOnlyField(help_text="Object specifying `unread_conversations_count` and `unread_notifications_count`")
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
                                   'listeners_url', 'listening_count', 'listening_url', 'conversation', 'chat_url',
-                                  'pages', 'admins')
+                                  'pages', 'admins', 'stats')
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -161,6 +162,7 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['location']['address']
             del ret['push_tokens']
             del ret['linked_accounts']
+            del ret['stats']
             if not ret['is_listener']:
                 del ret['chat_url']
 
