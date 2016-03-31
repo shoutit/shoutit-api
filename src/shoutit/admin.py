@@ -46,7 +46,7 @@ class CustomUserChangeForm(UserChangeForm):
 class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     save_on_top = True
     list_display = (
-        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_names',
+        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_clients',
         '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'is_guest', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
@@ -86,18 +86,22 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     _messaging.short_description = 'Messaging'
 
     def _devices(self, user):
-        apns_device = ''
-        if user.apns_device:
-            apns_device = '<a href="%s">iPhone</a>' % (
-                reverse('admin:push_notifications_apnsdevice_change', args=[user.apns_device.id]))
-        gcm_device = ''
-        if user.gcm_device:
-            gcm_device = '<a href="%s">Android</a>' % (
-                reverse('admin:push_notifications_gcmdevice_change', args=[user.gcm_device.id]))
-        return ((apns_device + '<br/>') if apns_device else '') + gcm_device
+        devices = ''
+        for device in user.devices.all():
+            devices += '<a href="%s">%s</a><br/>' % (device.admin_url, unicode(device))
+        return devices
 
     _devices.allow_tags = True
     _devices.short_description = 'Devices'
+
+    def api_clients(self, user):
+        clients = ''
+        for at in user.accesstoken_set.all():
+            clients += '<a href="%s">%s</a><br/>' % (at.admin_url, unicode(at.client.name))
+        return clients
+
+    api_clients.allow_tags = True
+    api_clients.short_description = 'Devices'
 
     def save_model(self, request, obj, form, change):
         update_fields = form.changed_data
