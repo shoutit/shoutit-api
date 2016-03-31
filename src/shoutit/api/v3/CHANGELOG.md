@@ -1,6 +1,11 @@
 # shoutit-api v3 changelog
 
 
+## Video Chat and Stats(2016-03-31)
+
+- Enhanced the Video chatting flow. Check [Video Chat wiki](https://github.com/shoutit/shoutit-api/wiki/Video-Chat).
+- Added `stats` to Profile object. Check [Profiles wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Profiles) for information on how to use it.
+
 ## Push (2016-03-30)
 
 Check the latest [Notifications wiki](https://github.com/shoutit/shoutit-api/wiki/Notifications#push-and-pusher).
