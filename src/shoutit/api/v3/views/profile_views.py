@@ -24,7 +24,7 @@ from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSe
 
 class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    Profiles API Resource.
+    Profile API Resource.
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z._]+'

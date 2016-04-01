@@ -17,7 +17,6 @@ from ..exceptions import ERROR_REASON
 
 
 class AttachedObjectSerializer(serializers.Serializer):
-    user = ProfileSerializer(source='attached_user', required=False)
     profile = ProfileSerializer(source='attached_profile', required=False)
     message = MessageSerializer(source='attached_message', required=False)
     shout = ShoutSerializer(source='attached_shout', required=False)
@@ -27,10 +26,8 @@ class AttachedObjectSerializer(serializers.Serializer):
         # to be used for representation
         class_name = attached_object.__class__.__name__
         if class_name == 'User':
-            setattr(attached_object, 'attached_user', attached_object)
             setattr(attached_object, 'attached_profile', attached_object)
         if class_name == 'Profile' or class_name == 'Page':
-            setattr(attached_object, 'attached_user', attached_object.user)
             setattr(attached_object, 'attached_profile', attached_object.user)
         if class_name == 'Message':
             setattr(attached_object, 'attached_message', attached_object)

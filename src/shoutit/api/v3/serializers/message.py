@@ -55,7 +55,6 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     conversation_id = serializers.UUIDField(read_only=True)
-    user = ProfileSerializer(read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     attachments = MessageAttachmentSerializer(many=True, required=False)
@@ -63,7 +62,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'conversation_id', 'user', 'profile', 'text', 'attachments', 'read_by')
+        fields = ('id', 'created_at', 'conversation_id', 'profile', 'text', 'attachments', 'read_by')
 
     def to_internal_value(self, data):
         validated_data = super(MessageSerializer, self).to_internal_value(data)
@@ -140,8 +139,6 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    users = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
-                              read_only=True)
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
     last_message = MessageSerializer(required=False)
@@ -159,7 +156,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Conversation
         fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count',
-                  'subject', 'icon', 'admins', 'users', 'profiles', 'last_message', 'about', 'messages_url', 'reply_url')
+                  'subject', 'icon', 'admins', 'profiles', 'last_message', 'about', 'messages_url', 'reply_url')
 
     def get_about(self, instance):
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:

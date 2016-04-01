@@ -33,7 +33,6 @@ class ShoutSerializer(serializers.ModelSerializer):
     currency = serializers.CharField(source='item.currency_code', allow_null=True, required=False,
                                      help_text="3 characters currency code taken from the list of available currencies")
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
-    user = ProfileSerializer(read_only=True)  # Todo: deprecate
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = serializers.ListField(default=list, )
@@ -42,7 +41,7 @@ class ShoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
-                  'available_count', 'is_sold', 'thumbnail', 'video_url', 'user', 'profile', 'date_published', 'filters')
+                  'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'filters')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
