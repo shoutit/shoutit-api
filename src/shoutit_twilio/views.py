@@ -8,11 +8,13 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from twilio.access_token import AccessToken, ConversationsGrant
 
+from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter
 from shoutit.models import User
 from shoutit_twilio.models import VideoClient
@@ -39,24 +41,29 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         ---
         """
         user = request.user
-        if hasattr(user, 'video_client'):
+        ttl = SHOUTIT_TWILIO_SETTINGS['TOKEN_TTL']
+        try:
             video_client = user.video_client
-        else:
+
+            # Check whether client has an expired token
+            time_diff = date_unix(timezone.now()) - video_client.created_at_unix
+            if time_diff > ttl:
+                video_client.delete()
+                raise ValueError()
+        except (AttributeError, ValueError):
             # Get credentials
             account_sid = SHOUTIT_TWILIO_SETTINGS['TWILIO_ACCOUNT_SID']
             api_key = SHOUTIT_TWILIO_SETTINGS['TWILIO_API_KEY']
             api_secret = SHOUTIT_TWILIO_SETTINGS['TWILIO_API_SECRET']
 
-            # Create an Access Token
-            token = AccessToken(account_sid, api_key, api_secret)
-
-            # Set the Identity of this token using random uuid.hex (not to have the hyphens)
+            # Create identity for the token using random uuid.hex (not to have the hyphens)
             identity = uuid.uuid4().hex
-            token.identity = identity
+
+            # Create an Access Token
+            token = AccessToken(account_sid, api_key, api_secret, identity=identity, ttl=ttl)
 
             # Grant access to Conversations
-            grant = ConversationsGrant()
-            grant.configuration_profile_sid = SHOUTIT_TWILIO_SETTINGS['TWILIO_CONFIGURATION_SID']
+            grant = ConversationsGrant(configuration_profile_sid=SHOUTIT_TWILIO_SETTINGS['TWILIO_CONFIGURATION_SID'])
             token.add_grant(grant)
 
             # Create VideoClient
