@@ -82,6 +82,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
             'user': user_dict,
+            'profile': user_dict,
             'new_signup': new_signup
         }
 
@@ -287,14 +288,14 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
     def post(self, request):
         """
-        Authorize the user and return an access token to be used in later API calls.
+        Authorize the profile and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup / login calls is optional. It may have location dict with latitude and longitude.
-        If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
+        The `profile` attribute in all signup / login calls is optional. It may have `location` dict with latitude and longitude.
+        If valid location is passed, the profile will have it set, otherwise it will have an estimated location based on IP.
 
-        When signing up and if there was a guest account saved, pass its `id` under the `user` attribute. This will make sure the guest account is no longer guest. The Api will convert it to a normal user.
+        When signing up and if there was a guest account saved, pass its `id` under the `profile` attribute. This will make sure the guest account is no longer guest. The Api will convert it to a normal account.
 
-        Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
+        Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual profile id for later tracking events.
 
         ##Requesting the access token
         There are various methods to do that. Each has different `grant_type` and attributes.
@@ -306,7 +307,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "gplus_code",
             "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -323,7 +324,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "facebook_access_token",
             "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -341,7 +342,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "grant_type": "shoutit_login",
             "email": "i.also.shout@whitehouse.gov",
             "password": "iW@ntToPl*YaGam3",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -362,7 +363,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "name": "Barack Hussein Obama",
             "email": "i.also.shout@whitehouse.gov",
             "password": "iW@ntToPl*YaGam3",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -378,7 +379,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "shoutit_guest",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -420,36 +421,34 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write",
-            "user": {Detailed or Guest user object},
+            "profile": {Detailed or Guest profile object},
             "new_signup": true
         }
         </code></pre>
 
-        If the user newly signed up `new_signup` will be set to true otherwise false.
+        If the profile newly signed up `new_signup` will be set to true otherwise false.
 
-        ###Guest user object
+        ###Guest profile object
         <pre><code>
-        {
-            "user": {
-                "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
-                "type": "Profile",
-                "api_url": "http://shoutit.dev:8000/v3/users/14969084019",
-                "username": "14969084019",
-                "is_guest": true,
-                "date_joined": 1456090930,
-                "location": {
-                    "latitude": 25.1993957,
-                    "longitude": 55.2738326,
-                    "country": "AE",
-                    "postal_code": "Dubai",
-                    "state": "Dubai",
-                    "city": "Dubai",
-                    "address": ""
-                },
-                "push_tokens": {
-                    "apns": "asdlfjorjrjrslfsfwrewrwejrlwejrwlrjwlrjwelrjwl",
-                    "gcm": null
-                }
+         {
+            "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
+            "type": "user",
+            "api_url": "http://shoutit.dev:8000/v3/users/14969084019",
+            "username": "14969084019",
+            "is_guest": true,
+            "date_joined": 1456090930,
+            "location": {
+                "latitude": 25.1993957,
+                "longitude": 55.2738326,
+                "country": "AE",
+                "postal_code": "Dubai",
+                "state": "Dubai",
+                "city": "Dubai",
+                "address": ""
+            },
+            "push_tokens": {
+                "apns": "asdlfjorjrjrslfsfwrewrwejrlwejrwlrjwlrjwelrjwl",
+                "gcm": null
             }
         }
         </code></pre>
@@ -525,6 +524,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
             'user': user_dict,
+            'profile': user_dict,
         }
 
         # Not all access_tokens are given a refresh_token
@@ -540,7 +540,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], suffix='Change Password')
     def change_password(self, request):
         """
-        Change the current user's password.
+        Change the current profile's password.
         ###REQUIRES AUTH
         ###Change password
         ####Body
@@ -552,7 +552,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         }
         </code></pre>
 
-        `old_password` is only required if set before. check user's `is_set_password` property
+        `old_password` is only required if set before. check profile's `is_set_password` property
         ---
         omit_serializer: true
         parameters:
@@ -566,8 +566,8 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], permission_classes=(), suffix='Reset Password')
     def reset_password(self, request):
         """
-        Send the user a password-reset email.
-        Used when user forgot his password. `email` can be email or username.
+        Send the profile a password-reset email.
+        Used when profile forgot his password. `email` can be email or username.
         ###Reset password
         ####Body
         <pre><code>
@@ -589,7 +589,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], permission_classes=(), suffix='Set Password')
     def set_password(self, request):
         """
-        Set the password using a reset token. This changes the user's current password. `reset_token` is to be extracted from the url sent to user's email.
+        Set the password using a reset token. This changes the profiles's current password. `reset_token` is to be extracted from the url sent to profile's email.
         ###Set Password
         ####Body
         <pre><code>
@@ -666,7 +666,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write",
-            "user": {Detailed User Object}
+            "profile": {Detailed Profile Object}
         }
         </code></pre>
 

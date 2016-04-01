@@ -8,46 +8,18 @@ import requests
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import IntegrityError
-from django.db.models.expressions import F
-from django.db.models.query_utils import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
 
-from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE)
 from common.utils import process_tags
 from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
-from shoutit.models import Shout, Post
+from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
 from shoutit.utils import debug_logger, track
-
-
-def get_post(post_id, find_muted=False, find_expired=False):
-    post = Post.objects.filter(id=post_id, is_disabled=False).select_related('user', 'user__business', 'user__profile')
-    if not find_muted:
-        post = post.filter(muted=False)
-
-    if not find_expired:
-        _today = timezone.now()
-        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        begin = _today - days
-        post = post.filter(
-            (~Q(type=POST_TYPE_REQUEST) & ~Q(type=POST_TYPE_OFFER)) |
-            ((Q(shout__expiry_date__isnull=True, date_published__range=(begin, _today)) |
-              Q(shout__expiry_date__isnull=False, date_published__lte=F('shout__expiry_date'))) &
-             (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)))
-        ).select_related()
-    if post:
-        post = post[0]
-        if post.type == POST_TYPE_OFFER or post.type == POST_TYPE_REQUEST:
-            return post.shout
-        elif post.type == POST_TYPE_EXPERIENCE:
-            return post.experience
-    else:
-        return None
 
 
 def delete_post(post):
@@ -84,7 +56,6 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-# todo: handle exception on each step and in case of errors, rollback!
 def create_shout_v2(user, shout_type, title, text, price, currency, category, tags, location, tags2=None, images=None,
                     videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
                     publish_to_facebook=None):
@@ -172,11 +143,11 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
                videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None, mobile=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
                               videos=videos, available_count=available_count, is_sold=is_sold)
-    if text:
+    if text is not None:
         shout.text = text
-    if category:
+    if category is not None:
         shout.category = category
-    if filters:
+    if filters is not None:
         tags2 = {}
         for f in filters:
             tags2[f['slug']] = str(f['value']['slug'])
@@ -188,10 +159,10 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
         shout.tags = tags
         # Create actual tags objects (when necessary)
         tag_controller.get_or_create_tags(tags, shout.user)
-    if location:
+    if location is not None:
         location_controller.update_object_location(shout, location, save=False)
         location_controller.add_predefined_city(location)
-    if page_admin_user:
+    if page_admin_user is not None:
         shout.page_admin_user = page_admin_user
     if mobile is not None:
         shout.mobile = mobile

@@ -19,7 +19,6 @@ api2_urls = {
     'item': ('items/{}', 'pk'),
     'Tag': ('tags/{}', 'name'),
     'Conversation': ('conversations/{}', 'pk'),
-    'Experience': ('experiences/{}', 'pk'),
 
     JSON_URL_MARK_NOTIFICATION_AS_READ: JSON_URL_MARK_NOTIFICATION_AS_READ,
     JSON_URL_MARK_NOTIFICATION_AS_UNREAD: JSON_URL_MARK_NOTIFICATION_AS_UNREAD,

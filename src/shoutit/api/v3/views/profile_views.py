@@ -6,31 +6,30 @@ from __future__ import unicode_literals
 
 from rest_framework import viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
+from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter, InvalidBody, \
+    RequiredBody
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.models import User, Shout, ShoutIndex
-from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
-from ..serializers import (UserSerializer, UserDetailSerializer, MessageSerializer, ShoutSerializer,
-                           TagDetailSerializer, UserDeactivationSerializer)
+from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, ShoutSerializer,
+                           TagDetailSerializer, ProfileDeactivationSerializer, GuestSerializer)
 
 
-class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    User API Resource.
+    Profile API Resource.
     """
     lookup_field = 'username'
     lookup_value_regex = '[0-9a-zA-Z._]+'
-    parser_classes = DEFAULT_PARSER_CLASSES_v2
-    serializer_class = UserSerializer
-    serializer_detail_class = UserDetailSerializer
+    serializer_class = ProfileSerializer
+    serializer_detail_class = ProfileDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True)
     queryset_detail = User.objects.filter(is_active=True).prefetch_related('profile', 'page')
     pagination_class = ShoutitPageNumberPaginationNoCount
@@ -44,36 +43,53 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if self.request.user.is_authenticated():
             if username == 'me' or username == self.request.user.username:
                 return self.request.user
-        return super(UserViewSet, self).get_object()
+        return super(ProfileViewSet, self).get_object()
+
+    def get_serializer(self, *args, **kwargs):
+        if args:
+            instance = args[0]
+            if isinstance(instance, User) and instance.is_guest:
+                self.serializer_class = GuestSerializer
+                self.serializer_detail_class = GuestSerializer
+        return super(ProfileViewSet, self).get_serializer(*args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         """
-        List Users based on `search` query param
+        List Profiles based on `search` query param
 
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer}
+          "results": [] // list of {ProfileSerializer}
         }
         </code></pre>
         ---
-        serializer: UserSerializer
+        serializer: ProfileSerializer
         parameters:
             - name: search
               paramType: query
         """
-        return super(UserViewSet, self).list(request, *args, **kwargs)
+        return super(ProfileViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Retrieve a User
+        Retrieve a Profile
+
+        ####These attributes will only show for Profile owner
+        `email`, `mobile`, `location.latitude`, `location.longitude`, `location.address`, `push_tokens`, `linked_accounts`
+
+        ####These attributes will not show for profile owner
+        `is_listening`, `is_listener`, `conversation`
+
+        ####This attribute will only show when it is possible to *start* chat with the profile
+        `chat_url`
         ---
-        serializer: UserDetailSerializer
+        serializer: ProfileDetailSerializer
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -84,7 +100,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def partial_update(self, request, *args, **kwargs):
         """
-        Modify a User
+        Modify a Profile
         ###REQUIRES AUTH
         ###Request
         Specify any or all of these attributes to change them.
@@ -93,6 +109,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         {
             "username": "mo",
             "email": "mo.chawich@gmail.com",
+            "mobile": "01501578444",
             "website": "https://www.shoutit.com",
             "first_name": "Mo",
             "last_name": "Chawich",
@@ -136,12 +153,12 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         }
         </code></pre>
         ---
-        serializer: UserDetailSerializer
+        serializer: ProfileDetailSerializer
         omit_parameters:
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -156,7 +173,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
     def destroy(self, request, *args, **kwargs):
         """
-        Delete a User and everything attached to him
+        Delete a Profile and everything attached to it
         ###REQUIRES AUTH
         ```
         NOT IMPLEMENTED AND ONLY USED FOR TEST USERS
@@ -167,7 +184,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -181,16 +198,16 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['post', 'delete'], permission_classes=(IsAuthenticatedOrReadOnly,), suffix='Listen')
     def listen(self, request, *args, **kwargs):
         """
-        Start/Stop listening to a User
+        Start/Stop listening to a Profile
         ###REQUIRES AUTH
         ###Start listening
         <pre><code>
-        POST: /v2/users/{username}/listen
+        POST: /users/{username}/listen
         </code></pre>
 
         ###Stop listening
         <pre><code>
-        DELETE: /v2/users/{username}/listen
+        DELETE: /users/{username}/listen
         </code></pre>
         ---
         omit_serializer: true
@@ -201,7 +218,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         ap = user.ap
 
         if request.user == user:
-            raise ValidationError({'error': "You can not listen to your self"})
+            raise ShoutitBadRequest("You can't listen to your self")
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap)
@@ -220,22 +237,22 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
-        List the User listeners
+        List the Profile listeners
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer}
+          "results": [] // list of {ProfileSerializer}
         }
         </code></pre>
         ---
-        serializer: UserSerializer
+        serializer: ProfileSerializer
         omit_parameters:
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -247,29 +264,30 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         listeners = listen_controller.get_object_listeners(user.ap)
         page = self.paginate_queryset(listeners)
-        serializer = UserSerializer(page, many=True, context={'request': request})
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], suffix='Listening')
     def listening(self, request, *args, **kwargs):
         """
-        List the User listening based on `type` query param. It could be either 'users' or 'tags', default is 'users'
+        List the Profile listening based on `type` query param.
+        It could be either `users`, `pages` or `tags`. The default is `users`
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {UserSerializer} same as in listeners or {TagDetailSerializer}
+          "results": [] // list of {ProfileSerializer} same as in listeners or {TagDetailSerializer}
         }
         </code></pre>
 
         ---
-        serializer: TagDetailSerializer
+        omit_serializer: true
         omit_parameters:
             - form
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -288,21 +306,22 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
               paramType: query
         """
 
-        listening_type = request.query_params.get('type', 'users')
+        listening_type = request.query_params.get('type')
+        if not listening_type:
+            raise RequiredParameter('type')
         if listening_type not in ['users', 'pages', 'tags']:
-            raise ValidationError({'type': "should be `users`, `pages` or `tags`."})
+            raise InvalidParameter('type', "Should be either `users`, `pages` or `tags`.")
 
         user = self.get_object()
         listening = getattr(user, 'listening2_' + listening_type)
 
         # we do not use the view pagination class since we need one with custom results field
-        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(
-            custom_results_field=listening_type)
+        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(custom_results_field=listening_type)
         page = self.paginate_queryset(listening)
 
         result_object_serializers = {
-            'users': UserSerializer,
-            'pages': UserSerializer,
+            'users': ProfileSerializer,
+            'pages': ProfileSerializer,
             'tags': TagDetailSerializer,
         }
         result_object_serializer = result_object_serializers[listening_type]
@@ -313,14 +332,14 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     @detail_route(methods=['get'], permission_classes=(IsAuthenticated, IsOwner), suffix='Home')
     def home(self, request, *args, **kwargs):
         """
-        List the User homepage shouts. User can't see the homepage of other users.
-        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
+        List the Profile homepage shouts. Profile can't see the homepage of other profiles.
+        [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
         ###REQUIRES AUTH
         ---
         serializer: ShoutSerializer
         parameters:
             - name: username
-              description: me for logged in user
+              description: me for logged in profile
               paramType: path
               required: true
               defaultValue: me
@@ -340,55 +359,10 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         serializer = ShoutSerializer(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
 
-    @detail_route(methods=['get'], suffix='Shouts')
-    def shouts(self, request, *args, **kwargs):
-        """
-        List the User shouts.
-        [Shouts Pagination](https://docs.google.com/document/d/1Zp9Ks3OwBQbgaDRqaULfMDHB-eg9as6_wHyvrAWa8u0/edit#heading=h.97r3lxfv95pj)
-        ---
-        serializer: ShoutSerializer
-        omit_parameters:
-            - form
-        parameters:
-            - name: username
-              description: me for logged in user
-              paramType: path
-              required: true
-              defaultValue: me
-            - name: shout_type
-              paramType: query
-              defaultValue: all
-              enum:
-                - request
-                - offer
-                - all
-            - name: page_size
-              paramType: query
-        """
-        user = self.get_object()
-        shout_type = request.query_params.get('shout_type', 'all')
-        if shout_type not in ['offer', 'request', 'all']:
-            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
-
-        # todo: refactor to use shout index filter
-        self.pagination_class = PageNumberIndexPagination
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
-        shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-date_published')
-        if shout_type != 'all':
-            shouts = shouts.query('match', type=shout_type)
-
-        page = self.paginate_queryset(shouts)
-        serializer = ShoutSerializer(page, many=True, context={'request': request})
-        return self.get_paginated_response(serializer.data)
-
     @detail_route(methods=['post'], suffix='Message')
-    def message(self, request, *args, **kwargs):
+    def chat(self, request, *args, **kwargs):
         """
-        Send the User a message
+        Start or continue chatting (conversation whose its `type` is `chat`) with the Profile
         ###REQUIRES AUTH
         > A user can only message his Listeners, or someone whom he already has an existing conversation with.
         ###Request
@@ -414,6 +388,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             ]
         }
         </code></pre>
+
+        Either `text`, `attachments` or both has to be provided. Images and videos are to be compressed and uploaded before submitting. CDN urls should be sent.
         ---
         response_serializer: MessageSerializer
         omit_parameters:
@@ -426,9 +402,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         logged_user = request.user
         if logged_user == user:
-            raise ValidationError({'error': "You can not start a conversation with your self"})
+            raise ShoutitBadRequest("You can not start a conversation with your self")
         if not (message_controller.conversation_exist(users=[user, logged_user]) or user.is_listening(logged_user)):
-            raise ValidationError({'error': "You can only start a conversation with your listeners"})
+            raise ShoutitBadRequest("You can only start a conversation with your listeners")
         context = {
             'request': request,
             'conversation': None,
@@ -444,7 +420,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
 
-    @detail_route(methods=['post', 'patch', 'delete'], suffix='Link / Unlink Accounts')
+    @detail_route(methods=['patch', 'delete'], suffix='Link / Unlink Accounts')
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
@@ -452,7 +428,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Link Facebook
         <pre><code>
-        PATCH: /v2/users/{username}/link
+        PATCH: /users/{username}/link
         {
             "account": "facebook",
             "facebook_access_token": "FACEBOOK_ACCESS_TOKEN"
@@ -461,7 +437,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Unlink Facebook
         <pre><code>
-        DELETE: /v2/users/{username}/link
+        DELETE: /users/{username}/link
         {
             "account": "facebook"
         }
@@ -469,7 +445,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Link G+
         <pre><code>
-        PATCH: /v2/users/{username}/link
+        PATCH: /users/{username}/link
         {
             "account": "gplus",
             "gplus_code": "GOOGLE_GRANT_CODE"
@@ -478,48 +454,51 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         ###Unlink G+
         <pre><code>
-        DELETE: /v2/users/{username}/link
+        DELETE: /users/{username}/link
         {
             "account": "gplus"
         }
         </code></pre>
         ---
-        serializer: UserDetailSerializer
+        serializer: ProfileDetailSerializer
         omit_parameters:
             - form
         parameters:
             - name: body
               paramType: body
         """
-        user = self.get_object()
+        # Todo: move validation to serializer
+        instance = self.get_object()
         account = request.data.get('account') or request.query_params.get('account')
         if not account:
-            raise ValidationError({'account': "This field is required."})
+            raise RequiredBody('account')
         if account not in ['facebook', 'gplus']:
-            raise ValidationError({'account': "Unsupported social account."})
+            raise InvalidBody('account', "Unsupported social account")
 
         if request.method in ['PATCH', 'POST']:
             if account == 'gplus':
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
-                    raise ValidationError({'gplus_code': "provide a valid `gplus_code`"})
-                client = hasattr(request.auth, 'client') and request.auth.client.name or None
-                gplus_controller.link_gplus_account(user, gplus_code, client)
+                    raise RequiredBody('gplus_code', message="Couldn't link your G+ account",
+                                       developer_message="provide a valid `gplus_code`")
+                client = (hasattr(request.auth, 'client') and request.auth.client.name) or 'shoutit-test'
+                gplus_controller.link_gplus_account(instance, gplus_code, client)
 
             elif account == 'facebook':
                 facebook_access_token = request.data.get('facebook_access_token')
                 if not facebook_access_token:
-                    raise ValidationError({'facebook_access_token': "provide a valid `facebook_access_token`"})
-                facebook_controller.link_facebook_account(user, facebook_access_token)
+                    raise RequiredBody('facebook_access_token', message="Couldn't link your Facebook account",
+                                       developer_message="provide a valid `facebook_access_token`")
+                facebook_controller.link_facebook_account(instance, facebook_access_token)
 
                 # msg = "{} linked successfully.".format(account.capitalize())
 
         else:
             if account == 'gplus':
-                gplus_controller.unlink_gplus_user(user)
+                gplus_controller.unlink_gplus_user(instance)
 
             elif account == 'facebook':
-                facebook_controller.unlink_facebook_user(user)
+                facebook_controller.unlink_facebook_user(instance)
 
                 # msg = "{} unlinked successfully.".format(account.capitalize())
 
@@ -529,13 +508,13 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         #     'status': status.HTTP_202_ACCEPTED
         # }
         # return Response(**ret)
-        serializer = self.get_serializer(user)
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     @detail_route(methods=['post'], permission_classes=(IsAuthenticated, IsOwner), suffix="Deactivate user's account")
     def deactivate(self, request, *args, **kwargs):
         """
-        Deactivate user's account
+        Deactivate profile
         ###REQUIRES AUTH, Account owner
 
         ####Body
@@ -550,6 +529,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - form
         """
         user = self.get_object()
-        serializer = UserDeactivationSerializer(data=request.data, context={'user': user})
+        serializer = ProfileDeactivationSerializer(data=request.data, context={'profile': user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

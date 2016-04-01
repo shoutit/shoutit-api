@@ -14,26 +14,30 @@ import uuid
 from HTMLParser import HTMLParser
 from cStringIO import StringIO
 from datetime import timedelta
+from importlib import import_module
 from re import sub
 
 import boto
 from PIL import Image
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
 # from django.dispatch import receiver
+from django.http import HttpRequest
 from django.utils.timezone import now as django_now
 from django_rq import job
 import nexmo as nexmo
 import phonenumbers
 import requests
 from mixpanel import Mixpanel
+from rest_framework.request import Request
 from twilio.rest import TwilioRestClient
 
 from common.constants import COUNTRY_ISO
 from shoutit import settings
-from shoutit.lib import mailchimp
-from common.lib.IP2Location import IP2Location
+from shoutit.api.versioning import ShoutitNamespaceVersioning
+from common.lib import mailchimp, location
 
 from shoutit.monkey_patches import ShoutitCustomJSONEncoder
 
@@ -47,7 +51,7 @@ sss_logger = logging.getLogger('shoutit.sss')
 shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitCustomJSONEncoder)
 
 # IP2Location instant
-ip2location = IP2Location(filename=settings.IP2LOCATION_DB_BIN)
+ip2location = location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 
 # Shoutit twilio
 shoutit_twilio = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
@@ -243,6 +247,7 @@ def _subscribe_to_master_list(user):
 
 def correct_mobile(mobile, country, raise_exception=False):
     try:
+        mobile = mobile.lower()
         country = country.upper()
         if country in ['KW', 'OM', 'BH', 'QA'] and not mobile.startswith('00') and mobile.startswith('0'):
             mobile = mobile[1:]
@@ -379,3 +384,55 @@ def now_plus_delta(delta=None):
     if delta and isinstance(delta, timedelta):
         return now + delta
     return now
+
+
+def blank_to_none(ret, fields):
+    for field in fields:
+        if field in ret and ret[field] == '':
+            ret[field] = None
+
+
+def none_to_blank(obj, attribute):
+    for attr in attribute:
+        if hasattr(obj, attr) and getattr(obj, attr) is None:
+            setattr(obj, attr, '')
+
+
+def create_fake_request(version):
+    django_request = HttpRequest()
+    django_request.META['SERVER_NAME'] = 'api.shoutit.com'
+    django_request.META['SERVER_PORT'] = '80'
+    request = Request(django_request)
+    request.version = version
+    request.versioning_scheme = ShoutitNamespaceVersioning()
+    return request
+
+
+def serialize_attached_object(attached_object, version, user=None):
+    from .models import Conversation, Message, User
+    serializers = import_module('shoutit.api.%s.serializers' % version)
+
+    # Create fake Request and set request.user to the notified user as if he was requesting it.
+    request = create_fake_request(version)
+    request.user = user or AnonymousUser()
+
+    if isinstance(attached_object, dict):
+        return attached_object
+    if isinstance(attached_object, User):
+        if getattr(attached_object, 'detailed', False):
+            serializer = serializers.ProfileDetailSerializer
+        else:
+            serializer = serializers.ProfileSerializer
+    elif isinstance(attached_object, Message):
+        serializer = serializers.MessageSerializer
+    elif isinstance(attached_object, Conversation):
+        serializer = serializers.ConversationSerializer
+    else:
+        serializer = None
+
+    if serializer:
+        attached_object_dict = serializer(attached_object, context={'request': request}).data
+    else:
+        attached_object_dict = {}
+
+    return attached_object_dict

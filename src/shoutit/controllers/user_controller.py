@@ -37,7 +37,7 @@ def create_user(email=None, password=None, first_name='', last_name='', username
 
     # profile fields
     profile_fields = profile_fields or {}
-    if not profile_fields.get('location'):
+    if not location_controller.has_full_location(profile_fields):
         profile_fields.update(DEFAULT_LOCATION)
     extra_user_fields.update({
         'type': USER_TYPE_PROFILE,

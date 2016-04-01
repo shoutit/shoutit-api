@@ -1,17 +1,14 @@
 from __future__ import unicode_literals
 
 from django.apps import apps
-from django.db.models.signals import post_save
+from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from django.conf import settings
-
-from common.constants import (
-    ListenType, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG
-)
-from shoutit.models.action import Action
-from shoutit.utils import track
+from common.constants import ListenType, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG
+from .action import Action
+from ..utils import track
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 

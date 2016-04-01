@@ -1,6 +1,72 @@
 # shoutit-api v3 changelog
 
 
+## Deprecations(2016-04-01)
+
+- Removed `user` and `users` from all v3 endpoints except those for authentication are now pending deprecation
+- Removed `main_tag` from Category object
+- Removed `/misc/categories` and `/misc/shout_sort_types`
+- Added `/shouts/categories` and `/shouts/sort_types`
+
+## Video Chat and Stats(2016-03-31)
+
+- Enhanced the Video chatting flow. Check [Video Chat wiki](https://github.com/shoutit/shoutit-api/wiki/Video-Chat).
+- Added `stats` to Profile object. Check [Profiles wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Profiles) for information on how to use it.
+
+## Push (2016-03-30)
+
+Check the latest [Notifications wiki](https://github.com/shoutit/shoutit-api/wiki/Notifications#push-and-pusher).
+
+- Pusher channel names in v3 should include the version e.g `presence-v3-c-conversationid`
+- Profile channel name is now uses `p` instead of `u` i.e. `presence-v3-p-profileid`
+- Added new push events: `new_read_by`, `profile_update`, and `conversation_update`
+- Check the new Pusher credentials for development in the wiki.
+- Added `/messages/{id}/read` endpoint to mark messages as read / unread
+
+
+## Dev (2016-03-29)
+
+- `type` is now required query parameter when retrieving list of listening on `/profiles/{username}/listening`
+- Added `type` property to **MessageAttachment** which can be either `shout`, `location` or `media`
+    - `shout` attachment has `shout` property
+    - `location` attachment has `location` property
+    - `media` attachment has `images` and `videos` properties
+- Unified the inputs and outputs of empty string values according to the following
+
+### Profile
+on `PATCH: /profiles/{id}`
+
+- `image`, `cover`, `mobile`, `gender`, `bio` / `about`, `video`, `website`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+- `push_tokens.apns`, `push_tokens.gcm`
+    - input: `null`
+    - output: `null`
+  
+### Shout
+on `POST: /shouts` and `PATCH: /shouts/{id}`
+
+- `title`, `text`, `mobile`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+- `mobile_hint`
+    - output: `null`
+    
+### Message and Report
+on `POST: /conversations/{id}/reply`, `POST: /shouts/{id}/reply` and `POST: /profiles/{id}/chat`
+
+- `text`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+
+### Report
+on `POST: /misc/reports`
+
+- `text`
+    - input: not set, empty `""` or `null`
+    - output: `null`
+
+
 ## New Error responses (2016-03-25)
 
 V3 of the API is now returning a standard error responses according to this [wiki page](https://github.com/shoutit/shoutit-api/wiki/Error-Responses)

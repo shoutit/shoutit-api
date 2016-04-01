@@ -8,25 +8,24 @@ from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.validators import URLValidator
-from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
 from shoutit.controllers import message_controller, location_controller, notifications_controller
 from shoutit.models import User, InactiveUser, Profile, Page, Video
-from shoutit.utils import url_with_querystring, correct_mobile
-from .base import VideoSerializer, LocationSerializer, PushTokensSerializer
+from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
+from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input
 from ..exceptions import ERROR_REASON
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
-    image = serializers.URLField(source='ap.image', required=False)
-    cover = serializers.URLField(source='ap.cover', required=False)
+    image = serializers.URLField(source='ap.image', **empty_char_input)
+    cover = serializers.URLField(source='ap.cover', **empty_char_input)
     api_url = serializers.SerializerMethodField()
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
-    listeners_count = serializers.IntegerField(required=False, help_text="Number of profiles (users, pages) Listening to this Profile")
+    listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
     is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
 
     class Meta:
@@ -82,32 +81,27 @@ class ProfileSerializer(serializers.ModelSerializer):
             ret = InactiveUser().to_dict
         else:
             ret = super(ProfileSerializer, self).to_representation(instance)
-        if not ret.get('image'):
-            ret['image'] = None
-        if not ret.get('cover'):
-            ret['cover'] = None
+        blank_to_none(ret, ['image', 'cover'])
         return ret
 
 
 # Todo: create two subclasses UserSerializer/UserDetailSerializer and PageSerializer/PageDetailSerializer
 class ProfileDetailSerializer(ProfileSerializer):
-    email = serializers.EmailField(allow_blank=True, max_length=254, required=False,
-                                   help_text="Only shown for owner")
-    mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, allow_blank=True, default='')
+    email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
+    mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, **empty_char_input)
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    gender = serializers.CharField(source='profile.gender', required=False)
-    bio = serializers.CharField(source='profile.bio', allow_blank=True, default='', max_length=150)
-    about = serializers.CharField(source='page.about', allow_blank=True, default='', max_length=150)
+    gender = serializers.CharField(source='profile.gender', **empty_char_input)
+    bio = serializers.CharField(source='profile.bio', max_length=150, **empty_char_input)
+    about = serializers.CharField(source='page.about', max_length=150, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
-    website = serializers.CharField(source='ap.website', allow_blank=True, default='')
+    website = serializers.CharField(source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this profile listeners")
-    listening_count = serializers.DictField(
-        read_only=True, child=serializers.IntegerField(),
+    listening_count = serializers.ReadOnlyField(
         help_text="object specifying the number of profile listening. It has 'users', 'pages' and 'tags' attributes")
     listening_url = serializers.SerializerMethodField(
         help_text="URL to get the listening of this profile. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
@@ -117,13 +111,14 @@ class ProfileDetailSerializer(ProfileSerializer):
         help_text="URL to message this profile if it is possible. This is the case when the profile is one of your listeners or an existing previous conversation")
     pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
     admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
+    stats = serializers.ReadOnlyField(help_text="Object specifying `unread_conversations_count` and `unread_notifications_count`")
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
                                   'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
                                   'listeners_url', 'listening_count', 'listening_url', 'conversation', 'chat_url',
-                                  'pages', 'admins')
+                                  'pages', 'admins', 'stats')
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -167,6 +162,7 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['location']['address']
             del ret['push_tokens']
             del ret['linked_accounts']
+            del ret['stats']
             if not ret['is_listener']:
                 del ret['chat_url']
 
@@ -177,10 +173,7 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['conversation']
             del ret['chat_url']
 
-        if not ret.get('image'):
-            ret['image'] = None
-        if not ret.get('cover'):
-            ret['cover'] = None
+        blank_to_none(ret, ['image', 'cover', 'gender', 'video', 'bio', 'about', 'mobile', 'website'])
         return ret
 
     def to_internal_value(self, data):
@@ -217,7 +210,6 @@ class ProfileDetailSerializer(ProfileSerializer):
         return website
 
     def validate_mobile(self, mobile):
-        mobile = mobile.lower()
         if mobile:
             user = self.context['request'].user
             mobile = correct_mobile(mobile, user.location['country'], raise_exception=True)
@@ -263,35 +255,20 @@ class ProfileDetailSerializer(ProfileSerializer):
         profile_data = validated_data.get('profile', {})
         page_data = validated_data.get('page', {})
 
+        def fill(obj, data, fields):
+            for field in fields:
+                if field in data:
+                    setattr(obj, field, data[field])
+                    ap_update_fields.append(field)
+
         if isinstance(ap, Profile):
-            bio = profile_data.get('bio')
-            if bio is not None:
-                ap.bio = bio
-                ap_update_fields.append('bio')
-            gender = profile_data.get('gender')
-            if gender is not None:
-                ap.gender = gender
-                ap_update_fields.append('gender')
-            mobile = profile_data.get('mobile')
-            if mobile is not None:
-                ap.mobile = mobile
-                ap_update_fields.append('mobile')
+            fill(ap, profile_data, ['bio', 'gender', 'mobile'])
+
         elif isinstance(ap, Page):
             pass
 
         if ap_data:
-            image = ap_data.get('image')
-            if image:
-                ap.image = image
-                ap_update_fields.append('image')
-            cover = ap_data.get('cover')
-            if cover:
-                ap.cover = cover
-                ap_update_fields.append('cover')
-            website = ap_data.get('website')
-            if website is not None:
-                ap.website = website
-                ap_update_fields.append('website')
+            fill(ap, ap_data, ['image', 'cover', 'website'])
 
             video_data = ap_data.get('video', {})
             if video_data:
@@ -317,30 +294,10 @@ class ProfileDetailSerializer(ProfileSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            if 'apns' in push_tokens_data:
-                apns_token = push_tokens_data.get('apns')
-                # delete user device if exists
-                if user.apns_device:
-                    user.delete_apns_device()
-                if apns_token is not None:
-                    # delete devices with same apns_token
-                    APNSDevice.objects.filter(registration_id=apns_token).delete()
-                    # create new device for user with apns_token
-                    APNSDevice(registration_id=apns_token, user=user).save()
-
-            if 'gcm' in push_tokens_data:
-                gcm_token = push_tokens_data.get('gcm')
-                # delete user device if exists
-                if user.gcm_device:
-                    user.delete_gcm_device()
-                if gcm_token is not None:
-                    # delete devices with same gcm_token
-                    GCMDevice.objects.filter(registration_id=gcm_token).delete()
-                    # create new device for user with gcm_token
-                    GCMDevice(registration_id=gcm_token, user=user).save()
+            user.update_push_tokens(push_tokens_data, 'v3')
 
         # Notify about updates
-        notifications_controller.notify_user_of_user_update(user)
+        notifications_controller.notify_user_of_profile_update(user)
         return user
 
 
@@ -367,28 +324,8 @@ class GuestSerializer(ProfileSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            if 'apns' in push_tokens_data:
-                apns_token = push_tokens_data.get('apns')
-                # delete user device if exists
-                if user.apns_device:
-                    user.delete_apns_device()
-                if apns_token is not None:
-                    # delete devices with same apns_token
-                    APNSDevice.objects.filter(registration_id=apns_token).delete()
-                    # create new device for user with apns_token
-                    APNSDevice(registration_id=apns_token, user=user).save()
-
-            if 'gcm' in push_tokens_data:
-                gcm_token = push_tokens_data.get('gcm')
-                # delete user device if exists
-                if user.gcm_device:
-                    user.delete_gcm_device()
-                if gcm_token is not None:
-                    # delete devices with same gcm_token
-                    GCMDevice.objects.filter(registration_id=gcm_token).delete()
-                    # create new device for user with gcm_token
-                    GCMDevice(registration_id=gcm_token, user=user).save()
+            user.update_push_tokens(push_tokens_data, 'v3')
 
         # Notify about updates
-        notifications_controller.notify_user_of_user_update(user)
+        notifications_controller.notify_user_of_profile_update(user)
         return user

@@ -13,8 +13,8 @@ from rest_framework.reverse import reverse
 from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Currency, InactiveShout
-from shoutit.utils import upload_image_to_s3, debug_logger
-from .base import LocationSerializer, VideoSerializer
+from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none
+from .base import LocationSerializer, VideoSerializer, empty_char_input
 from .profile import ProfileSerializer
 from .tag import CategorySerializer
 from ..exceptions import ERROR_REASON
@@ -24,8 +24,8 @@ class ShoutSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
     location = LocationSerializer(
         help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
-    title = serializers.CharField(source='item.name', min_length=4, max_length=50, default='', allow_blank=True, allow_null=True, help_text="Max 50 characters")
-    text = serializers.CharField(min_length=10, max_length=1000, default='', allow_null=True, allow_blank=True, help_text="Max 1000 characters")
+    title = serializers.CharField(source='item.name', min_length=4, max_length=50, help_text="Max 50 characters", **empty_char_input)
+    text = serializers.CharField(min_length=10, max_length=1000, help_text="Max 1000 characters", **empty_char_input)
     price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
     available_count = serializers.IntegerField(default=1, help_text="Only used for Offers")
     is_sold = serializers.BooleanField(default=False, help_text="Only used for Offers")
@@ -33,7 +33,6 @@ class ShoutSerializer(serializers.ModelSerializer):
     currency = serializers.CharField(source='item.currency_code', allow_null=True, required=False,
                                      help_text="3 characters currency code taken from the list of available currencies")
     date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
-    user = ProfileSerializer(read_only=True)  # Todo: deprecate
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = serializers.ListField(default=list, )
@@ -42,14 +41,16 @@ class ShoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
-                  'available_count', 'is_sold', 'thumbnail', 'video_url', 'user', 'profile', 'date_published', 'filters')
+                  'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'filters')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def validate_currency(self, value):
+        if not value:
+            return None
         try:
-            if not value:
+            if not isinstance(value, basestring):
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except (Currency.DoesNotExist, ValueError):
@@ -82,7 +83,7 @@ class ShoutSerializer(serializers.ModelSerializer):
         # Optional price and currency
         price_is_none = data.get('price') is None
         currency_is_none = data.get('currency') is None
-        if price_is_none != currency_is_none:
+        if price_is_none != currency_is_none and data.get('price') != 0:
             raise serializers.ValidationError({'price': "price and currency must be either both set or both `null`"})
         # Optional category defaults to "Other"
         if data.get('category') is None:
@@ -96,7 +97,9 @@ class ShoutSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         if instance.muted or instance.is_disabled:
             return InactiveShout().to_dict
-        return super(ShoutSerializer, self).to_representation(instance)
+        ret = super(ShoutSerializer, self).to_representation(instance)
+        blank_to_none(ret, ['title', 'text'])
+        return ret
 
 
 class ShoutDetailSerializer(ShoutSerializer):
@@ -106,7 +109,7 @@ class ShoutDetailSerializer(ShoutSerializer):
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner")
     conversations = serializers.SerializerMethodField()
-    mobile = serializers.CharField(min_length=4, max_length=20, allow_blank=True, default='', write_only=True)
+    mobile = serializers.CharField(min_length=4, max_length=20, write_only=True, **empty_char_input)
     mobile_hint = serializers.CharField(read_only=True)
     is_mobile_set = serializers.BooleanField(read_only=True)
 

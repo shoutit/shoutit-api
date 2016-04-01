@@ -18,32 +18,35 @@ from shoutit.models import User, DBCLConversation, ConfirmToken
 from .profile import ProfileDetailSerializer, GuestSerializer
 
 
+# Todo: change `user` to `profile` in all serializers
 class FacebookAuthSerializer(serializers.Serializer):
-    facebook_access_token = serializers.CharField(max_length=500)
+    facebook_access_token = serializers.CharField(max_length=512)
     user = ProfileDetailSerializer(required=False)
+    profile = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
         ret = super(FacebookAuthSerializer, self).to_internal_value(data)
         request = self.context.get('request')
         facebook_access_token = ret.get('facebook_access_token')
-        initial_user = ret.get('user', {})
-        initial_user['ip'] = get_real_ip(request)
-        user = facebook_controller.user_from_facebook_auth_response(facebook_access_token, initial_user, request.is_test)
+        initial_profile = ret.get('profile', {}) or ret.get('user', {})
+        initial_profile['ip'] = get_real_ip(request)
+        user = facebook_controller.user_from_facebook_auth_response(facebook_access_token, initial_profile, request.is_test)
         self.instance = user
         return ret
 
 
 class GplusAuthSerializer(serializers.Serializer):
-    gplus_code = serializers.CharField(max_length=500)
+    gplus_code = serializers.CharField(max_length=4096)
     user = ProfileDetailSerializer(required=False)
+    profile = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
         ret = super(GplusAuthSerializer, self).to_internal_value(data)
         request = self.context.get('request')
         gplus_code = ret.get('gplus_code')
-        initial_user = ret.get('user', {})
-        initial_user['ip'] = get_real_ip(request)
-        user = gplus_controller.user_from_gplus_code(gplus_code, initial_user, request.client, request.is_test)
+        initial_profile = ret.get('profile', {}) or ret.get('user', {})
+        initial_profile['ip'] = get_real_ip(request)
+        user = gplus_controller.user_from_gplus_code(gplus_code, initial_profile, request.client, request.is_test)
         self.instance = user
         return ret
 
@@ -55,6 +58,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(min_length=6, max_length=30)
     user = ProfileDetailSerializer(required=False)
+    profile = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
         if not data:
@@ -81,10 +85,10 @@ class ShoutitSignupSerializer(serializers.Serializer):
         return email
 
     def create(self, validated_data):
-        initial_user = validated_data.get('user', {})
         request = self.context.get('request')
-        initial_user['ip'] = get_real_ip(request)
-        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_user, request.is_test)
+        initial_profile = validated_data.get('profile', {}) or validated_data.get('user', {})
+        initial_profile['ip'] = get_real_ip(request)
+        user = user_controller.user_from_shoutit_signup_data(validated_data, initial_profile, request.is_test)
         return user
 
 
@@ -92,13 +96,14 @@ class ShoutitLoginSerializer(serializers.Serializer):
     email = serializers.CharField()
     password = serializers.CharField()
     user = ProfileDetailSerializer(required=False)
+    profile = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
         ret = super(ShoutitLoginSerializer, self).to_internal_value(data)
         email = ret.get('email').lower()
         password = ret.get('password')
-        initial_user = ret.get('user', {})
-        location = initial_user.get('location') if initial_user else None
+        initial_profile = ret.get('profile', {}) or ret.get('user', {})
+        location = initial_profile.get('location') if initial_profile else None
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
@@ -114,11 +119,12 @@ class ShoutitLoginSerializer(serializers.Serializer):
 
 class ShoutitGuestSerializer(serializers.Serializer):
     user = GuestSerializer(required=False)
+    profile = GuestSerializer(required=False)
 
     def to_internal_value(self, data):
         ret = super(ShoutitGuestSerializer, self).to_internal_value(data)
         request = self.context.get('request')
-        initial_guest_user = ret.get('user', {})
+        initial_guest_user = ret.get('profile', {}) or ret.get('user', {})
         push_tokens = initial_guest_user.get('push_tokens', {})
         apns = push_tokens.get('apns')
         gcm = push_tokens.get('gcm')
@@ -163,7 +169,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         ret = super(ShoutitVerifyEmailSerializer, self).to_internal_value(data)
         user = self.context.get('request').user
         email = ret.get('email')
-        # if the email changed the model will take care of sending the verification emal
+        # if the email changed the model will take care of sending the verification email
         if email:
             user.email = email.lower()
             user.save(update_fields=['email', 'is_activated'])
@@ -208,6 +214,7 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
 
         user.set_password(new_password)
         user.save(update_fields=['password'])
+        # Todo: Do we really need to log the user in?
         user.backend = 'django.contrib.auth.backends.ModelBackend'
         login(self.context.get('request'), user)
         return ret

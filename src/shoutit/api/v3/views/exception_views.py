@@ -175,7 +175,8 @@ def django_exception_handler(response):
             message = _("Bad request")
             reason = ERROR_REASON.BAD_REQUEST
         if exc:
-            developer_message = "%s: %s" % (exc.__class__.__name__, str(exc))
+            msg = str(exc).decode('utf')
+            developer_message = "%s: %s" % (exc.__class__.__name__, msg)
         else:
             developer_message = getattr(response, 'reason_phrase', "Contact server admin with `request_id`")
 
