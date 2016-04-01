@@ -12,6 +12,16 @@ from shoutit.utils import generate_username, debug_logger, error_logger, set_pro
 from shoutit.controllers import location_controller
 
 
+def has_full_location(dic):
+    latitude = dic.get('latitude', None)
+    longitude = dic.get('longitude', None)
+    country = dic.get('country', None)
+    city = dic.get('city', None)
+    if any(attr is None for attr in [latitude, longitude, country, city]):
+        return False
+    return True
+
+
 def create_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
                 **extra_user_fields):
     # email
@@ -37,7 +47,7 @@ def create_user(email=None, password=None, first_name='', last_name='', username
 
     # profile fields
     profile_fields = profile_fields or {}
-    if not profile_fields.get('location'):
+    if not has_full_location(profile_fields):
         profile_fields.update(DEFAULT_LOCATION)
     extra_user_fields.update({
         'type': USER_TYPE_PROFILE,
