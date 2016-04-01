@@ -1,6 +1,13 @@
 # shoutit-api v3 changelog
 
 
+## Deprecations(2016-04-01)
+
+- Removed `user` and `users` from all v3 endpoints except those for authentication are now pending deprecation
+- Removed `main_tag` from Category object
+- Removed `/misc/categories` and `/misc/shout_sort_types`
+- Added `/shouts/categories` and `/shouts/sort_types`
+
 ## Video Chat and Stats(2016-03-31)
 
 - Enhanced the Video chatting flow. Check [Video Chat wiki](https://github.com/shoutit/shoutit-api/wiki/Video-Chat).

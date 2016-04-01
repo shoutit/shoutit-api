@@ -33,22 +33,6 @@ class MiscViewSet(viewsets.ViewSet):
     """
     permission_classes = ()
 
-    @cache_control(max_age=60 * 60)
-    @list_route(methods=['get'], suffix='Categories')
-    def categories(self, request):
-        """
-        List Categories
-        ---
-        serializer: CategoryDetailSerializer
-        """
-        categories = Category.objects.all().order_by('name').select_related('main_tag')
-        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
-        # Everyday I'm shuffling!
-        shuffle = request.query_params.get('shuffle')
-        if shuffle:
-            random.shuffle(categories_data)
-        return Response(categories_data)
-
     @list_route(methods=['get'], suffix='Cities')
     def cities(self, request):
         """
@@ -71,21 +55,6 @@ class MiscViewSet(viewsets.ViewSet):
         currencies = Currency.objects.all()
         serializer = CurrencySerializer(currencies, many=True, context={'request': request})
         return Response(serializer.data)
-
-    @cache_control(max_age=60 * 60 * 24)
-    @list_route(methods=['get'], suffix='Shouts Sort Types')
-    def shouts_sort_types(self, request):
-        """
-        List Sort types for shouts
-        ---
-        """
-        return Response([
-            {'type': 'time', 'name': 'Latest'},
-            {'type': 'distance', 'name': 'Nearest'},
-            {'type': 'price_asc', 'name': 'Price Increasing'},
-            {'type': 'price_desc', 'name': 'Price Decreasing'},
-            {'type': 'recommended', 'name': 'Recommended'},
-        ])
 
     @list_route(methods=['get'], suffix='Suggestions')
     def suggestions(self, request):

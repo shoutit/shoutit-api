@@ -73,11 +73,10 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
     slug = serializers.CharField()
-    main_tag = TagSerializer(read_only=True)
 
     class Meta:
         model = Category
-        fields = ('name', 'slug', 'icon', 'image', 'main_tag')
+        fields = ('name', 'slug', 'icon', 'image')
 
     def to_internal_value(self, data):
         if isinstance(data, basestring):
