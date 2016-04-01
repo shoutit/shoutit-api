@@ -53,11 +53,17 @@ else:  # LOCAL
     ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
     RAVEN_DSN = 'https://dcb68ef95ab145d5a31c6f4ce6c0286a:9ca26cb110ae431f9b2d48cf24c62b44@app.getsentry.com/58134'
 
+
+ES_HOST, ES_PORT = os.environ.get('ES_HOST', ES_HOST), os.environ.get('ES_PORT', ES_PORT)
 ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
+REDIS_HOST, REDIS_PORT = os.environ.get('REDIS_HOST', REDIS_HOST), os.environ.get('REDIS_PORT', REDIS_PORT)
 
 info("DEBUG:", DEBUG)
 info("SITE_LINK:", SITE_LINK)
 info("API_LINK:", API_LINK)
+
+info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
+info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
 
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
@@ -168,12 +174,6 @@ if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
         queue_config['ASYNC'] = False
 
-"""
-=================================
-           AntiCaptcha
-=================================
-"""
-ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
 
 AUTH_USER_MODEL = 'shoutit.User'
 
@@ -187,24 +187,14 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.postgres',
     'django.contrib.staticfiles',
-    # 'paypal.standard.ipn',
-    # 'paypal.standard.pdt',
-    # 'keyedcache',
-    # 'livesettings',
-    # 'l10n',
-    # 'payment',
-    # 'subscription',
 
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
     'provider',
     'provider.oauth2',
-
     'push_notifications',
-
     'django_rq',
-    'widget_tweaks',
     'corsheaders',
 
     'shoutit_twilio',
@@ -229,24 +219,6 @@ if DEV:
 if PROD:
     INSTALLED_APPS += (
     )
-
-RAVEN_CONFIG = {
-    'dsn': RAVEN_DSN,
-    'string_max_length': 1000
-}
-
-APNS_SANDBOX = False
-FORCE_PUSH = False
-PUSH_NOTIFICATIONS_SETTINGS = {
-    'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(API_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
-                                     % ('dev' if APNS_SANDBOX else 'prod')),
-    'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
-    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
-}
-MAX_BROADCAST_RECIPIENTS = 1000
-info('FORCE_PUSH:', FORCE_PUSH)
-info('APNS_SANDBOX:', APNS_SANDBOX)
 
 CORS_ORIGIN_ALLOW_ALL = True
 REQUEST_ID_HEADER = None
@@ -277,12 +249,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': ENV.replace('_api', ''),  # eg. ENV is shoutit_api_prod, db should be shoutit_prod
-        'USER': 'shoutit',
-        'PASSWORD': '#a\_Y9>uw<.5;_=/kUwK',
-        'HOST': DB_HOST,
-        'PORT': DB_PORT,
+        'USER': os.environ.get('DB_USER', 'shoutit'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
+        'HOST': os.environ.get('DB_HOST', DB_HOST),
+        'PORT': os.environ.get('DB_PORT', DB_PORT),
     }
 }
+
+info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -493,10 +467,30 @@ SWAGGER_SETTINGS = {
     'doc_expansion': 'none',
 }
 
+# Push
+APNS_SANDBOX = False
+FORCE_PUSH = False
+PUSH_NOTIFICATIONS_SETTINGS = {
+    'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
+    'APNS_CERTIFICATE': os.path.join(API_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
+                                     % ('dev' if APNS_SANDBOX else 'prod')),
+    'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
+    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
+}
+MAX_BROADCAST_RECIPIENTS = 1000
+info('FORCE_PUSH:', FORCE_PUSH)
+info('APNS_SANDBOX:', APNS_SANDBOX)
+
+
 # Logging
+RAVEN_CONFIG = {
+    'dsn': RAVEN_DSN,
+    'string_max_length': 1000
+}
 FORCE_SENTRY = False
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
 LOG_SQL = False
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -673,33 +667,10 @@ LOGGING = {
     }
 }
 
-# PayPal and Payment
-PAYPAL_IDENTITY_TOKEN = 't9KJDunfc1X12lnPenlifnxutxvYiUOeA1PfPy6g-xpqHs5WCXA7V7kgqXO'  # 'SeS-TUDO3rKFsAIXxQOs6bjn1_RVrqBJE8RaQ7hmozmkXBuNnFlFAhf7jJO'
-PAYPAL_RECEIVER_EMAIL = 'nour@syrex.me'
-PAYPAL_PRIVATE_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal',
-                                   'paypal-private-key.pem')
-PAYPAL_PUBLIC_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal',
-                                  'paypal-public-key.pem')
-PAYPAL_CERT = os.path.join(API_DIR, 'assets', 'certificates', 'paypal', 'paypal-cert.pem')
-PAYPAL_CERT_ID = '5E7VKRU5XWGMJ'
-PAYPAL_NOTIFY_URL = 'http://80.227.53.34/paypal_ipn/'
-PAYPAL_RETURN_URL = 'http://80.227.53.34/paypal_return/'
-PAYPAL_CANCEL_URL = 'http://80.227.53.34/paypal_cancel/'
 
-PAYPAL_SUBSCRIPTION_RETURN_URL = 'http://80.227.53.34/bsignup/'
-PAYPAL_SUBSCRIPTION_CANCEL_URL = 'http://80.227.53.34/bsignup/'
-
-PAYPAL_BUSINESS = 'biz_1339997492_biz@syrex.me'
-PAYPAL_TEST = True
-
-SUBSCRIPTION_PAYPAL_SETTINGS = {
-    'notify_url': PAYPAL_NOTIFY_URL,
-    'return': PAYPAL_RETURN_URL,
-    'cancel_return': PAYPAL_CANCEL_URL,
-    'business': PAYPAL_BUSINESS,
-}
-
-SUBSCRIPTION_PAYPAL_FORM = 'paypal.standard.forms.PayPalEncryptedPaymentsForm'
-
-CPSP_ID = 'syrexme'
-CPSP_PASS_PHRASE = '$Yr3x_PassPhrase#'
+"""
+=================================
+           AntiCaptcha
+=================================
+"""
+ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'

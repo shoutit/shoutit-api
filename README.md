@@ -17,3 +17,6 @@
     - `shoutit_api_local`
     - `shoutit_api_dev`
     - `shoutit_api_prod`
+- `DB_HOST`, `DB_PORT`
+- `ES_HOST`, `ES_PORT`
+- `REDIS_HOST`, `REDIS_PORT`
