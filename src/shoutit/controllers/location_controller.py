@@ -182,3 +182,13 @@ def update_object_location(obj, location, save=True):
         obj.save(update_fields=['latitude', 'longitude', 'country', 'postal_code', 'state', 'city', 'address'])
     else:
         obj.save()
+
+
+def has_full_location(dic):
+    latitude = dic.get('latitude', None)
+    longitude = dic.get('longitude', None)
+    country = dic.get('country', None)
+    city = dic.get('city', None)
+    if any(attr is None for attr in [latitude, longitude, country, city]):
+        return False
+    return True
