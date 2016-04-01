@@ -389,7 +389,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
 
 class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
-    API endpoint that allows conversations/messages to be viewed or added.
+    Message API Resource.
     """
     serializer_class = MessageSerializer
     permission_classes = (permissions.IsAuthenticated, CanContribute)
