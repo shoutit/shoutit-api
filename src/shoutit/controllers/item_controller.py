@@ -22,13 +22,13 @@ def create_item(name, description, price, currency, images=None, videos=None, av
 
 def edit_item(item, name=None, description=None, price=None, currency=None, images=None, videos=None,
               available_count=None, is_sold=None):
-    if name:
+    if name is not None:
         item.name = name
-    if description:
+    if description is not None:
         item.description = description
-    if price:
+    if price is not None:
         item.price = price
-    if currency:
+    if currency is not None:
         item.currency = currency
     if images is not None:
         item.images = images

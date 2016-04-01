@@ -48,8 +48,10 @@ class ShoutSerializer(serializers.ModelSerializer):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def validate_currency(self, value):
+        if not value:
+            return None
         try:
-            if not value:
+            if not isinstance(value, basestring):
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except (Currency.DoesNotExist, ValueError):
@@ -82,7 +84,7 @@ class ShoutSerializer(serializers.ModelSerializer):
         # Optional price and currency
         price_is_none = data.get('price') is None
         currency_is_none = data.get('currency') is None
-        if price_is_none != currency_is_none:
+        if price_is_none != currency_is_none and data.get('price') != 0:
             raise serializers.ValidationError({'price': "price and currency must be either both set or both `null`"})
         # Optional category defaults to "Other"
         if data.get('category') is None:
