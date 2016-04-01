@@ -67,7 +67,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 WSGI_APPLICATION = 'wsgi.application'
 
 TEMPLATE_DEBUG = DEBUG
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com', '.dockerapp.io', '.dockerapp.io.']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 ADMINS = (
     ('Mo Chawich', 'mo.chawich@gmail.com'),
