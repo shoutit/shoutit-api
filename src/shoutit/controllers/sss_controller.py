@@ -4,7 +4,6 @@ import re
 import uuid
 
 import requests
-from antigate import AntiGate
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django_rq import job
@@ -93,8 +92,8 @@ def notify_db_user(db_user, from_user, message):
     reply_html = reply_response.content.decode('utf-8')
     captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
     captcha_img = requests.get(captcha_url)
-    gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
-    captcha_code = str(gate)
+    # gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
+    captcha_code = str("")
     captcha_hash = re.search('captcha/image_mobile/(.*?)/', captcha_url).groups()[0]
 
     ref = uuid.uuid4().hex
@@ -123,7 +122,6 @@ def notify_db_user(db_user, from_user, message):
 
 @job(settings.RQ_QUEUE_SSS)
 def notify_dbz2_user(dbz2_user, from_user, message):
-    from fake_useragent import UserAgent
     conversation = message.conversation
     shout = conversation.about
 
@@ -136,7 +134,7 @@ def notify_dbz2_user(dbz2_user, from_user, message):
 
     client = requests.session()
     headers = {
-        'User-Agent': UserAgent().random,
+        # 'User-Agent': UserAgent().random,
         'X-Requested-With': 'XMLHttpRequest',
         'Referer': reply_url
     }
@@ -145,8 +143,8 @@ def notify_dbz2_user(dbz2_user, from_user, message):
 
     captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
     captcha_img = requests.get(captcha_url)
-    gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
-    captcha_code = str(gate)
+    # gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
+    captcha_code = str("")
     captcha_hash = re.search('captcha/image/(.*?)/', captcha_url).groups()[0]
 
     ref = uuid.uuid4().hex

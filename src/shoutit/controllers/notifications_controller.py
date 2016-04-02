@@ -37,10 +37,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     if notification_type != NOTIFICATION_TYPE_PROFILE_UPDATE:
         Notification.create(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
 
-    # Send appropriate notification
-    if sss_controller.check_sss(user, notification_type, attached_object, from_user):
-        sss_controller.send_sss(user, attached_object, notification_type, from_user)
-    elif push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
+    # Send Push notification
+    if push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
         push_controller.send_push(user, notification_type, attached_object, 'v2')
         push_controller.send_push(user, notification_type, attached_object, 'v3')
 
