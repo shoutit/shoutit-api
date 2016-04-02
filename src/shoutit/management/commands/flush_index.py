@@ -24,7 +24,7 @@ class Command(BaseCommand):
         if full_index:
             index_name = full_index[0]
         else:
-            index_name = settings.ENV + '_' + index[0]
+            index_name = settings.SHOUTIT_ENV + '_' + index[0]
 
         try:
             shoutit.ES.indices.delete(index_name)

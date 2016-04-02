@@ -300,7 +300,7 @@ class ShoutIndex(DocType):
     priority = Integer()
 
     class Meta:
-        index = settings.ENV + '_shout'
+        index = settings.SHOUTIT_ENV + '_shout'
         dynamic_templates = MetaField([
             {
                 "tags2_integer_keys": {

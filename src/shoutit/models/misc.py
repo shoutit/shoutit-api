@@ -85,7 +85,7 @@ class LocationIndex(DocType):
     address = String(index='not_analyzed')
 
     class Meta:
-        index = settings.ENV + '_location'
+        index = settings.SHOUTIT_ENV + '_location'
 
     @property
     def location_dict(self):

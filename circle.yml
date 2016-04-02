@@ -1,0 +1,28 @@
+machine:
+  pre:
+    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
+  timezone:
+    Europe/Berlin
+  services:
+    - docker
+
+dependencies:
+  pre:
+  override:
+  post:
+
+test:
+  pre:
+  override:
+  post:
+
+deployment:
+  hub-dev:
+    branch: dev
+    commands:
+      - >
+        docker build
+        --build-arg SHOUTIT_ENV=shoutit_api_dev
+        -t shoutit/shoutit-api:dev .
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push shoutit/shoutit-api:dev
