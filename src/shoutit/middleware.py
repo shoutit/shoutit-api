@@ -1,11 +1,21 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from ipware.ip import get_real_ip
 
 from common.constants import DEFAULT_LOCATION
 from shoutit.controllers import facebook_controller
 from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
 from shoutit.utils import error_logger
+
+
+class XForwardedForMiddleware(object):
+    @staticmethod
+    def process_request(request):
+        if 'HTTP_X_FORWARDED_FOR' in request.META:
+            real_ip = get_real_ip(request)
+            if real_ip:
+                request.META['REMOTE_ADDR'] = real_ip
 
 
 class BadRequestsMiddleware(object):

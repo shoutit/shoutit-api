@@ -224,6 +224,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 REQUEST_ID_HEADER = None
 
 MIDDLEWARE_CLASSES = (
+    'shoutit.middleware.XForwardedForMiddleware',
     'request_id.middleware.RequestIdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
