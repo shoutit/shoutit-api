@@ -4,8 +4,6 @@
 
 ###virtualenv
 * env_name: shoutit_api_[dev|prod|local]
-* log_dir: /var/log/{env_name}
-* api_dir: /opt/api
 
 ###api_dir
 * git clone git@bitbucket.org:shoutitcom/shoutit_api.git .
@@ -13,10 +11,12 @@
 
 ### Env variables
 
-- `ENV` should be one of these:
+- `SHOUTIT_ENV` should be one of these:
     - `shoutit_api_local`
     - `shoutit_api_dev`
     - `shoutit_api_prod`
 - `DB_HOST`, `DB_PORT`
 - `ES_HOST`, `ES_PORT`
 - `REDIS_HOST`, `REDIS_PORT`
+- `SITE_LINK`, `API_LINK`
+- `RAVEN_DSN`

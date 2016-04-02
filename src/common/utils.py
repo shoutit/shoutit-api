@@ -4,6 +4,7 @@ Utils that are independent of Apps and their models
 from __future__ import unicode_literals
 
 import collections
+import os
 import sys
 import uuid
 from datetime import datetime
@@ -37,14 +38,6 @@ def get_address_port(using_gunicorn=False):
 
     else:
         return '127.0.0.1', '8000'
-
-
-def check_offline_mood():
-    try:
-        # requests.head('http://www.yourapihere.com', timeout=5)
-        return False
-    except requests.RequestException:
-        return True
 
 
 def process_tag(name, fn=strings.kebab_case):
@@ -140,3 +133,20 @@ class UUIDValidator(object):
             uuid.UUID(value)
         except:
             raise ValidationError(UUIDValidator.message % value, code=UUIDValidator.code)
+
+
+def tmp_file_from_env(env_var):
+    tmp_file_name = ''
+    if os.environ.get(env_var):
+        # create tmp file from ENV var
+        from tempfile import NamedTemporaryFile
+        import atexit
+        tmp_file = NamedTemporaryFile(delete=False)
+        tmp_file.write(bytes(os.environ.get(env_var)))
+        tmp_file.close()
+        tmp_file_name = tmp_file.name
+
+        def unlink_tmp_file():
+            os.unlink(tmp_file_name)
+        atexit.register(unlink_tmp_file)  # remove file on exit
+    return tmp_file_name

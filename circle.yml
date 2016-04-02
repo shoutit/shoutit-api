@@ -9,6 +9,7 @@ machine:
 dependencies:
   pre:
   override:
+  post:
 
 test:
   pre:
@@ -16,11 +17,12 @@ test:
   post:
 
 deployment:
-  hub-docker:
-    branch: docker
+  hub-dev:
+    branch: dev
     commands:
       - >
         docker build
-        -t shoutit/shoutit-api:docker .
+        --build-arg SHOUTIT_ENV=shoutit_api_dev
+        -t shoutit/shoutit-api:dev .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push shoutit/shoutit-api:docker
+      - docker push shoutit/shoutit-api:dev

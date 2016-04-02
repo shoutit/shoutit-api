@@ -21,7 +21,7 @@ errorlog = accesslog = '-'
 loglevel = 'info'
 
 preload_app = True
-proc_name = ENV
+proc_name = SHOUTIT_ENV
 
 # def when_ready(server):
 #     from django import setup

@@ -4,5 +4,3 @@ services:
     build: .
     ports:
       - "8001:8001"
-    environment:
-      - ENV=shoutit_api_dev

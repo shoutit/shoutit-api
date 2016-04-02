@@ -4,84 +4,50 @@
 """
 from __future__ import unicode_literals, print_function
 from settings_env import *  # NOQA
-from common.utils import get_address_port, check_offline_mood
+from common.utils import get_address_port
 from django.utils.translation import ugettext_lazy as _
 
-OFFLINE_MODE = check_offline_mood()
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
-SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 
-# using gunicorn or not
+"""
+=================================
+        Connection
+=================================
+"""
+WSGI_APPLICATION = 'wsgi.application'
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com', '.dockerapp.io', '.dockerapp.io.']
+INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 GUNICORN = 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '')
 ADDRESS, PORT = get_address_port(GUNICORN)
-
-info("==================================================")
-info("================= Shoutit Server =================")
-info("==================================================")
-info("ENV:", ENV)
-if OFFLINE_MODE:
-    info("OFFLINE MODE: ON")
-info("GUNICORN:", GUNICORN)
-info("BIND: {}:{}".format(ADDRESS, PORT))
-
-# todo: move sensitive settings [passwords, hosts, ports, etc] to environment or external conf files
-if PROD:
-    DEBUG = False
-    SITE_LINK = 'https://www.shoutit.com/'
-    API_LINK = 'https://api.shoutit.com/v3/'
-    DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
-    REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
-    ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
-    RAVEN_DSN = 'https://b26adb7e1a3b46dabc1b05bc8355008d:b820883c74724dcb93753af31cb21ee4@app.getsentry.com/36984'
-
-elif DEV:
-    DEBUG = True
-    SITE_LINK = 'https://stage.www.shoutit.com/'
-    API_LINK = 'https://dev.api.shoutit.com/v3/'
-    DB_HOST, DB_PORT = 'dev.db.shoutit.com', '5432'
-    REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6380'
-    ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
-    RAVEN_DSN = 'https://559b227392004e0582ac719810af99bd:fe13c8a73f744a5a90346b08323ad102@app.getsentry.com/58087'
-
-else:  # LOCAL
-    DEBUG = True
-    SITE_LINK = 'http://shoutit.dev:8080/'
-    API_LINK = 'http://shoutit.dev:8000/v3/'
-    DB_HOST, DB_PORT = 'db.shoutit.com', '5432'
-    REDIS_HOST, REDIS_PORT = 'redis.shoutit.com', '6379'
-    ES_HOST, ES_PORT = 'es.shoutit.com', '9200'
-    RAVEN_DSN = 'https://dcb68ef95ab145d5a31c6f4ce6c0286a:9ca26cb110ae431f9b2d48cf24c62b44@app.getsentry.com/58134'
-
-
-ES_HOST, ES_PORT = os.environ.get('ES_HOST', ES_HOST), os.environ.get('ES_PORT', ES_PORT)
-ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
-REDIS_HOST, REDIS_PORT = os.environ.get('REDIS_HOST', REDIS_HOST), os.environ.get('REDIS_PORT', REDIS_PORT)
-
-info("DEBUG:", DEBUG)
-info("SITE_LINK:", SITE_LINK)
-info("API_LINK:", API_LINK)
-
-info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
-info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
 
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
+API_LINK = os.environ.get('API_LINK', 'http://shoutit.dev:8000/v3/')
+SITE_LINK = os.environ.get('SITE_LINK', 'http://shoutit.dev:3000/')
+
+# Security
+if PROD:
+    DEBUG = False
+else:  # DEV and LOCAL
+    DEBUG = True
+SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
+ENFORCE_SECURE = PROD and not DEBUG
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-WSGI_APPLICATION = 'wsgi.application'
 
-TEMPLATE_DEBUG = DEBUG
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com', '.dockerapp.io', '.dockerapp.io.']
-INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
+# Admin
 ADMINS = (
     ('Mo Chawich', 'mo.chawich@gmail.com'),
 )
 MANAGERS = ADMINS
 GRAPPELLI_ADMIN_TITLE = 'Shoutit'
 
-# Shoutit defaults
+"""
+=================================
+        Shoutit defaults
+=================================
+"""
+AUTH_USER_MODEL = 'shoutit.User'
 MAX_REG_DAYS = 14
 MAX_SHOUTS_INACTIVE_USER = 5
 MAX_EXPIRY_DAYS_SSS = 7
@@ -95,12 +61,22 @@ MAX_VIDEOS_PER_ITEM = 2
 
 """
 =================================
+            Elasticsearch
+=================================
+"""
+ES_HOST = os.environ.get('ES_HOST', 'es.shoutit.com')
+ES_PORT = os.environ.get('ES_PORT', '9200')
+ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
+
+"""
+=================================
             Caching
 =================================
 """
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis.shoutit.com')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
 
 
-# todo: set passwords for redis databases
 def default_redis_conf(db=0):
     return {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -138,12 +114,12 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 =================================
 """
 FORCE_SYNC_RQ = False
-RQ_QUEUE = ENV
-RQ_QUEUE_MAIL = ENV + '_mail'
-RQ_QUEUE_PUSH = ENV + '_push'
-RQ_QUEUE_PUSH_BROADCAST = ENV + '_push_broadcast'
-RQ_QUEUE_PUSHER = ENV + '_pusher'
-RQ_QUEUE_SSS = ENV + '_sss'
+RQ_QUEUE = SHOUTIT_ENV
+RQ_QUEUE_MAIL = SHOUTIT_ENV + '_mail'
+RQ_QUEUE_PUSH = SHOUTIT_ENV + '_push'
+RQ_QUEUE_PUSH_BROADCAST = SHOUTIT_ENV + '_push_broadcast'
+RQ_QUEUE_PUSHER = SHOUTIT_ENV + '_pusher'
+RQ_QUEUE_SSS = SHOUTIT_ENV + '_sss'
 RQ_QUEUES = {
     RQ_QUEUE: {
         'USE_REDIS_CACHE': WORKER_CACHE_ALIAS,
@@ -174,10 +150,11 @@ if DEBUG or FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
         queue_config['ASYNC'] = False
 
-
-AUTH_USER_MODEL = 'shoutit.User'
-
-# Application definition
+"""
+=================================
+       Application definition
+=================================
+"""
 INSTALLED_APPS = (
     'grappelli',
     'django.contrib.auth',
@@ -197,32 +174,20 @@ INSTALLED_APPS = (
     'django_rq',
     'corsheaders',
 
+    'mptt',
     'shoutit_twilio',
     'shoutit_pusher',
     'shoutit_crm',
     'shoutit',
-    'mptt',
 )
-# apps only on local development
-if LOCAL:
-    INSTALLED_APPS += (
-    )
-# apps on on server [dev, prod]
-if ON_SERVER:
-    INSTALLED_APPS += (
-    )
-# apps only on server development
-if DEV:
-    INSTALLED_APPS += (
-    )
-# apps only on server production
-if PROD:
-    INSTALLED_APPS += (
-    )
 
-CORS_ORIGIN_ALLOW_ALL = True
+"""
+=================================
+       Middleware
+=================================
+"""
 REQUEST_ID_HEADER = None
-
+CORS_ORIGIN_ALLOW_ALL = True
 MIDDLEWARE_CLASSES = (
     'shoutit.middleware.XForwardedForMiddleware',
     'request_id.middleware.RequestIdMiddleware',
@@ -244,24 +209,27 @@ MIDDLEWARE_CLASSES = (
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
 )
 
-# Database
-# https://docs.djangoproject.com/en/1.6/ref/settings/#databases
+"""
+=================================
+            Database
+=================================
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': ENV.replace('_api', ''),  # eg. ENV is shoutit_api_prod, db should be shoutit_prod
+        'NAME': SHOUTIT_ENV.replace('_api', ''),  # eg. SHOUTIT_ENV is shoutit_api_prod, db should be shoutit_prod
         'USER': os.environ.get('DB_USER', 'shoutit'),
         'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
-        'HOST': os.environ.get('DB_HOST', DB_HOST),
-        'PORT': os.environ.get('DB_PORT', DB_PORT),
+        'HOST': os.environ.get('DB_HOST', 'db.shoutit.com'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
-info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
-
-# Internationalization
-# https://docs.djangoproject.com/en/1.6/topics/i18n/
-
+"""
+=================================
+       Internationalization
+=================================
+"""
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -272,7 +240,11 @@ LANGUAGES = (
 )
 DEFAULT_LANGUAGE_CODE = 'en'
 
-# Static files (CSS, JavaScript, Images)
+"""
+=================================
+         Static files
+=================================
+"""
 FORCE_S3 = True
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -296,18 +268,16 @@ else:
         os.makedirs(STATIC_ROOT)
 
 STATICFILES_DIRS = (
-    os.path.join(DJANGO_DIR, 'static'),
+    os.path.join(SRC_DIR, 'static'),
 )
 
-info('FORCE_S3:', FORCE_S3)
-info('STATIC_URL:', STATIC_URL)
-
 # Templates
+TEMPLATE_DEBUG = DEBUG
 TEMPLATE_DIRS = (
-    os.path.join(DJANGO_DIR, 'templates'),
-    os.path.join(DJANGO_DIR, 'templates', 'api_site'),
-    os.path.join(DJANGO_DIR, 'templates', 'text_messages'),
-    os.path.join(DJANGO_DIR, 'templates', 'html_messages'),
+    os.path.join(SRC_DIR, 'templates'),
+    os.path.join(SRC_DIR, 'templates', 'api_site'),
+    os.path.join(SRC_DIR, 'templates', 'text_messages'),
+    os.path.join(SRC_DIR, 'templates', 'html_messages'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -323,12 +293,26 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "shoutit.middleware.include_settings",
 )
 
+"""
+=================================
+            Services
+=================================
+"""
+# Push
+APNS_SANDBOX = False
+FORCE_PUSH = False
+PUSH_NOTIFICATIONS_SETTINGS = {
+    'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
+    'APNS_CERTIFICATE': os.path.join(SRC_DIR, 'assets', 'certificates', 'ios',
+                                     'push-%s.pem' % ('dev' if APNS_SANDBOX else 'prod')),
+    'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
+    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
+}
+MAX_BROADCAST_RECIPIENTS = 1000
+
 # Mixpanel
 MIXPANEL_TOKEN = 'c9d0a1dc521ac1962840e565fa971574'
 FORCE_MP_TRACKING = False
-
-# IP2Location
-IP2LOCATION_DB_BIN = os.path.join('/opt', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
 
 # Twilio
 TWILIO_ACCOUNT_SID = "AC72062980c854618cfa7765121af3085d"
@@ -339,11 +323,38 @@ TWILIO_FROM = '+14807255600'
 NEXMO_API_KEY = "7c650639"
 NEXMO_API_SECRET = "4ee98397"
 
-# Mail Settings
+# IP2Location
+IP2LOCATION_DB_BIN = os.path.join('/opt', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
+
+# AntiCaptcha
+ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
+
+"""
+=================================
+          Linked Apps
+=================================
+"""
+# Facebook App
+FACEBOOK_APP_ID = '353625811317277' if PROD else '1151546964858487'
+FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d' if PROD else '8fb7b12351091e8c59c723fc3105d05a'
+
+# Google App
+GOOGLE_API = {
+    'CLIENTS': {
+        'web': {'FILE': os.path.join(SRC_DIR, 'assets', 'googleapiclients', 'web.json')},
+        'android': {'FILE': os.path.join(SRC_DIR, 'assets', 'googleapiclients', 'android.json')},
+        'ios': {'FILE': os.path.join(SRC_DIR, 'assets', 'googleapiclients', 'ios.json')},
+    }
+}
+
+"""
+=================================
+            Mail
+=================================
+"""
+FORCE_SMTP = False
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
-
-FORCE_SMTP = False
 
 GOOGLE_SMTP = {
     'default_from_email': 'Jack <reply@shoutit.com>',
@@ -370,7 +381,6 @@ MANDRILL_SMTP = {
 FILE_SMTP = {
     'host': 'localhost',
     'backend': 'django.core.mail.backends.filebased.EmailBackend',
-    'file_path': os.path.join(LOG_DIR, 'messages')
 }
 
 EMAIL_BACKENDS = {
@@ -394,23 +404,11 @@ EMAIL_TIMEOUT = EMAIL_USING.get('time_out')
 EMAIL_BACKEND = EMAIL_USING.get('backend')
 EMAIL_FILE_PATH = EMAIL_USING.get('file_path')
 
-info("FORCE_SMTP:", FORCE_SMTP)
-info("EMAIL_HOST:", EMAIL_HOST)
-
-# Facebook App
-FACEBOOK_APP_ID = '353625811317277' if PROD else '1151546964858487'
-FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d' if PROD else '8fb7b12351091e8c59c723fc3105d05a'
-
-# Google App
-GOOGLE_API = {
-    'CLIENTS': {
-        'web': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'web.json')},
-        'android': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'android.json')},
-        'ios': {'FILE': os.path.join(API_DIR, 'assets', 'googleapiclients', 'ios.json')},
-    }
-}
-
-# Rest FW
+"""
+=================================
+              DRF
+=================================
+"""
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'shoutit.api.versioning.ShoutitNamespaceVersioning',
     'DEFAULT_VERSION': 'v3',
@@ -437,9 +435,7 @@ REST_FRAMEWORK = {
 }
 DEFAULT_MAX_PAGE_SIZE = 30
 
-ENFORCE_SECURE = PROD and not DEBUG
-
-# oauth2 settings
+# OAuth2 settings
 OAUTH_SINGLE_ACCESS_TOKEN = True
 OAUTH_ENFORCE_SECURE = ENFORCE_SECURE
 OAUTH_ENFORCE_CLIENT_SECURE = True
@@ -468,24 +464,20 @@ SWAGGER_SETTINGS = {
     'doc_expansion': 'none',
 }
 
-# Push
-APNS_SANDBOX = False
-FORCE_PUSH = False
-PUSH_NOTIFICATIONS_SETTINGS = {
-    'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(API_DIR, 'assets', 'certificates', 'ios', 'push-%s.pem'
-                                     % ('dev' if APNS_SANDBOX else 'prod')),
-    'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
-    'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
-}
-MAX_BROADCAST_RECIPIENTS = 1000
-info('FORCE_PUSH:', FORCE_PUSH)
-info('APNS_SANDBOX:', APNS_SANDBOX)
+"""
+=================================
+             Logging
+=================================
+"""
+LOG_DIR = os.path.join('/var', 'log', SHOUTIT_ENV)
 
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
 
-# Logging
+FILE_SMTP['file_path'] = os.path.join(LOG_DIR, 'messages')
+
 RAVEN_CONFIG = {
-    'dsn': RAVEN_DSN,
+    'dsn': os.environ.get('RAVEN_DSN'),
     'string_max_length': 1000
 }
 FORCE_SENTRY = False
@@ -668,10 +660,21 @@ LOGGING = {
     }
 }
 
-
-"""
-=================================
-           AntiCaptcha
-=================================
-"""
-ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
+info("==================================================")
+info("================= Shoutit Server =================")
+info("==================================================")
+info("SHOUTIT_ENV:", SHOUTIT_ENV)
+info("GUNICORN:", GUNICORN)
+info("BIND: {}:{}".format(ADDRESS, PORT))
+info("DEBUG:", DEBUG)
+info("API_LINK:", API_LINK)
+info("SITE_LINK:", SITE_LINK)
+info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
+info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
+info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
+info('FORCE_S3:', FORCE_S3)
+info('STATIC_URL:', STATIC_URL)
+info('FORCE_PUSH:', FORCE_PUSH)
+info('APNS_SANDBOX:', APNS_SANDBOX)
+info("FORCE_SMTP:", FORCE_SMTP)
+info("EMAIL_HOST:", EMAIL_HOST)

@@ -10,26 +10,26 @@ env.roledefs = {
     'dev': ['root@dev.api.shoutit.com'],
     'prod': ['root@node-01.api.shoutit.com']
 }
-manage_py = os.path.join(DJANGO_DIR, 'manage.py')
-scripts_dir = os.path.join(os.path.dirname(API_DIR), 'Scripts')  # Todo: This works only on Windows (specifically my machine)
+manage_py = os.path.join(SRC_DIR, 'manage.py')
+scripts_dir = os.path.join(os.path.dirname(os.path.dirname(SRC_DIR)), 'Scripts')  # Todo: This works only on Windows (specifically my machine)
 
 
 def local_flake8():
     print("Running flake8...")
     with lcd(scripts_dir):
-        local('flake8 %s ' % DJANGO_DIR)
+        local('flake8 %s ' % SRC_DIR)
 
 
 def local_radon():
     print("Running radon...")
     with lcd(scripts_dir):
-        local('radon cc -s -n B %s ' % DJANGO_DIR)
+        local('radon cc -s -n B %s ' % SRC_DIR)
 
 
 def local_update():
     print("Updating local requirements...")
     with lcd(scripts_dir):
-        local('pip install -U -r %s' % os.path.join(DJANGO_DIR, 'requirements', 'dev.txt'))
+        local('pip install -U -r %s' % os.path.join(SRC_DIR, 'requirements', 'shoutit_api_dev.txt'))
 
 
 def preview_local_updates():

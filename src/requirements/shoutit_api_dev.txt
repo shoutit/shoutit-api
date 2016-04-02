@@ -1,5 +1,5 @@
 # development requirements
--r prod.txt
+-r shoutit_api_prod.txt
 behave
 logging-tree==1.7
 mkdocs

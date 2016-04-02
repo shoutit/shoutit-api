@@ -23,8 +23,7 @@ from shoutit.models import (Currency, Category, PredefinedCity, User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, parse_signed_request
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           ProfileSerializer, ShoutSerializer,
-                           TagDetailSerializer, CategoryDetailSerializer)
+                           ProfileSerializer, ShoutSerializer, TagDetailSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
