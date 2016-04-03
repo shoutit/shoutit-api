@@ -15,13 +15,13 @@ sys.stdout = getwriter('utf8')(sys.stdout)
 sys.stderr = getwriter('utf8')(sys.stderr)
 
 SRC_DIR = os.path.dirname(os.path.realpath(__file__))
-SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'shoutit_api_local')
+SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
 
 # Local or Dev or Prod
-LOCAL = SHOUTIT_ENV == 'shoutit_api_local'
-ON_SERVER = not LOCAL
-DEV = ON_SERVER and SHOUTIT_ENV == 'shoutit_api_dev'
-PROD = ON_SERVER and SHOUTIT_ENV == 'shoutit_api_prod'
+LOCAL = SHOUTIT_ENV == 'local'
+DEV = SHOUTIT_ENV == 'dev'
+PROD = SHOUTIT_ENV == 'prod'
+ON_SERVER = DEV or PROD
 
 
 def info(*args):

@@ -34,7 +34,7 @@ def local_radon():
 def local_update():
     print("Updating local requirements...")
     with lcd(scripts_dir):
-        local('pip install -U -r %s' % os.path.join(SRC_DIR, 'requirements', 'shoutit_api_dev.txt'))
+        local('pip install -U -r %s' % os.path.join(SRC_DIR, 'requirements', 'dev.txt'))
         local('pip install -r %s' % os.path.join(SRC_DIR, 'requirements', 'common_noupdate.txt'))
 
 

@@ -1,11 +1,11 @@
 FROM python:2.7
 
-ARG SHOUTIT_ENV=shoutit_api_dev
+ARG SHOUTIT_ENV=dev
 
 # Define working directory and copying files to it
-RUN mkdir /code
-WORKDIR /code
-ADD . /code/
+RUN mkdir /api
+WORKDIR /api
+ADD . /api/
 
 # Install pip requirements
 RUN pip install -r src/requirements/$SHOUTIT_ENV.txt

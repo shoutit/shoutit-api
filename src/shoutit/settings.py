@@ -114,12 +114,12 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 =================================
 """
 FORCE_SYNC_RQ = False
-RQ_QUEUE = SHOUTIT_ENV
-RQ_QUEUE_MAIL = SHOUTIT_ENV + '_mail'
-RQ_QUEUE_PUSH = SHOUTIT_ENV + '_push'
-RQ_QUEUE_PUSH_BROADCAST = SHOUTIT_ENV + '_push_broadcast'
-RQ_QUEUE_PUSHER = SHOUTIT_ENV + '_pusher'
-RQ_QUEUE_SSS = SHOUTIT_ENV + '_sss'
+RQ_QUEUE = 'default'
+RQ_QUEUE_MAIL = 'mail'
+RQ_QUEUE_PUSH = 'push'
+RQ_QUEUE_PUSH_BROADCAST = 'push_broadcast'
+RQ_QUEUE_PUSHER = 'pusher'
+RQ_QUEUE_SSS = 'sss'
 RQ_QUEUES = {
     RQ_QUEUE: {
         'USE_REDIS_CACHE': WORKER_CACHE_ALIAS,
@@ -217,7 +217,7 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': SHOUTIT_ENV.replace('_api', ''),  # eg. SHOUTIT_ENV is shoutit_api_prod, db should be shoutit_prod
+        'NAME': 'shoutit_' + SHOUTIT_ENV,  # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
         'USER': os.environ.get('DB_USER', 'shoutit'),
         'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
         'HOST': os.environ.get('DB_HOST', 'db.shoutit.com'),
@@ -469,7 +469,7 @@ SWAGGER_SETTINGS = {
              Logging
 =================================
 """
-LOG_DIR = os.path.join('/var', 'log', SHOUTIT_ENV)
+LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
 
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)

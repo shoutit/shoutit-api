@@ -22,7 +22,7 @@ deployment:
     commands:
       - >
         docker build
-        --build-arg SHOUTIT_ENV=shoutit_api_dev
+        --build-arg SHOUTIT_ENV=dev
         -t shoutit/shoutit-api:dev .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
