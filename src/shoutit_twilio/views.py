@@ -98,7 +98,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         }
         </code></pre>
 
-        Returns 403 if the call is now allowed.
+        Returns 403 if the call is not allowed.
         ---
         """
         user = request.user
