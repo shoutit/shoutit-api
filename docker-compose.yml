@@ -4,3 +4,6 @@ services:
     build: .
     ports:
       - "8001:8001"
+  rq:
+    build: .
+    command: /bin/sh -c supervisord -n

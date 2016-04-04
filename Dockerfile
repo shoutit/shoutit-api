@@ -7,6 +7,10 @@ RUN mkdir /api
 WORKDIR /api
 ADD . /api/
 
+# Install supervisor
+RUN pip install supervisor
+COPY ./deploy/supervisord.conf /etc/supervisord.conf
+
 # Install pip requirements
 RUN pip install -r src/requirements/$SHOUTIT_ENV.txt
 RUN pip install -r src/requirements/common_noupdate.txt
