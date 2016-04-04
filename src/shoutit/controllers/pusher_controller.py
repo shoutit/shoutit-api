@@ -27,7 +27,7 @@ def trigger_profile_event(user, notification_type, attached_object, version):
         channel_name = 'presence-u-%s' % user.pk
     else:
         channel_name = 'presence-%s-p-%s' % (version, user.pk)
-    trigger_event(channel_name, notification_type, attached_object, version, user)
+    trigger_event.delay(channel_name, notification_type, attached_object, version, user)
 
 
 def trigger_conversation_event(conversation_id, notification_type, attached_object, version):
@@ -35,7 +35,7 @@ def trigger_conversation_event(conversation_id, notification_type, attached_obje
     Trigger event on Pusher conversation channel
     """
     channel_name = 'presence-%s-c-%s' % (version, conversation_id)
-    trigger_event(channel_name, notification_type, attached_object, version)
+    trigger_event.delay(channel_name, notification_type, attached_object, version)
 
 
 def trigger_new_message(message, version):

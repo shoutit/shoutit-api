@@ -39,8 +39,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
 
     # Send Push notification
     if push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
-        push_controller.send_push(user, notification_type, attached_object, 'v2')
-        push_controller.send_push(user, notification_type, attached_object, 'v3')
+        push_controller.send_push.delay(user, notification_type, attached_object, 'v2')
+        push_controller.send_push.delay(user, notification_type, attached_object, 'v3')
 
 
 def notify_user_of_listen(user, listener):
