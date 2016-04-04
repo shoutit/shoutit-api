@@ -1,0 +1,69 @@
+api-dev:
+  image: 'shoutit/shoutit-api:dev'
+  autoredeploy: true
+  environment:
+    - API_LINK=
+    - DB_HOST=
+    - DB_PASSWORD=
+    - DB_PORT=
+    - DB_USER=
+    - ES_HOST=
+    - ES_PORT=
+    - RAVEN_DSN=
+    - REDIS_HOST=
+    - REDIS_PORT=
+    - SHOUTIT_ENV=dev
+    - SITE_LINK=
+  links:
+    - 'api-dev-redis:redis'
+  restart: always
+  tags:
+    - api
+    - dev
+api-dev-lb:
+  image: 'dockercloud/haproxy:latest'
+  environment:
+    - DEFAULT_SSL_CERT=
+    - STATS_AUTH=
+  links:
+    - api-dev
+  ports:
+    - '80:80'
+    - '443:443'
+    - '45000:1936'
+  roles:
+    - global
+  tags:
+    - api
+    - dev
+    - lb
+api-dev-redis:
+  image: 'redis:latest'
+  restart: always
+  tags:
+    - api
+    - dev
+    - redis
+api-dev-rq:
+  image: 'shoutit/shoutit-api:dev'
+  autoredeploy: true
+  command: '/bin/sh -c supervisord -n'
+  environment:
+    - API_LINK=
+    - DB_HOST=
+    - DB_PASSWORD=
+    - DB_PORT=
+    - DB_USER=
+    - ES_HOST=
+    - ES_PORT=
+    - RAVEN_DSN=
+    - REDIS_HOST=
+    - REDIS_PORT=
+    - SHOUTIT_ENV=dev
+    - SITE_LINK=
+  links:
+    - 'api-dev-redis:redis'
+  restart: always
+  tags:
+    - api
+    - dev
