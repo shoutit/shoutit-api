@@ -9,6 +9,7 @@
     - `local`
     - `dev`
     - `prod`
+- `SHOUTIT_DEBUG` can be `True`
 - `DB_HOST`, `DB_PORT`
 - `ES_HOST`, `ES_PORT`
 - `REDIS_HOST`, `REDIS_PORT`

@@ -29,7 +29,7 @@ SITE_LINK = os.environ.get('SITE_LINK', 'http://shoutit.dev:3000/')
 if PROD:
     DEBUG = False
 else:  # DEV and LOCAL
-    DEBUG = True
+    DEBUG = os.environ.get('SHOUTIT_DEBUG', '').lower() == 'true'
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 ENFORCE_SECURE = PROD and not DEBUG
 USE_X_FORWARDED_HOST = True
