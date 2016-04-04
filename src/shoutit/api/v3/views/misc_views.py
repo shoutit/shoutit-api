@@ -145,12 +145,12 @@ class MiscViewSet(viewsets.ViewSet):
         }
         </code></pre>
 
-        ###Report User
+        ###Report Profile
         <pre><code>
         {
             "text": "the reason of this report, any text.",
             "attached_object": {
-                "user": {
+                "profile": {
                     "id": ""
                 }
             }
