@@ -160,10 +160,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         return Response([
             {'type': 'time', 'name': 'Latest'},
-            {'type': 'distance', 'name': 'Nearest'},
+            # {'type': 'distance', 'name': 'Nearest'},
             {'type': 'price_asc', 'name': 'Price Increasing'},
             {'type': 'price_desc', 'name': 'Price Decreasing'},
-            {'type': 'recommended', 'name': 'Recommended'},
+            # {'type': 'recommended', 'name': 'Recommended'},
         ])
 
     @list_route(methods=['get'], suffix='Shouts Auto-completion')
