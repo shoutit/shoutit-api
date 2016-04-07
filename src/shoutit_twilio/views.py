@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import uuid
+from collections import OrderedDict
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -42,13 +43,11 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         ---
         """
         user = request.user
-        ttl = SHOUTIT_TWILIO_SETTINGS['TOKEN_TTL']
         try:
             video_client = user.video_client
 
             # Check whether client has an expired token
-            time_diff = date_unix(timezone.now()) - video_client.created_at_unix
-            if time_diff > ttl:
+            if timezone.now() > video_client.expires_at:
                 video_client.delete()
                 raise ValueError()
         except (AttributeError, ValueError):
@@ -61,7 +60,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             identity = uuid.uuid4().hex
 
             # Create an Access Token
-            token = AccessToken(account_sid, api_key, api_secret, identity=identity, ttl=ttl)
+            token = AccessToken(account_sid, api_key, api_secret, identity=identity)
 
             # Grant access to Conversations
             grant = ConversationsGrant(configuration_profile_sid=SHOUTIT_TWILIO_SETTINGS['TWILIO_CONFIGURATION_SID'])
@@ -76,10 +75,11 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
 
         # Return token info
-        res = {
-            'identity': video_client.identity,
-            'token': video_client.token
-        }
+        res = OrderedDict([
+            ('identity', video_client.identity),
+            ('token', video_client.token),
+            ('expires_at', video_client.expires_at_unix)
+        ])
         return Response(res)
 
     @list_route(methods=['get'], suffix='Retrieve Identity')
