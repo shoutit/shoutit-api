@@ -56,31 +56,22 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         notifications_controller.mark_all_as_read(request.user)
         return Response(status=status.HTTP_202_ACCEPTED)
 
-    @detail_route(methods=['post', 'delete'])
+    @detail_route(methods=['post'])
     def read(self, request, *args, **kwargs):
         """
-        Mark a notification as read/unread
+        Mark a notification as read
         ###REQUIRES AUTH
-        ###Read
         <pre><code>
         POST: /notifications/{id}/read
         </code></pre>
 
-        ###Unread
-        <pre><code>
-        DELETE: /notification/{id}/read
-        </code></pre>
         ---
         omit_serializer: true
         omit_parameters:
             - form
         """
         notification = self.get_object()
-        if request.method == 'POST':
-            notification.is_read = True
-            notification.save()
-        else:
-            notification.is_read = False
-            notification.save()
+        notification.is_read = True
+        notification.save()
         serializer = self.get_serializer(notification)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
