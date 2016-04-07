@@ -24,6 +24,7 @@ deployment:
         docker build
         --build-arg SHOUTIT_ENV=dev
         -t shoutit/shoutit-api:dev .
-      - docker run shoutit/shoutit-api:dev python ./src/manage.py migrate
+# Todo: find a way to migrate different tags. Env vars need to be set!
+#      - docker run shoutit/shoutit-api:dev python ./src/manage.py migrate
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
