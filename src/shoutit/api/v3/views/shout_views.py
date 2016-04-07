@@ -197,7 +197,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
               paramType: query
         """
         # Todo: improve!
-        search = request.query_params.get('search', '')
+        search = request.query_params.get('search', '').strip()
         if not search:
             raise RequiredParameter('search', "This parameter is required")
         # category = request.query_params.get('category')
