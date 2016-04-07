@@ -81,10 +81,11 @@ class ShoutSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
 
         # Optional price and currency
-        price_is_none = data.get('price') is None
+        price = data.get('price')
+        price_is_set = price is not None
         currency_is_none = data.get('currency') is None
-        if price_is_none != currency_is_none and data.get('price') != 0:
-            raise serializers.ValidationError({'price': "price and currency must be either both set or both `null`"})
+        if price_is_set and price != 0 and currency_is_none:
+            raise serializers.ValidationError({'currency': "The currency must be set when the price is set"})
         # Optional category defaults to "Other"
         if data.get('category') is None:
             data['category'] = 'other'

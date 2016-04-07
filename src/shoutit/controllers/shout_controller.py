@@ -143,8 +143,11 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
                videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None, mobile=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
                               videos=videos, available_count=available_count, is_sold=is_sold)
-    if text is not None:
-        shout.text = text
+    # Can be unset
+    shout.text = text
+    shout.mobile = mobile
+
+    # Can't be unset
     if category is not None:
         shout.category = category
     if filters is not None:
@@ -164,8 +167,7 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
         location_controller.add_predefined_city(location)
     if page_admin_user is not None:
         shout.page_admin_user = page_admin_user
-    if mobile is not None:
-        shout.mobile = mobile
+
     shout.save()
     return shout
 
