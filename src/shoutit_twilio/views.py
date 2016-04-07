@@ -16,6 +16,7 @@ from twilio.access_token import AccessToken, ConversationsGrant
 
 from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter
+from shoutit.api.v3.serializers import ProfileSerializer
 from shoutit.models import User
 from shoutit_twilio.models import VideoClient
 from .settings import SHOUTIT_TWILIO_SETTINGS
@@ -100,6 +101,11 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
 
         Returns 403 if the call is not allowed.
         ---
+        omit_serializer: true
+        parameters:
+            - name: profile
+              description: Profile username
+              paramType: query
         """
         user = request.user
 
@@ -122,4 +128,40 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         res = {
             'identity': video_client.identity
         }
+        return Response(res)
+
+    @list_route(methods=['get'], suffix='Retrieve Profile')
+    def profile(self, request):
+        """
+        Retrieve profile using its video client identity
+        <pre><code>
+        GET: /twilio/profile?identity=7c6ca4737db3447f936037374473e61f
+        </code></pre>
+
+        ###REQUIRES AUTH
+
+        ###Response
+        Profile Object
+
+        ---
+        serializer: ProfileSerializer
+        parameters:
+            - name: identity
+              description: Video client identity
+              paramType: query
+        """
+        identity = request.query_params.get('identity')
+        if not identity:
+            raise RequiredParameter('identity')
+
+        try:
+            video_client = VideoClient.objects.get(id=identity)
+        except VideoClient.DoesNotExist:
+            msg = "Profile with identity %s doesn't exist" % identity
+            raise InvalidParameter('identity', message=msg)
+        except ValueError:
+            msg = "Invalid identity"
+            raise InvalidParameter('identity', message=msg)
+
+        res = ProfileSerializer(video_client.user, context={'request': request}).data
         return Response(res)
