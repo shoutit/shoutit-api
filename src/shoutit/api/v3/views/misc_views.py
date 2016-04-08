@@ -114,9 +114,7 @@ class MiscViewSet(viewsets.ViewSet):
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
-            shouts_qs = Shout.objects.filter().order_by('-date_published')
-            if country:
-                shouts_qs = shouts_qs.filter(country=country)
+            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-date_published')
             if 'shouts' in types:
                 shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
                 suggestions['shouts'] = shouts
