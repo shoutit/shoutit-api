@@ -212,6 +212,7 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             listening.append(listening_users)
 
         index_queryset = index_queryset.query('bool', should=listening)
+        index_queryset = index_queryset.sort('-date_published')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
 
