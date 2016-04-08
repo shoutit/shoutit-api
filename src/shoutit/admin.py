@@ -495,7 +495,7 @@ class ConfirmTokenAdmin(admin.ModelAdmin, UserLinkMixin):
 # GoogleLocation
 @admin.register(GoogleLocation)
 class GoogleLocationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'country', 'state', 'city', 'postal_code', 'latitude', 'longitude')
+    list_display = ('id', 'country', 'state', 'city', 'postal_code', 'latitude', 'longitude', 'is_indexed')
     list_filter = ('country', 'state', 'city', 'postal_code')
 
 
