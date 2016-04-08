@@ -110,7 +110,7 @@ class ShoutDetailSerializer(ShoutSerializer):
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner")
     conversations = serializers.SerializerMethodField()
-    mobile = serializers.CharField(min_length=4, max_length=20, write_only=True, **empty_char_input)
+    mobile = serializers.CharField(min_length=4, max_length=20, **empty_char_input)
     mobile_hint = serializers.CharField(read_only=True)
     is_mobile_set = serializers.BooleanField(read_only=True)
 
@@ -136,6 +136,8 @@ class ShoutDetailSerializer(ShoutSerializer):
         ret = super(ShoutDetailSerializer, self).to_representation(instance)
         if self.root.context['request'].user == instance.owner:
             del ret['reply_url']
+        else:
+            del ret['mobile']
         return ret
 
     def validate_images(self, images):

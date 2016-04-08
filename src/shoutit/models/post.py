@@ -18,7 +18,7 @@ from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
 from shoutit.models.base import UUIDModel
 from shoutit.models.tag import Tag, ShoutitSlugField
-from shoutit.utils import error_logger, none_to_blank
+from shoutit.utils import error_logger, none_to_blank, correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -147,7 +147,10 @@ class Shout(Post):
 
     def clean(self):
         super(Shout, self).clean()
+        if self.mobile:
+            self.mobile = correct_mobile(self.mobile, self.country)
         none_to_blank(self, ['mobile'])
+
 
     @property
     def images(self):
