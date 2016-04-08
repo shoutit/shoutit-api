@@ -301,10 +301,10 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 # Push
 APNS_SANDBOX = False
 FORCE_PUSH = False
+APNS_CERT_NAME = 'push-%s.pem' % ('prod' if PROD else 'dev')
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(SRC_DIR, 'assets', 'certificates', 'ios',
-                                     'push-%s.pem' % ('dev' if APNS_SANDBOX else 'prod')),
+    'APNS_CERTIFICATE': os.path.join(SRC_DIR, 'assets', 'certificates', 'ios', APNS_CERT_NAME),
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
