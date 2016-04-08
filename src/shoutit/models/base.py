@@ -46,6 +46,10 @@ class UUIDModel(models.Model):
         self.save(update_fields=update_fields)
         return self
 
+    @classmethod
+    def exists(cls, **kwargs):
+        return cls.objects.filter(**kwargs).exists()
+
     @property
     def pk(self):
         return str(self.id).lower()

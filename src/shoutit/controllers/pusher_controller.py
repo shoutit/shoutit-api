@@ -61,4 +61,4 @@ def trigger_conversation_update(conversation, version):
 
 def check_pusher(user):
     user_channel = 'presence-u-%s' % user.pk
-    return PusherChannel.objects.filter(name__iendswith=user_channel).exists()
+    return PusherChannel.exists(name__iendswith=user_channel)

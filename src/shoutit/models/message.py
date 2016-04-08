@@ -176,7 +176,7 @@ class Message(Action):
 
     @property
     def has_attachments(self):
-        return MessageAttachment.objects.filter(message_id=self.id).exists()
+        return MessageAttachment.exists(message_id=self.id)
 
     @property
     def contributors(self):
@@ -189,7 +189,7 @@ class Message(Action):
             return user in self.contributors
 
     def is_read(self, user):
-        return MessageRead.objects.filter(user=user, message=self, conversation=self.conversation).exists()
+        return MessageRead.exists(user=user, message=self, conversation=self.conversation)
 
     @property
     def read_by_objects(self):

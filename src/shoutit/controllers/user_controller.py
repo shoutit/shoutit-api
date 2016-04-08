@@ -15,13 +15,13 @@ from shoutit.controllers import location_controller
 def create_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
                 **extra_user_fields):
     # email
-    if email and User.objects.filter(email=email.lower()).exists():
+    if email and User.exists(email=email.lower()):
         raise DRFValidationError({'email': "User with same email exists."})
 
     # first, last and username
     if not username:
         username = generate_username()
-    while len(username) < 2 or User.objects.filter(username=username).exists():
+    while len(username) < 2 or User.exists(username=username):
         username = generate_username()
     if first_name and len(first_name) < 2:
         first_name = ''

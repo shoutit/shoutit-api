@@ -66,7 +66,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         if user_id:
             try:
                 uuid.UUID(user_id)
-                if not User.objects.filter(id=user_id).exists():
+                if not User.exists(id=user_id):
                     raise serializers.ValidationError({'id': "Profile with id '%s' does not exist" % user_id})
                 ret['id'] = user_id
             except (ValueError, TypeError):

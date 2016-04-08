@@ -80,7 +80,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
 
     def validate_email(self, email):
         email = email.lower()
-        if User.objects.filter(email=email).exists():
+        if User.exists(email=email):
             raise serializers.ValidationError('Email is already used by another user')
         return email
 

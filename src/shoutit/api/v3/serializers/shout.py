@@ -72,7 +72,7 @@ class ShoutSerializer(serializers.ModelSerializer):
             if shout_id:
                 try:
                     uuid.UUID(shout_id)
-                    if not Shout.objects.filter(id=shout_id).exists():
+                    if not Shout.exists(id=shout_id):
                         raise serializers.ValidationError({'id': "Shout with id '%s' does not exist" % shout_id})
                     return {'id': shout_id}
                 except (ValueError, TypeError, AttributeError):

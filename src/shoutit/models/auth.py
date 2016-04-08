@@ -345,7 +345,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         Check whether the user of this profile is listening to this obj or not
         """
         listen_type, target = Listen2.listen_type_and_target_from_object(obj)
-        return Listen2.objects.filter(user=self, type=listen_type, target=target).exists()
+        return Listen2.exists(user=self, type=listen_type, target=target)
 
     @property
     def listening2_users_ids(self):

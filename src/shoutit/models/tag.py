@@ -62,7 +62,7 @@ class Tag(UUIDModel, APIModelMixin):
 
     @property
     def is_category(self):
-        return Category.objects.get(main_tag=self).exists()
+        return Category.exists(main_tag=self)
 
     @property
     def listeners_count(self):

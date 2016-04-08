@@ -276,7 +276,7 @@ class UserSerializer(serializers.ModelSerializer):
         if user_id:
             try:
                 uuid.UUID(user_id)
-                if not User.objects.filter(id=user_id).exists():
+                if not User.exists(id=user_id):
                     raise ValidationError("user with id '{}' does not exist".format(user_id))
                 ret['id'] = user_id
             except (ValueError, TypeError):
@@ -544,7 +544,7 @@ class ShoutSerializer(serializers.ModelSerializer):
             if shout_id:
                 try:
                     uuid.UUID(shout_id)
-                    if not Shout.objects.filter(id=shout_id).exists():
+                    if not Shout.exists(id=shout_id):
                         raise ValidationError({'id': ["shout with id '%s' does not exist" % shout_id]})
                     return {'id': shout_id}
                 except (ValueError, TypeError):
@@ -746,7 +746,7 @@ class MessageSerializer(serializers.ModelSerializer):
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
-                        elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
+                        elif not Shout.exists(id=attachment['shout']['id']):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
@@ -996,7 +996,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
 
     def validate_email(self, email):
         email = email.lower()
-        if User.objects.filter(email=email).exists():
+        if User.exists(email=email):
             raise ValidationError(['Email is already used by another user.'])
         return email
 

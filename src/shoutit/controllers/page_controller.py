@@ -12,7 +12,7 @@ def create_page(creator, name, category, page_fields=None, **extra_user_fields):
     username = extra_user_fields.pop('username', None)
     if not username:
         username = generate_username()
-    while User.objects.filter(username=username).exists():
+    while User.exists(username=username):
         username = generate_username()
 
     # Page fields
