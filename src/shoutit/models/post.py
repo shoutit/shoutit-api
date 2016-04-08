@@ -148,7 +148,9 @@ class Shout(Post):
     def clean(self):
         super(Shout, self).clean()
         if self.mobile:
-            self.mobile = correct_mobile(self.mobile, self.country)
+            mobile_shout_country = correct_mobile(self.mobile, self.country)
+            mobile_owner_country = correct_mobile(self.mobile, self.owner.ap.country)
+            self.mobile = mobile_shout_country or mobile_owner_country
         none_to_blank(self, ['mobile'])
 
 
