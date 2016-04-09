@@ -7,6 +7,9 @@ RUN mkdir /api
 WORKDIR /api
 ADD . /api/
 
+# Install ubuntu dependencies
+RUN apt-get update -y && apt-get install tesseract-ocr -y
+
 # Install supervisor
 RUN pip install supervisor
 COPY ./deploy/supervisord.conf /etc/supervisord.conf
