@@ -135,7 +135,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         except ValueError:
             raise InvalidParameter(latlng_key, "Invalid number")
 
-        # Category and Tags2
+        # Category and Filters
         category = data.get('category')
         if category and category != 'all':
             try:
@@ -149,7 +149,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     if cat_f_type == TAG_TYPE_STR:
                         cat_f_param = data.get(cat_f_key)
                         if cat_f_param:
-                            index_queryset = index_queryset.filter('term', **{'tags2__%s' % cat_f_key: cat_f_param})
+                            cat_f_params = cat_f_param.split(',')
+                            index_queryset = index_queryset.filter('terms', **{'tags2__%s' % cat_f_key: cat_f_params})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
