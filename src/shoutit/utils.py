@@ -416,7 +416,7 @@ def serialize_attached_object(attached_object, version, user=None):
     request = create_fake_request(version)
     request.user = user or AnonymousUser()
 
-    if isinstance(attached_object, dict):
+    if isinstance(attached_object, (dict, list)):
         return attached_object
     if isinstance(attached_object, User):
         if getattr(attached_object, 'detailed', False):
