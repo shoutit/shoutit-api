@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.db.models import Q
 from django_rq import job
 
 from common.constants import (NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_READ_BY,
@@ -59,17 +60,10 @@ def trigger_conversation_update(conversation, version):
     trigger_conversation_event(conversation.id, NOTIFICATION_TYPE_CONVERSATION_UPDATE, conversation, version)
 
 
-def check_pusher_v2(user):
+def check_pusher(user):
     """
-    Return whether a v2 user pusher channel exits for this user
+    Return whether a profile pusher channel exists for this user on any version
     """
-    user_channel = 'presence-u-%s' % user.pk
-    return PusherChannel.exists(name__iendswith=user_channel)
-
-
-def check_pusher(user, version):
-    """
-    Return whether a profile pusher channel exists for this user
-    """
-    channel_name = 'presence-%s-p-%s' % (version, user.pk)
-    return PusherChannel.exists(name__iendswith=channel_name)
+    channel_name = Q(name='presence-u-%s' % user.pk)
+    channel_name |= Q(name='presence-%s-p-%s' % ('v3', user.pk))
+    return PusherChannel.objects.filter(channel_name)
