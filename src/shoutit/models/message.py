@@ -214,30 +214,33 @@ class Message(Action):
 @receiver(post_save, sender=Message)
 def post_save_message(sender, instance=None, created=False, **kwargs):
     if created:
-        # save the attachments
+        # Save the attachments
         from shoutit.controllers.message_controller import save_message_attachments
         attachments = getattr(instance, 'raw_attachments', [])
         save_message_attachments(instance, attachments)
 
+        # Push the message to the conversation presence channel
         from shoutit.controllers import notifications_controller, pusher_controller
-        # push the message to the conversation presence channel
         pusher_controller.trigger_new_message(instance, version='v3')
 
-        # update the conversation
+        # Update the conversation without sending `conversation_update` pusher event
         conversation = instance.conversation
         conversation.last_message = instance
+        conversation.notify = False
         conversation.save()
+
         # Add the message user to conversation users if he isn't already
         try:
             conversation.users.add(instance.user)
         except IntegrityError:
             pass
 
-        # read the message by its owner if exists (not by system)
+        # Read the message by its owner if exists (not by system)
+        # Todo: do we really need to read our own messages? clients should assume a message is read by its owner!
         if instance.user:
             MessageRead.create(user=instance.user, message=instance, conversation=conversation)
 
-        # notify the users
+        # Notify the other participants
         for to_user in conversation.contributors:
             if instance.user and instance.user != to_user:
                 notifications_controller.notify_user_of_message(to_user, instance)
