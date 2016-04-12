@@ -20,6 +20,8 @@ from ..utils import error_logger, debug_logger, serialize_attached_object
 def send_push(user, notification_type, attached_object, version):
     from shoutit.controllers.notifications_controller import get_all_unread_notifications_count
 
+    # Todo: maybe check whether it is possible to push before even serializing
+
     attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:

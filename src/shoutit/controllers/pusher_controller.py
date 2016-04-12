@@ -59,6 +59,17 @@ def trigger_conversation_update(conversation, version):
     trigger_conversation_event(conversation.id, NOTIFICATION_TYPE_CONVERSATION_UPDATE, conversation, version)
 
 
-def check_pusher(user):
+def check_pusher_v2(user):
+    """
+    Return whether a v2 user pusher channel exits for this user
+    """
     user_channel = 'presence-u-%s' % user.pk
     return PusherChannel.exists(name__iendswith=user_channel)
+
+
+def check_pusher(user, version):
+    """
+    Return whether a profile pusher channel exists for this user
+    """
+    channel_name = 'presence-%s-p-%s' % (version, user.pk)
+    return PusherChannel.exists(name__iendswith=channel_name)

@@ -38,9 +38,14 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
         Notification.create(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
 
     # Send Push notification
-    if push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
-        push_controller.send_push.delay(user, notification_type, attached_object, 'v2')
-        push_controller.send_push.delay(user, notification_type, attached_object, 'v3')
+    if push_controller.check_push(notification_type):
+        # V2
+        if not pusher_controller.check_pusher_v2(user):
+            push_controller.send_push.delay(user, notification_type, attached_object, 'v2')
+        # Other versions
+        version = 'v3'
+        if not pusher_controller.check_pusher(user, version):
+            push_controller.send_push.delay(user, notification_type, attached_object, version)
 
 
 def notify_user_of_listen(user, listener):
