@@ -271,7 +271,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     def listening(self, request, *args, **kwargs):
         """
         List the Profile listening based on `type` query param.
-        It could be either `users`, `pages` or `tags`. The default is `users`
+        It could be either `users`, `pages` or `tags`.
         ###Response
         <pre><code>
         {
