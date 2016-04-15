@@ -15,7 +15,7 @@ RUN pip install supervisor
 COPY ./deploy/supervisord.conf /etc/supervisord.conf
 
 # Install pip requirements
-RUN pip install -r src/requirements/$SHOUTIT_ENV.txt
+RUN pip install -r src/requirements/${SHOUTIT_ENV}.txt
 RUN pip install -r src/requirements/common_noupdate.txt
 
 # Add external dependencies
@@ -25,5 +25,6 @@ EXPOSE 8001
 
 ENV PYTHONUNBUFFERED 1
 ENV SHOUTIT_ENV $SHOUTIT_ENV
+ENV SHOUTIT_ENV /api/deploy/newrelic-${SHOUTIT_ENV}.ini
 
-CMD gunicorn src.wsgi -c ./src/settings_gunicorn.py
+CMD newrelic-admin run-program gunicorn src.wsgi -c /api/src/settings_gunicorn.py
