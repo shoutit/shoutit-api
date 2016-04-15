@@ -54,6 +54,7 @@ phonenumbers==7.2.8
 django-ipware
 twilio==6.2.dev0
 nexmo
+django-heartbeat
 
 # urllib
 # requires apt-get install libffi-dev

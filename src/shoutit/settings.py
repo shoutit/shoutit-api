@@ -173,6 +173,7 @@ INSTALLED_APPS = (
     'push_notifications',
     'django_rq',
     'corsheaders',
+    'heartbeat',
 
     'mptt',
     'shoutit_twilio',

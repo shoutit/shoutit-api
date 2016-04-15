@@ -27,6 +27,9 @@ urlpatterns = [
     # DRF API Auth
     url(r'^auth/', include('rest_framework.urls', namespace='rest_framework')),
 
+    # Heartbeat
+    url(r'^heartbeat', include('heartbeat.urls')),
+
     url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL + 'img/icon.png', permanent=True)),
     url(r'^robots\.txt$', RedirectView.as_view(url=settings.STATIC_URL + 'robots.txt', permanent=True)),
 ]
