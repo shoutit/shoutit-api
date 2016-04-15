@@ -129,8 +129,7 @@ class Shout(Post):
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
     is_indexed = models.BooleanField(default=False, db_index=True)
 
-    # Todo: check why item can be null and make it not one to one
-    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
+    item = models.OneToOneField('shoutit.Item', db_index=True)
     renewal_count = models.PositiveSmallIntegerField(default=0)
 
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
