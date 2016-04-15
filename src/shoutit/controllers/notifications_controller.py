@@ -7,7 +7,7 @@ from django.db.models.query_utils import Q
 from django_rq import job
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE)
-from ..controllers import push_controller, pusher_controller, sss_controller
+from ..controllers import push_controller, pusher_controller
 from ..models import Notification
 
 

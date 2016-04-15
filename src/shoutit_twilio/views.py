@@ -15,7 +15,6 @@ from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from twilio.access_token import AccessToken, ConversationsGrant
 
-from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter
 from shoutit.api.v3.serializers import ProfileSerializer
 from shoutit.models import User
@@ -107,7 +106,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
               description: Profile username
               paramType: query
         """
-        user = request.user
+        # Todo: Check whether calling user is allowed to do this call or not
 
         other_username = request.query_params.get('profile')
         if not other_username:

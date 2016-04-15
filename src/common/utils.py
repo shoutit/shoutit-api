@@ -10,7 +10,6 @@ import uuid
 from datetime import datetime
 
 import pytz
-import requests
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 from pydash import strings

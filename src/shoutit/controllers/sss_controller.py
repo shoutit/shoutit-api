@@ -91,7 +91,7 @@ def notify_db_user(db_user, from_user, message):
         return
     reply_html = reply_response.content.decode('utf-8')
     captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
-    captcha_img = requests.get(captcha_url)
+    # captcha_img = requests.get(captcha_url)
     # gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
     captcha_code = str("")
     captcha_hash = re.search('captcha/image_mobile/(.*?)/', captcha_url).groups()[0]
@@ -142,7 +142,7 @@ def notify_dbz2_user(dbz2_user, from_user, message):
     csrftoken = client.cookies.get('csrftoken')
 
     captcha_url = base_url + re.search('src="(.*?captcha.*?)"', reply_html).groups()[0]
-    captcha_img = requests.get(captcha_url)
+    # captcha_img = requests.get(captcha_url)
     # gate = AntiGate(key=settings.ANTI_KEY, captcha_file=captcha_img.content, binary=True)
     captcha_code = str("")
     captcha_hash = re.search('captcha/image/(.*?)/', captcha_url).groups()[0]

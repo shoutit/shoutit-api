@@ -153,7 +153,6 @@ class Shout(Post):
             self.mobile = mobile_shout_country or mobile_owner_country
         none_to_blank(self, ['mobile'])
 
-
     @property
     def images(self):
         return self.item.images
