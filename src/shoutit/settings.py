@@ -299,6 +299,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 =================================
 """
 # Push
+# Both certificates used for development(by AppUnite) and production (by Shoutit) are considered `production` certificates
 APNS_SANDBOX = False
 FORCE_PUSH = False
 APNS_CERT_NAME = 'push-%s.pem' % ('prod' if PROD else 'dev')
@@ -311,13 +312,8 @@ PUSH_NOTIFICATIONS_SETTINGS = {
 MAX_BROADCAST_RECIPIENTS = 1000
 
 # Mixpanel
-MIXPANEL_TOKEN = 'c9d0a1dc521ac1962840e565fa971574'
+MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', 'd2de0109a8de7237dede66874c7b8951')
 FORCE_MP_TRACKING = False
-
-# Twilio
-TWILIO_ACCOUNT_SID = "AC72062980c854618cfa7765121af3085d"
-TWILIO_AUTH_TOKEN = "ed5a3b1dc6debc010e10047ebaa066ce"
-TWILIO_FROM = '+14807255600'
 
 # Nexmo
 NEXMO_API_KEY = "7c650639"
@@ -628,7 +624,6 @@ LOGGING = {
         # 'level': 'DEBUG',
         # 'handlers': ['console_out', 'console_err', 'sentry'],
         # },
-
         'SqlLogMiddleware': {
             'handlers': ['sql_file'],
             'level': 'INFO',

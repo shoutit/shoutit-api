@@ -32,7 +32,6 @@ import phonenumbers
 import requests
 from mixpanel import Mixpanel
 from rest_framework.request import Request
-from twilio.rest import TwilioRestClient
 
 from common.constants import COUNTRY_ISO
 from shoutit import settings
@@ -53,8 +52,6 @@ shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitCustomJSONEncod
 # IP2Location instant
 ip2location = location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 
-# Shoutit twilio
-shoutit_twilio = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
 # shoutit mailchimp
 shoutit_mailchimp = mailchimp.Client(settings.MAILCHIMP_API_KEY)
