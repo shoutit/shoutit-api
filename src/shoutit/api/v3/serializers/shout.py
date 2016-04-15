@@ -7,13 +7,14 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Currency, InactiveShout
-from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none
+from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none, correct_mobile
 from .base import LocationSerializer, VideoSerializer, empty_char_input
 from .profile import ProfileSerializer
 from .tag import CategorySerializer
@@ -161,6 +162,10 @@ class ShoutDetailSerializer(ShoutSerializer):
         return self.perform_save(shout=shout, validated_data=validated_data)
 
     def perform_save(self, shout, validated_data):
+        request = self.root.context.get('request')
+        profile = getattr(request, 'profile', None) or getattr(request, 'user', None)or self.root.context.get('user')
+        page_admin_user = getattr(request, 'page_admin_user', None)
+
         shout_type_name = validated_data.get('get_type_display')
         shout_types = {
             'request': POST_TYPE_REQUEST,
@@ -182,13 +187,17 @@ class ShoutDetailSerializer(ShoutSerializer):
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
         mobile = validated_data.get('mobile')
+        if mobile:
+            try:
+                mobile = correct_mobile(mobile, profile.ap.country, raise_exception=True)
+            except ValidationError:
+                try:
+                    mobile = correct_mobile(mobile, location['country'], raise_exception=True)
+                except ValidationError:
+                    raise serializers.ValidationError({'mobile': "Invalid mobile"})
 
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
-
-        request = self.root.context.get('request')
-        profile = getattr(request, 'profile', None) or getattr(request, 'user', None)or self.root.context.get('user')
-        page_admin_user = getattr(request, 'page_admin_user', None)
 
         if not shout:
             case_1 = shout_type is POST_TYPE_REQUEST and title
