@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from copy import deepcopy
 
 from django.conf import settings
+from django.db.models import Count
 from django.db.models.query_utils import Q
 from django_rq import job
 
@@ -24,7 +25,9 @@ def get_unread_notifications_count(user):
 
 
 def get_unread_conversations_count(user):
-    return Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE).count()
+    q = Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE)
+    q = q.aggregate(count=Count('message__conversation', distinct=True))
+    return q.get('count', 0)
 
 
 @job(settings.RQ_QUEUE)

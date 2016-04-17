@@ -8,6 +8,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
 from django.db.models.signals import post_save
@@ -17,7 +18,7 @@ from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
-    CONVERSATION_TYPE_PUBLIC_CHAT)
+    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -84,7 +85,13 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         Message.objects.create(user=None, text=text, conversation=self)
 
     def mark_as_read(self, user):
-        # todo: find more efficient way
+        # Read all the notifications about this conversation
+        notifications = Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE,
+                                                    message__conversation=self)
+        notifications.update(is_read=True)
+
+        # Create MessageRead objects for all the conversation's messages
+        # Todo: Optimize!
         for message in self.messages.all():
             try:
                 MessageRead.objects.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
@@ -159,6 +166,8 @@ class Message(Action):
                                         related_name='deleted_messages')
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")
+
+    notifications = GenericRelation('shoutit.Notification', related_query_name='message')
 
     def __unicode__(self):
         return "%s  at:%s" % (self.summary, self.created_at_unix)
