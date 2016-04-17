@@ -107,8 +107,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             - name: discover
               description: discover item id to list its shouts
               paramType: query
-            - name: user
-              description: user username to list his shouts
+            - name: profile
+              description: profile username to list its shouts
               paramType: query
             - name: min_price
               paramType: query
@@ -281,83 +281,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def retrieve(self, request, *args, **kwargs):
         """
         Retrieve a Shout
-        <pre><code>
-        {
-            "id": "cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "api_url": "https://api.shoutit.com/v3/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "web_url": "https://www.shoutit.com/shout/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "type": "offer",
-            "category": {
-                "name": "Cars & Motors",
-                "slug": "cars-motors",
-                "icon": "https://tag-image.static.shoutit.com/categories/cars-i.png",
-                "image": "https://tag-image.static.shoutit.com/bb4f3137-48f2-4c86-89b8-0635ed6d426e-cars-motors.jpg"
-            },
-            "title": "Chevrolet Cruze 2011 Perfect Condition low mileage 59000 KM",
-            "location": {
-                "latitude": 25.2321179865413,
-                "longitude": 51.4795259383137,
-                "country": "QA",
-                "postal_code": "",
-                "state": "",
-                "city": "Ain Khaled",
-                "address": ""
-            },
-            "text": "Chevrolet Cruze 2011 \nPerfect Condition\nVery Low Mileage 59000 KM\nEngine is 1.8 CC\nInterior is like New \nSecond Owner\nESTMARA UP to 8/2017\nPRICE IS 25500\nشفرولية كروز موديل 2011\nبحالة ممتازة جدا جدا\nقاطع 59000 كيلومتر فقط\nنظيفة جدا من الداخل ومن الخارج\nاستمارة حتي شهر8 2017 \nالسعر 25500",
-            "price": 24500.0,
-            "currency": "QAR",
-            "available_count": 1,
-            "is_sold": false,
-            "thumbnail": "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
-            "video_url": null,
-            "profile": {
-                "id": "6590865d-b395-4cea-8382-68fbc5f048ce",
-                "type": "Profile",
-                "api_url": "https://api.shoutit.com/v3/profiles/15214428592",
-                "web_url": "https://www.shoutit.com/user/15214428592",
-                "username": "15214428592",
-                "name": "user 15214428592",
-                "first_name": "user",
-                "last_name": "15214428592",
-                "is_activated": false,
-                "image": "https://user-image.static.shoutit.com/default_male.jpg",
-                "cover": "",
-                "is_listening": false,
-                "listeners_count": 0
-            },
-            "date_published": 1456431892,
-            "filters": [
-                {
-                    "name": "Color",
-                    "slug": "color",
-                    "value": {
-                        "name": "White",
-                        "slug": "white"
-                    }
-                },
-                {
-                    "name": "Model",
-                    "slug": "model",
-                    "value": {
-                        "name": "2016",
-                        "slug": "2016"
-                    }
-                }
-            ],
-            "images": [
-                "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
-                "https://shout-image.static.shoutit.com/fac19243-2680-4971-ab52-d90b2f525c19-1456441369.jpg",
-                "https://shout-image.static.shoutit.com/bc40f2ca-fc5b-4fe0-8d13-1a0865f4b38b-1456441370.jpg"
-            ],
-            "videos": [],
-            "published_on": {},
-            "reply_url": "https://api.shoutit.com/v3/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
-            "conversations": [],
-            "mobile_hint": "01701...",
-            "is_mobile_set": true
-        }
-        </code></pre>
 
+        [Shout object](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Shouts)
         ---
         serializer: ShoutDetailSerializer
         """
