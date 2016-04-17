@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import random
 
+from django.conf import settings
 from django.views.decorators.cache import cache_control
 from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
@@ -130,7 +131,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
         result = self.get_paginated_response(serializer.data)
-        result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
+
+        # Todo: add actual data
+        result.data['web_url'] = settings.SITE_LINK + 'search?src=api'
+        result.data['related_searches'] = []
         return result
 
     @cache_control(max_age=60 * 60 * 24)
