@@ -66,4 +66,4 @@ def check_pusher(user):
     """
     channel_name = Q(name='presence-u-%s' % user.pk)
     channel_name |= Q(name='presence-%s-p-%s' % ('v3', user.pk))
-    return PusherChannel.objects.filter(channel_name)
+    return user.joined_pusher_channels.filter(channel_name).exists()

@@ -37,7 +37,7 @@ class PusherChannel(UUIDModel):
 
 
 class PusherChannelJoin(UUIDModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='joined_pusher_channels')
     channel = models.ForeignKey('shoutit_pusher.PusherChannel')
 
     class Meta:
