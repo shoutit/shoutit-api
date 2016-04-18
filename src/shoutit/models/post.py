@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -12,13 +12,13 @@ from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
 
-from common.constants import (POST_TYPE_DEAL, POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_EXPERIENCE, PostType)
+from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, PostType)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
 from shoutit.models.base import UUIDModel
 from shoutit.models.tag import Tag, ShoutitSlugField
-from shoutit.utils import error_logger
+from shoutit.utils import error_logger, none_to_blank, correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -43,14 +43,9 @@ class PostManager(models.Manager):
         days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
         day = today - days
         return qs.filter(
-            Q(type=POST_TYPE_EXPERIENCE)
-            | (
-                (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER))
-                & (
-                    Q(shout__expiry_date__isnull=True, date_published__range=(day, today))
-                    |
-                    Q(shout__expiry_date__isnull=False, shout__expiry_date__gte=today)
-                )
+            (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)) & (
+                Q(shout__expiry_date__isnull=True, date_published__range=(day, today)) |
+                Q(shout__expiry_date__isnull=False, shout__expiry_date__gte=today)
             )
         )
 
@@ -58,8 +53,8 @@ class PostManager(models.Manager):
 class ShoutManager(PostManager):
     def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
         if not types:
-            types = [POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]
-        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST, POST_TYPE_DEAL]))
+            types = [POST_TYPE_OFFER, POST_TYPE_REQUEST]
+        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST]))
         return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired,
                                            get_muted=get_muted)
 
@@ -98,8 +93,8 @@ class Post(Action):
         self._meta.get_field('user').blank = False
 
     def clean(self):
-        if self.text is None:
-            self.text = ""
+        super(Post, self).clean()
+        none_to_blank(self, ['text'])
 
     def mute(self):
         self.muted = True
@@ -134,8 +129,7 @@ class Shout(Post):
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
     is_indexed = models.BooleanField(default=False, db_index=True)
 
-    # Todo: check why item can be null and make it not one to one
-    item = models.OneToOneField('shoutit.Item', related_name='%(class)s', db_index=True, null=True, blank=True)
+    item = models.OneToOneField('shoutit.Item', db_index=True)
     renewal_count = models.PositiveSmallIntegerField(default=0)
 
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
@@ -149,6 +143,14 @@ class Shout(Post):
 
     def __unicode__(self):
         return unicode("%s: %s, %s: %s" % (self.pk, self.item.name, self.country, self.city))
+
+    def clean(self):
+        super(Shout, self).clean()
+        if self.mobile:
+            mobile_shout_country = correct_mobile(self.mobile, self.country)
+            mobile_owner_country = correct_mobile(self.mobile, self.owner.ap.country)
+            self.mobile = mobile_shout_country or mobile_owner_country
+        none_to_blank(self, ['mobile'])
 
     @property
     def images(self):
@@ -301,7 +303,7 @@ class ShoutIndex(DocType):
     priority = Integer()
 
     class Meta:
-        index = settings.ENV + '_shout'
+        index = 'shoutit_api_%s_shout' % settings.SHOUTIT_ENV
         dynamic_templates = MetaField([
             {
                 "tags2_integer_keys": {
@@ -346,56 +348,3 @@ class Video(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
-
-# class DealManager(ShoutManager):
-# def get_valid_deals(self, country=None, city=None, get_expired=False, get_muted=False):
-#         return ShoutManager.get_valid_shouts(self, [POST_TYPE_DEAL], country=country, city=city, get_expired=get_expired, get_muted=get_muted)
-#
-#
-# class ExperienceManager(PostManager):
-#     def get_valid_experiences(self, country=None, city=None, get_muted=False):
-#         return PostManager.get_valid_posts(self, types=[POST_TYPE_EXPERIENCE], country=country, city=city, get_expired=True, get_muted=get_muted)
-
-# class Deal(Shout):
-#     MinBuyers = models.IntegerField(default=0)
-#     MaxBuyers = models.IntegerField(null=True, blank=True)
-#     OriginalPrice = models.FloatField()
-#     IsClosed = models.BooleanField(default=False)
-#     ValidFrom = models.DateTimeField(null=True, blank=True)
-#     ValidTo = models.DateTimeField(null=True, blank=True)
-#
-#     objects = DealManager()
-#
-#     def BuyersCount(self):
-#         return self.Buys.aggregate(buys=Sum('Amount'))['buys']
-#
-#     def AvailableCount(self):
-#         return self.MaxBuyers - self.BuyersCount()
-
-
-# class Experience(Post):
-#     AboutBusiness = models.ForeignKey('shoutit.Business', related_name='Experiences')
-#     state = models.IntegerField(null=False)
-#
-#     objects = ExperienceManager()
-#
-#     def __unicode__(self):
-#         return unicode(self.pk)
-#
-#
-# class SharedExperience(UUIDModel):
-#     Experience = models.ForeignKey('shoutit.Experience', related_name='SharedExperiences')
-#     user = models.ForeignKey(AUTH_USER_MODEL, related_name='SharedExperiences')
-#
-#     class Meta(UUIDModel.Meta):
-#         unique_together = ('Experience', 'user',)
-
-
-# class Comment(UUIDModel):
-#     AboutPost = models.ForeignKey('shoutit.Post', related_name='Comments', null=True, blank=True)
-#     user = models.ForeignKey(AUTH_USER_MODEL, related_name='+')
-#     is_disabled = models.BooleanField(default=False)
-#     text = models.TextField(max_length=300)
-#
-#     def __unicode__(self):
-#         return unicode(self.pk) + ": " + unicode(self.text)

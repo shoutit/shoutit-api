@@ -22,20 +22,20 @@ def create_item(name, description, price, currency, images=None, videos=None, av
 
 def edit_item(item, name=None, description=None, price=None, currency=None, images=None, videos=None,
               available_count=None, is_sold=None):
-    if name:
-        item.name = name
-    if description:
-        item.description = description
-    if price:
-        item.price = price
-    if currency:
-        item.currency = currency
+    # Can be unset
+    item.name = name
+    item.description = description
+    item.price = price
+    item.currency = currency
+
+    # Can't be unset
     if images is not None:
         item.images = images
     if available_count is not None:
         item.available_count = available_count
     if is_sold is not None:
         item.is_sold = is_sold
+
     item.save()
     add_videos_to_item(item, videos, remove_existing=True)
     return item

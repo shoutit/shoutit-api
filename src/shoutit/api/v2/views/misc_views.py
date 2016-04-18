@@ -148,9 +148,7 @@ class MiscViewSet(viewsets.ViewSet):
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
-            shouts_qs = Shout.objects.filter().order_by('-date_published')
-            if country:
-                shouts_qs = shouts_qs.filter(country=country)
+            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-date_published')
             if 'shouts' in types:
                 shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
                 suggestions['shouts'] = shouts
@@ -464,7 +462,7 @@ def handle_dbz_reply(in_email, msg, request):
             debug_logger.debug('Messages count: %s' % messages_count)
             debug_logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
     if source in ['dbz', 'dbz2']:
-        email_exists = User.objects.filter(email=from_email).exists()
+        email_exists = User.exists(email=from_email)
         if not email_exists:
             from_user.email = from_email
             from_user.save()

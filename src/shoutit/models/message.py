@@ -3,21 +3,26 @@
 
 """
 from __future__ import unicode_literals
+
 from datetime import datetime
+
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
-from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
+
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
-    CONVERSATION_TYPE_PUBLIC_CHAT)
+    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE)
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
-from shoutit.utils import track
+from shoutit.utils import track, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -60,6 +65,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         return self.messages.count()
 
     def unread_messages_count(self, user):
+        if isinstance(user, AnonymousUser):
+            return 0
         return self.messages_count - user.read_messages.filter(conversation=self).count()
 
     def mark_as_deleted(self, user):
@@ -78,7 +85,13 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         Message.objects.create(user=None, text=text, conversation=self)
 
     def mark_as_read(self, user):
-        # todo: find more efficient way
+        # Read all the notifications about this conversation
+        notifications = Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE,
+                                                    message__conversation=self)
+        notifications.update(is_read=True)
+
+        # Create MessageRead objects for all the conversation's messages
+        # Todo: Optimize!
         for message in self.messages.all():
             try:
                 MessageRead.objects.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
@@ -120,8 +133,15 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
+    from shoutit.controllers import pusher_controller
+
     if created:
         track(getattr(instance, 'creator_id', 'system'), 'new_conversation', instance.track_properties)
+
+    else:
+        if getattr(instance, 'notify', True):
+            # Trigger `conversation_update` event in the conversation channel
+            pusher_controller.trigger_conversation_update(instance, 'v3')
 
 
 class ConversationDelete(UUIDModel):
@@ -147,8 +167,13 @@ class Message(Action):
     text = models.CharField(null=True, blank=True, max_length=2000,
                             help_text="The text body of this message, could be None if the message has attachments")
 
+    notifications = GenericRelation('shoutit.Notification', related_query_name='message')
+
     def __unicode__(self):
         return "%s  at:%s" % (self.summary, self.created_at_unix)
+
+    def clean(self):
+        none_to_blank(self, ['text'])
 
     @property
     def summary(self):
@@ -160,50 +185,71 @@ class Message(Action):
 
     @property
     def has_attachments(self):
-        return MessageAttachment.objects.filter(message_id=self.id).exists()
+        return MessageAttachment.exists(message_id=self.id)
 
     @property
     def contributors(self):
         return self.conversation.contributors
 
-    def is_read(self, user):
-        return MessageRead.objects.filter(user=user, message=self, conversation=self.conversation).exists()
+    def can_contribute(self, user):
+        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            return True
+        else:
+            return user in self.contributors
 
+    def is_read(self, user):
+        return MessageRead.exists(user=user, message=self, conversation=self.conversation)
+
+    @property
     def read_by_objects(self):
         read_by = []
         for read in self.read_set.all().values('user_id', 'created_at'):
             read_by.append({'profile_id': read['user_id'], 'read_at': date_unix(read['created_at'])})
         return read_by
 
+    def mark_as_read(self, user):
+        try:
+            MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
+        except IntegrityError:
+            pass
+
+    def mark_as_unread(self, user):
+        try:
+            MessageRead.objects.get(user=user, message_id=self.id, conversation_id=self.conversation_id).delete()
+        except MessageRead.DoesNotExist:
+            pass
+
 
 @receiver(post_save, sender=Message)
 def post_save_message(sender, instance=None, created=False, **kwargs):
     if created:
-        # save the attachments
+        # Save the attachments
         from shoutit.controllers.message_controller import save_message_attachments
         attachments = getattr(instance, 'raw_attachments', [])
         save_message_attachments(instance, attachments)
 
-        from shoutit.controllers import notifications_controller
-        # push the message to the conversation presence channel
-        # request = getattr(instance, 'request', None)
-        # notifications_controller.send_pusher_message.delay(instance, request)
+        # Push the message to the conversation presence channel
+        from shoutit.controllers import notifications_controller, pusher_controller
+        pusher_controller.trigger_new_message(instance, version='v3')
 
-        # update the conversation
+        # Update the conversation without sending `conversation_update` pusher event
         conversation = instance.conversation
         conversation.last_message = instance
+        conversation.notify = False
         conversation.save()
+
         # Add the message user to conversation users if he isn't already
         try:
             conversation.users.add(instance.user)
         except IntegrityError:
             pass
 
-        # read the message by its owner if exists (not by system)
+        # Read the message by its owner if exists (not by system)
+        # Todo: do we really need to read our own messages? clients should assume a message is read by its owner!
         if instance.user:
             MessageRead.create(user=instance.user, message=instance, conversation=conversation)
 
-        # notify the users
+        # Notify the other participants
         for to_user in conversation.contributors:
             if instance.user and instance.user != to_user:
                 notifications_controller.notify_user_of_message(to_user, instance)
@@ -220,6 +266,14 @@ class MessageRead(UUIDModel):
     class Meta(UUIDModel.Meta):
         # user can mark the message as 'read' only once
         unique_together = ('user', 'message', 'conversation')
+
+
+@receiver(post_save, sender=MessageRead)
+def post_save_message_read(sender, instance=None, created=False, **kwargs):
+    if created:
+        from shoutit.controllers import pusher_controller
+        # Trigger `new_read_by` event in the conversation channel
+        pusher_controller.trigger_new_read_by(message=instance.message, version='v3')
 
 
 class MessageDelete(UUIDModel):
@@ -262,12 +316,10 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
 
 class Notification(UUIDModel, AttachedObjectMixin):
-    ToUser = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
-    FromUser = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True,
-                                 default=None)
-    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value,
-                               choices=NotificationType.choices)
+    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
+    to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
     is_read = models.BooleanField(default=False)
+    from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
 
     def __unicode__(self):
         return self.pk + ": " + self.get_type_display()
@@ -286,6 +338,9 @@ class Report(UUIDModel, AttachedObjectMixin):
 
     def __unicode__(self):
         return "From user:%s about: %s:%s" % (self.user.pk, self.get_type_display(), self.attached_object.pk)
+
+    def clean(self):
+        none_to_blank(self, ['text'])
 
 
 class PushBroadcast(UUIDModel, AttachedObjectMixin):

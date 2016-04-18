@@ -138,11 +138,11 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tags = Tag.objects.filter(name__in=tag_names)
 
         if request.method == 'POST':
-            listen_controller.listen_to_objects(request.user, tags, request)
-            msg = "you started listening to {} shouts.".format(tag_names)
+            listen_controller.listen_to_objects(request.user, tags)
+            msg = "You started listening to {} shouts.".format(tag_names)
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)
-            msg = "you stopped listening to {} shouts.".format(tag_names)
+            msg = "You stopped listening to {} shouts.".format(tag_names)
 
         ret = {
             'data': {'success': msg},
@@ -186,7 +186,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         tag = self.get_object()
 
         if request.method == 'POST':
-            listen_controller.listen_to_object(request.user, tag, request)
+            listen_controller.listen_to_object(request.user, tag)
             msg = "you started listening to {} shouts.".format(tag.name)
         else:
             listen_controller.stop_listening_to_object(request.user, tag)
@@ -242,7 +242,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
               paramType: query
         """
         tag = self.get_object()
-        tags = Tag.objects.filter(category__in=tag.category.values_list('id', flat=True))
+        tags = Tag.objects.filter(category__in=tag.category.values_list('id', flat=True)).exclude(id=tag.id)
         page = self.paginate_queryset(tags)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)

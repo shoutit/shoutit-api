@@ -1,5 +1,5 @@
 # production requirements
 -r common.txt
-django-storages==1.1.8
+django-storages==1.4
 setproctitle
 newrelic

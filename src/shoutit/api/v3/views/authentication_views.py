@@ -10,17 +10,18 @@ from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.models import AccessToken, RefreshToken, Client
 from provider.oauth2.views import AccessTokenView as OAuthAccessTokenView
 from provider.utils import now
-from provider.views import OAuthError
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
-from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
+from shoutit.api.v3.exceptions import (ERROR_REASON, ShoutitBadRequest, RequiredBody, InvalidBody,
+                                       RequiredParameter, InvalidParameter)
 from shoutit.models import ConfirmToken
-from shoutit.utils import track, alias, error_logger
+from shoutit.utils import track, alias
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
@@ -59,18 +60,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
                    'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest']
 
-    def error_response(self, error, **kwargs):
-        """
-        Return an error response to the client with default status code of
-        *400* stating the error as outlined in :rfc:`5.2`.
-        """
-        client = kwargs.get('client')
-        grant_type = kwargs.get('grant_type', 'no-grant')
-        client_name = client.name if client else 'no-client'
-        error_name = "oAuth2 Error - %s - %s - %s" % (client_name, grant_type, error)
-        error_logger.warn(error_name, extra={'request': self.request._request}, exc_info=True)
-        return Response(error, status=400)
-
     def access_token_response(self, access_token, data=None):
         """
         Returns a successful response after creating the access token
@@ -78,7 +67,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = access_token.user
         if not user.is_active:
-            raise AuthenticationFailed('User inactive or deleted.')
+            raise AuthenticationFailed('Account inactive or deleted.')
 
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
@@ -93,6 +82,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
             'user': user_dict,
+            'profile': user_dict,
             'new_signup': new_signup
         }
 
@@ -298,14 +288,14 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
     def post(self, request):
         """
-        Authorize the user and return an access token to be used in later API calls.
+        Authorize the profile and return an access token to be used in later API calls.
 
-        The `user` attribute in all signup / login calls is optional. It may have location dict with latitude and longitude.
-        If valid location is passed, user's profile will have it set, otherwise it will have an estimated location based on IP.
+        The `profile` attribute in all signup / login calls is optional. It may have `location` dict with latitude and longitude.
+        If valid location is passed, the profile will have it set, otherwise it will have an estimated location based on IP.
 
-        When signing up and if there was a guest account saved, pass its `id` under the `user` attribute. This will make sure the guest account is no longer guest. The Api will convert it to a normal user.
+        When signing up and if there was a guest account saved, pass its `id` under the `profile` attribute. This will make sure the guest account is no longer guest. The Api will convert it to a normal account.
 
-        Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual user id for later tracking events.
+        Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual profile id for later tracking events.
 
         ##Requesting the access token
         There are various methods to do that. Each has different `grant_type` and attributes.
@@ -317,7 +307,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "gplus_code",
             "gplus_code": "4/04RAZxe3u9sp82yaUpzxmO_9yeYLibBcE5p0wq1szcQ.Yro5Y6YQChkeYFZr95uygvW7xDcmlwI",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -334,7 +324,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "facebook_access_token",
             "facebook_access_token": "CAAFBnuzd8h0BAA4dvVnscTb1qf9ye6ZCpq4NZCG7HJYIMHtQ0dfbZA95MbSZBzQSjFsvFwVzWr0NBibHxF5OuiXhEDMy",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -352,7 +342,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "grant_type": "shoutit_login",
             "email": "i.also.shout@whitehouse.gov",
             "password": "iW@ntToPl*YaGam3",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -373,7 +363,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "name": "Barack Hussein Obama",
             "email": "i.also.shout@whitehouse.gov",
             "password": "iW@ntToPl*YaGam3",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -389,7 +379,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "shoutit_guest",
-            "user": {
+            "profile": {
                 "location": {
                     "latitude": 48.7533744,
                     "longitude": 11.3796516
@@ -431,36 +421,34 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write",
-            "user": {Detailed or Guest user object},
+            "profile": {Detailed or Guest profile object},
             "new_signup": true
         }
         </code></pre>
 
-        If the user newly signed up `new_signup` will be set to true otherwise false.
+        If the profile newly signed up `new_signup` will be set to true otherwise false.
 
-        ###Guest user object
+        ###Guest profile object
         <pre><code>
-        {
-            "user": {
-                "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
-                "type": "Profile",
-                "api_url": "http://shoutit.dev:8000/v3/users/14969084019",
-                "username": "14969084019",
-                "is_guest": true,
-                "date_joined": 1456090930,
-                "location": {
-                    "latitude": 25.1993957,
-                    "longitude": 55.2738326,
-                    "country": "AE",
-                    "postal_code": "Dubai",
-                    "state": "Dubai",
-                    "city": "Dubai",
-                    "address": ""
-                },
-                "push_tokens": {
-                    "apns": "asdlfjorjrjrslfsfwrewrwejrlwejrwlrjwlrjwelrjwl",
-                    "gcm": null
-                }
+         {
+            "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
+            "type": "user",
+            "api_url": "http://shoutit.dev:8000/v3/users/14969084019",
+            "username": "14969084019",
+            "is_guest": true,
+            "date_joined": 1456090930,
+            "location": {
+                "latitude": 25.1993957,
+                "longitude": 55.2738326,
+                "country": "AE",
+                "postal_code": "Dubai",
+                "state": "Dubai",
+                "city": "Dubai",
+                "address": ""
+            },
+            "push_tokens": {
+                "apns": "asdlfjorjrjrslfsfwrewrwejrlwejrwlrjwlrjwelrjwl",
+                "gcm": null
             }
         }
         </code></pre>
@@ -476,57 +464,38 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             - name: body
               paramType: body
         """
+        # Set `action` to be used when handling exceptions
+        self.action = 'post'
+
         if provider_constants.ENFORCE_SECURE and not request.is_secure():
-            return self.error_response({
-                'error': 'invalid_request',
-                'error_description': "A secure connection is required."
-            })
+            raise ShoutitBadRequest(message="Authentication failed",
+                                    developer_message="A secure connection is required",
+                                    reason=ERROR_REASON.INSECURE_CONNECTION)
 
         if 'grant_type' not in request.data:
-            return self.error_response({
-                'error': 'invalid_request',
-                'error_description': "No 'grant_type' included in the request."
-            })
+            raise RequiredBody('grant_type', message="Authentication failed")
 
         grant_type = request.data.get('grant_type')
-
         if grant_type not in self.grant_types:
-            return self.error_response({'error': 'unsupported_grant_type'})
+            raise InvalidBody('grant_type', message="Unsupported grant_type")
 
         client = self.authenticate(request)
-
         if client is None:
-            return self.error_response({'error': 'invalid_client'})
+            raise InvalidBody('client', message="Authentication failed", developer_message="Invalid client")
+        request.client = client
+        request.is_test = client.name == 'shoutit-test'
 
         handler = self.get_handler(grant_type)
-
-        try:
-            data = request.data.copy()
-            request.client = client
-            request.is_test = client.name == 'shoutit-test'
-            return handler(request, data, client)
-        except OAuthError, e:
-            return self.error_response(e.args[0], client=client, grant_type=grant_type)
-        except ValidationError as e:
-            return self.error_response(e.detail, client=client, grant_type=grant_type)
-        except Exception as e:
-            return self.error_response(str(e), client=client, grant_type=grant_type)
+        data = request.data.copy()
+        # Update the `action` and set it as the `grant_type` before calling the handler
+        self.action = grant_type
+        return handler(request, data, client)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):
     """
     ShoutitAuth Resource
     """
-
-    def error_response(self, error):
-        """
-        Return an error response to the client with default status code of
-        *400* stating the error as outlined in :rfc:`5.2`.
-        """
-        response_data = {
-            'error': error,
-        }
-        return Response(response_data, status=400)
 
     def success_response(self, success):
         """
@@ -544,7 +513,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         user = access_token.user
         if not user.is_active:
-            raise AuthenticationFailed('User inactive or deleted.')
+            raise AuthenticationFailed("Account inactive or deleted.")
 
         # set the request user in case it is not set
         self.request.user = user
@@ -555,6 +524,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
             'user': user_dict,
+            'profile': user_dict,
         }
 
         # Not all access_tokens are given a refresh_token
@@ -570,7 +540,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], suffix='Change Password')
     def change_password(self, request):
         """
-        Change the current user's password.
+        Change the current profile's password.
         ###REQUIRES AUTH
         ###Change password
         ####Body
@@ -582,7 +552,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         }
         </code></pre>
 
-        `old_password` is only required if set before. check user's `is_set_password` property
+        `old_password` is only required if set before. check profile's `is_set_password` property
         ---
         omit_serializer: true
         parameters:
@@ -596,8 +566,8 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], permission_classes=(), suffix='Reset Password')
     def reset_password(self, request):
         """
-        Send the user a password-reset email.
-        Used when user forgot his password. `email` can be email or username.
+        Send the profile a password-reset email.
+        Used when profile forgot his password. `email` can be email or username.
         ###Reset password
         ####Body
         <pre><code>
@@ -619,7 +589,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
     @list_route(methods=['post'], permission_classes=(), suffix='Set Password')
     def set_password(self, request):
         """
-        Set the password using a reset token. This changes the user's current password. `reset_token` is to be extracted from the url sent to user's email.
+        Set the password using a reset token. This changes the profiles's current password. `reset_token` is to be extracted from the url sent to profile's email.
         ###Set Password
         ####Body
         <pre><code>
@@ -696,7 +666,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write",
-            "user": {Detailed User Object}
+            "profile": {Detailed Profile Object}
         }
         </code></pre>
 
@@ -732,14 +702,14 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         if request.method == 'GET':
             token = request.query_params.get('token')
             if not token:
-                raise ValidationError({'token': "This parameter is required."})
+                raise RequiredParameter('token')
             try:
                 cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token)
                 if cf.is_disabled:
                     raise ValueError()
                 user = cf.user
                 if not user.is_active:
-                    raise AuthenticationFailed('User inactive or deleted.')
+                    raise AuthenticationFailed("Account inactive or deleted")
                 user.activate()
                 cf.is_disabled = True
                 cf.save(update_fields=['is_disabled'])
@@ -749,15 +719,15 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
                 except Exception:
-                    return self.success_response("Your email has been verified.")
+                    return self.success_response("Your email has been verified")
             except ConfirmToken.DoesNotExist:
-                return self.error_response("Token does not exist.")
+                raise InvalidParameter('token', "Token does not exist")
             except ValueError:
-                return self.error_response("Email address is already verified.")
+                raise ShoutitBadRequest("Email address is already verified")
 
         elif request.method == 'POST':
             if request.user.is_anonymous():
-                return Response({"detail": "Authentication credentials were not provided."},
+                return Response({"detail": "Authentication credentials were not provided"},
                                 status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
                 return self.success_response("Your email '{}' is already verified.".format(request.user.email))

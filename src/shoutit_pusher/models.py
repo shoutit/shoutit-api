@@ -10,6 +10,7 @@ from django.db import models
 from shoutit.models import UUIDModel
 from pusher.util import channel_name_re, socket_id_re
 
+
 class PusherDevice(UUIDModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     socket_id = models.CharField(max_length=64, unique=True, validators=[

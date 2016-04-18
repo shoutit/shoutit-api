@@ -23,7 +23,7 @@ class DBCLUser(UUIDModel):
 
     @property
     def shout(self):
-        return Shout.objects.filter(user=self.user)[0]
+        return Shout.objects.filter(user=self.user).first()
 
 
 @receiver(post_delete)

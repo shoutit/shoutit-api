@@ -1,13 +1,21 @@
 from __future__ import unicode_literals
-import json
 
 from django.conf import settings
-from django.utils import datastructures
+from ipware.ip import get_real_ip
 
 from common.constants import DEFAULT_LOCATION
-from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
-from shoutit.utils import JsonResponseBadRequest, error_logger
 from shoutit.controllers import facebook_controller
+from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
+from shoutit.utils import error_logger
+
+
+class XForwardedForMiddleware(object):
+    @staticmethod
+    def process_request(request):
+        if 'HTTP_X_FORWARDED_FOR' in request.META:
+            real_ip = get_real_ip(request)
+            if real_ip:
+                request.META['REMOTE_ADDR'] = real_ip
 
 
 class BadRequestsMiddleware(object):
@@ -15,7 +23,7 @@ class BadRequestsMiddleware(object):
     def process_response(request, response):
         path = request.path
         excluded_paths = ['/v2/sms', '/v2/misc/sss4']
-        if response.status_code in [400] and path not in excluded_paths:
+        if '/v2/' in path and response.status_code in [400] and path not in excluded_paths:
             drf_request = response.renderer_context.get('request') if hasattr(response, 'renderer_context') else None
             req_data = drf_request.data if drf_request else {}
             res_data = getattr(response, 'data', {})
@@ -30,19 +38,6 @@ class BadRequestsMiddleware(object):
             }
             error_logger.debug("%s: %s" % (request.method.upper(), request.path), extra=extra)
         return response
-
-
-class APIDetectionMiddleware(object):
-    @staticmethod
-    def process_request(request):
-        # do not apply on api v2
-        if '/v2/' in request.META.get('PATH_INFO'):
-            request.is_api = False
-            request.api_client = 'other'
-            return
-        request.is_api = "/api/" in request.META.get('PATH_INFO') or "/oauth/" in request.META.get('PATH_INFO')
-        request.api_client = request.META.get('HTTP_SHOUTIT_CLIENT', 'other')
-        pass
 
 
 class UserPermissionsMiddleware(object):
@@ -69,44 +64,6 @@ class FBMiddleware(object):
             auth_response = facebook_controller.exchange_code(request, request.GET['code'])
             if auth_response:
                 facebook_controller.user_from_facebook_auth_response(request, auth_response)
-
-
-class JsonPostMiddleware(object):
-    @staticmethod
-    def process_request(request):
-        # do not apply on api v2 or v3
-        # Todo: check and deprecate if not needed anymore!
-        if '/v2/' in request.META.get('PATH_INFO') or '/v3/' in request.META.get('PATH_INFO'):
-            return
-
-        # add the json_data attribute to all POST requests.
-        if request.method in ['POST', 'PUT'] and 'CONTENT_TYPE' in request.META and 'json' in request.META['CONTENT_TYPE']:
-            try:
-                request.json_data = json.loads(request.body)
-                request.json_to_post_fill = True
-                request.json_to_post_filled = False
-            except ValueError, e:
-                return JsonResponseBadRequest({'error': 'invalid json format: ' + e.message})
-            except Exception, e:
-                return JsonResponseBadRequest({'error': e.message})
-
-        elif request.method == 'POST':
-            request.json_data = {}
-        else:
-            pass
-
-    @staticmethod
-    def fill_request_post(request, data=None):
-        if getattr(request, 'json_to_post_fill', False) and not getattr(request, 'json_to_post_filled', True):
-            if not data:
-                data = request.json_data
-            request.POST = request.POST.copy()
-            for item in data:
-                request.POST[item] = data[item]
-
-            request._request = datastructures.MergeDict(request.POST, request.GET)
-            request.json_to_post_fill = False
-            request.json_to_post_filled = True
 
 
 def default_location(request):

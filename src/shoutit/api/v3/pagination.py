@@ -12,13 +12,13 @@ from django.conf import settings
 from django.core.paginator import Paginator as DjangoPaginator
 from elasticsearch import ElasticsearchException, SerializationError
 from elasticsearch_dsl.result import Result
-from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import CursorPagination
 from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
 from rest_framework.templatetags.rest_framework import replace_query_param
 from rest_framework.utils.urls import remove_query_param
 
+from shoutit.api.v3.exceptions import InvalidParameter
 from shoutit.utils import error_logger
 from ..api_utils import get_current_uri
 
@@ -43,20 +43,18 @@ class DateTimePagination(CursorPagination):
         before_query_param = request.query_params.get(self.before_field)
         after_query_param = request.query_params.get(self.after_field)
         if before_query_param and after_query_param:
-            raise ValidationError({
-                'detail': "Using '{}' and '{}' query params together is not allowed".format(
-                    self.before_field, self.after_field)
-            })
+            msg = "Using '%s' and '%s' query params together is not allowed" % (self.before_field, self.after_field)
+            raise InvalidParameter('', msg)
 
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__lt': datetime.utcfromtimestamp(int(before_query_param) - 1 )
+                    self.datetime_attribute + '__lt': datetime.utcfromtimestamp(int(before_query_param) - 1)
                 }
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 
             except (TypeError, ValueError):
-                raise ValidationError({self.before_field: "should be a valid timestamp"})
+                raise InvalidParameter(self.before_field, "Should be a valid timestamp")
         elif after_query_param:
             try:
                 filters = {
@@ -64,7 +62,7 @@ class DateTimePagination(CursorPagination):
                 }
                 queryset = queryset.filter(**filters).order_by(self.datetime_attribute)
             except (TypeError, ValueError):
-                raise ValidationError({self.after_field: "should be a valid timestamp"})
+                raise InvalidParameter(self.after_field, "Should be a valid timestamp")
         else:
             queryset = queryset.order_by('-' + self.datetime_attribute)
 
@@ -168,84 +166,6 @@ class ShoutitPaginationMixin(object):
             results_field = custom_results_field or ShoutitPageNumberPagination.results_field
 
         return PageNumberPaginationClass
-
-
-class DateTimeIndexPagination(DateTimePagination):
-    datetime_attribute = 'date_published'
-    datetime_unix_attribute = 'date_published_unix'
-
-    def paginate_queryset(self, index_queryset, request, view=None):
-        """
-        Paginate a queryset using unix timestamp query params.
-        """
-        self.page_size = self.get_page_size(request)
-
-        before_query_param = request.query_params.get(self.before_field)
-        after_query_param = request.query_params.get(self.after_field)
-        if before_query_param and after_query_param:
-            raise ValidationError({
-                'detail': "Using '{}' and '{}' query params together is not allowed".format(
-                    self.before_field, self.after_field)
-            })
-
-        if before_query_param:
-            try:
-                filters = {
-                    self.datetime_attribute: {'lt': datetime.utcfromtimestamp(int(before_query_param) - 1)}
-                }
-                index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'desc'})
-
-            except (TypeError, ValueError):
-                raise ValidationError({self.before_field: "should be a valid timestamp"})
-        elif after_query_param:
-            try:
-                filters = {
-                    self.datetime_attribute: {'gt': datetime.utcfromtimestamp(int(after_query_param) + 1)}
-                }
-                index_queryset = index_queryset.filter('range', **filters).sort({self.datetime_attribute: 'asc'})
-            except (TypeError, ValueError):
-                raise ValidationError({self.after_field: "should be a valid timestamp"})
-        else:
-            index_queryset = index_queryset.sort({self.datetime_attribute: 'desc'})
-
-        try:
-            index_response = index_queryset[:self.page_size].execute()
-        except (ElasticsearchException, KeyError):
-            # todo: log!
-            # possible errors
-            # SerializationError: returned data was corrupted
-            # ConnectionTimeout
-            # https://elasticsearch-py.readthedocs.org/en/master/exceptions.html
-            index_response = []
-
-        try:
-            object_ids = [object_index.meta.id for object_index in index_response]
-        except KeyError:
-            # todo: elasticsearch bug
-            object_ids = []
-        page = view.model.objects.filter(id__in=object_ids) \
-            .select_related(*view.select_related) \
-            .prefetch_related(*view.prefetch_related) \
-            .defer(*view.defer) \
-            .order_by('-date_published')
-
-        # reverse the objects order if needed, so the results are always sorted from oldest to newest.
-        if not after_query_param:
-            page = list(page)[::-1]
-        else:
-            page = list(page)
-
-        # explicitly reverse the order if required
-        if self.recent_on_top:
-            page = page[::-1]
-
-        self.request = request
-        self.page = page
-        return self.page
-
-
-class ReverseDateTimeIndexPagination(DateTimeIndexPagination):
-    recent_on_top = True
 
 
 class PageNumberIndexPagination(PageNumberPagination):

@@ -204,7 +204,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             raise ValidationError({'error': "You can not listen to your self"})
 
         if request.method == 'POST':
-            listen_controller.listen_to_object(request.user, ap, request)
+            listen_controller.listen_to_object(request.user, ap)
             msg = "you started listening to {} shouts.".format(user.name)
             _status = status.HTTP_201_CREATED
         else:

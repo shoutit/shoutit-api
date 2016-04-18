@@ -3,6 +3,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from common.constants import ITEM_STATE_AVAILABLE
 from shoutit.models.base import UUIDModel
+from shoutit.utils import none_to_blank
 
 
 class Item(UUIDModel):
@@ -17,13 +18,10 @@ class Item(UUIDModel):
     videos = models.ManyToManyField('shoutit.Video', blank=True, related_name='items')
 
     def __unicode__(self):
-        return unicode(self.name[:30])
+        return unicode(self.name[:30]) if self.name else '[Item]'
 
     def clean(self):
-        if self.name is None:
-            self.name = ""
-        if self.description is None:
-            self.description = ""
+        none_to_blank(self, ['name', 'description'])
 
     @property
     def thumbnail(self):
@@ -44,7 +42,7 @@ class Item(UUIDModel):
 
     @property
     def v2_price(self):
-        return round(float(self.price / 100.0), 2)
+        return round(float(self.price / 100.0), 2) if self.price is not None else 0
 
 
 class Currency(UUIDModel):

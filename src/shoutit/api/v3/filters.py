@@ -4,16 +4,14 @@
 """
 from __future__ import unicode_literals
 
-from collections import OrderedDict
-
 import django_filters
 from django.conf import settings
 from elasticsearch_dsl import Search, Q
 from rest_framework import filters
-from rest_framework.exceptions import ValidationError
 
-from common.constants import COUNTRIES, TAG_TYPE_STR, TAG_TYPE_INT
+from common.constants import TAG_TYPE_STR, TAG_TYPE_INT
 from common.utils import process_tags
+from shoutit.api.v3.exceptions import InvalidParameter
 from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, TagKey, DiscoverItem, User
 from shoutit.utils import debug_logger, error_logger
 
@@ -33,8 +31,11 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if discover:
             try:
                 discover_item = DiscoverItem.objects.get(id=discover)
+            except ValueError:
+                raise InvalidParameter('discover', "Invalid discover id")
             except DiscoverItem.DoesNotExist:
-                raise ValidationError({'discover': ["Discover Item with id '%s' does not exist" % discover]})
+                msg = "Discover Item with id '%s' does not exist" % discover
+                raise InvalidParameter('discover', msg)
             else:
                 data.update(discover_item.shouts_query)
 
@@ -46,7 +47,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             try:
                 user_id = User.objects.get(username=user).pk
             except User.DoesNotExist:
-                raise ValidationError({'user': ["Profile with username '%s' does not exist" % user]})
+                msg = "Profile with username '%s' does not exist" % user
+                raise InvalidParameter('profile', msg)
             else:
                 index_queryset = index_queryset.filter('term', uid=user_id)
 
@@ -61,7 +63,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         shout_type = data.get('shout_type')
         if shout_type:
             if shout_type not in ['all', 'offer', 'request']:
-                raise ValidationError({'shout_type': ["should be `all`, `request` or `offer`."]})
+                msg = "should be `all`, `request` or `offer`"
+                raise InvalidParameter('shout_type', msg)
             if shout_type != 'all':
                 index_queryset = index_queryset.filter('term', type=shout_type)
 
@@ -97,44 +100,48 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                         cities.append(nearby_city.city)
                     index_queryset = index_queryset.filter('terms', city=cities)
 
-        latlng_errors = OrderedDict()
         down_left_lat = data.get('down_left_lat')
         down_left_lng = data.get('down_left_lng')
         up_right_lat = data.get('up_right_lat')
         up_right_lng = data.get('up_right_lng')
+        latlng_key = ''
         try:
             if down_left_lat:
+                latlng_key = 'down_left_lat'
                 down_left_lat = float(down_left_lat)
+                up_right_lat = up_right_lat or 90
                 if down_left_lat > float(up_right_lat) or not (90 >= down_left_lat >= -90):
-                    latlng_errors['down_left_lat'] = [
-                        "should be between -90 and 90, also not greater than 'up_right_lat'"]
-                    index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
+                    raise InvalidParameter('down_left_lat',
+                                           "Should be between -90 and 90, also not greater than 'up_right_lat'")
+                index_queryset = index_queryset.filter('range', **{'latitude': {'gte': down_left_lat}})
             if down_left_lng:
+                latlng_key = 'down_left_lng'
                 down_left_lng = float(down_left_lng)
+                up_right_lng = up_right_lng or 180
                 if down_left_lng > float(up_right_lng) or not (180 >= down_left_lng >= -180):
-                    latlng_errors['down_left_lng'] = [
-                        "should be between -180 and 180, also not greater than 'up_right_lng'"]
+                    raise InvalidParameter('down_left_lng',
+                                           "Should be between -180 and 180, also not greater than 'up_right_lng'")
                 index_queryset = index_queryset.filter('range', **{'longitude': {'gte': down_left_lng}})
             if up_right_lat:
+                latlng_key = 'up_right_lat'
                 if not (90 >= float(up_right_lat) >= -90):
-                    latlng_errors['up_right_lat'] = ["should be between -90 and 90"]
+                    raise InvalidParameter('up_right_lat', "Should be between -90 and 90")
                 index_queryset = index_queryset.filter('range', **{'latitude': {'lte': up_right_lat}})
             if up_right_lng:
+                latlng_key = 'up_right_lng'
                 if not (180 >= float(up_right_lng) >= -180):
-                    latlng_errors['up_right_lng'] = ["should be between -180 and 180"]
+                    raise InvalidParameter('up_right_lng', "Should be between -180 and 180")
                 index_queryset = index_queryset.filter('range', **{'longitude': {'lte': up_right_lng}})
         except ValueError:
-            latlng_errors['error'] = ["invalid lat or lng parameters"]
-        if latlng_errors:
-            raise ValidationError(latlng_errors)
+            raise InvalidParameter(latlng_key, "Invalid number")
 
-        # Category and Tags2
+        # Category and Filters
         category = data.get('category')
         if category and category != 'all':
             try:
                 category = Category.objects.get(slug=category)
             except Category.DoesNotExist:
-                raise ValidationError({'category': ["Category with slug '%s' does not exist" % category]})
+                raise InvalidParameter('category', "Category with slug '%s' does not exist" % category)
             else:
                 index_queryset = index_queryset.filter('terms', category=[category.name, category.slug])
                 cat_filters = TagKey.objects.filter(key__in=category.filters).values_list('key', 'values_type')
@@ -142,7 +149,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     if cat_f_type == TAG_TYPE_STR:
                         cat_f_param = data.get(cat_f_key)
                         if cat_f_param:
-                            index_queryset = index_queryset.filter('term', **{'tags2__%s' % cat_f_key: cat_f_param})
+                            cat_f_params = cat_f_param.split(',')
+                            index_queryset = index_queryset.filter('terms', **{'tags2__%s' % cat_f_key: cat_f_params})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
@@ -168,7 +176,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             'price_desc': ('-price',),
         }
         if sort and sort not in sort_types:
-            raise ValidationError({'sort': ["Invalid sort."]})
+            raise InvalidParameter('sort', "Invalid sort")
         # selected_sort = ('-priority',) + sort_types[sort]
         selected_sort = sort_types[sort]
         if search:
@@ -182,7 +190,6 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 class HomeFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, index_queryset, view):
         user = view.get_object()
-        data = request.query_params
         listening = []
 
         # Todo: figure way to show shouts that are
@@ -206,21 +213,7 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             listening.append(listening_users)
 
         index_queryset = index_queryset.query('bool', should=listening)
-
-        # sort
-        sort = data.get('sort')
-        sort_types = {
-            None: ('-date_published',),
-            'time': ('-date_published',),
-            'price_asc': ('price',),
-            'price_desc': ('-price',),
-        }
-        if sort and sort not in sort_types:
-            raise ValidationError({'sort': ["Invalid sort."]})
-        # selected_sort = ('-priority',) + sort_types[sort]
-        selected_sort = sort_types[sort]
-        index_queryset = index_queryset.sort(*selected_sort)
-
+        index_queryset = index_queryset.sort('-date_published')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
 
@@ -232,9 +225,6 @@ class DiscoverItemFilter(filters.BaseFilterBackend):
 
         data = request.query_params
         country = data.get('country', '')
-        if country not in COUNTRIES:
-            raise ValidationError({'country': ["Invalid country code"]})
-
         country_queryset = queryset.filter(countries__contains=[country])
         no_country_queryset = queryset.filter(countries__contained_by=[''])
         if country != '' and country_queryset.count() != 0:
@@ -244,6 +234,7 @@ class DiscoverItemFilter(filters.BaseFilterBackend):
         return queryset
 
 
+# Todo: check usage!
 class TagFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_type='icontains')
     type = django_filters.MethodFilter(action='filter_type')
@@ -258,7 +249,7 @@ class TagFilter(django_filters.FilterSet):
 
     def filter_type(self, queryset, value):
         if value not in ['all', 'top', 'featured']:
-            raise ValidationError({'type': ["should be `all`, `top` or `featured`."]})
+            raise InvalidParameter('type', "Should be `all`, `top` or `featured`")
 
         if value == 'featured':
             queryset = FeaturedTag.objects.all().order_by('rank')
@@ -268,7 +259,7 @@ class TagFilter(django_filters.FilterSet):
     def filter_category(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type == 'featured':
-            raise ValidationError({'category': ["does not work when type is `featured`."]})
+            raise InvalidParameter('category', "Does not work when type is `featured`")
         try:
             category = Category.objects.get(name=value)
             # return all tags that belong to the category except the main tag
@@ -276,24 +267,24 @@ class TagFilter(django_filters.FilterSet):
             # return queryset.filter(category=category).filter(~Q(id=category.main_tag_id))
             return queryset.filter(category=category)
         except Category.DoesNotExist:
-            raise ValidationError({'category': ["Category '%s' does not exist" % value]})
+            raise InvalidParameter('category', "Category '%s' does not exist" % value)
 
     def filter_country(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
-            raise ValidationError({'country': ["only works when type equals `top` or `featured`."]})
+            raise InvalidParameter('country', "Only works when type equals `top` or `featured`")
         return queryset
 
     def filter_state(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
-            raise ValidationError({'state': ["only works when type equals `top` or `featured`."]})
+            raise InvalidParameter('state', "Only works when type equals `top` or `featured`")
         return queryset
 
     def filter_city(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
-            raise ValidationError({'city': ["only works when type equals `top` or `featured`."]})
+            raise InvalidParameter('city', "Only works when type equals `top` or `featured`")
         return queryset
 
     def filter_location(self, queryset):

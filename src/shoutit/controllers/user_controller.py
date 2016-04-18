@@ -6,32 +6,22 @@ import requests
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
-from shoutit.api.v2.exceptions import GPLUS_LINK_ERROR_TRY_AGAIN
+from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
 from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 from shoutit.controllers import location_controller
 
 
-def has_full_location(dic):
-    latitude = dic.get('latitude', None)
-    longitude = dic.get('longitude', None)
-    country = dic.get('country', None)
-    city = dic.get('city', None)
-    if any(attr is None for attr in [latitude, longitude, country, city]):
-        return False
-    return True
-
-
 def create_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
                 **extra_user_fields):
     # email
-    if email and User.objects.filter(email=email.lower()).exists():
+    if email and User.exists(email=email.lower()):
         raise DRFValidationError({'email': "User with same email exists."})
 
     # first, last and username
     if not username:
         username = generate_username()
-    while len(username) < 2 or User.objects.filter(username=username).exists():
+    while len(username) < 2 or User.exists(username=username):
         username = generate_username()
     if first_name and len(first_name) < 2:
         first_name = ''
@@ -47,7 +37,7 @@ def create_user(email=None, password=None, first_name='', last_name='', username
 
     # profile fields
     profile_fields = profile_fields or {}
-    if not has_full_location(profile_fields):
+    if not location_controller.has_full_location(profile_fields):
         profile_fields.update(DEFAULT_LOCATION)
     extra_user_fields.update({
         'type': USER_TYPE_PROFILE,
@@ -130,8 +120,8 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     try:
         LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
     except IntegrityError as e:
-        print "create g+ la error", str(e)
-        raise GPLUS_LINK_ERROR_TRY_AGAIN
+        raise ShoutitBadRequest(message="Could not access your G+ account, try again later",
+                                developer_message=str(e))
 
     set_profile_image(user.profile, gplus_user['image']['url'].split('?')[0])
     return user

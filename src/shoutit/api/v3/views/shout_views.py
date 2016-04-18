@@ -6,17 +6,19 @@ from __future__ import unicode_literals
 
 import random
 
+from django.conf import settings
 from django.views.decorators.cache import cache_control
+from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify
+from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter
 from shoutit.controllers import shout_controller
-from shoutit.models import Shout, Category
+from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
 from shoutit.utils import has_unicode
 from ..filters import ShoutIndexFilterBackend
@@ -105,8 +107,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             - name: discover
               description: discover item id to list its shouts
               paramType: query
-            - name: user
-              description: user username to list his shouts
+            - name: profile
+              description: profile username to list its shouts
               paramType: query
             - name: min_price
               paramType: query
@@ -129,7 +131,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
         result = self.get_paginated_response(serializer.data)
-        result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
+
+        # Todo: add actual data
+        result.data['web_url'] = settings.SITE_LINK + 'search?src=api'
+        result.data['related_searches'] = []
         return result
 
     @cache_control(max_age=60 * 60 * 24)
@@ -159,11 +164,55 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         return Response([
             {'type': 'time', 'name': 'Latest'},
-            {'type': 'distance', 'name': 'Nearest'},
+            # {'type': 'distance', 'name': 'Nearest'},
             {'type': 'price_asc', 'name': 'Price Increasing'},
             {'type': 'price_desc', 'name': 'Price Decreasing'},
-            {'type': 'recommended', 'name': 'Recommended'},
+            # {'type': 'recommended', 'name': 'Recommended'},
         ])
+
+    @list_route(methods=['get'], suffix='Shouts Auto-completion')
+    def autocomplete(self, request):
+        """
+        List autocomplete terms that can be used for search suggestions (to be improved)
+
+        `search` is required while `category` and `country` are optional.
+        ###Response
+        <pre><code>
+        [
+          {
+            "term": "bmw-z4"
+          },
+          {
+            "term": "bmw"
+          },
+        ]
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: search
+              description: At least two characters
+              paramType: query
+            - name: category
+              description: Slug for the Category to return terms within it
+              paramType: query
+            - name: country
+              description: Code for the Country to return terms used in it
+              paramType: query
+        """
+        # Todo: improve!
+        search = request.query_params.get('search', '').strip()
+        if not search:
+            raise RequiredParameter('search', "This parameter is required")
+        # category = request.query_params.get('category')
+        # country = request.query_params.get('country')
+        if len(search) >= 2:
+            terms = list(Tag.objects.filter(name__istartswith=search).values_list('name', flat=True)[:10])
+            random.shuffle(terms)
+            terms = map(lambda t: {'term': strings.human_case(t)}, terms)
+        else:
+            raise InvalidParameter('search', "At least two characters are required")
+        return Response(terms)
 
     def create(self, request, *args, **kwargs):
         """
@@ -232,83 +281,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def retrieve(self, request, *args, **kwargs):
         """
         Retrieve a Shout
-        <pre><code>
-        {
-            "id": "cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "api_url": "https://api.shoutit.com/v3/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "web_url": "https://www.shoutit.com/shout/cd2ae206-3a3d-4758-85b6-fe95612aeda0",
-            "type": "offer",
-            "category": {
-                "name": "Cars & Motors",
-                "slug": "cars-motors",
-                "icon": "https://tag-image.static.shoutit.com/categories/cars-i.png",
-                "image": "https://tag-image.static.shoutit.com/bb4f3137-48f2-4c86-89b8-0635ed6d426e-cars-motors.jpg"
-            },
-            "title": "Chevrolet Cruze 2011 Perfect Condition low mileage 59000 KM",
-            "location": {
-                "latitude": 25.2321179865413,
-                "longitude": 51.4795259383137,
-                "country": "QA",
-                "postal_code": "",
-                "state": "",
-                "city": "Ain Khaled",
-                "address": ""
-            },
-            "text": "Chevrolet Cruze 2011 \nPerfect Condition\nVery Low Mileage 59000 KM\nEngine is 1.8 CC\nInterior is like New \nSecond Owner\nESTMARA UP to 8/2017\nPRICE IS 25500\nشفرولية كروز موديل 2011\nبحالة ممتازة جدا جدا\nقاطع 59000 كيلومتر فقط\nنظيفة جدا من الداخل ومن الخارج\nاستمارة حتي شهر8 2017 \nالسعر 25500",
-            "price": 24500.0,
-            "currency": "QAR",
-            "available_count": 1,
-            "is_sold": false,
-            "thumbnail": "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
-            "video_url": null,
-            "profile": {
-                "id": "6590865d-b395-4cea-8382-68fbc5f048ce",
-                "type": "Profile",
-                "api_url": "https://api.shoutit.com/v3/profiles/15214428592",
-                "web_url": "https://www.shoutit.com/user/15214428592",
-                "username": "15214428592",
-                "name": "user 15214428592",
-                "first_name": "user",
-                "last_name": "15214428592",
-                "is_activated": false,
-                "image": "https://user-image.static.shoutit.com/default_male.jpg",
-                "cover": "",
-                "is_listening": false,
-                "listeners_count": 0
-            },
-            "date_published": 1456431892,
-            "filters": [
-                {
-                    "name": "Color",
-                    "slug": "color",
-                    "value": {
-                        "name": "White",
-                        "slug": "white"
-                    }
-                },
-                {
-                    "name": "Model",
-                    "slug": "model",
-                    "value": {
-                        "name": "2016",
-                        "slug": "2016"
-                    }
-                }
-            ],
-            "images": [
-                "https://shout-image.static.shoutit.com/d7fad80a-440d-4c9e-b9b5-d4d6264516d1-1456441369.jpg",
-                "https://shout-image.static.shoutit.com/fac19243-2680-4971-ab52-d90b2f525c19-1456441369.jpg",
-                "https://shout-image.static.shoutit.com/bc40f2ca-fc5b-4fe0-8d13-1a0865f4b38b-1456441370.jpg"
-            ],
-            "videos": [],
-            "published_on": {},
-            "reply_url": "https://api.shoutit.com/v3/shouts/cd2ae206-3a3d-4758-85b6-fe95612aeda0/reply",
-            "conversations": [],
-            "mobile_hint": "01701...",
-            "is_mobile_set": true
-        }
-        </code></pre>
 
+        [Shout object](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Shouts)
         ---
         serializer: ShoutDetailSerializer
         """
@@ -388,10 +362,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             - name: body
               paramType: body
         """
-        # Todo: move validation to the serializer
         shout = self.get_object()
         if request.user == shout.owner:
-            raise ValidationError({'error': "You can not start a conversation about your own shout"})
+            raise ShoutitBadRequest("You can not start a conversation about your own shout")
         context = {
             'request': request,
             'conversation': None,

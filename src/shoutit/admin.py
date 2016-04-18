@@ -10,65 +10,26 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.core.urlresolvers import reverse
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from mptt.admin import MPTTModelAdmin
-from push_notifications.admin import DeviceAdmin
+from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import UserType
-from shoutit.admin_filters import ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter, \
-    PublishedOnFilter
-from shoutit.admin_utils import (
-    UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
-from shoutit.forms import PushBroadcastForm, ItemForm, CategoryForm
-from shoutit.models import (
-    User, Shout, Profile, Item, Tag, Notification, Category, Currency, Report, PredefinedCity,
-    LinkedFacebookAccount, LinkedGoogleAccount, MessageAttachment, Post, SharedLocation, Video,
-    UserPermission, Permission, Conversation, Message, MessageDelete, MessageRead,
-    ConversationDelete, FeaturedTag, ConfirmToken, DBUser, CLUser, DBCLConversation, DBZ2User, SMSInvitation,
-    PushBroadcast, GoogleLocation, Page, PageCategory, PageAdmin, DiscoverItem, TagKey)
-from shoutit_pusher.models import PusherChannel, PusherChannelJoin
+from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
+                            PublishedOnFilter)
+from .admin_forms import PushBroadcastForm, ItemForm, CategoryForm
+from .admin_utils import (UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
+from .models import *  # NOQA
 
 
-# from shoutit.models import Business, BusinessConfirmation, BusinessCategory, StoredFile
+@property
+def admin_url(self):
+    return reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=(self.pk,))
 
 
-# Shout
-@admin.register(Shout)
-class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
-    list_display = ('id', '_links', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled',
-                    'priority', 'published_on', 'date_published')
-    list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'city', PublishedOnFilter,
-                   ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user', 'page_admin_user')
-    exclude = ('item',)
-    readonly_fields = ('_user', '_item')
-    ordering = ('-date_published',)
-
-    def _item(self, obj):
-        return item_link(obj.item)
-
-    _item.allow_tags = True
-    _item.short_description = 'Item'
-
-
-# Post
-@admin.register(Post)
-class PostAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin):
-    list_display = ('id', '_user', 'type', 'text', '_location', 'muted', 'is_disabled')
-    ordering = ('-created_at',)
-    list_filter = ('type', 'is_disabled', 'country', 'city', ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user', 'page_admin_user')
-
-
-# Item
-@admin.register(Item)
-class ItemAdmin(admin.ModelAdmin):
-    form = ItemForm
-    list_display = ('id', 'name', 'price', 'currency', 'state', 'created_at')
-    list_filter = ('currency', 'state', ('created_at', ShoutitDateFieldListFilter))
-    raw_id_fields = ('videos',)
-    ordering = ('-created_at',)
+models.Model.add_to_class('admin_url', admin_url)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -80,11 +41,12 @@ class CustomUserChangeForm(UserChangeForm):
             'invalid': _("This value may only contain A-Z, a-z, 0-9, and periods (.)")})
 
 
+# User
 @admin.register(User)
 class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     save_on_top = True
     list_display = (
-        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_client_name',
+        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_clients',
         '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'is_guest', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
@@ -124,18 +86,22 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     _messaging.short_description = 'Messaging'
 
     def _devices(self, user):
-        apns_device = ''
-        if user.apns_device:
-            apns_device = '<a href="%s">iPhone</a>' % (
-                reverse('admin:push_notifications_apnsdevice_change', args=[user.apns_device.id]))
-        gcm_device = ''
-        if user.gcm_device:
-            gcm_device = '<a href="%s">Android</a>' % (
-                reverse('admin:push_notifications_gcmdevice_change', args=[user.gcm_device.id]))
-        return ((apns_device + '<br/>') if apns_device else '') + gcm_device
+        devices = ''
+        for device in user.devices.all():
+            devices += '<a href="%s">%s</a><br/>' % (device.admin_url, unicode(device))
+        return devices
 
     _devices.allow_tags = True
     _devices.short_description = 'Devices'
+
+    def api_clients(self, user):
+        clients = ''
+        for at in user.accesstoken_set.all():
+            clients += '<a href="%s">%s</a><br/>' % (at.admin_url, unicode(at.client.name))
+        return clients
+
+    api_clients.allow_tags = True
+    api_clients.short_description = 'Devices'
 
     def save_model(self, request, obj, form, change):
         update_fields = form.changed_data
@@ -155,6 +121,33 @@ class ProfileAdmin(admin.ModelAdmin, UserLinkMixin):
     ordering = ('-created_at',)
 
 
+# Page
+@admin.register(Page)
+class ShoutitPageAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', '_user', 'name', 'creator', 'category', 'country', 'city', 'created_at')
+    raw_id_fields = ('user', 'creator')
+    search_fields = ('name', 'user__email')
+    readonly_fields = ('video', '_user')
+    exclude = ('user',)
+    list_filter = ('country', 'city', 'category', ('created_at', ShoutitDateFieldListFilter))
+    ordering = ('-created_at',)
+
+
+# PageAdmin
+@admin.register(PageAdmin)
+class PageAdminAdmin(admin.ModelAdmin):
+    list_display = ('page', 'admin', 'type')
+    raw_id_fields = ('page', 'admin')
+
+
+# PageCategory
+@admin.register(PageCategory)
+class PageCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'slug', 'parent')
+    list_filter = ('parent',)
+
+
+# LinkedFacebookAccount
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'facebook_id', 'access_token', 'scopes', 'expires_at', 'created_at')
@@ -164,6 +157,7 @@ class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
     exclude = ('user',)
 
 
+# LinkedGoogleAccount
 @admin.register(LinkedGoogleAccount)
 class LinkedGoogleAccountAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'gplus_id', 'created_at')
@@ -171,6 +165,35 @@ class LinkedGoogleAccountAdmin(admin.ModelAdmin, UserLinkMixin):
     ordering = ('-created_at',)
     readonly_fields = ('_user',)
     exclude = ('user',)
+
+
+# Item
+@admin.register(Item)
+class ItemAdmin(admin.ModelAdmin):
+    form = ItemForm
+    list_display = ('id', 'name', 'price', 'currency', 'state', 'created_at')
+    list_filter = ('currency', 'state', ('created_at', ShoutitDateFieldListFilter))
+    raw_id_fields = ('videos',)
+    ordering = ('-created_at',)
+
+
+# Shout
+@admin.register(Shout)
+class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
+    list_display = ('id', '_links', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled',
+                    'priority', 'published_on', 'date_published', 'is_indexed')
+    list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'state', 'city', PublishedOnFilter,
+                   ('created_at', ShoutitDateFieldListFilter), 'is_indexed')
+    raw_id_fields = ('user', 'page_admin_user')
+    exclude = ('item',)
+    readonly_fields = ('_user', '_item')
+    ordering = ('-date_published',)
+
+    def _item(self, obj):
+        return item_link(obj.item)
+
+    _item.allow_tags = True
+    _item.short_description = 'Item'
 
 
 class TagChangeForm(forms.ModelForm):
@@ -203,6 +226,7 @@ class TagAdmin(admin.ModelAdmin, LinksMixin):
     form = TagChangeForm
 
 
+# TagKey
 @admin.register(TagKey)
 class TagKeyAdmin(admin.ModelAdmin):
     list_display = ('category', 'key', 'values_type')
@@ -210,6 +234,7 @@ class TagKeyAdmin(admin.ModelAdmin):
     list_filter = ('category', 'values_type')
 
 
+# Category
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', '_main_tag', 'filters', 'image', 'icon')
@@ -224,6 +249,7 @@ class CategoryAdmin(admin.ModelAdmin):
     _main_tag.short_description = 'Main Tag'
 
 
+# FeaturedTag
 @admin.register(FeaturedTag)
 class FeaturedTagAdmin(admin.ModelAdmin):
     list_display = ('title', '_tag', 'country', 'state', 'city', 'rank')
@@ -241,14 +267,21 @@ class FeaturedTagAdmin(admin.ModelAdmin):
     _tag.short_description = 'Tag'
 
 
+# DiscoverItem
+@admin.register(DiscoverItem)
+class DiscoverItemAdmin(MPTTModelAdmin):
+    mptt_level_indent = 20
+    mptt_indent_field = "some_node_field"
+
+
+# Conversation
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', '_users', '_messages', 'content_type', 'object_id', 'modified_at',
-                    'created_at')
-    readonly_fields = ('last_message', '_messages')
+    list_display = ('id', 'type', '_users', '_messages', '_attached_object', 'modified_at', 'created_at')
+    readonly_fields = ('_last_message', '_attached_object', '_messages')
     fieldsets = (
-        (None, {'fields': ('content_type', 'object_id', 'type', 'users', 'last_message')}),
-        (_('Extra'), {'fields': ('_messages',)}),
+        (None, {'fields': ('type', 'users', '_attached_object', '_last_message')}),
+        (_('Extra'), {'fields': ('_messages', 'subject', 'admins')}),
     )
     raw_id_fields = ('users',)
     list_filter = (('created_at', ShoutitDateFieldListFilter),)
@@ -271,10 +304,24 @@ class ConversationAdmin(admin.ModelAdmin):
     _messages.allow_tags = True
     _messages.short_description = 'Messages'
 
+    def _attached_object(self, instance):
+        if not instance.attached_object:
+            return ''
+        return '<a href="%s">%s</a>' % (instance.attached_object.admin_url, unicode(instance.attached_object))
 
-admin.site.register(ConversationDelete)
+    _attached_object.allow_tags = True
+    _attached_object.short_description = 'About'
+
+    def _last_message(self, instance):
+        if not instance.last_message:
+            return ''
+        return '<a href="%s">%s</a>' % (instance.last_message.admin_url, unicode(instance.last_message))
+
+    _last_message.allow_tags = True
+    _last_message.short_description = 'Last Message'
 
 
+# Message
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', '_conversation', '_user', 'summary', 'has_attachments', 'created_at')
@@ -306,10 +353,6 @@ class MessageAdmin(admin.ModelAdmin):
     has_attachments.boolean = True
 
 
-admin.site.register(MessageRead)
-admin.site.register(MessageDelete)
-
-
 # Message Attachment
 @admin.register(MessageAttachment)
 class MessageAttachmentAdmin(admin.ModelAdmin):
@@ -317,6 +360,95 @@ class MessageAttachmentAdmin(admin.ModelAdmin):
         'id', 'message', 'conversation', 'type', 'content_type', 'object_id', 'created_at')
     search_fields = ['message__id', 'conversation__id']
     ordering = ('-created_at',)
+
+
+admin.site.register(ConversationDelete)
+admin.site.register(MessageRead)
+admin.site.register(MessageDelete)
+
+
+# PushBroadcast
+@admin.register(PushBroadcast)
+class PushBroadcastAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', '_user', 'message', 'created_at')
+    list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    readonly_fields = ('_user',)
+    ordering = ('-created_at',)
+    form = PushBroadcastForm
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.save()
+
+
+# Django Push Notification
+class CustomPushDeviceAdmin(PushDeviceAdmin, UserLinkMixin):
+    list_display = ('__unicode__', '_device', 'device_id', '_user', 'active', 'date_created')
+    search_fields = ('device_id', 'user__id', 'user__username')
+    list_filter = ('active', ('date_created', ShoutitDateFieldListFilter))
+    raw_id_fields = ('user',)
+    readonly_fields = ('_device',)
+
+    def _device(self, obj):
+        device = obj.devices.first()
+        if device:
+            return '<a href="%s">Device</a>' % device.admin_url
+
+    _device.allow_tags = True
+
+
+admin.site.unregister(APNSDevice)
+admin.site.register(APNSDevice, CustomPushDeviceAdmin)
+admin.site.unregister(GCMDevice)
+admin.site.register(GCMDevice, CustomPushDeviceAdmin)
+
+
+# Device
+@admin.register(Device)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'type', 'api_version', '_push_device')
+    fieldsets = (
+        (None, {'fields': ('type', 'api_version', '_push_device')}),
+    )
+    readonly_fields = ('type', '_push_device')
+    list_filter = ('type', 'api_version')
+    search_fields = ('apns_devices__user__id', 'apns_devices__user__username',
+                     'gcm_devices__user__id', 'gcm_devices__user__username')
+
+    def _push_device(self, obj):
+        return '<a href="%s">%s</a>' % (obj.push_device.admin_url, unicode(obj.push_device))
+
+    _push_device.allow_tags = True
+
+
+# Video
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'provider', 'link', 'duration', 'thumb', 'shout')
+    list_filter = ('provider',)
+    ordering = ('-created_at',)
+
+    def link(self, obj):
+        return '<a href="%s" about="_blank">%s</a>' % (obj.url, obj.id_on_provider)
+
+    link.allow_tags = True
+
+    def thumb(self, obj):
+        return '<img src="%s" width="120"/>' % obj.thumbnail_url.replace('.jpg', '_small.jpg')
+
+    thumb.allow_tags = True
+
+    def shout(self, obj):
+        try:
+            _shout = obj.items.all()[0].shout
+            _shout_admin_url = '<a href="%s">%s</a>' % (
+                reverse('admin:shoutit_shout_change', args=(_shout.pk,)), _shout)
+            _shout_web_url = links(_shout)
+            return '%s | %s' % (_shout_admin_url, _shout_web_url)
+        except:
+            return 'None'
+
+    shout.allow_tags = True
 
 
 # Report
@@ -341,26 +473,43 @@ class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
     mark_as_disabled.short_description = "Mark selected reports as disabled"
 
 
-# PushBroadcast
-@admin.register(PushBroadcast)
-class PushBroadcastAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'message', 'created_at')
-    list_filter = (('created_at', ShoutitDateFieldListFilter),)
-    readonly_fields = ('_user',)
+# SMSInvitation
+@admin.register(SMSInvitation)
+class SMSInvitationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'status', 'country', 'mobile', 'user', 'created_at')
+    list_filter = ('status', 'country', ('created_at', ShoutitDateFieldListFilter))
+    search_fields = ('mobile', 'message')
+    raw_id_fields = ('user',)
     ordering = ('-created_at',)
-    form = PushBroadcastForm
-
-    def save_model(self, request, obj, form, change):
-        obj.user = request.user
-        obj.save()
 
 
+# ConfirmToken
 @admin.register(ConfirmToken)
 class ConfirmTokenAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', 'type', '_user', 'token', 'email', 'is_disabled', 'created_at')
     list_filter = ('type', 'is_disabled')
     ordering = ('-created_at',)
     readonly_fields = ('user',)
+
+
+# GoogleLocation
+@admin.register(GoogleLocation)
+class GoogleLocationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'country', 'state', 'city', 'postal_code', 'latitude', 'longitude', 'is_indexed')
+    list_filter = ('country', 'state', 'city', 'postal_code')
+
+
+# PredefinedCity
+@admin.register(PredefinedCity)
+class PredefinedCity(admin.ModelAdmin):
+    list_display = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')
+
+
+admin.site.register(Notification)
+admin.site.register(Currency)
+admin.site.register(SharedLocation)
+admin.site.register(UserPermission)
+admin.site.register(Permission)
 
 
 @admin.register(DBUser)
@@ -407,170 +556,3 @@ class DBCLConversationAdmin(admin.ModelAdmin):
         return user_link(obj.to_user)
 
     _to_user.allow_tags = True
-
-
-@admin.register(PredefinedCity)
-class PredefinedCity(admin.ModelAdmin):
-    list_display = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')
-
-
-# Django Push Notification
-class CustomDeviceAdmin(DeviceAdmin, UserLinkMixin):
-    list_display = ('__unicode__', 'device_id', '_user', 'active', 'date_created')
-    search_fields = ('device_id', 'user__id', 'user__username')
-    list_filter = ('active', ('date_created', ShoutitDateFieldListFilter))
-    raw_id_fields = ('user',)
-
-
-admin.site.unregister(APNSDevice)
-admin.site.register(APNSDevice, CustomDeviceAdmin)
-admin.site.unregister(GCMDevice)
-admin.site.register(GCMDevice, CustomDeviceAdmin)
-
-
-# Pusher
-@admin.register(PusherChannel)
-class PusherChannelAdmin(admin.ModelAdmin):
-    list_display = ('type', 'name')
-    raw_id_fields = ('users',)
-
-
-@admin.register(PusherChannelJoin)
-class PusherChannelJoinAdmin(admin.ModelAdmin):
-    list_display = ('channel', 'user')
-    raw_id_fields = ('channel', 'user')
-
-
-@admin.register(SMSInvitation)
-class SMSInvitationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status', 'country', 'mobile', 'user', 'created_at')
-    list_filter = ('status', 'country', ('created_at', ShoutitDateFieldListFilter))
-    search_fields = ('mobile', 'message')
-    raw_id_fields = ('user',)
-    ordering = ('-created_at',)
-
-
-@admin.register(GoogleLocation)
-class GoogleLocationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'country', 'state', 'city', 'postal_code', 'latitude', 'longitude')
-    list_filter = ('country', 'state', 'city', 'postal_code')
-
-
-@admin.register(Video)
-class VideoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'provider', 'link', 'duration', 'thumb', 'shout')
-    list_filter = ('provider',)
-    ordering = ('-created_at',)
-
-    def link(self, obj):
-        return '<a href="%s" about="_blank">%s</a>' % (obj.url, obj.id_on_provider)
-
-    link.allow_tags = True
-
-    def thumb(self, obj):
-        return '<img src="%s" width="120"/>' % obj.thumbnail_url.replace('.jpg', '_small.jpg')
-
-    thumb.allow_tags = True
-
-    def shout(self, obj):
-        try:
-            _shout = obj.items.all()[0].shout
-            _shout_admin_url = '<a href="%s">%s</a>' % (
-                reverse('admin:shoutit_shout_change', args=(_shout.pk,)), _shout)
-            _shout_web_url = links(_shout)
-            return '%s | %s' % (_shout_admin_url, _shout_web_url)
-        except:
-            return 'None'
-
-    shout.allow_tags = True
-
-
-@admin.register(Page)
-class ShoutitPageAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'name', 'creator', 'category', 'country', 'city', 'created_at')
-    raw_id_fields = ('user', 'creator')
-    search_fields = ('name', 'user__email')
-    readonly_fields = ('video', '_user')
-    exclude = ('user',)
-    list_filter = ('country', 'city', 'category', ('created_at', ShoutitDateFieldListFilter))
-    ordering = ('-created_at',)
-
-
-@admin.register(PageAdmin)
-class PageAdminAdmin(admin.ModelAdmin):
-    list_display = ('page', 'admin', 'type')
-    raw_id_fields = ('page', 'admin')
-
-
-@admin.register(PageCategory)
-class PageCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'slug', 'parent')
-    list_filter = ('parent',)
-
-
-@admin.register(DiscoverItem)
-class DiscoverItemAdmin(MPTTModelAdmin):
-    mptt_level_indent = 20
-    mptt_indent_field = "some_node_field"
-
-
-# Others
-admin.site.register(Notification)
-admin.site.register(Currency)
-admin.site.register(SharedLocation)
-admin.site.register(UserPermission)
-admin.site.register(Permission)
-
-
-# # Business
-# admin.site.register(StoredFile)
-# @admin.register(Business)
-# class BusinessProfileAdmin(admin.ModelAdmin):
-# list_display = ('id', 'name', 'user', 'country', 'city', 'Category', 'Confirmed')
-# search_fields = ['name', 'user__email', 'Website']
-# readonly_fields = ('user', 'LastToken')
-
-
-# BusinessCreateApplication
-# class BusinessCreateApplicationAdmin(admin.ModelAdmin):
-# list_display = ('name', 'user', 'Business','confirmation_url','country', 'city', 'Status')
-# search_fields = ['name', 'user__email','Website', 'Phone']
-# readonly_fields = ('user','Business','LastToken')
-# list_filter = ('Status',)
-# actions = ['accept_business', 'reject_business']
-#
-# def confirmation_url(self, obj):
-# try:
-# confirmation = obj.user.BusinessConfirmations.all().order_by('id')[0]
-# return '<a href="%s%s">%s</a>' % ('/admin/ShoutWebsite/businessconfirmation/', confirmation.pk, obj.user)
-#         except :
-#             return 'Docs not yet submitted'
-#
-#     confirmation_url.allow_tags = True
-#     confirmation_url.short_description = 'Confirmation Link'
-#
-#     def accept_business(self, request, queryset):
-#         for q in queryset:
-#             business_controller.AcceptBusiness(request, q)
-#     accept_business.short_description = "Accept selected business creation applications"
-#
-#     def reject_business(self, request, queryset):
-#         pass
-#     #TODO send email with explanation to user via email
-#     reject_business.short_description = "Reject selected business creation applications"
-# admin.site.register(BusinessCreateApplication, BusinessCreateApplicationAdmin)
-
-
-# BusinessConfirmation
-# class BusinessConfirmationAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'user')
-#
-# admin.site.register(BusinessConfirmation, BusinessConfirmationAdmin)
-
-
-# # BusinessCategory
-# class BusinessCategoryAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'Source', 'SourceID', 'Parent')
-#     search_fields = ['name', 'Parent__name']
-#
-# admin.site.register(BusinessCategory, BusinessCategoryAdmin)

@@ -8,6 +8,7 @@ from django.conf import settings
 from elasticsearch import NotFoundError
 
 import shoutit
+from shoutit.models import Shout, GoogleLocation
 
 
 class Command(BaseCommand):
@@ -24,11 +25,15 @@ class Command(BaseCommand):
         if full_index:
             index_name = full_index[0]
         else:
-            index_name = settings.ENV + '_' + index[0]
+            index_name = 'shoutit_api_%s_%s' % (settings.SHOUTIT_ENV, index[0])
 
         try:
             shoutit.ES.indices.delete(index_name)
             self.stdout.write("Successfully flushed '{}' index. Make sure to restart the server immediately".format(index_name))
+            if index_name.endswith('shout'):
+                Shout.objects.all().update(is_indexed=False)
+            elif index_name.endswith('location'):
+                GoogleLocation.objects.all().update(is_indexed=False)
         except NotFoundError as e:
             self.stderr.write("Failed to flush index '%s'" % index_name)
             self.stderr.write("Error: " + str(e))

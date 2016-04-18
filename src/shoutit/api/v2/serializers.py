@@ -13,7 +13,6 @@ from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from ipware.ip import get_real_ip
-from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.fields import empty
@@ -22,11 +21,11 @@ from rest_framework.settings import api_settings
 
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
-    ReportType, REPORT_TYPE_USER, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
+    REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import location_controller
-from shoutit.controllers import shout_controller, user_controller, message_controller, notifications_controller
+from shoutit.controllers import shout_controller, user_controller, message_controller
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import (
@@ -277,7 +276,7 @@ class UserSerializer(serializers.ModelSerializer):
         if user_id:
             try:
                 uuid.UUID(user_id)
-                if not User.objects.filter(id=user_id).exists():
+                if not User.exists(id=user_id):
                     raise ValidationError("user with id '{}' does not exist".format(user_id))
                 ret['id'] = user_id
             except (ValueError, TypeError):
@@ -497,30 +496,8 @@ class UserDetailSerializer(UserSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            if 'apns' in push_tokens_data:
-                apns_token = push_tokens_data.get('apns')
-                # delete user device if exists
-                if user.apns_device:
-                    user.delete_apns_device()
-                if apns_token is not None:
-                    # delete devices with same apns_token
-                    APNSDevice.objects.filter(registration_id=apns_token).delete()
-                    # create new device for user with apns_token
-                    APNSDevice(registration_id=apns_token, user=user).save()
+            user.update_push_tokens(push_tokens_data, 'v2')
 
-            if 'gcm' in push_tokens_data:
-                gcm_token = push_tokens_data.get('gcm')
-                # delete user device if exists
-                if user.gcm_device:
-                    user.delete_gcm_device()
-                if gcm_token is not None:
-                    # delete devices with same gcm_token
-                    GCMDevice.objects.filter(registration_id=gcm_token).delete()
-                    # create new device for user with gcm_token
-                    GCMDevice(registration_id=gcm_token, user=user).save()
-
-        # Notify about updates
-        notifications_controller.notify_user_of_user_update(user)
         return user
 
 
@@ -567,7 +544,7 @@ class ShoutSerializer(serializers.ModelSerializer):
             if shout_id:
                 try:
                     uuid.UUID(shout_id)
-                    if not Shout.objects.filter(id=shout_id).exists():
+                    if not Shout.exists(id=shout_id):
                         raise ValidationError({'id': ["shout with id '%s' does not exist" % shout_id]})
                     return {'id': shout_id}
                 except (ValueError, TypeError):
@@ -769,7 +746,7 @@ class MessageSerializer(serializers.ModelSerializer):
                     if 'shout' in attachment:
                         if 'id' not in attachment['shout']:
                             errors['attachments'] = {'shout': "shout object should have 'id'"}
-                        elif not Shout.objects.filter(id=attachment['shout']['id']).exists():
+                        elif not Shout.exists(id=attachment['shout']['id']):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
@@ -935,11 +912,11 @@ class ReportSerializer(serializers.ModelSerializer):
             if not ('attached_user' in attached_object or 'attached_shout' in attached_object):
                 errors['attached_object'] = "attached_object should have either 'user' or 'shout'"
 
-            if 'attached_shout' in attached_object:
-                validated_data['type'] = 'shout'
-
             if 'attached_user' in attached_object:
-                validated_data['type'] = 'user'
+                validated_data['type'] = REPORT_TYPE_PROFILE
+
+            if 'attached_shout' in attached_object:
+                validated_data['type'] = REPORT_TYPE_SHOUT
         else:
             errors['attached_object'] = ["This field is required."]
         if errors:
@@ -949,9 +926,9 @@ class ReportSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         attached_object = None
-        report_type = ReportType.texts[validated_data['type']]
+        report_type = validated_data['type']
 
-        if report_type == REPORT_TYPE_USER:
+        if report_type == REPORT_TYPE_PROFILE:
             attached_object = User.objects.get(id=validated_data['attached_object']['attached_user']['id'])
         if report_type == REPORT_TYPE_SHOUT:
             attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
@@ -1019,7 +996,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
 
     def validate_email(self, email):
         email = email.lower()
-        if User.objects.filter(email=email).exists():
+        if User.exists(email=email):
             raise ValidationError(['Email is already used by another user.'])
         return email
 
@@ -1219,3 +1196,8 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
             ret['message'] = message[:160]
         ret.pop('title', None)
         return ret
+
+
+# Backward compatibility with v3
+ProfileDetailSerializer = UserDetailSerializer
+ProfileSerializer = UserSerializer

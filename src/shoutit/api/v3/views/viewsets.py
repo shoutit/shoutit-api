@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import uuid
 
-from rest_framework.exceptions import ValidationError
+from shoutit.api.v3.exceptions import ShoutitBadRequest, ERROR_REASON
 
 
 class UUIDViewSetMixin(object):
@@ -17,6 +17,7 @@ class UUIDViewSetMixin(object):
         try:
             uuid.UUID(value)
         except:
-            raise ValidationError({'detail': "'%s' is not a valid id." % value})
+            raise ShoutitBadRequest(message="Resource not found", developer_message="'%s' is not a valid id" % value,
+                                    reason=ERROR_REASON.INVALID_IDENTIFIER)
 
         return super(UUIDViewSetMixin, self).get_object()

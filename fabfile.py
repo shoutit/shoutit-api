@@ -1,7 +1,11 @@
 from __future__ import unicode_literals, with_statement
-from src.settings_env import *
+
+import os
+
 from fabric.api import *
 from fabric.contrib.console import confirm
+
+SRC_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src')
 
 env.user = 'root'
 env.use_ssh_config = True
@@ -10,26 +14,28 @@ env.roledefs = {
     'dev': ['root@dev.api.shoutit.com'],
     'prod': ['root@node-01.api.shoutit.com']
 }
-manage_py = os.path.join(DJANGO_DIR, 'manage.py')
-scripts_dir = os.path.join(ENV_DIR, 'Scripts')
+manage_py = os.path.join(SRC_DIR, 'manage.py')
+# Todo: This works only on Windows (specifically my machine)
+scripts_dir = os.path.join(os.path.dirname(os.path.dirname(SRC_DIR)), 'Scripts')
 
 
 def local_flake8():
     print("Running flake8...")
     with lcd(scripts_dir):
-        local('flake8 %s ' % DJANGO_DIR)
+        local('flake8 %s ' % SRC_DIR)
 
 
 def local_radon():
     print("Running radon...")
     with lcd(scripts_dir):
-        local('radon cc -s -n B %s ' % DJANGO_DIR)
+        local('radon cc -s -n B %s ' % SRC_DIR)
 
 
 def local_update():
     print("Updating local requirements...")
     with lcd(scripts_dir):
-        local('pip install -U -r %s' % os.path.join(DJANGO_DIR, 'requirements', 'dev.txt'))
+        local('pip install -U -r %s' % os.path.join(SRC_DIR, 'requirements', 'dev.txt'))
+        local('pip install -r %s' % os.path.join(SRC_DIR, 'requirements', 'common_noupdate.txt'))
 
 
 def preview_local_updates():

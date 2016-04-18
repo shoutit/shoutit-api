@@ -1,20 +1,20 @@
 # core
 gunicorn==19.4.5
-raven==5.10.2
+raven==5.12.0
 requests==2.9.1
-Django==1.8.9
+Django==1.8.11
 psycopg2>=2.6
 kitchen==1.2.4
-django-mptt==0.8.0
-django-mptt-admin==0.3.3
+django-mptt==0.8.3
+django-mptt-admin==0.3.6
 
 # admin
-django-grappelli==2.7.3
+django-grappelli==2.8.1
 
 # django-rest-framework
-djangorestframework==3.3.2
+djangorestframework==3.3.3
 djangorestframework-oauth==1.1.0
-django-filter==0.12.0
+django-filter==0.13.0
 drf-extensions
 
 # cache search queues
@@ -29,7 +29,6 @@ django-widget-tweaks
 
 # AWS imaging
 Pillow==2.8.1
-geraldo==0.4.17
 boto==2.39.0
 
 # google
@@ -46,20 +45,16 @@ mixpanel==4.3.0
 
 # docs
 django-rest-swagger==0.3.4
-markdown==2.6.5
+markdown==2.6.6
 
 # utils
+django-request-id
 pydash
-phonenumbers==7.2.5
+phonenumbers==7.2.8
 django-ipware
 twilio==6.2.dev0
 nexmo
-
-# sss
-# requires apt-get install libcurl4-openssl-dev libxml2-dev libxslt-dev
-antigate
-pyquery
-fake_useragent
+django-heartbeat
 
 # urllib
 # requires apt-get install libffi-dev
@@ -69,8 +64,6 @@ pyasn1
 
 # python interface for django-admin shell (v 0.15 breaks)
 bpython==0.14.2
-
-# django-paypal==0.2
 
 # http://stackoverflow.com/questions/34646942/ssl3-get-server-certificate-certificate-verify-failed-on-python-when-requesting
 certifi==2015.04.28

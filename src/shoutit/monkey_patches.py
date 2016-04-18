@@ -8,15 +8,19 @@ import datetime
 import uuid
 from json import JSONEncoder
 
+import request_id
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl.result import Response
+from rest_framework import exceptions
 from rest_framework.request import Request
 from urllib3.contrib import pyopenssl
 
 # tell urllib3 to switch the ssl backend to PyOpenSSL to avoid InsecurePlatformWarning
 # https://urllib3.readthedocs.org/en/latest/security.html#insecureplatformwarning
+from shoutit.api.v3.exceptions import _force_text_recursive
+
 pyopenssl.inject_into_urllib3()
 
 default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
@@ -83,3 +87,14 @@ def __setstate__(self, state):
 
 
 Request.__setstate__ = __setstate__
+
+
+# Monkey Patching django-request-id to generate id's that can be used for Sentry as `event_id`
+def patched_generate_request_id():
+    return uuid.uuid4().hex
+
+request_id.__dict__['generate_request_id'] = patched_generate_request_id
+
+
+# Monkey patch DRF _force_text_recursive to use modified version
+exceptions.__dict__['_force_text_recursive'] = _force_text_recursive

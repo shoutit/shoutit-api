@@ -18,12 +18,12 @@ from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
-                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
+                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG, DEVICE_IOS, DEVICE_ANDROID)
 from common.utils import AllowedUsernamesValidator, date_unix
-from shoutit.controllers import email_controller
-from shoutit.models.base import UUIDModel, APIModelMixin, LocationMixin
-from shoutit.models.listen import Listen2
-from shoutit.utils import debug_logger
+from .base import UUIDModel, APIModelMixin, LocationMixin
+from .listen import Listen2
+from .misc import Device
+from shoutit.utils import debug_logger, none_to_blank
 
 
 class ShoutitUserManager(UserManager):
@@ -168,6 +168,33 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             if hasattr(self, '_gcm_device'):
                 delattr(self, '_gcm_device')
 
+    def update_push_tokens(self, push_tokens_data, api_version):
+        if 'apns' in push_tokens_data:
+            apns_token = push_tokens_data.get('apns')
+            # delete user device if exists
+            if self.apns_device:
+                self.delete_apns_device()
+            if apns_token is not None:
+                # delete devices with same apns_token
+                APNSDevice.objects.filter(registration_id=apns_token).delete()
+                # create new apns device for user with apns_token
+                apns_device = APNSDevice.objects.create(registration_id=apns_token, user=self)
+                # create new device with type and api version
+                Device.objects.create(user=self, type=DEVICE_IOS, api_version=api_version, push_device=apns_device)
+
+        if 'gcm' in push_tokens_data:
+            gcm_token = push_tokens_data.get('gcm')
+            # delete user device if exists
+            if self.gcm_device:
+                self.delete_gcm_device()
+            if gcm_token is not None:
+                # delete devices with same gcm_token
+                GCMDevice.objects.filter(registration_id=gcm_token).delete()
+                # create new gcm device for user with gcm_token
+                gcm_device = GCMDevice.objects.create(registration_id=gcm_token, user=self)
+                # create new device with type and api version
+                Device.objects.create(user=self, type=DEVICE_ANDROID, api_version=api_version, push_device=gcm_device)
+
     @property
     def linked_accounts(self):
         if not hasattr(self, '_linked_accounts'):
@@ -195,10 +222,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return self._push_tokens
 
     @property
-    def api_client_name(self):
-        if self.accesstoken_set.exists():
-            return self.accesstoken_set.all()[0].client.name
-        return 'none'
+    def api_client_names(self):
+        return self.accesstoken_set.values_list('client__name', flat=True)
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)
@@ -255,9 +280,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         pass
 
     def send_signup_email(self):
+        from ..controllers import email_controller
         email_controller.send_signup_email(self)
 
     def send_verified_email(self):
+        from ..controllers import email_controller
         email_controller.send_verified_email(self)
 
     @property
@@ -269,7 +296,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return settings.SITE_LINK
 
     def send_verification_email(self):
-        from shoutit.models import ConfirmToken
+        from .misc import ConfirmToken
+        from ..controllers import email_controller
         # invalidate other reset tokens
         self.confirmation_tokens.filter(type=TOKEN_TYPE_EMAIL).update(is_disabled=True)
         # create new reset token
@@ -286,7 +314,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return settings.SITE_LINK
 
     def reset_password(self):
-        from shoutit.models import ConfirmToken
+        from .misc import ConfirmToken
+        from ..controllers import email_controller
         # invalidate other reset tokens
         self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD).update(is_disabled=True)
         # create new reset token
@@ -316,7 +345,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         Check whether the user of this profile is listening to this obj or not
         """
         listen_type, target = Listen2.listen_type_and_target_from_object(obj)
-        return Listen2.objects.filter(user=self, type=listen_type, target=target).exists()
+        return Listen2.exists(user=self, type=listen_type, target=target)
 
     @property
     def listening2_users_ids(self):
@@ -361,6 +390,16 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         listen_type, target = Listen2.listen_type_and_target_from_object(self)
         return Listen2.objects.filter(type=listen_type, target=target).count()
 
+    @property
+    def stats(self):
+        from ..controllers import notifications_controller
+        if not hasattr(self, '_stats'):
+            self._stats = {
+                'unread_conversations_count': notifications_controller.get_unread_conversations_count(self),
+                'unread_notifications_count': notifications_controller.get_unread_notifications_count(self)
+            }
+        return self._stats
+
 
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
@@ -379,7 +418,7 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
     if not created:
         if getattr(instance, 'notify', True):
             # Send notification about user changes
-            notifications_controller.notify_user_of_user_update(instance)
+            notifications_controller.notify_user_of_profile_update(instance)
 
 
 class InactiveUser(AnonymousUser):
@@ -425,6 +464,9 @@ class AbstractProfile(UUIDModel, LocationMixin):
             except AttributeError:
                 six.reraise(info[0], info[1], info[2].tb_next)
 
+    def clean(self):
+        none_to_blank(self, ['image', 'cover', 'website'])
+
     @property
     def owner(self):
         return self.user
@@ -440,8 +482,8 @@ def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
 
     if not created:
         if getattr(instance, 'notify', True):
-            # Send notification about user changes
-            notifications_controller.notify_user_of_user_update(instance.user)
+            # Send `profile_update` notification
+            notifications_controller.notify_user_of_profile_update(instance.user)
 
 
 class LinkedFacebookAccount(UUIDModel):

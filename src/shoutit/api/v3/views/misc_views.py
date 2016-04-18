@@ -11,11 +11,11 @@ from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
 from shoutit.api.renderers import PlainTextRenderer
+from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
 from shoutit.controllers import location_controller
 from shoutit.controllers.facebook_controller import (update_linked_facebook_account_scopes,
                                                      delete_linked_facebook_account)
@@ -23,8 +23,7 @@ from shoutit.models import (Currency, Category, PredefinedCity, User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, parse_signed_request
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           ProfileSerializer, ShoutSerializer,
-                           TagDetailSerializer, CategoryDetailSerializer)
+                           ProfileSerializer, ShoutSerializer, TagDetailSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -32,22 +31,6 @@ class MiscViewSet(viewsets.ViewSet):
     Other API Resources.
     """
     permission_classes = ()
-
-    @cache_control(max_age=60 * 60)
-    @list_route(methods=['get'], suffix='Categories')
-    def categories(self, request):
-        """
-        List Categories
-        ---
-        serializer: CategoryDetailSerializer
-        """
-        categories = Category.objects.all().order_by('name').select_related('main_tag')
-        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
-        # Everyday I'm shuffling!
-        shuffle = request.query_params.get('shuffle')
-        if shuffle:
-            random.shuffle(categories_data)
-        return Response(categories_data)
 
     @list_route(methods=['get'], suffix='Cities')
     def cities(self, request):
@@ -71,21 +54,6 @@ class MiscViewSet(viewsets.ViewSet):
         currencies = Currency.objects.all()
         serializer = CurrencySerializer(currencies, many=True, context={'request': request})
         return Response(serializer.data)
-
-    @cache_control(max_age=60 * 60 * 24)
-    @list_route(methods=['get'], suffix='Shouts Sort Types')
-    def shouts_sort_types(self, request):
-        """
-        List Sort types for shouts
-        ---
-        """
-        return Response([
-            {'type': 'time', 'name': 'Latest'},
-            {'type': 'distance', 'name': 'Nearest'},
-            {'type': 'price_asc', 'name': 'Price Increasing'},
-            {'type': 'price_desc', 'name': 'Price Decreasing'},
-            {'type': 'recommended', 'name': 'Recommended'},
-        ])
 
     @list_route(methods=['get'], suffix='Suggestions')
     def suggestions(self, request):
@@ -117,13 +85,13 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             page_size = int(data.get('page_size', 5))
         except ValueError:
-            raise ValidationError({'error': "Invalid `page_size`"})
+            raise InvalidParameter('page_size', "Invalid `page_size`")
         type_qp = data.get('type', 'users,pages,tags,shouts,shout')
         country = data.get('country')
         try:
             types = type_qp.split(',')
         except:
-            raise ValidationError({'error': "Invalid `type` parameter"})
+            raise InvalidParameter('type', "Invalid `type`")
 
         suggestions = OrderedDict()
 
@@ -146,9 +114,7 @@ class MiscViewSet(viewsets.ViewSet):
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
-            shouts_qs = Shout.objects.filter().order_by('-date_published')
-            if country:
-                shouts_qs = shouts_qs.filter(country=country)
+            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-date_published')
             if 'shouts' in types:
                 shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
                 suggestions['shouts'] = shouts
@@ -177,12 +143,12 @@ class MiscViewSet(viewsets.ViewSet):
         }
         </code></pre>
 
-        ###Report User
+        ###Report Profile
         <pre><code>
         {
             "text": "the reason of this report, any text.",
             "attached_object": {
-                "user": {
+                "profile": {
                     "id": ""
                 }
             }
@@ -229,12 +195,14 @@ class MiscViewSet(viewsets.ViewSet):
         GET: /misc/geocode?latlng=40.722100,-74.046900
         ```
         """
+        latlng = request.query_params.get('latlng')
+        if not latlng:
+            raise RequiredParameter('latlng')
         try:
-            latlng = request.query_params.get('latlng', '')
             lat = float(latlng.split(',')[0])
             lng = float(latlng.split(',')[1])
         except Exception:
-            raise ValidationError({'latlng': ['missing or wrong latlng parameter']})
+            raise InvalidParameter('latlng', 'Invalid `latlng`')
         ip = get_real_ip(request)
         location = location_controller.from_location_index(lat, lng, ip)
         return Response(location)

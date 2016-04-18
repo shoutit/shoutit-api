@@ -20,8 +20,7 @@ def auth_login(request):
     except NoReverseMatch:
         return ''
 
-    snippet = "<a id='_user' href='{href}?next={next}'>Log in</a>".format(href=login_url,
-                                                                          next=escape(request.path))
+    snippet = "<a id='_user' href='{href}?next={next}'>Log in</a>".format(href=login_url, next=escape(request.path))
     return snippet
 
 
