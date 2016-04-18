@@ -4,7 +4,6 @@
 """
 from __future__ import unicode_literals
 
-import uuid
 from collections import OrderedDict
 
 from django.core.exceptions import ValidationError
@@ -13,13 +12,12 @@ from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
-from twilio.access_token import AccessToken, ConversationsGrant
 
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter
 from shoutit.api.v3.serializers import ProfileSerializer
 from shoutit.models import User
-from shoutit_twilio.models import VideoClient
-from .settings import SHOUTIT_TWILIO_SETTINGS
+from .controllers import create_video_client
+from .models import VideoClient
 
 
 class ShoutitTwilioViewSet(viewsets.ViewSet):
@@ -50,25 +48,8 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
                 video_client.delete()
                 raise ValueError()
         except (AttributeError, ValueError):
-            # Get credentials
-            account_sid = SHOUTIT_TWILIO_SETTINGS['TWILIO_ACCOUNT_SID']
-            api_key = SHOUTIT_TWILIO_SETTINGS['TWILIO_API_KEY']
-            api_secret = SHOUTIT_TWILIO_SETTINGS['TWILIO_API_SECRET']
-
-            # Create identity for the token using random uuid.hex (not to have the hyphens)
-            identity = uuid.uuid4().hex
-
-            # Create an Access Token
-            token = AccessToken(account_sid, api_key, api_secret, identity=identity)
-
-            # Grant access to Conversations
-            grant = ConversationsGrant(configuration_profile_sid=SHOUTIT_TWILIO_SETTINGS['TWILIO_CONFIGURATION_SID'])
-            token.add_grant(grant)
-
-            # Create VideoClient
-            jwt_token = token.to_jwt()
             try:
-                video_client = VideoClient.create(id=identity, user=user, token=jwt_token)
+                video_client = create_video_client(user)
             except (ValidationError, IntegrityError) as e:
                 msg = "Couldn't authorize you to make video calls"
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
