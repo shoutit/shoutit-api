@@ -70,6 +70,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         return self.messages_count - user.read_messages.filter(conversation=self).count()
 
     def mark_as_deleted(self, user):
+        # 0 - Mark all its messages as read
+        self.mark_as_read(user)
+
         # 1 - record the deletion
         try:
             ConversationDelete.objects.create(user=user, conversation_id=self.id)
