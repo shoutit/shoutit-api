@@ -330,7 +330,11 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
     def mark_as_read(self):
         self.is_read = True
-        self.save()
+        self.save(update_fields=['is_read'])
+
+        # Trigger `stats_update` on Pusher
+        from ..controllers import pusher_controller
+        pusher_controller.trigger_stats_update(self.to_user, 'v3')
 
 
 class Report(UUIDModel, AttachedObjectMixin):

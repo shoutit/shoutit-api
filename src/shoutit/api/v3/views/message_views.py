@@ -139,10 +139,12 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         self.pagination_class = DateTimePagination
         page = self.paginate_queryset(messages_qs)
 
-        # only keep the messages that were not deleted by this user
-        messages_ids = [message.id for message in page.object_list]
+        # Only keep the messages that were not deleted by this user
+        messages_ids = map(lambda m: m.id, page.object_list)
         deleted_messages_ids = request.user.deleted_messages.filter(id__in=messages_ids).values_list('id', flat=True)
-        [page.object_list.remove(message) for message in page.object_list if message.id in deleted_messages_ids]
+        for message in page.object_list:
+            if message.id in deleted_messages_ids:
+                page.object_list.remove(message)
 
         serializer = MessageSerializer(page, many=True, context={'request': request})
         conversation.mark_as_read(request.user)

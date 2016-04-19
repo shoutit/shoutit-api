@@ -52,7 +52,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         omit_parameters:
             - form
         """
-        notifications_controller.mark_all_notifications_as_read(request.user)
+        notifications_controller.mark_notifications_as_read(request.user)
         return Response(status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post'])
@@ -70,7 +70,5 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
             - form
         """
         notification = self.get_object()
-        notification.is_read = True
-        notification.save()
-        serializer = self.get_serializer(notification)
-        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        notification.mark_as_read()
+        return Response(status=status.HTTP_202_ACCEPTED)
