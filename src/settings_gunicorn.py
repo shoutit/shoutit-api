@@ -17,8 +17,7 @@ else:
     workers = multiprocessing.cpu_count() * 2 + 1
     max_requests = 1000
 
-errorlog = '/dev/stderr'
-accesslog = '/dev/stdout'
+errorlog = accesslog = '-'
 loglevel = 'info'
 
 preload_app = True
