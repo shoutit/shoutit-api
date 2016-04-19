@@ -253,11 +253,6 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         except IntegrityError:
             pass
 
-        # Read the message by its owner if exists (not by system)
-        # Todo: do we really need to read our own messages? clients should assume a message is read by its owner!
-        if instance.user:
-            MessageRead.create(user=instance.user, message=instance, conversation=conversation)
-
         # Notify the other participants
         for to_user in conversation.contributors:
             if instance.user and instance.user != to_user:
