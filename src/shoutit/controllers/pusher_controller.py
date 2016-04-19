@@ -5,8 +5,7 @@ from django.db.models import Q
 from django_rq import job
 
 from common.constants import (NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_READ_BY,
-                              NOTIFICATION_TYPE_CONVERSATION_UPDATE)
-from shoutit_pusher.models import PusherChannel
+                              NOTIFICATION_TYPE_CONVERSATION_UPDATE, NOTIFICATION_TYPE_STATS_UPDATE)
 from shoutit_pusher.utils import pusher
 from ..utils import serialize_attached_object
 
@@ -37,6 +36,17 @@ def trigger_conversation_event(conversation_id, notification_type, attached_obje
     """
     channel_name = 'presence-%s-c-%s' % (version, conversation_id)
     trigger_event.delay(channel_name, notification_type, attached_object, version)
+
+
+def trigger_stats_update(user, version):
+    """
+    Trigger `stats_update` event on Pusher conversation channel
+    """
+    trigger_profile_event(user, NOTIFICATION_TYPE_STATS_UPDATE, user.stats, version)
+
+    # iOS needs special care! set its badge
+    from .push_controller import set_ios_badge
+    set_ios_badge.delay(user)
 
 
 def trigger_new_message(message, version):

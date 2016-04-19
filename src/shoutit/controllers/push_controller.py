@@ -18,7 +18,7 @@ from ..utils import error_logger, debug_logger, serialize_attached_object
 
 @job(settings.RQ_QUEUE_PUSH)
 def send_push(user, notification_type, attached_object, version):
-    from shoutit.controllers.notifications_controller import get_all_unread_notifications_count
+    from shoutit.controllers.notifications_controller import get_total_unread_count
 
     # Todo: maybe check whether it is possible to push before even serializing
 
@@ -44,7 +44,7 @@ def send_push(user, notification_type, attached_object, version):
         }
 
     if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
-        badge = get_all_unread_notifications_count(user)
+        badge = get_total_unread_count(user)
         try:
             user.apns_device.send_message(message, extra=extra, sound='default', badge=badge)
             debug_logger.debug("Sent apns push to %s." % user)
@@ -57,6 +57,19 @@ def send_push(user, notification_type, attached_object, version):
             debug_logger.debug("Sent gcm push to %s." % user)
         except GCMError:
             error_logger.warn("Could not send gcm push.", exc_info=True)
+
+
+@job(settings.RQ_QUEUE_PUSH)
+def set_ios_badge(user):
+    from .notifications_controller import get_total_unread_count
+
+    if user.apns_device:
+        badge = get_total_unread_count(user)
+        try:
+            user.apns_device.send_message(message=None, badge=badge)
+            debug_logger.debug("Set apns badge for %s." % user)
+        except APNSError:
+            error_logger.warn("Could not set apns badge for.", exc_info=True)
 
 
 def check_push(notification_type):

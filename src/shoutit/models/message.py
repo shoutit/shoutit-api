@@ -20,9 +20,9 @@ from common.constants import (
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE)
 from common.utils import date_unix
-from shoutit.models.action import Action
-from shoutit.models.base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
-from shoutit.utils import track, none_to_blank
+from .action import Action
+from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
+from ..utils import track, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -70,6 +70,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         return self.messages_count - user.read_messages.filter(conversation=self).count()
 
     def mark_as_deleted(self, user):
+        # 0 - Mark all its messages as read
+        self.mark_as_read(user)
+
         # 1 - record the deletion
         try:
             ConversationDelete.objects.create(user=user, conversation_id=self.id)
@@ -90,13 +93,14 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
                                                     message__conversation=self)
         notifications.update(is_read=True)
 
-        # Create MessageRead objects for all the conversation's messages
+        # Trigger `stats_update` on Pusher
+        from ..controllers import pusher_controller
+        pusher_controller.trigger_stats_update(user, 'v3')
+
+        # Read all the conversation's messages
         # Todo: Optimize!
         for message in self.messages.all():
-            try:
-                MessageRead.objects.create(user=user, message_id=message.id, conversation_id=message.conversation.id)
-            except IntegrityError:
-                pass
+            message.mark_as_read(user, notify=False)
 
     def mark_as_unread(self, user):
         try:
@@ -133,7 +137,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
-    from shoutit.controllers import pusher_controller
+    from ..controllers import pusher_controller
 
     if created:
         track(getattr(instance, 'creator_id', 'system'), 'new_conversation', instance.track_properties)
@@ -207,9 +211,14 @@ class Message(Action):
             read_by.append({'profile_id': read['user_id'], 'read_at': date_unix(read['created_at'])})
         return read_by
 
-    def mark_as_read(self, user):
+    def mark_as_read(self, user, notify=True):
         try:
             MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
+
+            if notify:
+                # Trigger `stats_update` on Pusher
+                from ..controllers import pusher_controller
+                pusher_controller.trigger_stats_update(user, 'v3')
         except IntegrityError:
             pass
 
@@ -224,12 +233,12 @@ class Message(Action):
 def post_save_message(sender, instance=None, created=False, **kwargs):
     if created:
         # Save the attachments
-        from shoutit.controllers.message_controller import save_message_attachments
+        from ..controllers.message_controller import save_message_attachments
         attachments = getattr(instance, 'raw_attachments', [])
         save_message_attachments(instance, attachments)
 
         # Push the message to the conversation presence channel
-        from shoutit.controllers import notifications_controller, pusher_controller
+        from ..controllers import notifications_controller, pusher_controller
         pusher_controller.trigger_new_message(instance, version='v3')
 
         # Update the conversation without sending `conversation_update` pusher event
@@ -243,11 +252,6 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
             conversation.users.add(instance.user)
         except IntegrityError:
             pass
-
-        # Read the message by its owner if exists (not by system)
-        # Todo: do we really need to read our own messages? clients should assume a message is read by its owner!
-        if instance.user:
-            MessageRead.create(user=instance.user, message=instance, conversation=conversation)
 
         # Notify the other participants
         for to_user in conversation.contributors:
@@ -271,7 +275,7 @@ class MessageRead(UUIDModel):
 @receiver(post_save, sender=MessageRead)
 def post_save_message_read(sender, instance=None, created=False, **kwargs):
     if created:
-        from shoutit.controllers import pusher_controller
+        from ..controllers import pusher_controller
         # Trigger `new_read_by` event in the conversation channel
         pusher_controller.trigger_new_read_by(message=instance.message, version='v3')
 
@@ -326,7 +330,11 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
     def mark_as_read(self):
         self.is_read = True
-        self.save()
+        self.save(update_fields=['is_read'])
+
+        # Trigger `stats_update` on Pusher
+        from ..controllers import pusher_controller
+        pusher_controller.trigger_stats_update(self.to_user, 'v3')
 
 
 class Report(UUIDModel, AttachedObjectMixin):

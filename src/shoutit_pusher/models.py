@@ -29,7 +29,7 @@ class PusherChannel(UUIDModel):
     name = models.CharField(max_length=164, unique=True, validators=[
         validators.RegexValidator(channel_name_re)
     ])
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='channels',
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='joined_pusher_channels',
                                    through='shoutit_pusher.PusherChannelJoin')
 
     def __unicode__(self):
@@ -37,7 +37,7 @@ class PusherChannel(UUIDModel):
 
 
 class PusherChannelJoin(UUIDModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='joined_pusher_channels')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
     channel = models.ForeignKey('shoutit_pusher.PusherChannel')
 
     class Meta:
