@@ -173,6 +173,7 @@ NOTIFICATION_TYPE_BROADCAST = NotificationType('broadcast')
 NOTIFICATION_TYPE_PROFILE_UPDATE = NotificationType('profile_update')
 NOTIFICATION_TYPE_CONVERSATION_UPDATE = NotificationType('conversation_update')
 NOTIFICATION_TYPE_READ_BY = NotificationType('new_read_by')
+NOTIFICATION_TYPE_STATS_UPDATE = NotificationType('stats_update')
 
 
 class ListenType(Constant):

@@ -59,6 +59,19 @@ def send_push(user, notification_type, attached_object, version):
             error_logger.warn("Could not send gcm push.", exc_info=True)
 
 
+@job(settings.RQ_QUEUE_PUSH)
+def set_ios_badge(user):
+    from .notifications_controller import get_all_unread_notifications_count
+
+    if user.apns_device:
+        badge = get_all_unread_notifications_count(user)
+        try:
+            user.apns_device.send_message(message=None, badge=badge)
+            debug_logger.debug("Set apns badge for %s." % user)
+        except APNSError:
+            error_logger.warn("Could not set apns badge for.", exc_info=True)
+
+
 def check_push(notification_type):
     if notification_type not in [NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE]:
         return False

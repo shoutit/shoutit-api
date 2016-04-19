@@ -14,10 +14,12 @@ from ..models import Notification
 
 def mark_all_as_read(user):
     Notification.objects.filter(is_read=False, to_user=user).update(is_read=True)
+    pusher_controller.trigger_stats_update(user, 'v3')
 
 
 def mark_all_notifications_as_read(user):
     Notification.objects.filter(is_read=False, to_user=user).exclude(type=NOTIFICATION_TYPE_MESSAGE).update(is_read=True)
+    pusher_controller.trigger_stats_update(user, 'v3')
 
 
 def get_all_unread_notifications_count(user):
@@ -43,6 +45,9 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     # Create notification object
     if notification_type != NOTIFICATION_TYPE_PROFILE_UPDATE:
         Notification.create(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
+
+    # Trigger `stats_update` on Pusher
+    pusher_controller.trigger_stats_update(user, 'v3')
 
     # Send Push notification when no pusher channels of any version exit
     if push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):

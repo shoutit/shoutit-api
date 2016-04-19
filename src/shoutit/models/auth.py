@@ -180,6 +180,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 # create new apns device for user with apns_token
                 apns_device = APNSDevice.objects.create(registration_id=apns_token, user=self)
                 # create new device with type and api version
+                # Todo: use signals
                 Device.objects.create(user=self, type=DEVICE_IOS, api_version=api_version, push_device=apns_device)
 
         if 'gcm' in push_tokens_data:
@@ -193,6 +194,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 # create new gcm device for user with gcm_token
                 gcm_device = GCMDevice.objects.create(registration_id=gcm_token, user=self)
                 # create new device with type and api version
+                # Todo: use signals
                 Device.objects.create(user=self, type=DEVICE_ANDROID, api_version=api_version, push_device=gcm_device)
 
     @property
