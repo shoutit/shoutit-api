@@ -116,6 +116,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
     def messages(self, request, *args, **kwargs):
         """
         List the conversation messages
+        This will mark the conversation as read regardless of how many unread messages there are.
         ###REQUIRES AUTH
         [Messages Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#messages-pagination)
         ---
