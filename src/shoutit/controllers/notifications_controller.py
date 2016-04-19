@@ -23,11 +23,11 @@ def mark_all_notifications_as_read(user):
 
 
 def get_all_unread_notifications_count(user):
-    return Notification.objects.filter(is_read=False, to_user=user).count()
+    return get_unread_notifications_count(user) + get_unread_conversations_count(user)
 
 
 def get_unread_notifications_count(user):
-    return Notification.objects.filter(Q(is_read=False) & Q(to_user=user) & ~Q(type=NOTIFICATION_TYPE_MESSAGE)).count()
+    return Notification.objects.filter(is_read=False, to_user=user).exclude(type=NOTIFICATION_TYPE_MESSAGE).count()
 
 
 def get_unread_conversations_count(user):
