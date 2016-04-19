@@ -16,6 +16,10 @@ def mark_all_as_read(user):
     Notification.objects.filter(is_read=False, to_user=user).update(is_read=True)
 
 
+def mark_all_notifications_as_read(user):
+    Notification.objects.filter(is_read=False, to_user=user).exclude(type=NOTIFICATION_TYPE_MESSAGE).update(is_read=True)
+
+
 def get_all_unread_notifications_count(user):
     return Notification.objects.filter(is_read=False, to_user=user).count()
 

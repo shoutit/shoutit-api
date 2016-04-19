@@ -45,14 +45,14 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     @list_route(methods=['post'])
     def reset(self, request, *args, **kwargs):
         """
-        Mark all notification as read
+        Mark all notifications as read
         ###REQUIRES AUTH
         ---
         omit_serializer: true
         omit_parameters:
             - form
         """
-        notifications_controller.mark_all_as_read(request.user)
+        notifications_controller.mark_all_notifications_as_read(request.user)
         return Response(status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post'])
