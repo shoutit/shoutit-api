@@ -3,13 +3,17 @@
 """
 from __future__ import unicode_literals
 import json
+import uuid
+
+import boto
 from django import forms
+from django.conf import settings
 from django.contrib.postgres.forms import SplitArrayField
 from django.core.exceptions import ValidationError
 from django.forms import URLField, SlugField
 
 from common.utils import process_tags
-from shoutit.models import PushBroadcast, Item
+from shoutit.models import PushBroadcast, Item, Tag
 from common.constants import DeviceOS, COUNTRY_CHOICES
 from django.utils.translation import string_concat
 
@@ -108,3 +112,24 @@ class CategoryForm(forms.ModelForm):
     def clean_filters(self):
         filters = process_tags(self.cleaned_data['filters'], snake_case=True)
         return filters
+
+
+class ImageFileChangeForm(forms.ModelForm):
+    image_file = forms.FileField(required=False)
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+    def clean_image_file(self):
+        image_file = self.cleaned_data.get('image_file')
+        if not image_file:
+            return
+        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+        bucket = s3.get_bucket('shoutit-tag-image-original')
+        filename = "%s.jpg" % uuid.uuid4()
+        key = bucket.new_key(filename)
+        key.set_metadata('Content-Type', 'image/jpg')
+        key.set_contents_from_file(image_file)
+        s3_image_url = 'https://tag-image.static.shoutit.com/%s' % filename
+        self.cleaned_data['image'] = s3_image_url

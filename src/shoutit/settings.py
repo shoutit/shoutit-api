@@ -157,6 +157,9 @@ if DEBUG or FORCE_SYNC_RQ:
 """
 INSTALLED_APPS = (
     'grappelli',
+    'mptt',
+    'django_mptt_admin',
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -175,7 +178,6 @@ INSTALLED_APPS = (
     'corsheaders',
     'heartbeat',
 
-    'mptt',
     'shoutit_twilio',
     'shoutit_pusher',
     'shoutit_crm',

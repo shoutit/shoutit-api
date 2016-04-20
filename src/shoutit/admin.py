@@ -1,10 +1,6 @@
 from __future__ import unicode_literals
 
-import uuid
-
-import boto
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -12,14 +8,14 @@ from django.contrib.auth.forms import UserChangeForm
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from mptt.admin import MPTTModelAdmin
+from django_mptt_admin.admin import DjangoMpttAdmin
 from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import UserType
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
-from .admin_forms import PushBroadcastForm, ItemForm, CategoryForm
+from .admin_forms import PushBroadcastForm, ItemForm, CategoryForm, ImageFileChangeForm
 from .admin_utils import (UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
 from .models import *  # NOQA
 
@@ -196,34 +192,13 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
     _item.short_description = 'Item'
 
 
-class TagChangeForm(forms.ModelForm):
-    image_file = forms.FileField(required=False)
-
-    class Meta:
-        model = Tag
-        fields = '__all__'
-
-    def clean_image_file(self):
-        image_file = self.cleaned_data.get('image_file')
-        if not image_file:
-            return
-        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = s3.get_bucket('shoutit-tag-image-original')
-        filename = "%s-%s.jpg" % (uuid.uuid4(), self.cleaned_data['name'])
-        key = bucket.new_key(filename)
-        key.set_metadata('Content-Type', 'image/jpg')
-        key.set_contents_from_file(image_file)
-        s3_image_url = 'https://tag-image.static.shoutit.com/%s' % filename
-        self.cleaned_data['image'] = s3_image_url
-
-
 # Tag
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin, LinksMixin):
     list_display = ('name', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
-    form = TagChangeForm
+    form = ImageFileChangeForm
 
 
 # TagKey
@@ -269,9 +244,9 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 # DiscoverItem
 @admin.register(DiscoverItem)
-class DiscoverItemAdmin(MPTTModelAdmin):
-    mptt_level_indent = 20
-    mptt_indent_field = "some_node_field"
+class DiscoverItemAdmin(DjangoMpttAdmin):
+    tree_auto_open = False
+    form = ImageFileChangeForm
 
 
 # Conversation
