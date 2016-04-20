@@ -68,7 +68,7 @@ def send_video_call(user, from_user, version):
             "action-loc-key": "Answer"
         }
         try:
-            user.apns_device.send_message(message=alert, sound='default')
+            user.apns_device.send_message(message=alert, sound='default', category='VIDEO_CALL_CATEGORY')
             debug_logger.debug("Sent apns push to %s." % user)
         except APNSError:
             error_logger.warn("Could not send apns push.", exc_info=True)
