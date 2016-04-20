@@ -13,7 +13,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
 
-from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter
+from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter, RequiredBody
 from shoutit.api.v3.serializers import ProfileSerializer
 from shoutit.controllers import push_controller
 from shoutit.models import User
@@ -109,7 +109,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             try:
                 video_client = create_video_client(other_user)
             except (ValidationError, IntegrityError) as e:
-                msg = "Error calling %" % other_username.name
+                msg = "Error calling %s" % other_username.name
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
 
         # Notify the other user
@@ -119,6 +119,46 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             'identity': video_client.identity
         }
         return Response(res)
+
+    @list_route(methods=['post'], suffix='Video call Profile')
+    def video_call(self, request):
+        """
+        Send the Profile Push about video call
+        ###REQUIRES AUTH
+        ###Request
+        <pre><code>
+        {
+          "identity": "7c6ca4737db3447f936037374473e61f",
+          "missed": true
+        }
+        </code></pre>
+
+        ---
+        """
+        data = request.data
+        identity = data.get('identity')
+        if not identity:
+            raise RequiredBody('identity')
+        try:
+            video_client = VideoClient.objects.get(id=identity)
+        except VideoClient.DoesNotExist:
+            msg = "Profile with identity %s doesn't exist" % identity
+            raise InvalidParameter('identity', message=msg)
+        except ValueError:
+            msg = "Invalid identity"
+            raise InvalidParameter('identity', message=msg)
+        other_user = video_client.user
+
+        missed = data.get('missed', False)
+
+        if missed:
+            # Notify the other user about the missed video call
+            push_controller.send_missed_video_call(user=other_user, from_user=request.user, version='v3')
+        else:
+            # Notify the other user about the incoming video call
+            push_controller.send_video_call(user=other_user, from_user=request.user, version='v3')
+
+        return Response()
 
     @list_route(methods=['get'], suffix='Retrieve Profile')
     def profile(self, request):
