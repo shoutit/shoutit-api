@@ -15,6 +15,7 @@ from rest_framework.response import Response
 
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter
 from shoutit.api.v3.serializers import ProfileSerializer
+from shoutit.controllers import push_controller
 from shoutit.models import User
 from .controllers import create_video_client
 from .models import VideoClient
@@ -92,6 +93,8 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         other_username = request.query_params.get('profile')
         if not other_username:
             raise RequiredParameter('profile')
+        if other_username == request.user.username:
+            raise InvalidParameter('profile', "You can't call your self")
 
         try:
             other_user = User.objects.get(username=other_username)
@@ -102,8 +105,15 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         if hasattr(other_user, 'video_client'):
             video_client = other_user.video_client
         else:
-            msg = "Profile with username %s is not online" % other_username
-            raise InvalidParameter('profile', message=msg)
+            # Create video client for the other user
+            try:
+                video_client = create_video_client(other_user)
+            except (ValidationError, IntegrityError) as e:
+                msg = "Error calling %" % other_username.name
+                raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
+
+        # Notify the other user
+        push_controller.send_video_call(user=other_user, from_user=request.user, version='v3')
 
         res = {
             'identity': video_client.identity
