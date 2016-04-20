@@ -121,7 +121,7 @@ class MiscViewSet(viewsets.ViewSet):
         except ValueError:
             raise ValidationError({'error': "Invalid `page_size`"})
         type_qp = data.get('type', 'users,pages,tags,shouts,shout')
-        country = data.get('country')
+        country = data.get('country', '').upper()
         try:
             types = type_qp.split(',')
         except:

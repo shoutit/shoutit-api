@@ -82,7 +82,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             index_queryset = index_queryset.filter('terms', tags=tag_names)
 
         # Location: Country, State, City, Latitude, Longitude
-        country = data.get('country')
+        country = data.get('country', '').upper()
         if country and country != 'all':
             index_queryset = index_queryset.filter('term', country=country)
             # todo: add state
@@ -224,7 +224,7 @@ class DiscoverItemFilter(filters.BaseFilterBackend):
             return queryset
 
         data = request.query_params
-        country = data.get('country', '')
+        country = data.get('country', '').upper()
         country_queryset = queryset.filter(countries__contains=[country])
         no_country_queryset = queryset.filter(countries__contained_by=[''])
         if country != '' and country_queryset.count() != 0:
