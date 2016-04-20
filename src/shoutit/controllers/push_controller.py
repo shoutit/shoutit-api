@@ -63,7 +63,7 @@ def send_video_call(user, from_user, version):
 
     if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
         alert = {
-            "title": "Incoming call",
+            "title": "Incoming video call",
             "body": "%s is calling you..." % from_user.name,
             "action-loc-key": "Answer"
         }
