@@ -175,6 +175,7 @@ NOTIFICATION_TYPE_CONVERSATION_UPDATE = NotificationType('conversation_update')
 NOTIFICATION_TYPE_READ_BY = NotificationType('new_read_by')
 NOTIFICATION_TYPE_STATS_UPDATE = NotificationType('stats_update')
 NOTIFICATION_TYPE_VIDEO_CALL = NotificationType('video_call')
+NOTIFICATION_TYPE_MISSED_VIDEO_CALL = NotificationType('missed_video_call')
 
 
 class ListenType(Constant):

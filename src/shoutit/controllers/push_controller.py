@@ -11,7 +11,8 @@ from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS,
-                              NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL)
+                              NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL,
+                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL)
 from ..models import User, PushBroadcast
 from ..utils import error_logger, debug_logger, serialize_attached_object
 
@@ -64,7 +65,7 @@ def send_video_call(user, from_user, version):
     if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
         alert = {
             "title": "Incoming video call",
-            "body": "%s is calling you..." % from_user.name,
+            'body': "%s is calling you on Shoutit" % from_user.first_name,
             "action-loc-key": "Answer"
         }
         try:
@@ -77,7 +78,32 @@ def send_video_call(user, from_user, version):
         extra = {
             'type': str(NOTIFICATION_TYPE_VIDEO_CALL),
             'message': "Incoming video call",
-            'body': "%s is calling you" % from_user.name,
+            'body': "%s is calling you on Shoutit" % from_user.first_name,
+        }
+        try:
+            user.gcm_device.send_message(message=None, extra=extra)
+            debug_logger.debug("Sent gcm push to %s." % user)
+        except GCMError:
+            error_logger.warn("Could not send gcm push.", exc_info=True)
+
+
+def send_missed_video_call(user, from_user, version):
+    if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
+        alert = {
+            "title": "Missed video call",
+            "body": "You missed a call from %s." % from_user.first_name,
+        }
+        try:
+            user.apns_device.send_message(message=alert, sound='default')
+            debug_logger.debug("Sent apns push to %s." % user)
+        except APNSError:
+            error_logger.warn("Could not send apns push.", exc_info=True)
+
+    if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
+        extra = {
+            'type': str(NOTIFICATION_TYPE_MISSED_VIDEO_CALL),
+            'message': "Missed video call",
+            "body": "You missed a call from %s." % from_user.first_name,
         }
         try:
             user.gcm_device.send_message(message=None, extra=extra)
