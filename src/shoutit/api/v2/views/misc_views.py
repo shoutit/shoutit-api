@@ -348,8 +348,9 @@ class MiscViewSet(viewsets.ViewSet):
         b64 = request.data.get('b64')
         config = request.data.get('config')
         box = request.data.get('box')
+        invert = request.data.get('invert', False)
         try:
-            text = base64_to_text(b64, box, config)
+            text = base64_to_text(b64, box, config, invert)
             return Response({'text': text})
         except Exception as e:
             return Response({'error': str(e)})
@@ -361,8 +362,9 @@ class MiscViewSet(viewsets.ViewSet):
         """
         b64 = request.data.get('b64')
         configs = request.data.get('configs')
+        invert = request.data.get('invert', False)
         try:
-            texts = base64_to_texts(b64, configs)
+            texts = base64_to_texts(b64, configs, invert)
             return Response({'texts': texts})
         except Exception as e:
             return Response({'error': str(e)})
