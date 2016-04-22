@@ -85,7 +85,7 @@ class LocationIndex(DocType):
     address = String(index='not_analyzed')
 
     class Meta:
-        index = 'shoutit_api_%s_location' % settings.SHOUTIT_ENV
+        index = '%s_location' % settings.ES_BASE_INDEX
 
     @property
     def location_dict(self):

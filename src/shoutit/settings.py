@@ -67,6 +67,7 @@ MAX_VIDEOS_PER_ITEM = 2
 ES_HOST = os.environ.get('ES_HOST', 'es.shoutit.com')
 ES_PORT = os.environ.get('ES_PORT', '9200')
 ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
+ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX', 'shoutit_api_%s' % SHOUTIT_ENV)
 
 """
 =================================
@@ -220,7 +221,7 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'shoutit_' + SHOUTIT_ENV,  # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
+        'NAME': os.environ.get('DB_NAME', 'shoutit_' + SHOUTIT_ENV),  # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
         'USER': os.environ.get('DB_USER', 'shoutit'),
         'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
         'HOST': os.environ.get('DB_HOST', 'db.shoutit.com'),
@@ -351,6 +352,10 @@ GOOGLE_API = {
             Mail
 =================================
 """
+LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
 FORCE_SMTP = False
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
@@ -380,6 +385,7 @@ MANDRILL_SMTP = {
 FILE_SMTP = {
     'host': 'localhost',
     'backend': 'django.core.mail.backends.filebased.EmailBackend',
+    'file_path': os.path.join(LOG_DIR, 'messages')
 }
 
 EMAIL_BACKENDS = {
@@ -468,13 +474,6 @@ SWAGGER_SETTINGS = {
              Logging
 =================================
 """
-LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
-
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
-
-FILE_SMTP['file_path'] = os.path.join(LOG_DIR, 'messages')
-
 RAVEN_CONFIG = {
     'dsn': os.environ.get('RAVEN_DSN'),
     'string_max_length': 1000

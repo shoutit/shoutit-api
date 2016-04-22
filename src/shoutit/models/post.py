@@ -303,7 +303,7 @@ class ShoutIndex(DocType):
     priority = Integer()
 
     class Meta:
-        index = 'shoutit_api_%s_shout' % settings.SHOUTIT_ENV
+        index = '%s_shout' % settings.ES_BASE_INDEX
         dynamic_templates = MetaField([
             {
                 "tags2_integer_keys": {
