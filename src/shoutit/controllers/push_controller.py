@@ -70,9 +70,9 @@ def send_video_call(user, from_user, version):
         }
         try:
             user.apns_device.send_message(message=alert, sound='default', category='VIDEO_CALL_CATEGORY')
-            debug_logger.debug("Sent apns push to %s." % user)
+            debug_logger.debug("Sent APNS Incoming video call push to %s." % user)
         except APNSError:
-            error_logger.warn("Could not send apns push.", exc_info=True)
+            error_logger.warn("Could not send APNS Incoming video call push.", exc_info=True)
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
         extra = {
@@ -82,9 +82,9 @@ def send_video_call(user, from_user, version):
         }
         try:
             user.gcm_device.send_message(message=None, extra=extra)
-            debug_logger.debug("Sent gcm push to %s." % user)
+            debug_logger.debug("Sent GCM Incoming video call push to %s." % user)
         except GCMError:
-            error_logger.warn("Could not send gcm push.", exc_info=True)
+            error_logger.warn("Could not GCM Incoming video call push push.", exc_info=True)
 
 
 def send_missed_video_call(user, from_user, version):
@@ -95,9 +95,9 @@ def send_missed_video_call(user, from_user, version):
         }
         try:
             user.apns_device.send_message(message=alert, sound='default')
-            debug_logger.debug("Sent apns push to %s." % user)
+            debug_logger.debug("Sent APNS Missed video call push to %s." % user)
         except APNSError:
-            error_logger.warn("Could not send apns push.", exc_info=True)
+            error_logger.warn("Could not send APNS Missed video call push to %s." % user, exc_info=True)
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
         extra = {
@@ -107,9 +107,9 @@ def send_missed_video_call(user, from_user, version):
         }
         try:
             user.gcm_device.send_message(message=None, extra=extra)
-            debug_logger.debug("Sent gcm push to %s." % user)
+            debug_logger.debug("Sent GCM Missed video call push to %s." % user)
         except GCMError:
-            error_logger.warn("Could not send gcm push.", exc_info=True)
+            error_logger.warn("Could not send GCM Missed video call push to %s." % user, exc_info=True)
 
 
 @job(settings.RQ_QUEUE_PUSH)
