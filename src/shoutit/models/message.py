@@ -225,7 +225,12 @@ class Message(Action):
             'type': 'text' if self.text else 'attachment',
             'conversation_id': self.conversation_id,
             'conversation_type': conversation.get_type_display(),
-            'is_first': self.is_first
+            'is_first': self.is_first,
+            'Country': self.get_country_display(),
+            'Region': self.state,
+            'City': self.city,
+            'api_client': getattr(self, 'api_client', None),
+            'api_version': getattr(self, 'api_version', None) ,
         }
         if properties['type'] == 'attachment':
             first_attachment = self.attachments.first()

@@ -92,6 +92,8 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
     message = Message(conversation=conversation, user=user, text=text, page_admin_user=page_admin_user)
     message.raw_attachments = attachments
     message.request = request
+    message.api_client = getattr(request, 'api_client', None)
+    message.api_version = getattr(request, 'version', None)
     message.save()
     return message
 

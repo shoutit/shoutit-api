@@ -40,6 +40,7 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
         ret = super(ShoutitPageAuthenticationMixin, self).authenticate(request)
         if ret is None:
             return ret
+        self.set_api_client(request, ret[1])
 
         page_id_auth = get_authorization_header(request).split()
         if not page_id_auth:
@@ -66,6 +67,15 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
         setattr(request, '_user', page.user)
         setattr(request, 'page_admin_user', ret[0])
         return page.user, ret[1]
+
+    def set_api_client(self, request, auth):
+        """
+        Set api_client to be used
+        """
+        if hasattr(auth, 'client'):
+            # Authorized (AccessToken) DRF requests
+            api_client = auth.client.name
+            request.api_client = api_client
 
 
 class ShoutitTokenAuthentication(ShoutitPageAuthenticationMixin, TokenAuthentication):

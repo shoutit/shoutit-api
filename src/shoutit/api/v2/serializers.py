@@ -666,7 +666,8 @@ class ShoutDetailSerializer(ShoutSerializer):
             shout = shout_controller.create_shout_v2(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook
+                page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
+                api_client=getattr(request, 'api_client', None), api_version=request.version
             )
         else:
             shout = shout_controller.edit_shout_v2(

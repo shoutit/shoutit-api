@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import django_filters
 from django.conf import settings
 from elasticsearch_dsl import Search, Q
+from pydash import parse_int
 from rest_framework import filters
 
 from common.constants import TAG_TYPE_STR, TAG_TYPE_INT
@@ -143,6 +144,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             except Category.DoesNotExist:
                 raise InvalidParameter('category', "Category with slug '%s' does not exist" % category)
             else:
+                data['category'] = category.slug
                 index_queryset = index_queryset.filter('terms', category=[category.name, category.slug])
                 cat_filters = TagKey.objects.filter(key__in=category.filters).values_list('key', 'values_type')
                 for cat_f_key, cat_f_type in cat_filters:
@@ -184,6 +186,9 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         index_queryset = index_queryset.sort(*selected_sort)
 
         debug_logger.debug(index_queryset.to_dict())
+        index_queryset.search_data = {
+            k: parse_int(v) or v for k, v in data.items()
+        }
         return index_queryset
 
 
