@@ -208,7 +208,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                 user=profile, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,
                 images=images, videos=videos, page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
-                mobile=mobile
+                mobile=mobile, api_client=getattr(request, 'api_client', None), api_version=request.version
             )
         else:
             # Todo: Check when updating shouts not to break requirements [case_1, case_2] better have that done at class level

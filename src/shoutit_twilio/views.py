@@ -113,7 +113,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
 
         # Notify the other user
-        push_controller.send_video_call(user=other_user, from_user=request.user, version='v3')
+        push_controller.send_incoming_video_call(user=other_user, from_user=request.user, version='v3')
 
         res = {
             'identity': video_client.identity
@@ -156,7 +156,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             push_controller.send_missed_video_call(user=other_user, from_user=request.user, version='v3')
         else:
             # Notify the other user about the incoming video call
-            push_controller.send_video_call(user=other_user, from_user=request.user, version='v3')
+            push_controller.send_incoming_video_call(user=other_user, from_user=request.user, version='v3')
 
         return Response()
 

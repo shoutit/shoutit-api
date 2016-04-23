@@ -18,7 +18,7 @@ from importlib import import_module
 from re import sub
 
 import boto
-from PIL import Image
+from PIL import Image, ImageOps
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.core.mail import get_connection
@@ -173,7 +173,7 @@ def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, r
 
 
 def alias(alias_id, original):
-    if not settings.PROD and not settings.FORCE_MP_TRACKING:
+    if not settings.ON_SERVER and not settings.FORCE_MP_TRACKING:
         return
     return _alias.delay(alias_id, original)
 
@@ -184,10 +184,24 @@ def _alias(alias_id, original):
     debug_logger.debug("MP aliased, alias_id: %s original: %s" % (alias_id, original))
 
 
-def track(distinct_id, event_name, properties=None):
-    if not settings.PROD and not settings.FORCE_MP_TRACKING:
+def track_new_message(message):
+    _track_new_message.delay(message)
+
+
+@job(settings.RQ_QUEUE)
+def _track_new_message(message):
+    distinct_id = message.user.pk if message.user else 'system'
+    track(distinct_id, 'new_message', message.track_properties, delay=False)
+
+
+def track(distinct_id, event_name, properties=None, delay=True):
+    # Todo: properties could be a callable that gets called when the tracking happens
+    if not settings.ON_SERVER and not settings.FORCE_MP_TRACKING:
         return
-    return _track.delay(distinct_id, event_name, properties)
+    if delay:
+        return _track.delay(distinct_id, event_name, properties)
+    else:
+        return _track(distinct_id, event_name, properties)
 
 
 @job(settings.RQ_QUEUE)
@@ -324,7 +338,7 @@ def text_from_html(text):
         return text
 
 
-def base64_to_text(b64, box=None, config=None):
+def base64_to_text(b64, box=None, config=None, invert=False):
     import pytesseract as pytesseract
     data = base64.b64decode(b64)
     image = Image.open(StringIO(data))
@@ -333,22 +347,31 @@ def base64_to_text(b64, box=None, config=None):
         cl, cu, cr, cd = box
         box = [0 + cl, 0 + cu, w - cr, h - cd]
         image = image.crop(box)
-    try:
-        image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
-        image_no_trans.paste(image, image)
-        image = image_no_trans
-    except:
-        pass
+    if invert:
+        try:
+            image_no_trans = Image.new("RGB", image.size, (0, 0, 0))
+            image_no_trans.paste(image, image)
+            inverted_image = ImageOps.invert(image_no_trans)
+            image = inverted_image
+        except:
+            pass
+    else:
+        try:
+            image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
+            image_no_trans.paste(image, image)
+            image = image_no_trans
+        except:
+            pass
     text = pytesseract.image_to_string(image, config=config)
     return text.decode("utf8")
 
 
-def base64_to_texts(b64, configs):
+def base64_to_texts(b64, configs, invert=False):
     texts = []
     for conf in configs:
         box = conf.get('box')
         config = conf.get('config')
-        text = base64_to_text(b64, box, config)
+        text = base64_to_text(b64, box, config, invert)
         texts.append(text)
     return texts
 

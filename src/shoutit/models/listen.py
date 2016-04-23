@@ -51,7 +51,12 @@ class Listen2(Action):
     def track_properties(self):
         properties = {
             'type': self.get_type_display(),
-            'target': self.target
+            'target': self.target,
+            'Country': self.get_country_display(),
+            'Region': self.state,
+            'City': self.city,
+            'api_client': getattr(self, 'api_client', None),
+            'api_version': getattr(self, 'api_version', None),
         }
         return properties
 

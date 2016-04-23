@@ -58,7 +58,7 @@ def NotifyPreExpiry():
 
 def create_shout_v2(user, shout_type, title, text, price, currency, category, tags, location, tags2=None, images=None,
                     videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
-                    publish_to_facebook=None):
+                    publish_to_facebook=None, api_client=None, api_version=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
@@ -80,9 +80,10 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos)
-    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
-                         is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user)
+    shout = Shout(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
+                  is_sss=is_sss, priority=priority, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
+    shout.api_client, shout.api_version = api_client, api_version
 
     if not date_published:
         date_published = timezone.now()
@@ -101,7 +102,8 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
 
 def create_shout(user, shout_type, title, text, price, currency, category, location, filters=None, images=None,
                  videos=None, date_published=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
-                 publish_to_facebook=None, available_count=None, is_sold=None, mobile=None):
+                 publish_to_facebook=None, available_count=None, is_sold=None, mobile=None, api_client=None,
+                 api_version=None):
     # tags2
     tags2 = {}
     if not filters:
@@ -117,9 +119,10 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos, available_count=available_count, is_sold=is_sold)
-    shout = Shout.create(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2, item=item,
-                         is_sss=is_sss, priority=priority, save=False, page_admin_user=page_admin_user, mobile=mobile)
+    shout = Shout(user=user, type=shout_type, text=text, category=category, tags=tags, tags2=tags2,
+                  item=item, is_sss=is_sss, priority=priority, page_admin_user=page_admin_user, mobile=mobile)
     location_controller.update_object_location(shout, location, save=False)
+    shout.api_client, shout.api_version = api_client, api_version
 
     if not date_published:
         date_published = timezone.now()

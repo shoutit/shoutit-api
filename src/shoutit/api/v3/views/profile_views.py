@@ -216,12 +216,13 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         """
         user = self.get_object()
         ap = user.ap
+        api_client = getattr(request, 'api_client', None)
 
         if request.user == user:
             raise ShoutitBadRequest("You can't listen to your self")
 
         if request.method == 'POST':
-            listen_controller.listen_to_object(request.user, ap)
+            listen_controller.listen_to_object(request.user, ap, api_client=api_client, api_version=request.version)
             msg = "you started listening to {} shouts.".format(user.name)
             _status = status.HTTP_201_CREATED
         else:

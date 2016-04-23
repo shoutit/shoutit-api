@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import django_filters
 from django.conf import settings
 from elasticsearch_dsl import Search, Q
+from pydash import parse_int
 from rest_framework import filters
 
 from common.constants import TAG_TYPE_STR, TAG_TYPE_INT
@@ -143,6 +144,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             except Category.DoesNotExist:
                 raise InvalidParameter('category', "Category with slug '%s' does not exist" % category)
             else:
+                data['category'] = category.slug
                 index_queryset = index_queryset.filter('terms', category=[category.name, category.slug])
                 cat_filters = TagKey.objects.filter(key__in=category.filters).values_list('key', 'values_type')
                 for cat_f_key, cat_f_type in cat_filters:
@@ -184,6 +186,9 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         index_queryset = index_queryset.sort(*selected_sort)
 
         debug_logger.debug(index_queryset.to_dict())
+        index_queryset.search_data = {
+            k: parse_int(v, 10) or v for k, v in data.items()
+        }
         return index_queryset
 
 
@@ -192,21 +197,14 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         user = view.get_object()
         listening = []
 
-        # Todo: figure way to show shouts that are
-        # - from users / pages listened to by the users [any country]
-        # - from tags listened to by the user [only his country]
-
-        # country = user.location.get('country')
-        # if country:
-        #     index_queryset = index_queryset.filter('term', country=country)
-
         # Listened Tags
         tags = user.listening2_tags_names
         if tags:
-            listening_tags = Q('terms', tags=tags)
+            country = user.location.get('country')
+            listening_tags = Q('terms', tags=tags) & Q('term', country=country)
             listening.append(listening_tags)
 
-        # Listened Users + user himself
+        # Listened Profiles + user himself
         users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if users:
             listening_users = Q('terms', uid=users)

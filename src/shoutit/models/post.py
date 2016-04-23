@@ -210,7 +210,7 @@ class Shout(Post):
     def track_properties(self):
         return {
             'type': self.get_type_display(),
-            'category': self.category.name,
+            'category': self.category.slug,
             'Country': self.get_country_display(),
             'Region': self.state,
             'City': self.city,
@@ -219,7 +219,10 @@ class Shout(Post):
             'price': self.item.price,
             'currency': self.item.currency.name if self.item.currency else None,
             'shout_id': self.pk,
-            'published_to_facebook': self.published_on.get('facebook')
+            'has_mobile': bool(self.mobile),
+            'published_to_facebook': self.published_on.get('facebook'),
+            'api_client': getattr(self, 'api_client', None),
+            'api_version': getattr(self, 'api_version', None),
         }
 
     @property
@@ -303,7 +306,7 @@ class ShoutIndex(DocType):
     priority = Integer()
 
     class Meta:
-        index = 'shoutit_api_%s_shout' % settings.SHOUTIT_ENV
+        index = '%s_shout' % settings.ES_BASE_INDEX
         dynamic_templates = MetaField([
             {
                 "tags2_integer_keys": {

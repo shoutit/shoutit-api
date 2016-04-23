@@ -15,7 +15,7 @@ from shoutit.api.permissions import IsOwnerModify
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import has_unicode
+from shoutit.utils import has_unicode, track
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
@@ -132,6 +132,15 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         serializer = self.get_serializer(page, many=True)
         result = self.get_paginated_response(serializer.data)
         result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
+
+        # Track
+        search_data = getattr(shouts, 'search_data', {})
+        search_data.update({
+            'num_results': shouts.count(),
+            'api_client': getattr(request, 'api_client', None),
+            'api_version': request.version,
+        })
+        track(request.user.pk, 'search', search_data)
         return result
 
     def create(self, request, *args, **kwargs):

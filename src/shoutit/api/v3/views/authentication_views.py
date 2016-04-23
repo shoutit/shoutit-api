@@ -102,7 +102,9 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                 alias(user.pk, mixpanel_distinct_id)
             track(user.pk, 'signup', {
                 'user_id': user.pk,
+                'is_guest': user.is_guest,
                 'api_client': request_data.get('client_id'),
+                'api_version': self.request.version,
                 'using': request_data.get('grant_type'),
                 'server': self.request.META.get('HTTP_HOST'),
                 'Country': COUNTRY_ISO.get(user.location.get('country')),

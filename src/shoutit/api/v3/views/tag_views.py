@@ -184,9 +184,10 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             - query
         """
         tag = self.get_object()
+        api_client = getattr(request, 'api_client', None)
 
         if request.method == 'POST':
-            listen_controller.listen_to_object(request.user, tag)
+            listen_controller.listen_to_object(request.user, tag, api_client=api_client, api_version=request.version)
             msg = "you started listening to {} shouts.".format(tag.name)
         else:
             listen_controller.stop_listening_to_object(request.user, tag)

@@ -22,7 +22,7 @@ from common.constants import (
 from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
-from ..utils import track, none_to_blank
+from ..utils import none_to_blank, track_new_message
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -122,30 +122,14 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         else:
             return user in self.contributors
 
-    @property
-    def track_properties(self):
-        properties = {
-            'id': self.pk,
-            'type': self.get_type_display()
-        }
-        if self.about and self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
-            properties.update({'shout': self.about.pk})
-            if self.about.is_sss:
-                properties.update({'about_sss': True})
-        return properties
-
 
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
     from ..controllers import pusher_controller
 
-    if created:
-        track(getattr(instance, 'creator_id', 'system'), 'new_conversation', instance.track_properties)
-
-    else:
-        if getattr(instance, 'notify', True):
-            # Trigger `conversation_update` event in the conversation channel
-            pusher_controller.trigger_conversation_update(instance, 'v3')
+    if not created and getattr(instance, 'notify', True):
+        # Trigger `conversation_update` event in the conversation channel
+        pusher_controller.trigger_conversation_update(instance, 'v3')
 
 
 class ConversationDelete(UUIDModel):
@@ -181,7 +165,7 @@ class Message(Action):
 
     @property
     def summary(self):
-        return (getattr(self, 'text') or '<attachment>')[:30]
+        return (getattr(self, 'text') or 'attachment')[:30]
 
     @property
     def attachments(self):
@@ -190,6 +174,11 @@ class Message(Action):
     @property
     def has_attachments(self):
         return MessageAttachment.exists(message_id=self.id)
+
+    @property
+    def is_first(self):
+        first_id = self.conversation.messages.all().order_by('created_at')[:1].values_list('id', flat=True)[0]
+        return self.id == first_id
 
     @property
     def contributors(self):
@@ -228,6 +217,31 @@ class Message(Action):
         except MessageRead.DoesNotExist:
             pass
 
+    @property
+    def track_properties(self):
+        conversation = self.conversation
+        properties = {
+            'id': self.pk,
+            'type': 'text' if self.text else 'attachment',
+            'conversation_id': self.conversation_id,
+            'conversation_type': conversation.get_type_display(),
+            'is_first': self.is_first,
+            'Country': self.get_country_display(),
+            'Region': self.state,
+            'City': self.city,
+            'api_client': getattr(self, 'api_client', None),
+            'api_version': getattr(self, 'api_version', None) ,
+        }
+        if properties['type'] == 'attachment':
+            first_attachment = self.attachments.first()
+            if first_attachment:
+                properties.update({'attachment_type': first_attachment.get_type_display()})
+        if conversation.about and conversation.type == CONVERSATION_TYPE_ABOUT_SHOUT:
+            properties.update({'shout': conversation.about.pk})
+            if conversation.about.is_sss:
+                properties.update({'about_sss': True})
+        return properties
+
 
 @receiver(post_save, sender=Message)
 def post_save_message(sender, instance=None, created=False, **kwargs):
@@ -247,6 +261,7 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         conversation.notify = False
         conversation.save()
 
+        # Todo: move the logic below on a queue
         # Add the message user to conversation users if he isn't already
         try:
             conversation.users.add(instance.user)
@@ -257,6 +272,9 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         for to_user in conversation.contributors:
             if instance.user and instance.user != to_user:
                 notifications_controller.notify_user_of_message(to_user, instance)
+
+        # Track the message on MixPanel
+        track_new_message(instance)
 
 
 class MessageRead(UUIDModel):

@@ -20,7 +20,7 @@ from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, Requi
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import has_unicode
+from shoutit.utils import has_unicode, track
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
@@ -135,6 +135,15 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         # Todo: add actual data
         result.data['web_url'] = settings.SITE_LINK + 'search?src=api'
         result.data['related_searches'] = []
+
+        # Track
+        search_data = getattr(shouts, 'search_data', {})
+        search_data.update({
+            'num_results': result.data.get('count'),
+            'api_client': getattr(request, 'api_client', None),
+            'api_version': request.version,
+        })
+        track(request.user.pk, 'search', search_data)
         return result
 
     @cache_control(max_age=60 * 60 * 24)
@@ -433,5 +442,22 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         omit_parameters:
             - form
         """
+        user = request.user
+        profile = user.ap
         shout = self.get_object()
-        return Response({'mobile': shout.mobile if shout.is_mobile_set else None})
+        mobile = shout.mobile if shout.is_mobile_set else None
+        if not mobile:
+            raise ShoutitBadRequest(message="No mobile to be called")
+        track_properties = {
+            'api_client': getattr(request, 'api_client', None),
+            'api_version': request.version,
+            'Country': profile.get_country_display(),
+            'Region': profile.state,
+            'City': profile.city,
+            'shout_id': shout.pk,
+            'shout_country': shout.get_country_display(),
+            'shout_region': shout.state,
+            'shout_city': shout.city,
+        }
+        track(user.pk, 'show_mobile', track_properties)
+        return Response({'mobile': mobile})
