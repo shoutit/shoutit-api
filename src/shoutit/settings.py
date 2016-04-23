@@ -114,7 +114,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
            Queuing
 =================================
 """
-FORCE_SYNC_RQ = False
+FORCE_SYNC_RQ = os.environ.get('FORCE_SYNC_RQ', False)
 RQ_QUEUE = 'default'
 RQ_QUEUE_MAIL = 'mail'
 RQ_QUEUE_PUSH = 'push'
