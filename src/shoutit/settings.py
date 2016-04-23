@@ -304,8 +304,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 """
 # Push
 # Both certificates used for development(by AppUnite) and production (by Shoutit) are considered `production` certificates
-APNS_SANDBOX = False
-FORCE_PUSH = False
+APNS_SANDBOX = os.environ.get('APNS_SANDBOX', False)
+FORCE_PUSH = os.environ.get('FORCE_PUSH', False)
 APNS_CERT_NAME = 'push-%s.pem' % ('prod' if PROD else 'dev')
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",

@@ -21,14 +21,22 @@ from ..utils import debug_logger, serialize_attached_object
 def send_push(user, notification_type, attached_object, version):
     from shoutit.controllers.notifications_controller import get_total_unread_count
 
-    # Todo: maybe check whether it is possible to push before even serializing
+    # Check whether we are really going to send anything
+    sending_apns = user.has_apns and getattr(user.apns_device.devices.first(), 'api_version', None) == version
+    sending_gcm = user.has_gcm and getattr(user.gcm_device.devices.first(), 'api_version', None) == version
+    if not sending_apns and not sending_gcm:
+        return
 
+    # Serialize the attached object and prepare the message
     attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
 
     if notification_type == NOTIFICATION_TYPE_LISTEN:
-        message = _("You got a new listen")
+        name = attached_object.first_name
+        message = _("%(name)s started listening to you") % {'name': name}
     elif notification_type == NOTIFICATION_TYPE_MESSAGE:
-        message = _("You got a new message")
+        name = attached_object.user.first_name if attached_object.user else 'Shoutit'
+        text = attached_object.summary
+        message = _("%(name)s: %(text)s") % {'name': name, 'text': text}
     else:
         message = None
 
@@ -44,7 +52,8 @@ def send_push(user, notification_type, attached_object, version):
             'message': message
         }
 
-    if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
+    # Send the Push
+    if sending_apns:
         badge = get_total_unread_count(user)
         try:
             user.apns_device.send_message(message, extra=extra, sound='default', badge=badge)
@@ -52,7 +61,7 @@ def send_push(user, notification_type, attached_object, version):
         except APNSError:
             debug_logger.warn("Could not send %s APNS push to %s." % (version, user), exc_info=True)
 
-    if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
+    if sending_gcm:
         try:
             user.gcm_device.send_message(message, extra=extra)
             debug_logger.debug("Sent %s GCM push to %s." % (version, user))
@@ -60,7 +69,7 @@ def send_push(user, notification_type, attached_object, version):
             debug_logger.warn("Could not send %s GCM push to %s." % (version, user), exc_info=True)
 
 
-def send_video_call(user, from_user, version):
+def send_incoming_video_call(user, from_user, version):
 
     if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
         alert = {

@@ -146,6 +146,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         except APNSDevice.DoesNotExist:
             return None
 
+    @property
+    def has_apns(self):
+        return self.apns_device is not None
+
     def delete_apns_device(self):
         if self.apns_device:
             self.apns_device.delete()
@@ -161,6 +165,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return self._gcm_device
         except GCMDevice.DoesNotExist:
             return None
+
+    @property
+    def has_gcm(self):
+        return self.gcm_device is not None
 
     def delete_gcm_device(self):
         if self.gcm_device:
