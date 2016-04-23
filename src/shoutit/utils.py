@@ -184,10 +184,24 @@ def _alias(alias_id, original):
     debug_logger.debug("MP aliased, alias_id: %s original: %s" % (alias_id, original))
 
 
-def track(distinct_id, event_name, properties=None):
+def track_new_message(message):
+    _track_new_message.delay(message)
+
+
+@job(settings.RQ_QUEUE)
+def _track_new_message(message):
+    distinct_id = message.user.pk if message.user else 'system'
+    track(distinct_id, 'new_message', message.track_properties, delay=False)
+
+
+def track(distinct_id, event_name, properties=None, delay=True):
+    # Todo: properties could be a callable that gets called when the tracking happens
     if not settings.PROD and not settings.FORCE_MP_TRACKING:
         return
-    return _track.delay(distinct_id, event_name, properties)
+    if delay:
+        return _track.delay(distinct_id, event_name, properties)
+    else:
+        return _track(distinct_id, event_name, properties)
 
 
 @job(settings.RQ_QUEUE)
