@@ -301,7 +301,7 @@ class ConversationAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', '_conversation', '_user', 'summary', 'has_attachments', 'created_at')
     search_fields = ('user__id', 'user__username', 'text')
-    readonly_fields = ('_conversation', '_user')
+    readonly_fields = ('conversation', '_conversation', 'user', '_user')
     raw_id_fields = ('conversation', 'user')
     fieldsets = (
         (None, {'fields': ('conversation', '_conversation', 'user', '_user', 'text')}),

@@ -136,9 +136,10 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
         tag_names = map(lambda x: str(x['name']), tag_dicts)
         tags = Tag.objects.filter(name__in=tag_names)
+        api_client = getattr(request, 'api_client', None)
 
         if request.method == 'POST':
-            listen_controller.listen_to_objects(request.user, tags)
+            listen_controller.listen_to_objects(request.user, tags, api_client=api_client, api_version=request.version)
             msg = "You started listening to {} shouts.".format(tag_names)
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)

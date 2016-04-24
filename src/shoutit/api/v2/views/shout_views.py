@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
+from common.utils import any_in
 from shoutit.api.permissions import IsOwnerModify
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout
@@ -133,14 +134,16 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         result = self.get_paginated_response(serializer.data)
         result.data['related_searches'] = ['HP', 'Laptops', 'Lenovo', 'Macbook Pro']
 
-        # Track
+        # Track, skip when requests shouts of a Profile, Tag or Discover
         search_data = getattr(shouts, 'search_data', {})
-        search_data.update({
-            'num_results': shouts.count(),
-            'api_client': getattr(request, 'api_client', None),
-            'api_version': request.version,
-        })
-        track(request.user.pk, 'search', search_data)
+        if not any_in(['user', 'tag', 'discover'], search_data.keys()):
+            search_data.update({
+                'num_results': result.data.get('count'),
+                'api_client': getattr(request, 'api_client', None),
+                'api_version': request.version,
+            })
+            event_name = 'search' if 'search' in search_data else 'browse'
+            track(request.user.pk, event_name, search_data)
         return result
 
     def create(self, request, *args, **kwargs):

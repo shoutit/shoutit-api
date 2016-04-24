@@ -77,6 +77,10 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             api_client = auth.client.name
             request.api_client = api_client
 
+        # Todo: when no authorized it could be that this is from `shoutit-web`. A header must be agreed on to identify webapp requests even for guests. This should be done in a middleware outside auth.
+        # elif 'node-superagent' in request.META.get('USER_AGENT', ''):
+        #     request.api_client = 'shoutit-web'
+
 
 class ShoutitTokenAuthentication(ShoutitPageAuthenticationMixin, TokenAuthentication):
     pass
