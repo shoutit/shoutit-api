@@ -7,7 +7,7 @@ from django_rq import job
 from common.constants import (NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_READ_BY,
                               NOTIFICATION_TYPE_CONVERSATION_UPDATE, NOTIFICATION_TYPE_STATS_UPDATE)
 from shoutit_pusher.utils import pusher
-from ..utils import serialize_attached_object
+from ..utils import serialize_attached_object, debug_logger
 
 
 @job(settings.RQ_QUEUE_PUSHER)
@@ -15,8 +15,10 @@ def trigger_event(channel_name, notification_type, attached_object, version, use
     """
     Trigger event on Pusher profile channel
     """
+    event_name = str(notification_type)
     attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
-    pusher.trigger(channel_name, str(notification_type), attached_object_dict)
+    pusher.trigger(channel_name, event_name, attached_object_dict)
+    debug_logger.debug("Sent Pusher event: %s in channel: %s" % (event_name, channel_name))
 
 
 def trigger_profile_event(user, notification_type, attached_object, version):
