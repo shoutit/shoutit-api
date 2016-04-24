@@ -14,6 +14,8 @@ api-dev:
     - REDIS_PORT=
     - SHOUTIT_ENV=dev
     - SITE_LINK=
+    - PUSHER_ENV=dev
+    - MIXPANEL_TOKEN=
   links:
     - 'api-dev-redis:redis'
   restart: always
@@ -61,6 +63,8 @@ api-dev-rq:
     - REDIS_PORT=
     - SHOUTIT_ENV=dev
     - SITE_LINK=
+    - PUSHER_ENV=dev
+    - MIXPANEL_TOKEN=
   links:
     - 'api-dev-redis:redis'
   restart: always

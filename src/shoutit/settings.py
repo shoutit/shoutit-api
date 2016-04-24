@@ -14,7 +14,8 @@ from django.utils.translation import ugettext_lazy as _
 =================================
 """
 WSGI_APPLICATION = 'wsgi.application'
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com', '.dockerapp.io', '.dockerapp.io.']
+ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com', '.dockerapp.io', '.dockerapp.io.',
+                 'shoutit.ngrok.io']
 INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
 GUNICORN = 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '')
 ADDRESS, PORT = get_address_port(GUNICORN)
@@ -316,7 +317,7 @@ PUSH_NOTIFICATIONS_SETTINGS = {
 MAX_BROADCAST_RECIPIENTS = 1000
 
 # Mixpanel
-MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', 'd2de0109a8de7237dede66874c7b8951')
+MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', 'a5774a99b9068ae66129859421ade687')
 FORCE_MP_TRACKING = os.environ.get('FORCE_MP_TRACKING', False)
 
 # Nexmo
