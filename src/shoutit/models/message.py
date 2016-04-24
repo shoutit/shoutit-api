@@ -18,7 +18,7 @@ from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
-    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE)
+    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA)
 from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -86,6 +86,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         # 3 - create a system message saying the user has left the conversation
         text = "{} has left the conversation".format(user.name)
         Message.objects.create(user=None, text=text, conversation=self)
+        # Todo: track `conversation_delete` event?
 
     def mark_as_read(self, user):
         # Read all the notifications about this conversation
@@ -222,6 +223,7 @@ class Message(Action):
         conversation = self.conversation
         properties = {
             'id': self.pk,
+            'profile': self.user_id,
             'type': 'text' if self.text else 'attachment',
             'conversation_id': self.conversation_id,
             'conversation_type': conversation.get_type_display(),
@@ -230,12 +232,12 @@ class Message(Action):
             'Region': self.state,
             'City': self.city,
             'api_client': getattr(self, 'api_client', None),
-            'api_version': getattr(self, 'api_version', None) ,
+            'api_version': getattr(self, 'api_version', None),
         }
         if properties['type'] == 'attachment':
             first_attachment = self.attachments.first()
             if first_attachment:
-                properties.update({'attachment_type': first_attachment.get_type_display()})
+                properties.update({'attachment_type': first_attachment.summary})
         if conversation.about and conversation.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             properties.update({'shout': conversation.about.pk})
             if conversation.about.is_sss:
@@ -274,7 +276,8 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
                 notifications_controller.notify_user_of_message(to_user, instance)
 
         # Track the message on MixPanel
-        track_new_message(instance)
+        if instance.user:
+            track_new_message(instance)
 
 
 class MessageRead(UUIDModel):
@@ -335,6 +338,20 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
             return self.attached_object
         else:
             return None
+
+    @property
+    def summary(self):
+        _summary = self.get_type_display()
+        if self.type == MESSAGE_ATTACHMENT_TYPE_MEDIA:
+            images_count = len(self.images)
+            videos_count = self.videos.count()
+            if images_count and videos_count:
+                _summary = "%s photo(s) | %s video(s)" % (images_count, videos_count)
+            elif images_count:
+                _summary = "%s photo(s)" % images_count
+            elif videos_count:
+                _summary = "%s videos(s)" % videos_count
+        return _summary
 
 
 class Notification(UUIDModel, AttachedObjectMixin):

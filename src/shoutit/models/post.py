@@ -209,6 +209,8 @@ class Shout(Post):
     @property
     def track_properties(self):
         return {
+            'id': self.pk,
+            'profile': self.user_id,
             'type': self.get_type_display(),
             'category': self.category.slug,
             'Country': self.get_country_display(),
@@ -218,7 +220,6 @@ class Shout(Post):
             'videos': self.videos.count(),
             'price': self.item.price,
             'currency': self.item.currency.name if self.item.currency else None,
-            'shout_id': self.pk,
             'has_mobile': bool(self.mobile),
             'published_to_facebook': self.published_on.get('facebook'),
             'api_client': getattr(self, 'api_client', None),

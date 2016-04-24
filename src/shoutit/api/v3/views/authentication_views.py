@@ -100,9 +100,9 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
             if mixpanel_distinct_id:
                 alias(user.pk, mixpanel_distinct_id)
-            track(user.pk, 'signup', {
-                'user_id': user.pk,
-                'is_guest': user.is_guest,
+            event_name = "signup%s" % '_guest' if user.is_guest else ''
+            track(user.pk, event_name, {
+                'profile': user.pk,
                 'api_client': request_data.get('client_id'),
                 'api_version': self.request.version,
                 'using': request_data.get('grant_type'),
@@ -110,6 +110,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                 'Country': COUNTRY_ISO.get(user.location.get('country')),
                 'Region': user.location.get('state'),
                 'City': user.location.get('city'),
+                'has_push_tokens': user.devices.count() > 0
             })
 
         return Response(response_data)

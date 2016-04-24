@@ -50,6 +50,7 @@ class Listen2(Action):
     @property
     def track_properties(self):
         properties = {
+            'profile': self.user_id,
             'type': self.get_type_display(),
             'target': self.target,
             'Country': self.get_country_display(),
