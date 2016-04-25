@@ -18,11 +18,10 @@ from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
-                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG, DEVICE_IOS, DEVICE_ANDROID)
+                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 from common.utils import AllowedUsernamesValidator, date_unix
 from .base import UUIDModel, APIModelMixin, LocationMixin
 from .listen import Listen2
-from .misc import Device
 from shoutit.utils import debug_logger, none_to_blank
 
 
@@ -179,31 +178,29 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def update_push_tokens(self, push_tokens_data, api_version):
         if 'apns' in push_tokens_data:
             apns_token = push_tokens_data.get('apns')
-            # delete user device if exists
+            # Delete user device if exists
             if self.apns_device:
                 self.delete_apns_device()
             if apns_token is not None:
-                # delete devices with same apns_token
+                # Delete devices with same apns_token
                 APNSDevice.objects.filter(registration_id=apns_token).delete()
-                # create new apns device for user with apns_token
-                apns_device = APNSDevice.objects.create(registration_id=apns_token, user=self)
-                # create new device with type and api version
-                # Todo: use signals
-                Device.objects.create(user=self, type=DEVICE_IOS, api_version=api_version, push_device=apns_device)
+                # Create new device for user with apns_token
+                apns_device = APNSDevice(registration_id=apns_token, user=self)
+                apns_device.api_version = api_version
+                apns_device.save(True)
 
         if 'gcm' in push_tokens_data:
             gcm_token = push_tokens_data.get('gcm')
-            # delete user device if exists
+            # Delete user device if exists
             if self.gcm_device:
                 self.delete_gcm_device()
             if gcm_token is not None:
-                # delete devices with same gcm_token
+                # Delete devices with same gcm_token
                 GCMDevice.objects.filter(registration_id=gcm_token).delete()
-                # create new gcm device for user with gcm_token
-                gcm_device = GCMDevice.objects.create(registration_id=gcm_token, user=self)
-                # create new device with type and api version
-                # Todo: use signals
-                Device.objects.create(user=self, type=DEVICE_ANDROID, api_version=api_version, push_device=gcm_device)
+                # Create new gcm device for user with gcm_token
+                gcm_device = GCMDevice(registration_id=gcm_token, user=self)
+                gcm_device.api_version = api_version
+                gcm_device.save(True)
 
     @property
     def linked_accounts(self):

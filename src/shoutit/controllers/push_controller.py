@@ -9,11 +9,12 @@ from django_rq import job
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
+from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS,
                               NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL,
                               NOTIFICATION_TYPE_MISSED_VIDEO_CALL)
-from ..models import User, PushBroadcast
+from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, serialize_attached_object, error_logger
 
 
@@ -187,3 +188,17 @@ def send_push_broadcast(push_broadcast, devices, user_ids):
 class UserIds(list):
     def __repr__(self):
         return "UserIds: %d ids" % len(self)
+
+
+@receiver(post_save, sender=APNSDevice)
+def apns_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    if created:
+        api_version = getattr(instance, 'api_version', api_settings.DEFAULT_VERSION)
+        Device.objects.create(user=instance.user, type=DEVICE_IOS, api_version=api_version, push_device=instance)
+
+
+@receiver(post_save, sender=GCMDevice)
+def gcm_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    if created:
+        api_version = getattr(instance, 'api_version', api_settings.DEFAULT_VERSION)
+        Device.objects.create(user=instance.user, type=DEVICE_ANDROID, api_version=api_version, push_device=instance)
