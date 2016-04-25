@@ -115,6 +115,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
            Queuing
 =================================
 """
+PUSHER_ENV = os.environ.get('PUSHER_ENV', 'local')
 FORCE_SYNC_RQ = os.environ.get('FORCE_SYNC_RQ', False)
 RQ_QUEUE = 'default'
 RQ_QUEUE_MAIL = 'mail'
@@ -673,6 +674,7 @@ info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PO
 info('FORCE_S3:', FORCE_S3)
 info('STATIC_URL:', STATIC_URL)
 info('FORCE_PUSH:', FORCE_PUSH)
+info('PUSHER_ENV:', PUSHER_ENV)
 info('APNS_SANDBOX:', APNS_SANDBOX)
 info("FORCE_SMTP:", FORCE_SMTP)
 info("EMAIL_HOST:", EMAIL_HOST)

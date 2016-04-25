@@ -13,7 +13,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
 from common.constants import TOKEN_TYPE_RESET_PASSWORD
-from shoutit.controllers import facebook_controller, gplus_controller, user_controller, location_controller
+from shoutit.controllers import (facebook_controller, gplus_controller, user_controller, location_controller)
+
 from shoutit.models import User, DBCLConversation, ConfirmToken
 from .profile import ProfileDetailSerializer, GuestSerializer
 

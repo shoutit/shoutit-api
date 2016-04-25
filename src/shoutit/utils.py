@@ -207,11 +207,8 @@ def track(distinct_id, event_name, properties=None, delay=True):
 @job(settings.RQ_QUEUE)
 def _track(distinct_id, event_name, properties=None):
     properties = properties or {}
-    try:
-        shoutit_mp.track(distinct_id, event_name, properties)
-        debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
-    except Exception:
-        error_logger.warn("shoutit_mp.track failed", exc_info=True)
+    shoutit_mp.track(distinct_id, event_name, properties)
+    debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
 
 
 def subscribe_to_master_list(user):

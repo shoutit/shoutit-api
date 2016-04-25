@@ -100,7 +100,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
             if mixpanel_distinct_id:
                 alias(user.pk, mixpanel_distinct_id)
-            event_name = "signup%s" % '_guest' if user.is_guest else ''
+            event_name = "signup_guest" if user.is_guest else 'signup'
             track(user.pk, event_name, {
                 'profile': user.pk,
                 'api_client': request_data.get('client_id'),
