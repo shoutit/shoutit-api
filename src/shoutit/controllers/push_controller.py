@@ -59,14 +59,14 @@ def send_push(user, notification_type, attached_object, version):
             user.apns_device.send_message(message, extra=extra, sound='default', badge=badge)
             debug_logger.debug("Sent %s APNS push to %s." % (version, user))
         except APNSError:
-            error_logger.warn("Could not send %s APNS push to %s." % (version, user), exc_info=True)
+            error_logger.warn("Could not send %s APNS push to %s" % (version, user), exc_info=True)
 
     if sending_gcm:
         try:
             user.gcm_device.send_message(message, extra=extra)
             debug_logger.debug("Sent %s GCM push to %s." % (version, user))
         except GCMError:
-            error_logger.warn("Could not send %s GCM push to %s." % (version, user), exc_info=True)
+            error_logger.warn("Could not send %s GCM push to %s" % (version, user), exc_info=True)
 
 
 def send_incoming_video_call(user, from_user, version):
@@ -79,9 +79,9 @@ def send_incoming_video_call(user, from_user, version):
         }
         try:
             user.apns_device.send_message(message=alert, sound='default', category='VIDEO_CALL_CATEGORY')
-            debug_logger.debug("Sent APNS Incoming video call push to %s." % user)
+            debug_logger.debug("Sent APNS Incoming video call push to %s" % user)
         except APNSError:
-            error_logger.warn("Could not send APNS Incoming video call push to %s." % user, exc_info=True)
+            error_logger.warn("Could not send APNS Incoming video call push to %s" % user, exc_info=True)
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
         extra = {
@@ -91,9 +91,9 @@ def send_incoming_video_call(user, from_user, version):
         }
         try:
             user.gcm_device.send_message(message=None, extra=extra)
-            debug_logger.debug("Sent GCM Incoming video call push to %s." % user)
+            debug_logger.debug("Sent GCM Incoming video call push to %s" % user)
         except GCMError:
-            error_logger.warn("Could not GCM Incoming video call push push to %s." % user, exc_info=True)
+            error_logger.warn("Could not GCM Incoming video call push push to %s" % user, exc_info=True)
 
 
 def send_missed_video_call(user, from_user, version):
@@ -104,9 +104,9 @@ def send_missed_video_call(user, from_user, version):
         }
         try:
             user.apns_device.send_message(message=alert, sound='default')
-            debug_logger.debug("Sent APNS Missed video call push to %s." % user)
+            debug_logger.debug("Sent APNS Missed video call push to %s" % user)
         except APNSError:
-            error_logger.warn("Could not send APNS Missed video call push to %s." % user, exc_info=True)
+            error_logger.warn("Could not send APNS Missed video call push to %s" % user, exc_info=True)
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
         extra = {
@@ -116,9 +116,9 @@ def send_missed_video_call(user, from_user, version):
         }
         try:
             user.gcm_device.send_message(message=None, extra=extra)
-            debug_logger.debug("Sent GCM Missed video call push to %s." % user)
+            debug_logger.debug("Sent GCM Missed video call push to %s" % user)
         except GCMError:
-            error_logger.warn("Could not send GCM Missed video call push to %s." % user, exc_info=True)
+            error_logger.warn("Could not send GCM Missed video call push to %s" % user, exc_info=True)
 
 
 @job(settings.RQ_QUEUE_PUSH)
@@ -129,7 +129,7 @@ def set_ios_badge(user):
         badge = get_total_unread_count(user)
         try:
             user.apns_device.send_message(message=None, badge=badge)
-            debug_logger.debug("Set APNS badge for %s." % user)
+            debug_logger.debug("Set APNS badge for %s" % user)
         except APNSError:
             error_logger.warn("Could not set APNS badge for %s" % user, exc_info=True)
 

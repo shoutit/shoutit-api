@@ -415,7 +415,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     from shoutit.controllers import notifications_controller
     action = 'Created' if created else 'Updated'
-    debug_logger.debug('%s User: %s' % (action, instance))
+    is_guest = 'Guest' if instance.is_guest else ''
+    debug_logger.debug('%s %sUser: %s' % (action, is_guest, instance))
 
     # Mute / unmute user shouts if his active state was changed
     if isinstance(update_fields, frozenset):

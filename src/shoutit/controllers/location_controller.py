@@ -151,9 +151,9 @@ def parse_google_geocode_response(response):
     return location
 
 
-def update_profile_location(profile, location, add_pc=True, notify=True):
-    # determine whether the profile should send a notification about its location changes
-    setattr(profile, 'notify', notify)
+def update_profile_location(profile, location, add_pc=True):
+    # Don't send notification about the profile update.
+    profile.notify = False
     update_object_location(profile, location)
     if profile.country and profile.city and add_pc:
         add_predefined_city(location)
