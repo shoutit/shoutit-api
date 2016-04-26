@@ -9,10 +9,15 @@
     - `dev`
     - `prod`
 - `SHOUTIT_DEBUG` can be `True`
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
-- `ES_HOST`, `ES_PORT`
-- `REDIS_HOST`, `REDIS_PORT`
-- `SITE_LINK`, `API_LINK`
 - `RAVEN_DSN`
+
+- `SITE_LINK`, `API_LINK`
+
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
+- `REDIS_HOST`, `REDIS_PORT`
+- `ES_HOST`, `ES_PORT`
+
+- `EMAIL_USING`
 - `PUSHER_ENV`
+- `TWILIO_ENV`
 - `MIXPANEL_TOKEN`

@@ -7,7 +7,6 @@ from settings_env import *  # NOQA
 from common.utils import get_address_port
 from django.utils.translation import ugettext_lazy as _
 
-
 """
 =================================
         Connection
@@ -115,7 +114,6 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
            Queuing
 =================================
 """
-PUSHER_ENV = os.environ.get('PUSHER_ENV', 'local')
 FORCE_SYNC_RQ = os.environ.get('FORCE_SYNC_RQ', False)
 RQ_QUEUE = 'default'
 RQ_QUEUE_MAIL = 'mail'
@@ -187,6 +185,9 @@ INSTALLED_APPS = (
     'shoutit',
 )
 
+TWILIO_ENV = os.environ.get('TWILIO_ENV', 'local')
+PUSHER_ENV = os.environ.get('PUSHER_ENV', 'local')
+
 """
 =================================
        Middleware
@@ -223,7 +224,8 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DB_NAME', 'shoutit_' + SHOUTIT_ENV),  # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
+        'NAME': os.environ.get('DB_NAME', 'shoutit_' + SHOUTIT_ENV),
+    # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
         'USER': os.environ.get('DB_USER', 'shoutit'),
         'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
         'HOST': os.environ.get('DB_HOST', 'db.shoutit.com'),
@@ -358,7 +360,6 @@ LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
-FORCE_SMTP = False
 MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
 MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
 
@@ -372,7 +373,6 @@ GOOGLE_SMTP = {
     'time_out': 5,
     'backend': 'django.core.mail.backends.smtp.EmailBackend'
 }
-
 MANDRILL_SMTP = {
     'default_from_email': 'Shoutit <noreply@shoutit.com>',
     'host': 'smtp.mandrillapp.com',
@@ -383,24 +383,29 @@ MANDRILL_SMTP = {
     'time_out': 5,
     'backend': 'django.core.mail.backends.smtp.EmailBackend'
 }
-
+POSTMARK_SMTP = {
+    'default_from_email': 'Shoutit <noreply@shoutit.com>',
+    'host': 'smtp.postmarkapp.com',
+    'port': 587,
+    'username': str('0172be86-91ee-45cd-b651-e3c761d99726'),  # str() to avoid issue in Python HMAC: http://stackoverflow.com/a/20862445/552621
+    'password': str('0172be86-91ee-45cd-b651-e3c761d99726'),
+    'use_tls': True,
+    'time_out': 5,
+    'backend': 'django.core.mail.backends.smtp.EmailBackend'
+}
 FILE_SMTP = {
     'host': 'localhost',
     'backend': 'django.core.mail.backends.filebased.EmailBackend',
     'file_path': os.path.join(LOG_DIR, 'messages')
 }
-
 EMAIL_BACKENDS = {
     'google': GOOGLE_SMTP,
     'mandrill': MANDRILL_SMTP,
+    'postmark': POSTMARK_SMTP,
     'file': FILE_SMTP
 }
-
-if not LOCAL or FORCE_SMTP:
-    EMAIL_USING = EMAIL_BACKENDS['mandrill']
-else:
-    EMAIL_USING = EMAIL_BACKENDS['file']
-
+EMAIL_ENV = os.environ.get('EMAIL_ENV', 'file')
+EMAIL_USING = EMAIL_BACKENDS[EMAIL_ENV]
 DEFAULT_FROM_EMAIL = EMAIL_USING.get('default_from_email')
 EMAIL_HOST = EMAIL_USING.get('host')
 EMAIL_PORT = EMAIL_USING.get('port')
@@ -666,15 +671,20 @@ info("SHOUTIT_ENV:", SHOUTIT_ENV)
 info("GUNICORN:", GUNICORN)
 info("BIND: {}:{}".format(ADDRESS, PORT))
 info("DEBUG:", DEBUG)
+info("==================================================")
 info("API_LINK:", API_LINK)
 info("SITE_LINK:", SITE_LINK)
-info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
-info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
+info("==================================================")
 info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
+info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
+info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
+info("==================================================")
 info('FORCE_S3:', FORCE_S3)
 info('STATIC_URL:', STATIC_URL)
+info("==================================================")
+info("EMAIL_ENV:", EMAIL_ENV)
 info('FORCE_PUSH:', FORCE_PUSH)
-info('PUSHER_ENV:', PUSHER_ENV)
 info('APNS_SANDBOX:', APNS_SANDBOX)
-info("FORCE_SMTP:", FORCE_SMTP)
-info("EMAIL_HOST:", EMAIL_HOST)
+info('PUSHER_ENV:', PUSHER_ENV)
+info('TWILIO_ENV:', TWILIO_ENV)
+info("==================================================")

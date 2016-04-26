@@ -211,10 +211,12 @@ def _track(distinct_id, event_name, properties=None):
     debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
 
 
+# Todo: find another service for mailing lists
 def subscribe_to_master_list(user):
-    if not settings.PROD:
-        return
-    return _subscribe_to_master_list.delay(user)
+    return
+    # if not settings.PROD:
+    #     return
+    # return _subscribe_to_master_list.delay(user)
 
 
 @job(settings.RQ_QUEUE_MAIL)
