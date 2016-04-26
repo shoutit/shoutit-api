@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.templatetags.rest_framework import replace_query_param
 from rest_framework.utils.urls import remove_query_param
 
+from common.utils import utcfromtimestamp
 from shoutit.api.v3.exceptions import InvalidParameter
 from shoutit.utils import error_logger
 from ..api_utils import get_current_uri
@@ -49,7 +50,7 @@ class DateTimePagination(CursorPagination):
         if before_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__lt': datetime.utcfromtimestamp(int(before_query_param) - 1)
+                    self.datetime_attribute + '__lt': utcfromtimestamp(int(before_query_param) - 1)
                 }
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 
@@ -58,7 +59,7 @@ class DateTimePagination(CursorPagination):
         elif after_query_param:
             try:
                 filters = {
-                    self.datetime_attribute + '__gt': datetime.utcfromtimestamp(int(after_query_param) + 1)
+                    self.datetime_attribute + '__gt': utcfromtimestamp(int(after_query_param) + 1)
                 }
                 queryset = queryset.filter(**filters).order_by(self.datetime_attribute)
             except (TypeError, ValueError):

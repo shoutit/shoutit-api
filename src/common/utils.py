@@ -62,8 +62,11 @@ def date_unix(date):
     try:
         return int((date - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
     except TypeError:
-        # Todo: find when this occurs
-        return int((date - datetime(1970, 1, 1)).total_seconds())
+        return int((date.replace(tzinfo=pytz.UTC) - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
+
+
+def utcfromtimestamp(timestamp):
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
 
 
 def any_in(a, b):

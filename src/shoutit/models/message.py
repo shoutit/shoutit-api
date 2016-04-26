@@ -19,7 +19,7 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA)
-from common.utils import date_unix
+from common.utils import date_unix, utcfromtimestamp
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from ..utils import none_to_blank, track_new_message
@@ -48,9 +48,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def get_messages(self, before=None, after=None, limit=25):
         messages = self.messages.order_by('-created_at')
         if before:
-            messages = messages.filter(created_at__lt=datetime.utcfromtimestamp(before))
+            messages = messages.filter(created_at__lt=utcfromtimestamp(before))
         if after:
-            messages = messages.filter(created_at__gt=datetime.utcfromtimestamp(after))
+            messages = messages.filter(created_at__gt=utcfromtimestamp(after))
         return messages[:limit][::-1]
 
     def get_messages_qs(self, ):
