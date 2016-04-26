@@ -17,6 +17,7 @@ api-dev:
     - PUSHER_ENV=dev
     - TWILIO_ENV=dev
     - MIXPANEL_TOKEN=
+    - EMAIL_ENV=postmark
   links:
     - 'api-dev-redis:redis'
   restart: always
@@ -67,6 +68,7 @@ api-dev-rq:
     - TWILIO_ENV=dev
     - PUSHER_ENV=dev
     - MIXPANEL_TOKEN=
+    - EMAIL_ENV=postmark
   links:
     - 'api-dev-redis:redis'
   restart: always
