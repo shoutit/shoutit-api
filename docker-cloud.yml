@@ -15,6 +15,7 @@ api-dev:
     - SHOUTIT_ENV=dev
     - SITE_LINK=
     - PUSHER_ENV=dev
+    - TWILIO_ENV=dev
     - MIXPANEL_TOKEN=
   links:
     - 'api-dev-redis:redis'
@@ -63,6 +64,7 @@ api-dev-rq:
     - REDIS_PORT=
     - SHOUTIT_ENV=dev
     - SITE_LINK=
+    - TWILIO_ENV=dev
     - PUSHER_ENV=dev
     - MIXPANEL_TOKEN=
   links:
