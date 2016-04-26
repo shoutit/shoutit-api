@@ -56,12 +56,12 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
     pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v2')
     pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v3')
 
-    # Create notification object
     if notification_type != NOTIFICATION_TYPE_PROFILE_UPDATE:
+        # Create notification object
         Notification.create(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
 
-    # Trigger `stats_update` on Pusher
-    pusher_controller.trigger_stats_update(user, 'v3')
+        # Trigger `stats_update` on Pusher
+        pusher_controller.trigger_stats_update(user, 'v3')
 
     # Send Push notification when no pusher channels of any version exit
     if push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
