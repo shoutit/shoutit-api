@@ -8,6 +8,7 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from distutils.util import strtobool as stb
 
 import pytz
 from django.core.exceptions import ValidationError
@@ -154,3 +155,13 @@ def tmp_file_from_env(env_var):
 
         atexit.register(unlink_tmp_file)  # remove file on exit
     return tmp_file_name
+
+
+def strtobool(val):
+    """
+    Convert a string representation of truth to True or False.
+    Returns False if 'val' is None
+    """
+    if val is None:
+        return False
+    return bool(stb(val))

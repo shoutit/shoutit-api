@@ -65,7 +65,6 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
             events = webhook.get('events', [])
             events.sort(key=lambda e: e.get('name'))
             for event in events:
-                debug_logger.debug(event)
                 event_name = event.get('name')
                 channel_name = event.get('channel')
                 user_id = event.get('user_id')

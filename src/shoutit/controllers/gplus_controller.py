@@ -126,9 +126,7 @@ def credentials_from_code_and_client(code, client):
     redirect_uri = redirect_uri_from_client(client)
     try:
         # Upgrade the authorization code into a credentials object
-        google_api_client = settings.GOOGLE_API['CLIENTS']['web']
-        credentials = credentials_from_clientsecrets_and_code(filename=google_api_client['FILE'],
-                                                              scope='', code=code,
+        credentials = credentials_from_clientsecrets_and_code(filename=settings.GOOGLE_WEB_CLIENT, scope='', code=code,
                                                               redirect_uri=redirect_uri)
         return credentials
     except FlowExchangeError as e:

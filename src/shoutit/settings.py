@@ -4,8 +4,9 @@
 """
 from __future__ import unicode_literals, print_function
 from settings_env import *  # NOQA
-from common.utils import get_address_port
+from common.utils import get_address_port, strtobool
 from django.utils.translation import ugettext_lazy as _
+
 
 """
 =================================
@@ -13,23 +14,19 @@ from django.utils.translation import ugettext_lazy as _
 =================================
 """
 WSGI_APPLICATION = 'wsgi.application'
-ALLOWED_HOSTS = ['127.0.0.1', 'shoutit.dev', '.shoutit.com.', '.shoutit.com', '.dockerapp.io', '.dockerapp.io.',
-                 'shoutit.ngrok.io']
-INTERNAL_IPS = ('127.0.0.1', 'shoutit.dev')
+ALLOWED_HOSTS = ['127.0.0.1', '.shoutit.com']
+INTERNAL_IPS = ['127.0.0.1']
 GUNICORN = 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '')
 ADDRESS, PORT = get_address_port(GUNICORN)
 
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
-API_LINK = os.environ.get('API_LINK', 'http://shoutit.dev:8000/v3/')
-SITE_LINK = os.environ.get('SITE_LINK', 'http://shoutit.dev:3000/')
+API_LINK = os.environ.get('API_LINK', 'http://api.shoutit.local:8000/v3/')
+SITE_LINK = os.environ.get('SITE_LINK', 'http://www.shoutit.local:3000/')
 
 # Security
-if PROD:
-    DEBUG = False
-else:  # DEV and LOCAL
-    DEBUG = os.environ.get('SHOUTIT_DEBUG', '').lower() == 'true'
+DEBUG = strtobool(os.environ.get('SHOUTIT_DEBUG'))
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
 ENFORCE_SECURE = PROD and not DEBUG
 USE_X_FORWARDED_HOST = True
@@ -37,10 +34,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Admin
 ADMINS = (
-    ('Mo Chawich', 'mo.chawich@gmail.com'),
+    ('Mo Chawich', 'mo.chawich@shoutit.com'),
 )
 MANAGERS = ADMINS
-GRAPPELLI_ADMIN_TITLE = 'Shoutit'
+GRAPPELLI_ADMIN_TITLE = 'Shoutit API Admin'
 
 """
 =================================
@@ -114,7 +111,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
            Queuing
 =================================
 """
-FORCE_SYNC_RQ = os.environ.get('FORCE_SYNC_RQ', False)
+FORCE_SYNC_RQ = strtobool(os.environ.get('FORCE_SYNC_RQ'))
 RQ_QUEUE = 'default'
 RQ_QUEUE_MAIL = 'mail'
 RQ_QUEUE_PUSH = 'push'
@@ -147,7 +144,7 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 30,
     },
 }
-if DEBUG or FORCE_SYNC_RQ:
+if FORCE_SYNC_RQ:
     for queue_config in RQ_QUEUES.itervalues():
         queue_config['ASYNC'] = False
 
@@ -224,8 +221,8 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
         'NAME': os.environ.get('DB_NAME', 'shoutit_' + SHOUTIT_ENV),
-    # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
         'USER': os.environ.get('DB_USER', 'shoutit'),
         'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
         'HOST': os.environ.get('DB_HOST', 'db.shoutit.com'),
@@ -308,8 +305,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 """
 # Push
 # Both certificates used for development(by AppUnite) and production (by Shoutit) are considered `production` certificates
-APNS_SANDBOX = os.environ.get('APNS_SANDBOX', False)
-FORCE_PUSH = os.environ.get('FORCE_PUSH', False)
+APNS_SANDBOX = strtobool(os.environ.get('APNS_SANDBOX'))
+FORCE_PUSH = strtobool(os.environ.get('FORCE_PUSH'))
+USE_PUSH = ON_SERVER or FORCE_PUSH
 APNS_CERT_NAME = 'push-%s.pem' % ('prod' if PROD else 'dev')
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
@@ -320,8 +318,8 @@ PUSH_NOTIFICATIONS_SETTINGS = {
 MAX_BROADCAST_RECIPIENTS = 1000
 
 # Mixpanel
-MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', 'a5774a99b9068ae66129859421ade687')
-FORCE_MP_TRACKING = os.environ.get('FORCE_MP_TRACKING', False)
+MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', '')
+USE_MIXPANEL = MIXPANEL_TOKEN is not ''
 
 # Nexmo
 NEXMO_API_KEY = "7c650639"
@@ -339,17 +337,11 @@ ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
 =================================
 """
 # Facebook App
-FACEBOOK_APP_ID = '353625811317277' if PROD else '1151546964858487'
-FACEBOOK_APP_SECRET = '75b9dadd2f876a405c5b4a9d4fc4811d' if PROD else '8fb7b12351091e8c59c723fc3105d05a'
+FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', '1204745992871917')
+FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '357fbd11d7889a2e8d869fa7ecad0860')
 
 # Google App
-GOOGLE_API = {
-    'CLIENTS': {
-        'web': {'FILE': os.path.join(SRC_DIR, 'assets', 'googleapiclients', 'web.json')},
-        'android': {'FILE': os.path.join(SRC_DIR, 'assets', 'googleapiclients', 'android.json')},
-        'ios': {'FILE': os.path.join(SRC_DIR, 'assets', 'googleapiclients', 'ios.json')},
-    }
-}
+GOOGLE_WEB_CLIENT = os.path.join(SRC_DIR, 'assets', 'google-web-client.json')
 
 """
 =================================
@@ -373,22 +365,12 @@ GOOGLE_SMTP = {
     'time_out': 5,
     'backend': 'django.core.mail.backends.smtp.EmailBackend'
 }
-MANDRILL_SMTP = {
+SENDGRID_SMTP = {
     'default_from_email': 'Shoutit <noreply@shoutit.com>',
-    'host': 'smtp.mandrillapp.com',
+    'host': 'smtp.sendgrid.net',
     'port': 587,
-    'username': 'info@shoutit.com',
-    'password': 'bneGVmK5BHC5B9pyLUEj_w',
-    'use_tls': True,
-    'time_out': 5,
-    'backend': 'django.core.mail.backends.smtp.EmailBackend'
-}
-POSTMARK_SMTP = {
-    'default_from_email': 'Shoutit <noreply@shoutit.com>',
-    'host': 'smtp.postmarkapp.com',
-    'port': 587,
-    'username': str('0172be86-91ee-45cd-b651-e3c761d99726'),  # str() to avoid issue in Python HMAC: http://stackoverflow.com/a/20862445/552621
-    'password': str('0172be86-91ee-45cd-b651-e3c761d99726'),
+    'username': 'shoutit-api',
+    'password': 'tE$X@WdDL}4d:FAK',
     'use_tls': True,
     'time_out': 5,
     'backend': 'django.core.mail.backends.smtp.EmailBackend'
@@ -400,8 +382,7 @@ FILE_SMTP = {
 }
 EMAIL_BACKENDS = {
     'google': GOOGLE_SMTP,
-    'mandrill': MANDRILL_SMTP,
-    'postmark': POSTMARK_SMTP,
+    'sendgrid': SENDGRID_SMTP,
     'file': FILE_SMTP
 }
 EMAIL_ENV = os.environ.get('EMAIL_ENV', 'file')
@@ -482,11 +463,12 @@ SWAGGER_SETTINGS = {
 =================================
 """
 RAVEN_CONFIG = {
-    'dsn': os.environ.get('RAVEN_DSN'),
+    'dsn': os.environ.get('RAVEN_DSN', ''),
     'string_max_length': 1000
 }
-FORCE_SENTRY = False
+USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
+
 LOG_SQL = False
 
 LOGGING = {
@@ -522,7 +504,7 @@ LOGGING = {
             '()': 'common.log.LevelBelowWarning',
         },
         'on_server_or_forced': {
-            '()': 'common.log.OnServerOrForced',
+            '()': 'common.log.UseSentry',
         },
     },
     'handlers': {
@@ -530,13 +512,13 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
-            'formatter': 'detailed'
+            'formatter': 'simple'
         },
         'console_err': {
             'level': 'WARNING',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
-            'formatter': 'detailed'
+            'formatter': 'simple'
         },
         'console_out': {
             'level': 'DEBUG' if LOCAL and LOG_SQL else 'INFO',
@@ -555,7 +537,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': sys.stderr,
-            'formatter': 'detailed',
+            'formatter': 'simple',
             'filters': ['require_debug_true'],
         },
         'sentry': {
@@ -671,6 +653,7 @@ info("SHOUTIT_ENV:", SHOUTIT_ENV)
 info("GUNICORN:", GUNICORN)
 info("BIND: {}:{}".format(ADDRESS, PORT))
 info("DEBUG:", DEBUG)
+info("USE_SENTRY:", USE_SENTRY, RAVEN_CONFIG['dsn'][-5:])
 info("==================================================")
 info("API_LINK:", API_LINK)
 info("SITE_LINK:", SITE_LINK)
@@ -678,13 +661,13 @@ info("==================================================")
 info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
 info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
 info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
+info("FORCE_SYNC_RQ:", FORCE_SYNC_RQ)
 info("==================================================")
 info('FORCE_S3:', FORCE_S3)
 info('STATIC_URL:', STATIC_URL)
 info("==================================================")
 info("EMAIL_ENV:", EMAIL_ENV)
-info('FORCE_PUSH:', FORCE_PUSH)
-info('APNS_SANDBOX:', APNS_SANDBOX)
+info('USE_PUSH:', USE_PUSH)
 info('PUSHER_ENV:', PUSHER_ENV)
 info('TWILIO_ENV:', TWILIO_ENV)
 info("==================================================")

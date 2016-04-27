@@ -12,6 +12,6 @@ class LevelBelowWarning(Filter):
         return record.levelno < WARNING
 
 
-class OnServerOrForced(Filter):
+class UseSentry(Filter):
     def filter(self, record):
-        return settings.ON_SERVER or getattr(settings, 'FORCE_SENTRY', False)
+        return settings.USE_SENTRY
