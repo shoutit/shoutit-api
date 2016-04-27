@@ -19,7 +19,7 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA)
-from common.utils import date_unix
+from common.utils import date_unix, utcfromtimestamp
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from ..utils import none_to_blank, track_new_message
@@ -48,9 +48,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def get_messages(self, before=None, after=None, limit=25):
         messages = self.messages.order_by('-created_at')
         if before:
-            messages = messages.filter(created_at__lt=datetime.utcfromtimestamp(before))
+            messages = messages.filter(created_at__lt=utcfromtimestamp(before))
         if after:
-            messages = messages.filter(created_at__gt=datetime.utcfromtimestamp(after))
+            messages = messages.filter(created_at__gt=utcfromtimestamp(after))
         return messages[:limit][::-1]
 
     def get_messages_qs(self, ):
@@ -67,7 +67,11 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def unread_messages_count(self, user):
         if isinstance(user, AnonymousUser):
             return 0
-        return self.messages_count - user.read_messages.filter(conversation=self).count()
+        user_own_messages_count = user.messages.filter(conversation=self).count()
+        user_read_messages_count = user.read_messages.filter(conversation=self).exclude(user=user).count()
+        total_read_messages_count = user_own_messages_count + user_read_messages_count
+        count = self.messages_count - total_read_messages_count
+        return count
 
     def mark_as_deleted(self, user):
         # 0 - Mark all its messages as read
@@ -100,8 +104,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
         # Read all the conversation's messages
         # Todo: Optimize!
-        for message in self.messages.all():
-            message.mark_as_read(user, notify=False)
+        for message in self.messages.exclude(user=user):
+            message.mark_as_read(user, trigger_stats_update=False)
 
     def mark_as_unread(self, user):
         try:
@@ -186,26 +190,25 @@ class Message(Action):
         return self.conversation.contributors
 
     def can_contribute(self, user):
-        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
-            return True
-        else:
-            return user in self.contributors
+        return self.conversation.can_contribute(user)
 
     def is_read(self, user):
         return MessageRead.exists(user=user, message=self, conversation=self.conversation)
 
     @property
     def read_by_objects(self):
-        read_by = []
+        read_by = [
+            {'profile_id': self.user_id, 'read_at': self.created_at_unix}
+        ]
         for read in self.read_set.all().values('user_id', 'created_at'):
             read_by.append({'profile_id': read['user_id'], 'read_at': date_unix(read['created_at'])})
         return read_by
 
-    def mark_as_read(self, user, notify=True):
+    def mark_as_read(self, user, trigger_stats_update=True):
         try:
             MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
 
-            if notify:
+            if trigger_stats_update:
                 # Trigger `stats_update` on Pusher
                 from ..controllers import pusher_controller
                 pusher_controller.trigger_stats_update(user, 'v3')

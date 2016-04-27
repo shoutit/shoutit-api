@@ -7,17 +7,22 @@ api-dev:
     - DB_PASSWORD=
     - DB_PORT=
     - DB_USER=
+    - EMAIL_ENV=sendgrid
     - ES_HOST=
     - ES_PORT=
+    - FACEBOOK_APP_ID=
+    - FACEBOOK_APP_SECRET=
+    - FORCE_SSL=yes
+    - MIXPANEL_TOKEN=
+    - PUSHER_ENV=dev
     - RAVEN_DSN=
     - REDIS_HOST=
     - REDIS_PORT=
+    - SHOUTIT_DEBUG=True
     - SHOUTIT_ENV=dev
     - SITE_LINK=
-    - PUSHER_ENV=dev
     - TWILIO_ENV=dev
-    - MIXPANEL_TOKEN=
-    - EMAIL_ENV=postmark
+    - VIRTUAL_HOST
   links:
     - 'api-dev-redis:redis'
   restart: always
@@ -58,17 +63,22 @@ api-dev-rq:
     - DB_PASSWORD=
     - DB_PORT=
     - DB_USER=
+    - EMAIL_ENV=sendgrid
     - ES_HOST=
     - ES_PORT=
+    - FACEBOOK_APP_ID=
+    - FACEBOOK_APP_SECRET=
+    - FORCE_SSL=yes
+    - MIXPANEL_TOKEN=
+    - PUSHER_ENV=dev
     - RAVEN_DSN=
     - REDIS_HOST=
     - REDIS_PORT=
+    - SHOUTIT_DEBUG=True
     - SHOUTIT_ENV=dev
     - SITE_LINK=
     - TWILIO_ENV=dev
-    - PUSHER_ENV=dev
-    - MIXPANEL_TOKEN=
-    - EMAIL_ENV=postmark
+    - VIRTUAL_HOST
   links:
     - 'api-dev-redis:redis'
   restart: always

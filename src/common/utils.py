@@ -8,6 +8,7 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from distutils.util import strtobool as stb
 
 import pytz
 from django.core.exceptions import ValidationError
@@ -62,8 +63,11 @@ def date_unix(date):
     try:
         return int((date - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
     except TypeError:
-        # Todo: find when this occurs
-        return int((date - datetime(1970, 1, 1)).total_seconds())
+        return int((date.replace(tzinfo=pytz.UTC) - datetime(1970, 1, 1, tzinfo=pytz.UTC)).total_seconds())
+
+
+def utcfromtimestamp(timestamp):
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
 
 
 def any_in(a, b):
@@ -95,6 +99,7 @@ def json_flatten(y, sep='.'):
                 i += 1
         else:
             out[str(name[:-1])] = str(x)
+
     _flatten(y)
     return out
 
@@ -147,5 +152,16 @@ def tmp_file_from_env(env_var):
 
         def unlink_tmp_file():
             os.unlink(tmp_file_name)
+
         atexit.register(unlink_tmp_file)  # remove file on exit
     return tmp_file_name
+
+
+def strtobool(val):
+    """
+    Convert a string representation of truth to True or False.
+    Returns False if 'val' is None
+    """
+    if val is None:
+        return False
+    return bool(stb(val))

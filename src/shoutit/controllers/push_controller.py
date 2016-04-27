@@ -138,7 +138,7 @@ def set_ios_badge(user):
 def check_push(notification_type):
     if notification_type not in [NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE]:
         return False
-    return (not settings.DEBUG) or settings.FORCE_PUSH
+    return settings.USE_PUSH
 
 
 @receiver(post_save, sender=PushBroadcast)

@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import django_filters
 from django.conf import settings
 from elasticsearch_dsl import Search, Q
-from pydash import parse_int
+from pydash import parse_int, arrays
 from rest_framework import filters
 
 from common.constants import TAG_TYPE_STR, TAG_TYPE_INT
@@ -89,7 +89,6 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             # todo: add state
             city = data.get('city')
             if city and city != 'all':
-                cities = [city]
                 # todo: use other means of finding the surrounding cities like state.
                 try:
                     pd_city = PredefinedCity.objects.filter(city=city, country=country)[0]
@@ -97,8 +96,9 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     pass
                 else:
                     nearby_cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
-                    for nearby_city in nearby_cities:
-                        cities.append(nearby_city.city)
+                    cities = map(lambda nc: nc.city, nearby_cities)
+                    cities.append(city)
+                    cities = arrays.unique(cities)
                     index_queryset = index_queryset.filter('terms', city=cities)
 
         down_left_lat = data.get('down_left_lat')

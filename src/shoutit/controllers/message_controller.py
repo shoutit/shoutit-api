@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.db.models import Q
+from pydash import arrays
 
 from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
@@ -34,8 +35,8 @@ def conversation_exist(conversation_id=None, users=None, about=None, include_pub
         return get_conversation(conversation_id) or False
     elif users:
         assert isinstance(users, list)
-        # remove duplicates if any
-        users = list(set(users))
+
+        users = arrays.unique(users)
 
         if about:
             conversations = Conversation.objects.with_attached_object(about)

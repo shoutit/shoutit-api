@@ -173,7 +173,7 @@ def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, r
 
 
 def alias(alias_id, original):
-    if not settings.ON_SERVER and not settings.FORCE_MP_TRACKING:
+    if not settings.USE_MIXPANEL:
         return
     return _alias.delay(alias_id, original)
 
@@ -196,7 +196,7 @@ def _track_new_message(message):
 
 def track(distinct_id, event_name, properties=None, delay=True):
     # Todo: properties could be a callable that gets called when the tracking happens
-    if not settings.ON_SERVER and not settings.FORCE_MP_TRACKING:
+    if not settings.USE_MIXPANEL:
         return
     if delay:
         return _track.delay(distinct_id, event_name, properties)
@@ -208,7 +208,7 @@ def track(distinct_id, event_name, properties=None, delay=True):
 def _track(distinct_id, event_name, properties=None):
     properties = properties or {}
     shoutit_mp.track(distinct_id, event_name, properties)
-    debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
+    debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
 
 
 # Todo: find another service for mailing lists

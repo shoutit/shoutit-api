@@ -109,6 +109,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
+        # Todo: display guest when user is guest
         return "{} [{}:{}]".format(self.name, self.pk, self.username)
 
     @property
@@ -413,7 +414,8 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
     from shoutit.controllers import notifications_controller
     action = 'Created' if created else 'Updated'
     is_guest = 'Guest' if instance.is_guest else ''
-    debug_logger.debug('%s %sUser: %s' % (action, is_guest, instance))
+    notify = getattr(instance, 'notify', True)
+    debug_logger.debug('%s %sUser: %s | Notify: %s' % (action, is_guest, instance, notify))
 
     # Mute / unmute user shouts if his active state was changed
     if isinstance(update_fields, frozenset):
@@ -424,7 +426,7 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
                 instance.mute_shouts()
 
     if not created:
-        if getattr(instance, 'notify', True):
+        if notify:
             # Send notification about user changes
             notifications_controller.notify_user_of_profile_update(instance)
 
@@ -486,10 +488,11 @@ def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
     if not issubclass(sender, AbstractProfile):
         return
     action = 'Created' if created else 'Updated'
-    debug_logger.debug('%s %s: %s' % (action, instance.model_name, instance))
+    notify = getattr(instance, 'notify', True)
+    debug_logger.debug('%s %s: %s | Notify: %s' % (action, instance.model_name, instance, notify))
 
     if not created:
-        if getattr(instance, 'notify', True):
+        if notify:
             # Send `profile_update` notification
             notifications_controller.notify_user_of_profile_update(instance.user)
 

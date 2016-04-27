@@ -436,7 +436,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
          {
             "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
             "type": "user",
-            "api_url": "http://shoutit.dev:8000/v3/users/14969084019",
+            "api_url": "https://api.shoutit.com/v3/users/14969084019",
             "username": "14969084019",
             "is_guest": true,
             "date_joined": 1456090930,

@@ -51,7 +51,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
 
     def list(self, request, *args, **kwargs):
         """
-        List the user conversations
+        List the user conversations.
         ###REQUIRES AUTH
         [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
@@ -59,6 +59,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         parameters:
             - name: search
               description: NOT IMPLEMENTED
+              paramType: query
+            - name: type
               paramType: query
             - name: before
               description: timestamp to get messages before
@@ -78,7 +80,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
           "id": "73e43221-1f65-42c3-8c3e-82325a3e23ff",
           "created_at": 1458658338,
           "modified_at": 1458742115,
-          "web_url": "http://shoutit.dev:8080/conversation/73e43221-1f65-42c3-8c3e-82325a3e23ff",
+          "web_url": "https://api.shoutit.com/conversation/73e43221-1f65-42c3-8c3e-82325a3e23ff",
           "type": "chat",
           "messages_count": 3,
           "unread_messages_count": 0,
@@ -90,8 +92,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
           "profiles": "[List of Profile Objects]",
           "last_message": "{Message Object}",
           "about": null,
-          "messages_url": "http://shoutit.dev:8000/v3/conversations/73e43221-1f65-42c3-8c3e-82325a3e23ff/messages",
-          "reply_url": "http://shoutit.dev:8000/v3/conversations/73e43221-1f65-42c3-8c3e-82325a3e23ff/reply"
+          "messages_url": "https://api.shoutit.com/v3/conversations/73e43221-1f65-42c3-8c3e-82325a3e23ff/messages",
+          "reply_url": "https://api.shoutit.com/v3/conversations/73e43221-1f65-42c3-8c3e-82325a3e23ff/reply"
         }
         </code></pre>
         ---
