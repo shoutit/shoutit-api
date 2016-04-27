@@ -208,7 +208,7 @@ def track(distinct_id, event_name, properties=None, delay=True):
 def _track(distinct_id, event_name, properties=None):
     properties = properties or {}
     shoutit_mp.track(distinct_id, event_name, properties)
-    debug_logger.debug("MP tracked, distinct_id: %s event_name: %s" % (distinct_id, event_name))
+    debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
 
 
 # Todo: find another service for mailing lists
