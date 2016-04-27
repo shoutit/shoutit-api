@@ -54,7 +54,6 @@ class ShoutManager(PostManager):
     def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
         if not types:
             types = [POST_TYPE_OFFER, POST_TYPE_REQUEST]
-        types = list(set(types).intersection([POST_TYPE_OFFER, POST_TYPE_REQUEST]))
         return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired,
                                            get_muted=get_muted)
 

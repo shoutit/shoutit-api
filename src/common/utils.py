@@ -98,6 +98,7 @@ def json_flatten(y, sep='.'):
                 i += 1
         else:
             out[str(name[:-1])] = str(x)
+
     _flatten(y)
     return out
 
@@ -150,5 +151,6 @@ def tmp_file_from_env(env_var):
 
         def unlink_tmp_file():
             os.unlink(tmp_file_name)
+
         atexit.register(unlink_tmp_file)  # remove file on exit
     return tmp_file_name

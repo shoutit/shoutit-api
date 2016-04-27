@@ -1,15 +1,18 @@
 from __future__ import unicode_literals
+
 import uuid
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django_rq import job
 from elasticsearch import RequestError, ConnectionTimeout, NotFoundError, ConflictError
 from elasticsearch_dsl import DocType, String, GeoPoint
+from pydash import arrays
+
 from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED, DeviceOS
 from shoutit.models.base import UUIDModel, LocationMixin
 from ..utils import error_logger, debug_logger
@@ -32,12 +35,12 @@ class PredefinedCity(UUIDModel, LocationMixin):
                     cos( radians( longitude ) - radians(%s) ) + sin( radians(%s) ) *
                     sin( radians( latitude ) ) ) )""" % (self.latitude, self.longitude, self.latitude)
         }
-        cities = PredefinedCity.objects.filter(country=self.country).exclude(id=self.id)\
-            .extra(select=distance).values('id', 'distance')
+        cities = PredefinedCity.objects.filter(country=self.country).exclude(id=self.id).extra(select=distance).values(
+            'id', 'distance')
         cities = list(cities)
         cities.sort(key=lambda x: x['distance'])
-        # todo: remove duplicates
         ids = [c['id'] for c in cities if float(c['distance']) < dist_km][:max_cities]
+        ids = arrays.unique(ids)
         return PredefinedCity.objects.filter(id__in=ids)
 
 

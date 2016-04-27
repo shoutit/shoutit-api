@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import random
-from collections import OrderedDict
 from datetime import timedelta
 
 import requests
@@ -13,6 +12,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
+from pydash import arrays
 
 from common.utils import process_tags
 from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
@@ -69,7 +69,7 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
     # add main_tag from category
     tags.insert(0, category.slug)
     # remove duplicates
-    tags = list(OrderedDict.fromkeys(tags))
+    tags = arrays.unique(tags)
     # Create actual tags objects (when necessary)
     tag_controller.get_or_create_tags(tags, user)
     # tags2
@@ -112,7 +112,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
         tags2[f['slug']] = str(f['value']['slug'])
     # tags
     tags = tags2.values()
-    tags = list(OrderedDict.fromkeys(tags))
+    tags = arrays.unique(tags)
     tags.insert(0, category.slug)
     # Create actual tags objects (when necessary)
     tag_controller.get_or_create_tags(tags, user)
@@ -160,7 +160,7 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
         shout.tags2 = tags2
 
         tags = tags2.values()
-        tags = list(OrderedDict.fromkeys(tags))
+        tags = arrays.unique(tags)
         tags.insert(0, shout.category.slug)
         shout.tags = tags
         # Create actual tags objects (when necessary)
@@ -190,7 +190,7 @@ def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, cur
         if not isinstance(tags[0], basestring):
             tags = [tag.get('name') for tag in tags]
         # remove duplicates
-        tags = list(OrderedDict.fromkeys(tags))
+        tags = arrays.unique(tags)
         # process tags
         tags = process_tags(tags)
         # add main_tag from category
