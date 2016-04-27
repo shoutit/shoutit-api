@@ -190,10 +190,7 @@ class Message(Action):
         return self.conversation.contributors
 
     def can_contribute(self, user):
-        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
-            return True
-        else:
-            return user in self.contributors
+        return self.conversation.can_contribute(user)
 
     def is_read(self, user):
         return MessageRead.exists(user=user, message=self, conversation=self.conversation)
