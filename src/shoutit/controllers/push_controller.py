@@ -170,19 +170,17 @@ def prepare_push_broadcast(push_broadcast):
 
 @job(settings.RQ_QUEUE_PUSH_BROADCAST)
 def send_push_broadcast(push_broadcast, devices, user_ids):
-    assert isinstance(user_ids, list) and len(
-        user_ids) <= settings.MAX_BROADCAST_RECIPIENTS, "user_ids shout be a list <= 1000"
+    error = "user_ids shout be a list <= 1000"
+    assert isinstance(user_ids, list) and len(user_ids) <= settings.MAX_BROADCAST_RECIPIENTS, error
 
-    # Todo: Send for both v2 and v3
     if DEVICE_IOS.value in devices:
         apns_devices = APNSDevice.objects.filter(user__in=user_ids)
-        apns_devices.send_message(push_broadcast.message, sound='default',
-                                  extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
-        debug_logger.debug("Sent push broadcast: %s to %d apns devices" % (push_broadcast.pk, len(apns_devices)))
+        apns_devices.send_message(push_broadcast.message, sound='default')
+        debug_logger.debug("Sent Push Broadcast: %s to %d APNS devices" % (push_broadcast.pk, len(apns_devices)))
     if DEVICE_ANDROID.value in devices:
         gcm_devices = GCMDevice.objects.filter(user__in=user_ids)
         gcm_devices.send_message(push_broadcast.message, extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
-        debug_logger.debug("Sent push broadcast: %s to %d gcm devices" % (push_broadcast.pk, len(gcm_devices)))
+        debug_logger.debug("Sent Push Broadcast: %s to %d GCM devices" % (push_broadcast.pk, len(gcm_devices)))
 
 
 class UserIds(list):
