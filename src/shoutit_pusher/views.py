@@ -31,18 +31,19 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         ###Not used directly by API clients.
         ---
         """
+        user = request.user
         channel = request.data.get('channel_name', '')
         # Todo: check if the user is allowed to subscribe to the channel
         socket_id = request.data.get('socket_id', '')
         api_version = request.version
         data = {
             'v2': {
-                'user_id': request.user.pk,
-                'user': v2_serializers.UserSerializer(request.user, context={'request': create_fake_request('v2')}).data
+                'user_id': user.pk,
+                'user': v2_serializers.UserSerializer(user, context={'request': create_fake_request('v2')}).data
             },
             'v3': {
-                'user_id': request.user.pk,
-                'profile': v3_serializers.ProfileSerializer(request.user, context={'request': create_fake_request('v3')}).data
+                'user_id': user.pk,
+                'profile': v3_serializers.ProfileSerializer(user, context={'request': create_fake_request('v3')}).data
             }
         }
         custom_data = data[api_version]
@@ -50,6 +51,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
             auth = pusher.authenticate(channel=channel, socket_id=socket_id, custom_data=custom_data)
         except ValueError as e:
             raise ValidationError(str(e))
+        debug_logger.debug("Authorized %s to use %s Pusher on socket_id: %s" % (user, api_version, socket_id))
         return Response(auth)
 
     @list_route(methods=['post'], permission_classes=(), suffix='Webhook')
