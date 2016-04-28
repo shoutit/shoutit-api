@@ -4,6 +4,8 @@
 """
 from __future__ import unicode_literals
 
+import uuid
+
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
@@ -70,6 +72,10 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
                 event_name = event.get('name')
                 channel_name = event.get('channel')
                 user_id = event.get('user_id')
+                try:
+                    uuid.UUID(user_id)
+                except ValueError:
+                    pass
                 if event_name == 'channel_occupied':
                     create_channel(channel_name)
                 elif event_name == 'channel_vacated':
