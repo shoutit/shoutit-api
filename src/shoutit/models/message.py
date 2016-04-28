@@ -396,4 +396,4 @@ class PushBroadcast(UUIDModel, AttachedObjectMixin):
     data = JsonField(default=dict, blank=True)
 
     def __unicode__(self):
-        return self.pk + ": Broadcast"
+        return self.pk
