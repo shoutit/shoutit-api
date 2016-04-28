@@ -18,42 +18,31 @@ def create_channel(channel_name):
     else:
         channel_type = 0
 
-    try:
-        channel = PusherChannel.create(type=channel_type, name=channel_name)
+    channel, created = PusherChannel.objects.get_or_create(type=channel_type, name=channel_name)
+    if created:
         debug_logger.debug('Created PusherChannel: %s' % channel_name)
-        return channel
-    except (ValidationError, IntegrityError) as e:
-        debug_logger.warn(e)
-        return None
+    return channel
 
 
 def delete_channel(channel_name):
-    try:
-        channel = PusherChannel.objects.get(name=channel_name)
-    except PusherChannel.DoesNotExist:
-        pass
-    else:
-        channel.users.clear()
+    channel = PusherChannel.objects.filter(name=channel_name)
+    if channel.exists():
         channel.delete()
         debug_logger.debug('Deleted PusherChannel: %s' % channel_name)
 
 
 def add_member(channel_name, user_id):
-    try:
-        channel = PusherChannel.objects.get(name=channel_name)
-    except PusherChannel.DoesNotExist:
-        channel = create_channel(channel_name)
-    if channel:
-        try:
-            PusherChannelJoin.create(channel=channel, user_id=user_id)
-            debug_logger.debug('Added User: %s to PusherChannel: %s' % (user_id, channel.name))
-        except (ValidationError, IntegrityError, ValueError) as e:
-            debug_logger.warn(e)
+    channel = create_channel(channel_name)
+    join, created = PusherChannelJoin.objects.get_or_create(channel=channel, user_id=user_id)
+    if created:
+        debug_logger.debug('Added Member: %s to PusherChannel: %s' % (user_id, channel.name))
 
 
 def remove_member(channel_name, user_id):
-    try:
-        PusherChannelJoin.objects.filter(channel__name=channel_name, user_id=user_id).delete()
-        debug_logger.debug('Removed User: %s from PusherChannel: %s' % (user_id, channel_name))
-    except ValueError as e:
-        debug_logger.warn(e)
+    join = PusherChannelJoin.objects.filter(channel__name=channel_name, user_id=user_id)
+    if join.exists():
+        join.delete()
+        debug_logger.debug('Removed Member: %s from PusherChannel: %s' % (user_id, channel_name))
+        joins = PusherChannelJoin.objects.filter(channel__name=channel_name)
+        if not joins.exists():
+            delete_channel(channel_name)
