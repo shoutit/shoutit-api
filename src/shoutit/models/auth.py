@@ -182,6 +182,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             # Delete user device if exists
             if self.apns_device:
                 self.delete_apns_device()
+                debug_logger.debug("Deleted APNSDevice for %s" % self)
             if apns_token is not None:
                 # Delete devices with same apns_token
                 APNSDevice.objects.filter(registration_id=apns_token).delete()
@@ -189,12 +190,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 apns_device = APNSDevice(registration_id=apns_token, user=self)
                 apns_device.api_version = api_version
                 apns_device.save(True)
+                debug_logger.debug("Created %s APNSDevice for %s" % (api_version, self))
 
         if 'gcm' in push_tokens_data:
             gcm_token = push_tokens_data.get('gcm')
             # Delete user device if exists
             if self.gcm_device:
                 self.delete_gcm_device()
+                debug_logger.debug("Deleted GCMDevice for %s" % self)
             if gcm_token is not None:
                 # Delete devices with same gcm_token
                 GCMDevice.objects.filter(registration_id=gcm_token).delete()
@@ -202,6 +205,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 gcm_device = GCMDevice(registration_id=gcm_token, user=self)
                 gcm_device.api_version = api_version
                 gcm_device.save(True)
+                debug_logger.debug("Created %s GCMDevice for %s" % (api_version, self))
 
     @property
     def linked_accounts(self):

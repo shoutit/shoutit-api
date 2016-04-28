@@ -4,6 +4,8 @@
 """
 from __future__ import unicode_literals
 
+import uuid
+
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
@@ -13,7 +15,7 @@ from rest_framework.response import Response
 from shoutit.api.parsers import ShoutitJSONParser
 from shoutit.api.v2 import serializers as v2_serializers
 from shoutit.api.v3 import serializers as v3_serializers
-from shoutit.utils import debug_logger, create_fake_request
+from shoutit.utils import debug_logger, create_fake_request, error_logger
 from .controllers import add_member, remove_member, create_channel, delete_channel
 from .utils import pusher
 
@@ -70,6 +72,10 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
                 event_name = event.get('name')
                 channel_name = event.get('channel')
                 user_id = event.get('user_id')
+                try:
+                    uuid.UUID(user_id)
+                except ValueError:
+                    error_logger.warning("Ignored user_id: %s sent from Pusher" % user_id)
                 if event_name == 'channel_occupied':
                     create_channel(channel_name)
                 elif event_name == 'channel_vacated':
