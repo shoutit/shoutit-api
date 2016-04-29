@@ -12,6 +12,7 @@ import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
+from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from common.utils import utcfromtimestamp
@@ -185,7 +186,7 @@ def fb_user_from_facebook_access_token(facebook_access_token):
 def create_linked_facebook_account(user, access_token):
     token_data = debug_token(access_token)
     expires_at = utcfromtimestamp(float(token_data.get('expires_at')))
-    if abs((datetime.datetime.utcnow() - expires_at).days) < 30:
+    if abs((timezone.now() - expires_at).days) < 30:
         long_lived_token = extend_token(access_token)
         access_token = long_lived_token.get('access_token')
         expires = long_lived_token.get('expires')
