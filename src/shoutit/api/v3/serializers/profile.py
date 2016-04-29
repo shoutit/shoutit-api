@@ -326,6 +326,4 @@ class GuestSerializer(ProfileSerializer):
         if push_tokens_data:
             user.update_push_tokens(push_tokens_data, 'v3')
 
-        # Notify about updates
-        notifications_controller.notify_user_of_profile_update(user)
         return user

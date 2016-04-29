@@ -53,8 +53,8 @@ def get_unread_conversations_count(user):
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None):
     # Trigger event on Pusher profile channel
-    pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v2')
     pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v3')
+    pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v2')
 
     if notification_type != NOTIFICATION_TYPE_PROFILE_UPDATE:
         # Create notification object
@@ -63,10 +63,12 @@ def notify_user(user, notification_type, from_user=None, attached_object=None):
         # Trigger `stats_update` on Pusher
         pusher_controller.trigger_stats_update(user, 'v3')
 
-    # Send Push notification when no pusher channels of any version exit
-    if push_controller.check_push(notification_type) and not pusher_controller.check_pusher(user):
-        push_controller.send_push.delay(user, notification_type, attached_object, 'v2')
-        push_controller.send_push.delay(user, notification_type, attached_object, 'v3')
+        # Send Push notification when no pusher channels of any version exit
+        can_push = push_controller.check_push(notification_type)
+        can_pusher = pusher_controller.check_pusher(user)
+        if can_push and not can_pusher:
+            push_controller.send_push.delay(user, notification_type, attached_object, 'v3')
+            push_controller.send_push.delay(user, notification_type, attached_object, 'v2')
 
 
 def notify_user_of_listen(user, listener):

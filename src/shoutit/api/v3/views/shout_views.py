@@ -428,7 +428,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @detail_route(methods=['get'], suffix='Call')
+    @detail_route(methods=['get'], suffix='Call', permission_classes=[permissions.IsAuthenticated])
     def call(self, request, *args, **kwargs):
         """
         Get the mobile of this Shout
