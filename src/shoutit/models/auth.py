@@ -109,8 +109,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
-        # Todo: display guest when user is guest
-        return "{} [{}:{}]".format(self.name, self.pk, self.username)
+        return "{} [{}:{}]".format(self.name if not self.is_guest else 'Guest', self.pk, self.username)
 
     @property
     def type_name_v3(self):
@@ -122,7 +121,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name_username(self):
-        return "{} [{}]".format(self.name, self.username)
+        return "{} [{}]".format(self.name if not self.is_guest else 'Guest', self.username)
 
     @property
     def owner(self):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 import django_pgjson.fields
 from django.conf import settings
 import uuid
@@ -10,9 +10,9 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('shoutit', '0001_initial'),
         ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('shoutit', '0033_auto_20150831_0132'),
     ]
 
     operations = [
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('id_on_source', models.CharField(max_length=100)),
                 ('xml_data', models.TextField()),
                 ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
-                ('shout', models.ForeignKey(to='shoutit.Shout')),
+                ('shout', models.ForeignKey(related_name='crm_shout', to='shoutit.Shout')),
             ],
             options={
                 'abstract': False,
