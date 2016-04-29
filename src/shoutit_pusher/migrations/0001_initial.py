@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 import re
 from django.conf import settings
 import django.core.validators
@@ -35,10 +35,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
                 ('channel', models.ForeignKey(to='shoutit_pusher.PusherChannel')),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
-            options={
-                'abstract': False,
-            },
         ),
         migrations.CreateModel(
             name='PusherDevice',
@@ -54,13 +52,12 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddField(
-            model_name='pusherchanneljoin',
-            name='device',
-            field=models.ForeignKey(to='shoutit_pusher.PusherDevice'),
-        ),
-        migrations.AddField(
             model_name='pusherchannel',
-            name='devices',
-            field=models.ManyToManyField(related_name='channels', through='shoutit_pusher.PusherChannelJoin', to='shoutit_pusher.PusherDevice'),
+            name='users',
+            field=models.ManyToManyField(related_name='joined_pusher_channels', through='shoutit_pusher.PusherChannelJoin', to=settings.AUTH_USER_MODEL, blank=True),
+        ),
+        migrations.AlterUniqueTogether(
+            name='pusherchanneljoin',
+            unique_together=set([('user', 'channel')]),
         ),
     ]
