@@ -302,6 +302,8 @@ def post_save_message_read(sender, instance=None, created=False, **kwargs):
         from ..controllers import pusher_controller
         # Trigger `new_read_by` event in the conversation channel
         pusher_controller.trigger_new_read_by(message=instance.message, version='v3')
+        # Trigger `stats_update` event in the reader profile channel
+        pusher_controller.trigger_stats_update(user=instance.user, version='v3')
 
 
 class MessageDelete(UUIDModel):

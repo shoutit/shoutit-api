@@ -62,7 +62,11 @@ def trigger_new_read_by(message, version):
     """
     Trigger `new_read_by` event on Pusher conversation channel
     """
-    trigger_conversation_event(message.conversation_id, NOTIFICATION_TYPE_READ_BY, message.read_by_objects, version)
+    message_summary = {
+        'id': message.id,
+        'read_by': message.read_by_objects
+    }
+    trigger_conversation_event(message.conversation_id, NOTIFICATION_TYPE_READ_BY, message_summary, version)
 
 
 def trigger_conversation_update(conversation, version):
