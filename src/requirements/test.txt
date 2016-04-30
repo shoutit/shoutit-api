@@ -1,0 +1,4 @@
+# test requirements
+-r common.txt
+coverage==4.0.3
+codeclimate-test-reporter
