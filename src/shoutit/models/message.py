@@ -64,14 +64,10 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def messages_count(self):
         return self.messages.count()
 
-    def unread_messages_count(self, user):
+    def unread_messages(self, user):
         if isinstance(user, AnonymousUser):
-            return 0
-        user_own_messages_count = user.messages.filter(conversation=self).count()
-        user_read_messages_count = user.read_messages.filter(conversation=self).exclude(user=user).count()
-        total_read_messages_count = user_own_messages_count + user_read_messages_count
-        count = self.messages_count - total_read_messages_count
-        return count
+            return self.messages.none()
+        return self.messages.exclude(read_set__user=user).exclude(user=user)
 
     def mark_as_deleted(self, user):
         # 0 - Mark all its messages as read
@@ -93,25 +89,33 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         # Todo: track `conversation_delete` event?
 
     def mark_as_read(self, user):
-        # Read all the notifications about this conversation
-        notifications = Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE,
-                                                    message__conversation=self)
-        notifications.update(is_read=True)
+        unread_messages = self.unread_messages(user)
+        if not unread_messages:
+            return
+
+        # Read all the unread notifications about this conversation
+        Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE,
+                                    message__conversation=self).update(is_read=True)
 
         # Trigger `stats_update` on Pusher
         from ..controllers import pusher_controller
         pusher_controller.trigger_stats_update(user, 'v3')
 
-        # Read all the conversation's messages
-        # Todo: Optimize!
-        for message in self.messages.exclude(user=user):
-            message.mark_as_read(user, trigger_stats_update=False)
+        # Read all the conversation's messages by other users that weren't read by the user before
+        unread_messages = self.unread_messages(user)
+        MessageRead.objects.bulk_create(
+            map(lambda m: MessageRead(user=user, message=m, conversation=self), unread_messages)
+        )
+
+        # Todo: Optimize! bulk pusher events
+        for message in unread_messages:
+            pusher_controller.trigger_new_read_by(message=message, version='v3')
 
     def mark_as_unread(self, user):
-        try:
-            MessageRead.objects.get(user=user, message_id=self.last_message.id, conversation_id=self.id).delete()
-        except MessageRead.DoesNotExist:
-            pass
+        # Delete the last MessageRead only if it exits
+        last_message_read = self.messages_read_set.filter(user=user).order_by('created_at').last()
+        if last_message_read:
+            last_message_read.delte()
 
     @property
     def messages_attachments(self):
@@ -182,7 +186,7 @@ class Message(Action):
 
     @property
     def is_first(self):
-        first_id = self.conversation.messages.all().order_by('created_at')[:1].values_list('id', flat=True)[0]
+        first_id = self.conversation.messages.values_list('id', flat=True).order_by('created_at').first()
         return self.id == first_id
 
     @property
@@ -204,22 +208,26 @@ class Message(Action):
             read_by.append({'profile_id': read['user_id'], 'read_at': date_unix(read['created_at'])})
         return read_by
 
-    def mark_as_read(self, user, trigger_stats_update=True):
+    def mark_as_read(self, user):
         try:
             MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
-
-            if trigger_stats_update:
-                # Trigger `stats_update` on Pusher
-                from ..controllers import pusher_controller
-                pusher_controller.trigger_stats_update(user, 'v3')
         except IntegrityError:
             pass
+        else:
+            from ..controllers import pusher_controller
+
+            # Trigger `new_read_by` event in the conversation channel
+            pusher_controller.trigger_new_read_by(message=self, version='v3')
+
+            # Read the notifications about this message
+            Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_MESSAGE,
+                                        message=self).update(is_read=True)
+
+            # Trigger `stats_update` on Pusher
+            pusher_controller.trigger_stats_update(user, 'v3')
 
     def mark_as_unread(self, user):
-        try:
-            MessageRead.objects.get(user=user, message_id=self.id, conversation_id=self.conversation_id).delete()
-        except MessageRead.DoesNotExist:
-            pass
+        user.read_messages_set(message=self).delete()
 
     @property
     def track_properties(self):
@@ -294,16 +302,6 @@ class MessageRead(UUIDModel):
     class Meta(UUIDModel.Meta):
         # user can mark the message as 'read' only once
         unique_together = ('user', 'message', 'conversation')
-
-
-@receiver(post_save, sender=MessageRead)
-def post_save_message_read(sender, instance=None, created=False, **kwargs):
-    if created:
-        from ..controllers import pusher_controller
-        # Trigger `new_read_by` event in the conversation channel
-        pusher_controller.trigger_new_read_by(message=instance.message, version='v3')
-        # Trigger `stats_update` event in the reader profile channel
-        pusher_controller.trigger_stats_update(user=instance.user, version='v3')
 
 
 class MessageDelete(UUIDModel):
