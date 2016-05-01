@@ -36,7 +36,7 @@ from rest_framework.request import Request
 from common.constants import COUNTRY_ISO
 from shoutit import settings
 from shoutit.api.versioning import ShoutitNamespaceVersioning
-from common.lib import mailchimp, location
+from common.lib import location
 
 from shoutit.monkey_patches import ShoutitCustomJSONEncoder
 
@@ -51,10 +51,6 @@ shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitCustomJSONEncod
 
 # IP2Location instant
 ip2location = location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
-
-
-# shoutit mailchimp
-shoutit_mailchimp = mailchimp.Client(settings.MAILCHIMP_API_KEY)
 
 # nexmo
 nexmo_client = nexmo.Client(key=settings.NEXMO_API_KEY, secret=settings.NEXMO_API_SECRET)
@@ -209,50 +205,6 @@ def _track(distinct_id, event_name, properties=None):
     properties = properties or {}
     shoutit_mp.track(distinct_id, event_name, properties)
     debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
-
-
-# Todo: find another service for mailing lists
-def subscribe_to_master_list(user):
-    return
-    # if not settings.PROD:
-    #     return
-    # return _subscribe_to_master_list.delay(user)
-
-
-@job(settings.RQ_QUEUE_MAIL)
-def _subscribe_to_master_list(user):
-    try:
-        location = user.location
-        address = {
-            'addr1': location.get('address') or 'n/a',
-            'city': location.get('city') or 'n/a',
-            'state': location.get('state') or location.get('city') or 'n/a',
-            'zip': location.get('postal_code') or 'n/a',
-            'country': location.get('country'),
-        }
-        merge_fields = {
-            'FNAME': user.first_name,
-            'LNAME': user.last_name,
-            'IMAGE': user.profile.image,
-        }
-        if address.get('country'):
-            merge_fields.update({'ADDRESS': address})
-        extra_fields = {
-            'location': {
-                'latitude': "%s" % location.get('latitude', 0),
-                'longitude': "%s" % location.get('longitude', 0)
-            }
-        }
-        shoutit_mailchimp.add_member(list_id=settings.MAILCHIMP_MASTER_LIST_ID, email=user.email,
-                                     status='subscribed', extra_fields=extra_fields, merge_fields=merge_fields)
-        debug_logger.debug("Added user %s to MailChimp master list" % user)
-    except mailchimp.MailChimpException as e:
-        if hasattr(e.response, 'json'):
-            status = e.json.get('status')
-            detail = e.json.get('detail', "")
-            if status == 400 and 'is already a list member' in detail:
-                return
-        raise
 
 
 def correct_mobile(mobile, country, raise_exception=False):

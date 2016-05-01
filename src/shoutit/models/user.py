@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from common.constants import USER_TYPE_PROFILE, TOKEN_TYPE_EMAIL
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.misc import ConfirmToken
-from shoutit.utils import correct_mobile, subscribe_to_master_list, none_to_blank
+from shoutit.utils import correct_mobile, none_to_blank
+
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -96,7 +97,8 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
             ConfirmToken.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
             instance.send_welcome_email()
-            # subscribe to mailchimp master list
+            # subscribe to SendGrid Contacts DB
+            from ..controllers.email_controller import subscribe_to_master_list
             subscribe_to_master_list(instance)
     else:
         if isinstance(update_fields, frozenset):
