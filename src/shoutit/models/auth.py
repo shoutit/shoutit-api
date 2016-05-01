@@ -290,9 +290,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         # take_permissions_from_user(self, ACTIVATED_USER_PERMISSIONS)
         pass
 
-    def send_signup_email(self):
+    def send_welcome_email(self):
         from ..controllers import email_controller
-        email_controller.send_signup_email(self)
+        email_controller.send_welcome_email(self)
 
     def send_verified_email(self):
         from ..controllers import email_controller

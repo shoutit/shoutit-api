@@ -95,7 +95,7 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
             # create email confirmation token and send verification email
             ConfirmToken.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
-            instance.send_signup_email()
+            instance.send_welcome_email()
             # subscribe to mailchimp master list
             subscribe_to_master_list(instance)
     else:

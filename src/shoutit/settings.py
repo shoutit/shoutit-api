@@ -376,6 +376,7 @@ SENDGRID_SMTP = {
     'backend': 'django.core.mail.backends.smtp.EmailBackend'
 }
 FILE_SMTP = {
+    'default_from_email': 'Shoutit <noreply@shoutit.com>',
     'host': 'localhost',
     'backend': 'django.core.mail.backends.filebased.EmailBackend',
     'file_path': os.path.join(LOG_DIR, 'messages')

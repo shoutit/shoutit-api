@@ -6,10 +6,11 @@ Django==1.8.11
 psycopg2>=2.6
 kitchen==1.2.4
 django-mptt==0.8.3
-django-mptt-admin==0.3.6
+sendgrid==2.2.1
 
 # admin
 django-grappelli==2.8.1
+django-mptt-admin==0.3.6
 
 # django-rest-framework
 djangorestframework==3.3.3
