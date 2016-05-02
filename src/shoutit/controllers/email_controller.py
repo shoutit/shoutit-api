@@ -1,36 +1,83 @@
 from __future__ import unicode_literals
 
+import base64
+import json
+
+import sendgrid
 from django.conf import settings
-from django.core.mail.message import EmailMultiAlternatives
-from django.template.context import Context
-from django.template.loader import get_template
 from django.utils.translation import ugettext as _
 from django_rq import job
 
-from shoutit.utils import get_google_smtp_connection, error_logger, sss_logger
+from common.utils import date_unix
+from shoutit.models import User
+from shoutit.utils import debug_logger
+
+SG_WELCOME_TEMPLATE = 'f34f9b3a-92f3-4b11-932e-f0205003897a'
+SG_GENERAL_TEMPLATE = '487198e5-5479-4aca-aa6c-f5f36b0a8a61'
+SG_API_KEY = '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'
+sg = sendgrid.SendGridClient(SG_API_KEY)
+sg_api = sendgrid.SendGridAPIClient(apikey=SG_API_KEY)
 
 
-def send_password_reset_email(user):
-    return _send_password_reset_email.delay(user)
+def prepare_message(user, subject, template, subs=None):
+    message = sendgrid.Mail()
+    message.add_to(user.email)
+    message.set_subject(subject)
+    message.set_from(settings.DEFAULT_FROM_EMAIL)
+    message.set_html(' ')
+    message.add_filter('templates', 'enable', '1')
+    message.add_filter('templates', 'template_id', template)
+    message.add_substitution('{{site_link}}', settings.SITE_LINK)
+    message.add_substitution('{{name}}', user.name)
+    if subs:
+        for key, val in subs.items():
+            message.add_substitution('{{%s}}' % key, val)
+    return message
+
+
+def send_welcome_email(user):
+    return _send_welcome_email.delay(user)
 
 
 @job(settings.RQ_QUEUE_MAIL)
-def _send_password_reset_email(user):
-    subject = _('Password Reset')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context({
-        'title': subject,
-        'username': user.username,
-        'name': user.name if user.name != user.username else '',
-        'link': user.password_reset_link
-    })
-    html_template = get_template('email/passwordrecovery.html')
-    html_message = html_template.render(context)
-    text_template = get_template('password_recovery_email.txt')
-    text_message = text_template.render(context)
-    msg = EmailMultiAlternatives(subject, text_message, from_email, [user.email])
-    msg.attach_alternative(html_message, "text/html")
-    msg.send(True)
+def _send_welcome_email(user):
+    subject = _('Welcome!')
+    subs = {
+        'username': user.username
+    }
+    if user.is_activated:
+        subs.update({
+            'text1': "",
+            'action': _("Take me to my profile"),
+            'link': user.web_url
+        })
+    else:
+        subs.update({
+            'text1': _("To get started using Shoutit, please activate your account below"),
+            'action': _("Activate your account"),
+            'link': user.verification_link
+        })
+    message = prepare_message(user=user, subject=subject, template=SG_WELCOME_TEMPLATE, subs=subs)
+    result = sg.send(message)
+    debug_logger.debug("Sent Welcome Email to %s Result: %s" % (user, result))
+
+
+def send_verification_email(user):
+    return _send_verification_email.delay(user)
+
+
+@job(settings.RQ_QUEUE_MAIL)
+def _send_verification_email(user):
+    subject = _('Verify your email')
+    subs = {
+        'text1': _("Your have changed your email therefore your account is not verified. To "
+                   "use Shoutit with full potential we need to verify your email."),
+        'action': _("Verify it now"),
+        'link': user.verification_link
+    }
+    message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
+    result = sg.send(message)
+    debug_logger.debug("Sent Verification Email to %s Result: %s" % (user, result))
 
 
 def send_verified_email(user):
@@ -40,124 +87,84 @@ def send_verified_email(user):
 @job(settings.RQ_QUEUE_MAIL)
 def _send_verified_email(user):
     subject = _('Your email has been verified!')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context({
-        'title': subject,
-        'username': user.username,
-        'name': user.name if user.name != user.username else '',
-        'link': settings.SITE_LINK,
-    })
-    html_template = get_template('email/verified.html')
-    html_message = html_template.render(context)
-    msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
-    msg.attach_alternative(html_message, "text/html")
-    msg.send(True)
+    subs = {
+        'text1': _("Thank you for verifying your email. Your account has been verified and you can now use Shoutit full"
+                   " potential."),
+        'action': _("Take me to my profile"),
+        'link': user.web_url
+    }
+    message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
+    result = sg.send(message)
+    debug_logger.debug("Sent Verified Email to %s Result: %s" % (user, result))
 
 
-def send_signup_email(user):
-    return _send_signup_email.delay(user)
+def send_password_reset_email(user):
+    return _send_password_reset_email.delay(user)
 
 
 @job(settings.RQ_QUEUE_MAIL)
-def _send_signup_email(user):
-    subject = _('Welcome to Shoutit!')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context({
-        'title': subject,
-        'username': user.username,
-        'name': user.name if user.name != user.username else '',
-        'link': user.verification_link,
-        'is_activated': user.is_activated
-    })
-    html_template = get_template('email/registration.html')
-    html_message = html_template.render(context)
-    msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
-    msg.attach_alternative(html_message, "text/html")
-    msg.send(True)
+def _send_password_reset_email(user):
+    subject = _('Reset your password')
+    subs = {
+        'text1': _("You have requested to reset your password. If it wasn't you please let us know as soon as possible."),
+        'action': _("Reset my password"),
+        'link': user.password_reset_link
+    }
+    message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
+    result = sg.send(message)
+    debug_logger.debug("Sent Password Reset Email to %s Result: %s" % (user, result))
 
 
-def send_verification_email(user):
-    return _send_verification_email.delay(user)
+def subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=True):
+    if not settings.PROD:
+        return
+    return _subscribe_users_to_mailing_list.delay(users=users, user_ids=user_ids, raise_errors=raise_errors)
 
 
 @job(settings.RQ_QUEUE_MAIL)
-def _send_verification_email(user):
-    subject = _('Shoutit - Verify your email')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context({
-        'title': subject,
-        'username': user.username,
-        'name': user.name if user.name != user.username else '',
-        'link': user.verification_link
-    })
-    html_template = get_template('email/verification.html')
-    html_message = html_template.render(context)
-    msg = EmailMultiAlternatives(subject, "", from_email, [user.email])
-    msg.attach_alternative(html_message, "text/html")
-    msg.send(True)
+def _subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=True):
+    if users is None:
+        users = User.objects.filter(id__in=user_ids)
+    request_body = []
+    for user in users:
+        ap = user.ap
+        fields = {
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'is_active': 'true' if user.is_active else 'false',
+            'is_activated': 'true' if user.is_activated else 'false',
+            'type': user.type_name_v3,
+            'username': user.username,
+            'date_joined': date_unix(user.date_joined),
+            'last_login': date_unix(user.last_login) if user.last_login else 0,
+            'country': ap.country,
+            'image': ap.image,
+            'platform': " ".join(map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names)),
+            'gender': getattr(ap, 'gender', ''),
+        }
+        request_body.append(fields)
+    try:
+        response = sg_api.client.contactdb.recipients.post(request_body=request_body)
+        response_data = json.loads(response.response_body)
 
+        # Check added
+        if response_data['new_count'] > 0:
+            debug_logger.debug("Added %d user(s) to SendGrid Contacts DB" % response_data['new_count'])
+        # Check updated
+        if response_data['updated_count'] > 0:
+            debug_logger.debug("Updated %d user(s) on SendGrid Contacts DB" % response_data['updated_count'])
 
-def send_cl_invitation_email(cl_user):
-    return _send_cl_invitation_email.delay(cl_user)
+        # Update added / updated users
+        added_emails = map(lambda pr: base64.b64decode(pr), response_data['persisted_recipients'])
+        User.objects.filter(email__in=added_emails).update(on_mailing_list=True)
 
-
-@job(settings.RQ_QUEUE)
-def _send_cl_invitation_email(cl_user):
-    subject = _('Welcome to Shoutit!')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context({
-        'shout': cl_user.shout.item.name[:30] + '...',
-        'link': 'https://www.shoutit.com/app',
-    })
-    text_template = get_template('cl_user_invitation_email.txt')
-    text_message = text_template.render(context)
-    connection = get_google_smtp_connection()
-    user = cl_user.user
-    email = EmailMultiAlternatives(subject=subject, body=text_message, to=[cl_user.cl_email],
-                                   from_email=from_email, connection=connection)
-    if email.send(True):
-        sss_logger.debug("Sent invitation to cl user: %s" % str(user))
-    else:
-        error_logger.warn("Failed to send invitation to cl user.", exc_info=True)
-
-
-def send_db_invitation_email(db_user):
-    return _send_db_invitation_email.delay(db_user)
-
-
-@job(settings.RQ_QUEUE)
-def _send_db_invitation_email(db_user):
-    subject = _('Welcome to Shoutit!')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context({
-        'shout': db_user.shout.item.name[:30] + '...',
-        'link': 'https://www.shoutit.com/app',
-    })
-    html_template = get_template('email/db_user_invitation_email.html')
-    html_message = html_template.render(context)
-    user = db_user.user
-    email = EmailMultiAlternatives(subject=subject, to=[user.email], from_email=from_email)
-    email.attach_alternative(html_message, "text/html")
-    if email.send(True):
-        sss_logger.debug("Sent invitation to db user: %s" % str(user))
-    else:
-        error_logger.warn("Failed to send invitation to db user.", exc_info=True)
-
-
-def send_template_email_test(template, email, context, use_google_connection=False):
-    return _send_template_email_test.delay(template, email, context, use_google_connection)
-
-
-@job(settings.RQ_QUEUE)
-def _send_template_email_test(template, email, context, use_google_connection=False):
-    subject = _('Template Test!')
-    from_email = settings.DEFAULT_FROM_EMAIL
-    context = Context(context)
-    html_template = get_template(template)
-    html_message = html_template.render(context)
-    email = EmailMultiAlternatives(subject=subject, to=[email], from_email=from_email)
-    if use_google_connection:
-        connection = get_google_smtp_connection()
-        email.connection = connection
-    email.attach_alternative(html_message, "text/html")
-    email.send(True)
+        # Errors
+        if response_data['error_count'] > 0:
+            debug_logger.warning("Error adding/updating %d user(s) to SendGrid contacts db" % response_data['error_count'])
+            debug_logger.warning(response_data['errors'])
+            raise ValueError(response_data['errors'])
+    except Exception as e:
+        debug_logger.warning("Error adding/updating %d users to SendGrid: %s" % (len(users), str(e)))
+        if raise_errors:
+            raise

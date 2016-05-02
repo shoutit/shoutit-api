@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from common.constants import USER_TYPE_PROFILE, TOKEN_TYPE_EMAIL
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.misc import ConfirmToken
-from shoutit.utils import correct_mobile, subscribe_to_master_list, none_to_blank
+from shoutit.utils import correct_mobile, none_to_blank
+
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -95,9 +96,10 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
             # create email confirmation token and send verification email
             ConfirmToken.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
-            instance.send_signup_email()
-            # subscribe to mailchimp master list
-            subscribe_to_master_list(instance)
+            # Send welcome email
+            instance.send_welcome_email()
+            # Subscribe to mailing list
+            instance.subscribe_to_mailing_list()
     else:
         if isinstance(update_fields, frozenset):
             if 'is_activated' in update_fields and instance.is_activated:

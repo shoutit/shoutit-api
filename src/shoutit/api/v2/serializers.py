@@ -820,7 +820,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         return None
 
     def get_unread_messages_count(self, instance):
-        return instance.unread_messages_count(self.context['request'].user)
+        return instance.unread_messages(self.context['request'].user).count()
 
     def get_messages_url(self, conversation):
         return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])
