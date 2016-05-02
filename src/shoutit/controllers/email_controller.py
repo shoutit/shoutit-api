@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import base64
 import json
 
 import sendgrid
@@ -8,6 +9,7 @@ from django.utils.translation import ugettext as _
 from django_rq import job
 
 from common.utils import date_unix
+from shoutit.models import User
 from shoutit.utils import debug_logger
 
 SG_WELCOME_TEMPLATE = 'f34f9b3a-92f3-4b11-932e-f0205003897a'
@@ -113,38 +115,56 @@ def _send_password_reset_email(user):
     debug_logger.debug("Sent Password Reset Email to %s Result: %s" % (user, result))
 
 
-def subscribe_to_master_list(user):
+def subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=True):
     if not settings.PROD:
         return
-    return _subscribe_to_master_list.delay(user)
+    return _subscribe_users_to_mailing_list.delay(users=users, user_ids=user_ids, raise_errors=raise_errors)
 
 
 @job(settings.RQ_QUEUE_MAIL)
-def _subscribe_to_master_list(user):
-    ap = user.ap
-    fields = {
-        'email': user.email,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'is_active': user.is_active,
-        'is_activated': user.is_activated,
-        'type': user.type_name_v3,
-        'username': user.username,
-        'date_joined': date_unix(user.date_joined),
-        'last_login': date_unix(user.last_login),
-        'country': ap.country,
-        'image': ap.image,
-        'platform': " ".join(map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names)),
-        'gender': getattr(ap, 'gender', ''),
-    }
-    response_data = None
+def _subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=True):
+    if users is None:
+        users = User.objects.filter(id__in=user_ids)
+    request_body = []
+    for user in users:
+        ap = user.ap
+        fields = {
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'is_active': 'true' if user.is_active else 'false',
+            'is_activated': 'true' if user.is_activated else 'false',
+            'type': user.type_name_v3,
+            'username': user.username,
+            'date_joined': date_unix(user.date_joined),
+            'last_login': date_unix(user.last_login) if user.last_login else 0,
+            'country': ap.country,
+            'image': ap.image,
+            'platform': " ".join(map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names)),
+            'gender': getattr(ap, 'gender', ''),
+        }
+        request_body.append(fields)
     try:
-        response = sg_api.client.contactdb.recipients.post(request_body=[fields])
+        response = sg_api.client.contactdb.recipients.post(request_body=request_body)
         response_data = json.loads(response.response_body)
+
+        # Check added
+        if response_data['new_count'] > 0:
+            debug_logger.debug("Added %d user(s) to SendGrid Contacts DB" % response_data['new_count'])
+        # Check updated
+        if response_data['updated_count'] > 0:
+            debug_logger.debug("Updated %d user(s) on SendGrid Contacts DB" % response_data['updated_count'])
+
+        # Update added / updated users
+        added_emails = map(lambda pr: base64.b64decode(pr), response_data['persisted_recipients'])
+        User.objects.filter(email__in=added_emails).update(on_mailing_list=True)
+
+        # Errors
         if response_data['error_count'] > 0:
-            raise ValueError
-        debug_logger.debug("Added user %s to SendGrid contacts db" % user)
-    except ValueError:
-        debug_logger.warning("Error adding user %s to SendGrid: %s" % (user, str(response_data)))
+            debug_logger.warning("Error adding/updating %d user(s) to SendGrid contacts db" % response_data['error_count'])
+            debug_logger.warning(response_data['errors'])
+            raise ValueError(response_data['errors'])
     except Exception as e:
-        debug_logger.warning("Error adding user %s to SendGrid: %s" % (user, str(e)))
+        debug_logger.warning("Error adding/updating %d users to SendGrid: %s" % (len(users), str(e)))
+        if raise_errors:
+            raise

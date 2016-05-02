@@ -96,10 +96,10 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
             # create email confirmation token and send verification email
             ConfirmToken.create(user=instance, type=TOKEN_TYPE_EMAIL)
         if not instance.is_test and instance.email and '@sale.craigslist.org' not in instance.email:
+            # Send welcome email
             instance.send_welcome_email()
-            # subscribe to SendGrid Contacts DB
-            from ..controllers.email_controller import subscribe_to_master_list
-            subscribe_to_master_list(instance)
+            # Subscribe to mailing list
+            instance.subscribe_to_mailing_list()
     else:
         if isinstance(update_fields, frozenset):
             if 'is_activated' in update_fields and instance.is_activated:

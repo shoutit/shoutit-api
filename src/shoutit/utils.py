@@ -407,3 +407,8 @@ def serialize_attached_object(attached_object, version, user=None):
         attached_object_dict = {}
 
     return attached_object_dict
+
+
+class UserIds(list):
+    def __repr__(self):
+        return "UserIds: %d ids" % len(self)
