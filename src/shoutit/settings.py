@@ -22,13 +22,13 @@ ADDRESS, PORT = get_address_port(GUNICORN)
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
-API_LINK = os.environ.get('API_LINK', 'http://api.shoutit.local:8000/v3/')
+API_LINK = os.environ.get('API_LINK', 'http://api.shoutit.local/v3/')
 SITE_LINK = os.environ.get('SITE_LINK', 'http://www.shoutit.local:3000/')
 
 # Security
 DEBUG = strtobool(os.environ.get('SHOUTIT_DEBUG'))
 SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
-ENFORCE_SECURE = PROD and not DEBUG
+ENFORCE_SECURE = not DEBUG
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -182,8 +182,8 @@ INSTALLED_APPS = (
     'shoutit',
 )
 
-TWILIO_ENV = os.environ.get('TWILIO_ENV', 'local')
-PUSHER_ENV = os.environ.get('PUSHER_ENV', 'local')
+TWILIO_ENV = os.environ.get('TWILIO_ENV', SHOUTIT_ENV)
+PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
 
 """
 =================================
@@ -256,9 +256,9 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-AWS_ACCESS_KEY_ID = 'AKIAIWBSACXFWBQ3MGWA'
-AWS_SECRET_ACCESS_KEY = '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'
-if ON_SERVER or FORCE_S3:
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     INSTALLED_APPS += (
         'storages',
     )
@@ -272,17 +272,10 @@ else:
     if not os.path.exists(STATIC_ROOT):
         os.makedirs(STATIC_ROOT)
 
-STATICFILES_DIRS = (
-    os.path.join(SRC_DIR, 'static'),
-)
-
 # Templates
 TEMPLATE_DEBUG = DEBUG
 TEMPLATE_DIRS = (
     os.path.join(SRC_DIR, 'templates'),
-    os.path.join(SRC_DIR, 'templates', 'api_site'),
-    os.path.join(SRC_DIR, 'templates', 'text_messages'),
-    os.path.join(SRC_DIR, 'templates', 'html_messages'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -307,11 +300,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 # Both certificates used for development(by AppUnite) and production (by Shoutit) are considered `production` certificates
 APNS_SANDBOX = strtobool(os.environ.get('APNS_SANDBOX'))
 FORCE_PUSH = strtobool(os.environ.get('FORCE_PUSH'))
-USE_PUSH = ON_SERVER or FORCE_PUSH
-APNS_CERT_NAME = 'push-%s.pem' % ('prod' if PROD else 'dev')
+APNS_CERT_NAME = 'push-%s.pem' % SHOUTIT_ENV
+APNS_CERT_FILE = os.path.join(SRC_DIR, 'assets', 'certificates', 'ios', APNS_CERT_NAME)
+USE_PUSH = os.path.isfile(APNS_CERT_FILE)
 PUSH_NOTIFICATIONS_SETTINGS = {
     'GCM_API_KEY': "AIzaSyBld5731YUMSNuLBO5Gu2L4Tsj-CrQZGIg",
-    'APNS_CERTIFICATE': os.path.join(SRC_DIR, 'assets', 'certificates', 'ios', APNS_CERT_NAME),
+    'APNS_CERTIFICATE': APNS_CERT_FILE,
     'APNS_HOST': "gateway.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else ''),
     'APNS_FEEDBACK_HOST': "feedback.%spush.apple.com" % ('sandbox.' if APNS_SANDBOX else '')
 }
@@ -435,7 +429,6 @@ OAUTH_DELETE_EXPIRED = True
 SWAGGER_SETTINGS = {
     'api_version': '3',
     'api_path': '/',
-    'protocol': 'https' if PROD else 'http',
     'enabled_methods': [
         'get',
         'post',
@@ -448,7 +441,7 @@ SWAGGER_SETTINGS = {
     'is_superuser': False,
     'permission_denied_handler': None,
     'info': {
-        # 'contact': 'mo.chawich@gmail.com',
+        'contact': 'mo.chawich@shoutit.com',
         'description': '',
         'title': 'Shoutit API Documentation',
     },
@@ -501,7 +494,7 @@ LOGGING = {
         'level_below_warning': {
             '()': 'common.log.LevelBelowWarning',
         },
-        'on_server_or_forced': {
+        'use_sentry': {
             '()': 'common.log.UseSentry',
         },
     },
@@ -519,7 +512,7 @@ LOGGING = {
             'formatter': 'simple'
         },
         'console_out': {
-            'level': 'DEBUG' if LOCAL and LOG_SQL else 'INFO',
+            'level': 'DEBUG' if LOG_SQL else 'INFO',
             'class': 'logging.StreamHandler',
             'stream': sys.stdout,
             'filters': ['level_below_warning'],
@@ -541,12 +534,12 @@ LOGGING = {
         'sentry': {
             'level': 'ERROR',
             'class': 'raven.contrib.django.handlers.SentryHandler',
-            'filters': ['on_server_or_forced'],
+            'filters': ['use_sentry'],
         },
         'sentry_all': {
             'level': 'DEBUG',
             'class': 'raven.contrib.django.handlers.SentryHandler',
-            'filters': ['on_server_or_forced'],
+            'filters': ['use_sentry'],
         },
         'sentry_file': {
             'level': 'WARNING',
@@ -564,16 +557,16 @@ LOGGING = {
             'level': 'INFO',
             'filename': os.path.join(LOG_DIR, 'sql.log')
         },
+        'sql_console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'message_only'
+        },
         'sss_file': {
             'class': 'logging.FileHandler',
             'level': 'DEBUG',
             'filename': os.path.join(LOG_DIR, 'sss.log'),
             'formatter': 'simple_dashed'
-        },
-        'sql_console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'message_only'
         },
         'null': {
             "class": 'django.utils.log.NullHandler',
