@@ -2,7 +2,7 @@ from django.conf import settings
 
 SHOUTIT_TWILIO_SETTINGS = {
     "TWILIO_ACCOUNT_SID": "AC72062980c854618cfa7765121af3085d",
-    "TOKEN_TTL": 3600
+    "TOKEN_TTL": 86400  # 1 Day
 }
 TWILIO_ENV = settings.TWILIO_ENV
 

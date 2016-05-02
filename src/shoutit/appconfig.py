@@ -5,4 +5,4 @@ from django.apps import AppConfig
 class ShoutitConfig(AppConfig):
     name = 'shoutit'
     label = 'shoutit'
-    verbose_name = "Shoutit"
+    verbose_name = "Shoutit API"

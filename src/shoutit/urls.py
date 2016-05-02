@@ -29,9 +29,6 @@ urlpatterns = [
 
     # Heartbeat
     url(r'^heartbeat', include('heartbeat.urls')),
-
-    url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL + 'img/icon.png', permanent=True)),
-    url(r'^robots\.txt$', RedirectView.as_view(url=settings.STATIC_URL + 'robots.txt', permanent=True)),
 ]
 
 # serving static files while developing locally using gunicorn

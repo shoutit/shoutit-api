@@ -4,20 +4,21 @@
 
 ### Env variables
 
+
+- `API_LINK`
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
+- `EMAIL_ENV`
+- `ES_HOST`, `ES_PORT`
+- `FACEBOOK_APP_ID`
+- `FACEBOOK_APP_SECRET`
+- `MIXPANEL_TOKEN`
+- `PUSHER_ENV`
+- `RAVEN_DSN`
+- `REDIS_HOST`, `REDIS_PORT`
+- `SHOUTIT_DEBUG` any true value
 - `SHOUTIT_ENV` should be one of these:
     - `local`
     - `dev`
     - `prod`
-- `SHOUTIT_DEBUG` can be `True`
-- `RAVEN_DSN`
-
-- `SITE_LINK`, `API_LINK`
-
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
-- `REDIS_HOST`, `REDIS_PORT`
-- `ES_HOST`, `ES_PORT`
-
-- `EMAIL_USING`
-- `PUSHER_ENV`
+- `SITE_LINK`
 - `TWILIO_ENV`
-- `MIXPANEL_TOKEN`

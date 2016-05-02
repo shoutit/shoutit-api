@@ -35,6 +35,10 @@ class PusherChannel(UUIDModel):
     def __unicode__(self):
         return "%s: %s users" % (self.name, self.users.count())
 
+    @property
+    def users_count(self):
+        return self.users.count()
+
 
 class PusherChannelJoin(UUIDModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)

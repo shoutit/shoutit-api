@@ -19,9 +19,6 @@ SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
 
 # Local or Dev or Prod
 LOCAL = SHOUTIT_ENV == 'local'
-DEV = SHOUTIT_ENV == 'dev'
-PROD = SHOUTIT_ENV == 'prod'
-ON_SERVER = DEV or PROD
 
 
 def info(*args):
