@@ -14,7 +14,7 @@ from .settings import SHOUTIT_TWILIO_SETTINGS
 class VideoClient(UUIDModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='video_client')
     token = models.CharField(max_length=1000)
-    ttl = models.SmallIntegerField(default=SHOUTIT_TWILIO_SETTINGS['TOKEN_TTL'])
+    ttl = models.IntegerField(default=SHOUTIT_TWILIO_SETTINGS['TOKEN_TTL'])
 
     def __unicode__(self):
         return "%s" % unicode(self.user)
