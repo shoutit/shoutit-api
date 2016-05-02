@@ -99,6 +99,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         _('testuser status'), default=False, help_text=_('Designates whether this user is a test user.'))
     is_guest = models.BooleanField(
         _('guest user status'), default=False, help_text=_('Designates whether this user is a guest user.'))
+    on_mailing_list = models.BooleanField(
+        _('mailing list status'), default=False, help_text=_('Designates whether this user is on the main mailing list.'))
     objects = ShoutitUserManager()
 
     USERNAME_FIELD = 'username'
@@ -110,6 +112,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     def __unicode__(self):
         return "{} [{}:{}]".format(self.name if not self.is_guest else 'Guest', self.pk, self.username)
+
+    def clean(self):
+        self.email = self.email.lower()
+        if self.is_test:
+            self.is_activated = True
 
     @property
     def type_name_v3(self):
@@ -290,9 +297,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         # take_permissions_from_user(self, ACTIVATED_USER_PERMISSIONS)
         pass
 
-    def send_signup_email(self):
+    def send_welcome_email(self):
         from ..controllers import email_controller
-        email_controller.send_signup_email(self)
+        email_controller.send_welcome_email(self)
+
+    def subscribe_to_mailing_list(self):
+        from ..controllers import email_controller
+        email_controller.subscribe_users_to_mailing_list([self])
 
     def send_verified_email(self):
         from ..controllers import email_controller
@@ -333,11 +344,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_RESET_PASSWORD)
         # email the user
         email_controller.send_password_reset_email(self)
-
-    def clean(self):
-        self.email = self.email.lower()
-        if self.is_test:
-            self.is_activated = True
 
     @property
     def is_password_set(self):

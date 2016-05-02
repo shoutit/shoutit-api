@@ -352,9 +352,6 @@ LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
-MAILCHIMP_API_KEY = 'd87a573a48bc62ff3326d55f6a92b2cc-us5'
-MAILCHIMP_MASTER_LIST_ID = 'f339e70dd9'
-
 GOOGLE_SMTP = {
     'default_from_email': 'Jack <reply@shoutit.com>',
     'host': 'smtp.gmail.com',
@@ -376,6 +373,7 @@ SENDGRID_SMTP = {
     'backend': 'django.core.mail.backends.smtp.EmailBackend'
 }
 FILE_SMTP = {
+    'default_from_email': 'Shoutit <noreply@shoutit.com>',
     'host': 'localhost',
     'backend': 'django.core.mail.backends.filebased.EmailBackend',
     'file_path': os.path.join(LOG_DIR, 'messages')

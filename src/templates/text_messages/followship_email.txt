@@ -1,8 +1,0 @@
-Hello {{ followed }},
-The user {{ follower }} [{{ link }}] has started listening to your shouts.
--------------------------------------------------------------------------------------
-Please do not reply to this email, your message won't be read or processed.
-
-
-Shoutit [http://www.shoutit.com]
-info@shout.com

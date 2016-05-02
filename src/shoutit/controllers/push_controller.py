@@ -15,7 +15,7 @@ from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAG
                               NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL,
                               NOTIFICATION_TYPE_MISSED_VIDEO_CALL)
 from ..models import User, PushBroadcast, Device
-from ..utils import debug_logger, serialize_attached_object, error_logger
+from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
 
 
 @job(settings.RQ_QUEUE_PUSH)
@@ -181,11 +181,6 @@ def send_push_broadcast(push_broadcast, devices, user_ids):
         gcm_devices = GCMDevice.objects.filter(user__in=user_ids)
         gcm_devices.send_message(push_broadcast.message, extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
         debug_logger.debug("Sent Push Broadcast: %s to %d GCM devices" % (push_broadcast.pk, len(gcm_devices)))
-
-
-class UserIds(list):
-    def __repr__(self):
-        return "UserIds: %d ids" % len(self)
 
 
 @receiver(post_save, sender=APNSDevice)
