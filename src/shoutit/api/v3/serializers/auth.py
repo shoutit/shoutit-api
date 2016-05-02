@@ -138,17 +138,12 @@ class ShoutitGuestSerializer(serializers.Serializer):
                 raise User.DoesNotExist()
         except User.DoesNotExist:
             initial_guest_user['ip'] = get_real_ip(request)
+            # Create user
             user = user_controller.user_from_guest_data(initial_gust_user=initial_guest_user, is_test=request.is_test)
-            if apns:
-                # delete devices with same apns_token
-                APNSDevice.objects.filter(registration_id=apns).delete()
-                # create new device for user with apns_token
-                APNSDevice(registration_id=apns, user=user).save()
-            elif gcm:
-                # delete devices with same gcm_token
-                GCMDevice.objects.filter(registration_id=gcm).delete()
-                # create new device for user with gcm_token
-                GCMDevice(registration_id=gcm, user=user).save()
+            # Set Push Tokens
+            if push_tokens:
+                user.update_push_tokens(push_tokens, 'v3')
+
         # Todo: Check when this case happens
         if not user:
             raise serializers.ValidationError("Could not create guest account")
