@@ -17,7 +17,8 @@ def create_video_client(user):
 
     # Create an Access Token
     token = AccessToken(SHOUTIT_TWILIO_SETTINGS['TWILIO_ACCOUNT_SID'], SHOUTIT_TWILIO_SETTINGS['TWILIO_API_KEY'],
-                        SHOUTIT_TWILIO_SETTINGS['TWILIO_API_SECRET'], identity=identity)
+                        SHOUTIT_TWILIO_SETTINGS['TWILIO_API_SECRET'], identity=identity,
+                        ttl=SHOUTIT_TWILIO_SETTINGS['ttl'])
 
     # Grant access to Conversations
     grant = ConversationsGrant(configuration_profile_sid=SHOUTIT_TWILIO_SETTINGS['TWILIO_CONFIGURATION_SID'])
