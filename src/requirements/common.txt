@@ -1,4 +1,5 @@
 # core
+django-dotenv
 gunicorn==19.4.5
 raven==5.14.0
 requests==2.10.0
