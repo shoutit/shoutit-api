@@ -1,5 +1,6 @@
 ### Env variables
 
+These (except `SHOUTIT_ENV`) should be set in a file located in `src/configs`
 - `API_LINK`
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`
 - `EMAIL_ENV`
@@ -11,9 +12,13 @@
 - `RAVEN_DSN`
 - `REDIS_HOST`, `REDIS_PORT`
 - `SHOUTIT_DEBUG` any true value
-- `SHOUTIT_ENV` should be one of these:
+- `SHOUTIT_ENV` should be one of the following and set before starting the server
     - `local`
     - `dev`
     - `prod`
 - `SITE_LINK`
 - `TWILIO_ENV`
+
+Other variables that can be used on Docker
+- `FORCE_SSL`
+- `VIRTUAL_HOST`
