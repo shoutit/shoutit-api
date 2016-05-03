@@ -44,3 +44,50 @@ api-dev-rq:
   tags:
     - api
     - dev
+
+api-prod:
+  image: 'shoutit/shoutit-api:prod'
+  autoredeploy: true
+  links:
+    - 'api-prod-redis:redis'
+  restart: always
+  tags:
+    - api
+    - prod
+api-prod-lb:
+  image: 'dockercloud/haproxy:latest'
+  environment:
+    - DEFAULT_SSL_CERT=
+    - STATS_AUTH=
+    - TERM=xterm-256color
+  links:
+    - api-prod
+  ports:
+    - '80:80'
+    - '443:443'
+    - '45000:1936'
+  roles:
+    - global
+  tags:
+    - api
+    - prod
+    - lb
+api-prod-redis:
+  image: 'redis:latest'
+  environment:
+    - TERM=xterm-256color
+  restart: always
+  tags:
+    - api
+    - prod
+    - redis
+api-prod-rq:
+  image: 'shoutit/shoutit-api:prod'
+  autoredeploy: true
+  command: '/bin/sh -c supervisord -n'
+  links:
+    - 'api-prod-redis:redis'
+  restart: always
+  tags:
+    - api
+    - prod
