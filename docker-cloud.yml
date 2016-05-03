@@ -1,28 +1,6 @@
 api-dev:
   image: 'shoutit/shoutit-api:dev'
   autoredeploy: true
-  environment:
-    - API_LINK=
-    - DB_HOST=
-    - DB_PASSWORD=
-    - DB_PORT=
-    - DB_USER=
-    - EMAIL_ENV=sendgrid
-    - ES_HOST=
-    - ES_PORT=
-    - FACEBOOK_APP_ID=
-    - FACEBOOK_APP_SECRET=
-    - FORCE_SSL=yes
-    - MIXPANEL_TOKEN=
-    - PUSHER_ENV=dev
-    - RAVEN_DSN=
-    - REDIS_HOST=
-    - REDIS_PORT=
-    - SHOUTIT_DEBUG=True
-    - SHOUTIT_ENV=dev
-    - SITE_LINK=
-    - TWILIO_ENV=dev
-    - VIRTUAL_HOST
   links:
     - 'api-dev-redis:redis'
   restart: always
@@ -34,6 +12,7 @@ api-dev-lb:
   environment:
     - DEFAULT_SSL_CERT=
     - STATS_AUTH=
+    - TERM=xterm-256color
   links:
     - api-dev
   ports:
@@ -48,6 +27,8 @@ api-dev-lb:
     - lb
 api-dev-redis:
   image: 'redis:latest'
+  environment:
+    - TERM=xterm-256color
   restart: always
   tags:
     - api
@@ -57,28 +38,6 @@ api-dev-rq:
   image: 'shoutit/shoutit-api:dev'
   autoredeploy: true
   command: '/bin/sh -c supervisord -n'
-  environment:
-    - API_LINK=
-    - DB_HOST=
-    - DB_PASSWORD=
-    - DB_PORT=
-    - DB_USER=
-    - EMAIL_ENV=sendgrid
-    - ES_HOST=
-    - ES_PORT=
-    - FACEBOOK_APP_ID=
-    - FACEBOOK_APP_SECRET=
-    - FORCE_SSL=yes
-    - MIXPANEL_TOKEN=
-    - PUSHER_ENV=dev
-    - RAVEN_DSN=
-    - REDIS_HOST=
-    - REDIS_PORT=
-    - SHOUTIT_DEBUG=True
-    - SHOUTIT_ENV=dev
-    - SITE_LINK=
-    - TWILIO_ENV=dev
-    - VIRTUAL_HOST
   links:
     - 'api-dev-redis:redis'
   restart: always
