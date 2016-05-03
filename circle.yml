@@ -17,7 +17,7 @@ test:
   post:
 
 deployment:
-  hub-dev:
+  deploy-dev:
     branch: dev
     commands:
       - rm -rf src/configs
@@ -28,3 +28,14 @@ deployment:
         -t shoutit/shoutit-api:dev .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
+  deploy-prod:
+    branch: prod
+    commands:
+      - rm -rf src/configs
+      - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
+      - >
+        docker build
+        --build-arg SHOUTIT_ENV=prod
+        -t shoutit/shoutit-api:prod .
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push shoutit/shoutit-api:prod
