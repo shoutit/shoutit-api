@@ -20,6 +20,8 @@ deployment:
   hub-dev:
     branch: dev
     commands:
+      - rm -rf src/configs
+      - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
       - >
         docker build
         --build-arg SHOUTIT_ENV=dev
