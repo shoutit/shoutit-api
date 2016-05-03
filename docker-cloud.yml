@@ -3,7 +3,10 @@ api-dev:
   autoredeploy: true
   links:
     - 'api-dev-redis:redis'
-  restart: always
+  environment:
+    - FORCE_SSL=yes
+    - 'VIRTUAL_HOST=https://dev.api.shoutit.com, http://dev.api.shoutit.com'
+      restart: always
   tags:
     - api
     - dev
@@ -48,6 +51,9 @@ api-dev-rq:
 api-prod:
   image: 'shoutit/shoutit-api:prod'
   autoredeploy: true
+  environment:
+    - FORCE_SSL=yes
+    - 'VIRTUAL_HOST=https://api.shoutit.com, http://api.shoutit.com'
   links:
     - 'api-prod-redis:redis'
   restart: always
