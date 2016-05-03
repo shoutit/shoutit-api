@@ -61,7 +61,7 @@ MAX_VIDEOS_PER_ITEM = 2
             Elasticsearch
 =================================
 """
-ES_HOST = os.environ.get('ES_HOST', 'es.shoutit.com')
+ES_HOST = os.environ.get('ES_HOST', '127.0.0.1')
 ES_PORT = os.environ.get('ES_PORT', '9200')
 ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
 ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX', 'shoutit_api_%s' % SHOUTIT_ENV)
@@ -71,14 +71,13 @@ ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX', 'shoutit_api_%s' % SHOUTIT_ENV)
             Caching
 =================================
 """
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis.shoutit.com')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_PORT = os.environ.get('REDIS_PORT', 'tcp://localhost:6379').replace('tcp', 'redis')
 
 
 def default_redis_conf(db=0):
     return {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://%s:%s/%s" % (REDIS_HOST, REDIS_PORT, str(db)),
+        "LOCATION": "%s/%s" % (REDIS_PORT, str(db)),
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -649,7 +648,7 @@ info("API_LINK:", API_LINK)
 info("SITE_LINK:", SITE_LINK)
 info("==================================================")
 info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
-info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
+info("REDIS_PORT:", REDIS_PORT)
 info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
 info("FORCE_SYNC_RQ:", FORCE_SYNC_RQ)
 info("==================================================")
