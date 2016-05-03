@@ -250,7 +250,6 @@ DEFAULT_LANGUAGE_CODE = 'en'
          Static files
 =================================
 """
-FORCE_S3 = True
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -654,7 +653,6 @@ info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
 info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
 info("FORCE_SYNC_RQ:", FORCE_SYNC_RQ)
 info("==================================================")
-info('FORCE_S3:', FORCE_S3)
 info('STATIC_URL:', STATIC_URL)
 info("==================================================")
 info("EMAIL_ENV:", EMAIL_ENV)
