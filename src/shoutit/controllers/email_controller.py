@@ -116,7 +116,7 @@ def _send_password_reset_email(user):
 
 
 def subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=True):
-    if not settings.PROD:
+    if settings.EMAIL_ENV == 'file':
         return
     return _subscribe_users_to_mailing_list.delay(users=users, user_ids=user_ids, raise_errors=raise_errors)
 
