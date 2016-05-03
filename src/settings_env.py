@@ -7,6 +7,7 @@ from __future__ import unicode_literals, print_function
 import os
 import sys
 
+import dotenv
 from django.utils import timezone
 from kitchen.text.converters import getwriter
 
@@ -19,6 +20,10 @@ SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
 
 # Local or Dev or Prod
 LOCAL = SHOUTIT_ENV == 'local'
+
+# Read env variables from .env file based on `SHOUTIT_ENV`
+env_file = os.path.join(SRC_DIR, 'configs', SHOUTIT_ENV + '.env')
+dotenv.read_dotenv(env_file)
 
 
 def info(*args):

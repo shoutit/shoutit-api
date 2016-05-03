@@ -22,12 +22,12 @@ ADDRESS, PORT = get_address_port(GUNICORN)
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
-API_LINK = os.environ.get('API_LINK', 'http://api.shoutit.local/v3/')
-SITE_LINK = os.environ.get('SITE_LINK', 'http://www.shoutit.local:3000/')
+API_LINK = os.environ.get('API_LINK')
+SITE_LINK = os.environ.get('SITE_LINK')
 
 # Security
 DEBUG = strtobool(os.environ.get('SHOUTIT_DEBUG'))
-SECRET_KEY = '0af3^t(o@8cl(8z_gli1@)j*)&(&qzlvu7gox@koj-e#u8z*$q'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 ENFORCE_SECURE = not DEBUG
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -61,24 +61,23 @@ MAX_VIDEOS_PER_ITEM = 2
             Elasticsearch
 =================================
 """
-ES_HOST = os.environ.get('ES_HOST', 'es.shoutit.com')
-ES_PORT = os.environ.get('ES_PORT', '9200')
+ES_HOST = os.environ.get('ES_HOST')
+ES_PORT = os.environ.get('ES_PORT')
 ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
-ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX', 'shoutit_api_%s' % SHOUTIT_ENV)
+ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
 
 """
 =================================
             Caching
 =================================
 """
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis.shoutit.com')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_PORT = os.environ.get('REDIS_PORT').replace('tcp', 'redis')
 
 
 def default_redis_conf(db=0):
     return {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://%s:%s/%s" % (REDIS_HOST, REDIS_PORT, str(db)),
+        "LOCATION": "%s/%s" % (REDIS_PORT, str(db)),
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -221,12 +220,11 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        # eg. SHOUTIT_ENV is prod, db should be shoutit_prod
-        'NAME': os.environ.get('DB_NAME', 'shoutit_' + SHOUTIT_ENV),
-        'USER': os.environ.get('DB_USER', 'shoutit'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', '#a\_Y9>uw<.5;_=/kUwK'),
-        'HOST': os.environ.get('DB_HOST', 'db.shoutit.com'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
     }
 }
 
@@ -250,7 +248,6 @@ DEFAULT_LANGUAGE_CODE = 'en'
          Static files
 =================================
 """
-FORCE_S3 = True
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -331,8 +328,8 @@ ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
 =================================
 """
 # Facebook App
-FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID', '1204745992871917')
-FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '357fbd11d7889a2e8d869fa7ecad0860')
+FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID')
+FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
 
 # Google App
 GOOGLE_WEB_CLIENT = os.path.join(SRC_DIR, 'assets', 'google-web-client.json')
@@ -377,7 +374,7 @@ EMAIL_BACKENDS = {
     'sendgrid': SENDGRID_SMTP,
     'file': FILE_SMTP
 }
-EMAIL_ENV = os.environ.get('EMAIL_ENV', 'file')
+EMAIL_ENV = os.environ.get('EMAIL_ENV')
 EMAIL_USING = EMAIL_BACKENDS[EMAIL_ENV]
 DEFAULT_FROM_EMAIL = EMAIL_USING.get('default_from_email')
 EMAIL_HOST = EMAIL_USING.get('host')
@@ -650,11 +647,10 @@ info("API_LINK:", API_LINK)
 info("SITE_LINK:", SITE_LINK)
 info("==================================================")
 info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
-info("REDIS_HOST, REDIS_PORT:", REDIS_HOST, REDIS_PORT)
+info("REDIS_PORT:", REDIS_PORT)
 info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
 info("FORCE_SYNC_RQ:", FORCE_SYNC_RQ)
 info("==================================================")
-info('FORCE_S3:', FORCE_S3)
 info('STATIC_URL:', STATIC_URL)
 info("==================================================")
 info("EMAIL_ENV:", EMAIL_ENV)

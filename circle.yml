@@ -17,14 +17,25 @@ test:
   post:
 
 deployment:
-  hub-dev:
+  deploy-dev:
     branch: dev
     commands:
+      - rm -rf src/configs
+      - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
       - >
         docker build
         --build-arg SHOUTIT_ENV=dev
         -t shoutit/shoutit-api:dev .
-# Todo: find a way to migrate different tags. Env vars need to be set!
-#      - docker run shoutit/shoutit-api:dev python ./src/manage.py migrate
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
+  deploy-prod:
+    branch: prod
+    commands:
+      - rm -rf src/configs
+      - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
+      - >
+        docker build
+        --build-arg SHOUTIT_ENV=prod
+        -t shoutit/shoutit-api:prod .
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push shoutit/shoutit-api:prod
