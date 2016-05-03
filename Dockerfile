@@ -24,6 +24,7 @@ RUN pip install -r src/requirements/common_noupdate.txt
 EXPOSE 8001
 
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONIOENCODING UTF-8
 ENV SHOUTIT_ENV $SHOUTIT_ENV
 ENV NEW_RELIC_CONFIG_FILE /api/deploy/newrelic-${SHOUTIT_ENV}.ini
 
