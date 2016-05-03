@@ -1,6 +1,5 @@
 FROM python:2.7
 
-ARG ENV_KEY
 ARG SHOUTIT_ENV=dev
 
 # Define working directory and copy files to it
@@ -10,7 +9,6 @@ ADD . /api/
 
 # Add external files
 ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
-ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/${ENV_KEY}/${SHOUTIT_ENV}.env src/.env
 
 # Install ubuntu dependencies
 RUN apt-get update -y && apt-get install tesseract-ocr -y
