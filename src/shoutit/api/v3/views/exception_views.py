@@ -35,7 +35,7 @@ drf_exceptions_map = {
 
 # key: (code, message, developer_message, reason)
 other_exceptions_map = {
-    Http404: (status.HTTP_400_BAD_REQUEST, _('Resource not found.'), "", ERROR_REASON.NOT_FOUND),
+    Http404: (status.HTTP_404_NOT_FOUND, _('Resource not found.'), "", ERROR_REASON.NOT_FOUND),
     django_exceptions.PermissionDenied: (status.HTTP_403_FORBIDDEN,
                                          _('Permission denied.'), "", ERROR_REASON.PERMISSION_DENIED)
 }
