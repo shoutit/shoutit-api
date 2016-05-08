@@ -188,6 +188,7 @@ def apns_post_save(sender, instance=None, created=False, update_fields=None, **k
     if created:
         api_version = getattr(instance, 'api_version', api_settings.DEFAULT_VERSION)
         Device.objects.create(user=instance.user, type=DEVICE_IOS, api_version=api_version, push_device=instance)
+        debug_logger.debug("Created %s APNSDevice for %s" % (api_version, instance.user))
 
 
 @receiver(post_save, sender=GCMDevice)
@@ -195,3 +196,4 @@ def gcm_post_save(sender, instance=None, created=False, update_fields=None, **kw
     if created:
         api_version = getattr(instance, 'api_version', api_settings.DEFAULT_VERSION)
         Device.objects.create(user=instance.user, type=DEVICE_ANDROID, api_version=api_version, push_device=instance)
+        debug_logger.debug("Created %s GCMDevice for %s" % (api_version, instance.user))

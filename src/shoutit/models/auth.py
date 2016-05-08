@@ -144,74 +144,52 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def apns_device(self):
-        if hasattr(self, '_apns_device'):
-            return self._apns_device
-        try:
-            self._apns_device = APNSDevice.objects.get(user=self)
-            return self._apns_device
-        except APNSDevice.DoesNotExist:
-            return None
+        return APNSDevice.objects.filter(user=self).first()
 
     @property
     def has_apns(self):
         return self.apns_device is not None
 
-    def delete_apns_device(self):
-        if self.apns_device:
-            self.apns_device.delete()
-            if hasattr(self, '_apns_device'):
-                delattr(self, '_apns_device')
+    def delete_apns_devices(self):
+        APNSDevice.objects.filter(user=self).delete()
+        debug_logger.debug("Deleted APNSDevices for %s" % self)
 
     @property
     def gcm_device(self):
-        if hasattr(self, '_gcm_device'):
-            return self._gcm_device
-        try:
-            self._gcm_device = GCMDevice.objects.get(user=self)
-            return self._gcm_device
-        except GCMDevice.DoesNotExist:
-            return None
+        return GCMDevice.objects.filter(user=self).first()
 
     @property
     def has_gcm(self):
         return self.gcm_device is not None
 
-    def delete_gcm_device(self):
-        if self.gcm_device:
-            self.gcm_device.delete()
-            if hasattr(self, '_gcm_device'):
-                delattr(self, '_gcm_device')
+    def delete_gcm_devices(self):
+        GCMDevice.objects.filter(user=self).delete()
+        debug_logger.debug("Deleted GCMDevices for %s" % self)
 
     def update_push_tokens(self, push_tokens_data, api_version):
         if 'apns' in push_tokens_data:
             apns_token = push_tokens_data.get('apns')
-            # Delete user device if exists
-            if self.apns_device:
-                self.delete_apns_device()
-                debug_logger.debug("Deleted APNSDevice for %s" % self)
+            # Delete user devices
+            self.delete_apns_devices()
             if apns_token is not None:
                 # Delete devices with same apns_token
                 APNSDevice.objects.filter(registration_id=apns_token).delete()
                 # Create new device for user with apns_token
                 apns_device = APNSDevice(registration_id=apns_token, user=self)
                 apns_device.api_version = api_version
-                apns_device.save(True)
-                debug_logger.debug("Created %s APNSDevice for %s" % (api_version, self))
+                apns_device.save()
 
         if 'gcm' in push_tokens_data:
             gcm_token = push_tokens_data.get('gcm')
-            # Delete user device if exists
-            if self.gcm_device:
-                self.delete_gcm_device()
-                debug_logger.debug("Deleted GCMDevice for %s" % self)
+            # Delete user devices
+            self.delete_gcm_devices()
             if gcm_token is not None:
                 # Delete devices with same gcm_token
                 GCMDevice.objects.filter(registration_id=gcm_token).delete()
                 # Create new gcm device for user with gcm_token
                 gcm_device = GCMDevice(registration_id=gcm_token, user=self)
                 gcm_device.api_version = api_version
-                gcm_device.save(True)
-                debug_logger.debug("Created %s GCMDevice for %s" % (api_version, self))
+                gcm_device.save()
 
     @property
     def linked_accounts(self):
