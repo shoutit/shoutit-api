@@ -5,6 +5,7 @@ from copy import deepcopy
 from django.conf import settings
 from django.db.models import Count
 from django_rq import job
+from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE)
 from ..controllers import push_controller, pusher_controller
@@ -51,24 +52,26 @@ def get_unread_conversations_count(user):
 
 
 @job(settings.RQ_QUEUE)
-def notify_user(user, notification_type, from_user=None, attached_object=None):
+def notify_user(user, notification_type, from_user=None, attached_object=None, versions=None):
+    if not versions:
+        versions = api_settings.ALLOWED_VERSIONS
     # Trigger event on Pusher profile channel
-    pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v3')
-    pusher_controller.trigger_profile_event(user, notification_type, attached_object, 'v2')
+    for v in versions:
+        pusher_controller.trigger_profile_event(user, notification_type, attached_object, v)
 
     if notification_type != NOTIFICATION_TYPE_PROFILE_UPDATE:
         # Create notification object
         Notification.create(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
 
-        # Trigger `stats_update` on Pusher
+        # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
 
         # Send Push notification when no pusher channels of any version exit
         can_push = push_controller.check_push(notification_type)
         can_pusher = pusher_controller.check_pusher(user)
         if can_push and not can_pusher:
-            push_controller.send_push.delay(user, notification_type, attached_object, 'v3')
-            push_controller.send_push.delay(user, notification_type, attached_object, 'v2')
+            for v in versions:
+                push_controller.send_push.delay(user, notification_type, attached_object, v)
 
 
 def notify_user_of_listen(user, listener):
@@ -85,4 +88,5 @@ def notify_user_of_profile_update(user):
     # Serialize using ProfileDetailSerializer
     user.detailed = True
     attached_object = deepcopy(user)  # Avoid pickling issues
-    notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=attached_object)
+    notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=attached_object,
+                      versions=['v3'])
