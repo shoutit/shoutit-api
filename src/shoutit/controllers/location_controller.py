@@ -35,6 +35,8 @@ def from_ip(ip=None, use_location_index=False):
 
 
 def from_location_index(lat, lon, ip=None, ip_location=None):
+    lat = round(float(lat), 6)
+    lon = round(float(lon), 6)
     location = {}
     # 0 - if lat and lon are 0, use the ip to determine location
     if lat == 0 and lon == 0:
@@ -60,8 +62,8 @@ def from_location_index(lat, lon, ip=None, ip_location=None):
             else:
                 location = DEFAULT_LOCATION
         else:
-            # 2 - check if there is results
-            if indexed_locations:
+            # 2 - check if there are 'correct' results
+            if indexed_locations and isinstance(indexed_locations[0], LocationIndex):
                 # 3 - check closest location, if closer than x km return its attributes
                 closest_location = indexed_locations[0]
                 if closest_location.meta['sort'][0] < 5.0:

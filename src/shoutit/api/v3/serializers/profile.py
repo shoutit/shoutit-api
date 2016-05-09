@@ -201,11 +201,11 @@ class ProfileDetailSerializer(ProfileSerializer):
         return email
 
     def validate_website(self, website):
-        website = website.lower()
-        # If no URL scheme given, assume http://
-        if website and '://' not in website:
-            website = u'http://%s' % website
         if website:
+            website = website.lower()
+            # If no URL scheme given, assume http://
+            if '://' not in website:
+                website = u'http://%s' % website
             URLValidator()(website)
         return website
 
