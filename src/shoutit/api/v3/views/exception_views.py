@@ -16,7 +16,7 @@ from rest_framework import exceptions as drf_exceptions, status
 from rest_framework.compat import set_rollback
 from rest_framework.request import _hasattr
 from rest_framework.response import Response
-
+from provider import views as provider_views
 from common.utils import dict_flatten
 from shoutit.api.v3.exceptions import ShoutitAPIException, ERROR_REASON, ERROR_LOCATION_TYPE, _force_text_recursive
 from shoutit.utils import error_logger
@@ -34,10 +34,13 @@ drf_exceptions_map = {
 }
 
 # key: (code, message, developer_message, reason)
+# `developer_message` can be a callable that accepts the exception as its single parameter and return a string
 other_exceptions_map = {
     Http404: (status.HTTP_404_NOT_FOUND, _('Resource not found.'), "", ERROR_REASON.NOT_FOUND),
-    django_exceptions.PermissionDenied: (status.HTTP_403_FORBIDDEN,
-                                         _('Permission denied.'), "", ERROR_REASON.PERMISSION_DENIED)
+    django_exceptions.PermissionDenied: (status.HTTP_403_FORBIDDEN, _('Permission denied.'), "",
+                                         ERROR_REASON.PERMISSION_DENIED),
+    provider_views.OAuthError: (status.HTTP_400_BAD_REQUEST, _("Authentication failed"), lambda e: e.message['error'],
+                                ERROR_REASON.AUTH_FAILED)
 }
 
 
@@ -78,6 +81,8 @@ def drf_exception_handler(exc, context):
 
     elif exc.__class__ in other_exceptions_map:
         status_code, message, developer_message, reason = other_exceptions_map[exc.__class__]
+        if hasattr(developer_message, '__call__'):
+            developer_message = developer_message(exc)
         errors = [{'message': message, 'developer_message': developer_message, 'reason': reason}]
 
     else:
