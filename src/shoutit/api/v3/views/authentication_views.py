@@ -125,18 +125,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Handle ``grant_type=facebook_access_token`` requests.
         """
         user = self.get_facebook_access_token_grant(request, data, client)
-        self.request.user = user
-        scope = provider_scope.to_int('read', 'write')
-
-        if provider_constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, user, scope, client)
-        else:
-            at = self.create_access_token(request, user, scope, client)
-            # Public clients don't get refresh tokens
-            if client.client_type == provider_constants.CONFIDENTIAL:
-                self.create_refresh_token(request, user, scope, at, client)
-
-        return self.access_token_response(at)
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes)
 
     def get_gplus_code_grant(self, request, data, client):
         serializer = GplusAuthSerializer(data=data, context={'request': request})
@@ -148,18 +138,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Handle ``grant_type=gplus_code`` requests.
         """
         user = self.get_gplus_code_grant(request, data, client)
-        self.request.user = user
-        scope = provider_scope.to_int('read', 'write')
-
-        if provider_constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, user, scope, client)
-        else:
-            at = self.create_access_token(request, user, scope, client)
-            # Public clients don't get refresh tokens
-            if client.client_type == provider_constants.CONFIDENTIAL:
-                self.create_refresh_token(request, user, scope, at, client)
-
-        return self.access_token_response(at)
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes)
 
     def get_shoutit_signup_grant(self, request, signup_data, client):
         serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request})
@@ -172,18 +152,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Handle ``grant_type=shoutit_signup`` requests.
         """
         user = self.get_shoutit_signup_grant(request, data, client)
-        self.request.user = user
-        scope = provider_scope.to_int('read', 'write')
-
-        if provider_constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, user, scope, client)
-        else:
-            at = self.create_access_token(request, user, scope, client)
-            # Public clients don't get refresh tokens
-            if client.client_type == provider_constants.CONFIDENTIAL:
-                self.create_refresh_token(request, user, scope, at, client)
-
-        return self.access_token_response(at)
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes)
 
     def get_shoutit_login_grant(self, request, login_data, client):
         serializer = ShoutitLoginSerializer(data=login_data, context={'request': request})
@@ -194,20 +164,9 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         Handle ``grant_type=shoutit_login`` requests.
         """
-
         user = self.get_shoutit_login_grant(request, data, client)
-        self.request.user = user
-        scope = provider_scope.to_int('read', 'write')
-
-        if provider_constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, user, scope, client)
-        else:
-            at = self.create_access_token(request, user, scope, client)
-            # Public clients don't get refresh tokens
-            if client.client_type == provider_constants.CONFIDENTIAL:
-                self.create_refresh_token(request, user, scope, at, client)
-
-        return self.access_token_response(at)
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes)
 
     def get_shoutit_guest_grant(self, request, guest_data, client):
         serializer = ShoutitGuestSerializer(data=guest_data, context={'request': request})
@@ -219,18 +178,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Handle ``grant_type=shoutit_guest`` requests.
         """
         user = self.get_shoutit_guest_grant(request, data, client)
-        self.request.user = user
-        scope = provider_scope.to_int('read')
-
-        if provider_constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, user, scope, client)
-        else:
-            at = self.create_access_token(request, user, scope, client)
-            # Public clients don't get refresh tokens
-            if client.client_type == provider_constants.CONFIDENTIAL:
-                self.create_refresh_token(request, user, scope, at, client)
-
-        return self.access_token_response(at)
+        scopes = ('read',)
+        return self.prepare_access_token_response(request, client, user, scopes)
 
     def get_sms_code_grant(self, request, data, client):
         serializer = SMSCodeSerializer(data=data, context={'request': request})
@@ -242,11 +191,12 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Handle ``grant_type=sms_code`` requests.
         """
         user = self.get_sms_code_grant(request, data, client)
-        return self.prepare_access_token_response(request, client, user)
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes)
 
-    def prepare_access_token_response(self, request, client, user):
+    def prepare_access_token_response(self, request, client, user, scopes):
         self.request.user = user
-        scope = provider_scope.to_int('read', 'write')
+        scope = provider_scope.to_int(*scopes)
 
         if provider_constants.SINGLE_ACCESS_TOKEN:
             at = self.get_access_token(request, user, scope, client)
