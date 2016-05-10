@@ -143,6 +143,7 @@ class MessageAttachmentType(Constant):
 MESSAGE_ATTACHMENT_TYPE_SHOUT = MessageAttachmentType('shout')
 MESSAGE_ATTACHMENT_TYPE_LOCATION = MessageAttachmentType('location')
 MESSAGE_ATTACHMENT_TYPE_MEDIA = MessageAttachmentType('media')
+MESSAGE_ATTACHMENT_TYPE_PROFILE = MessageAttachmentType('profile')
 
 
 class PostType(Constant):

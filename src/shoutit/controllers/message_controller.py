@@ -5,11 +5,12 @@ from django.db import IntegrityError
 from django.db.models import Q
 from pydash import arrays
 
-from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION
+from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION, MESSAGE_ATTACHMENT_TYPE_PROFILE
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import any_in
-from shoutit.models import (MessageAttachment, Shout, Conversation, Message, MessageDelete, SharedLocation, Video)
+from shoutit.models import (Conversation, Message, MessageAttachment, MessageDelete, Shout, User, SharedLocation,
+                            Video)
 from shoutit.utils import error_logger
 
 
@@ -107,6 +108,13 @@ def save_message_attachments(message, attachments):
             object_id = attachment[MESSAGE_ATTACHMENT_TYPE_SHOUT.text]['id']
             content_type = ContentType.objects.get_for_model(Shout)
             ma_type = MESSAGE_ATTACHMENT_TYPE_SHOUT
+            MessageAttachment.create(message_id=message.id, conversation_id=conversation.id, content_type=content_type,
+                                     object_id=object_id, type=ma_type).save()
+
+        if MESSAGE_ATTACHMENT_TYPE_PROFILE.text in attachment:
+            object_id = attachment[MESSAGE_ATTACHMENT_TYPE_PROFILE.text]['id']
+            content_type = ContentType.objects.get_for_model(User)
+            ma_type = MESSAGE_ATTACHMENT_TYPE_PROFILE
             MessageAttachment.create(message_id=message.id, conversation_id=conversation.id, content_type=content_type,
                                      object_id=object_id, type=ma_type).save()
 

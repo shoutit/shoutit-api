@@ -231,6 +231,11 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
                     }
                 },
                 {
+                    "profile": {
+                        "id": ""
+                    }
+                },
+                {
                     "location": {
                         "latitude": 12.345,
                         "longitude": 12.345

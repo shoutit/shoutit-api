@@ -10,7 +10,7 @@ from rest_framework.reverse import reverse
 
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT,
-                              MessageAttachmentType, CONVERSATION_TYPE_PUBLIC_CHAT)
+                              MessageAttachmentType, CONVERSATION_TYPE_PUBLIC_CHAT, MESSAGE_ATTACHMENT_TYPE_PROFILE)
 from common.utils import any_in
 from shoutit.controllers import location_controller, message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
@@ -30,26 +30,35 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(choices=MessageAttachmentType.texts, source='get_type_display', read_only=True)
     shout = ShoutSerializer(required=False)
     location = SharedLocationSerializer(required=False)
+    profile = ProfileSerializer(required=False)
     images = serializers.ListField(child=serializers.URLField(), required=False)
     videos = VideoSerializer(many=True, required=False)
 
     class Meta:
         model = MessageAttachment
-        fields = ['type', 'shout', 'location', 'images', 'videos']
+        fields = ['type', 'shout', 'location', 'profile', 'images', 'videos']
 
     def to_representation(self, instance):
         ret = super(MessageAttachmentSerializer, self).to_representation(instance)
         if instance.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
             del ret['location']
+            del ret['profile']
             del ret['images']
             del ret['videos']
         if instance.type == MESSAGE_ATTACHMENT_TYPE_LOCATION:
             del ret['shout']
+            del ret['profile']
+            del ret['images']
+            del ret['videos']
+        if instance.type == MESSAGE_ATTACHMENT_TYPE_PROFILE:
+            del ret['shout']
+            del ret['location']
             del ret['images']
             del ret['videos']
         if instance.type == MESSAGE_ATTACHMENT_TYPE_MEDIA:
-            del ret['location']
             del ret['shout']
+            del ret['location']
+            del ret['profile']
         return ret
 
 
@@ -81,8 +90,8 @@ class MessageSerializer(serializers.ModelSerializer):
                 errors['attachments'] = []
                 for attachment in attachments:
                     attachment_error = None
-                    if not any_in(['shout', 'location', 'images', 'videos'], attachment):
-                        attachment_error = {'': "attachment should have at least a 'shout', 'location', 'images' or 'videos'"}
+                    if not any_in(['shout', 'location', 'profile', 'images', 'videos'], attachment):
+                        attachment_error = {'': "attachment should have at least a 'shout', 'location', 'profile', 'images' or 'videos'"}
                         errors['attachments'].insert(i, attachment_error)
                         i += 1
                         continue
@@ -95,7 +104,8 @@ class MessageSerializer(serializers.ModelSerializer):
                         videos = attachment.get('videos')
                         if not (images or videos):
                             attachment_error = {
-                                '': "attachment should have at least one item in a 'images' or 'videos'"}
+                                '': "attachment should have at least one item in a 'images' or 'videos'"
+                            }
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1
                 if not any(errors['attachments']):
