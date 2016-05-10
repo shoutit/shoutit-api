@@ -438,7 +438,7 @@ class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateMo
 
     def list(self, request, *args, **kwargs):
         """
-        List Public Chat conversations in users country.
+        List Public Chat conversations in profile's country.
         ###REQUIRES AUTH
         [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
@@ -458,12 +458,13 @@ class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateMo
 
     def create(self, request, *args, **kwargs):
         """
-        Create Public Chat conversations in users country.
+        Create Public Chat conversation in profile's country.
         ###REQUIRES AUTH
         ####Body
         <pre><code>
         {
             "subject": "text goes here",
+            "icon": "icon url"
         }
         </code></pre>
         ---
