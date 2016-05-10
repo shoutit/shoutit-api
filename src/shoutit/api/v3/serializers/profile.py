@@ -54,13 +54,14 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         from .notification import AttachedObjectSerializer
+        from .message import MessageAttachmentSerializer
         ret = super(ProfileSerializer, self).to_internal_value(data)
 
-        # validate the id only when sharing the user as an attached object
-        if not isinstance(self.parent, AttachedObjectSerializer):
+        # validate the id only when sharing this profile as an attached object or message attachment
+        if not isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
             return ret
 
-        # todo: refactor
+        # Todo: refactor
         user_id = data.get('id')
         if user_id == '':
             raise serializers.ValidationError({'id': 'This field can not be empty'})

@@ -371,7 +371,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         """
         Start or continue chatting (conversation whose its `type` is `chat`) with the Profile
         ###REQUIRES AUTH
-        > A user can only message his Listeners, or someone whom he already has an existing conversation with.
+        > Profile can only message its Listeners, or someone whom it already has an existing conversation with.
         ###Request
         <pre><code>
         {
@@ -379,6 +379,11 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             "attachments": [
                 {
                     "shout": {
+                        "id": ""
+                    }
+                },
+                {
+                    "profile": {
                         "id": ""
                     }
                 },
