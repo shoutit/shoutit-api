@@ -1,13 +1,19 @@
 # shoutit-api v3 changelog
 
+## Update (2016-05-10)
 
-## Listening / Listeners / Interests (2016-05-10)
+### Public Chats
+
+- Added `GET /public_chats` which is a shortcut to `GET /conversations?type=public_chat`
+- Added `POST /public_chats` which is a shortcut to `POST /conversations` with `type` set to `public_chat` in the request body
+
+### Listening / Listeners / Interests
 
 - Added `/profiles/{username}/interests` which returns a list of profile interests (tags)
 - Removed the `type` parameter from `/profiles/{username}/listening` it now returns a mixed list of Profiles (Users and Pages)
 
 
-## Deprecations(2016-04-01)
+## Deprecations (2016-04-01)
 
 - Removed `user` and `users` from all v3 endpoints except those for authentication are now pending deprecation
 - Removed `main_tag` from Category object
@@ -15,7 +21,7 @@
 - Added `/shouts/categories` and `/shouts/sort_types`
 
 
-## Video Chat and Stats(2016-03-31)
+## Video Chat and Stats (2016-03-31)
 
 - Enhanced the Video chatting flow. Check [Video Chat wiki](https://github.com/shoutit/shoutit-api/wiki/Video-Chat).
 - Added `stats` to Profile object. Check [Profiles wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Profiles) for information on how to use it.
