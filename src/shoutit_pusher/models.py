@@ -24,6 +24,7 @@ class PusherDevice(UUIDModel):
 pusher_channel_types = ((0, 'public'), (1, 'private'), (2, 'presence'))
 
 
+# Todo: change PK to name
 class PusherChannel(UUIDModel):
     type = models.SmallIntegerField(choices=pusher_channel_types)
     name = models.CharField(max_length=164, unique=True, validators=[
