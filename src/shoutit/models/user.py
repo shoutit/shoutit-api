@@ -12,10 +12,14 @@ from shoutit.utils import correct_mobile, none_to_blank
 
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
+gender_choices = [
+    ('male', "Male"),
+    ('female', "Male"),
+]
 
 
 class Profile(AbstractProfile):
-    gender = models.CharField(max_length=10, null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True, choices=gender_choices)
     birthday = models.DateField(null=True, blank=True)
     bio = models.TextField(blank=True, max_length=512, default='New Shouter!')
     mobile = models.CharField(blank=True, max_length=20, default='')

@@ -14,6 +14,7 @@ from rest_framework.reverse import reverse
 
 from shoutit.controllers import message_controller, location_controller, notifications_controller
 from shoutit.models import User, InactiveUser, Profile, Page, Video
+from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
 from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input
 from ..exceptions import ERROR_REASON
@@ -91,7 +92,7 @@ class ProfileDetailSerializer(ProfileSerializer):
     mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, **empty_char_input)
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    gender = serializers.CharField(source='profile.gender', **empty_char_input)
+    gender = serializers.ChoiceField(source='profile.gender', choices=gender_choices, help_text='`male`, `female` or `null`', **empty_char_input)
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
