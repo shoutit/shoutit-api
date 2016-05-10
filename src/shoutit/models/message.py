@@ -45,6 +45,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def __unicode__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
 
+    def clean(self):
+        none_to_blank(self, ['icon', 'subject'])
+
     def get_messages(self, before=None, after=None, limit=25):
         messages = self.messages.order_by('-created_at')
         if before:

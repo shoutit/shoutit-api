@@ -172,22 +172,28 @@ class ConversationSerializer(serializers.ModelSerializer):
     def get_reply_url(self, conversation):
         return reverse('conversation-reply', kwargs={'id': conversation.id}, request=self.context['request'])
 
-    def to_internal_value(self, data):
-        validated_data = super(ConversationSerializer, self).to_internal_value(data)
-        return validated_data
-
     def validate_type(self, conversation_type):
         if conversation_type != 'public_chat':
             raise serializers.ValidationError({'type': "Only 'public_chat' conversations can be directly created"})
         return conversation_type
 
+    def to_internal_value(self, data):
+        validated_data = super(ConversationSerializer, self).to_internal_value(data)
+        return validated_data
+
+    def to_representation(self, instance):
+        ret = super(ConversationSerializer, self).to_representation(instance)
+        blank_to_none(ret, ['icon', 'subject'])
+        return ret
+
     def create(self, validated_data):
         user = self.context['request'].user
         conversation_type = ConversationType.texts[validated_data['get_type_display']]
         subject = validated_data['subject']
-        icon = validated_data.get('icon', '')
+        icon = validated_data.get('icon')
         conversation = Conversation(creator=user, type=conversation_type, subject=subject, icon=icon, admins=[user.id])
         location_controller.update_object_location(conversation, user.location, save=False)
         conversation.save()
         conversation.users.add(user)
         return conversation
+
