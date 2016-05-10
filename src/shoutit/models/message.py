@@ -4,8 +4,6 @@
 """
 from __future__ import unicode_literals
 
-from datetime import datetime
-
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation

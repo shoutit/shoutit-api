@@ -1,5 +1,3 @@
-import os
-
 from django.conf import settings
 from pusher.requests import RequestsBackend
 

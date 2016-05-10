@@ -12,8 +12,7 @@ from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
-from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter, InvalidBody, \
-    RequiredBody
+from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidBody, RequiredBody
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.models import User, Shout, ShoutIndex
 from ..filters import HomeFilterBackend

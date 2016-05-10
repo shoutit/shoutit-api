@@ -86,9 +86,9 @@ class ProfileDetailSerializer(ProfileSerializer):
     is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this profile listeners")
     listening_count = serializers.ReadOnlyField(
-        help_text="object specifying the number of profile listening. It has 'users', 'pages' and 'tags' attributes")
-    listening_url = serializers.SerializerMethodField(
-        help_text="URL to get the listening of this profile. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
+        help_text="Object specifying the number of profile listening. It has 'users', 'pages' and 'tags' properties")
+    listening_url = serializers.SerializerMethodField(help_text="URL to get the Profiles this profile is listening to")
+    interests_url = serializers.SerializerMethodField(help_text="URL to get the Interests of this profile")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this profile")
     conversation = serializers.SerializerMethodField(
         help_text="Conversation with type `chat` between you and this profile if exists")
@@ -102,10 +102,11 @@ class ProfileDetailSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + (
-        'gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
-        'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
-        'listeners_url', 'listening_count', 'listening_url', 'conversation', 'chat_url',
-        'pages', 'admins', 'stats')
+            'gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
+            'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
+            'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
+            'pages', 'admins', 'stats'
+        )
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -118,6 +119,9 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     def get_listening_url(self, user):
         return reverse('profile-listening', kwargs={'username': user.username}, request=self.context['request'])
+
+    def get_interests_url(self, user):
+        return reverse('profile-interests', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_listeners_url(self, user):
         return reverse('profile-listeners', kwargs={'username': user.username}, request=self.context['request'])

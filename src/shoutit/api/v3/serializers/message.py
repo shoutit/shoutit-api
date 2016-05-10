@@ -206,4 +206,3 @@ class ConversationSerializer(serializers.ModelSerializer):
         conversation.save()
         conversation.users.add(user)
         return conversation
-

@@ -8,13 +8,11 @@ import random
 from django.contrib.auth import login
 from django.db.models import Q
 from ipware.ip import get_real_ip
-from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
 from common.constants import TOKEN_TYPE_RESET_PASSWORD
 from shoutit.controllers import (facebook_controller, gplus_controller, user_controller, location_controller)
-
 from shoutit.models import User, DBCLConversation, ConfirmToken
 from .profile import ProfileDetailSerializer, GuestSerializer
 
