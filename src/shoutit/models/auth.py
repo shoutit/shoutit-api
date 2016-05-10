@@ -140,7 +140,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name(self):
-        return self.get_full_name() if self.type == USER_TYPE_PROFILE else self.page.name
+        if self.type == USER_TYPE_PROFILE:
+            return self.get_full_name()
+        elif hasattr(self, 'page'):
+            return self.page.name
+        else:
+            return self.type_name_v3.capitalize()
 
     @property
     def apns_device(self):
@@ -341,6 +346,15 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         """
         listen_type, target = Listen2.listen_type_and_target_from_object(obj)
         return Listen2.exists(user=self, type=listen_type, target=target)
+
+    @property
+    def listening2_profile_ids(self):
+        ids = Listen2.objects.filter(user=self).exclude(type=LISTEN_TYPE_TAG).values_list('target', flat=True)
+        return list(ids)
+
+    @property
+    def listening2_profiles(self):
+        return User.objects.filter(id__in=self.listening2_profile_ids)
 
     @property
     def listening2_users_ids(self):
