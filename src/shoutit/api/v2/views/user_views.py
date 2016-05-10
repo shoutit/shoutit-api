@@ -97,7 +97,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             "first_name": "Mo",
             "last_name": "Chawich",
             "bio": "I'm a good shouter",
-            "gender": 1,
+            "gender": "male",
             "image": "https://user-image.static.shoutit.com/user_uuid-timestamp.jpg",
             "cover": "https://user-image.static.shoutit.com/user_uuid-timestamp.jpg",
             "location": {
