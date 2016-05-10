@@ -12,8 +12,7 @@ from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
-from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter, InvalidBody, \
-    RequiredBody
+from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidBody, RequiredBody
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
 from shoutit.models import User, Shout, ShoutIndex
 from ..filters import HomeFilterBackend
@@ -238,7 +237,8 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
         """
-        List the Profile listeners
+        List the Profiles listening to this Profile
+        Returned list is mix of Users and Pages
         ###Response
         <pre><code>
         {
@@ -271,17 +271,16 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     @detail_route(methods=['get'], suffix='Listening')
     def listening(self, request, *args, **kwargs):
         """
-        List the Profile listening based on `type` query param.
-        It could be either `users`, `pages` or `tags`.
+        List the Profiles this Profile is listening to
+        Returned list is a mix of Users and Pages
         ###Response
         <pre><code>
         {
           "next": null, // next results page url
           "previous": null, // previous results page url
-          "results": [] // list of {ProfileSerializer} same as in listeners or {TagDetailSerializer}
+          "results": [] // list of {ProfileSerializer}
         }
         </code></pre>
-
         ---
         omit_serializer: true
         omit_parameters:
@@ -292,42 +291,48 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
               paramType: path
               required: true
               defaultValue: me
-            - name: type
-              description:
-              paramType: query
-              required: true
-              defaultValue: users
-              enum:
-                - users
-                - pages
-                - tags
             - name: page
               paramType: query
             - name: page_size
               paramType: query
         """
-
-        listening_type = request.query_params.get('type')
-        if not listening_type:
-            raise RequiredParameter('type')
-        if listening_type not in ['users', 'pages', 'tags']:
-            raise InvalidParameter('type', "Should be either `users`, `pages` or `tags`.")
-
         user = self.get_object()
-        listening = getattr(user, 'listening2_' + listening_type)
-
-        # we do not use the view pagination class since we need one with custom results field
-        self.pagination_class = self.get_custom_shoutit_page_number_pagination_class(custom_results_field=listening_type)
+        listening = user.listening2_profiles
         page = self.paginate_queryset(listening)
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
 
-        result_object_serializers = {
-            'users': ProfileSerializer,
-            'pages': ProfileSerializer,
-            'tags': TagDetailSerializer,
+    @detail_route(methods=['get'], suffix='Interests')
+    def interests(self, request, *args, **kwargs):
+        """
+        List the Interests this Profile is listening to
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {TagDetailSerializer}
         }
-        result_object_serializer = result_object_serializers[listening_type]
-        serializer = result_object_serializer(page, many=True, context={'request': request})
-
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        user = self.get_object()
+        listening = user.listening2_tags
+        page = self.paginate_queryset(listening)
+        serializer = TagDetailSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['get'], permission_classes=(IsAuthenticated, IsOwner), suffix='Home')
@@ -365,7 +370,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         """
         Start or continue chatting (conversation whose its `type` is `chat`) with the Profile
         ###REQUIRES AUTH
-        > A user can only message his Listeners, or someone whom he already has an existing conversation with.
+        > Profile can only message its Listeners, or someone whom it already has an existing conversation with.
         ###Request
         <pre><code>
         {
@@ -373,6 +378,11 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             "attachments": [
                 {
                     "shout": {
+                        "id": ""
+                    }
+                },
+                {
+                    "profile": {
                         "id": ""
                     }
                 },

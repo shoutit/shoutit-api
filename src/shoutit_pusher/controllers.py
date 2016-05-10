@@ -3,11 +3,11 @@
 
 """
 from __future__ import unicode_literals
-from django.core.exceptions import ValidationError
+
 from django.db import IntegrityError
 
-from .models import *  # NOQA
 from shoutit.utils import debug_logger
+from .models import *  # NOQA
 
 
 def create_channel(channel_name):

@@ -1,17 +1,31 @@
 # shoutit-api v3 changelog
 
+## Update (2016-05-10)
 
-## Deprecations(2016-04-01)
+### Public Chats
+
+- Added `GET /public_chats` which is a shortcut to `GET /conversations?type=public_chat`
+- Added `POST /public_chats` which is a shortcut to `POST /conversations` with `type` set to `public_chat` in the request body
+
+### Listening / Listeners / Interests
+
+- Added `/profiles/{username}/interests` which returns a list of profile interests (tags)
+- Removed the `type` parameter from `/profiles/{username}/listening` it now returns a mixed list of Profiles (Users and Pages)
+
+
+## Deprecations (2016-04-01)
 
 - Removed `user` and `users` from all v3 endpoints except those for authentication are now pending deprecation
 - Removed `main_tag` from Category object
 - Removed `/misc/categories` and `/misc/shout_sort_types`
 - Added `/shouts/categories` and `/shouts/sort_types`
 
-## Video Chat and Stats(2016-03-31)
+
+## Video Chat and Stats (2016-03-31)
 
 - Enhanced the Video chatting flow. Check [Video Chat wiki](https://github.com/shoutit/shoutit-api/wiki/Video-Chat).
 - Added `stats` to Profile object. Check [Profiles wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Profiles) for information on how to use it.
+
 
 ## Push (2016-03-30)
 
@@ -71,6 +85,7 @@ on `POST: /misc/reports`
 
 V3 of the API is now returning a standard error responses according to this [wiki page](https://github.com/shoutit/shoutit-api/wiki/Error-Responses)
 
+
 ## Update (2016-03-21)
 
 - Added `conversation/{id}`
@@ -86,12 +101,10 @@ V3 of the API is now returning a standard error responses according to this [wik
 - Live documentation: http://dev.api.shoutit.com/docs/
 - V3 base url: `http://dev.api.shoutit.com/v3`
 
-
 ### OAuth2
 
 - Changed `shoutit_signin` to `shoutit_login`
 - Added `shoutit_guest` grant type to [OAuth2 endpoint](https://dev.api.shoutit.com/docs/#!/oauth2) (notice the returned `GuestUser` object)
-
 
 ### Profiles
 
@@ -99,21 +112,18 @@ V3 of the API is now returning a standard error responses according to this [wik
 
 - `/profiles`
 
-
 ###Users
 
 - Removed `/users/{USERNAME}/shouts` use `/shouts?profile={USERNAME}` instead
 - For each endpoint that has `user` or `users` there is respective and totally equal `profile` or `profiles`. The later properties are pending deprecation and clients should use the new ones
 
-
 ###Tags
 
 - Removed `/tags/{TAGNAME}/shouts` use `/shouts?tags={TAGNAME}` instead
 
-
 ###Discover
-- Removed `/discover/{DISCOVER_ID}/shouts` use `/shouts?discover={DISCOVER_ID}` instead
 
+- Removed `/discover/{DISCOVER_ID}/shouts` use `/shouts?discover={DISCOVER_ID}` instead
 
 ###Shouts
 
@@ -167,7 +177,6 @@ V3 of the API is now returning a standard error responses according to this [wik
 	- When the user wants to view (on webapp) or call (on mobile apps), the clients should request `mobile` using `/shouts/{id}/call`
 	- Added `/shouts/{id}/call` which returns the `mobile` of that shout to contact its owner
 
-
 ###Creating and editing Shouts
 
 Check the live docs: [Shout create](http://dev.api.shoutit.com/docs/#!/shouts/Shout_create), [Shout update](http://dev.api.shoutit.com/docs/#!/shouts/Shout_partial_update)
@@ -180,17 +189,14 @@ Check the live docs: [Shout create](http://dev.api.shoutit.com/docs/#!/shouts/Sh
 	- passing the entire category object which has `slug` in it
 - Empty fields should be passed as `null`
 
-
 ###Search
 
 - Categories should be passed as slugs i.e. `category=cars-motors`
-
 
 ###Misc
 
 - Removed `google_geocode_response` from `location` objects and stopped accepting it as a valid location. clients should pass `latitude` and `longitude` to represent a location
 - Deprecated the misc endpoint `/misc/parse_google_geocode_response`
-
 
 ###Pending deprecation
 

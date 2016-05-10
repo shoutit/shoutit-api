@@ -3,8 +3,6 @@
 """
 from __future__ import unicode_literals
 
-import uuid
-
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -15,17 +13,17 @@ from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Currency, InactiveShout
 from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none, correct_mobile
-from .base import LocationSerializer, VideoSerializer, empty_char_input
+from .base import LocationSerializer, VideoSerializer, empty_char_input, AttachedUUIDObjectMixin
 from .profile import ProfileSerializer
 from .tag import CategorySerializer
-from ..exceptions import ERROR_REASON
 
 
-class ShoutSerializer(serializers.ModelSerializer):
+class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
     location = LocationSerializer(
         help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
-    title = serializers.CharField(source='item.name', min_length=4, max_length=50, help_text="Max 50 characters", **empty_char_input)
+    title = serializers.CharField(source='item.name', min_length=4, max_length=50, help_text="Max 50 characters",
+                                  **empty_char_input)
     text = serializers.CharField(min_length=10, max_length=1000, help_text="Max 1000 characters", **empty_char_input)
     price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
     available_count = serializers.IntegerField(default=1, help_text="Only used for Offers")
@@ -58,28 +56,10 @@ class ShoutSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid currency')
 
     def to_internal_value(self, data):
-        from .message import MessageAttachmentSerializer
-        from .notification import AttachedObjectSerializer
-        # Make sure no empty JSON body was posted
-        if not data:
-            data = {}
-        # validate the id only when sharing the shout as message attachment
-        if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
-            if not isinstance(data, dict):
-                raise serializers.ValidationError('Invalid data. Expected a dictionary, but got %s' % type(data).__name__)
-            shout_id = data.get('id')
-            if shout_id == '':
-                raise serializers.ValidationError({'id': 'This field can not be empty'})
-            if shout_id:
-                try:
-                    uuid.UUID(shout_id)
-                    if not Shout.exists(id=shout_id):
-                        raise serializers.ValidationError({'id': "Shout with id '%s' does not exist" % shout_id})
-                    return {'id': shout_id}
-                except (ValueError, TypeError, AttributeError):
-                    raise serializers.ValidationError({'id': "'%s' is not a valid id" % shout_id})
-            else:
-                raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
+        # Validate when passed as attached object or message attachment
+        ret = self.to_internal_attached_value(data)
+        if ret:
+            return ret
 
         # Optional price and currency
         price = data.get('price')
@@ -163,7 +143,7 @@ class ShoutDetailSerializer(ShoutSerializer):
 
     def perform_save(self, shout, validated_data):
         request = self.root.context.get('request')
-        profile = getattr(request, 'profile', None) or getattr(request, 'user', None)or self.root.context.get('user')
+        profile = getattr(request, 'profile', None) or getattr(request, 'user', None) or self.root.context.get('user')
         page_admin_user = getattr(request, 'page_admin_user', None)
 
         shout_type_name = validated_data.get('get_type_display')

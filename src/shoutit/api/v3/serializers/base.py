@@ -3,11 +3,14 @@
 """
 from __future__ import unicode_literals
 
+import uuid
+
 from ipware.ip import get_real_ip
 from rest_framework import serializers
 
 from shoutit.controllers import location_controller
 from shoutit.models import Video, PredefinedCity
+from ..exceptions import ERROR_REASON
 
 empty_char_input = {'allow_blank': True, 'allow_null': True, 'required': False}
 
@@ -75,3 +78,30 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
     class Meta:
         model = PredefinedCity
         fields = ('id', 'country', 'postal_code', 'state', 'city', 'latitude', 'longitude')
+
+
+class AttachedUUIDObjectMixin(object):
+    def to_internal_attached_value(self, data):
+        from .message import MessageAttachmentSerializer
+        from .notification import AttachedObjectSerializer
+        model = self.Meta.model
+        # Make sure no empty JSON body was posted
+        if not data:
+            data = {}
+        # Validate the id only
+        if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
+            if not isinstance(data, dict):
+                raise serializers.ValidationError('Invalid data. Expected a dictionary, but got %s' % type(data).__name__)
+            object_id = data.get('id')
+            if object_id == '':
+                raise serializers.ValidationError({'id': 'This field can not be empty'})
+            if object_id:
+                try:
+                    uuid.UUID(object_id)
+                    if not model.exists(id=object_id):
+                        raise serializers.ValidationError({'id': "%s with id '%s' does not exist" % (model.__name__, object_id)})
+                    return {'id': object_id}
+                except (ValueError, TypeError, AttributeError):
+                    raise serializers.ValidationError({'id': "'%s' is not a valid id" % object_id})
+            else:
+                raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})

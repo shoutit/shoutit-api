@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import math
 from collections import OrderedDict
-from datetime import datetime
 
 from django.conf import settings
 from django.core.paginator import Paginator as DjangoPaginator

@@ -41,7 +41,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
                     'type': CONVERSATION_TYPE_PUBLIC_CHAT,
                     'country': self.request.user.location['country']
                 }
-                return Conversation.objects.filter(**filters)
+                return Conversation.objects.filter(**filters).order_by('-modified_at')
             else:
                 return self.request.user.conversations.all().order_by('-modified_at')
 
@@ -227,6 +227,11 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
             "attachments": [
                 {
                     "shout": {
+                        "id": ""
+                    }
+                },
+                {
+                    "profile": {
                         "id": ""
                     }
                 },
@@ -419,3 +424,60 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
         elif request.method == 'DELETE':
             message.mark_as_unread(request.user)
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
+class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """
+    Public Chat API Resource.
+    """
+    serializer_class = ConversationSerializer
+    pagination_class = ReverseModifiedDateTimePagination
+    permission_classes = (permissions.IsAuthenticated, CanContribute)
+
+    def get_queryset(self, *args, **kwargs):
+        filters = {
+            'type': CONVERSATION_TYPE_PUBLIC_CHAT,
+            'country': self.request.user.location['country']
+        }
+        return Conversation.objects.filter(**filters).order_by('-modified_at')
+
+    def list(self, request, *args, **kwargs):
+        """
+        List Public Chat conversations in profile's country.
+        ###REQUIRES AUTH
+        [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
+        ---
+        serializer: ConversationSerializer
+        parameters:
+            - name: search
+              description: NOT IMPLEMENTED
+              paramType: query
+            - name: before
+              description: timestamp to get messages before
+              paramType: query
+            - name: after
+              description: timestamp to get messages after
+              paramType: query
+        """
+        return super(PublicChatViewSet, self).list(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create Public Chat conversation in profile's country.
+        ###REQUIRES AUTH
+        ####Body
+        <pre><code>
+        {
+            "subject": "text goes here",
+            "icon": "icon url"
+        }
+        </code></pre>
+        ---
+        serializer: ConversationSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        return super(PublicChatViewSet, self).create(request, *args, **kwargs)

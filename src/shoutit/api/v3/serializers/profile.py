@@ -3,7 +3,6 @@
 """
 from __future__ import unicode_literals
 
-import uuid
 from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
@@ -16,11 +15,10 @@ from shoutit.controllers import message_controller, location_controller, notific
 from shoutit.models import User, InactiveUser, Profile, Page, Video
 from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
-from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input
-from ..exceptions import ERROR_REASON
+from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input, AttachedUUIDObjectMixin
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
     image = serializers.URLField(source='ap.image', **empty_char_input)
     cover = serializers.URLField(source='ap.cover', **empty_char_input)
@@ -53,28 +51,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         return self.root.context['request'].user == user
 
     def to_internal_value(self, data):
-        from .notification import AttachedObjectSerializer
-        ret = super(ProfileSerializer, self).to_internal_value(data)
-
-        # validate the id only when sharing the user as an attached object
-        if not isinstance(self.parent, AttachedObjectSerializer):
+        # Validate when passed as attached object or message attachment
+        ret = self.to_internal_attached_value(data)
+        if ret:
             return ret
 
-        # todo: refactor
-        user_id = data.get('id')
-        if user_id == '':
-            raise serializers.ValidationError({'id': 'This field can not be empty'})
-        if user_id:
-            try:
-                uuid.UUID(user_id)
-                if not User.exists(id=user_id):
-                    raise serializers.ValidationError({'id': "Profile with id '%s' does not exist" % user_id})
-                ret['id'] = user_id
-            except (ValueError, TypeError):
-                raise serializers.ValidationError({'id': "'%s' is not a valid id" % user_id})
-        else:
-            raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
-
+        ret = super(ProfileSerializer, self).to_internal_value(data)
         return ret
 
     def to_representation(self, instance):
@@ -92,7 +74,8 @@ class ProfileDetailSerializer(ProfileSerializer):
     mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, **empty_char_input)
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
-    gender = serializers.ChoiceField(source='profile.gender', choices=gender_choices, help_text='`male`, `female` or `null`', **empty_char_input)
+    gender = serializers.ChoiceField(source='profile.gender', choices=gender_choices,
+                                     help_text='`male`, `female` or `null`', **empty_char_input)
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
@@ -103,23 +86,27 @@ class ProfileDetailSerializer(ProfileSerializer):
     is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this profile listeners")
     listening_count = serializers.ReadOnlyField(
-        help_text="object specifying the number of profile listening. It has 'users', 'pages' and 'tags' attributes")
-    listening_url = serializers.SerializerMethodField(
-        help_text="URL to get the listening of this profile. `type` query param is default to 'users' it could be 'users', 'pages' or 'tags'")
+        help_text="Object specifying the number of profile listening. It has 'users', 'pages' and 'tags' properties")
+    listening_url = serializers.SerializerMethodField(help_text="URL to get the Profiles this profile is listening to")
+    interests_url = serializers.SerializerMethodField(help_text="URL to get the Interests of this profile")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this profile")
-    conversation = serializers.SerializerMethodField(help_text="Conversation with type `chat` between you and this profile if exists")
+    conversation = serializers.SerializerMethodField(
+        help_text="Conversation with type `chat` between you and this profile if exists")
     chat_url = serializers.SerializerMethodField(
         help_text="URL to message this profile if it is possible. This is the case when the profile is one of your listeners or an existing previous conversation")
     pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
     admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
-    stats = serializers.ReadOnlyField(help_text="Object specifying `unread_conversations_count` and `unread_notifications_count`")
+    stats = serializers.ReadOnlyField(
+        help_text="Object specifying `unread_conversations_count` and `unread_notifications_count`")
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
-        fields = parent_fields + ('gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
-                                  'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
-                                  'listeners_url', 'listening_count', 'listening_url', 'conversation', 'chat_url',
-                                  'pages', 'admins', 'stats')
+        fields = parent_fields + (
+            'gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
+            'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
+            'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
+            'pages', 'admins', 'stats'
+        )
 
     def get_is_listener(self, user):
         request = self.root.context.get('request')
@@ -132,6 +119,9 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     def get_listening_url(self, user):
         return reverse('profile-listening', kwargs={'username': user.username}, request=self.context['request'])
+
+    def get_interests_url(self, user):
+        return reverse('profile-interests', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_listeners_url(self, user):
         return reverse('profile-listeners', kwargs={'username': user.username}, request=self.context['request'])

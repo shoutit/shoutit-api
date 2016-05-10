@@ -4,8 +4,6 @@
 """
 from __future__ import unicode_literals
 
-from datetime import datetime
-
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
@@ -18,7 +16,8 @@ from django_pgjson.fields import JsonField
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
-    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA)
+    CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
+    MESSAGE_ATTACHMENT_TYPE_PROFILE)
 from common.utils import date_unix, utcfromtimestamp
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -44,6 +43,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
     def __unicode__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
+
+    def clean(self):
+        none_to_blank(self, ['icon', 'subject'])
 
     def get_messages(self, before=None, after=None, limit=25):
         messages = self.messages.order_by('-created_at')
@@ -331,6 +333,13 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     @property
     def shout(self):
         if self.type == MESSAGE_ATTACHMENT_TYPE_SHOUT:
+            return self.attached_object
+        else:
+            return None
+
+    @property
+    def profile(self):
+        if self.type == MESSAGE_ATTACHMENT_TYPE_PROFILE:
             return self.attached_object
         else:
             return None
