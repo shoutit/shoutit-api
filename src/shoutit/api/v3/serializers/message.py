@@ -10,7 +10,7 @@ from rest_framework.reverse import reverse
 
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT,
-                              MessageAttachmentType)
+                              MessageAttachmentType, CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import any_in
 from shoutit.controllers import location_controller, message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
@@ -142,7 +142,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
     last_message = MessageSerializer(required=False)
-    type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display',
+    type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display', default=str(CONVERSATION_TYPE_PUBLIC_CHAT),
                                    help_text="'chat', 'about_shout' or 'public_chat'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
