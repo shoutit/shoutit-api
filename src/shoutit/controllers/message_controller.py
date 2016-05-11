@@ -79,11 +79,10 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
 
     if not conversation:
         if about:
-            conversation = Conversation(creator=user, attached_object=about, type=CONVERSATION_TYPE_ABOUT_SHOUT)
+            extra = {'type': CONVERSATION_TYPE_ABOUT_SHOUT, 'attached_object': about}
         else:
-            conversation = Conversation(creator=user, type=CONVERSATION_TYPE_CHAT)
-        conversation.admins.append(user.pk)
-        conversation.save()
+            extra = {'type': CONVERSATION_TYPE_CHAT}
+        conversation = Conversation.create(creator=user, **extra)
         conversation.users.add(*to_users)
 
     # add the new message

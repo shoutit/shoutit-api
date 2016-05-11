@@ -9,7 +9,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
-from django.db.models.signals import post_save
+from django.db.models import Q
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 
@@ -55,18 +56,18 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
     @property
     def messages_count(self):
-        return self.messages.count()
+        return self.messages.exclude(user=None).count()
 
     def unread_messages(self, user):
         if isinstance(user, AnonymousUser):
             return self.messages.none()
-        return self.messages.exclude(read_set__user=user).exclude(user=user)
+        return self.messages.exclude(read_set__user=user).exclude(Q(user=user) | Q(user=None))
 
     def display(self, user):
         title = self.subject
         contributors_summary = self.contributors.exclude(id=user.id)[:5]
         contributors_summary_names = map(lambda u: u.first_name, contributors_summary)
-        sub_title = ", ".join(contributors_summary_names) or 'You only'
+        sub_title = ", ".join(contributors_summary_names) or "You only"
         image = self.icon
 
         if self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
@@ -165,13 +166,35 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         self.save(update_fields=['blocked'])
 
 
+@receiver(pre_save, sender=Conversation)
+def pre_save_conversation(sender, instance=None, **kwargs):
+    from ..controllers import location_controller
+
+    if instance._state.adding and instance.creator:
+        if instance.creator.id not in instance.admins:
+            instance.admins.append(instance.creator.id)
+        if not instance.is_named_location:
+            location_controller.update_object_location(instance, instance.creator.location, save=False)
+
+
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
     from ..controllers import pusher_controller
 
-    if not created and getattr(instance, 'notify', True):
-        # Trigger `conversation_update` event in the conversation channel
-        pusher_controller.trigger_conversation_update(instance, 'v3')
+    if created:
+        if instance.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            text = "{} created this public chat".format(instance.creator.name)
+            message = Message.create(save=False, user=None, text=text, conversation=instance)
+            message.skip_post_save = True
+            message.save()
+            instance.last_message = message
+            instance.notify = False
+            instance.save()
+
+    else:
+        if getattr(instance, 'notify', True):
+            # Trigger `conversation_update` event in the conversation channel
+            pusher_controller.trigger_conversation_update(instance, 'v3')
 
 
 class ConversationDelete(UUIDModel):
@@ -235,6 +258,9 @@ class Message(Action):
 
     @property
     def read_by_objects(self):
+        # No read by for system messages
+        if self.user is None:
+            return []
         read_by = [
             {'profile_id': self.user_id, 'read_at': self.created_at_unix}
         ]
@@ -292,7 +318,7 @@ class Message(Action):
 
 @receiver(post_save, sender=Message)
 def post_save_message(sender, instance=None, created=False, **kwargs):
-    if created:
+    if created and not getattr(instance, 'skip_post_save', False):
         # Save the attachments
         from ..controllers.message_controller import save_message_attachments
         attachments = getattr(instance, 'raw_attachments', [])

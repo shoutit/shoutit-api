@@ -220,9 +220,7 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
         conversation_type = ConversationType.texts[validated_data['get_type_display']]
         subject = validated_data['subject']
         icon = validated_data.get('icon')
-        conversation = Conversation(creator=user, type=conversation_type, subject=subject, icon=icon, admins=[user.id])
-        location_controller.update_object_location(conversation, user.location, save=False)
-        conversation.save()
+        conversation = Conversation.create(creator=user, type=conversation_type, subject=subject, icon=icon)
         conversation.users.add(user)
         return conversation
 
