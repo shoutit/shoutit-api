@@ -108,11 +108,12 @@ class Post(Action):
         return date_unix(self.date_published)
 
     @property
+    def title(self):
+        return self.item.name
+
+    @property
     def thumbnail(self):
-        if self.type in [POST_TYPE_REQUEST, POST_TYPE_OFFER]:
-            return self.item.thumbnail
-        else:
-            return None
+        return self.item.thumbnail
 
     @property
     def video_url(self):

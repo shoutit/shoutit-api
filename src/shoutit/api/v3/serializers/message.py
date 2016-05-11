@@ -167,16 +167,17 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     subject = serializers.CharField(max_length=25)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
-    unread_messages_count = serializers.SerializerMethodField(
-        help_text="Number of unread messages in this conversation")
+    unread_messages_count = serializers.SerializerMethodField(help_text="# of unread messages in this conversation")
+    display = serializers.SerializerMethodField(help_text="Properties used for displaying the conversation")
     messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
         model = Conversation
-        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count',
-                  'subject', 'icon', 'admins', 'profiles', 'blocked', 'last_message', 'about', 'messages_url',
-                  'reply_url')
+        fields = (
+            'id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'display',
+            'subject', 'icon', 'admins', 'profiles', 'blocked', 'last_message', 'about', 'messages_url', 'reply_url'
+        )
 
     def get_about(self, instance):
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
@@ -185,6 +186,9 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
 
     def get_unread_messages_count(self, instance):
         return instance.unread_messages(self.context['request'].user).count()
+
+    def get_display(self, instance):
+        return instance.display(self.context['request'].user)
 
     def get_messages_url(self, conversation):
         return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])

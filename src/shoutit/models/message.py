@@ -17,7 +17,7 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
-    MESSAGE_ATTACHMENT_TYPE_PROFILE)
+    MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT)
 from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -61,6 +61,30 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         if isinstance(user, AnonymousUser):
             return self.messages.none()
         return self.messages.exclude(read_set__user=user).exclude(user=user)
+
+    def display(self, user):
+        title = self.subject
+        contributors_summary = self.contributors.exclude(id=user.id)[:5]
+        contributors_summary_names = map(lambda u: u.first_name, contributors_summary)
+        sub_title = ", ".join(contributors_summary_names) or 'You only'
+        image = self.icon
+
+        if self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
+            title = self.about.title
+            image = self.about.thumbnail
+        elif self.type == CONVERSATION_TYPE_CHAT:
+            if not title:
+                title = sub_title
+                sub_title = ''
+            if not image:
+                image = contributors_summary[0].ap.image if contributors_summary else user.ap.image
+
+        dis = {
+            'title': title,
+            'sub_title': sub_title,
+            'image': image
+        }
+        return dis
 
     @property
     def contributors(self):
