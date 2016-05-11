@@ -18,7 +18,7 @@ from common.constants import (
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
     MESSAGE_ATTACHMENT_TYPE_PROFILE)
-from common.utils import date_unix, utcfromtimestamp
+from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from ..utils import none_to_blank, track_new_message
@@ -167,7 +167,8 @@ class Message(Action):
     Message is a message from user into a Conversation
     """
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages')
-    read_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageRead', related_name='read_messages')
+    read_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageRead',
+                                     related_name='read_messages')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageDelete',
                                         related_name='deleted_messages')
     text = models.CharField(null=True, blank=True, max_length=2000,

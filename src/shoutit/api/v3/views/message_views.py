@@ -6,18 +6,16 @@ from __future__ import unicode_literals
 
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.decorators import detail_route
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
 from shoutit.api.permissions import CanContribute
-from shoutit.api.v3.exceptions import RequiredBody, InvalidBody
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
-from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination
+from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
 from ..serializers import (ConversationSerializer, MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
-                           RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer)
+                           RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -43,7 +41,8 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
                     'type': CONVERSATION_TYPE_PUBLIC_CHAT,
                     'country': self.request.user.location['country']
                 }
-                return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by('-modified_at')
+                return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by(
+                    '-modified_at')
             else:
                 return user.conversations.all().exclude(blocked__contains=[user.id]).order_by('-modified_at')
 
@@ -429,6 +428,37 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @detail_route(methods=['get'], suffix='Blocked Profiles')
+    def blocked(self, request, *args, **kwargs):
+        """
+        List blocked profiles from this conversation
+        ###REQUIRES AUTH
+        The logged in profile should be admin in the conversation.
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ProfileSerializer}
+        }
+        </code></pre>
+        ---
+        serializer: ProfileSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        conversation = self.get_object()
+        blocked = User.objects.filter(id__in=conversation.blocked)
+        self.pagination_class = ShoutitPageNumberPagination
+        page = self.paginate_queryset(blocked)
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
 
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
