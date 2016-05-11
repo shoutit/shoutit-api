@@ -16,7 +16,8 @@ from shoutit.api.v3.exceptions import RequiredBody, InvalidBody
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination
-from ..serializers import ConversationSerializer, MessageSerializer
+from ..serializers import (ConversationSerializer, MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
+                           RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -32,8 +33,9 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
     # todo: conversations / messages search
 
     def get_queryset(self, *args, **kwargs):
+        user = self.request.user
         if self._is_request_to_detail_endpoint():
-            return Conversation.objects.all()
+            return Conversation.objects.all().exclude(blocked__contains=[user.id])
         else:
             conversation_type = self.request.query_params.get('type')
             if conversation_type == 'public_chat':
@@ -41,9 +43,9 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
                     'type': CONVERSATION_TYPE_PUBLIC_CHAT,
                     'country': self.request.user.location['country']
                 }
-                return Conversation.objects.filter(**filters).order_by('-modified_at')
+                return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by('-modified_at')
             else:
-                return self.request.user.conversations.all().order_by('-modified_at')
+                return user.conversations.all().exclude(blocked__contains=[user.id]).order_by('-modified_at')
 
     def _is_request_to_detail_endpoint(self):
         lookup = self.lookup_url_kwarg or self.lookup_field
@@ -137,7 +139,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
               paramType: query
         """
         conversation = self.get_object()
-        messages_qs = conversation.get_messages_qs()
+        messages_qs = conversation.messages.all()
         self.pagination_class = DateTimePagination
         page = self.paginate_queryset(messages_qs)
 
@@ -268,7 +270,6 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         headers = self.get_success_message_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # Todo: refactor and move validation to Serializer since the logic is being repeated in three methods
     @detail_route(methods=['post'], suffix='Add Profile')
     def add_profile(self, request, *args, **kwargs):
         """
@@ -279,7 +280,9 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         ####Body
         <pre><code>
         {
-            "profile_id": "id of the profile to be added"
+            "profile": {
+                "id": "id of the profile to be added"
+            }
         }
         </code></pre>
         ---
@@ -290,24 +293,14 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
             - name: body
               paramType: body
         """
-        conversation = self.get_object()
-        adder = request.user
-        if adder.id not in conversation.admins:
-            raise PermissionDenied()
-        new_profile_id = request.data.get('profile_id')
-        try:
-            if not new_profile_id:
-                raise RequiredBody('new_profile_id')
-            new_profile = User.objects.get(id=new_profile_id)
-        except User.DoesNotExist:
-            raise InvalidBody('profile_id', "Profile with id '%s' does not exist" % new_profile_id)
-        except:
-            raise InvalidBody('profile_id', "Invalid profile_id")
-        if not new_profile.is_listening(adder):
-            msg = "The profile you are trying to add is not one of your listeners"
-            raise InvalidBody('profile_id', msg)
-        conversation.users.add(new_profile)
-        return Response({'success': "Added '%s' to the conversation" % new_profile.name}, status=status.HTTP_202_ACCEPTED)
+        context = {
+            'conversation': self.get_object(),
+            'request': request
+        }
+        serializer = AddProfileSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post'], suffix='Remove Profile')
     def remove_profile(self, request, *args, **kwargs):
@@ -319,7 +312,9 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         ####Body
         <pre><code>
         {
-            "profile_id": "id of the profile to be removed"
+            "profile": {
+                "id": "id of the profile to be removed"
+            }
         }
         </code></pre>
         ---
@@ -330,39 +325,30 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
             - name: body
               paramType: body
         """
-        conversation = self.get_object()
-        adder = request.user
-        if adder.id not in conversation.admins:
-            raise PermissionDenied()
-        existing_profile_id = request.data.get('profile_id')
-        try:
-            if not existing_profile_id:
-                raise RequiredBody('new_profile_id')
-            existing_profile = User.objects.get(id=existing_profile_id)
-        except User.DoesNotExist:
-            raise InvalidBody('profile_id', "Profile with id '%s' does not exist" % existing_profile_id)
-        except:
-            raise InvalidBody('profile_id', "Invalid profile_id")
-        if not conversation.users.filter(id=existing_profile.id).exists():
-            msg = "The profile you are trying to remove is not a member of this conversation"
-            raise InvalidBody('profile_id', msg)
-        conversation.users.remove(existing_profile)
-        return Response({'success': "Removed '%s' from the conversation" % existing_profile.name},
-                        status=status.HTTP_202_ACCEPTED)
+        context = {
+            'conversation': self.get_object(),
+            'request': request
+        }
+        serializer = RemoveProfileSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
-    @detail_route(methods=['post'], suffix='Promote Profile to admin')
+    @detail_route(methods=['post'], suffix='Promote Profile to Admin')
     def promote_admin(self, request, *args, **kwargs):
         """
-        Promote profile to admin in this conversation.
+        Promote profile to admin in this conversation
         ###REQUIRES AUTH
         The logged in profile should be admin in the conversation.
         ###Request
         ####Body
         <pre><code>
         {
-            "profile_id": "id of the profile to be promoted"
+            "profile": {
+                "id": "id of the profile to be promoted as admin"
+            }
         }
-        </code></pre>x
+        </code></pre>
         ---
         omit_serializer: true
         omit_parameters:
@@ -371,26 +357,78 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
             - name: body
               paramType: body
         """
-        conversation = self.get_object()
-        adder = request.user
-        if adder.id not in conversation.admins:
-            raise PermissionDenied()
-        existing_profile_id = request.data.get('profile_id')
-        try:
-            if not existing_profile_id:
-                raise RequiredBody('new_profile_id')
-            existing_profile = User.objects.get(id=existing_profile_id)
-        except User.DoesNotExist:
-            raise InvalidBody('profile_id', "Profile with id '%s' does not exist" % existing_profile_id)
-        except:
-            raise InvalidBody('profile_id', "Invalid profile_id")
-        if not conversation.users.filter(id=existing_profile.id).exists():
-            msg = "The profile you are trying to promote is not a member of this conversation"
-            raise InvalidBody('profile_id', msg)
-        conversation.admins.append(existing_profile.pk)
-        conversation.save()
-        return Response({'success': "Promoted '%s' to admin in this conversation" % existing_profile.name},
-                        status=status.HTTP_202_ACCEPTED)
+        context = {
+            'conversation': self.get_object(),
+            'request': request
+        }
+        serializer = PromoteAdminSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @detail_route(methods=['post'], suffix='Block Profile')
+    def block_profile(self, request, *args, **kwargs):
+        """
+        Block profile from this conversation
+        ###REQUIRES AUTH
+        The logged in profile should be admin in the conversation.
+        ###Request
+        ####Body
+        <pre><code>
+        {
+            "profile": {
+                "id": "id of the profile to be blocked"
+            }
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        context = {
+            'conversation': self.get_object(),
+            'request': request
+        }
+        serializer = BlockProfileSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @detail_route(methods=['post'], suffix='Unblock Profile')
+    def unblock_profile(self, request, *args, **kwargs):
+        """
+        Unblock profile from this conversation
+        ###REQUIRES AUTH
+        The logged in profile should be admin in the conversation.
+        ###Request
+        ####Body
+        <pre><code>
+        {
+            "profile": {
+                "id": "id of the profile to be unblocked"
+            }
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        context = {
+            'conversation': self.get_object(),
+            'request': request
+        }
+        serializer = UnblockProfileSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     def get_success_message_headers(self, data):
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
@@ -435,11 +473,12 @@ class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateMo
     permission_classes = (permissions.IsAuthenticated, CanContribute)
 
     def get_queryset(self, *args, **kwargs):
+        user = self.request.user
         filters = {
             'type': CONVERSATION_TYPE_PUBLIC_CHAT,
             'country': self.request.user.location['country']
         }
-        return Conversation.objects.filter(**filters).order_by('-modified_at')
+        return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by('-modified_at')
 
     def list(self, request, *args, **kwargs):
         """
