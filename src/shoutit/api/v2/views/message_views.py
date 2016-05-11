@@ -104,7 +104,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
               paramType: query
         """
         conversation = self.get_object()
-        messages_qs = conversation.get_messages_qs()
+        messages_qs = conversation.messages.all()
         self.pagination_class = DateTimePagination
         page = self.paginate_queryset(messages_qs)
 

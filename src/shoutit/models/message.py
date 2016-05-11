@@ -9,7 +9,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
-from django.db.models.signals import post_save
+from django.db.models import Q
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 
@@ -17,8 +18,8 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
-    MESSAGE_ATTACHMENT_TYPE_PROFILE)
-from common.utils import date_unix, utcfromtimestamp
+    MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT)
+from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from ..utils import none_to_blank, track_new_message
@@ -37,9 +38,11 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     subject = models.CharField(max_length=25, blank=True, default='')
     icon = models.URLField(blank=True, default='')
     admins = ArrayField(models.UUIDField(), default=list, blank=True)
+    blocked = ArrayField(models.UUIDField(), default=list, blank=True)
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, through='shoutit.ConversationDelete',
                                         related_name='deleted_conversations')
-    last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True)
+    last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True,
+                                        on_delete=models.SET_NULL)
 
     def __unicode__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
@@ -47,29 +50,52 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def clean(self):
         none_to_blank(self, ['icon', 'subject'])
 
-    def get_messages(self, before=None, after=None, limit=25):
-        messages = self.messages.order_by('-created_at')
-        if before:
-            messages = messages.filter(created_at__lt=utcfromtimestamp(before))
-        if after:
-            messages = messages.filter(created_at__gt=utcfromtimestamp(after))
-        return messages[:limit][::-1]
-
-    def get_messages_qs(self, ):
-        return self.messages.all()
-
     @property
     def about(self):
         return self.attached_object
 
     @property
     def messages_count(self):
-        return self.messages.count()
+        return self.messages.exclude(user=None).count()
 
     def unread_messages(self, user):
         if isinstance(user, AnonymousUser):
             return self.messages.none()
-        return self.messages.exclude(read_set__user=user).exclude(user=user)
+        return self.messages.exclude(read_set__user=user).exclude(Q(user=user) | Q(user=None))
+
+    def display(self, user):
+        title = self.subject
+        contributors_summary = self.contributors.exclude(id=user.id)[:5]
+        contributors_summary_names = map(lambda u: u.first_name, contributors_summary)
+        sub_title = ", ".join(contributors_summary_names) or "You only"
+        image = self.icon
+
+        if self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
+            title = self.about.title
+            image = self.about.thumbnail
+        elif self.type == CONVERSATION_TYPE_CHAT:
+            if not title:
+                title = sub_title
+                sub_title = ''
+            if not image:
+                image = contributors_summary[0].ap.image if contributors_summary else user.ap.image
+
+        dis = {
+            'title': title,
+            'sub_title': sub_title,
+            'image': image
+        }
+        return dis
+
+    @property
+    def contributors(self):
+        return self.users.exclude(id__in=self.blocked)
+
+    def can_contribute(self, user):
+        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            return user.id not in self.blocked
+        else:
+            return user in self.contributors
 
     def mark_as_deleted(self, user):
         # 0 - Mark all its messages as read
@@ -119,28 +145,56 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         if last_message_read:
             last_message_read.delte()
 
-    @property
-    def messages_attachments(self):
-        return MessageAttachment.objects.filter(conversation_id=self.id)
+    def add_profile(self, profile):
+        self.users.add(profile)
 
-    @property
-    def contributors(self):
-        return self.users.all()
+    def remove_profile(self, profile):
+        self.users.remove(profile)
 
-    def can_contribute(self, user):
-        if self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
-            return True
-        else:
-            return user in self.contributors
+    def promote_admin(self, profile):
+        self.admins.append(profile.id)
+        self.save(update_fields=['admins'])
+
+    def block_profile(self, profile):
+        if profile.id in self.admins:
+            self.admins.remove(profile.id)
+        self.blocked.append(profile.id)
+        self.save(update_fields=['admins', 'blocked'])
+
+    def unblock_profile(self, profile):
+        self.blocked.remove(profile.id)
+        self.save(update_fields=['blocked'])
+
+
+@receiver(pre_save, sender=Conversation)
+def pre_save_conversation(sender, instance=None, **kwargs):
+    from ..controllers import location_controller
+
+    if instance._state.adding and instance.creator:
+        if instance.creator.id not in instance.admins:
+            instance.admins.append(instance.creator.id)
+        if not instance.is_named_location:
+            location_controller.update_object_location(instance, instance.creator.location, save=False)
 
 
 @receiver(post_save, sender=Conversation)
 def post_save_conversation(sender, instance=None, created=False, **kwargs):
     from ..controllers import pusher_controller
 
-    if not created and getattr(instance, 'notify', True):
-        # Trigger `conversation_update` event in the conversation channel
-        pusher_controller.trigger_conversation_update(instance, 'v3')
+    if created:
+        if instance.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            text = "{} created this public chat".format(instance.creator.name)
+            message = Message.create(save=False, user=None, text=text, conversation=instance)
+            message.skip_post_save = True
+            message.save()
+            instance.last_message = message
+            instance.notify = False
+            instance.save()
+
+    else:
+        if getattr(instance, 'notify', True):
+            # Trigger `conversation_update` event in the conversation channel
+            pusher_controller.trigger_conversation_update(instance, 'v3')
 
 
 class ConversationDelete(UUIDModel):
@@ -160,7 +214,8 @@ class Message(Action):
     Message is a message from user into a Conversation
     """
     conversation = models.ForeignKey('shoutit.Conversation', related_name='messages')
-    read_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageRead', related_name='read_messages')
+    read_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageRead',
+                                     related_name='read_messages')
     deleted_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='shoutit.MessageDelete',
                                         related_name='deleted_messages')
     text = models.CharField(null=True, blank=True, max_length=2000,
@@ -203,6 +258,9 @@ class Message(Action):
 
     @property
     def read_by_objects(self):
+        # No read by for system messages
+        if self.user is None:
+            return []
         read_by = [
             {'profile_id': self.user_id, 'read_at': self.created_at_unix}
         ]
@@ -260,7 +318,7 @@ class Message(Action):
 
 @receiver(post_save, sender=Message)
 def post_save_message(sender, instance=None, created=False, **kwargs):
-    if created:
+    if created and not getattr(instance, 'skip_post_save', False):
         # Save the attachments
         from ..controllers.message_controller import save_message_attachments
         attachments = getattr(instance, 'raw_attachments', [])

@@ -27,7 +27,7 @@ class Action(UUIDModel, APIModelMixin, LocationMixin):
 
 
 @receiver(pre_save)
-def action_pre_save(sender, instance=None, created=False, **kwargs):
+def action_pre_save(sender, instance=None, **kwargs):
     if not issubclass(sender, Action):
         return
     if instance.is_zero_coord:
