@@ -3,14 +3,14 @@
 """
 from __future__ import unicode_literals
 
-from collections import OrderedDict
-
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
-from common.constants import REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT
-from shoutit.models import Notification, Report, User, Shout
+from common.constants import REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, REPORT_TYPE_CONVERSATION
+from common.utils import any_in
+from shoutit.models import Notification, Report
 from shoutit.utils import blank_to_none
-from .message import MessageSerializer
+from .message import MessageSerializer, ConversationSerializer
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
 from ..exceptions import ERROR_REASON
@@ -20,21 +20,23 @@ class AttachedObjectSerializer(serializers.Serializer):
     profile = ProfileSerializer(source='attached_profile', required=False)
     message = MessageSerializer(source='attached_message', required=False)
     shout = ShoutSerializer(source='attached_shout', required=False)
+    conversation = ConversationSerializer(source='attached_conversation', required=False)
 
     def to_representation(self, attached_object):
-        # create reference to the object inside itself with name based on its class
-        # to be used for representation
-        class_name = attached_object.__class__.__name__
+        # Create reference to the object inside itself with attr based on its class `attached_{class name}`
+        class_name = getattr(attached_object, 'model_name', None)
         if class_name == 'User':
             setattr(attached_object, 'attached_profile', attached_object)
-        if class_name == 'Profile' or class_name == 'Page':
-            setattr(attached_object, 'attached_profile', attached_object.user)
-        if class_name == 'Message':
-            setattr(attached_object, 'attached_message', attached_object)
-        if class_name == 'Shout':
-            setattr(attached_object, 'attached_shout', attached_object)
-
+        elif class_name:
+            setattr(attached_object, 'attached_%s' % class_name.lower(), attached_object)
         return super(AttachedObjectSerializer, self).to_representation(attached_object)
+
+    def to_internal_value(self, data):
+        ret = super(AttachedObjectSerializer, self).to_internal_value(data)
+        keys = data.keys()
+        if len(keys) != 1:
+            raise serializers.ValidationError(("Should have a single property", ERROR_REASON.REQUIRED))
+        return ret
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -62,38 +64,35 @@ class ReportSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         validated_data = super(ReportSerializer, self).to_internal_value(data)
+        attached_object = validated_data['attached_object']
 
-        errors = OrderedDict()
-        if 'attached_object' in validated_data:
-            attached_object = validated_data['attached_object']
-            if not ('attached_profile' in attached_object or 'attached_shout' in attached_object):
-                error_tuple = ("attached_object should have either 'profile' or 'shout'", ERROR_REASON.REQUIRED)
-                errors['attached_object'] = error_tuple
+        if not any_in(['attached_profile', 'attached_shout', 'attached_conversation'], attached_object):
+            error_tuple = ("attached_object should have either 'profile', 'shout' or 'conversation'",
+                           ERROR_REASON.REQUIRED)
+            raise serializers.ValidationError({'attached_object': error_tuple})
 
-            if 'attached_profile' in attached_object:
-                validated_data['type'] = REPORT_TYPE_PROFILE
+        if 'attached_profile' in attached_object:
+            validated_data['type'] = REPORT_TYPE_PROFILE
 
-            if 'attached_shout' in attached_object:
-                validated_data['type'] = REPORT_TYPE_SHOUT
-        else:
-            error_tuple = ("This field is required", ERROR_REASON.REQUIRED)
-            errors['attached_object'] = error_tuple
-        if errors:
-            raise serializers.ValidationError(errors)
+        elif 'attached_shout' in attached_object:
+            validated_data['type'] = REPORT_TYPE_SHOUT
+
+        elif 'attached_conversation' in attached_object:
+            validated_data['type'] = REPORT_TYPE_CONVERSATION
 
         return validated_data
 
     def create(self, validated_data):
-        attached_object = None
         report_type = validated_data['type']
-
         if report_type == REPORT_TYPE_PROFILE:
-            attached_object = User.objects.get(id=validated_data['attached_object']['attached_profile']['id'])
-        if report_type == REPORT_TYPE_SHOUT:
-            attached_object = Shout.objects.get(id=validated_data['attached_object']['attached_shout']['id'])
-        text = validated_data['text'] if 'text' in validated_data else None
-        report = Report.objects.create(user=self.root.context['request'].user, text=text,
-                                       attached_object=attached_object, type=report_type)
+            model_name = 'user'
+        else:
+            model_name = str(report_type)
+        user = self.root.context['request'].user
+        text = validated_data.get('text')
+        object_id = validated_data['attached_object']['attached_%s' % report_type]['id']
+        ct = ContentType.objects.get_by_natural_key('shoutit', model_name)
+        report = Report.objects.create(user=user, text=text, content_type=ct, object_id=object_id, type=report_type)
         return report
 
     def to_representation(self, instance):

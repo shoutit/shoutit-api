@@ -15,7 +15,7 @@ from common.utils import any_in
 from shoutit.controllers import location_controller, message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
 from shoutit.utils import blank_to_none
-from .base import VideoSerializer
+from .base import VideoSerializer, AttachedUUIDObjectMixin
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
 
@@ -62,7 +62,7 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
         return ret
 
 
-class MessageSerializer(serializers.ModelSerializer):
+class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     conversation_id = serializers.UUIDField(read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
@@ -74,6 +74,11 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'conversation_id', 'profile', 'text', 'attachments', 'read_by')
 
     def to_internal_value(self, data):
+        # Validate when passed as attached object or message attachment
+        ret = self.to_internal_attached_value(data)
+        if ret:
+            return ret
+
         validated_data = super(MessageSerializer, self).to_internal_value(data)
         attachments = validated_data.get('attachments')
         text = validated_data.get('text')
@@ -148,7 +153,7 @@ class MessageSerializer(serializers.ModelSerializer):
         return message
 
 
-class ConversationSerializer(serializers.ModelSerializer):
+class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
     last_message = MessageSerializer(required=False)
@@ -188,6 +193,11 @@ class ConversationSerializer(serializers.ModelSerializer):
         return conversation_type
 
     def to_internal_value(self, data):
+        # Validate when passed as attached object or message attachment
+        ret = self.to_internal_attached_value(data)
+        if ret:
+            return ret
+
         validated_data = super(ConversationSerializer, self).to_internal_value(data)
         return validated_data
 
