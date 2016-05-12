@@ -222,17 +222,16 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap, api_client=api_client, api_version=request.version)
-            msg = "you started listening to {} shouts.".format(user.name)
-            _status = status.HTTP_201_CREATED
+            msg = "You started listening to %s shouts" % user.name
         else:
             listen_controller.stop_listening_to_object(request.user, ap)
-            msg = "you stopped listening to {} shouts.".format(user.name)
-            _status = status.HTTP_202_ACCEPTED
-        ret = {
-            'data': {'success': msg},
-            'status': _status
+            msg = "You stopped listening to %s shouts" % user.name
+
+        data = {
+            'success': msg,
+            'new_listeners_count': user.listeners_count
         }
-        return Response(**ret)
+        return Response(data=data, status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
