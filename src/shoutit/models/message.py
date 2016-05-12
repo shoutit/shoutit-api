@@ -168,6 +168,10 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         self.blocked.remove(profile.id)
         self.save(update_fields=['blocked'])
 
+    @property
+    def media_attachments(self):
+        return self.messages_attachments.filter(type=MESSAGE_ATTACHMENT_TYPE_MEDIA)
+
 
 @receiver(pre_save, sender=Conversation)
 def pre_save_conversation(sender, instance=None, **kwargs):

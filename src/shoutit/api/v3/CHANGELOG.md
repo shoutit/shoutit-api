@@ -15,6 +15,8 @@
 - Added `GET /conversations/{id}/blocked` that returns a list of blocked profiles from this conversation
 - Conversations (from type `public_chats`) can be now reported using `POST /misc/reports`
 - Allow attaching profiles in messages. Check [Message Attachment](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Messaging#message-attachment)
+- Added `/conversation/{id}/media` to list media attachments (images and videos)
+
 
 ## Update (2016-05-10)
 
