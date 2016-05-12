@@ -224,6 +224,17 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
         conversation.users.add(user)
         return conversation
 
+    def update(self, conversation, validated_data):
+        subject = validated_data.get('subject')
+        icon = validated_data.get('icon')
+        if subject:
+            conversation.subject = subject
+        if icon:
+            conversation.icon = icon
+        if subject or icon:
+            conversation.save(update_fields=['subject', 'icon'])
+        return conversation
+
 
 class ConversationProfileActionSerializer(serializers.Serializer):
     """

@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
-from shoutit.api.permissions import IsContributor, CanContribute
+from shoutit.api.permissions import CanContribute
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from . import DEFAULT_PARSER_CLASSES_v2
@@ -314,7 +314,7 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
     """
     parser_classes = DEFAULT_PARSER_CLASSES_v2
     serializer_class = MessageSerializer
-    permission_classes = (permissions.IsAuthenticated, IsContributor)
+    permission_classes = (permissions.IsAuthenticated, CanContribute)
 
     def get_queryset(self):
         return Message.objects.all()

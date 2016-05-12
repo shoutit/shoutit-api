@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 
 from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
-from shoutit.api.permissions import CanContribute
+from shoutit.api.permissions import CanContribute, IsAdminOrCanContribute
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
@@ -20,13 +20,13 @@ from ..views.viewsets import UUIDViewSetMixin
 
 
 class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                          viewsets.GenericViewSet):
+                          mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
     serializer_class = ConversationSerializer
     pagination_class = ReverseModifiedDateTimePagination
-    permission_classes = (permissions.IsAuthenticated, CanContribute)
+    permission_classes = (permissions.IsAuthenticated, IsAdminOrCanContribute)
 
     # todo: conversations / messages search
 
@@ -101,6 +101,27 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         serializer: ConversationSerializer
         """
         return super(ConversationViewSet, self).retrieve(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Update conversation
+        ###REQUIRES AUTH
+        ####Body
+        <pre><code>
+        {
+            "subject": "text goes here",
+            "icon": "icon url"
+        }
+        </code></pre>
+        ---
+        serializer: ConversationSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        return super(ConversationViewSet, self).partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         """

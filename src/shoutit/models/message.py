@@ -97,6 +97,9 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         else:
             return user in self.contributors
 
+    def is_admin(self, user):
+        return user.id in self.admins
+
     def mark_as_deleted(self, user):
         # 0 - Mark all its messages as read
         self.mark_as_read(user)
