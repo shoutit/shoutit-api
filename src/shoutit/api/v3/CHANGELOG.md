@@ -1,11 +1,28 @@
 # shoutit-api v3 changelog
 
+## Chat actions (2016-05-12)
+
+- Updated the following actions docs
+  - `POST /conversations/{id}/add_profile` 
+  - `POST /conversations/{id}/remove_profile` 
+  - `POST /conversations/{id}/promote_admin` 
+  - `POST /conversations/{id}/block_profile` 
+  - `POST /conversations/{id}/unblock_profile` 
+- Added `PATCH /conversations/{id}` that allows conversation admins to update `subject` and `icon` of the conversation
+- Now returning `display` property in each conversation. It includes `title`, `sub_title` and `image` which can be used to display the conversation
+- When creating public chat, a message is being auto created and added to the conversation "Profile created this public chat"
+- Added `blocked` property to Conversation that includes the ids of blocked profiles
+- Added `GET /conversations/{id}/blocked` that returns a list of blocked profiles from this conversation
+- Conversations (from type `public_chats`) can be now reported using `POST /misc/reports`
+- Allow attaching profiles in messages. Check [Message Attachment](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Messaging#message-attachment)
+
 ## Update (2016-05-10)
 
 ### Public Chats
 
 - Added `GET /public_chats` which is a shortcut to `GET /conversations?type=public_chat`
 - Added `POST /public_chats` which is a shortcut to `POST /conversations` with `type` set to `public_chat` in the request body
+- Check [Public Chats wiki article](https://github.com/shoutit/shoutit-api/wiki/Public-Chats) for more info
 
 ### Listening / Listeners / Interests
 
