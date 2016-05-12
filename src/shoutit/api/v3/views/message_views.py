@@ -16,7 +16,7 @@ from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
 from ..serializers import (ConversationSerializer, MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
                            RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer,
-                           MessageAttachmentSerializer)
+                           MessageAttachmentSerializer, ShoutSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -220,8 +220,37 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         media_attachments = conversation.media_attachments
         self.pagination_class = ShoutitPageNumberPagination
         page = self.paginate_queryset(media_attachments)
-        # Todo: Only keep the messages that were not deleted by this user
+        # Todo: Only keep the message attachments that were not deleted by this user
         serializer = MessageAttachmentSerializer(page, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Shouts')
+    def shouts(self, request, *args, **kwargs):
+        """
+        List the conversation attached shouts
+        ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        conversation = self.get_object()
+        shout_attachments = conversation.shout_attachments
+        self.pagination_class = ShoutitPageNumberPagination
+        page = self.paginate_queryset(shout_attachments)
+        # Todo: Only keep the message attachments that were not deleted by this user
+        serializer = ShoutSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Delete Messages')
