@@ -15,7 +15,8 @@ from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
 from ..serializers import (ConversationSerializer, MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
-                           RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer)
+                           RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer,
+                           MessageAttachmentSerializer, ShoutSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -172,6 +173,84 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
 
         serializer = MessageSerializer(page, many=True, context={'request': request})
         conversation.mark_as_read(request.user)
+        return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Media')
+    def media(self, request, *args, **kwargs):
+        """
+        List the conversation attached media
+        ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {MessageAttachmentSerializer} of type `media`
+        }
+        </code></pre>
+
+        ###MessageAttachmentSerializer of type `media`
+        <pre><code>
+        {
+            "type": "media",
+            "images": [
+                "https://shout-image.static.shoutit.com/image1.jpg",
+                "https://shout-image.static.shoutit.com/image2.jpg"
+            ],
+            "videos": [
+                {
+                    "url": "https://shout-image.static.shoutit.com/video.mp4",
+                    "thumbnail_url": "https://shout-image.static.shoutit.com/thumbnail.jpg",
+                    "provider": "shoutit_s3",
+                    "id_on_provider": "38CB868F-B0C8-4B41-AF5A-F57C9FC666C7-1447616915",
+                    "duration": 12
+                }
+            ]
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        conversation = self.get_object()
+        media_attachments = conversation.media_attachments
+        self.pagination_class = ShoutitPageNumberPagination
+        page = self.paginate_queryset(media_attachments)
+        # Todo: Only keep the message attachments that were not deleted by this user
+        serializer = MessageAttachmentSerializer(page, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Shouts')
+    def shouts(self, request, *args, **kwargs):
+        """
+        List the conversation attached shouts
+        ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        conversation = self.get_object()
+        shout_attachments = conversation.shout_attachments
+        self.pagination_class = ShoutitPageNumberPagination
+        page = self.paginate_queryset(shout_attachments)
+        # Todo: Only keep the message attachments that were not deleted by this user
+        serializer = ShoutSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], suffix='Delete Messages')

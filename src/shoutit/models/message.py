@@ -168,6 +168,15 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         self.blocked.remove(profile.id)
         self.save(update_fields=['blocked'])
 
+    @property
+    def media_attachments(self):
+        return self.messages_attachments.filter(type=MESSAGE_ATTACHMENT_TYPE_MEDIA)
+
+    @property
+    def shout_attachments(self):
+        from .post import Shout
+        return Shout.objects.filter(message_attachments__conversation=self)
+
 
 @receiver(pre_save, sender=Conversation)
 def pre_save_conversation(sender, instance=None, **kwargs):
@@ -389,7 +398,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     videos = models.ManyToManyField('shoutit.Video', blank=True)
 
     def __unicode__(self):
-        return self.pk + " for message: " + self.message.pk
+        return self.get_type_display()
 
     @property
     def shout(self):

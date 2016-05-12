@@ -29,7 +29,7 @@ class Command(BaseCommand):
         days_ago = now + datetime.timedelta(days=-options['days'])
         conversations = Conversation.objects.filter(created_at__gte=days_ago,
                                                     created_at__lt=two_hours_ago,
-                                                    shout__is_sss=True)
+                                                    about_shout__is_sss=True)
         replies_count = 0
         for conversation in conversations:
             shout = conversation.about

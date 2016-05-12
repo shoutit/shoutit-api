@@ -137,7 +137,9 @@ class Shout(Post):
 
     is_sss = models.BooleanField(default=False)
     mobile = models.CharField(blank=True, max_length=20, default='')
-    conversations = GenericRelation('shoutit.Conversation', related_query_name='shout')
+
+    conversations = GenericRelation('shoutit.Conversation', related_query_name='about_shout')
+    message_attachments = GenericRelation('shoutit.MessageAttachment', related_query_name='attached_shout')
 
     objects = ShoutManager()
 
