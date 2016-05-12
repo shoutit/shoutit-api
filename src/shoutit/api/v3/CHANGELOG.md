@@ -1,5 +1,10 @@
 # shoutit-api v3 changelog
 
+## Update
+
+- Now returning `new_listeners_count` when listening / stop listening to profiles and tags
+
+
 ## Chat actions (2016-05-12)
 
 - Updated the following actions docs

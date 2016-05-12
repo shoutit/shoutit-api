@@ -174,18 +174,6 @@ class Shout(Post):
     def tag_objects(self):
         return Tag.objects.filter(name__in=self.tags)
 
-    def get_text(self):
-        text = ''
-        if self.type == POST_TYPE_REQUEST or self.type == POST_TYPE_OFFER:
-            try:
-                text = self.shout.item.name + ' ' + self.text
-            except Exception, e:
-                print e
-        else:
-            text = self.text
-
-        return text
-
     @property
     def is_expired(self):
         now = timezone.now()

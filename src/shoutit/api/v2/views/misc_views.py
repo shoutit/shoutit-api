@@ -290,7 +290,7 @@ class MiscViewSet(viewsets.ViewSet):
                                                     mobile=mobile)
             else:
                 raise Exception('Unknown ad source.')
-        except Exception, e:
+        except Exception as e:
             msg = "User Creation Error."
             error_logger.info(msg, exc_info=True)
             return Response({'error': msg, 'detail': str(e)})
@@ -309,7 +309,7 @@ class MiscViewSet(viewsets.ViewSet):
                 category=category, images=shout['images'],
                 is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10, mobile=mobile
             )
-        except Exception, e:
+        except Exception as e:
             msg = "Shout Creation Error. Deleting user."
             error_logger.info(msg, exc_info=True)
             user.delete()
@@ -489,8 +489,8 @@ def handle_cl_reply(msg, request):
         return Response({'error': "we couldn't process the message text."})
     try:
         dbcl_conversation = DBCLConversation.objects.get(ref=ref)
-    except DBCLConversation.DoesNotExist, e:
-        print e
+    except DBCLConversation.DoesNotExist as e:
+        error_logger.warning(str(e))
         return Response({'error': str(e)})
 
     from_user = dbcl_conversation.to_user

@@ -436,7 +436,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
         try:
             return handler(request, request.data.copy(), client)
-        except OAuthError, e:
+        except OAuthError as e:
             return self.error_response(e.args[0], client=client, grant_type=grant_type)
         except ValidationError as e:
             return self.error_response(e.detail, client=client, grant_type=grant_type)
