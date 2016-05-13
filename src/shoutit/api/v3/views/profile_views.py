@@ -18,7 +18,8 @@ from shoutit.controllers import listen_controller, message_controller, facebook_
 from shoutit.models import User
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, ShoutitPageNumberPaginationNoCount)
-from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer, ProfileDeactivationSerializer, GuestSerializer)
+from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
+                           ProfileDeactivationSerializer, GuestSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -340,8 +341,17 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         List the Profile homepage shouts. Profile can't see the homepage of other profiles.
         [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
         ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "count": 0, // number of results
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
         ---
-        serializer: ShoutSerializer
+        omit_serializer: true
         parameters:
             - name: username
               description: me for logged in profile
