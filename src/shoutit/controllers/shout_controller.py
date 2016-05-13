@@ -198,7 +198,7 @@ def _save_shout_index(shout=None, created=False):
     try:
         if created:
             raise NotFoundError()
-        if shout.is_disabled or shout.is_muted:
+        if shout.is_disabled:
             return delete_object_index(ShoutIndex, shout)
         shout_index = ShoutIndex.get(shout.pk)
     except NotFoundError:
@@ -234,6 +234,7 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.price = shout.item.price if shout.item.price is not None else 0
     shout_index.available_count = shout.available_count
     shout_index.is_sold = shout.is_sold
+    shout_index.is_muted = shout.is_muted
     shout_index.uid = shout.user.pk
     shout_index.username = shout.user.username
     shout_index.published_at = shout.published_at

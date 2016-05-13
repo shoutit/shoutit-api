@@ -43,8 +43,13 @@ class ShoutManager(models.Manager):
     def filter_expired_out(self, qs):
         now = timezone.now()
         min_published = now - timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+
+        # Recently published and no specified expires_at
         no_expiry_still_valid = Q(expires_at__isnull=True, published_at__gte=min_published)
+
+        # Not expired
         expiry_still_valid = Q(expires_at__isnull=False, expires_at__gte=now)
+
         return qs.filter(no_expiry_still_valid | expiry_still_valid)
 
 
@@ -266,6 +271,7 @@ class ShoutIndex(DocType):
     price = Double()
     available_count = Integer()
     is_sold = Boolean()
+    is_muted = Boolean()
     uid = String(index='not_analyzed')
     username = String(index='not_analyzed')
     published_at = Date()

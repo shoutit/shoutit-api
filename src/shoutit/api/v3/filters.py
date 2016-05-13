@@ -4,8 +4,11 @@
 """
 from __future__ import unicode_literals
 
+from datetime import timedelta
+
 import django_filters
 from django.conf import settings
+from django.utils import timezone
 from elasticsearch_dsl import Search, Q
 from pydash import parse_int, arrays
 from rest_framework import filters
@@ -175,6 +178,21 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         max_price = data.get('max_price')
         if max_price:
             index_queryset = index_queryset.filter('range', **{'price': {'lte': max_price}})
+
+        # Expired
+        if not getattr(view, 'get_expired', False):
+            now = timezone.now()
+            min_published = now - timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+
+            # Recently published and no specified expires_at
+            recently_published = Q('range', **{'published_at': {'gte': min_published}})
+            no_expiry_still_valid = Q('bool', filter=[Q('missing', field='expires_at'), recently_published])
+
+            # Not expired
+            not_expired = Q('range', **{'expires_at': {'gte': now}})
+            expiry_still_valid = Q('bool', filter=[Q('exists', field='expires_at'), not_expired])
+
+            index_queryset = index_queryset.query('bool', should=[no_expiry_still_valid, expiry_still_valid])
 
         # Sorting
         sort = data.get('sort')
