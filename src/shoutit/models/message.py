@@ -146,7 +146,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         # Delete the last MessageRead only if it exits
         last_message_read = self.messages_read_set.filter(user=user).order_by('created_at').last()
         if last_message_read:
-            last_message_read.delte()
+            last_message_read.delete()
 
     def add_profile(self, profile):
         self.users.add(profile)
