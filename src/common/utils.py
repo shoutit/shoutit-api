@@ -13,7 +13,7 @@ from distutils.util import strtobool as stb
 import pytz
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
-from pydash import strings
+from pydash import strings, arrays
 
 from common.constants import NOT_ALLOWED_USERNAMES
 
@@ -56,6 +56,7 @@ def process_tags(names, snake_case=False):
         processed_tag = process_tag(name, fn)
         if processed_tag:
             processed_tags.append(processed_tag)
+    processed_tags = arrays.unique(processed_tags)
     return processed_tags
 
 

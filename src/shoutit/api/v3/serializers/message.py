@@ -12,7 +12,7 @@ from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MessageAttachmentType, CONVERSATION_TYPE_PUBLIC_CHAT, MESSAGE_ATTACHMENT_TYPE_PROFILE)
 from common.utils import any_in
-from shoutit.controllers import location_controller, message_controller
+from shoutit.controllers import message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
 from shoutit.utils import blank_to_none
 from .base import VideoSerializer, AttachedUUIDObjectMixin

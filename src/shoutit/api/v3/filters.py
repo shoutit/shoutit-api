@@ -40,25 +40,32 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             else:
                 data.update(discover_item.shouts_query)
 
-        # Filter shouts by user id if user username or id are passed in `user` query param
+        # Filter shouts by user id if user username is passed in `profile` query param
         user = data.get('profile') or data.get('user')
         if user:
+            # Replace `me` with logged in username
             if user == 'me' and request.user.is_authenticated():
                 user = request.user.username
+
+            # Get the user id using username
             try:
-                user_id = User.objects.get(username=user).pk
+                user_id = str(User.objects.values('pk').get(username=user)['pk'])
             except User.DoesNotExist:
                 msg = "Profile with username '%s' does not exist" % user
                 raise InvalidParameter('profile', msg)
             else:
                 index_queryset = index_queryset.filter('term', uid=user_id)
 
-        # Exclude ids
-        exclude_ids = data.get('exclude_ids')
-        if isinstance(exclude_ids, basestring):
-            exclude_ids = exclude_ids.split(',')
-        if exclude_ids:
-            index_queryset = index_queryset.filter(~Q('terms', _id=exclude_ids))
+            # When listing user's own shouts show him the expired ones
+            if user == request.user.username:
+                setattr(view, 'get_expired', True)
+
+        # Exclude shouts using their ids
+        exclude = data.get('exclude')
+        if isinstance(exclude, basestring):
+            exclude = exclude.split(',')
+        if exclude:
+            index_queryset = index_queryset.filter(~Q('terms', _id=exclude))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -152,13 +159,13 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                         cat_f_param = data.get(cat_f_key)
                         if cat_f_param:
                             cat_f_params = cat_f_param.split(',')
-                            index_queryset = index_queryset.filter('terms', **{'tags2__%s' % cat_f_key: cat_f_params})
+                            index_queryset = index_queryset.filter('terms', **{'filters__%s' % cat_f_key: cat_f_params})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
                             if cat_f_param:
                                 index_queryset = index_queryset.filter('range',
-                                                                       **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
+                                                                       **{'filters__%s' % cat_f_key: {m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')
@@ -172,8 +179,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         # Sorting
         sort = data.get('sort')
         sort_types = {
-            None: ('-date_published',),
-            'time': ('-date_published',),
+            None: ('-published_at',),
+            'time': ('-published_at',),
             'price_asc': ('price',),
             'price_desc': ('-price',),
         }
@@ -211,7 +218,7 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             listening.append(listening_users)
 
         index_queryset = index_queryset.query('bool', should=listening)
-        index_queryset = index_queryset.sort('-date_published')
+        index_queryset = index_queryset.sort('-published_at')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
 
