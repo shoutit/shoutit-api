@@ -218,6 +218,7 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
     def to_representation(self, instance):
         ret = super(ConversationSerializer, self).to_representation(instance)
         blank_to_none(ret, ['icon', 'subject'])
+        blank_to_none(ret['display'], ['title', 'sub_title', 'image'])
         return ret
 
     def create(self, validated_data):
