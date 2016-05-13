@@ -23,13 +23,15 @@ from shoutit.utils import error_logger, none_to_blank, correct_mobile
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class PostManager(models.Manager):
-    def get_valid_posts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
-        qs = self.distinct().filter(is_disabled=False)
+class ShoutManager(models.Manager):
+    def get_valid_shouts(self, types=None, country=None, state=None, city=None, get_expired=False, get_muted=False):
+        qs = self.filter(is_disabled=False)
         if types:
             qs = qs.filter(type__in=types)
         if country:
             qs = qs.filter(country__iexact=country)
+        if state:
+            qs = qs.filter(state__iexact=state)
         if city:
             qs = qs.filter(city__iexact=city)
         if not get_muted:
@@ -39,40 +41,11 @@ class PostManager(models.Manager):
         return qs
 
     def filter_expired_out(self, qs):
-        today = timezone.now()
-        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        day = today - days
-        return qs.filter(
-            (Q(type=POST_TYPE_REQUEST) | Q(type=POST_TYPE_OFFER)) & (
-                Q(shout__expiry_date__isnull=True, date_published__range=(day, today)) |
-                Q(shout__expiry_date__isnull=False, shout__expiry_date__gte=today)
-            )
-        )
-
-
-class ShoutManager(PostManager):
-    def get_valid_shouts(self, types=None, country=None, city=None, get_expired=False, get_muted=False):
-        if not types:
-            types = [POST_TYPE_OFFER, POST_TYPE_REQUEST]
-        return PostManager.get_valid_posts(self, types, country=country, city=city, get_expired=get_expired,
-                                           get_muted=get_muted)
-
-    def filter_expired_out(self, qs):
-        today = timezone.now()
-        days = timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        day = today - days
-        return qs.filter(Q(expiry_date__isnull=True, date_published__range=(day, today)) | Q(
-            expiry_date__isnull=False, expiry_date__gte=today))
-
-    def get_valid_requests(self, country=None, city=None, get_expired=False, get_muted=False):
-        types = [POST_TYPE_REQUEST]
-        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired,
-                                     get_muted=get_muted)
-
-    def get_valid_offers(self, country=None, city=None, get_expired=False, get_muted=False):
-        types = [POST_TYPE_OFFER]
-        return self.get_valid_shouts(types=types, country=country, city=city, get_expired=get_expired,
-                                     get_muted=get_muted)
+        now = timezone.now()
+        min_published = now - timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+        no_expiry_still_valid = Q(expiry_date__isnull=True, date_published__gte=min_published)
+        expiry_still_valid = Q(expiry_date__isnull=False, expiry_date__gte=now)
+        return qs.filter(no_expiry_still_valid | expiry_still_valid)
 
 
 class Post(Action):
@@ -85,14 +58,12 @@ class Post(Action):
     is_disabled = models.BooleanField(default=False, db_index=True)
 
     priority = models.SmallIntegerField(default=0)
-    objects = PostManager()
 
     def __init__(self, *args, **kwargs):
         super(Action, self).__init__(*args, **kwargs)
         self._meta.get_field('user').blank = False
 
     def clean(self):
-        super(Post, self).clean()
         none_to_blank(self, ['text'])
 
     def mute(self):
@@ -117,10 +88,7 @@ class Post(Action):
 
     @property
     def video_url(self):
-        if self.type in [POST_TYPE_REQUEST, POST_TYPE_OFFER]:
-            return self.item.video_url
-        else:
-            return None
+        return self.item.video_url
 
 
 class Shout(Post):
@@ -130,10 +98,10 @@ class Shout(Post):
     is_indexed = models.BooleanField(default=False, db_index=True)
 
     item = models.OneToOneField('shoutit.Item', db_index=True)
-    renewal_count = models.PositiveSmallIntegerField(default=0)
 
     expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
     expiry_notified = models.BooleanField(default=False)
+    renewal_count = models.PositiveSmallIntegerField(default=0)
 
     is_sss = models.BooleanField(default=False)
     mobile = models.CharField(blank=True, max_length=20, default='')
@@ -177,24 +145,22 @@ class Shout(Post):
     @property
     def is_expired(self):
         now = timezone.now()
-        if (not self.expiry_date and now > self.date_published + timedelta(
-                days=int(settings.MAX_EXPIRY_DAYS))) or (
-                    self.expiry_date and now > self.expiry_date):
+        should_expire_at = self.date_published + timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+        no_expiry_invalid = self.expiry_date is None and now > should_expire_at
+        expiry_invalid = self.expiry_date is not None and now > self.expiry_date
+        if no_expiry_invalid or expiry_invalid:
             return True
+        return False
 
+    # Todo: Deprecate
     @property
     def related_requests(self):
-        if self.type == POST_TYPE_REQUEST:
-            return []
-        else:
-            return []
+        return []
 
+    # Todo: Deprecate
     @property
     def related_offers(self):
-        if self.type == POST_TYPE_OFFER:
-            return []
-        else:
-            return []
+        return []
 
     @property
     def track_properties(self):

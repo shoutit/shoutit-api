@@ -3,6 +3,8 @@
 ## Update
 
 - Now returning `new_listeners_count` when listening / stop listening to profiles and tags
+- Added `is_expired` property to Shout
+- Added `exclude` parameter to `GET /shouts`. It can be either shout id or comma separated shout ids. This is useful when getting other owner shouts on his shout details page not to show the shout again
 
 
 ## Chat actions (2016-05-12)

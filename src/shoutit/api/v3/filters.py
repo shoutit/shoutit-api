@@ -40,25 +40,32 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             else:
                 data.update(discover_item.shouts_query)
 
-        # Filter shouts by user id if user username or id are passed in `user` query param
+        # Filter shouts by user id if user username is passed in `profile` query param
         user = data.get('profile') or data.get('user')
         if user:
+            # Replace `me` with logged in username
             if user == 'me' and request.user.is_authenticated():
                 user = request.user.username
+
+            # Get the user id using username
             try:
-                user_id = User.objects.get(username=user).pk
+                user_id = str(User.objects.values('pk').get(username=user)['pk'])
             except User.DoesNotExist:
                 msg = "Profile with username '%s' does not exist" % user
                 raise InvalidParameter('profile', msg)
             else:
                 index_queryset = index_queryset.filter('term', uid=user_id)
 
-        # Exclude ids
-        exclude_ids = data.get('exclude_ids')
-        if isinstance(exclude_ids, basestring):
-            exclude_ids = exclude_ids.split(',')
-        if exclude_ids:
-            index_queryset = index_queryset.filter(~Q('terms', _id=exclude_ids))
+            # When listing user's own shouts show him the expired ones
+            if user == request.user.username:
+                setattr(view, 'get_expired', True)
+
+        # Exclude shouts using their ids
+        exclude = data.get('exclude')
+        if isinstance(exclude, basestring):
+            exclude = exclude.split(',')
+        if exclude:
+            index_queryset = index_queryset.filter(~Q('terms', _id=exclude))
 
         # Shout type
         shout_type = data.get('shout_type')
