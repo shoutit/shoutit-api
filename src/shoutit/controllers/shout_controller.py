@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import random
 from datetime import timedelta
 
 import requests
@@ -12,10 +11,8 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
-from pydash import arrays
 
-from common.utils import process_tags
-from shoutit.controllers import email_controller, item_controller, location_controller, tag_controller
+from shoutit.controllers import email_controller, item_controller, location_controller
 from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
@@ -27,7 +24,7 @@ def delete_post(post):
     post.save()
 
 
-# todo: make api for renewing shouts
+# Todo: make api for renewing shouts
 def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
     shout = Shout.objects.get(pk=shout_id)
     if not shout:
@@ -41,7 +38,7 @@ def RenewShout(request, shout_id, days=int(settings.MAX_EXPIRY_DAYS)):
         shout.save()
 
 
-# todo: implement better method
+# Todo: implement better method
 def NotifyPreExpiry():
     shouts = Shout.objects.all()
     for shout in shouts:
@@ -57,21 +54,13 @@ def NotifyPreExpiry():
 
 
 def create_shout_v2(user, shout_type, title, text, price, currency, category, tags, location, filters=None, images=None,
-                    videos=None, published_at=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
+                    videos=None, published_at=None, exp_days=None, priority=0, page_admin_user=None,
                     publish_to_facebook=None, api_client=None, api_version=None):
     # tags
     # if passed as [{'name': 'tag-x'},...]
     if tags:
         if not isinstance(tags[0], basestring):
             tags = map(lambda t: t.get('name'), tags)
-    # process tags
-    tags = process_tags(tags)
-    # add main_tag from category
-    tags.insert(0, category.slug)
-    # remove duplicates
-    tags = arrays.unique(tags)
-    # Create actual tags objects (when necessary)
-    tag_controller.get_or_create_tags(tags, user)
     # filters
     if not filters:
         filters = {}
@@ -79,18 +68,16 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, ta
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos)
     shout = Shout(user=user, type=shout_type, text=text, category=category, tags=tags, filters=filters, item=item,
-                  is_sss=is_sss, priority=priority, page_admin_user=page_admin_user)
+                  priority=priority, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
-    shout.api_client, shout.api_version = api_client, api_version
 
-    if not published_at:
-        published_at = timezone.now()
-        if is_sss:
-            hours = random.randrange(-5, 0)
-            minutes = random.randrange(-59, 0)
-            published_at += timedelta(hours=hours, minutes=minutes)
-    shout.published_at = published_at
-    shout.expires_at = exp_days and (published_at + timedelta(days=exp_days)) or None
+    # Published and Expires
+    if published_at:
+        shout.published_at = published_at
+    if exp_days:
+        shout.expires_at = published_at + timedelta(days=exp_days)
+
+    shout.api_client, shout.api_version = api_client, api_version
     shout.publish_to_facebook = publish_to_facebook
     shout.save()
 
@@ -106,19 +93,11 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     if not filters:
         filters = {}
 
-    # Tags
-    # Todo: move saving tags login to clean method
-    tags = filters.values()
-    tags = arrays.unique(tags)
-    tags.insert(0, category.slug)
-    # Create actual tags objects (when necessary)
-    tag_controller.get_or_create_tags(tags, user)
-
     # Create the Item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos, available_count=available_count, is_sold=is_sold)
     # Prepare the Shout
-    shout = Shout(user=user, type=shout_type, text=text, category=category, item=item, tags=tags, filters=filters,
+    shout = Shout(user=user, type=shout_type, text=text, category=category, item=item, filters=filters,
                   mobile=mobile, is_sss=is_sss, priority=priority, page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
 
@@ -156,13 +135,6 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
 
     if filters is not None:
         shout.filters = filters
-        # Todo: move saving tags login to clean method
-        tags = filters.values()
-        tags = arrays.unique(tags)
-        tags.insert(0, shout.category.slug)
-        shout.tags = tags
-        # Create actual tags objects (when necessary)
-        tag_controller.get_or_create_tags(tags, shout.user)
 
     if location is not None:
         location_controller.update_object_location(shout, location, save=False)
@@ -189,15 +161,7 @@ def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, cur
         # if passed as [{'name': 'tag-x'},...]
         if not isinstance(tags[0], basestring):
             tags = [tag.get('name') for tag in tags]
-        # remove duplicates
-        tags = arrays.unique(tags)
-        # process tags
-        tags = process_tags(tags)
-        # add main_tag from category
-        tags.insert(0, shout.category.slug)
         shout.tags = tags
-        # Create actual tags objects (when necessary)
-        tag_controller.get_or_create_tags(tags, shout.user)
     if filters:
         shout.filters = filters
     if location:
@@ -217,7 +181,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
         # Publish to Facebook
         if getattr(instance, 'publish_to_facebook', False):
             publish_shout_to_facebook.delay(instance)
-        # track
+        # Track
         if not instance.is_sss:
             track(instance.user.pk, 'new_shout', instance.track_properties)
 

@@ -115,7 +115,22 @@ class Shout(Post):
         return unicode("%s: %s, %s: %s" % (self.pk, self.item.name, self.country, self.city))
 
     def clean(self):
+        from common.utils import process_tags
+        from ..controllers import tag_controller
+
+        # Super clean
         super(Shout, self).clean()
+
+        # Tags and Filters
+        tags = self.filters.values() or self.tags  # V2 shouts have no filters, use their existing tags
+        tags.insert(0, self.category.slug)
+        tags = process_tags(tags)
+        if self.tags != tags:
+            # Create actual tags objects (when necessary)
+            tag_controller.get_or_create_tags(tags, self.user)
+        self.tags = tags
+
+        # Mobile
         if self.mobile:
             mobile_shout_country = correct_mobile(self.mobile, self.country)
             mobile_owner_country = correct_mobile(self.mobile, self.owner.ap.country)

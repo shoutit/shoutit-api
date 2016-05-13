@@ -155,8 +155,8 @@ class ShoutDetailSerializer(ShoutSerializer):
         return self.perform_save(shout=shout, validated_data=validated_data)
 
     def perform_save(self, shout, validated_data):
-        request = self.root.context.get('request')
-        profile = getattr(request, 'profile', None) or getattr(request, 'user', None) or self.root.context.get('user')
+        request = self.context['request']
+        user = request.user
         page_admin_user = getattr(request, 'page_admin_user', None)
 
         shout_type_name = validated_data.get('get_type_display')
@@ -182,7 +182,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         mobile = validated_data.get('mobile')
         if mobile:
             try:
-                mobile = correct_mobile(mobile, profile.ap.country, raise_exception=True)
+                mobile = correct_mobile(mobile, user.ap.country, raise_exception=True)
             except ValidationError:
                 try:
                     mobile = correct_mobile(mobile, location['country'], raise_exception=True)
@@ -198,7 +198,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             if not (case_1 or case_2):
                 raise serializers.ValidationError("Not enough info to create a shout")
             shout = shout_controller.create_shout(
-                user=profile, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
+                user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,
                 images=images, videos=videos, page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
                 mobile=mobile, api_client=getattr(request, 'api_client', None), api_version=request.version
