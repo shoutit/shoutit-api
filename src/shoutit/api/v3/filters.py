@@ -159,13 +159,13 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                         cat_f_param = data.get(cat_f_key)
                         if cat_f_param:
                             cat_f_params = cat_f_param.split(',')
-                            index_queryset = index_queryset.filter('terms', **{'tags2__%s' % cat_f_key: cat_f_params})
+                            index_queryset = index_queryset.filter('terms', **{'filters__%s' % cat_f_key: cat_f_params})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
                             if cat_f_param:
                                 index_queryset = index_queryset.filter('range',
-                                                                       **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
+                                                                       **{'filters__%s' % cat_f_key: {m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')
@@ -179,8 +179,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         # Sorting
         sort = data.get('sort')
         sort_types = {
-            None: ('-date_published',),
-            'time': ('-date_published',),
+            None: ('-published_at',),
+            'time': ('-published_at',),
             'price_asc': ('price',),
             'price_desc': ('-price',),
         }
@@ -218,7 +218,7 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             listening.append(listening_users)
 
         index_queryset = index_queryset.query('bool', should=listening)
-        index_queryset = index_queryset.sort('-date_published')
+        index_queryset = index_queryset.sort('-published_at')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
 

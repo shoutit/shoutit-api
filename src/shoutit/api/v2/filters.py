@@ -128,7 +128,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if latlng_errors:
             raise ValidationError(latlng_errors)
 
-        # Category and Tags2
+        # Category and Filters
         category = data.get('category')
         if category and category != 'all':
             try:
@@ -143,13 +143,13 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     if cat_f_type == TAG_TYPE_STR:
                         cat_f_param = data.get(cat_f_key)
                         if cat_f_param:
-                            index_queryset = index_queryset.filter('term', **{'tags2__%s' % cat_f_key: cat_f_param})
+                            index_queryset = index_queryset.filter('term', **{'filters__%s' % cat_f_key: cat_f_param})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
                             if cat_f_param:
                                 index_queryset = index_queryset.filter('range',
-                                                                       **{'tags2__%s' % cat_f_key: {m2: cat_f_param}})
+                                                                       **{'filters__%s' % cat_f_key: {m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')
@@ -163,8 +163,8 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         # Sorting
         sort = data.get('sort')
         sort_types = {
-            None: ('-date_published',),
-            'time': ('-date_published',),
+            None: ('-published_at',),
+            'time': ('-published_at',),
             'price_asc': ('price',),
             'price_desc': ('-price',),
         }
@@ -207,8 +207,8 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         # Sort
         sort = data.get('sort')
         sort_types = {
-            None: ('-date_published',),
-            'time': ('-date_published',),
+            None: ('-published_at',),
+            'time': ('-published_at',),
             'price_asc': ('price',),
             'price_desc': ('-price',),
         }

@@ -264,7 +264,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
         setattr(self, 'prefetch_related', ('item__videos',))
         setattr(self, 'defer', ())
-        shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-date_published')
+        shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-published_at')
         if shout_type != 'all':
             shouts = shouts.query('match', type=shout_type)
 

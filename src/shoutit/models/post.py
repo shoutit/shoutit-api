@@ -12,7 +12,7 @@ from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
 
-from common.constants import (POST_TYPE_OFFER, POST_TYPE_REQUEST, PostType)
+from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
@@ -35,7 +35,7 @@ class ShoutManager(models.Manager):
         if city:
             qs = qs.filter(city__iexact=city)
         if not get_muted:
-            qs = qs.filter(muted=False)
+            qs = qs.filter(is_muted=False)
         if not get_expired:
             qs = self.filter_expired_out(qs)
         return qs
@@ -43,18 +43,18 @@ class ShoutManager(models.Manager):
     def filter_expired_out(self, qs):
         now = timezone.now()
         min_published = now - timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        no_expiry_still_valid = Q(expiry_date__isnull=True, date_published__gte=min_published)
-        expiry_still_valid = Q(expiry_date__isnull=False, expiry_date__gte=now)
+        no_expiry_still_valid = Q(expires_at__isnull=True, published_at__gte=min_published)
+        expiry_still_valid = Q(expires_at__isnull=False, expires_at__gte=now)
         return qs.filter(no_expiry_still_valid | expiry_still_valid)
 
 
 class Post(Action):
     text = models.TextField(max_length=10000, blank=True)
     type = models.IntegerField(choices=PostType.choices, default=POST_TYPE_REQUEST.value, db_index=True)
-    date_published = models.DateTimeField(default=timezone.now, db_index=True)
+    published_at = models.DateTimeField(default=timezone.now, db_index=True)
     published_on = HStoreField(blank=True, default=dict)
 
-    muted = models.BooleanField(default=False, db_index=True)
+    is_muted = models.BooleanField(default=False, db_index=True)
     is_disabled = models.BooleanField(default=False, db_index=True)
 
     priority = models.SmallIntegerField(default=0)
@@ -67,16 +67,16 @@ class Post(Action):
         none_to_blank(self, ['text'])
 
     def mute(self):
-        self.muted = True
-        self.save()
+        self.is_muted = True
+        self.save(update_fields=['is_muted'])
 
     def unmute(self):
-        self.muted = False
-        self.save()
+        self.is_muted = False
+        self.save(update_fields=['is_muted'])
 
     @property
-    def date_published_unix(self):
-        return date_unix(self.date_published)
+    def published_at_unix(self):
+        return date_unix(self.published_at)
 
     @property
     def title(self):
@@ -93,13 +93,13 @@ class Post(Action):
 
 class Shout(Post):
     tags = ArrayField(ShoutitSlugField(), blank=True, default=list)
-    tags2 = HStoreField(blank=True, default=dict)
+    filters = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
     is_indexed = models.BooleanField(default=False, db_index=True)
 
     item = models.OneToOneField('shoutit.Item', db_index=True)
 
-    expiry_date = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
+    expires_at = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
     expiry_notified = models.BooleanField(default=False)
     renewal_count = models.PositiveSmallIntegerField(default=0)
 
@@ -145,9 +145,9 @@ class Shout(Post):
     @property
     def is_expired(self):
         now = timezone.now()
-        should_expire_at = self.date_published + timedelta(days=int(settings.MAX_EXPIRY_DAYS))
-        no_expiry_invalid = self.expiry_date is None and now > should_expire_at
-        expiry_invalid = self.expiry_date is not None and now > self.expiry_date
+        should_expire_at = self.published_at + timedelta(days=int(settings.MAX_EXPIRY_DAYS))
+        no_expiry_invalid = self.expires_at is None and now > should_expire_at
+        expiry_invalid = self.expires_at is not None and now > self.expires_at
         if no_expiry_invalid or expiry_invalid:
             return True
         return False
@@ -183,10 +183,10 @@ class Shout(Post):
         }
 
     @property
-    def filters(self):
-        filters = []
-        for key, value in self.tags2.items():
-            filters.append({
+    def filter_objects(self):
+        objects = []
+        for key, value in self.filters.items():
+            objects.append({
                 'name': key.title() if isinstance(key, basestring) else key,
                 'slug': key,
                 'value': {
@@ -194,7 +194,7 @@ class Shout(Post):
                     'slug': value
                 }
             })
-        return filters
+        return objects
 
     @property
     def mobile_hint(self):
@@ -212,7 +212,7 @@ class InactiveShout(object):
             "id": "",
             "api_url": "",
             "web_url": "",
-            "type": "offer",
+            "type": "",
             "location": {
                 "latitude": 0, "longitude": 0, "country": "", "postal_code": "",
                 "state": "", "city": "", "address": ""
@@ -225,9 +225,11 @@ class InactiveShout(object):
             "video_url": "",
             "user": InactiveUser().to_dict,
             "date_published": 0,
+            "published_at": 0,
+            "is_expired": True,
             "category": {"name": "", "slug": "", "main_tag": {}},
             "tags": [],
-            "tags2": {}
+            "filters": {}
         })
 
 
@@ -238,7 +240,7 @@ class ShoutIndex(DocType):
     text = String(analyzer='snowball')
     tags_count = Integer()
     tags = String(index='not_analyzed')
-    tags2 = Object()
+    filters = Object()
     category = String(index='not_analyzed')
     country = String(index='not_analyzed')
     postal_code = String(index='not_analyzed')
@@ -251,7 +253,8 @@ class ShoutIndex(DocType):
     is_sold = Boolean()
     uid = String(index='not_analyzed')
     username = String(index='not_analyzed')
-    date_published = Date()
+    published_at = Date()
+    expires_at = Date()
 
     # todo: should not be analysed or indexed
     currency = String(index='not_analyzed')
@@ -266,7 +269,7 @@ class ShoutIndex(DocType):
         index = '%s_shout' % settings.ES_BASE_INDEX
         dynamic_templates = MetaField([
             {
-                "tags2_integer_keys": {
+                "filters_integer_keys": {
                     "match_pattern": "regex",
                     "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
                     "mapping": {
@@ -275,8 +278,8 @@ class ShoutIndex(DocType):
                 }
             },
             {
-                "tags2_string_keys": {
-                    "path_match": "tags2.*",
+                "filters_string_keys": {
+                    "path_match": "filters.*",
                     "mapping": {
                         "type": "string",
                         "index": "not_analyzed"
@@ -286,8 +289,8 @@ class ShoutIndex(DocType):
         ])
 
     @property
-    def date_published_unix(self):
-        return date_unix(self.date_published)
+    def published_at_unix(self):
+        return date_unix(self.published_at)
 
 
 # initiate the index if not initiated

@@ -510,17 +510,17 @@ class ShoutSerializer(serializers.ModelSerializer):
     price = serializers.FloatField(source='item.v2_price', allow_null=True)
     currency = serializers.CharField(source='item.currency_code', allow_null=True,
                                      help_text='Currency code taken from list of available currencies')
-    date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
+    date_published = serializers.IntegerField(source='published_at_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
     tags = TagSerializer(default=list, many=True, source='tag_objects')
-    tags2 = serializers.DictField(default=dict)
+    filters = serializers.DictField(default=dict)
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price',
-                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags', 'tags2')
+                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags', 'filters')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -572,7 +572,7 @@ class ShoutSerializer(serializers.ModelSerializer):
         return ret
 
     def to_representation(self, instance):
-        if instance.muted or instance.is_disabled:
+        if instance.is_muted or instance.is_disabled:
             return InactiveShout().to_dict
         return super(ShoutSerializer, self).to_representation(instance)
 
@@ -603,7 +603,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         return ConversationSerializer(conversations, many=True, context=self.root.context).data
 
     def to_representation(self, instance):
-        if instance.muted or instance.is_disabled:
+        if instance.is_muted or instance.is_disabled:
             return InactiveShout().to_dict
         ret = super(ShoutDetailSerializer, self).to_representation(instance)
         if self.root.context['request'].user == instance.owner:
@@ -650,7 +650,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         tags = validated_data.get('tag_objects')
         if isinstance(tags, list):
             tags = tags[:MAX_TAGS_PER_SHOUT]
-        tags2 = validated_data.get('tags2')
+        filters = validated_data.get('filters')
 
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
@@ -665,14 +665,14 @@ class ShoutDetailSerializer(ShoutSerializer):
         if not shout:
             shout = shout_controller.create_shout_v2(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
-                category=category, tags=tags, tags2=tags2, location=location, images=images, videos=videos,
+                category=category, tags=tags, filters=filters, location=location, images=images, videos=videos,
                 page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
                 api_client=getattr(request, 'api_client', None), api_version=request.version
             )
         else:
             shout = shout_controller.edit_shout_v2(
                 shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
-                tags=tags, tags2=tags2, location=location, images=images, videos=videos, page_admin_user=page_admin_user
+                tags=tags, filters=filters, location=location, images=images, videos=videos, page_admin_user=page_admin_user
             )
         return shout
 

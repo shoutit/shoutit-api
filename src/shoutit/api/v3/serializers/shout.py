@@ -31,17 +31,20 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
 
     currency = serializers.CharField(source='item.currency_code', allow_null=True, required=False,
                                      help_text="3 characters currency code taken from the list of available currencies")
-    date_published = serializers.IntegerField(source='date_published_unix', read_only=True)
+    date_published = serializers.IntegerField(source='published_at_unix', read_only=True)
+    published_at = serializers.IntegerField(source='published_at_unix', read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
-    filters = serializers.ListField(default=list, )
+    filters = serializers.ListField(default=list, source='filter_objects')
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shout
-        fields = ('id', 'api_url', 'web_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
-                  'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'filters',
-                  'is_expired')
+        fields = (
+            'id', 'api_url', 'web_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
+            'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
+            'filters', 'is_expired'
+        )
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
@@ -55,6 +58,15 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
             return Currency.objects.get(code__iexact=value)
         except (Currency.DoesNotExist, ValueError):
             raise serializers.ValidationError('Invalid currency')
+
+    def validate_filters(self, value):
+        try:
+            filter_tuples = map(lambda f: (f['slug'], f['value']['slug']), value)
+        except KeyError as e:
+            raise serializers.ValidationError('Malformed filters, missing key: %s' % e.message.encode('utf'))
+        else:
+            filters = dict(filter_tuples)
+        return filters
 
     def to_internal_value(self, data):
         # Validate when passed as attached object or message attachment
@@ -78,7 +90,7 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
         return ret
 
     def to_representation(self, instance):
-        if instance.muted or instance.is_disabled:
+        if instance.is_muted or instance.is_disabled:
             return InactiveShout().to_dict
         ret = super(ShoutSerializer, self).to_representation(instance)
         blank_to_none(ret, ['title', 'text'])
@@ -113,7 +125,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         return ConversationSerializer(conversations, many=True, context=self.root.context).data
 
     def to_representation(self, instance):
-        if instance.muted or instance.is_disabled:
+        if instance.is_muted or instance.is_disabled:
             return InactiveShout().to_dict
         ret = super(ShoutDetailSerializer, self).to_representation(instance)
         if self.root.context['request'].user == instance.owner:
@@ -163,7 +175,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         is_sold = validated_data.get('is_sold')
 
         category = validated_data.get('category')
-        filters = validated_data.get('filters')
+        filters = validated_data.get('filter_objects')
 
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')

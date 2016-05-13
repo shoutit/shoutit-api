@@ -171,8 +171,8 @@ class ShoutitPaginationMixin(object):
 
 
 class DateTimeIndexPagination(DateTimePagination):
-    datetime_attribute = 'date_published'
-    datetime_unix_attribute = 'date_published_unix'
+    datetime_attribute = 'published_at'
+    datetime_unix_attribute = 'published_at_unix'
 
     def paginate_queryset(self, index_queryset, request, view=None):
         """
@@ -227,7 +227,7 @@ class DateTimeIndexPagination(DateTimePagination):
             .select_related(*view.select_related) \
             .prefetch_related(*view.prefetch_related) \
             .defer(*view.defer) \
-            .order_by('-date_published')
+            .order_by('-published_at')
 
         # reverse the objects order if needed, so the results are always sorted from oldest to newest.
         if not after_query_param:
