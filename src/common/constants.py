@@ -166,6 +166,26 @@ TAG_TYPE_STR = TagValueType('str')
 
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
+    new_notification = 'new_notification'
+
+    @classmethod
+    def requires_notification_object(cls, notification_type):
+        types = [
+            NOTIFICATION_TYPE_MESSAGE,
+            NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
+        ]
+        return notification_type in types
+
+    @classmethod
+    def is_new_notification_type(cls, notification_type):
+        types = [
+            NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
+        ]
+        return notification_type in types
+
+    @classmethod
+    def include_in_push(cls, notification_type):
+        return notification_type == cls.new_notification or cls.requires_notification_object(notification_type)
 
 
 NOTIFICATION_TYPE_LISTEN = NotificationType('new_listen')

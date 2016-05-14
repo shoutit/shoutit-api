@@ -230,9 +230,9 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             listening.append(listening_tags)
 
         # Listened Profiles + user himself
-        users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
-        if users:
-            listening_profiles = Q('terms', uid=users)
+        profiles = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
+        if profiles:
+            listening_profiles = Q('terms', uid=profiles)
             listening.append(listening_profiles)
 
         index_queryset = index_queryset.filter(Q('bool', should=listening))

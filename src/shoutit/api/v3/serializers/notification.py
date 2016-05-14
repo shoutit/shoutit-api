@@ -41,22 +41,19 @@ class AttachedObjectSerializer(serializers.Serializer):
 
 class NotificationSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix')
-    type = serializers.CharField(source='get_type_display', help_text="Currently, either 'listen' or 'message'")
-    attached_object = AttachedObjectSerializer(
-        help_text="Attached Object that contain either 'profile' or 'message' objects depending on notification type")
+    type = serializers.CharField(source='get_type_display')
+    attached_object = AttachedObjectSerializer(help_text="To be deprecated!")
 
     class Meta:
         model = Notification
-        fields = ('id', 'type', 'created_at', 'is_read', 'attached_object')
+        fields = ('id', 'created_at', 'is_read', 'display', 'type', 'attached_object')
 
 
 class ReportSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
-    type = serializers.CharField(source='get_type_display', help_text="Currently, either 'profile' or 'shout'",
-                                 read_only=True)
+    type = serializers.CharField(source='get_type_display', read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
-    attached_object = AttachedObjectSerializer(
-        help_text="Attached Object that contain either 'profile' or 'shout' objects depending on report type")
+    attached_object = AttachedObjectSerializer(help_text="The reported object")
 
     class Meta:
         model = Report
@@ -67,8 +64,7 @@ class ReportSerializer(serializers.ModelSerializer):
         attached_object = validated_data['attached_object']
 
         if not any_in(['attached_profile', 'attached_shout', 'attached_conversation'], attached_object):
-            error_tuple = ("attached_object should have either 'profile', 'shout' or 'conversation'",
-                           ERROR_REASON.REQUIRED)
+            error_tuple = ("Should have either 'profile', 'shout' or 'conversation'", ERROR_REASON.REQUIRED)
             raise serializers.ValidationError({'attached_object': error_tuple})
 
         if 'attached_profile' in attached_object:
