@@ -4,6 +4,8 @@
 """
 from __future__ import unicode_literals
 
+from collections import OrderedDict
+
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
@@ -12,6 +14,7 @@ from django.db import models, IntegrityError
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
 from django_pgjson.fields import JsonField
 
 from common.constants import (
@@ -80,11 +83,11 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
             if not image:
                 image = contributors_summary[0].ap.image if contributors_summary else user.ap.image
 
-        dis = {
-            'title': title,
-            'sub_title': sub_title,
-            'image': image
-        }
+        dis = OrderedDict([
+            ('title', title),
+            ('sub_title', sub_title),
+            ('image', image),
+        ])
         return dis
 
     @property
@@ -437,13 +440,44 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
 
 
 class Notification(UUIDModel, AttachedObjectMixin):
-    type = models.IntegerField(default=NOTIFICATION_TYPE_LISTEN.value, choices=NotificationType.choices)
+    type = models.IntegerField(choices=NotificationType.choices)
     to_user = models.ForeignKey(AUTH_USER_MODEL, related_name='notifications')
     is_read = models.BooleanField(default=False)
-    from_user = models.ForeignKey(AUTH_USER_MODEL, related_name='+', null=True, blank=True, default=None)
+    from_user = models.ForeignKey(AUTH_USER_MODEL, null=True, blank=True, related_name='+')
+    expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     def __unicode__(self):
         return self.pk + ": " + self.get_type_display()
+
+    def display(self):
+        text = None
+        ranges = []
+        image = None
+        target = None
+
+        if self.type == NOTIFICATION_TYPE_LISTEN:
+            name = self.attached_object.first_name
+            text = _("%(name)s started listening to you") % {'name': name}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            image = self.attached_object.ap.image
+            target = self.attached_object.ap
+
+        elif self.type == NOTIFICATION_TYPE_MESSAGE:
+            name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
+            message = self.attached_object.summary
+            text = _("%(name)s: %(message)s") % {'name': name, 'text': message}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            image = self.attached_object.user.ap.image
+            target = self.attached_object.user.ap
+
+        ret = OrderedDict([
+            ('text', text),
+            ('ranges', ranges),
+            ('image', image),
+            ('web_url', getattr(target, 'web_url', None)),
+            ('app_url', getattr(target, 'app_url', None)),
+        ])
+        return ret
 
     def mark_as_read(self):
         self.is_read = True
