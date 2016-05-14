@@ -450,6 +450,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
         return self.pk + ": " + self.get_type_display()
 
     def display(self):
+        title = None
         text = None
         ranges = []
         image = None
@@ -471,6 +472,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             target = self.attached_object.user.ap
 
         ret = OrderedDict([
+            ('title', title),
             ('text', text),
             ('ranges', ranges),
             ('image', image),

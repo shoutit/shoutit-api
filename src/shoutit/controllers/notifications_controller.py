@@ -74,7 +74,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
         can_pusher = pusher_controller.check_pusher(user)
         if can_push and not can_pusher:
             for v in versions:
-                push_controller.send_push.delay(user, notification_type, attached_object, v)
+                push_controller.send_push.delay(user, notification, v)
 
     # Trigger event on Pusher profile channel
     for v in versions:
