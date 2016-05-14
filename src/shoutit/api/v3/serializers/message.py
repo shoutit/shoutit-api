@@ -5,19 +5,20 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
-from rest_framework import serializers
+from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.reverse import reverse
 
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MessageAttachmentType, CONVERSATION_TYPE_PUBLIC_CHAT, MESSAGE_ATTACHMENT_TYPE_PROFILE)
 from common.utils import any_in
-from shoutit.controllers import location_controller, message_controller
+from shoutit.controllers import message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
 from shoutit.utils import blank_to_none
-from .base import VideoSerializer
+from .base import VideoSerializer, AttachedUUIDObjectMixin
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
+from .. import exceptions
 
 
 class SharedLocationSerializer(serializers.ModelSerializer):
@@ -62,7 +63,7 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
         return ret
 
 
-class MessageSerializer(serializers.ModelSerializer):
+class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     conversation_id = serializers.UUIDField(read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
@@ -74,6 +75,11 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'conversation_id', 'profile', 'text', 'attachments', 'read_by')
 
     def to_internal_value(self, data):
+        # Validate when passed as attached object or message attachment
+        ret = self.to_internal_attached_value(data)
+        if ret:
+            return ret
+
         validated_data = super(MessageSerializer, self).to_internal_value(data)
         attachments = validated_data.get('attachments')
         text = validated_data.get('text')
@@ -91,12 +97,14 @@ class MessageSerializer(serializers.ModelSerializer):
                 for attachment in attachments:
                     attachment_error = None
                     if not any_in(['shout', 'location', 'profile', 'images', 'videos'], attachment):
-                        attachment_error = {'': "attachment should have at least a 'shout', 'location', 'profile', 'images' or 'videos'"}
+                        attachment_error = {
+                            '': "attachment should have at least a 'shout', 'location', 'profile', 'images' or 'videos'"}
                         errors['attachments'].insert(i, attachment_error)
                         i += 1
                         continue
 
-                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                    if 'location' in attachment and (
+                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         attachment_error = {'location': "location object should have 'latitude' and 'longitude'"}
 
                     if 'images' in attachment or 'videos' in attachment:
@@ -106,6 +114,11 @@ class MessageSerializer(serializers.ModelSerializer):
                             attachment_error = {
                                 '': "attachment should have at least one item in a 'images' or 'videos'"
                             }
+                        if videos:
+                            for v in videos:
+                                vs = VideoSerializer(data=v)
+                                if not vs.is_valid():
+                                    attachment_error = {'videos': str(vs.errors)}
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1
                 if not any(errors['attachments']):
@@ -148,25 +161,28 @@ class MessageSerializer(serializers.ModelSerializer):
         return message
 
 
-class ConversationSerializer(serializers.ModelSerializer):
+class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
     last_message = MessageSerializer(required=False)
-    type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display', default=str(CONVERSATION_TYPE_PUBLIC_CHAT),
+    type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display',
+                                   default=str(CONVERSATION_TYPE_PUBLIC_CHAT),
                                    help_text="'chat', 'about_shout' or 'public_chat'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     subject = serializers.CharField(max_length=25)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
-    unread_messages_count = serializers.SerializerMethodField(
-        help_text="Number of unread messages in this conversation")
+    unread_messages_count = serializers.SerializerMethodField(help_text="# of unread messages in this conversation")
+    display = serializers.SerializerMethodField(help_text="Properties used for displaying the conversation")
     messages_url = serializers.SerializerMethodField(help_text="URL to get the messages of this conversation")
     reply_url = serializers.SerializerMethodField(help_text="URL to reply in this conversation")
 
     class Meta:
         model = Conversation
-        fields = ('id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count',
-                  'subject', 'icon', 'admins', 'profiles', 'last_message', 'about', 'messages_url', 'reply_url')
+        fields = (
+            'id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'display',
+            'subject', 'icon', 'admins', 'profiles', 'blocked', 'last_message', 'about', 'messages_url', 'reply_url'
+        )
 
     def get_about(self, instance):
         if instance.type == CONVERSATION_TYPE_ABOUT_SHOUT:
@@ -175,6 +191,9 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     def get_unread_messages_count(self, instance):
         return instance.unread_messages(self.context['request'].user).count()
+
+    def get_display(self, instance):
+        return instance.display(self.context['request'].user)
 
     def get_messages_url(self, conversation):
         return reverse('conversation-messages', kwargs={'id': conversation.id}, request=self.context['request'])
@@ -188,12 +207,18 @@ class ConversationSerializer(serializers.ModelSerializer):
         return conversation_type
 
     def to_internal_value(self, data):
+        # Validate when passed as attached object or message attachment
+        ret = self.to_internal_attached_value(data)
+        if ret:
+            return ret
+
         validated_data = super(ConversationSerializer, self).to_internal_value(data)
         return validated_data
 
     def to_representation(self, instance):
         ret = super(ConversationSerializer, self).to_representation(instance)
         blank_to_none(ret, ['icon', 'subject'])
+        blank_to_none(ret['display'], ['title', 'sub_title', 'image'])
         return ret
 
     def create(self, validated_data):
@@ -201,8 +226,130 @@ class ConversationSerializer(serializers.ModelSerializer):
         conversation_type = ConversationType.texts[validated_data['get_type_display']]
         subject = validated_data['subject']
         icon = validated_data.get('icon')
-        conversation = Conversation(creator=user, type=conversation_type, subject=subject, icon=icon, admins=[user.id])
-        location_controller.update_object_location(conversation, user.location, save=False)
-        conversation.save()
+        conversation = Conversation.create(creator=user, type=conversation_type, subject=subject, icon=icon)
         conversation.users.add(user)
+        return conversation
+
+    def update(self, conversation, validated_data):
+        subject = validated_data.get('subject')
+        icon = validated_data.get('icon')
+        if subject:
+            conversation.subject = subject
+        if icon:
+            conversation.icon = icon
+        if subject or icon:
+            conversation.save(update_fields=['subject', 'icon'])
+        return conversation
+
+
+class ConversationProfileActionSerializer(serializers.Serializer):
+    """
+    Should be initialized in Conversation view with
+    context = {
+        'conversation': self.get_object(),
+        'request': request
+    }
+    Subclasses must
+    - Define these attributes
+    `success_message`, `error_messages`
+    - Implement these methods
+    `condition(self, conversation, actor, profile)`, `create(self, validated_data)`
+    """
+    profile = ProfileSerializer()
+
+    def to_internal_value(self, data):
+        conversation = self.context['conversation']
+        request = self.context['request']
+        actor = request.user
+        if actor.id not in conversation.admins:
+            raise drf_exceptions.PermissionDenied()
+
+        validated_data = super(ConversationProfileActionSerializer, self).to_internal_value(data)
+        profile = self.fields['profile'].instance
+        if not self.condition(conversation, actor, profile):
+            raise exceptions.InvalidBody('profile', self.error_message % profile.name)
+
+        return validated_data
+
+    def to_representation(self, instance):
+        profile = self.fields['profile'].instance
+        return {'success': self.success_message % profile.name}
+
+
+class AddProfileSerializer(ConversationProfileActionSerializer):
+    error_message = "%s is not one of your listeners and can't be added to this conversation"
+    success_message = "Added %s to this conversation"
+
+    def condition(self, conversation, actor, profile):
+        return profile.is_listening(actor)
+
+    def create(self, validated_data):
+        conversation = self.context['conversation']
+        profile = self.fields['profile'].instance
+        if not conversation.users.filter(id=profile.id).exists():
+            conversation.add_profile(profile)
+        else:
+            self.success_message = "%s is already in this conversation"
+        return conversation
+
+
+class RemoveProfileSerializer(ConversationProfileActionSerializer):
+    error_message = "%s is not a member of this conversation and can't be removed from it"
+    success_message = "Removed %s from this conversation"
+
+    def condition(self, conversation, actor, profile):
+        return conversation.users.filter(id=profile.id).exists()
+
+    def create(self, validated_data):
+        conversation = self.context['conversation']
+        profile = self.fields['profile'].instance
+        conversation.remove_profile(profile)
+        return conversation
+
+
+class PromoteAdminSerializer(ConversationProfileActionSerializer):
+    error_message = "%s is not a member of this conversation and can't be promoted to admin it"
+    success_message = "Promoted %s to admin in this conversation"
+
+    def condition(self, conversation, actor, profile):
+        return conversation.users.filter(id=profile.id).exists()
+
+    def create(self, validated_data):
+        conversation = self.context['conversation']
+        profile = self.fields['profile'].instance
+        if profile.id not in conversation.admins:
+            conversation.promote_admin(profile)
+        else:
+            self.success_message = "%s is already admin on this conversation"
+        return conversation
+
+
+class BlockProfileSerializer(ConversationProfileActionSerializer):
+    error_message = "%s is not a member of this conversation and can't be blocked"
+    success_message = "Blocked %s from this conversation"
+
+    def condition(self, conversation, actor, profile):
+        return conversation.users.filter(id=profile.id).exists()
+
+    def create(self, validated_data):
+        conversation = self.context['conversation']
+        profile = self.fields['profile'].instance
+        if profile.id not in conversation.blocked:
+            conversation.block_profile(profile)
+        else:
+            self.success_message = "%s is already blocked from this conversation"
+        return conversation
+
+
+class UnblockProfileSerializer(ConversationProfileActionSerializer):
+    error_message = "%s is not a blocked from this conversation"
+    success_message = "Unblocked %s from this conversation"
+
+    def condition(self, conversation, actor, profile):
+        return profile.id in conversation.blocked
+
+    def create(self, validated_data):
+        conversation = self.context['conversation']
+        profile = self.fields['profile'].instance
+        conversation.unblock_profile(profile)
         return conversation

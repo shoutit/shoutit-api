@@ -114,7 +114,7 @@ class MiscViewSet(viewsets.ViewSet):
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
-            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-date_published')
+            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-published_at')
             if 'shouts' in types:
                 shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
                 suggestions['shouts'] = shouts
@@ -154,6 +154,18 @@ class MiscViewSet(viewsets.ViewSet):
             }
         }
         </code></pre>
+
+        ###Report Conversation (`public_chat`)
+        <pre><code>
+        {
+            "text": "the reason of this report, any text.",
+            "attached_object": {
+                "conversation": {
+                    "id": ""
+                }
+            }
+        }
+        </code></pre>
         ---
         serializer: ReportSerializer
         omit_parameters:
@@ -162,7 +174,7 @@ class MiscViewSet(viewsets.ViewSet):
             - name: body
               paramType: body
         """
-        serializer = ReportSerializer(data=request.data, partial=True, context={'request': request})
+        serializer = ReportSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)

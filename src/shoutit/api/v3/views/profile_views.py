@@ -13,12 +13,13 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
 from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidBody, RequiredBody
+from shoutit.api.v3.views.shout_views import ShoutViewSet
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
-from shoutit.models import User, Shout, ShoutIndex
+from shoutit.models import User
 from ..filters import HomeFilterBackend
-from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
-from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, ShoutSerializer,
-                           TagDetailSerializer, ProfileDeactivationSerializer, GuestSerializer)
+from ..pagination import (ShoutitPaginationMixin, ShoutitPageNumberPaginationNoCount)
+from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
+                           ProfileDeactivationSerializer, GuestSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -222,17 +223,16 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap, api_client=api_client, api_version=request.version)
-            msg = "you started listening to {} shouts.".format(user.name)
-            _status = status.HTTP_201_CREATED
+            msg = "You started listening to %s shouts" % user.name
         else:
             listen_controller.stop_listening_to_object(request.user, ap)
-            msg = "you stopped listening to {} shouts.".format(user.name)
-            _status = status.HTTP_202_ACCEPTED
-        ret = {
-            'data': {'success': msg},
-            'status': _status
+            msg = "You stopped listening to %s shouts" % user.name
+
+        data = {
+            'success': msg,
+            'new_listeners_count': user.listeners_count
         }
-        return Response(**ret)
+        return Response(data=data, status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):
@@ -341,8 +341,17 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         List the Profile homepage shouts. Profile can't see the homepage of other profiles.
         [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
         ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "count": 0, // number of results
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
         ---
-        serializer: ShoutSerializer
+        omit_serializer: true
         parameters:
             - name: username
               description: me for logged in profile
@@ -354,16 +363,20 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             - name: page_size
               paramType: query
         """
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
-        shouts = HomeFilterBackend().filter_queryset(request=request, index_queryset=ShoutIndex.search(), view=self)
-        paginator = PageNumberIndexPagination()
-        page = paginator.paginate_queryset(index_queryset=shouts, request=request, view=self)
-        serializer = ShoutSerializer(page, many=True, context={'request': request})
-        return paginator.get_paginated_response(serializer.data)
+        # Borrow `serializer_class`, `pagination_class` and `get_queryset` from ShoutViewSet
+        shout_view_set = ShoutViewSet()
+        setattr(self, 'serializer_detail_class',
+                shout_view_set.serializer_class)  # Using detail since this is a detail endpoint
+        setattr(self, 'pagination_class', shout_view_set.pagination_class)
+        setattr(self, 'get_queryset', shout_view_set.get_queryset)
+        setattr(self, 'get_index_search', shout_view_set.get_index_search)
+        setattr(self, 'filter_backends', [HomeFilterBackend])
+
+        shouts = self.filter_queryset(self.get_index_search())
+        page = self.paginate_queryset(shouts)
+        serializer = self.get_serializer(page, many=True)
+        result = self.get_paginated_response(serializer.data)
+        return result
 
     @detail_route(methods=['post'], suffix='Message')
     def chat(self, request, *args, **kwargs):

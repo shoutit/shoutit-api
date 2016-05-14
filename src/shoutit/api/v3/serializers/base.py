@@ -82,14 +82,14 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 
 class AttachedUUIDObjectMixin(object):
     def to_internal_attached_value(self, data):
-        from .message import MessageAttachmentSerializer
+        from .message import MessageAttachmentSerializer, ConversationProfileActionSerializer
         from .notification import AttachedObjectSerializer
         model = self.Meta.model
         # Make sure no empty JSON body was posted
         if not data:
             data = {}
         # Validate the id only
-        if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer)):
+        if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer, ConversationProfileActionSerializer)):
             if not isinstance(data, dict):
                 raise serializers.ValidationError('Invalid data. Expected a dictionary, but got %s' % type(data).__name__)
             object_id = data.get('id')
@@ -98,10 +98,14 @@ class AttachedUUIDObjectMixin(object):
             if object_id:
                 try:
                     uuid.UUID(object_id)
-                    if not model.exists(id=object_id):
-                        raise serializers.ValidationError({'id': "%s with id '%s' does not exist" % (model.__name__, object_id)})
-                    return {'id': object_id}
+                    instance = model.objects.filter(id=object_id).first()
                 except (ValueError, TypeError, AttributeError):
                     raise serializers.ValidationError({'id': "'%s' is not a valid id" % object_id})
+                else:
+                    if not instance:
+                        raise serializers.ValidationError({'id': "%s with id '%s' does not exist" % (model.__name__, object_id)})
+                    # Todo: utilize the fetched instance
+                    self.instance = instance
+                    return {'id': object_id}
             else:
                 raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})

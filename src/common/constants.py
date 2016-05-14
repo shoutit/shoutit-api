@@ -198,6 +198,7 @@ REPORT_TYPE_IPHONE_APP = ReportType('iphone_app')
 REPORT_TYPE_ANDROID_APP = ReportType('android_app')
 REPORT_TYPE_PROFILE = ReportType('profile')
 REPORT_TYPE_SHOUT = ReportType('shout')
+REPORT_TYPE_CONVERSATION = ReportType('conversation')
 
 
 DEFAULT_LOCATIONS_LATLNG = {

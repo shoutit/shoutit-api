@@ -2,7 +2,7 @@
 """
 
 """
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 from settings_env import *  # NOQA
 from common.utils import get_address_port, strtobool
 from django.utils.translation import ugettext_lazy as _

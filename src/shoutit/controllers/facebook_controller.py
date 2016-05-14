@@ -19,7 +19,7 @@ from common.utils import utcfromtimestamp
 from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.controllers import location_controller, user_controller
 from shoutit.models import LinkedFacebookAccount
-from shoutit.utils import debug_logger, now_plus_delta
+from shoutit.utils import debug_logger, now_plus_delta, error_logger
 
 FB_LINK_ERROR_TRY_AGAIN = "Could not link Facebook account, try again later."
 FB_LINK_ERROR_EMAIL = "Could not access user email, make sure you allowed it."
@@ -69,8 +69,8 @@ def exchange_code(request, code):
         }
         response = requests.get(exchange_url, params=params, timeout=20)
         params = dict(urlparse.parse_qsl(response.content))
-    except Exception, e:
-        print e.message
+    except Exception as e:
+        error_logger.warn(e.message)
         return None
 
     auth_response = {

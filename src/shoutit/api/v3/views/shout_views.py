@@ -37,27 +37,22 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     serializer_detail_class = ShoutDetailSerializer
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
-    filters = {'is_disabled': False}
+    get_expired = False
     select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
     prefetch_related = ('item__videos',)
-    defer = ()
     pagination_class = PageNumberIndexPagination
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        return (Shout.objects.get_valid_shouts(get_expired=True).all()
-                .select_related(*self.select_related)
-                .prefetch_related(*self.prefetch_related)
-                .defer(*self.defer))
+        qs = Shout.objects.get_valid_shouts(get_expired=self.get_expired).all()
+        qs = qs.select_related(*self.select_related)
+        qs = qs.prefetch_related(*self.prefetch_related)
+        return qs
 
     def filter_queryset(self, queryset, *args, **kwargs):
         """
         Given a queryset, filter it with whichever filter backend is in use.
-
-        You are unlikely to want to override this method, although you may need
-        to call it either from a list view, or from a custom `get_object`
-        method if you want to apply the configured filtering backend to the
-        default queryset.
+        This is modified to allow passing extra args and kwargs to the filter backend.
         """
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self, *args, **kwargs)
@@ -420,13 +415,19 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
               paramType: query
         """
         shout = self.get_object()
-        # Todo: check resolution here https://github.com/elastic/elasticsearch-dsl-py/issues/348
+        # Shouts with long unicode titles can't be fuzzily searched
+        # https://github.com/elastic/elasticsearch-dsl-py/issues/348
+        if not has_unicode(shout.item.name):
+            title = shout.item.name
+        else:
+            title = ""
+        search = "%s %s" % (title, " ".join(shout.tags))
         extra_query_params = {
-            'search': "%s %s" % (shout.item.name if not has_unicode(shout.item.name) else "", " ".join(shout.tags)),
+            'search': search,
             'country': shout.country,
             'shout_type': shout.get_type_display(),
             'category': shout.category.slug,
-            'exclude_ids': [shout.pk]
+            'exclude': shout.pk
         }
         shouts = self.filter_queryset(self.get_index_search(), extra_query_params=extra_query_params)
         page = self.paginate_queryset(shouts)

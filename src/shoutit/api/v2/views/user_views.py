@@ -378,7 +378,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
         setattr(self, 'prefetch_related', ('item__videos',))
         setattr(self, 'defer', ())
-        shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-date_published')
+        shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-published_at')
         if shout_type != 'all':
             shouts = shouts.query('match', type=shout_type)
 

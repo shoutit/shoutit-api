@@ -177,13 +177,13 @@ class ItemAdmin(admin.ModelAdmin):
 @admin.register(Shout)
 class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
     list_display = ('id', '_links', '_user', 'type', 'category', '_item', '_location', 'is_sss', 'is_disabled',
-                    'priority', 'published_on', 'date_published', 'is_indexed')
+                    'priority', 'published_on', 'published_at', 'is_indexed')
     list_filter = ('type', 'category', 'is_sss', 'is_disabled', 'country', 'state', 'city', PublishedOnFilter,
                    ('created_at', ShoutitDateFieldListFilter), 'is_indexed')
     raw_id_fields = ('user', 'page_admin_user')
     exclude = ('item',)
     readonly_fields = ('_user', '_item')
-    ordering = ('-date_published',)
+    ordering = ('-published_at',)
 
     def _item(self, obj):
         return item_link(obj.item)

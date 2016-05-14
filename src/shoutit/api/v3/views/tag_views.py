@@ -84,43 +84,31 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         """
         Start/Stop listening to a multiple Tags
         ###REQUIRES AUTH
-        ###Listen
+
+        ###Start Listening
         <pre><code>
         POST: /tags/listen
-        </code></pre>
-        <pre><code>
-        {
-          "tags": [
-            {
-              "name": "2002-honda-cbr-954rr"
-            },
-            {
-              "name": "paradox"
-            },
-            {
-              "name": "shanghai"
-            }
-          ]
-        }
         </code></pre>
 
         ###Stop listening
         <pre><code>
         DELETE: /tags/listen
         </code></pre>
+
+        ###Body
         <pre><code>
         {
-          "tags": [
-            {
-              "name": "2002-honda-cbr-954rr"
-            },
-            {
-              "name": "paradox"
-            },
-            {
-              "name": "shanghai"
-            }
-          ]
+            "tags": [
+                {
+                    "name": "2002-honda-cbr-954rr"
+                },
+                {
+                    "name": "paradox"
+                },
+                {
+                    "name": "shanghai"
+                }
+            ]
         }
         </code></pre>
         ---
@@ -134,22 +122,18 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         """
         tag_dicts = request.data.get('tags', [])
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
-        tag_names = map(lambda x: str(x['name']), tag_dicts)
+        tag_names = ", ".join(map(lambda x: str(x['name']), tag_dicts))
         tags = Tag.objects.filter(name__in=tag_names)
         api_client = getattr(request, 'api_client', None)
 
         if request.method == 'POST':
             listen_controller.listen_to_objects(request.user, tags, api_client=api_client, api_version=request.version)
-            msg = "You started listening to {} shouts.".format(tag_names)
+            msg = "You started listening to %s shouts" % tag_names
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)
-            msg = "You stopped listening to {} shouts.".format(tag_names)
+            msg = "You stopped listening to %s shouts" % tag_names
 
-        ret = {
-            'data': {'success': msg},
-            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
-        }
-        return Response(**ret)
+        return Response(data={'success': msg}, status=status.HTTP_202_ACCEPTED)
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -189,16 +173,16 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, tag, api_client=api_client, api_version=request.version)
-            msg = "you started listening to {} shouts.".format(tag.name)
+            msg = "You started listening to %s shouts" % tag.name
         else:
             listen_controller.stop_listening_to_object(request.user, tag)
-            msg = "you stopped listening to {} shouts.".format(tag.name)
+            msg = "You stopped listening to %s shouts" % tag.name
 
-        ret = {
-            'data': {'success': msg},
-            'status': status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_202_ACCEPTED
+        data = {
+            'success': msg,
+            'new_listeners_count': tag.listeners_count
         }
-        return Response(**ret)
+        return Response(data=data, status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['get'], suffix='Listeners')
     def listeners(self, request, *args, **kwargs):

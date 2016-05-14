@@ -8,8 +8,10 @@ import json
 import random
 import re
 from collections import OrderedDict
+from datetime import timedelta
 
 from django.conf import settings
+from django.utils import timezone
 from ipware.ip import get_real_ip
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
@@ -148,7 +150,7 @@ class MiscViewSet(viewsets.ViewSet):
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
-            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-date_published')
+            shouts_qs = Shout.objects.get_valid_shouts(country=country).order_by('-published_at')
             if 'shouts' in types:
                 shouts = ShoutSerializer(shouts_qs[:page_size], many=True, context={'request': request}).data
                 suggestions['shouts'] = shouts
@@ -290,7 +292,7 @@ class MiscViewSet(viewsets.ViewSet):
                                                     mobile=mobile)
             else:
                 raise Exception('Unknown ad source.')
-        except Exception, e:
+        except Exception as e:
             msg = "User Creation Error."
             error_logger.info(msg, exc_info=True)
             return Response({'error': msg, 'detail': str(e)})
@@ -303,13 +305,13 @@ class MiscViewSet(viewsets.ViewSet):
             price = float(shout['price']) * 100
             currency = Currency.objects.get(code=shout['currency'])
             category = Category.objects.get(name=shout['category'])
+            published_at = timezone.now() + timedelta(hours=random.randrange(-5, 0), minutes=random.randrange(-59, 0))
             shout_controller.create_shout(
-                user=user, shout_type=shout_type,
-                title=title, text=text, price=price, currency=currency, location=location,
-                category=category, images=shout['images'],
-                is_sss=True, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10, mobile=mobile
+                user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
+                location=location, category=category, images=shout['images'], mobile=mobile, is_sss=True,
+                published_at=published_at, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10
             )
-        except Exception, e:
+        except Exception as e:
             msg = "Shout Creation Error. Deleting user."
             error_logger.info(msg, exc_info=True)
             user.delete()
@@ -489,8 +491,8 @@ def handle_cl_reply(msg, request):
         return Response({'error': "we couldn't process the message text."})
     try:
         dbcl_conversation = DBCLConversation.objects.get(ref=ref)
-    except DBCLConversation.DoesNotExist, e:
-        print e
+    except DBCLConversation.DoesNotExist as e:
+        error_logger.warning(str(e))
         return Response({'error': str(e)})
 
     from_user = dbcl_conversation.to_user
