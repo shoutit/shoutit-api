@@ -37,7 +37,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     serializer_detail_class = ShoutDetailSerializer
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
-    get_expired = True
+    get_expired = False
     select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
     prefetch_related = ('item__videos',)
     pagination_class = PageNumberIndexPagination
