@@ -104,7 +104,7 @@ class Shout(Post):
 
     item = models.OneToOneField('shoutit.Item', db_index=True)
 
-    expires_at = models.DateTimeField(null=True, blank=True, default=None, db_index=True)
+    expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
     expiry_notified = models.BooleanField(default=False)
     renewal_count = models.PositiveSmallIntegerField(default=0)
 
