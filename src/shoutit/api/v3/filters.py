@@ -192,7 +192,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             not_expired = Q('range', **{'expires_at': {'gte': now}})
             expiry_still_valid = Q('bool', filter=[Q('exists', field='expires_at'), not_expired])
 
-            index_queryset = index_queryset.query('bool', should=[no_expiry_still_valid, expiry_still_valid])
+            index_queryset = index_queryset.filter(no_expiry_still_valid | expiry_still_valid)
 
         # Sorting
         sort = data.get('sort')
@@ -232,10 +232,10 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         # Listened Profiles + user himself
         users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if users:
-            listening_users = Q('terms', uid=users)
-            listening.append(listening_users)
+            listening_profiles = Q('terms', uid=users)
+            listening.append(listening_profiles)
 
-        index_queryset = index_queryset.query('bool', should=listening)
+        index_queryset = index_queryset.filter(Q('bool', should=listening))
         index_queryset = index_queryset.sort('-published_at')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
