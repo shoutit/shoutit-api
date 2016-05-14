@@ -13,7 +13,7 @@ from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS,
                               NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL,
-                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL)
+                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NotificationType)
 from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
 
@@ -136,9 +136,7 @@ def set_ios_badge(user):
 
 
 def check_push(notification_type):
-    if notification_type not in [NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE]:
-        return False
-    return settings.USE_PUSH
+    return settings.USE_PUSH and NotificationType.include_in_push(notification_type)
 
 
 @receiver(post_save, sender=PushBroadcast)
