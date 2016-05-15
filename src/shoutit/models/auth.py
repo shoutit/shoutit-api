@@ -155,6 +155,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def has_apns(self):
         return self.apns_device is not None
 
+    def send_apns(self, alert, **kwargs):
+        from push_notifications.apns import apns_send_bulk_message
+        if not self.has_apns:
+            return
+        apns_send_bulk_message(registration_ids=[self.apns_device.registration_id], alert=alert, **kwargs)
+
     def delete_apns_devices(self):
         APNSDevice.objects.filter(user=self).delete()
         debug_logger.debug("Deleted APNSDevices for %s" % self)
@@ -166,6 +172,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def has_gcm(self):
         return self.gcm_device is not None
+
+    def send_gcm(self, data, **kwargs):
+        from push_notifications.gcm import gcm_send_bulk_message
+        if not self.has_gcm:
+            return
+        gcm_send_bulk_message(registration_ids=[self.gcm_device.registration_id], data=data, **kwargs)
 
     def delete_gcm_devices(self):
         GCMDevice.objects.filter(user=self).delete()

@@ -1,21 +1,27 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db.models.query_utils import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils.translation import ugettext as _
 from django_rq import job
 from push_notifications.apns import APNSError
 from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.settings import api_settings
 
-from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS,
-                              NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL,
-                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NotificationType)
+from common.constants import (NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS, NOTIFICATION_TYPE_BROADCAST,
+                              NOTIFICATION_TYPE_VIDEO_CALL, NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NotificationType)
 from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
+
+
+_apns_devices = GenericRelation('shoutit.Device', related_query_name='apns_devices')
+APNSDevice.add_to_class('devices', _apns_devices)
+
+_gcm_devices = GenericRelation('shoutit.Device', related_query_name='gcm_devices')
+GCMDevice.add_to_class('devices', _gcm_devices)
 
 
 @job(settings.RQ_QUEUE_PUSH)
@@ -28,22 +34,27 @@ def send_push(user, notification, version):
     if not sending_apns and not sending_gcm:
         return
 
-    # Serialize the attached object and prepare the message
-    notification_data = serialize_attached_object(attached_object=notification, version=version, user=user)
+    # Prepare the push object
     notification_display = notification.display()
     title = notification_display['title']
     body = notification_display['text']
     image = notification_display['image']
 
+    if notification.type == NOTIFICATION_TYPE_MESSAGE:
+        attached_object = notification.attached_object
+    else:
+        attached_object = notification
+    data = serialize_attached_object(attached_object=attached_object, version=version, user=user)
+
     extra = {
         'event_name': str(notification.type),
-        'data': notification_data,
+        'data': data,
         'message': body,  # deprecate
 
         # New properties
         'title': title,
         'body': body,
-        'image': image,
+        'icon': image,
     }
     # Send the Push
     if sending_apns:
@@ -53,14 +64,14 @@ def send_push(user, notification, version):
             'body': body,
         }
         try:
-            user.apns_device.send_message(alert, extra=extra, sound='default', badge=badge)
+            user.send_apns(alert=alert, extra=extra, sound='default', badge=badge)
             debug_logger.debug("Sent %s APNS push to %s." % (version, user))
         except APNSError:
             error_logger.warn("Could not send %s APNS push to %s" % (version, user), exc_info=True)
 
     if sending_gcm:
         try:
-            user.gcm_device.send_message(message=None, extra=extra)
+            user.send_gcm(data=extra)
             debug_logger.debug("Sent %s GCM push to %s." % (version, user))
         except GCMError:
             error_logger.warn("Could not send %s GCM push to %s" % (version, user), exc_info=True)
@@ -75,19 +86,19 @@ def send_incoming_video_call(user, from_user, version):
             "action-loc-key": "Answer"
         }
         try:
-            user.apns_device.send_message(message=alert, sound='default', category='VIDEO_CALL_CATEGORY')
+            user.send_apns(alert=alert, sound='default', category='VIDEO_CALL_CATEGORY')
             debug_logger.debug("Sent APNS Incoming video call push to %s" % user)
         except APNSError:
             error_logger.warn("Could not send APNS Incoming video call push to %s" % user, exc_info=True)
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
-        extra = {
+        data = {
             'type': str(NOTIFICATION_TYPE_VIDEO_CALL),
             'message': "Incoming video call",
             'body': "%s is calling you on Shoutit" % from_user.first_name,
         }
         try:
-            user.gcm_device.send_message(message=None, extra=extra)
+            user.send_gcm(data=data)
             debug_logger.debug("Sent GCM Incoming video call push to %s" % user)
         except GCMError:
             error_logger.warn("Could not GCM Incoming video call push push to %s" % user, exc_info=True)
@@ -100,19 +111,19 @@ def send_missed_video_call(user, from_user, version):
             "body": "You missed a call from %s." % from_user.first_name,
         }
         try:
-            user.apns_device.send_message(message=alert, sound='default')
+            user.send_apns(alert=alert, sound='default')
             debug_logger.debug("Sent APNS Missed video call push to %s" % user)
         except APNSError:
             error_logger.warn("Could not send APNS Missed video call push to %s" % user, exc_info=True)
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
-        extra = {
+        data = {
             'type': str(NOTIFICATION_TYPE_MISSED_VIDEO_CALL),
             'message': "Missed video call",
             "body": "You missed a call from %s." % from_user.first_name,
         }
         try:
-            user.gcm_device.send_message(message=None, extra=extra)
+            user.send_gcm(data=data)
             debug_logger.debug("Sent GCM Missed video call push to %s" % user)
         except GCMError:
             error_logger.warn("Could not send GCM Missed video call push to %s" % user, exc_info=True)
@@ -125,7 +136,7 @@ def set_ios_badge(user):
     if user.apns_device:
         badge = get_total_unread_count(user)
         try:
-            user.apns_device.send_message(message=None, badge=badge)
+            user.send_apns(alert=None, badge=badge)
             debug_logger.debug("Set APNS badge for %s" % user)
         except APNSError:
             error_logger.warn("Could not set APNS badge for %s" % user, exc_info=True)

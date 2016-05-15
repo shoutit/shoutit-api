@@ -59,6 +59,11 @@ def trigger_new_message(message, version):
 
 
 def trigger_new_read_by(message, version):
+    _trigger_new_read_by.delay(message, version)
+
+
+@job(settings.RQ_QUEUE_PUSHER)
+def _trigger_new_read_by(message, version):
     """
     Trigger `new_read_by` event on Pusher conversation channel
     """

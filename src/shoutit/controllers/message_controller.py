@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Count
 from pydash import arrays
 
 from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION, MESSAGE_ATTACHMENT_TYPE_PROFILE
@@ -14,30 +14,18 @@ from shoutit.models import (Conversation, Message, MessageAttachment, MessageDel
 from shoutit.utils import error_logger
 
 
-def get_conversation(conversation_id):
-    try:
-        return Conversation.objects.get(pk=conversation_id)
-    except Conversation.DoesNotExist:
-        return None
-
-
-def get_message(message_id):
-    try:
-        return Message.objects.get(pk=message_id)
-    except Message.DoesNotExist:
-        return None
-
-
 def conversation_exist(conversation_id=None, users=None, about=None, include_public=False):
     """
     Check whether a conversation with same id or both users and about exists
     """
     if conversation_id:
-        return get_conversation(conversation_id) or False
+        try:
+            return Conversation.objects.get(pk=conversation_id)
+        except Conversation.DoesNotExist:
+            return False
+
     elif users:
         assert isinstance(users, list)
-
-        users = arrays.unique(users)
 
         if about:
             conversations = Conversation.objects.with_attached_object(about)
@@ -45,11 +33,13 @@ def conversation_exist(conversation_id=None, users=None, about=None, include_pub
             conversations = Conversation.objects.filter(object_id=None)
 
         if not include_public:
-            conversations = conversations.filter(~Q(type=CONVERSATION_TYPE_PUBLIC_CHAT))
+            conversations = conversations.exclude(type=CONVERSATION_TYPE_PUBLIC_CHAT)
 
+        users = arrays.unique(users)
+        conversations = conversations.annotate(c=Count('users')).filter(c=len(users))
         for user in users:
             conversations = conversations.filter(users=user)
-        return conversations[0] if len(conversations) else False
+        return conversations.first() or False
     else:
         return False
 
