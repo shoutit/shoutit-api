@@ -14,7 +14,7 @@ from shoutit.utils import correct_mobile, none_to_blank
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 gender_choices = [
     ('male', "Male"),
-    ('female', "Male"),
+    ('female', "Female"),
     ('other', "Other"),
 ]
 
