@@ -136,7 +136,6 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         pusher_controller.trigger_stats_update(user, 'v3')
 
         # Read all the conversation's messages by other users that weren't read by the user before
-        unread_messages = self.unread_messages(user)
         MessageRead.objects.bulk_create(
             map(lambda m: MessageRead(user=user, message=m, conversation=self), unread_messages)
         )
@@ -274,7 +273,7 @@ class Message(Action):
     @property
     def read_by_objects(self):
         # No read by for system messages
-        if self.user is None:
+        if self.user_id is None:
             return []
         read_by = [
             {'profile_id': self.user_id, 'read_at': self.created_at_unix}
@@ -466,7 +465,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
             name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
             message = self.attached_object.summary
-            text = _("%(name)s: %(message)s") % {'name': name, 'text': message}
+            text = _("%(name)s: %(message)s") % {'name': name, 'message': message}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.user.ap.image
             target = self.attached_object.user.ap

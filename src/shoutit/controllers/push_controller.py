@@ -28,16 +28,21 @@ def send_push(user, notification, version):
     if not sending_apns and not sending_gcm:
         return
 
-    # Serialize the attached object and prepare the message
-    notification_data = serialize_attached_object(attached_object=notification, version=version, user=user)
+    # Prepare the push object
     notification_display = notification.display()
     title = notification_display['title']
     body = notification_display['text']
     image = notification_display['image']
 
+    if notification.type == NOTIFICATION_TYPE_MESSAGE:
+        attached_object = notification.attached_object
+    else:
+        attached_object = notification
+    data = serialize_attached_object(attached_object=attached_object, version=version, user=user)
+
     extra = {
         'event_name': str(notification.type),
-        'data': notification_data,
+        'data': data,
         'message': body,  # deprecate
 
         # New properties
