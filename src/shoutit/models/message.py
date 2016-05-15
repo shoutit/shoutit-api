@@ -449,7 +449,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
         return self.pk + ": " + self.get_type_display()
 
     def display(self):
-        title = None
+        title = _("Shoutit")
         text = None
         ranges = []
         image = None

@@ -1,2 +1,1 @@
-git+https://github.com/mochawich/django-push-notifications
 git+https://github.com/mochawich/django-oauth2-provider
