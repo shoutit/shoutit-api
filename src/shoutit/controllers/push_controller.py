@@ -13,13 +13,13 @@ from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS,
                               NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_VIDEO_CALL,
-                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL)
+                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NotificationType)
 from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
 
 
 @job(settings.RQ_QUEUE_PUSH)
-def send_push(user, notification_type, attached_object, version):
+def send_push(user, notification, version):
     from shoutit.controllers.notifications_controller import get_total_unread_count
 
     # Check whether we are really going to send anything
@@ -29,42 +29,38 @@ def send_push(user, notification_type, attached_object, version):
         return
 
     # Serialize the attached object and prepare the message
-    attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
+    notification_data = serialize_attached_object(attached_object=notification, version=version, user=user)
+    notification_display = notification.display()
+    title = notification_display['title']
+    body = notification_display['text']
+    image = notification_display['image']
 
-    if notification_type == NOTIFICATION_TYPE_LISTEN:
-        name = attached_object.first_name
-        message = _("%(name)s started listening to you") % {'name': name}
-    elif notification_type == NOTIFICATION_TYPE_MESSAGE:
-        name = attached_object.user.first_name if attached_object.user else 'Shoutit'
-        text = attached_object.summary
-        message = _("%(name)s: %(text)s") % {'name': name, 'text': text}
-    else:
-        message = None
+    extra = {
+        'event_name': str(notification.type),
+        'data': notification_data,
+        'message': body,  # deprecate
 
-    if version == 'v2':
-        extra = {
-            'notification_type': int(notification_type),
-            'object': attached_object_dict
-        }
-    else:
-        extra = {
-            'event_name': str(notification_type),
-            'data': attached_object_dict,
-            'message': message
-        }
-
+        # New properties
+        'title': title,
+        'body': body,
+        'image': image,
+    }
     # Send the Push
     if sending_apns:
         badge = get_total_unread_count(user)
+        alert = {
+            'title': title,
+            'body': body,
+        }
         try:
-            user.apns_device.send_message(message, extra=extra, sound='default', badge=badge)
+            user.apns_device.send_message(alert, extra=extra, sound='default', badge=badge)
             debug_logger.debug("Sent %s APNS push to %s." % (version, user))
         except APNSError:
             error_logger.warn("Could not send %s APNS push to %s" % (version, user), exc_info=True)
 
     if sending_gcm:
         try:
-            user.gcm_device.send_message(message, extra=extra)
+            user.gcm_device.send_message(message=None, extra=extra)
             debug_logger.debug("Sent %s GCM push to %s." % (version, user))
         except GCMError:
             error_logger.warn("Could not send %s GCM push to %s" % (version, user), exc_info=True)
@@ -136,9 +132,7 @@ def set_ios_badge(user):
 
 
 def check_push(notification_type):
-    if notification_type not in [NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE]:
-        return False
-    return settings.USE_PUSH
+    return settings.USE_PUSH and NotificationType.include_in_push(notification_type)
 
 
 @receiver(post_save, sender=PushBroadcast)

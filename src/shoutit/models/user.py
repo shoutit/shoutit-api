@@ -15,6 +15,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 gender_choices = [
     ('male', "Male"),
     ('female', "Male"),
+    ('other', "Other"),
 ]
 
 

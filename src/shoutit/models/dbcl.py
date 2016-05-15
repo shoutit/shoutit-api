@@ -11,8 +11,7 @@ from django.conf import settings
 
 
 class DBCLUser(UUIDModel):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s', unique=True,
-                                db_index=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, related_name='%(class)s')
     converted_at = models.DateTimeField(verbose_name="Conversion time", null=True, blank=True)
 
     class Meta(UUIDModel.Meta):
