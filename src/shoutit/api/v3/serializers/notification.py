@@ -48,6 +48,11 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ('id', 'created_at', 'is_read', 'display', 'type', 'attached_object')
 
+    def to_representation(self, instance):
+        ret = super(NotificationSerializer, self).to_representation(instance)
+        blank_to_none(ret['display'], ['text', 'image'])
+        return ret
+
 
 class ReportSerializer(serializers.ModelSerializer):
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)

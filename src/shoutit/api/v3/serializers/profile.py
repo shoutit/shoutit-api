@@ -18,7 +18,13 @@ from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
 from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input, AttachedUUIDObjectMixin
 
 
-class ProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class MiniProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'name')
+
+
+class ProfileSerializer(MiniProfileSerializer):
     type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
     image = serializers.URLField(source='ap.image', **empty_char_input)
     cover = serializers.URLField(source='ap.cover', **empty_char_input)
@@ -27,10 +33,10 @@ class ProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
     is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
 
-    class Meta:
-        model = User
-        fields = ('id', 'type', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated',
-                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
+    class Meta(MiniProfileSerializer.Meta):
+        parent_fields = MiniProfileSerializer.Meta.fields
+        fields = parent_fields + ('type', 'api_url', 'web_url', 'first_name', 'last_name', 'is_activated',
+                                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ProfileSerializer, self).__init__(instance, data, **kwargs)

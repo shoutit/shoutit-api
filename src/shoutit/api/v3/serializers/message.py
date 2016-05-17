@@ -16,7 +16,7 @@ from shoutit.controllers import message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
 from shoutit.utils import blank_to_none
 from .base import VideoSerializer, AttachedUUIDObjectMixin
-from .profile import ProfileSerializer
+from .profile import ProfileSerializer, MiniProfileSerializer
 from .shout import ShoutSerializer
 from .. import exceptions
 
@@ -162,15 +162,17 @@ class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
 
 
 class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+    creator = MiniProfileSerializer(help_text='Can be `null` when the conversation was created by the system')
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
-    last_message = MessageSerializer(required=False)
+    last_message = MessageSerializer(read_only=True)
     type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display',
                                    default=str(CONVERSATION_TYPE_PUBLIC_CHAT),
                                    help_text="'chat', 'about_shout' or 'public_chat'")
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
-    subject = serializers.CharField(max_length=25)
+    subject = serializers.CharField(max_length=25, write_only=True)
+    icon = serializers.URLField(allow_blank=True, max_length=200, required=False, write_only=True)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
     unread_messages_count = serializers.SerializerMethodField(help_text="# of unread messages in this conversation")
     display = serializers.SerializerMethodField(help_text="Properties used for displaying the conversation")
@@ -181,7 +183,8 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
         model = Conversation
         fields = (
             'id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'display',
-            'subject', 'icon', 'admins', 'profiles', 'blocked', 'last_message', 'about', 'messages_url', 'reply_url'
+            'subject', 'icon', 'creator', 'admins', 'profiles', 'blocked', 'last_message', 'attachments_count',
+            'about', 'messages_url', 'reply_url'
         )
 
     def get_about(self, instance):

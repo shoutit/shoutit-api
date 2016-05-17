@@ -1,6 +1,19 @@
 # shoutit-api v3 changelog
 
-## Update
+## Update (2016-05-17)
+
+- Introducing **MiniProfile** which has `id`, `username` and `name`. This will be used in endpoints that don't require extra profile properties
+- Added `last_message_summary` in Conversation `display`. This can be used to display the text under title and sub_title
+- Added `attachments_count` which has number of attached `shout`s, `media`s, `profile`s and `location`s. It will be returned only in detail Conversation endpoint `/conversations/{id}`
+- Added `creator` to Conversation. It is of type MiniProfile
+
+### To be deprecated
+- `last_message` from Conversation
+- `about` and `profiles` will be only returned in detail Conversation endpoint `/conversations/{id}` and not the main `/conversations/`
+- `subject` and `icon` in Conversation will not returned and only used when creating the Conversation (public chat)
+
+
+## Update (2016-05-13)
 
 - Now returning `new_listeners_count` when listening / stop listening to profiles and tags
 - Added `is_expired` property to Shout

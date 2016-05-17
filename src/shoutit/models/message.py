@@ -11,7 +11,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
@@ -72,6 +72,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         contributors_summary_names = map(lambda u: u.first_name, contributors_summary)
         sub_title = ", ".join(contributors_summary_names) or "You only"
         image = self.icon
+        last_message_summary = self.last_message.summary if self.last_message else None
 
         if self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             title = self.about.title
@@ -86,9 +87,17 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         dis = OrderedDict([
             ('title', title),
             ('sub_title', sub_title),
+            ('last_message_summary', last_message_summary),
             ('image', image),
         ])
         return dis
+
+    def attachments_count(self):
+        counts = self.messages_attachments.values('type').annotate(total=Count('type'))
+        available_counts = dict([(MessageAttachmentType.values[c['type']], c['total']) for c in counts])
+        all_counts = dict([(t, 0) for t in MessageAttachmentType.texts.keys()])
+        all_counts.update(available_counts)
+        return all_counts
 
     @property
     def contributors(self):
@@ -245,7 +254,12 @@ class Message(Action):
 
     @property
     def summary(self):
-        return (getattr(self, 'text') or 'attachment')[:30]
+        # Todo: Create summary attribute and set it while saving
+        _summary = (getattr(self, 'text') or 'attachment')[:30]
+        if self.user_id:
+            return "%s: %s" % (self.user.name, _summary)
+        else:
+            return _summary
 
     @property
     def attachments(self):
