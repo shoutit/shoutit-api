@@ -2,7 +2,9 @@ from __future__ import unicode_literals
 
 import re
 import sys
+import urlparse
 from collections import OrderedDict
+from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager, AnonymousUser
@@ -20,9 +22,9 @@ from push_notifications.models import APNSDevice, GCMDevice
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 from common.utils import AllowedUsernamesValidator, date_unix
+from shoutit.utils import debug_logger, none_to_blank
 from .base import UUIDModel, APIModelMixin, LocationMixin
 from .listen import Listen2
-from shoutit.utils import debug_logger, none_to_blank
 
 
 class ShoutitUserManager(UserManager):
@@ -133,6 +135,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def owner(self):
         return self
+
+    @property
+    def app_url(self):
+        params = urlencode({'username': self.username})
+        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, 'profile', '', '', params, ''))
+        return url
 
     @property
     def location(self):
@@ -489,10 +497,6 @@ class AbstractProfile(UUIDModel, LocationMixin):
 
     def clean(self):
         none_to_blank(self, ['image', 'cover', 'website'])
-
-    @property
-    def owner(self):
-        return self.user
 
 
 @receiver(post_save)

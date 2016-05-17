@@ -25,28 +25,22 @@ class MiniProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin
 
 
 class ProfileSerializer(MiniProfileSerializer):
+    api_url = serializers.HyperlinkedIdentityField(view_name='profile-detail', lookup_field='username')
     type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
     image = serializers.URLField(source='ap.image', **empty_char_input)
     cover = serializers.URLField(source='ap.cover', **empty_char_input)
-    api_url = serializers.SerializerMethodField()
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
     listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
     is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
 
     class Meta(MiniProfileSerializer.Meta):
         parent_fields = MiniProfileSerializer.Meta.fields
-        fields = parent_fields + ('type', 'api_url', 'web_url', 'first_name', 'last_name', 'is_activated',
+        fields = parent_fields + ('type', 'api_url', 'web_url', 'app_url', 'first_name', 'last_name', 'is_activated',
                                   'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ProfileSerializer, self).__init__(instance, data, **kwargs)
         self.fields['username'].required = False
-
-    def get_api_url(self, user):
-        request = self.root.context.get('request')
-        if request:
-            return reverse('profile-detail', kwargs={'username': user.username}, request=request)
-        return "https://api.shoutit.com/v3/profiles/" + user.username
 
     def get_is_listening(self, tag):
         request = self.root.context.get('request')

@@ -4,7 +4,9 @@
 """
 from __future__ import unicode_literals
 
+import urlparse
 from collections import OrderedDict
+from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
@@ -98,6 +100,12 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         all_counts = dict([(t, 0) for t in MessageAttachmentType.texts.keys()])
         all_counts.update(available_counts)
         return all_counts
+
+    @property
+    def app_url(self):
+        params = urlencode({'id': self.id})
+        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, 'conversation', '', '', params, ''))
+        return url
 
     @property
     def contributors(self):
@@ -474,7 +482,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             text = _("%(name)s started listening to you") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
-            target = self.attached_object.ap
+            target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
             name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
@@ -482,7 +490,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             text = _("%(name)s: %(message)s") % {'name': name, 'message': message}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.user.ap.image
-            target = self.attached_object.user.ap
+            target = self.attached_object.conversation
 
         ret = OrderedDict([
             ('title', title),

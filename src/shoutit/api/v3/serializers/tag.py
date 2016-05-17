@@ -12,7 +12,7 @@ from shoutit.utils import url_with_querystring
 
 class TagSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=30)
-    api_url = serializers.SerializerMethodField()
+    api_url = serializers.HyperlinkedIdentityField(view_name='tag-detail', lookup_field='name')
 
     class Meta:
         model = Tag
@@ -23,9 +23,6 @@ class TagSerializer(serializers.ModelSerializer):
             data = {'name': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
-
-    def get_api_url(self, tag):
-        return reverse('tag-detail', kwargs={'name': tag.name}, request=self.context['request'])
 
     def to_representation(self, instance):
         ret = super(TagSerializer, self).to_representation(instance)

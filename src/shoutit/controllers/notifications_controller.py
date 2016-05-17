@@ -92,8 +92,11 @@ def notify_user_of_message(user, message):
 
 
 def notify_user_of_profile_update(user):
-    # Serialize using ProfileDetailSerializer
-    user.detailed = True
+    user.detailed = True  # Serialize using ProfileDetailSerializer
     attached_object = deepcopy(user)  # Avoid pickling issues
     notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=attached_object,
                       versions=['v3'])
+
+
+# Todo: Create def notify_user_of_incoming_video_call
+# Todo: Create def notify_user_of_missed_video_call

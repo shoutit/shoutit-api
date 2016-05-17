@@ -24,6 +24,7 @@ ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 API_LINK = os.environ.get('API_LINK')
 SITE_LINK = os.environ.get('SITE_LINK')
+APP_LINK_SCHEMA = 'shoutit'
 
 # Security
 DEBUG = strtobool(os.environ.get('SHOUTIT_DEBUG'))

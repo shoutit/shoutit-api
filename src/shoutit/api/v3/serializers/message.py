@@ -162,6 +162,7 @@ class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
 
 
 class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+    api_url = serializers.HyperlinkedIdentityField(view_name='conversation-detail', lookup_field='id')
     creator = MiniProfileSerializer(help_text='Can be `null` when the conversation was created by the system')
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
@@ -182,9 +183,9 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
     class Meta:
         model = Conversation
         fields = (
-            'id', 'created_at', 'modified_at', 'web_url', 'type', 'messages_count', 'unread_messages_count', 'display',
-            'subject', 'icon', 'creator', 'admins', 'profiles', 'blocked', 'last_message', 'attachments_count',
-            'about', 'messages_url', 'reply_url'
+            'id', 'created_at', 'modified_at', 'api_url', 'web_url', 'app_url', 'type', 'messages_count',
+            'unread_messages_count', 'display', 'subject', 'icon', 'creator', 'admins', 'profiles', 'blocked',
+            'last_message', 'attachments_count', 'about', 'messages_url', 'reply_url'
         )
 
     def get_about(self, instance):

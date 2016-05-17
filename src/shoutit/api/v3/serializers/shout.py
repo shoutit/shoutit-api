@@ -36,7 +36,7 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = serializers.ListField(default=list, source='filter_objects')
-    api_url = serializers.SerializerMethodField()
+    api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
 
     class Meta:
         model = Shout
@@ -45,9 +45,6 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
             'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
             'filters', 'is_expired'
         )
-
-    def get_api_url(self, shout):
-        return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def validate_currency(self, value):
         if not value:
