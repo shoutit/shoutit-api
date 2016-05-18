@@ -32,7 +32,7 @@ test:
       shoutit/shoutit-api:test
       /bin/bash -c "
       cp -r /host_repo/.git ./
-      && coverage run --source='.' --omit='src/tests/*,*migrations*,*management*,*/v2/*,src/wsgi.py,src/manage.py,src/settings*,src/shoutit/settings.py,fabfile.py' src/manage.py test --keepdb
+      && coverage run --source='src' --omit='*migrations*,*management*,*/v2/*,src/wsgi.py,src/manage.py,src/settings*,src/shoutit/settings.py,fabfile.py' src/manage.py test --keepdb
       && CODECLIMATE_REPO_TOKEN=31faacd4ff502f670a904e50a44fec3626ab30a0105c0163cdc0fc33bb659e66 codeclimate-test-reporter"
   post:
 

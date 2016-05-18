@@ -36,3 +36,11 @@ class VerifyEmailTestCase(BaseTestCase):
     def test_verify_unauth_no_data(self):
         resp = self.client.get(self.reverse(self.url_name))
         self.assert400(resp)
+
+
+class AccessTokenTestCase(BaseTestCase):
+    url_name = 'access_token'
+
+    def test_access_token_nodata(self):
+        resp = self.client.post(self.reverse(self.url_name))
+        self.assert400(resp)
