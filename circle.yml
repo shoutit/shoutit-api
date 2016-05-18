@@ -5,6 +5,8 @@ machine:
     Europe/Berlin
   services:
     - docker
+    - elasticsearch
+    - redis
 
 dependencies:
   pre:
@@ -13,7 +15,25 @@ dependencies:
 
 test:
   pre:
+    - sudo bash -c "echo \"listen_addresses = '*'\" >>
+      /etc/postgresql/9.4/main/postgresql.conf"
+    - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
+      /etc/postgresql/9.4/main/pg_hba.conf"
+    - sudo /etc/init.d/postgresql restart
+    - >
+      docker build
+      --build-arg SHOUTIT_ENV=test
+      -t shoutit/shoutit-api:test .
   override:
+    - >
+      docker run -it
+      -v ~/shoutit-api:/host_repo
+      --add-host host_machine:$(ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+      shoutit/shoutit-api:test
+      /bin/bash -c "
+      cp -r /host_repo/.git ./
+      && coverage run --source='src' --omit='*migrations*,*management*,*/v2/*,src/wsgi.py,src/manage.py,src/settings*,src/shoutit/settings.py,fabfile.py' src/manage.py test --keepdb
+      && CODECLIMATE_REPO_TOKEN=31faacd4ff502f670a904e50a44fec3626ab30a0105c0163cdc0fc33bb659e66 codeclimate-test-reporter"
   post:
 
 deployment:

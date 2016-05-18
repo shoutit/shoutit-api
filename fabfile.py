@@ -47,7 +47,7 @@ def preview_local_updates():
 def local_test():
     with lcd(scripts_dir):
         with settings(warn_only=True):
-            result = local('python %s test shoutit --keepdb --verbosity=2' % manage_py)
+            result = local('python %s test --keepdb --verbosity=2' % manage_py)
 
 
 def local_commit():
