@@ -168,10 +168,14 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
             last_message_read.delete()
 
     def add_profile(self, profile):
+        from ..controllers import pusher_controller
         self.users.add(profile)
+        pusher_controller.trigger_conversation_update(self, 'v3')
 
     def remove_profile(self, profile):
+        from ..controllers import pusher_controller
         self.users.remove(profile)
+        pusher_controller.trigger_conversation_update(self, 'v3')
 
     def promote_admin(self, profile):
         self.admins.append(profile.id)

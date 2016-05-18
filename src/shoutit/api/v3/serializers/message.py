@@ -12,6 +12,7 @@ from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MessageAttachmentType, CONVERSATION_TYPE_PUBLIC_CHAT, MESSAGE_ATTACHMENT_TYPE_PROFILE)
 from common.utils import any_in
+from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.controllers import message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
 from shoutit.utils import blank_to_none
@@ -271,6 +272,10 @@ class ConversationProfileActionSerializer(serializers.Serializer):
 
         validated_data = super(ConversationProfileActionSerializer, self).to_internal_value(data)
         profile = self.fields['profile'].instance
+
+        if actor.id == profile.id:
+            raise exceptions.ShoutitBadRequest("You can't make chat actions against your own profile",
+                                               reason=ERROR_REASON.BAD_REQUEST)
         if not self.condition(conversation, actor, profile):
             raise exceptions.InvalidBody('profile', self.error_message % profile.name)
 
