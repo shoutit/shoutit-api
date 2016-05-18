@@ -163,7 +163,8 @@ class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
 
 class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     api_url = serializers.HyperlinkedIdentityField(view_name='conversation-detail', lookup_field='id')
-    creator = MiniProfileSerializer(help_text='Can be `null` when the conversation was created by the system')
+    creator = MiniProfileSerializer(read_only=True, help_text='Can be `null` when the conversation was created by the'
+                                                              ' system')
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
     last_message = MessageSerializer(read_only=True)
