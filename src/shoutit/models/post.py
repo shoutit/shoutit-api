@@ -249,7 +249,7 @@ class InactiveShout(object):
             "is_expired": True,
             "category": {"name": "", "slug": "", "main_tag": {}},
             "tags": [],
-            "filters": {}
+            "filters": []
         })
 
 
