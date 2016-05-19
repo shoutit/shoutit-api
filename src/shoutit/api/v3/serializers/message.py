@@ -16,7 +16,7 @@ from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.controllers import message_controller
 from shoutit.models import Message, SharedLocation, Conversation, MessageAttachment
 from shoutit.utils import blank_to_none
-from .base import VideoSerializer, AttachedUUIDObjectMixin
+from .base import VideoSerializer, AttachedUUIDObjectMixin, LocationSerializer
 from .profile import ProfileSerializer, MiniProfileSerializer
 from .shout import ShoutSerializer
 from .. import exceptions
@@ -176,6 +176,8 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     subject = serializers.CharField(max_length=25, write_only=True)
     icon = serializers.URLField(allow_blank=True, max_length=200, required=False, write_only=True)
+    location = LocationSerializer(help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` "
+                                            "is enough to calculate new location properties", required=False)
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
     unread_messages_count = serializers.SerializerMethodField(help_text="# of unread messages in this conversation")
     display = serializers.SerializerMethodField(help_text="Properties used for displaying the conversation")
@@ -186,8 +188,8 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
         model = Conversation
         fields = (
             'id', 'created_at', 'modified_at', 'api_url', 'web_url', 'app_url', 'type', 'messages_count',
-            'unread_messages_count', 'display', 'subject', 'icon', 'creator', 'admins', 'profiles', 'blocked',
-            'last_message', 'attachments_count', 'about', 'messages_url', 'reply_url'
+            'unread_messages_count', 'display', 'subject', 'icon', 'location', 'creator', 'admins', 'profiles',
+            'blocked', 'last_message', 'attachments_count', 'about', 'messages_url', 'reply_url'
         )
 
     def get_about(self, instance):
@@ -225,15 +227,20 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
         ret = super(ConversationSerializer, self).to_representation(instance)
         blank_to_none(ret, ['icon', 'subject'])
         blank_to_none(ret['display'], ['title', 'sub_title', 'image'])
+        if ret['type'] != str(CONVERSATION_TYPE_PUBLIC_CHAT):
+            del ret['location']
         return ret
 
     def create(self, validated_data):
         user = self.context['request'].user
         conversation_type = ConversationType.texts[validated_data['get_type_display']]
-        subject = validated_data['subject']
-        icon = validated_data.get('icon')
-        conversation = Conversation.create(creator=user, type=conversation_type, subject=subject, icon=icon)
-        conversation.users.add(user)
+        if conversation_type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            subject = validated_data['subject']
+            icon = validated_data.get('icon')
+            location = validated_data.get('location')
+            conversation = message_controller.create_public_chat(user, subject, icon, location)
+        else:
+            raise exceptions.InvalidBody('type', 'Only `public_chat` is allowed')
         return conversation
 
     def update(self, conversation, validated_data):

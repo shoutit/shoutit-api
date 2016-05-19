@@ -2,6 +2,11 @@
 
 ## Update (2016-05-17)
 
+- Accept `location` and return property when creating / listing Public Chats
+- Ignore reading own messages
+
+## Update (2016-05-17)
+
 - Introducing **MiniProfile** which has `id`, `username` and `name`. This will be used in endpoints that don't require extra profile properties
 - Added `last_message_summary` in Conversation `display`. This can be used to display the text under title and sub_title
 - Added `attachments_count` which has number of attached `shout`s, `media`s, `profile`s and `location`s. It will be returned only in detail Conversation endpoint `/conversations/{id}`

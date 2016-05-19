@@ -587,10 +587,12 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
             - form
         """
         message = self.get_object()
-        if request.method == 'POST':
-            message.mark_as_read(request.user)
-        elif request.method == 'DELETE':
-            message.mark_as_unread(request.user)
+        # Skip reading / unreading own messages
+        if request.user.id != message.user_id:
+            if request.method == 'POST':
+                message.mark_as_read(request.user)
+            elif request.method == 'DELETE':
+                message.mark_as_unread(request.user)
         return Response(status=status.HTTP_202_ACCEPTED)
 
 

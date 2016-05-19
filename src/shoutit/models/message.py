@@ -71,7 +71,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def display(self, user):
         title = self.subject
         contributors_summary = self.contributors.exclude(id=user.id)[:5]
-        contributors_summary_names = map(lambda u: u.first_name, contributors_summary)
+        contributors_summary_names = map(lambda u: u.name, contributors_summary)
         sub_title = ", ".join(contributors_summary_names) or "You only"
         image = self.icon
         last_message_summary = self.last_message.summary if self.last_message else None
@@ -482,9 +482,10 @@ class Notification(UUIDModel, AttachedObjectMixin):
         target = None
 
         if self.type == NOTIFICATION_TYPE_LISTEN:
-            name = self.attached_object.first_name
+            name = self.attached_object.name
             text = _("%(name)s started listening to you") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
+            ranges.append({'offset': text.index('you'), 'length': len('you')})
             image = self.attached_object.ap.image
             target = self.attached_object
 

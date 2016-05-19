@@ -110,6 +110,13 @@ class AbstractLocationMixin(models.Model):
         abstract = True
 
     @property
+    def location(self):
+        return {
+            'latitude': self.latitude,
+            'longitude': self.longitude
+        }
+
+    @property
     def is_zero_coord(self):
         return self.latitude == 0 and self.longitude == 0
 
@@ -122,6 +129,15 @@ class NamedLocationMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def location(self):
+        return {
+            'country': self.country,
+            'postal_code': self.postal_code,
+            'state': self.state,
+            'city': self.city
+        }
 
     @property
     def is_named_location(self):
@@ -141,7 +157,7 @@ class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
             'postal_code': self.postal_code,
             'state': self.state,
             'city': self.city,
-            'address': self.address,
+            'address': self.address
         }
 
     @property
