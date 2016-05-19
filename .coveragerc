@@ -1,0 +1,2 @@
+[run]
+omit = *migrations*,*management*,*/v2/*,src/wsgi.py,src/manage.py,src/settings*,src/shoutit/settings.py,fabfile.py
