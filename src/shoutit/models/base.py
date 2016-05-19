@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
+
+import urlparse
 import uuid
+from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -90,13 +93,31 @@ class APIModelMixin(object):
     def web_url(self):
         name = self.__class__.__name__.lower()
         lookups = {
-            # class: ('url part', 'lookup')
+            # class: ('netloc', 'identity_attr')
             'user': ('user', 'username'),
             'tag': ('tag', 'name'),
-            'shout': ('shout', 'pk'),
+            'shout': ('shout', 'id'),
+            'discoveritem': ('discover', 'id'),
         }
-        lookup = getattr(self, lookups.get(name, (name, 'pk'))[1], '')
-        return "{}{}/{}".format(settings.SITE_LINK, name, lookup)
+        netloc, identity_attr = lookups.get(name, (name, 'id'))
+        identity = getattr(self, identity_attr, '')
+        return "%s%s/%s" % (settings.SITE_LINK, netloc, identity)
+
+    @property
+    def app_url(self):
+        name = self.__class__.__name__.lower()
+        lookups = {
+            # class: ('netloc', 'attr_name')
+            'user': ('profile', 'username'),
+            'shout': ('shout', 'id'),
+            'conversation': ('conversation', 'id'),
+            'discoveritem': ('discover', 'id'),
+        }
+        netloc, attr_name = lookups.get(name, (name, 'id'))
+        attr_value = getattr(self, attr_name, '')
+        params = urlencode({attr_name: attr_value})
+        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, netloc, '', '', params, ''))
+        return url
 
 
 class AbstractLocationMixin(models.Model):

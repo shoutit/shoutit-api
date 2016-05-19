@@ -2,9 +2,7 @@ from __future__ import unicode_literals
 
 import re
 import sys
-import urlparse
 from collections import OrderedDict
-from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager, AnonymousUser
@@ -135,12 +133,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def owner(self):
         return self
-
-    @property
-    def app_url(self):
-        params = urlencode({'username': self.username})
-        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, 'profile', '', '', params, ''))
-        return url
 
     @property
     def location(self):

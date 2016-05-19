@@ -7,10 +7,10 @@ from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 
-from shoutit.models.base import UUIDModel, CountriesField
+from shoutit.models.base import UUIDModel, CountriesField, APIModelMixin
 
 
-class DiscoverItem(MPTTModel, UUIDModel):
+class DiscoverItem(MPTTModel, UUIDModel, APIModelMixin):
     title = models.CharField(max_length=100)
     subtitle = models.CharField(max_length=100, blank=True)
     description = models.CharField(max_length=100, blank=True)

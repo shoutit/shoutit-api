@@ -41,7 +41,7 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     class Meta:
         model = Shout
         fields = (
-            'id', 'api_url', 'web_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
+            'id', 'api_url', 'web_url', 'app_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
             'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
             'filters', 'is_expired'
         )

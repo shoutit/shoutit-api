@@ -1,9 +1,10 @@
 # shoutit-api v3 changelog
 
-## Update (2016-05-17)
+## Update (2016-05-19)
 
 - Accept `location` and return property when creating / listing Public Chats
 - Ignore reading own messages
+- Added `app_url` to **Profile**, **Conversation**, **Shout** and **DiscoverItem**
 
 ## Update (2016-05-17)
 

@@ -4,9 +4,7 @@
 """
 from __future__ import unicode_literals
 
-import urlparse
 from collections import OrderedDict
-from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
@@ -100,12 +98,6 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         all_counts = dict([(t, 0) for t in MessageAttachmentType.texts.keys()])
         all_counts.update(available_counts)
         return all_counts
-
-    @property
-    def app_url(self):
-        params = urlencode({'id': self.id})
-        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, 'conversation', '', '', params, ''))
-        return url
 
     @property
     def contributors(self):
