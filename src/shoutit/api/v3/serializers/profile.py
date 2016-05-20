@@ -130,14 +130,14 @@ class ProfileDetailSerializer(ProfileSerializer):
         return reverse('profile-chat', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_conversation(self, user):
-        from .message import ConversationSerializer
+        from .conversation import ConversationDetailSerializer
         request_user = self.root.context['request'].user
         if isinstance(request_user, AnonymousUser) or request_user.id == user.id:
             return None
         conversation = message_controller.conversation_exist(users=[request_user, user])
         if not conversation:
             return None
-        return ConversationSerializer(conversation, context=self.root.context).data
+        return ConversationDetailSerializer(conversation, context=self.root.context).data
 
     def to_representation(self, instance):
         if not instance.is_active:

@@ -1,5 +1,15 @@
 # shoutit-api v3 changelog
 
+## Conversation (2016-05-20)
+
+- Updated [Messaging Wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Messaging)
+- Divided Conversation to **Conversation** and **Conversation Detail**. The earlier will be returned in all endpoints while the later will be only returned in conversation detail endpoint `GET /conversations/{id}`
+- Clients should utilize the Conversation object and only when opening the chat ask for Conversation Detail
+- Clients should listen to `conversation_update` rather than asking for conversation detail after every admin action
+
+### To be deprecated
+- At the moment all endpoints will keep returning full **Conversation Detail** objects until all clients are updated to utilize regular **Conversation** objects
+
 ## Update (2016-05-19)
 
 - Accept `location` and return property when creating / listing Public Chats

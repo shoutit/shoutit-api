@@ -114,12 +114,12 @@ class ShoutDetailSerializer(ShoutSerializer):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
 
     def get_conversations(self, shout):
-        from .message import ConversationSerializer
+        from .conversation import ConversationDetailSerializer
         user = self.root.context['request'].user
         if isinstance(user, AnonymousUser):
             return []
         conversations = shout.conversations.filter(users=user)
-        return ConversationSerializer(conversations, many=True, context=self.root.context).data
+        return ConversationDetailSerializer(conversations, many=True, context=self.root.context).data
 
     def to_representation(self, instance):
         if instance.is_muted or instance.is_disabled:

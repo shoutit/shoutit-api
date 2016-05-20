@@ -8,24 +8,27 @@ from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.decorators import detail_route
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from common.constants import CONVERSATION_TYPE_PUBLIC_CHAT
 from shoutit.api.permissions import CanContribute, IsAdminOrCanContribute
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
-from ..serializers import (ConversationSerializer, MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
+from ..serializers import (ConversationSerializer, ConversationDetailSerializer,
+                           MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
                            RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer,
                            MessageAttachmentSerializer, ShoutSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
-class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
+class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
                           mixins.UpdateModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
-    serializer_class = ConversationSerializer
+    serializer_class = ConversationDetailSerializer
+    serializer_detail_class = ConversationDetailSerializer
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, IsAdminOrCanContribute)
 
@@ -57,7 +60,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         ###REQUIRES AUTH
         [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
-        serializer: ConversationSerializer
+        serializer: ConversationDetailSerializer
         parameters:
             - name: search
               description: NOT IMPLEMENTED
@@ -99,7 +102,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         }
         </code></pre>
         ---
-        serializer: ConversationSerializer
+        serializer: ConversationDetailSerializer
         """
         return super(ConversationViewSet, self).retrieve(request, *args, **kwargs)
 
@@ -115,7 +118,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Retrie
         }
         </code></pre>
         ---
-        serializer: ConversationSerializer
+        serializer: ConversationDetailSerializer
         omit_parameters:
             - form
         parameters:
@@ -596,11 +599,13 @@ class MessageViewSet(UUIDViewSetMixin, mixins.DestroyModelMixin, viewsets.Generi
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class PublicChatViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateModelMixin,
+                        viewsets.GenericViewSet):
     """
     Public Chat API Resource.
     """
-    serializer_class = ConversationSerializer
+    serializer_class = ConversationDetailSerializer
+    serializer_detail_class = ConversationDetailSerializer
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, CanContribute)
 
@@ -618,7 +623,7 @@ class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateMo
         ###REQUIRES AUTH
         [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
-        serializer: ConversationSerializer
+        serializer: ConversationDetailSerializer
         parameters:
             - name: search
               description: NOT IMPLEMENTED
@@ -644,7 +649,7 @@ class PublicChatViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.CreateMo
         }
         </code></pre>
         ---
-        serializer: ConversationSerializer
+        serializer: ConversationDetailSerializer
         omit_parameters:
             - form
         parameters:
