@@ -70,7 +70,13 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         title = self.subject
         contributors_summary = self.contributors.exclude(id=user.id)[:5]
         contributors_summary_names = map(lambda u: u.name, contributors_summary)
-        sub_title = ", ".join(contributors_summary_names) or "You only"
+        contributors_summary_len = len(contributors_summary)
+        if contributors_summary_len == 0:
+            sub_title = "You only"
+        else:
+            sub_title = ", ".join(contributors_summary_names)
+            if contributors_summary_len > 1 or self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+                sub_title = "You, " + sub_title
         image = self.icon
         last_message_summary = self.last_message.summary if self.last_message else None
 
