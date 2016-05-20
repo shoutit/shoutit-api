@@ -82,7 +82,8 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 
 class AttachedUUIDObjectMixin(object):
     def to_internal_attached_value(self, data):
-        from .message import MessageAttachmentSerializer, ConversationProfileActionSerializer
+        from .message import MessageAttachmentSerializer
+        from .conversation import ConversationProfileActionSerializer
         from .notification import AttachedObjectSerializer
         model = self.Meta.model
         # Make sure no empty JSON body was posted
