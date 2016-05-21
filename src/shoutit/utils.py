@@ -397,7 +397,7 @@ def serialize_attached_object(attached_object, version, user=None):
     elif isinstance(attached_object, Message):
         serializer = serializers.MessageSerializer
     elif isinstance(attached_object, Conversation):
-        serializer = serializers.ConversationSerializer
+        serializer = serializers.ConversationDetailSerializer
     elif isinstance(attached_object, Notification):
         serializer = serializers.NotificationSerializer
     else:
