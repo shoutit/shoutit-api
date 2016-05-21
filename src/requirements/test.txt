@@ -2,3 +2,6 @@
 -r common.txt
 coverage==4.0.3
 codeclimate-test-reporter
+pytest-django==2.9.1
+pytest-cov==2.2.1
+django-dynamic-fixture==1.8.5
