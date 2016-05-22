@@ -1,6 +1,24 @@
 # -*- coding: utf-8 -*-
 from rest_framework.test import APITestCase
 from django.core.urlresolvers import reverse
+from django.contrib.auth import get_user_model
+from django_dynamic_fixture import N
+from mock import MagicMock
+
+from shoutit_pusher import utils
+
+
+# mock pusher
+def mocked_validate_webhook(key, *args, **kwargs):
+    if not isinstance(key, basestring):
+        raise TypeError('key should be a unicode string')
+    return {}
+
+mocked_pusher = MagicMock()
+mocked_pusher.authenticate = MagicMock(return_value={'pusher': 'success'})
+mocked_pusher.validate_webhook = MagicMock(
+    side_effect=mocked_validate_webhook)
+unmocked_pusher, utils.pusher = utils.pusher, mocked_pusher
 
 
 class BaseTestCase(APITestCase):
@@ -29,3 +47,17 @@ class BaseTestCase(APITestCase):
 
     def assert404(self, response):
         self.assertEqual(response.status_code, 404)
+
+    @classmethod
+    def create_user(cls, username='ivan', first_name='Ivan', password='123',
+                    is_test=True, **kwargs):
+        user = N(
+            get_user_model(),
+            username=username,
+            first_name=first_name,
+            is_test=is_test,
+            **kwargs
+        )
+        user.set_password(password)
+        user.save()
+        return user
