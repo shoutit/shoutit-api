@@ -69,7 +69,7 @@ class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
 
     class Meta:
         model = Message
-        fields = ('id', 'created_at', 'conversation_id', 'profile', 'text', 'attachments', 'read_by')
+        fields = ('id', 'created_at', 'conversation_id', 'app_url', 'profile', 'text', 'attachments', 'read_by')
 
     def to_internal_value(self, data):
         # Validate when passed as attached object or message attachment

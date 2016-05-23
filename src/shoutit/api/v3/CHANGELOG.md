@@ -6,6 +6,7 @@
 - Divided Conversation to **Conversation** and **Conversation Detail**. The earlier will be returned in all endpoints while the later will be only returned in conversation detail endpoint `GET /conversations/{id}`
 - Clients should utilize the Conversation object and only when opening the chat ask for Conversation Detail
 - Clients should listen to `conversation_update` rather than asking for conversation detail after every admin action
+- Add `app_url` to **Message** object this can be used to open the conversation from Native Push
 
 ### To be deprecated
 - At the moment all endpoints will keep returning full **Conversation Detail** objects until all clients are updated to utilize regular **Conversation** objects

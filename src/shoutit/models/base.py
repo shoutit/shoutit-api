@@ -108,14 +108,18 @@ class APIModelMixin(object):
         name = self.__class__.__name__.lower()
         lookups = {
             # class: ('netloc', 'attr_name')
+            # attr_name can be string or (attr_name, param_name)
             'user': ('profile', 'username'),
             'shout': ('shout', 'id'),
+            'message': ('conversation', ('conversation_id', 'id')),
             'conversation': ('conversation', 'id'),
             'discoveritem': ('discover', 'id'),
         }
         netloc, attr_name = lookups.get(name, (name, 'id'))
-        attr_value = getattr(self, attr_name, '')
-        params = urlencode({attr_name: attr_value})
+        if isinstance(attr_name, basestring):
+            attr_name = (attr_name, attr_name)
+        attr_value = getattr(self, attr_name[0], '')
+        params = urlencode({attr_name[1]: attr_value})
         url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, netloc, '', '', params, ''))
         return url
 
