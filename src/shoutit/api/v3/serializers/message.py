@@ -100,9 +100,7 @@ class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
                         i += 1
                         continue
 
-                    if 'location' in attachment and (
-                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
-                                'location']):
+                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         attachment_error = {'location': "location object should have 'latitude' and 'longitude'"}
 
                     if 'images' in attachment or 'videos' in attachment:

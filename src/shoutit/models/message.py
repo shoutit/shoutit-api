@@ -21,7 +21,8 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
-    MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT)
+    MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
+    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
 from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -472,6 +473,26 @@ class Notification(UUIDModel, AttachedObjectMixin):
     def __unicode__(self):
         return self.pk + ": " + self.get_type_display()
 
+    @property
+    def notification_type(self):
+        return NotificationType.instance(self.type)
+
+    @property
+    def event_name(self):
+        if self.notification_type.is_new_notification_type():
+            name = str(NotificationType.new_notification())
+        else:
+            name = str(self.notification_type)
+        return name
+
+    @property
+    def event_object(self):
+        if self.notification_type.is_self_attached():
+            obj = self
+        else:
+            obj = self.attached_object
+        return obj
+
     def display(self):
         title = _("Shoutit")
         text = None
@@ -495,6 +516,22 @@ class Notification(UUIDModel, AttachedObjectMixin):
             image = self.attached_object.user.ap.image
             target = self.attached_object.conversation
 
+        elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+            title = _("Incoming video call")
+            name = self.attached_object.name
+            text = _("%(name)s is calling you on Shoutit") % {'name': name}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            image = self.attached_object.ap.image
+            target = self.attached_object
+
+        elif self.type == NOTIFICATION_TYPE_MISSED_VIDEO_CALL:
+            title = _("Missed video call")
+            name = self.attached_object.name
+            text = _("You missed a call from %(name)s") % {'name': name}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            image = self.attached_object.ap.image
+            target = self.attached_object
+
         ret = OrderedDict([
             ('title', title),
             ('text', text),
@@ -503,6 +540,10 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ('web_url', getattr(target, 'web_url', None)),
             ('app_url', getattr(target, 'app_url', None)),
         ])
+
+        if self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+            ret['alert_extra'] = {'action-loc-key': _('Answer')}
+            ret['aps_extra'] = {'category': 'VIDEO_CALL_CATEGORY'}
         return ret
 
     def mark_as_read(self):

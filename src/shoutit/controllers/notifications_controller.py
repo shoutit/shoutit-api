@@ -8,7 +8,7 @@ from django_rq import job
 from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE,
-                              NotificationType)
+                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
 from ..controllers import push_controller, pusher_controller
 from ..models import Notification
 
@@ -57,28 +57,25 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
     if not versions:
         versions = api_settings.ALLOWED_VERSIONS
 
-    if NotificationType.requires_notification_object(notification_type):
-        # Create notification object
-        notification = Notification.create(to_user=user, type=notification_type, from_user=from_user,
-                                           attached_object=attached_object)
+    # Create notification object
+    notification = Notification(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
 
+    if notification_type.requires_notification_object():
+        # Save the notification
+        notification.save()
         # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
 
-        if NotificationType.is_new_notification_type(notification_type):
-            notification_type = NotificationType.new_notification
-            attached_object = notification
-
-        # Send Push notification when no pusher channels of any version exit
-        can_push = push_controller.check_push(notification_type)
-        can_pusher = pusher_controller.check_pusher(user)
-        if can_push and not can_pusher:
-            for v in versions:
-                push_controller.send_push.delay(user, notification, v)
+    # Send Push notification when no pusher channels of any version exit
+    can_push = push_controller.check_push(notification_type)
+    can_pusher = pusher_controller.check_pusher(user)
+    if can_push and not can_pusher:
+        for v in versions:
+            push_controller.send_push.delay(user, notification, v)
 
     # Trigger event on Pusher profile channel
     for v in versions:
-        pusher_controller.trigger_profile_event(user, notification_type, attached_object, v)
+        pusher_controller.trigger_profile_event(user, notification.event_name, notification.event_object, v)
 
 
 def notify_user_of_listen(user, listener):
@@ -98,5 +95,11 @@ def notify_user_of_profile_update(user):
                       versions=['v3'])
 
 
-# Todo: Create def notify_user_of_incoming_video_call
-# Todo: Create def notify_user_of_missed_video_call
+def notify_user_of_incoming_video_call(user, caller):
+    notify_user.delay(user, notification_type=NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, from_user=caller,
+                      attached_object=caller, versions=['v3'])
+
+
+def notify_user_of_missed_video_call(user, caller):
+    notify_user.delay(user, notification_type=NOTIFICATION_TYPE_MISSED_VIDEO_CALL, from_user=caller,
+                      attached_object=caller, versions=['v3'])

@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter, RequiredBody
 from shoutit.api.v3.serializers import ProfileSerializer
-from shoutit.controllers import push_controller
+from shoutit.controllers import notifications_controller
 from shoutit.models import User
 from .controllers import create_video_client
 from .models import VideoClient
@@ -40,6 +40,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         </code></pre>
         ---
         """
+        # Todo: Move the logic to Serializer
         user = request.user
         try:
             video_client = user.video_client
@@ -89,6 +90,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
               paramType: query
         """
         # Todo: Check whether calling user is allowed to do this call or not
+        # Todo: Move the logic to Serializer
 
         other_username = request.query_params.get('profile')
         if not other_username:
@@ -113,7 +115,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
 
         # Notify the other user
-        push_controller.send_incoming_video_call(user=other_user, from_user=request.user, version='v3')
+        notifications_controller.notify_user_of_incoming_video_call(user=other_user, caller=request.user)
 
         res = {
             'identity': video_client.identity
@@ -135,6 +137,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
 
         ---
         """
+        # Todo: Move the logic to Serializer
         data = request.data
         identity = data.get('identity')
         if not identity:
@@ -153,10 +156,10 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
 
         if missed:
             # Notify the other user about the missed video call
-            push_controller.send_missed_video_call(user=other_user, from_user=request.user, version='v3')
+            notifications_controller.notify_user_of_missed_video_call(user=other_user, caller=request.user)
         else:
             # Notify the other user about the incoming video call
-            push_controller.send_incoming_video_call(user=other_user, from_user=request.user, version='v3')
+            notifications_controller.notify_user_of_incoming_video_call(user=other_user, caller=request.user)
 
         return Response()
 
@@ -180,6 +183,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
               description: Video client identity
               paramType: query
         """
+        # Todo: Move the logic to Serializer
         identity = request.query_params.get('identity')
         if not identity:
             raise RequiredParameter('identity')
