@@ -46,15 +46,20 @@ def send_push(user, notification, version):
         attached_object = notification
     data = serialize_attached_object(attached_object=attached_object, version=version, user=user)
 
-    extra = {
-        'event_name': str(notification.type),
-        'data': data,
-        'message': body,  # deprecate
+    if NotificationType.is_new_notification_type(notification.type):
+        event_name = NotificationType.new_notification
+    else:
+        event_name = str(notification.type)
 
-        # New properties
+    extra = {
+        'event_name': event_name,
         'title': title,
         'body': body,
         'icon': image,
+        'data': data,
+
+        # Todo: Deprecate old properties
+        'message': body
     }
     # Send the Push
     if sending_apns:
@@ -93,9 +98,13 @@ def send_incoming_video_call(user, from_user, version):
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
         data = {
-            'type': str(NOTIFICATION_TYPE_VIDEO_CALL),
-            'message': "Incoming video call",
+            'event_name': str(NOTIFICATION_TYPE_VIDEO_CALL),
+            'title': "Incoming video call",
             'body': "%s is calling you on Shoutit" % from_user.first_name,
+
+            # Todo: Deprecate old properties
+            'type': str(NOTIFICATION_TYPE_VIDEO_CALL),
+            'message': "Incoming video call"
         }
         try:
             user.send_gcm(data=data)
@@ -118,9 +127,13 @@ def send_missed_video_call(user, from_user, version):
 
     if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
         data = {
+            'event_name': NotificationType.new_notification,
+            'title': "Missed video call",
+            'body': "You missed a call from %s." % from_user.first_name,
+
+            # Todo: Deprecate old properties
             'type': str(NOTIFICATION_TYPE_MISSED_VIDEO_CALL),
-            'message': "Missed video call",
-            "body": "You missed a call from %s." % from_user.first_name,
+            'message': "Missed video call"
         }
         try:
             user.send_gcm(data=data)
@@ -182,9 +195,19 @@ def send_push_broadcast(push_broadcast, devices, user_ids):
         apns_devices = APNSDevice.objects.filter(user__in=user_ids)
         apns_devices.send_message(push_broadcast.message, sound='default')
         debug_logger.debug("Sent Push Broadcast: %s to %d APNS devices" % (push_broadcast.pk, len(apns_devices)))
+
     if DEVICE_ANDROID.value in devices:
         gcm_devices = GCMDevice.objects.filter(user__in=user_ids)
-        gcm_devices.send_message(push_broadcast.message, extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
+        extra = {
+            'event_name': NotificationType.new_notification,
+            'title': "Shoutit",
+            'body': push_broadcast.message,
+
+            # Todo: Deprecate old properties
+            'notification_type': int(NOTIFICATION_TYPE_BROADCAST),
+            'message': push_broadcast.message
+        }
+        gcm_devices.send_message(None, extra=extra)
         debug_logger.debug("Sent Push Broadcast: %s to %d GCM devices" % (push_broadcast.pk, len(gcm_devices)))
 
 
