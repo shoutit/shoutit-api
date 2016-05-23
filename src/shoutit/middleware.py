@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import re
+
 from django.conf import settings
 from ipware.ip import get_real_ip
 
@@ -16,6 +18,25 @@ class XForwardedForMiddleware(object):
             real_ip = get_real_ip(request)
             if real_ip:
                 request.META['REMOTE_ADDR'] = real_ip
+
+
+class AgentMiddleware(object):
+    @staticmethod
+    def process_request(request):
+        """
+        Add information about the request using the its user-agent
+        """
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        if 'com.shoutit-iphone' in user_agent:
+            agent = 'ios'
+            build_no_re = re.search('com.shoutit-iphone.*\((\d+);', user_agent)
+            build_no = build_no_re.groups()[0] if build_no_re else None
+        else:
+            agent = None
+            build_no = None
+
+        request.agent = agent
+        request.build_no = int(build_no) if build_no else None
 
 
 class BadRequestsMiddleware(object):

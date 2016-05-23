@@ -190,6 +190,7 @@ PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
 REQUEST_ID_HEADER = None
 CORS_ORIGIN_ALLOW_ALL = True
 MIDDLEWARE_CLASSES = (
+    'shoutit.middleware.AgentMiddleware',
     'shoutit.middleware.XForwardedForMiddleware',
     'request_id.middleware.RequestIdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

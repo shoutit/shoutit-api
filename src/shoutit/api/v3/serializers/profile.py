@@ -144,6 +144,9 @@ class ProfileDetailSerializer(ProfileSerializer):
             return InactiveUser().to_dict
         ret = super(ProfileDetailSerializer, self).to_representation(instance)
 
+        # Compatibility hack for iOS v3 clients that still expect v2_linked_accounts
+        self.ios_compat_la(ret)
+
         # hide sensitive attributes from other users than owner
         if not ret['is_owner']:
             del ret['email']
@@ -165,6 +168,12 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['chat_url']
 
         blank_to_none(ret, ['image', 'cover', 'gender', 'video', 'bio', 'about', 'mobile', 'website'])
+        return ret
+
+    def ios_compat_la(self, ret):
+        request = self.context['request']
+        if getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no <= 1269:
+            ret['linked_accounts'] = self.instance.v2_linked_accounts
         return ret
 
     def to_internal_value(self, data):
