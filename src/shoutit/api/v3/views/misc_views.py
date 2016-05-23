@@ -23,7 +23,7 @@ from shoutit.models import (Currency, Category, PredefinedCity, User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, parse_signed_request
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           ProfileSerializer, ShoutSerializer, TagDetailSerializer)
+                           ProfileSerializer, ShoutSerializer, TagDetailSerializer, PushTestSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -178,6 +178,56 @@ class MiscViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @list_route(methods=['post'], permission_classes=(permissions.IsAuthenticated,), suffix='Send Push Test')
+    def push(self, request):
+        """
+        Send push test
+
+        ###REQUIRES AUTH
+        ###Report Shout
+        <pre><code>
+        {
+            "type": "android",
+            "token": "",
+            "aps_data": {
+                "alert": {},
+                "badge": 3,
+                "sound": "default",
+                "category": ""
+            },
+            "payload": {
+                "event_name": "new_notification",
+                "title": "Push test",
+                "body": "Hi there",
+                "icon": "",
+                "data": {
+                    "app_url": ""
+                }
+            }
+        }
+        </code></pre>
+
+        - `type` can be either `android` or `ios`
+        - `type` and `token` are required
+        - `aps_data` is iOS specific and can only have the mentioned properties
+        - `alert` can either be a string or dict that may contain title, body and icon, action-loc-key, loc-key or loc-args
+        - `payload` properties will be sent as
+            - extra payload properties for iOS
+            - properties inside a `data` dict in Android payload
+
+        ---
+        serializer: PushTestSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        serializer = PushTestSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'success': True}, status=status.HTTP_201_CREATED)
 
     @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='Fake Error')
     def error(self, request):

@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 import uuid
 
 from ipware.ip import get_real_ip
+from push_notifications.apns import apns_send_bulk_message
+from push_notifications.gcm import gcm_send_bulk_message
 from rest_framework import serializers
 
 from shoutit.controllers import location_controller
@@ -110,3 +112,31 @@ class AttachedUUIDObjectMixin(object):
                     return {'id': object_id}
             else:
                 raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
+
+
+class PushTestSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=['android', 'ios'])
+    token = serializers.CharField()
+    aps_data = serializers.DictField(required=False)
+    payload = serializers.DictField(required=False)
+
+    def validate_aps_data(self, value):
+        if value and isinstance(value, dict):
+            if not all([k in ['alert', 'badge', 'sound', 'category'] for k in value.keys()]):
+                raise serializers.ValidationError("can only contain 'alert', 'badge', 'sound' and 'category'")
+        return value
+
+    def create(self, validated_data):
+        push_type = validated_data['type']
+        token = validated_data['token']
+        aps_data = validated_data.get('aps_data', {})
+        payload = validated_data.get('payload', {})
+
+        if push_type == 'android':
+            gcm_send_bulk_message(registration_ids=[token], data=payload)
+
+        else:
+            alert = aps_data.pop('alert', '')
+            apns_send_bulk_message(registration_ids=[token], alert=alert, extra=payload, **aps_data)
+
+        return True
