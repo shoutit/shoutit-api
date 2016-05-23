@@ -309,7 +309,7 @@ class UserDetailSerializer(UserSerializer):
     location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     website = serializers.URLField(source='ap.website', required=False)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
-    linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
+    linked_accounts = serializers.ReadOnlyField(source='v2_linked_accounts', help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this user is listening to signed in user")
     listeners_url = serializers.SerializerMethodField(help_text="URL to get this user listeners")
     listening_count = serializers.DictField(

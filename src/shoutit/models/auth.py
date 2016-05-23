@@ -119,7 +119,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             self.is_activated = True
 
     @property
-    def type_name_v3(self):
+    def v3_type_name(self):
         return "user" if self.type == USER_TYPE_PROFILE else "page"
 
     @property
@@ -145,7 +145,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         elif hasattr(self, 'page'):
             return self.page.name
         else:
-            return self.type_name_v3.capitalize()
+            return self.v3_type_name.capitalize()
 
     @property
     def apns_device(self):
@@ -210,20 +210,36 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def linked_accounts(self):
-        if not hasattr(self, '_linked_accounts'):
+        facebook_la = self.linked_facebook
+        gplus = self.linked_gplus
+        _linked_accounts = {
+            'gplus': {
+                'gplus_id': gplus.gplus_id
+            } if gplus else {},
+            'facebook': OrderedDict([
+                ('facebook_id', facebook_la.facebook_id),
+                ('expires_at', facebook_la.expires_at_unix),
+                ('scopes', facebook_la.scopes)
+            ]) if facebook_la else {},
+        }
+        return _linked_accounts
+
+    @property
+    def v2_linked_accounts(self):
+        if not hasattr(self, '_v2_linked_accounts'):
             facebook_la = hasattr(self, 'linked_facebook') and self.linked_facebook
-            self._linked_accounts = {
+            self._v2_linked_accounts = {
                 'facebook': True if facebook_la else False,
                 'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
             }
             if facebook_la:
-                self._linked_accounts['facebook_details'] = {
+                self._v2_linked_accounts['facebook_details'] = {
                     'facebook_id': facebook_la.facebook_id,
                     'access_token': facebook_la.access_token,
                     'expires_at': date_unix(facebook_la.expires_at),
                     'scopes': facebook_la.scopes
                 }
-        return self._linked_accounts
+        return self._v2_linked_accounts
 
     @property
     def push_tokens(self):
@@ -515,6 +531,10 @@ class LinkedFacebookAccount(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.user)
+
+    @property
+    def expires_at_unix(self):
+        return date_unix(self.created_at)
 
 
 class LinkedGoogleAccount(UUIDModel):

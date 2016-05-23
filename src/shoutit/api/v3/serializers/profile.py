@@ -26,7 +26,7 @@ class MiniProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin
 
 class ProfileSerializer(MiniProfileSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='profile-detail', lookup_field='username')
-    type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
+    type = serializers.CharField(source='v3_type_name', help_text="'user' or 'page'", read_only=True)
     image = serializers.URLField(source='ap.image', **empty_char_input)
     cover = serializers.URLField(source='ap.cover', **empty_char_input)
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
