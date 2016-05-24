@@ -47,7 +47,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = ('id', 'created_at', 'is_read', 'display', 'type', 'attached_object')
+        fields = ('id', 'created_at', 'is_read', 'display', 'app_url', 'web_url', 'type', 'attached_object')
 
     def to_representation(self, instance):
         ret = super(NotificationSerializer, self).to_representation(instance)

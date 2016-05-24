@@ -494,6 +494,9 @@ class Notification(UUIDModel, AttachedObjectMixin):
         return obj
 
     def display(self):
+        if hasattr(self, '_display'):
+            return self._display
+
         title = _("Shoutit")
         text = None
         ranges = []
@@ -537,14 +540,25 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ('text', text),
             ('ranges', ranges),
             ('image', image),
-            ('web_url', getattr(target, 'web_url', None)),
-            ('app_url', getattr(target, 'app_url', None)),
         ])
 
         if self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
             ret['alert_extra'] = {'action-loc-key': _('Answer')}
             ret['aps_extra'] = {'category': 'VIDEO_CALL_CATEGORY'}
-        return ret
+
+        setattr(self, 'target', target)
+        setattr(self, '_display', ret)
+        return self._display
+
+    @property
+    def app_url(self):
+        self.display()
+        return getattr(self.target, 'app_url', None) if hasattr(self, 'target') else None
+
+    @property
+    def web_url(self):
+        self.display()
+        return getattr(self.target, 'web_url', None) if hasattr(self, 'target') else None
 
     def mark_as_read(self):
         self.is_read = True

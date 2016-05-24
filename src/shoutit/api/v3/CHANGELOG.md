@@ -1,5 +1,10 @@
 # shoutit-api v3 changelog
 
+## Dev update
+
+- Moved `app_url` and `web_url` in **Notification** out of `display` to be more consistent inside native push. Check [Profile Notifications](https://github.com/shoutit/shoutit-api/wiki/Profile-Notifications)
+- `missed_video_call` push events is now under `new_notification` and will appear in Profile notifications list. Check [Native Push](https://github.com/shoutit/shoutit-api/wiki/Native-Push)
+
 ## Conversation (2016-05-20)
 
 - Updated [Messaging Wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Messaging)
