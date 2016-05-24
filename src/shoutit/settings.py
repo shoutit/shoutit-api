@@ -451,7 +451,8 @@ SWAGGER_SETTINGS = {
 """
 RAVEN_CONFIG = {
     'dsn': os.environ.get('RAVEN_DSN', ''),
-    'string_max_length': 1000
+    'string_max_length': 1000,
+    'transport': 'raven.transport.requests.RequestsHTTPTransport'
 }
 USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
