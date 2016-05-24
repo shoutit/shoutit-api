@@ -487,7 +487,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
     @property
     def event_object(self):
-        if self.notification_type.is_self_attached():
+        if self.notification_type.is_new_notification_type():
             obj = self
         else:
             obj = self.attached_object

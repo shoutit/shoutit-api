@@ -190,10 +190,6 @@ class NotificationType(Constant):
         ]
         return self in types
 
-    def is_self_attached(self):
-        types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_INCOMING_VIDEO_CALL]
-        return self not in types
-
     def include_in_push(self):
         types = [NOTIFICATION_TYPE_INCOMING_VIDEO_CALL]
         requires_obj = self.requires_notification_object()
