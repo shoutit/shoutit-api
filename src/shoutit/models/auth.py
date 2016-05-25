@@ -210,36 +210,36 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def linked_accounts(self):
-        facebook_la = self.linked_facebook
-        gplus = self.linked_gplus
+        linked_facebook = getattr(self, 'linked_facebook', None)
+        linked_gplus = getattr(self, 'linked_gplus', None)
         _linked_accounts = {
             'gplus': {
-                'gplus_id': gplus.gplus_id
-            } if gplus else {},
+                'gplus_id': linked_gplus.gplus_id
+            } if linked_gplus else None,
             'facebook': OrderedDict([
-                ('facebook_id', facebook_la.facebook_id),
-                ('expires_at', facebook_la.expires_at_unix),
-                ('scopes', facebook_la.scopes)
-            ]) if facebook_la else {},
+                ('facebook_id', linked_facebook.facebook_id),
+                ('expires_at', linked_facebook.expires_at_unix),
+                ('scopes', linked_facebook.scopes)
+            ]) if linked_facebook else None,
         }
         return _linked_accounts
 
     @property
     def v2_linked_accounts(self):
-        if not hasattr(self, '_v2_linked_accounts'):
-            facebook_la = hasattr(self, 'linked_facebook') and self.linked_facebook
-            self._v2_linked_accounts = {
-                'facebook': True if facebook_la else False,
-                'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
+        linked_facebook = getattr(self, 'linked_facebook', None)
+        has_linked_gplus = hasattr(self, 'linked_gplus')
+        _linked_accounts = {
+            'facebook': linked_facebook is not None,
+            'gplus': has_linked_gplus,
+        }
+        if linked_facebook:
+            _linked_accounts['facebook_details'] = {
+                'facebook_id': linked_facebook.facebook_id,
+                'access_token': linked_facebook.access_token,
+                'expires_at': date_unix(linked_facebook.expires_at),
+                'scopes': linked_facebook.scopes
             }
-            if facebook_la:
-                self._v2_linked_accounts['facebook_details'] = {
-                    'facebook_id': facebook_la.facebook_id,
-                    'access_token': facebook_la.access_token,
-                    'expires_at': date_unix(facebook_la.expires_at),
-                    'scopes': facebook_la.scopes
-                }
-        return self._v2_linked_accounts
+        return _linked_accounts
 
     @property
     def push_tokens(self):
