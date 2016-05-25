@@ -115,28 +115,30 @@ class AttachedUUIDObjectMixin(object):
 
 
 class PushTestSerializer(serializers.Serializer):
-    type = serializers.ChoiceField(choices=['android', 'ios'])
-    token = serializers.CharField()
-    aps_data = serializers.DictField(required=False)
-    payload = serializers.DictField(required=False)
+    apns = serializers.CharField(required=False)
+    gcm = serializers.CharField(required=False)
+    payload = serializers.DictField()
 
-    def validate_aps_data(self, value):
-        if value and isinstance(value, dict):
-            if not all([k in ['alert', 'badge', 'sound', 'category'] for k in value.keys()]):
-                raise serializers.ValidationError("can only contain 'alert', 'badge', 'sound' and 'category'")
+    def validate_payload(self, value):
+        aps = value.get('aps')
+        if aps is not None:
+            if not isinstance(aps, dict) or aps.keys() == []:
+                raise serializers.ValidationError({'aps': "Must be a non-empty dictionary"})
+            valid_keys = ['alert', 'badge', 'sound', 'category', 'expiration', 'priority']
+            if not all([k in valid_keys for k in aps.keys()]):
+                raise serializers.ValidationError({'aps': "can only contain %s" % ", ".join(valid_keys)})
         return value
 
     def create(self, validated_data):
-        push_type = validated_data['type']
-        token = validated_data['token']
-        aps_data = validated_data.get('aps_data', {})
+        apns = validated_data.get('apns')
+        gcm = validated_data.get('gcm')
         payload = validated_data.get('payload', {})
+        aps = payload.pop('aps', {})
+        alert = aps.pop('alert', {})
 
-        if push_type == 'android':
-            gcm_send_bulk_message(registration_ids=[token], data=payload)
-
-        else:
-            alert = aps_data.pop('alert', '')
-            apns_send_bulk_message(registration_ids=[token], alert=alert, extra=payload, **aps_data)
+        if apns:
+            apns_send_bulk_message(registration_ids=[apns], alert=alert, extra=payload, **aps)
+        if gcm:
+            gcm_send_bulk_message(registration_ids=[gcm], data=payload)
 
         return True

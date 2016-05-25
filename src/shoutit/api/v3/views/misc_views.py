@@ -188,33 +188,38 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Shout
         <pre><code>
         {
-            "type": "android",
-            "token": "",
-            "aps_data": {
-                "alert": {},
-                "badge": 3,
-                "sound": "default",
-                "category": ""
-            },
+            "apns": "e6f8269e0feb816c332c245134b49638b339e03e6b20b3b5c842eb3c495deb57",
+            "gcm": "c1jWs3rultQ:APA91bGMrBNbkAJXoSk1BUbsOdAfeKXBKhF8-bLQul5ed7KJefoWFb83XMTQWcv_MLXS5_yaGg7ufPmY-7gjUa1DG_wjHQbxsyXMakN6vxVX_a6F2Vm5XZbBf1ZmwKChMeu6EUuH_1We",
             "payload": {
                 "event_name": "new_notification",
-                "title": "Push test",
-                "body": "Hi there",
-                "icon": "",
+                "title": "Deep Link",
+                "body": "Check Chats!",
+                "icon": "https://user-image.static.shoutit.com/477ed080-0a53-4a15-9d02-1795d2e8b875.jpg",
+                "aps": {
+                    "alert": {
+                        "title": "Deep Link",
+                        "body": "Check Chats!"
+                    },
+                    "badge": 0,
+                    "sound": "default",
+                    "category": "",
+                    "expiration": null,
+                    "priority": 10
+                },
                 "data": {
-                    "app_url": ""
+                    "app_url": "shoutit://chats"
                 }
             }
         }
         </code></pre>
 
-        - `type` can be either `android` or `ios`
-        - `type` and `token` are required
-        - `aps_data` is iOS specific and can only have the mentioned properties
-        - `alert` can either be a string or dict that may contain title, body and icon, action-loc-key, loc-key or loc-args
-        - `payload` properties will be sent as
-            - extra payload properties for iOS
-            - properties inside a `data` dict in Android payload
+        - `apns` is the APNS Push Token to be used for Push test
+        - `gcm` is the GCM RegistrationID to be used for Push test
+        - `payload` is required and will be sent as
+            - custom payload properties for iOS push
+            - intent extras Bundle for Android that can be retrieved via intent.getExtras()
+        - `payload.aps` is iOS specific. It will not be sent to Android and can only have the listed properties
+        - `payload.aps.alert` can be either a string or dict that may contain title, body, action-loc-key, loc-key or loc-args
 
         ---
         serializer: PushTestSerializer
