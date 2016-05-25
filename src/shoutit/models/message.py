@@ -268,7 +268,7 @@ class Message(Action):
         # Todo: Create summary attribute and set it while saving
         _summary = (getattr(self, 'text') or 'attachment')[:30]
         if self.user_id:
-            return "%s: %s" % (self.user.name, _summary)
+            return _("%(name)s: %(message)s") % {'name': self.user.name, 'message': _summary}
         else:
             return _summary
 
@@ -513,8 +513,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
             name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
-            message = self.attached_object.summary
-            text = _("%(name)s: %(message)s") % {'name': name, 'message': message}
+            text = self.attached_object.summary
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.user.ap.image
             target = self.attached_object.conversation
