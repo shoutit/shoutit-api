@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
+
+import urlparse
 import uuid
+from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -90,13 +93,35 @@ class APIModelMixin(object):
     def web_url(self):
         name = self.__class__.__name__.lower()
         lookups = {
-            # class: ('url part', 'lookup')
+            # class: ('netloc', 'identity_attr')
             'user': ('user', 'username'),
             'tag': ('tag', 'name'),
-            'shout': ('shout', 'pk'),
+            'shout': ('shout', 'id'),
+            'discoveritem': ('discover', 'id'),
         }
-        lookup = getattr(self, lookups.get(name, (name, 'pk'))[1], '')
-        return "{}{}/{}".format(settings.SITE_LINK, name, lookup)
+        netloc, identity_attr = lookups.get(name, (name, 'id'))
+        identity = getattr(self, identity_attr, '')
+        return "%s%s/%s" % (settings.SITE_LINK, netloc, identity)
+
+    @property
+    def app_url(self):
+        name = self.__class__.__name__.lower()
+        lookups = {
+            # class: ('netloc', 'attr_name')
+            # attr_name can be string or (attr_name, param_name)
+            'user': ('profile', 'username'),
+            'shout': ('shout', 'id'),
+            'message': ('conversation', ('conversation_id', 'id')),
+            'conversation': ('conversation', 'id'),
+            'discoveritem': ('discover', 'id'),
+        }
+        netloc, attr_name = lookups.get(name, (name, 'id'))
+        if isinstance(attr_name, basestring):
+            attr_name = (attr_name, attr_name)
+        attr_value = getattr(self, attr_name[0], '')
+        params = urlencode({attr_name[1]: attr_value})
+        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, netloc, '', '', params, ''))
+        return url
 
 
 class AbstractLocationMixin(models.Model):
@@ -108,6 +133,13 @@ class AbstractLocationMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def location(self):
+        return {
+            'latitude': self.latitude,
+            'longitude': self.longitude
+        }
 
     @property
     def is_zero_coord(self):
@@ -122,6 +154,15 @@ class NamedLocationMixin(models.Model):
 
     class Meta:
         abstract = True
+
+    @property
+    def location(self):
+        return {
+            'country': self.country,
+            'postal_code': self.postal_code,
+            'state': self.state,
+            'city': self.city
+        }
 
     @property
     def is_named_location(self):
@@ -141,7 +182,7 @@ class LocationMixin(AbstractLocationMixin, NamedLocationMixin):
             'postal_code': self.postal_code,
             'state': self.state,
             'city': self.city,
-            'address': self.address,
+            'address': self.address
         }
 
     @property

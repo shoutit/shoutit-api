@@ -11,7 +11,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
@@ -21,7 +21,8 @@ from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
-    MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT)
+    MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
+    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
 from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -69,9 +70,16 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def display(self, user):
         title = self.subject
         contributors_summary = self.contributors.exclude(id=user.id)[:5]
-        contributors_summary_names = map(lambda u: u.first_name, contributors_summary)
-        sub_title = ", ".join(contributors_summary_names) or "You only"
+        contributors_summary_names = map(lambda u: u.name, contributors_summary)
+        contributors_summary_len = len(contributors_summary)
+        if contributors_summary_len == 0:
+            sub_title = "You only"
+        else:
+            sub_title = ", ".join(contributors_summary_names)
+            if contributors_summary_len > 1 or self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+                sub_title = "You, " + sub_title
         image = self.icon
+        last_message_summary = self.last_message.summary if self.last_message else None
 
         if self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
             title = self.about.title
@@ -86,9 +94,17 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         dis = OrderedDict([
             ('title', title),
             ('sub_title', sub_title),
+            ('last_message_summary', last_message_summary),
             ('image', image),
         ])
         return dis
+
+    def attachments_count(self):
+        counts = self.messages_attachments.values('type').annotate(total=Count('type'))
+        available_counts = dict([(MessageAttachmentType.values[c['type']], c['total']) for c in counts])
+        all_counts = dict([(t, 0) for t in MessageAttachmentType.texts.keys()])
+        all_counts.update(available_counts)
+        return all_counts
 
     @property
     def contributors(self):
@@ -151,10 +167,14 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
             last_message_read.delete()
 
     def add_profile(self, profile):
+        from ..controllers import pusher_controller
         self.users.add(profile)
+        pusher_controller.trigger_conversation_update(self, 'v3')
 
     def remove_profile(self, profile):
+        from ..controllers import pusher_controller
         self.users.remove(profile)
+        pusher_controller.trigger_conversation_update(self, 'v3')
 
     def promote_admin(self, profile):
         self.admins.append(profile.id)
@@ -245,7 +265,12 @@ class Message(Action):
 
     @property
     def summary(self):
-        return (getattr(self, 'text') or 'attachment')[:30]
+        # Todo: Create summary attribute and set it while saving
+        _summary = (getattr(self, 'text') or 'attachment')[:30]
+        if self.user_id:
+            return _("%(name)s: %(message)s") % {'name': self.user.name, 'message': _summary}
+        else:
+            return _summary
 
     @property
     def attachments(self):
@@ -448,7 +473,30 @@ class Notification(UUIDModel, AttachedObjectMixin):
     def __unicode__(self):
         return self.pk + ": " + self.get_type_display()
 
+    @property
+    def notification_type(self):
+        return NotificationType.instance(self.type)
+
+    @property
+    def event_name(self):
+        if self.notification_type.is_new_notification_type():
+            name = str(NotificationType.new_notification())
+        else:
+            name = str(self.notification_type)
+        return name
+
+    @property
+    def event_object(self):
+        if self.notification_type.is_new_notification_type():
+            obj = self
+        else:
+            obj = self.attached_object
+        return obj
+
     def display(self):
+        if hasattr(self, '_display'):
+            return self._display
+
         title = _("Shoutit")
         text = None
         ranges = []
@@ -456,29 +504,60 @@ class Notification(UUIDModel, AttachedObjectMixin):
         target = None
 
         if self.type == NOTIFICATION_TYPE_LISTEN:
-            name = self.attached_object.first_name
+            name = self.attached_object.name
             text = _("%(name)s started listening to you") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
+            ranges.append({'offset': text.index('you'), 'length': len('you')})
             image = self.attached_object.ap.image
-            target = self.attached_object.ap
+            target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
             name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
-            message = self.attached_object.summary
-            text = _("%(name)s: %(message)s") % {'name': name, 'message': message}
+            text = self.attached_object.summary
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.user.ap.image
-            target = self.attached_object.user.ap
+            target = self.attached_object.conversation
+
+        elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+            title = _("Incoming video call")
+            name = self.attached_object.name
+            text = _("%(name)s is calling you on Shoutit") % {'name': name}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            image = self.attached_object.ap.image
+            target = self.attached_object
+
+        elif self.type == NOTIFICATION_TYPE_MISSED_VIDEO_CALL:
+            title = _("Missed video call")
+            name = self.attached_object.name
+            text = _("You missed a call from %(name)s") % {'name': name}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            image = self.attached_object.ap.image
+            target = self.attached_object
 
         ret = OrderedDict([
             ('title', title),
             ('text', text),
             ('ranges', ranges),
             ('image', image),
-            ('web_url', getattr(target, 'web_url', None)),
-            ('app_url', getattr(target, 'app_url', None)),
         ])
-        return ret
+
+        if self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+            ret['alert_extra'] = {'action-loc-key': _('Answer')}
+            ret['aps_extra'] = {'category': 'VIDEO_CALL_CATEGORY'}
+
+        setattr(self, 'target', target)
+        setattr(self, '_display', ret)
+        return self._display
+
+    @property
+    def app_url(self):
+        self.display()
+        return getattr(self.target, 'app_url', None) if hasattr(self, 'target') else None
+
+    @property
+    def web_url(self):
+        self.display()
+        return getattr(self.target, 'web_url', None) if hasattr(self, 'target') else None
 
     def mark_as_read(self):
         self.is_read = True

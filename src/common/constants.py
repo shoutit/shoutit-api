@@ -13,7 +13,9 @@ class Constant(object):
 
     def __init__(self, text='', value=None):
         self.text = text
-        if not value:
+        if value is not None:
+            self.value = value
+        else:
             self.value = self.__class__.counter
             self.__class__.counter += 1
         self.__class__.values[self.value] = text
@@ -46,6 +48,10 @@ class Constant(object):
 
     def get_text(self):
         return self.__class__.values[self.value]
+
+    @classmethod
+    def instance(cls, value):
+        return cls(cls.values[value], value)
 
 
 TOKEN_LONG = ('abcdefghkmnopqrstuvwxyzABCDEFGHKMNPQRSTUVWXYZ23456789', 24)  # for emails
@@ -166,26 +172,28 @@ TAG_TYPE_STR = TagValueType('str')
 
 class NotificationType(Constant):
     counter, values, texts, choices = 0, {}, {}, ()
-    new_notification = 'new_notification'
 
     @classmethod
-    def requires_notification_object(cls, notification_type):
+    def new_notification(cls):
+        return cls('new_notification', 1000)
+
+    def requires_notification_object(self):
         types = [
             NOTIFICATION_TYPE_MESSAGE,
             NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
         ]
-        return notification_type in types
+        return self in types
 
-    @classmethod
-    def is_new_notification_type(cls, notification_type):
+    def is_new_notification_type(self):
         types = [
             NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
         ]
-        return notification_type in types
+        return self in types
 
-    @classmethod
-    def include_in_push(cls, notification_type):
-        return notification_type == cls.new_notification or cls.requires_notification_object(notification_type)
+    def include_in_push(self):
+        types = [NOTIFICATION_TYPE_INCOMING_VIDEO_CALL]
+        requires_obj = self.requires_notification_object()
+        return self in types or requires_obj
 
 
 NOTIFICATION_TYPE_LISTEN = NotificationType('new_listen')
@@ -195,7 +203,7 @@ NOTIFICATION_TYPE_PROFILE_UPDATE = NotificationType('profile_update')
 NOTIFICATION_TYPE_CONVERSATION_UPDATE = NotificationType('conversation_update')
 NOTIFICATION_TYPE_READ_BY = NotificationType('new_read_by')
 NOTIFICATION_TYPE_STATS_UPDATE = NotificationType('stats_update')
-NOTIFICATION_TYPE_VIDEO_CALL = NotificationType('incoming_video_call')
+NOTIFICATION_TYPE_INCOMING_VIDEO_CALL = NotificationType('incoming_video_call')
 NOTIFICATION_TYPE_MISSED_VIDEO_CALL = NotificationType('missed_video_call')
 
 

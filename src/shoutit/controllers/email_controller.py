@@ -134,7 +134,7 @@ def _subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=Tru
             'last_name': user.last_name,
             'is_active': 'true' if user.is_active else 'false',
             'is_activated': 'true' if user.is_activated else 'false',
-            'type': user.type_name_v3,
+            'type': user.v3_type_name,
             'username': user.username,
             'date_joined': date_unix(user.date_joined),
             'last_login': date_unix(user.last_login) if user.last_login else 0,

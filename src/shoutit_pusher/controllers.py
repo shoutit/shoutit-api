@@ -27,10 +27,16 @@ def create_channel(channel_name):
 
 
 def delete_channel(channel_name):
-    channel = PusherChannel.objects.filter(name=channel_name)
-    if channel.exists():
-        channel.delete()
-        debug_logger.debug('Deleted PusherChannel %s' % channel_name)
+    joins = PusherChannelJoin.objects.filter(channel__name=channel_name)
+    if not joins.exists():
+        channel = PusherChannel.objects.filter(name=channel_name)
+        if channel.exists():
+            try:
+                channel.delete()
+            except IntegrityError:
+                debug_logger.debug('Could not delete PusherChannel %s' % channel_name)
+            else:
+                debug_logger.debug('Deleted PusherChannel %s' % channel_name)
 
 
 def add_member(channel_name, user_id):
@@ -52,6 +58,5 @@ def remove_member(channel_name, user_id):
     if join.exists():
         join.delete()
         debug_logger.debug('Removed Member %s from PusherChannel %s' % (user_id, channel_name))
-        other_joins = PusherChannelJoin.objects.filter(channel__name=channel_name)
-        if not other_joins.exists():
-            delete_channel(channel_name)
+        # Try to delete the channel
+        delete_channel(channel_name)

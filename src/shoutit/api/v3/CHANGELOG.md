@@ -1,6 +1,41 @@
 # shoutit-api v3 changelog
 
-## Update
+## Dev update
+
+- Moved `app_url` and `web_url` in **Notification** out of `display` to be more consistent inside native push. Check [Profile Notifications](https://github.com/shoutit/shoutit-api/wiki/Profile-Notifications)
+- `missed_video_call` push events is now under `new_notification` and will appear in Profile notifications list. Check [Native Push](https://github.com/shoutit/shoutit-api/wiki/Native-Push)
+
+## Conversation (2016-05-20)
+
+- Updated [Messaging Wiki](https://github.com/shoutit/shoutit-api/wiki/Intro-to-Messaging)
+- Divided Conversation to **Conversation** and **Conversation Detail**. The earlier will be returned in all endpoints while the later will be only returned in conversation detail endpoint `GET /conversations/{id}`
+- Clients should utilize the Conversation object and only when opening the chat ask for Conversation Detail
+- Clients should listen to `conversation_update` rather than asking for conversation detail after every admin action
+- Add `app_url` to **Message** object this can be used to open the conversation from Native Push
+
+### To be deprecated
+- At the moment all endpoints will keep returning full **Conversation Detail** objects until all clients are updated to utilize regular **Conversation** objects
+
+## Update (2016-05-19)
+
+- Accept `location` and return property when creating / listing Public Chats
+- Ignore reading own messages
+- Added `app_url` to **Profile**, **Conversation**, **Shout** and **DiscoverItem**
+
+## Update (2016-05-17)
+
+- Introducing **MiniProfile** which has `id`, `username` and `name`. This will be used in endpoints that don't require extra profile properties
+- Added `last_message_summary` in Conversation `display`. This can be used to display the text under title and sub_title
+- Added `attachments_count` which has number of attached `shout`s, `media`s, `profile`s and `location`s. It will be returned only in detail Conversation endpoint `/conversations/{id}`
+- Added `creator` to Conversation. It is of type MiniProfile
+
+### To be deprecated
+- `last_message` from Conversation
+- `about` and `profiles` will be only returned in detail Conversation endpoint `/conversations/{id}` and not the main `/conversations/`
+- `subject` and `icon` in Conversation will not returned and only used when creating the Conversation (public chat)
+
+
+## Update (2016-05-13)
 
 - Now returning `new_listeners_count` when listening / stop listening to profiles and tags
 - Added `is_expired` property to Shout

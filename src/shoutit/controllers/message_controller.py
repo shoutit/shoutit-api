@@ -9,6 +9,7 @@ from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION, MESSAGE_ATTACHMEN
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import any_in
+from shoutit.controllers import location_controller
 from shoutit.models import (Conversation, Message, MessageAttachment, MessageDelete, Shout, User, SharedLocation,
                             Video)
 from shoutit.utils import error_logger
@@ -130,3 +131,12 @@ def save_message_attachments(message, attachments):
                     ma.videos.add(video)
                 except Exception:
                     error_logger.warn("Error creating video", exc_info=True)
+
+
+def create_public_chat(creator, subject, icon=None, location=None):
+    conversation = Conversation(creator=creator, type=CONVERSATION_TYPE_PUBLIC_CHAT, subject=subject, icon=icon)
+    if location:
+        location_controller.update_object_location(conversation, location, save=False)
+    conversation.save()
+    conversation.users.add(creator)
+    return conversation

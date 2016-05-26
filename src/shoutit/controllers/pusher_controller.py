@@ -11,17 +11,16 @@ from ..utils import serialize_attached_object, debug_logger
 
 
 @job(settings.RQ_QUEUE_PUSHER)
-def trigger_event(channel_name, notification_type, attached_object, version, user=None):
+def trigger_event(channel_name, event_name, attached_object, version, user=None):
     """
     Trigger event on Pusher profile channel
     """
-    event_name = str(notification_type)
     attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
     pusher.trigger(channel_name, event_name, attached_object_dict)
     debug_logger.debug("Sent Pusher event: %s in channel: %s" % (event_name, channel_name))
 
 
-def trigger_profile_event(user, notification_type, attached_object, version):
+def trigger_profile_event(user, event_name, attached_object, version):
     """
     Trigger event on Pusher profile channel
     """
@@ -29,22 +28,23 @@ def trigger_profile_event(user, notification_type, attached_object, version):
         channel_name = 'presence-u-%s' % user.pk
     else:
         channel_name = 'presence-%s-p-%s' % (version, user.pk)
-    trigger_event.delay(channel_name, notification_type, attached_object, version, user)
+    trigger_event.delay(channel_name, event_name, attached_object, version, user)
 
 
-def trigger_conversation_event(conversation_id, notification_type, attached_object, version):
+def trigger_conversation_event(conversation_id, event_name, attached_object, version):
     """
     Trigger event on Pusher conversation channel
     """
     channel_name = 'presence-%s-c-%s' % (version, conversation_id)
-    trigger_event.delay(channel_name, notification_type, attached_object, version)
+    trigger_event.delay(channel_name, event_name, attached_object, version)
 
 
 def trigger_stats_update(user, version):
     """
     Trigger `stats_update` event on Pusher conversation channel
     """
-    trigger_profile_event(user, NOTIFICATION_TYPE_STATS_UPDATE, user.stats, version)
+    event_name = str(NOTIFICATION_TYPE_STATS_UPDATE)
+    trigger_profile_event(user, event_name, user.stats, version)
 
     # iOS needs special care! set its badge
     from .push_controller import set_ios_badge
@@ -55,7 +55,8 @@ def trigger_new_message(message, version):
     """
     Trigger `new_message` event on Pusher conversation channel
     """
-    trigger_conversation_event(message.conversation_id, NOTIFICATION_TYPE_MESSAGE, message, version)
+    event_name = str(NOTIFICATION_TYPE_MESSAGE)
+    trigger_conversation_event(message.conversation_id, event_name, message, version)
 
 
 def trigger_new_read_by(message, version):
@@ -67,18 +68,20 @@ def _trigger_new_read_by(message, version):
     """
     Trigger `new_read_by` event on Pusher conversation channel
     """
+    event_name = str(NOTIFICATION_TYPE_READ_BY)
     message_summary = {
         'id': message.id,
         'read_by': message.read_by_objects
     }
-    trigger_conversation_event(message.conversation_id, NOTIFICATION_TYPE_READ_BY, message_summary, version)
+    trigger_conversation_event(message.conversation_id, event_name, message_summary, version)
 
 
 def trigger_conversation_update(conversation, version):
     """
     Trigger `conversation_update` event on Pusher conversation channel
     """
-    trigger_conversation_event(conversation.id, NOTIFICATION_TYPE_CONVERSATION_UPDATE, conversation, version)
+    event_name = str(NOTIFICATION_TYPE_CONVERSATION_UPDATE)
+    trigger_conversation_event(conversation.id, event_name, conversation, version)
 
 
 def check_pusher(user):

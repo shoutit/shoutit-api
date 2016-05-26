@@ -62,9 +62,13 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         Receive webhooks from Pusher.
         ###Not used directly by API clients.
         """
-        webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
-                                          signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
-                                          body=getattr(request, 'raw_body', ''))
+        try:
+            webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
+                                              signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
+                                              body=getattr(request, 'raw_body', ''))
+        except TypeError as e:
+            error_logger.exception("Bad data for pusher webhook")
+            raise ValidationError(str(e))
         if webhook:
             events = webhook.get('events', [])
             events.sort(key=lambda e: e.get('name'))

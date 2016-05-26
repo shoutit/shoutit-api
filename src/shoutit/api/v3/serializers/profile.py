@@ -18,29 +18,29 @@ from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
 from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input, AttachedUUIDObjectMixin
 
 
-class ProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
-    type = serializers.CharField(source='type_name_v3', help_text="'user' or 'page'", read_only=True)
+class MiniProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'name')
+
+
+class ProfileSerializer(MiniProfileSerializer):
+    api_url = serializers.HyperlinkedIdentityField(view_name='profile-detail', lookup_field='username')
+    type = serializers.CharField(source='v3_type_name', help_text="'user' or 'page'", read_only=True)
     image = serializers.URLField(source='ap.image', **empty_char_input)
     cover = serializers.URLField(source='ap.cover', **empty_char_input)
-    api_url = serializers.SerializerMethodField()
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
     listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
     is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
 
-    class Meta:
-        model = User
-        fields = ('id', 'type', 'api_url', 'web_url', 'username', 'name', 'first_name', 'last_name', 'is_activated',
-                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
+    class Meta(MiniProfileSerializer.Meta):
+        parent_fields = MiniProfileSerializer.Meta.fields
+        fields = parent_fields + ('type', 'api_url', 'web_url', 'app_url', 'first_name', 'last_name', 'is_activated',
+                                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ProfileSerializer, self).__init__(instance, data, **kwargs)
         self.fields['username'].required = False
-
-    def get_api_url(self, user):
-        request = self.root.context.get('request')
-        if request:
-            return reverse('profile-detail', kwargs={'username': user.username}, request=request)
-        return "https://api.shoutit.com/v3/profiles/" + user.username
 
     def get_is_listening(self, tag):
         request = self.root.context.get('request')
@@ -130,19 +130,22 @@ class ProfileDetailSerializer(ProfileSerializer):
         return reverse('profile-chat', kwargs={'username': user.username}, request=self.context['request'])
 
     def get_conversation(self, user):
-        from .message import ConversationSerializer
+        from .conversation import ConversationDetailSerializer
         request_user = self.root.context['request'].user
         if isinstance(request_user, AnonymousUser) or request_user.id == user.id:
             return None
         conversation = message_controller.conversation_exist(users=[request_user, user])
         if not conversation:
             return None
-        return ConversationSerializer(conversation, context=self.root.context).data
+        return ConversationDetailSerializer(conversation, context=self.root.context).data
 
     def to_representation(self, instance):
         if not instance.is_active:
             return InactiveUser().to_dict
         ret = super(ProfileDetailSerializer, self).to_representation(instance)
+
+        # Compatibility hack for iOS v3 clients that still expect v2_linked_accounts
+        self.ios_compat_la(ret)
 
         # hide sensitive attributes from other users than owner
         if not ret['is_owner']:
@@ -165,6 +168,12 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['chat_url']
 
         blank_to_none(ret, ['image', 'cover', 'gender', 'video', 'bio', 'about', 'mobile', 'website'])
+        return ret
+
+    def ios_compat_la(self, ret):
+        request = self.context['request']
+        if getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no < 1280:
+            ret['linked_accounts'] = self.instance.v2_linked_accounts
         return ret
 
     def to_internal_value(self, data):

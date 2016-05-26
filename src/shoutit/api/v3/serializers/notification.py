@@ -10,7 +10,8 @@ from common.constants import REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, REPORT_TYPE
 from common.utils import any_in
 from shoutit.models import Notification, Report
 from shoutit.utils import blank_to_none
-from .message import MessageSerializer, ConversationSerializer
+from .message import MessageSerializer
+from .conversation import ConversationDetailSerializer
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
 from ..exceptions import ERROR_REASON
@@ -20,7 +21,7 @@ class AttachedObjectSerializer(serializers.Serializer):
     profile = ProfileSerializer(source='attached_profile', required=False)
     message = MessageSerializer(source='attached_message', required=False)
     shout = ShoutSerializer(source='attached_shout', required=False)
-    conversation = ConversationSerializer(source='attached_conversation', required=False)
+    conversation = ConversationDetailSerializer(source='attached_conversation', required=False)
 
     def to_representation(self, attached_object):
         # Create reference to the object inside itself with attr based on its class `attached_{class name}`
@@ -46,7 +47,12 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = ('id', 'created_at', 'is_read', 'display', 'type', 'attached_object')
+        fields = ('id', 'created_at', 'is_read', 'display', 'app_url', 'web_url', 'type', 'attached_object')
+
+    def to_representation(self, instance):
+        ret = super(NotificationSerializer, self).to_representation(instance)
+        blank_to_none(ret['display'], ['text', 'image'])
+        return ret
 
 
 class ReportSerializer(serializers.ModelSerializer):

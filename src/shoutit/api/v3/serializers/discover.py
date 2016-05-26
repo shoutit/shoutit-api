@@ -14,7 +14,7 @@ from shoutit.utils import url_with_querystring
 class DiscoverItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiscoverItem
-        fields = ('id', 'api_url', 'title', 'subtitle', 'position', 'image', 'icon')
+        fields = ('id', 'api_url', 'web_url', 'app_url', 'title', 'subtitle', 'position', 'image', 'icon')
         extra_kwargs = {api_settings.URL_FIELD_NAME: {'view_name': 'discover-detail'}}
 
     def to_representation(self, instance):

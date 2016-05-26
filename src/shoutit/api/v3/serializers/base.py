@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 import uuid
 
 from ipware.ip import get_real_ip
+from push_notifications.apns import apns_send_bulk_message
+from push_notifications.gcm import gcm_send_bulk_message
 from rest_framework import serializers
 
 from shoutit.controllers import location_controller
@@ -82,7 +84,8 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 
 class AttachedUUIDObjectMixin(object):
     def to_internal_attached_value(self, data):
-        from .message import MessageAttachmentSerializer, ConversationProfileActionSerializer
+        from .message import MessageAttachmentSerializer
+        from .conversation import ConversationProfileActionSerializer
         from .notification import AttachedObjectSerializer
         model = self.Meta.model
         # Make sure no empty JSON body was posted
@@ -109,3 +112,33 @@ class AttachedUUIDObjectMixin(object):
                     return {'id': object_id}
             else:
                 raise serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
+
+
+class PushTestSerializer(serializers.Serializer):
+    apns = serializers.CharField(required=False)
+    gcm = serializers.CharField(required=False)
+    payload = serializers.DictField()
+
+    def validate_payload(self, value):
+        aps = value.get('aps')
+        if aps is not None:
+            if not isinstance(aps, dict) or aps.keys() == []:
+                raise serializers.ValidationError({'aps': "Must be a non-empty dictionary"})
+            valid_keys = ['alert', 'badge', 'sound', 'category', 'expiration', 'priority']
+            if not all([k in valid_keys for k in aps.keys()]):
+                raise serializers.ValidationError({'aps': "can only contain %s" % ", ".join(valid_keys)})
+        return value
+
+    def create(self, validated_data):
+        apns = validated_data.get('apns')
+        gcm = validated_data.get('gcm')
+        payload = validated_data.get('payload', {})
+        aps = payload.pop('aps', {})
+        alert = aps.pop('alert', {})
+
+        if apns:
+            apns_send_bulk_message(registration_ids=[apns], alert=alert, extra=payload, **aps)
+        if gcm:
+            gcm_send_bulk_message(registration_ids=[gcm], data=payload)
+
+        return True

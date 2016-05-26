@@ -24,6 +24,7 @@ ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 API_LINK = os.environ.get('API_LINK')
 SITE_LINK = os.environ.get('SITE_LINK')
+APP_LINK_SCHEMA = 'shoutit'
 
 # Security
 DEBUG = strtobool(os.environ.get('SHOUTIT_DEBUG'))
@@ -189,6 +190,7 @@ PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
 REQUEST_ID_HEADER = None
 CORS_ORIGIN_ALLOW_ALL = True
 MIDDLEWARE_CLASSES = (
+    'shoutit.middleware.AgentMiddleware',
     'shoutit.middleware.XForwardedForMiddleware',
     'request_id.middleware.RequestIdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -449,7 +451,8 @@ SWAGGER_SETTINGS = {
 """
 RAVEN_CONFIG = {
     'dsn': os.environ.get('RAVEN_DSN', ''),
-    'string_max_length': 1000
+    'string_max_length': 1000,
+    'transport': 'raven.transport.requests.RequestsHTTPTransport'
 }
 USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'

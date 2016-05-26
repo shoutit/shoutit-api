@@ -20,9 +20,9 @@ from push_notifications.models import APNSDevice, GCMDevice
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
 from common.utils import AllowedUsernamesValidator, date_unix
+from shoutit.utils import debug_logger, none_to_blank
 from .base import UUIDModel, APIModelMixin, LocationMixin
 from .listen import Listen2
-from shoutit.utils import debug_logger, none_to_blank
 
 
 class ShoutitUserManager(UserManager):
@@ -119,7 +119,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             self.is_activated = True
 
     @property
-    def type_name_v3(self):
+    def v3_type_name(self):
         return "user" if self.type == USER_TYPE_PROFILE else "page"
 
     @property
@@ -145,7 +145,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         elif hasattr(self, 'page'):
             return self.page.name
         else:
-            return self.type_name_v3.capitalize()
+            return self.v3_type_name.capitalize()
 
     @property
     def apns_device(self):
@@ -210,20 +210,36 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def linked_accounts(self):
-        if not hasattr(self, '_linked_accounts'):
-            facebook_la = hasattr(self, 'linked_facebook') and self.linked_facebook
-            self._linked_accounts = {
-                'facebook': True if facebook_la else False,
-                'gplus': True if (hasattr(self, 'linked_gplus') and self.linked_gplus) else False,
+        linked_facebook = getattr(self, 'linked_facebook', None)
+        linked_gplus = getattr(self, 'linked_gplus', None)
+        _linked_accounts = {
+            'gplus': {
+                'gplus_id': linked_gplus.gplus_id
+            } if linked_gplus else None,
+            'facebook': OrderedDict([
+                ('facebook_id', linked_facebook.facebook_id),
+                ('expires_at', linked_facebook.expires_at_unix),
+                ('scopes', linked_facebook.scopes)
+            ]) if linked_facebook else None,
+        }
+        return _linked_accounts
+
+    @property
+    def v2_linked_accounts(self):
+        linked_facebook = getattr(self, 'linked_facebook', None)
+        has_linked_gplus = hasattr(self, 'linked_gplus')
+        _linked_accounts = {
+            'facebook': linked_facebook is not None,
+            'gplus': has_linked_gplus,
+        }
+        if linked_facebook:
+            _linked_accounts['facebook_details'] = {
+                'facebook_id': linked_facebook.facebook_id,
+                'access_token': linked_facebook.access_token,
+                'expires_at': date_unix(linked_facebook.expires_at),
+                'scopes': linked_facebook.scopes
             }
-            if facebook_la:
-                self._linked_accounts['facebook_details'] = {
-                    'facebook_id': facebook_la.facebook_id,
-                    'access_token': facebook_la.access_token,
-                    'expires_at': date_unix(facebook_la.expires_at),
-                    'scopes': facebook_la.scopes
-                }
-        return self._linked_accounts
+        return _linked_accounts
 
     @property
     def push_tokens(self):
@@ -490,10 +506,6 @@ class AbstractProfile(UUIDModel, LocationMixin):
     def clean(self):
         none_to_blank(self, ['image', 'cover', 'website'])
 
-    @property
-    def owner(self):
-        return self.user
-
 
 @receiver(post_save)
 def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
@@ -519,6 +531,10 @@ class LinkedFacebookAccount(UUIDModel):
 
     def __unicode__(self):
         return unicode(self.user)
+
+    @property
+    def expires_at_unix(self):
+        return date_unix(self.created_at)
 
 
 class LinkedGoogleAccount(UUIDModel):

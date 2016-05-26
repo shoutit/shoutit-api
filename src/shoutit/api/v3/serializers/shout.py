@@ -36,18 +36,15 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = serializers.ListField(default=list, source='filter_objects')
-    api_url = serializers.SerializerMethodField()
+    api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
 
     class Meta:
         model = Shout
         fields = (
-            'id', 'api_url', 'web_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
+            'id', 'api_url', 'web_url', 'app_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
             'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
             'filters', 'is_expired'
         )
-
-    def get_api_url(self, shout):
-        return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
 
     def validate_currency(self, value):
         if not value:
@@ -117,12 +114,12 @@ class ShoutDetailSerializer(ShoutSerializer):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
 
     def get_conversations(self, shout):
-        from .message import ConversationSerializer
+        from .conversation import ConversationDetailSerializer
         user = self.root.context['request'].user
         if isinstance(user, AnonymousUser):
             return []
         conversations = shout.conversations.filter(users=user)
-        return ConversationSerializer(conversations, many=True, context=self.root.context).data
+        return ConversationDetailSerializer(conversations, many=True, context=self.root.context).data
 
     def to_representation(self, instance):
         if instance.is_muted or instance.is_disabled:

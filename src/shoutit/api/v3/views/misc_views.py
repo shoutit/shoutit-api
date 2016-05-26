@@ -23,7 +23,7 @@ from shoutit.models import (Currency, Category, PredefinedCity, User, Shout,
                             Tag)
 from shoutit.utils import debug_logger, parse_signed_request
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           ProfileSerializer, ShoutSerializer, TagDetailSerializer)
+                           ProfileSerializer, ShoutSerializer, TagDetailSerializer, PushTestSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -178,6 +178,61 @@ class MiscViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @list_route(methods=['post'], permission_classes=(permissions.IsAuthenticated,), suffix='Send Push Test')
+    def push(self, request):
+        """
+        Send push test
+
+        ###REQUIRES AUTH
+        ###Report Shout
+        <pre><code>
+        {
+            "apns": "e6f8269e0feb816c332c245134b49638b339e03e6b20b3b5c842eb3c495deb57",
+            "gcm": "c1jWs3rultQ:APA91bGMrBNbkAJXoSk1BUbsOdAfeKXBKhF8-bLQul5ed7KJefoWFb83XMTQWcv_MLXS5_yaGg7ufPmY-7gjUa1DG_wjHQbxsyXMakN6vxVX_a6F2Vm5XZbBf1ZmwKChMeu6EUuH_1We",
+            "payload": {
+                "event_name": "new_notification",
+                "title": "Deep Link",
+                "body": "Check Chats!",
+                "icon": "https://user-image.static.shoutit.com/477ed080-0a53-4a15-9d02-1795d2e8b875.jpg",
+                "aps": {
+                    "alert": {
+                        "title": "Deep Link",
+                        "body": "Check Chats!"
+                    },
+                    "badge": 0,
+                    "sound": "default",
+                    "category": "",
+                    "expiration": null,
+                    "priority": 10
+                },
+                "data": {
+                    "app_url": "shoutit://chats"
+                }
+            }
+        }
+        </code></pre>
+
+        - `apns` is the APNS Push Token to be used for Push test
+        - `gcm` is the GCM RegistrationID to be used for Push test
+        - `payload` is required and will be sent as
+            - custom payload properties for iOS push
+            - intent extras Bundle for Android that can be retrieved via intent.getExtras()
+        - `payload.aps` is iOS specific. It will not be sent to Android and can only have the listed properties
+        - `payload.aps.alert` can be either a string or dict that may contain title, body, action-loc-key, loc-key or loc-args
+
+        ---
+        serializer: PushTestSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        serializer = PushTestSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'success': True}, status=status.HTTP_201_CREATED)
 
     @list_route(methods=['get', 'post', 'delete', 'put', 'patch', 'head', 'options'], suffix='Fake Error')
     def error(self, request):

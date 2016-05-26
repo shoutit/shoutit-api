@@ -11,8 +11,7 @@ from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.settings import api_settings
 
-from common.constants import (NOTIFICATION_TYPE_MESSAGE, DEVICE_ANDROID, DEVICE_IOS, NOTIFICATION_TYPE_BROADCAST,
-                              NOTIFICATION_TYPE_VIDEO_CALL, NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NotificationType)
+from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST)
 from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
 
@@ -35,27 +34,25 @@ def send_push(user, notification, version):
         return
 
     # Prepare the push object
+    event_name = notification.event_name
     notification_display = notification.display()
     title = notification_display['title']
     body = notification_display['text']
     image = notification_display['image']
-
-    if notification.type == NOTIFICATION_TYPE_MESSAGE:
-        attached_object = notification.attached_object
-    else:
-        attached_object = notification
-    data = serialize_attached_object(attached_object=attached_object, version=version, user=user)
-
+    alert_extra = notification_display.get('alert_extra', {})
+    aps_extra = notification_display.get('aps_extra', {})
+    data = serialize_attached_object(attached_object=notification.event_object, version=version, user=user)
     extra = {
-        'event_name': str(notification.type),
-        'data': data,
-        'message': body,  # deprecate
-
-        # New properties
+        'event_name': event_name,
         'title': title,
         'body': body,
         'icon': image,
+        'data': data,
+        # Todo: Deprecate old properties
+        'type': str(notification.type),
+        'message': body
     }
+
     # Send the Push
     if sending_apns:
         badge = get_total_unread_count(user)
@@ -63,70 +60,24 @@ def send_push(user, notification, version):
             'title': title,
             'body': body,
         }
+        alert.update(alert_extra)
+        aps = {
+            'sound': 'default',
+            'badge': badge
+        }
+        aps.update(aps_extra)
         try:
-            user.send_apns(alert=alert, extra=extra, sound='default', badge=badge)
-            debug_logger.debug("Sent %s APNS push to %s." % (version, user))
+            user.send_apns(alert=alert, extra=extra, **aps)
+            debug_logger.debug("Sent %s APNS:%s to %s" % (version, event_name, user))
         except APNSError:
-            error_logger.warn("Could not send %s APNS push to %s" % (version, user), exc_info=True)
+            error_logger.warn("Could not send %s APNS:%s to %s" % (version, event_name, user), exc_info=True)
 
     if sending_gcm:
         try:
             user.send_gcm(data=extra)
-            debug_logger.debug("Sent %s GCM push to %s." % (version, user))
+            debug_logger.debug("Sent %s GCM:%s to %s" % (version, event_name, user))
         except GCMError:
-            error_logger.warn("Could not send %s GCM push to %s" % (version, user), exc_info=True)
-
-
-def send_incoming_video_call(user, from_user, version):
-
-    if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
-        alert = {
-            "title": "Incoming video call",
-            'body': "%s is calling you on Shoutit" % from_user.first_name,
-            "action-loc-key": "Answer"
-        }
-        try:
-            user.send_apns(alert=alert, sound='default', category='VIDEO_CALL_CATEGORY')
-            debug_logger.debug("Sent APNS Incoming video call push to %s" % user)
-        except APNSError:
-            error_logger.warn("Could not send APNS Incoming video call push to %s" % user, exc_info=True)
-
-    if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
-        data = {
-            'type': str(NOTIFICATION_TYPE_VIDEO_CALL),
-            'message': "Incoming video call",
-            'body': "%s is calling you on Shoutit" % from_user.first_name,
-        }
-        try:
-            user.send_gcm(data=data)
-            debug_logger.debug("Sent GCM Incoming video call push to %s" % user)
-        except GCMError:
-            error_logger.warn("Could not GCM Incoming video call push push to %s" % user, exc_info=True)
-
-
-def send_missed_video_call(user, from_user, version):
-    if user.apns_device and getattr(user.apns_device.devices.first(), 'api_version', None) == version:
-        alert = {
-            "title": "Missed video call",
-            "body": "You missed a call from %s." % from_user.first_name,
-        }
-        try:
-            user.send_apns(alert=alert, sound='default')
-            debug_logger.debug("Sent APNS Missed video call push to %s" % user)
-        except APNSError:
-            error_logger.warn("Could not send APNS Missed video call push to %s" % user, exc_info=True)
-
-    if user.gcm_device and getattr(user.gcm_device.devices.first(), 'api_version', None) == version:
-        data = {
-            'type': str(NOTIFICATION_TYPE_MISSED_VIDEO_CALL),
-            'message': "Missed video call",
-            "body": "You missed a call from %s." % from_user.first_name,
-        }
-        try:
-            user.send_gcm(data=data)
-            debug_logger.debug("Sent GCM Missed video call push to %s" % user)
-        except GCMError:
-            error_logger.warn("Could not send GCM Missed video call push to %s" % user, exc_info=True)
+            error_logger.warn("Could not send %s GCM:%s to %s" % (version, event_name, user), exc_info=True)
 
 
 @job(settings.RQ_QUEUE_PUSH)
@@ -143,7 +94,7 @@ def set_ios_badge(user):
 
 
 def check_push(notification_type):
-    return settings.USE_PUSH and NotificationType.include_in_push(notification_type)
+    return settings.USE_PUSH and notification_type.include_in_push()
 
 
 @receiver(post_save, sender=PushBroadcast)
@@ -182,9 +133,19 @@ def send_push_broadcast(push_broadcast, devices, user_ids):
         apns_devices = APNSDevice.objects.filter(user__in=user_ids)
         apns_devices.send_message(push_broadcast.message, sound='default')
         debug_logger.debug("Sent Push Broadcast: %s to %d APNS devices" % (push_broadcast.pk, len(apns_devices)))
+
     if DEVICE_ANDROID.value in devices:
         gcm_devices = GCMDevice.objects.filter(user__in=user_ids)
-        gcm_devices.send_message(push_broadcast.message, extra={"notification_type": int(NOTIFICATION_TYPE_BROADCAST)})
+        extra = {
+            'event_name': NotificationType.new_notification(),
+            'title': "Shoutit",
+            'body': push_broadcast.message,
+
+            # Todo: Deprecate old properties
+            'notification_type': int(NOTIFICATION_TYPE_BROADCAST),
+            'message': push_broadcast.message
+        }
+        gcm_devices.send_message(None, extra=extra)
         debug_logger.debug("Sent Push Broadcast: %s to %d GCM devices" % (push_broadcast.pk, len(gcm_devices)))
 
 
