@@ -437,6 +437,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             }
         return self._stats
 
+    @property
+    def mutual_friends(self):
+        if not hasattr(self, 'linked_facebook'):
+            return []
+        return User.objects.filter(linked_facebook__facebook_id__in=self.linked_facebook.friends)
+
 
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
@@ -528,6 +534,7 @@ class LinkedFacebookAccount(UUIDModel):
     access_token = models.CharField(max_length=512)
     expires_at = models.DateTimeField()
     scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'])
+    friends = ArrayField(models.CharField(max_length=24), default=list, blank=True)
 
     def __unicode__(self):
         return unicode(self.user)

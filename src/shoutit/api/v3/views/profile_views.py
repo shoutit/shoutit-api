@@ -499,7 +499,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         if account not in ['facebook', 'gplus']:
             raise InvalidBody('account', "Unsupported social account")
 
-        if request.method in ['PATCH', 'POST']:
+        if request.method == 'PATCH':
             if account == 'gplus':
                 gplus_code = request.data.get('gplus_code')
                 if not gplus_code:
@@ -515,8 +515,6 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
                                        developer_message="provide a valid `facebook_access_token`")
                 facebook_controller.link_facebook_account(instance, facebook_access_token)
 
-                # msg = "{} linked successfully.".format(account.capitalize())
-
         else:
             if account == 'gplus':
                 gplus_controller.unlink_gplus_user(instance)
@@ -524,16 +522,42 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             elif account == 'facebook':
                 facebook_controller.unlink_facebook_user(instance)
 
-                # msg = "{} unlinked successfully.".format(account.capitalize())
-
-        # Todo: check if this breaks something in the Apps
-        # ret = {
-        #     'data': {'success': msg},
-        #     'status': status.HTTP_202_ACCEPTED
-        # }
-        # return Response(**ret)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Mutual Facebook Friends')
+    def mutual_friends(self, request, *arg, **kwargs):
+        """
+        List this Profile's friends who are also on Shoutit
+        Returned list is a mix of Users and Pages
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ProfileSerializer}
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+            """
+        user = self.get_object()
+        mutual_friends = user.mutual_friends
+        page = self.paginate_queryset(mutual_friends)
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
 
     @detail_route(methods=['post'], permission_classes=(IsAuthenticated, IsOwner), suffix="Deactivate user's account")
     def deactivate(self, request, *args, **kwargs):
