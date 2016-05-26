@@ -1,2 +1,7 @@
 [run]
-omit = *migrations*,*management*,*/v2/*,src/wsgi.py,src/manage.py,src/settings*,src/shoutit/settings.py,fabfile.py
+omit = *migrations*,*management*,*settings*,*/v2/*,
+       fabfile.py,
+       src/wsgi.py,
+       src/manage.py,
+       src/common/middleware/ProfilerMiddleware.py,
+       src/common/middleware/SqlLogMiddleware.py

@@ -23,8 +23,8 @@ class DiscoverTestCase(BaseTestCase):
     def test_discover_list(self):
         resp = self.client.get(self.reverse(self.url_list))
         self.assert200(resp)
-        self.assertIdsEqual(json.loads(resp.content)['results'],
-                            [self.d1, self.d4])
+        self.assert_ids_equal(json.loads(resp.content)['results'],
+                              [self.d1, self.d4])
 
     def test_discover_detail_with_children(self):
         resp = self.client.get(
@@ -32,8 +32,8 @@ class DiscoverTestCase(BaseTestCase):
         self.assert200(resp)
         data = json.loads(resp.content)
         self.assertEqual(data['id'], self.d1.pk)
-        self.assertIdsEqual(data['parents'], [])
-        self.assertIdsEqual(data['children'], [self.d2])
+        self.assert_ids_equal(data['parents'], [])
+        self.assert_ids_equal(data['children'], [self.d2])
 
     def test_discover_detail_with_parents(self):
         resp = self.client.get(
@@ -41,8 +41,8 @@ class DiscoverTestCase(BaseTestCase):
         self.assert200(resp)
         data = json.loads(resp.content)
         self.assertEqual(data['id'], self.d3.pk)
-        self.assertIdsEqual(data['parents'], [self.d1, self.d2])
-        self.assertIdsEqual(data['children'], [])
+        self.assert_ids_equal(data['parents'], [self.d1, self.d2])
+        self.assert_ids_equal(data['children'], [])
 
     def test_discover_detail_with_children_parents(self):
         resp = self.client.get(
@@ -50,8 +50,8 @@ class DiscoverTestCase(BaseTestCase):
         self.assert200(resp)
         data = json.loads(resp.content)
         self.assertEqual(data['id'], self.d2.pk)
-        self.assertIdsEqual(data['parents'], [self.d1])
-        self.assertIdsEqual(data['children'], [self.d3])
+        self.assert_ids_equal(data['parents'], [self.d1])
+        self.assert_ids_equal(data['children'], [self.d3])
 
     def test_discover_detail_no_childer_no_parents(self):
         resp = self.client.get(
@@ -59,8 +59,8 @@ class DiscoverTestCase(BaseTestCase):
         self.assert200(resp)
         data = json.loads(resp.content)
         self.assertEqual(data['id'], self.d4.pk)
-        self.assertIdsEqual(data['parents'], [])
-        self.assertIdsEqual(data['children'], [])
+        self.assert_ids_equal(data['parents'], [])
+        self.assert_ids_equal(data['children'], [])
 
     def test_discover_unknown(self):
         resp = self.client.get(self.reverse(self.url_detail, kwargs={'pk': 0}))
