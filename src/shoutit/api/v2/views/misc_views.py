@@ -20,13 +20,10 @@ from rest_framework.response import Response
 
 from common.constants import POST_TYPE_OFFER, USER_TYPE_PAGE, USER_TYPE_PROFILE
 from common.constants import POST_TYPE_REQUEST
-from shoutit.api.renderers import PlainTextRenderer
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
-from shoutit.controllers.facebook_controller import (update_linked_facebook_account_scopes,
-                                                     delete_linked_facebook_account)
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
                             Tag)
-from shoutit.utils import debug_logger, error_logger, parse_signed_request, base64_to_text, base64_to_texts
+from shoutit.utils import debug_logger, error_logger, base64_to_text, base64_to_texts
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
                            UserSerializer, ShoutSerializer,
