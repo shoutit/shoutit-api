@@ -10,12 +10,14 @@ from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone, six
 from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
+from pydash import arrays
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
@@ -440,8 +442,20 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def mutual_friends(self):
         if not hasattr(self, 'linked_facebook'):
-            return []
+            return User.objects.none()
         return User.objects.filter(linked_facebook__facebook_id__in=self.linked_facebook.friends)
+
+    @property
+    def mutual_contacts(self):
+        from shoutit.models import Profile
+        values = self.contacts.values_list('emails', 'mobiles')
+        if not values:
+            return User.objects.none()
+        emails_list, mobiles_list = arrays.unzip(values)
+        emails = filter(None, arrays.flatten(emails_list))
+        mobiles = filter(None, arrays.flatten(mobiles_list))
+        profile_ids = Profile.objects.filter(mobile__in=mobiles).values_list('id', flat=True)
+        return User.objects.filter(Q(email__in=emails) | Q(id__in=profile_ids))
 
 
 @receiver(post_save, sender=User)
@@ -484,7 +498,7 @@ class InactiveUser(AnonymousUser):
 
 
 class AbstractProfile(UUIDModel, LocationMixin):
-    user = models.OneToOneField(User, related_name='%(class)s', db_index=True)
+    user = models.OneToOneField(User, related_name='%(class)s')
     image = models.URLField(blank=True, default='')
     cover = models.URLField(blank=True, default='')
     video = models.OneToOneField('shoutit.Video', related_name='%(class)s', null=True, blank=True,
@@ -529,8 +543,8 @@ def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
 
 
 class LinkedFacebookAccount(UUIDModel):
-    user = models.OneToOneField(User, related_name='linked_facebook', db_index=True)
-    facebook_id = models.CharField(max_length=24, db_index=True, unique=True)
+    user = models.OneToOneField(User, related_name='linked_facebook')
+    facebook_id = models.CharField(max_length=24, unique=True)
     access_token = models.CharField(max_length=512)
     expires_at = models.DateTimeField()
     scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'])
@@ -545,9 +559,25 @@ class LinkedFacebookAccount(UUIDModel):
 
 
 class LinkedGoogleAccount(UUIDModel):
-    user = models.OneToOneField(User, related_name='linked_gplus', db_index=True)
-    gplus_id = models.CharField(max_length=64, db_index=True, unique=True)
+    user = models.OneToOneField(User, related_name='linked_gplus')
+    gplus_id = models.CharField(max_length=64, unique=True)
     credentials_json = models.CharField(max_length=4096)
 
     def __unicode__(self):
         return unicode(self.user)
+
+
+class ProfileContact(UUIDModel):
+    user = models.ForeignKey(User, related_name='contacts')
+    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    emails = ArrayField(models.EmailField(_('email address'), blank=True), default=list, blank=True)
+    mobiles = ArrayField(models.CharField(_('mobile'), max_length=20, blank=True), default=list, blank=True)
+    hash = models.CharField(max_length=1000)
+
+    class Meta:
+        unique_together = ('user', 'hash')
+
+    def clean(self):
+        self.emails = filter(None, self.emails)
+        self.mobiles = filter(None, self.mobiles)

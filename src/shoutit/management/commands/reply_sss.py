@@ -7,7 +7,7 @@ import datetime
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from shoutit.controllers import message_controller
-from shoutit.controllers.notifications_controller import sms_sss_user
+from shoutit.controllers.sss_controller import sms_sss_user
 from shoutit.models import Conversation, DBCLConversation
 import random
 
