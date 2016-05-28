@@ -19,7 +19,8 @@ from shoutit.models import User
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, ShoutitPageNumberPaginationNoCount)
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
-                           ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer)
+                           ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
+                           ProfileContactsSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -526,6 +527,80 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         user = self.get_object()
         mutual_friends = user.mutual_friends
         page = self.paginate_queryset(mutual_friends)
+        serializer = ProfileSerializer(page, many=True, context={'request': request})
+        return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['patch'], suffix='Update Contacts')
+    def contacts(self, request, *arg, **kwargs):
+        """
+        Upload Phone book Contacts of the logged in profile
+        ###Body
+        <pre><code>
+        [
+            "encrypted contact object",
+            "encrypted contact object",
+            "encrypted contact object"
+        ]
+        </code></pre>
+
+        - The hashed contact object should when decoded look like
+
+        <pre><code>
+        {
+            "first_name": "John",
+            "last_name": "Doe",
+            "name": "John Doe",
+            "mobiles": ["+491501234567", "01501234567"],
+            "emails": ["john@example.com", "superman@andromeda.com"]
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            """
+        serializer = ProfileContactsSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @detail_route(methods=['get'], suffix='Mutual Contacts')
+    def mutual_contacts(self, request, *arg, **kwargs):
+        """
+        List this Profile's contacts who are also on Shoutit
+        Returned list is a mix of Users and Pages
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ProfileSerializer}
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+            """
+        user = self.get_object()
+        mutual_contacts = user.mutual_contacts
+        page = self.paginate_queryset(mutual_contacts)
         serializer = ProfileSerializer(page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 

@@ -58,6 +58,7 @@ django-ipware
 twilio==6.2.dev0
 nexmo
 django-heartbeat
+xmltodict
 
 # urllib
 # requires apt-get install libffi-dev

@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
-from shoutit.api.v3.exceptions import RequiredBody
+from shoutit.api.v3.exceptions import RequiredBody, InvalidBody
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
                                  gplus_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video
@@ -372,6 +372,16 @@ class ProfileLinkSerializer(serializers.Serializer):
         else:
             res = {'success': "No changes were made"}
         return res
+
+    def to_representation(self, instance):
+        return self.validated_data
+
+
+class ProfileContactsSerializer(serializers.Serializer):
+    def to_internal_value(self, data):
+        if not isinstance(data, list) or not all(map(lambda c: isinstance(c, basestring), data)):
+            raise InvalidBody('', "Body must be a list of hashed contacts")
+        return {'success': "Your contacts have been uploaded successfully"}
 
     def to_representation(self, instance):
         return self.validated_data
