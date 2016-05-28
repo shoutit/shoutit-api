@@ -34,7 +34,7 @@ test:
       /bin/bash -c "
       cp -r /host_repo/.git ./
       && PYTHONPATH='./src' py.test --reuse-db --cov=src --cov-report= --cov-config .coveragerc --junitxml=/circle_test_reports/django/junit.xml
-      && CODECLIMATE_REPO_TOKEN=31faacd4ff502f670a904e50a44fec3626ab30a0105c0163cdc0fc33bb659e66 codeclimate-test-reporter"
+      && CODECLIMATE_REPO_TOKEN=$CODECLIMATE_REPO_TOKEN codeclimate-test-reporter"
   post:
 
 deployment:
