@@ -134,7 +134,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
             self.users.remove(user)
 
         # 3 - create a system message saying the user has left the conversation
-        text = "{} has left the conversation".format(user.name)
+        # Todo (mo) [#i18n]: Allow returning system message in localized text
+        text = _("%(name)s has left the conversation") % {'name': user.name}
         Message.objects.create(user=None, text=text, conversation=self)
         # Todo: track `conversation_delete` event?
 
