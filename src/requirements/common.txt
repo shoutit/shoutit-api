@@ -1,7 +1,6 @@
 # core
 django-dotenv
 gunicorn==19.5.0
-raven==5.18.0
 requests==2.10.0
 Django==1.8.13
 psycopg2>=2.6
@@ -52,6 +51,7 @@ markdown==2.6.6
 
 # utils
 django-request-id
+raven==5.19.0
 pydash
 phonenumbers==7.4.0
 django-ipware
