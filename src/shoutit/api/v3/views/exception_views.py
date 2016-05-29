@@ -227,7 +227,7 @@ def exception_response(data, status_code, headers, django=False):
 
 def log_drf_exception(exc, data, status_code, context):
     # Ignore 404 errors
-    if exc in [Http404]:
+    if isinstance(exc, Http404):
         return
 
     drf_request = context['request']

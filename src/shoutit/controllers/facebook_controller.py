@@ -35,6 +35,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
     facebook_id = fb_user.get('id')
     try:
         linked_account = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
+        save_linked_facebook_account(linked_account.user, facebook_access_token, linked_account, fb_user)
         user = linked_account.user
         if initial_user and initial_user.get('location'):
             location_controller.update_profile_location(user.profile, initial_user.get('location'))
@@ -46,7 +47,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
             raise ShoutitBadRequest(message=FB_LINK_ERROR_EMAIL, developer_message=dev_msg)
         user = user_controller.auth_with_facebook(fb_user, facebook_access_token, initial_user, is_test)
         try:
-            create_linked_facebook_account(user, facebook_access_token)
+            save_linked_facebook_account(user, facebook_access_token, fb_user=fb_user)
         except (DjangoValidationError, IntegrityError) as e:
             raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(e))
 
@@ -111,11 +112,14 @@ def debug_token(facebook_token):
     }
     try:
         response = requests.get(debug_url, params=params, timeout=20)
-        data = response.json()['data']
-        if response.status_code != 200 or data.get('error'):
-            raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(data.get('error')))
-        return data
-    except (requests.RequestException, ValueError, KeyError) as e:
+        response_data = response.json()
+        error = response_data.get('error')
+        if response.status_code != 200 or error:
+            dev_msg = error.get('message') if isinstance(error, dict) else str(response_data)
+            dev_msg = "Facebook debug token error: %s" % dev_msg
+            raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)
+        return response_data['data']
+    except requests.RequestException as e:
         dev_msg = "Facebook debug token error: %s" % str(e)
         debug_logger.error(dev_msg)
         raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)
@@ -141,9 +145,9 @@ def link_facebook_account(user, facebook_access_token):
     unlink_facebook_user(user, False)
 
     # link
-    # todo: get info, pic, etc about user
+    # Todo: get info, pic, etc about user
     try:
-        create_linked_facebook_account(user, facebook_access_token)
+        save_linked_facebook_account(user, facebook_access_token, fb_user=fb_user)
     except (DjangoValidationError, IntegrityError) as e:
         debug_logger.error("LinkedFacebookAccount creation error: %s." % str(e))
         raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=str(e))
@@ -157,21 +161,18 @@ def unlink_facebook_user(user, strict=True):
     """
     Deleted the user's LinkedFacebookAccount
     """
-    try:
-        linked_account = LinkedFacebookAccount.objects.get(user=user)
-    except LinkedFacebookAccount.DoesNotExist:
-        if strict:
-            debug_logger.warning("User: %s, tried to unlink non-existing facebook account." % user)
-            raise ShoutitBadRequest(FB_LINK_ERROR_NO_LINK)
-    else:
-        # todo: unlink from facebook services?
+    linked_account = LinkedFacebookAccount.objects.filter(user=user)
+    if linked_account.exists():
         linked_account.delete()
+    elif strict:
+        debug_logger.warning("User: %s, tried to unlink non-existing facebook account." % user)
+        raise ShoutitBadRequest(FB_LINK_ERROR_NO_LINK)
 
 
 def fb_user_from_facebook_access_token(facebook_access_token):
-    graph_url = 'https://graph.facebook.com/v2.5/me'
+    graph_url = 'https://graph.facebook.com/v2.6/me'
     params = {
-        'fields': "id,email,first_name,last_name,gender",
+        'fields': "id,email,first_name,last_name,gender,friends",
         'access_token': facebook_access_token
     }
     try:
@@ -183,7 +184,7 @@ def fb_user_from_facebook_access_token(facebook_access_token):
         raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)
 
 
-def create_linked_facebook_account(user, access_token):
+def save_linked_facebook_account(user, access_token, la=None, fb_user=None):
     token_data = debug_token(access_token)
     expires_at = utcfromtimestamp(float(token_data.get('expires_at')))
     if abs((timezone.now() - expires_at).days) < 30:
@@ -193,8 +194,17 @@ def create_linked_facebook_account(user, access_token):
         expires_at = now_plus_delta(datetime.timedelta(seconds=int(expires)))
     facebook_id = token_data.get('user_id')
     scopes = token_data.get('scopes')
-    LinkedFacebookAccount.create(user=user, facebook_id=facebook_id, access_token=access_token, scopes=scopes,
-                                 expires_at=expires_at)
+    friends_data = fb_user.get('friends') if fb_user else None
+    friends_data = friends_data['data'] if friends_data else None
+    friends = map(lambda f: f['id'], friends_data) if friends_data else []
+    if la:
+        LinkedFacebookAccount.objects.filter(id=la.id).update(
+            user=user, facebook_id=facebook_id, access_token=access_token, scopes=scopes, expires_at=expires_at,
+            friends=friends)
+    else:
+        LinkedFacebookAccount.create(
+            user=user, facebook_id=facebook_id, access_token=access_token, scopes=scopes, expires_at=expires_at,
+            friends=friends)
 
 
 def update_linked_facebook_account_scopes(facebook_user_id):

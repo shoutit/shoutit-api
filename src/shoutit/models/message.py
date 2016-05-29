@@ -81,7 +81,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         image = self.icon
         last_message_summary = self.last_message.summary if self.last_message else None
 
-        if self.type == CONVERSATION_TYPE_ABOUT_SHOUT:
+        if self.type == CONVERSATION_TYPE_ABOUT_SHOUT and self.about:
             title = self.about.title
             image = self.about.thumbnail
         elif self.type == CONVERSATION_TYPE_CHAT:

@@ -11,7 +11,9 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
-from shoutit.controllers import message_controller, location_controller, notifications_controller
+from shoutit.api.v3.exceptions import RequiredBody, InvalidBody
+from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
+                                 gplus_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video
 from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
@@ -327,3 +329,59 @@ class GuestSerializer(ProfileSerializer):
             user.update_push_tokens(push_tokens_data, 'v3')
 
         return user
+
+
+class ProfileLinkSerializer(serializers.Serializer):
+    account = serializers.ChoiceField(choices=['facebook', 'gplus'])
+    facebook_access_token = serializers.CharField(required=False)
+    gplus_code = serializers.CharField(required=False)
+
+    def to_internal_value(self, data):
+        validated_data = super(ProfileLinkSerializer, self).to_internal_value(data)
+        request = self.context['request']
+        user = request.user
+        account = validated_data['account']
+        action = None
+
+        if request.method == 'PATCH':
+            action = 'linked'
+            if account == 'gplus':
+                gplus_code = validated_data.get('gplus_code')
+                if not gplus_code:
+                    raise RequiredBody('gplus_code', message="Couldn't link your G+ account",
+                                       developer_message="provide a valid `gplus_code`")
+                client = request.auth.client.name if hasattr(request.auth, 'client') else 'shoutit-test'
+                gplus_controller.link_gplus_account(user, gplus_code, client)
+
+            elif account == 'facebook':
+                facebook_access_token = validated_data.get('facebook_access_token')
+                if not facebook_access_token:
+                    raise RequiredBody('facebook_access_token', message="Couldn't link your Facebook account",
+                                       developer_message="provide a valid `facebook_access_token`")
+                facebook_controller.link_facebook_account(user, facebook_access_token)
+
+        elif request.method == 'DELETE':
+            action = 'unlinked'
+            if account == 'gplus':
+                gplus_controller.unlink_gplus_user(user)
+            elif account == 'facebook':
+                facebook_controller.unlink_facebook_user(user)
+
+        if action:
+            res = {'success': "Successfully %s your %s account" % (action, account.title())}
+        else:
+            res = {'success': "No changes were made"}
+        return res
+
+    def to_representation(self, instance):
+        return self.validated_data
+
+
+class ProfileContactsSerializer(serializers.Serializer):
+    def to_internal_value(self, data):
+        if not isinstance(data, list) or not all(map(lambda c: isinstance(c, basestring), data)):
+            raise InvalidBody('', "Body must be a list of hashed contacts")
+        return {'success': "Your contacts have been uploaded successfully"}
+
+    def to_representation(self, instance):
+        return self.validated_data
