@@ -16,7 +16,7 @@ from shoutit.controllers import email_controller, item_controller, location_cont
 from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import debug_logger, track
+from shoutit.utils import debug_logger, track, error_logger
 
 
 def delete_post(post):
@@ -250,8 +250,9 @@ def shout_index_from_shout(shout, shout_index=None):
 
 @job(settings.RQ_QUEUE)
 def publish_shout_to_facebook(shout):
-    la = shout.user.linked_facebook
+    la = getattr(shout.user, 'linked_facebook')
     if not la or 'publish_actions' not in la.scopes:
+        debug_logger.debug('No LA, skip publishing Shout %s on Facebook' % shout)
         return
     actions_url = 'https://graph.facebook.com/me/shoutitcom:shout'
     params = {
@@ -264,3 +265,6 @@ def publish_shout_to_facebook(shout):
     if id_on_facebook:
         shout.published_on['facebook'] = id_on_facebook
         shout.save(update_fields=['published_on'])
+        debug_logger.debug('Published Shout %s on Facebook' % shout)
+    else:
+        error_logger.warn('Error publishing Shout %s on Facebook' % shout, extra={'res': res})

@@ -9,8 +9,10 @@ from collections import OrderedDict
 
 from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
+from pydash import arrays
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
+from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
@@ -274,10 +276,11 @@ class MiscViewSet(viewsets.ViewSet):
         location = location_controller.from_location_index(lat, lng, ip)
         return Response(location)
 
-    @list_route(methods=['post'], suffix='Deauthorize a Facebook Installation')
+    @list_route(methods=['get', 'post'], authentication_classes=(), parser_classes=[FormParser],
+                renderer_classes=[PlainTextRenderer], suffix='Deauthorize a Facebook App Installation')
     def fb_deauth(self, request):
         """
-        Deauthorize a Facebook Installation. This removes the LinkedFacebookAccount record from Shoutit Database.
+        Deauthorize a Facebook App Installation. This removes the LinkedFacebookAccount record from Shoutit Database.
         ###NOT TO BE USED BY API CLIENTS
         ###POST
         Expects a POST body with signed_request to be parsed against Shoutit Facebook Application secret.
@@ -288,10 +291,10 @@ class MiscViewSet(viewsets.ViewSet):
             facebook_user_id = parsed_signed_request.get('user_id')
             if facebook_user_id:
                 delete_linked_facebook_account(facebook_user_id)
-        return Response()
+        return Response('OK')
 
-    @list_route(methods=['get', 'post'], renderer_classes=(PlainTextRenderer,),
-                suffix='Deauthorize a Facebook Installation')
+    @list_route(methods=['get', 'post'], authentication_classes=(), renderer_classes=[PlainTextRenderer],
+                suffix='Change the permission scopes of a LinkedFacebookAccount')
     def fb_scopes_changed(self, request):
         """
         Get notified about a Facebook user changing Shoutit App scopes. This updates the LinkedFacebookAccount record with new scopes.
@@ -305,8 +308,7 @@ class MiscViewSet(viewsets.ViewSet):
             return Response(hub_challenge)
 
         entries = request.data.get('entry', [])
-        for entry in entries:
-            facebook_user_id = entry.get('uid')
-            if facebook_user_id:
-                update_linked_facebook_account_scopes(facebook_user_id)
-        return Response("OK")
+        facebook_ids = filter(None, arrays.unique(map(lambda e: e['id'], entries)))
+        for facebook_id in facebook_ids:
+            update_linked_facebook_account_scopes(facebook_id)
+        return Response('OK')

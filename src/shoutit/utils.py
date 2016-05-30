@@ -209,13 +209,13 @@ def _track(distinct_id, event_name, properties=None):
 
 def correct_mobile(mobile, country, raise_exception=False):
     try:
-        mobile = mobile.lower()
+        mobile = mobile.replace(' ', '')
         country = country.upper()
         if country in ['KW', 'OM', 'BH', 'QA'] and not mobile.startswith('00') and mobile.startswith('0'):
             mobile = mobile[1:]
         p = phonenumbers.parse(mobile, country)
-        if phonenumbers.is_valid_number(p) and phonenumbers.number_type(
-                p) != phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE:
+        fixed_line = phonenumbers.phonenumberutil.PhoneNumberType.FIXED_LINE
+        if phonenumbers.is_valid_number(p) and phonenumbers.number_type(p) != fixed_line:
             mobile = phonenumbers.format_number(p, phonenumbers.PhoneNumberFormat.E164)
         else:
             raise ValueError()

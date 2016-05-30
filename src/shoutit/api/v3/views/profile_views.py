@@ -534,26 +534,33 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     def contacts(self, request, *arg, **kwargs):
         """
         Upload Phone book Contacts of the logged in profile
+
         ###Body
         <pre><code>
-        [
-            "encrypted contact object",
-            "encrypted contact object",
-            "encrypted contact object"
-        ]
-        </code></pre>
-
-        - The hashed contact object should when decoded look like
-
-        <pre><code>
         {
-            "first_name": "John",
-            "last_name": "Doe",
-            "name": "John Doe",
-            "mobiles": ["+491501234567", "01501234567"],
-            "emails": ["john@example.com", "superman@andromeda.com"]
+            "contacts": [
+                {
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "name": "",
+                    "mobiles": ["+491501234567", "01501234567"],
+                    "emails": ["john@example.com", "superman@andromeda.com"]
+                },
+                {
+                    "first_name": "",
+                    "last_name": "",
+                    "name": "Sam Doe",
+                    "mobiles": ["+96170364170"],
+                    "emails": []
+                }
+            ]
         }
         </code></pre>
+
+        - `first_name`, `last_name` and `name` are optional
+        - `name` value is used only when `first_name` and `last_name` are empty, null or non existing
+        - each string in `mobiles` should be either full mobile number with country code and `+` or valid mobile number from the country of the profile otherwise it will be skipped
+        - each string in `emails` should be a valid email otherwise it will be skipped
 
         ---
         omit_serializer: true
@@ -568,7 +575,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             """
         serializer = ProfileContactsSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+        return Response({'success': "Your contacts have been uploaded successfully"})
 
     @detail_route(methods=['get'], suffix='Mutual Contacts')
     def mutual_contacts(self, request, *arg, **kwargs):

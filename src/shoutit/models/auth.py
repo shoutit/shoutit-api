@@ -443,7 +443,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def mutual_friends(self):
         if not hasattr(self, 'linked_facebook'):
             return User.objects.none()
-        return User.objects.filter(linked_facebook__facebook_id__in=self.linked_facebook.friends)
+        friends = Q(linked_facebook__facebook_id__in=self.linked_facebook.friends)
+        friend = Q(linked_facebook__friends__contains=[self.linked_facebook.facebook_id])
+        return User.objects.filter(friends | friend)
 
     @property
     def mutual_contacts(self):
@@ -547,7 +549,7 @@ class LinkedFacebookAccount(UUIDModel):
     facebook_id = models.CharField(max_length=24, unique=True)
     access_token = models.CharField(max_length=512)
     expires_at = models.DateTimeField()
-    scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'])
+    scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'], blank=True)
     friends = ArrayField(models.CharField(max_length=24), default=list, blank=True)
 
     def __unicode__(self):
@@ -573,11 +575,10 @@ class ProfileContact(UUIDModel):
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     emails = ArrayField(models.EmailField(_('email address'), blank=True), default=list, blank=True)
     mobiles = ArrayField(models.CharField(_('mobile'), max_length=20, blank=True), default=list, blank=True)
-    hash = models.CharField(max_length=1000)
-
-    class Meta:
-        unique_together = ('user', 'hash')
 
     def clean(self):
         self.emails = filter(None, self.emails)
         self.mobiles = filter(None, self.mobiles)
+
+    def is_empty(self):
+        return all([not self.first_name, not self.last_name, not self.emails, not self.mobiles])
