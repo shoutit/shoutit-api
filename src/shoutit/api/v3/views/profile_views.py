@@ -534,24 +534,19 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     def contacts(self, request, *arg, **kwargs):
         """
         Upload Phone book Contacts of the logged in profile
+
         ###Body
         <pre><code>
-        [
-            "encrypted contact object",
-            "encrypted contact object",
-            "encrypted contact object"
-        ]
-        </code></pre>
-
-        - The hashed contact object should when decoded look like
-
-        <pre><code>
         {
-            "first_name": "John",
-            "last_name": "Doe",
-            "name": "John Doe",
-            "mobiles": ["+491501234567", "01501234567"],
-            "emails": ["john@example.com", "superman@andromeda.com"]
+            "contacts": [
+                {
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "name": "John Doe",
+                    "mobiles": ["+491501234567", "01501234567"],
+                    "emails": ["john@example.com", "superman@andromeda.com"]
+                }
+            ]
         }
         </code></pre>
 
@@ -568,7 +563,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
             """
         serializer = ProfileContactsSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
+        return Response({'success': "Your contacts have been uploaded successfully"})
 
     @detail_route(methods=['get'], suffix='Mutual Contacts')
     def mutual_contacts(self, request, *arg, **kwargs):
