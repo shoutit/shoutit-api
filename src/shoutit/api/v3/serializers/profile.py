@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
-from django.core.validators import URLValidator
+from django.core.validators import URLValidator, validate_email
 from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
@@ -381,7 +381,7 @@ class ProfileContactSerializer(serializers.Serializer):
     first_name = serializers.CharField(**empty_char_input)
     last_name = serializers.CharField(**empty_char_input)
     name = serializers.CharField(**empty_char_input)
-    emails = serializers.ListSerializer(child=serializers.EmailField(**empty_char_input), allow_empty=True)
+    emails = serializers.ListSerializer(child=serializers.CharField(**empty_char_input), allow_empty=True)
     mobiles = serializers.ListSerializer(child=serializers.CharField(**empty_char_input), allow_empty=True)
 
     def to_internal_value(self, data):
@@ -403,7 +403,14 @@ class ProfileContactSerializer(serializers.Serializer):
 
     def validate_emails(self, emails):
         emails = map(lambda e: e.lower(), emails)
-        emails = filter(None, emails)
+
+        def email(e):
+            try:
+                validate_email(e)
+                return e
+            except:
+                return None
+        emails = filter(None, filter(email, emails))
         return emails
 
     def validate_mobiles(self, mobiles):
