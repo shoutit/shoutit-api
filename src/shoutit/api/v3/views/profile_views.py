@@ -542,13 +542,25 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
                 {
                     "first_name": "John",
                     "last_name": "Doe",
-                    "name": "John Doe",
+                    "name": "",
                     "mobiles": ["+491501234567", "01501234567"],
                     "emails": ["john@example.com", "superman@andromeda.com"]
+                },
+                {
+                    "first_name": "",
+                    "last_name": "",
+                    "name": "Sam Doe",
+                    "mobiles": ["+96170364170"],
+                    "emails": []
                 }
             ]
         }
         </code></pre>
+
+        - `first_name`, `last_name` and `name` are optional
+        - `name` value is used only when `first_name` and `last_name` are empty, null or non existing
+        - each string in `mobiles` should be either full mobile number with country code and `+` or valid mobile number from the country of the profile otherwise it will be skipped
+        - each string in `emails` should be a valid email otherwise it will be skipped
 
         ---
         omit_serializer: true

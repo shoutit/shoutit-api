@@ -246,4 +246,3 @@ def delete_linked_facebook_account(facebook_user_id):
 
         # Send `profile_update` on Pusher
         notifications_controller.notify_user_of_profile_update(user)
-

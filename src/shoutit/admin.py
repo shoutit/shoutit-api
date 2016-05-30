@@ -163,6 +163,16 @@ class LinkedGoogleAccountAdmin(admin.ModelAdmin, UserLinkMixin):
     exclude = ('user',)
 
 
+# ProfileContact
+@admin.register(ProfileContact)
+class ProfileContactAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', '_user', 'first_name', 'last_name', 'emails', 'mobiles', 'created_at')
+    search_fields = ('user__first_name', 'user__last_name', 'user__username', 'user__email')
+    ordering = ('-created_at',)
+    readonly_fields = ('_user',)
+    exclude = ('user',)
+
+
 # Item
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):

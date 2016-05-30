@@ -575,11 +575,10 @@ class ProfileContact(UUIDModel):
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     emails = ArrayField(models.EmailField(_('email address'), blank=True), default=list, blank=True)
     mobiles = ArrayField(models.CharField(_('mobile'), max_length=20, blank=True), default=list, blank=True)
-    hash = models.CharField(max_length=1000)
-
-    class Meta:
-        unique_together = ('user', 'hash')
 
     def clean(self):
         self.emails = filter(None, self.emails)
         self.mobiles = filter(None, self.mobiles)
+
+    def is_empty(self):
+        return all([not self.first_name, not self.last_name, not self.emails, not self.mobiles])

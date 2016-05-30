@@ -14,7 +14,7 @@ from rest_framework.reverse import reverse
 from shoutit.api.v3.exceptions import RequiredBody
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
                                  gplus_controller)
-from shoutit.models import User, InactiveUser, Profile, Page, Video
+from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
 from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
 from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input, AttachedUUIDObjectMixin
@@ -381,8 +381,44 @@ class ProfileContactSerializer(serializers.Serializer):
     first_name = serializers.CharField(**empty_char_input)
     last_name = serializers.CharField(**empty_char_input)
     name = serializers.CharField(**empty_char_input)
-    mobiles = serializers.ListSerializer(child=serializers.CharField(**empty_char_input), allow_empty=True)
     emails = serializers.ListSerializer(child=serializers.EmailField(**empty_char_input), allow_empty=True)
+    mobiles = serializers.ListSerializer(child=serializers.CharField(**empty_char_input), allow_empty=True)
+
+    def to_internal_value(self, data):
+        ret = super(ProfileContactSerializer, self).to_internal_value(data)
+        first_name = ret.get('first_name', '')
+        last_name = ret.get('last_name', '')
+
+        if not first_name or not last_name:
+            name = ret.get('name', '')
+            names = name.split()
+            if len(names) >= 2:
+                first_name = " ".join(names[0:-1])
+                last_name = names[-1]
+            elif len(names) == 1:
+                first_name = names[0]
+        ret['first_name'] = first_name
+        ret['last_name'] = last_name
+        return ret
+
+    def validate_emails(self, emails):
+        emails = map(lambda e: e.lower(), emails)
+        emails = filter(None, emails)
+        return emails
+
+    def validate_mobiles(self, mobiles):
+        request = self.root.context['request']
+        user = request.user
+        country = user.ap.country
+
+        def mobile(m):
+            if m.startswith('+'):
+                return m
+            correct_mobile(mobile=m, country=country)
+
+        mobiles = map(mobile, mobiles)
+        mobiles = filter(None, mobiles)
+        return mobiles
 
 
 class ProfileContactsSerializer(serializers.Serializer):
@@ -390,4 +426,19 @@ class ProfileContactsSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         ret = super(ProfileContactsSerializer, self).to_internal_value(data)
+        request = self.context['request']
+        user = request.user
+        contacts = ret.get('contacts')
+
+        def profile_contact(c):
+            first_name = c['first_name']
+            last_name = c['last_name']
+            emails = c['emails']
+            mobiles = c['mobiles']
+            return ProfileContact(user=user, first_name=first_name, emails=emails, last_name=last_name, mobiles=mobiles)
+
+        user.contacts.all().delete()
+        profile_contacts = map(profile_contact, contacts)
+        profile_contacts = filter(lambda pc: not pc.is_empty(), profile_contacts)
+        ProfileContact.objects.bulk_create(profile_contacts)
         return ret
