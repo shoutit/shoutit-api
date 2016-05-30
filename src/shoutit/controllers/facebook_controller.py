@@ -17,7 +17,7 @@ from rest_framework.exceptions import ValidationError
 
 from common.utils import utcfromtimestamp
 from shoutit.api.v3.exceptions import ShoutitBadRequest
-from shoutit.controllers import location_controller, user_controller
+from shoutit.controllers import location_controller, user_controller, notifications_controller
 from shoutit.models import LinkedFacebookAccount
 from shoutit.utils import debug_logger, now_plus_delta, error_logger
 
@@ -142,7 +142,7 @@ def link_facebook_account(user, facebook_access_token):
         pass
 
     # unlink previous facebook account
-    unlink_facebook_user(user, False)
+    unlink_facebook_user(user, strict=False, notify=False)
 
     # link
     # Todo: get info, pic, etc about user
@@ -154,10 +154,14 @@ def link_facebook_account(user, facebook_access_token):
 
     # activate the user
     if not user.is_activated:
+        user.notify = False
         user.activate()
 
+    # Send `profile_update` on Pusher
+    notifications_controller.notify_user_of_profile_update(user)
 
-def unlink_facebook_user(user, strict=True):
+
+def unlink_facebook_user(user, strict=True, notify=True):
     """
     Deleted the user's LinkedFacebookAccount
     """
@@ -167,6 +171,10 @@ def unlink_facebook_user(user, strict=True):
     elif strict:
         debug_logger.warning("User: %s, tried to unlink non-existing facebook account." % user)
         raise ShoutitBadRequest(FB_LINK_ERROR_NO_LINK)
+
+    if notify:
+        # Send `profile_update` on Pusher
+        notifications_controller.notify_user_of_profile_update(user)
 
 
 def fb_user_from_facebook_access_token(facebook_access_token):
@@ -222,9 +230,20 @@ def update_linked_facebook_account_scopes(facebook_user_id):
             la.delete()
             debug_logger.error("LinkedFacebookAccount for facebook id: %s is expired. Deleting it." % facebook_user_id)
 
+        # Send `profile_update` on Pusher
+        notifications_controller.notify_user_of_profile_update(la.user)
+
 
 def delete_linked_facebook_account(facebook_user_id):
     try:
-        LinkedFacebookAccount.objects.filter(facebook_id=facebook_user_id).delete()
-    except IntegrityError as e:
-        debug_logger.warning("LinkedFacebookAccount deletion error: %s." % str(e), exc_info=True)
+        la = LinkedFacebookAccount.objects.get(facebook_id=facebook_user_id)
+    except LinkedFacebookAccount.DoesNotExist:
+        debug_logger.error("LinkedFacebookAccount for facebook id: %s does not exist" % facebook_user_id)
+    else:
+        # Delete LinkedFacebookAccount
+        user = la.user
+        la.delete()
+
+        # Send `profile_update` on Pusher
+        notifications_controller.notify_user_of_profile_update(user)
+

@@ -547,7 +547,7 @@ class LinkedFacebookAccount(UUIDModel):
     facebook_id = models.CharField(max_length=24, unique=True)
     access_token = models.CharField(max_length=512)
     expires_at = models.DateTimeField()
-    scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'])
+    scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'], blank=True)
     friends = ArrayField(models.CharField(max_length=24), default=list, blank=True)
 
     def __unicode__(self):
