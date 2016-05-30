@@ -443,7 +443,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def mutual_friends(self):
         if not hasattr(self, 'linked_facebook'):
             return User.objects.none()
-        return User.objects.filter(linked_facebook__facebook_id__in=self.linked_facebook.friends)
+        friends = Q(linked_facebook__facebook_id__in=self.linked_facebook.friends)
+        friend = Q(linked_facebook__friends__contains=[self.linked_facebook.facebook_id])
+        return User.objects.filter(friends | friend)
 
     @property
     def mutual_contacts(self):
