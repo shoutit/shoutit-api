@@ -265,6 +265,6 @@ def publish_shout_to_facebook(shout):
     if id_on_facebook:
         shout.published_on['facebook'] = id_on_facebook
         shout.save(update_fields=['published_on'])
-        debug_logger.debug('Published Shout %s on Facebook' % shout)
+        debug_logger.debug('Published shout %s on Facebook' % shout)
     else:
-        error_logger.warn('Error publishing Shout %s on Facebook' % shout, extra={'res': res})
+        error_logger.warn('Error publishing shout on Facebook' % shout, extra={'res': res, 'shout': shout})
