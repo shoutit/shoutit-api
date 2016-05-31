@@ -390,7 +390,8 @@ def serialize_attached_object(attached_object, version, user=None):
     if isinstance(attached_object, (dict, list)):
         return attached_object
     if isinstance(attached_object, User):
-        if getattr(attached_object, 'detailed', False):
+        # Use ProfileDetailSerializer if the user is the one getting his own profile
+        if user and user.id == request.user.id:
             serializer = serializers.ProfileDetailSerializer
         else:
             serializer = serializers.ProfileSerializer

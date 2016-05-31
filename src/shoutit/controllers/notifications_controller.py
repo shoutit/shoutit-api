@@ -89,7 +89,6 @@ def notify_user_of_message(user, message):
 
 
 def notify_user_of_profile_update(user):
-    user.detailed = True  # Serialize using ProfileDetailSerializer
     attached_object = deepcopy(user)  # Avoid pickling issues
     notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=attached_object,
                       versions=['v3'])
