@@ -253,7 +253,7 @@ def shout_index_from_shout(shout, shout_index=None):
 
 @job(settings.RQ_QUEUE)
 def publish_shout_to_facebook(shout):
-    la = getattr(shout.user, 'linked_facebook')
+    la = getattr(shout.user, 'linked_facebook', None)
     if not la:
         debug_logger.debug('No linked_facebook, skip publishing Shout %s on Facebook' % shout)
         return
