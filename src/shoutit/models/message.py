@@ -327,7 +327,7 @@ class Message(Action):
             pusher_controller.trigger_stats_update(user, 'v3')
 
     def mark_as_unread(self, user):
-        user.read_messages_set(message=self).delete()
+        user.read_messages_set.filter(message=self).delete()
 
     @property
     def track_properties(self):

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-
 from mock import patch
 from django_dynamic_fixture import G, N
 from push_notifications import apns
@@ -51,7 +49,7 @@ class NotificationsTestCase(BaseTestCase):
         self.client.login(username=self.user.username, password='123')
         resp = self.client.get(self.reverse(self.url_name_list))
         self.assert200(resp)
-        self.assert_ids_equal(json.loads(resp.content)['results'],
+        self.assert_ids_equal(self.decode_json(resp)['results'],
                               self.user_notifications)
 
     # reset
