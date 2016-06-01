@@ -397,8 +397,8 @@ class ProfileContactSerializer(serializers.Serializer):
                 last_name = names[-1]
             elif len(names) == 1:
                 first_name = names[0]
-        ret['first_name'] = first_name
-        ret['last_name'] = last_name
+        ret['first_name'] = first_name[:30]
+        ret['last_name'] = last_name[:30]
         return ret
 
     def validate_emails(self, emails):
