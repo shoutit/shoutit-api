@@ -205,7 +205,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             shout = shout_controller.edit_shout(
                 shout, title=title, text=text, price=price, currency=currency, available_count=available_count,
                 is_sold=is_sold, category=category, filters=filters, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user, mobile=mobile
+                page_admin_user=page_admin_user, mobile=mobile, publish_to_facebook=publish_to_facebook
             )
         return shout
 
