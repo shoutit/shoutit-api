@@ -277,9 +277,6 @@ class ProfileDetailSerializer(ProfileSerializer):
                 video = Video.create(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
                                      provider=video_data['provider'], id_on_provider=video_data['id_on_provider'],
                                      duration=video_data['duration'])
-                # # delete existing video first
-                # if ap.video:
-                #     ap.video.delete()
                 ap.video = video
                 ap_update_fields.append('video')
 

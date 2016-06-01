@@ -617,7 +617,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                 valid_images.append(image)
                 continue
             try:
-                s3_image = upload_image_to_s3(bucket='shoutit-shout-image-original', url=image,
+                s3_image = upload_image_to_s3(bucket_name='shoutit-shout-image-original', url=image,
                                               public_url='https://shout-image.static.shoutit.com', raise_exception=True)
                 valid_images.append(s3_image)
             except Exception as e:

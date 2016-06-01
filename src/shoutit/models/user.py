@@ -32,6 +32,7 @@ class Profile(AbstractProfile):
         return unicode(self.user)
 
     def update(self, gender=None, birthday=None, bio=None, mobile=None):
+        # Todo (mo): UUIDModel already has update method, use it maybe?
         update_fields = []
         if gender:
             self.gender = gender

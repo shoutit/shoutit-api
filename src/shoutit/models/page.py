@@ -52,7 +52,8 @@ class Page(AbstractProfile):
     def __unicode__(self):
         return unicode(self.user)
 
-    def update(self, name=None, ):
+    def update(self, name=None):
+        # Todo (mo): UUIDModel already has update method, use it maybe?
         update_fields = []
         if name is not None:
             self.name = name
