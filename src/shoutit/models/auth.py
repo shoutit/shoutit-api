@@ -593,3 +593,6 @@ class ProfileContact(UUIDModel):
 
     def is_empty(self):
         return all([not self.first_name, not self.last_name, not self.emails, not self.mobiles])
+
+    def is_reached(self):
+        return any([self.emails, self.mobiles])

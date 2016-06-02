@@ -449,6 +449,6 @@ class ProfileContactsSerializer(serializers.Serializer):
 
         user.contacts.all().delete()
         profile_contacts = map(profile_contact, contacts)
-        profile_contacts = filter(lambda pc: not pc.is_empty(), profile_contacts)
+        profile_contacts = filter(lambda pc: pc.is_reached(), profile_contacts)
         ProfileContact.objects.bulk_create(profile_contacts)
         return ret
