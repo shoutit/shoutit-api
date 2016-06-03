@@ -138,7 +138,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                 valid_images.append(image)
                 continue
             try:
-                s3_image = upload_image_to_s3(bucket='shoutit-shout-image-original', url=image,
+                s3_image = upload_image_to_s3(bucket_name='shoutit-shout-image-original', url=image,
                                               public_url='https://shout-image.static.shoutit.com', raise_exception=True)
                 valid_images.append(s3_image)
             except Exception as e:
@@ -205,7 +205,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             shout = shout_controller.edit_shout(
                 shout, title=title, text=text, price=price, currency=currency, available_count=available_count,
                 is_sold=is_sold, category=category, filters=filters, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user, mobile=mobile
+                page_admin_user=page_admin_user, mobile=mobile, publish_to_facebook=publish_to_facebook
             )
         return shout
 

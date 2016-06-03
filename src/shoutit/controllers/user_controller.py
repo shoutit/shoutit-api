@@ -1,15 +1,13 @@
 from __future__ import unicode_literals
 
 from django.db import IntegrityError
-import requests
-
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
 from shoutit.api.v3.exceptions import ShoutitBadRequest
-from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
-from shoutit.utils import generate_username, debug_logger, error_logger, set_profile_image
 from shoutit.controllers import location_controller
+from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
+from shoutit.utils import generate_username, debug_logger, set_profile_media
 
 
 def create_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
@@ -122,55 +120,47 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     except IntegrityError as e:
         raise ShoutitBadRequest(message="Could not access your G+ account, try again later",
                                 developer_message=str(e))
-
-    set_profile_image(user.profile, gplus_user['image']['url'].split('?')[0])
+    image_url = gplus_user['image']['url'].split('?')[0]
+    set_profile_media(user.profile, 'image', image_url)
     return user
 
 
-def auth_with_facebook(fb_user, access_token, initial_user=None, is_test=False):
+def auth_with_facebook(fb_user, initial_user=None, is_test=False):
     email = fb_user.get('email').lower()
     first_name = fb_user.get('first_name')
     last_name = fb_user.get('last_name')
     facebook_id = fb_user.get('id')
     gender = fb_user.get('gender')
-    username = initial_user.get('username')
+    username = initial_user and initial_user.get('username')
+    location = initial_user and initial_user.get('location')
     profile_fields = {}
-    location = {}
-    if initial_user:
-        if initial_user.get('location'):
-            location = initial_user.get('location')
-            location_controller.add_predefined_city(location)
-        elif initial_user.get('ip'):
-            location = location_controller.from_ip(initial_user.get('ip'))
-    profile_fields.update(location)
-    profile_fields.update({'gender': gender})
+    update_fields = []
+    if location:
+        location_controller.add_predefined_city(location)  # Todo (mo): are we still using this?
+        profile_fields.update(location)
+        update_fields += location.keys()
+    if gender:
+        profile_fields.update({'gender': gender})
+        update_fields.append('gender')
 
     try:
-        user = User.objects.get(email=email)
-        debug_logger.debug('Found user: {} with same email of fb_user: {}'.format(user, facebook_id))
+        user = User.objects.filter(email=email).select_related('profile').first()
+        if not user:
+            raise User.DoesNotExist()
+        profile = user.profile
+        debug_logger.debug('Found user: %s with same email of fb_user: %s' % (user, facebook_id))
         if location:
-            location_controller.update_profile_location(user.profile, location, add_pc=False)
+            location_controller.update_object_location(profile, location, save=False)
+        if gender:
+            profile.gender = gender
+        profile.save(update_fields=update_fields)
+
     except User.DoesNotExist:
         user = create_user(email=email, first_name=first_name, last_name=last_name, username=username,
                            is_activated=True, profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
         user.activate()
-
-    if not user.profile.gender and gender:
-        user.profile.update(gender=gender)
-
-    # todo: move the entire logic to rq
-    std_male = '10354686_10150004552801856_220367501106153455_n.jpg'
-    std_female = '1379841_10150004552801901_469209496895221757_n.jpg'
-    image_url = 'https://graph.facebook.com/me/picture/?type=large&access_token=' + access_token
-    try:
-        response = requests.get(image_url, timeout=10)
-        image_data = response.content
-        if not (std_male in response.url or std_female in response.url or '.gif' in response.url):
-            set_profile_image(user.profile, image_data=image_data)
-    except requests.RequestException as e:
-        error_logger.warn(str(e), exc_info=True)
 
     return user
 

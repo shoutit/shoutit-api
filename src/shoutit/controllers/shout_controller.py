@@ -122,7 +122,8 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
 
 
 def edit_shout(shout, title=None, text=None, price=None, currency=None, category=None, filters=None, images=None,
-               videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None, mobile=None):
+               videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None, mobile=None,
+               publish_to_facebook=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
                               videos=videos, available_count=available_count, is_sold=is_sold)
     # Can be unset
@@ -143,6 +144,7 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
     if page_admin_user is not None:
         shout.page_admin_user = page_admin_user
 
+    shout.publish_to_facebook = publish_to_facebook
     shout.save()
     return shout
 
@@ -178,12 +180,13 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
     # Create / Update ShoutIndex
     save_shout_index(instance, created)
     if created:
-        # Publish to Facebook
-        if getattr(instance, 'publish_to_facebook', False):
-            publish_shout_to_facebook.delay(instance)
         # Track
         if not instance.is_sss:
             track(instance.user.pk, 'new_shout', instance.track_properties)
+
+    # Publish to Facebook
+    if getattr(instance, 'publish_to_facebook', False) and 'facebook' not in instance.published_on:
+        publish_shout_to_facebook.delay(instance)
 
 
 def save_shout_index(shout=None, created=False, delay=True):
@@ -250,9 +253,12 @@ def shout_index_from_shout(shout, shout_index=None):
 
 @job(settings.RQ_QUEUE)
 def publish_shout_to_facebook(shout):
-    la = getattr(shout.user, 'linked_facebook')
-    if not la or 'publish_actions' not in la.scopes:
-        debug_logger.debug('No LA, skip publishing Shout %s on Facebook' % shout)
+    la = getattr(shout.user, 'linked_facebook', None)
+    if not la:
+        debug_logger.debug('No linked_facebook, skip publishing Shout %s on Facebook' % shout)
+        return
+    if 'publish_actions' not in la.scopes:
+        debug_logger.debug('No publish_actions in scopes, skip publishing Shout %s on Facebook' % shout)
         return
     actions_url = 'https://graph.facebook.com/me/shoutitcom:shout'
     params = {
@@ -265,6 +271,6 @@ def publish_shout_to_facebook(shout):
     if id_on_facebook:
         shout.published_on['facebook'] = id_on_facebook
         shout.save(update_fields=['published_on'])
-        debug_logger.debug('Published Shout %s on Facebook' % shout)
+        debug_logger.debug('Published shout %s on Facebook' % shout)
     else:
-        error_logger.warn('Error publishing Shout %s on Facebook' % shout, extra={'res': res})
+        error_logger.warn('Error publishing shout on Facebook', extra={'res': res, 'shout': shout})

@@ -109,37 +109,24 @@ def get_google_smtp_connection():
     return get_connection(**settings.EMAIL_BACKENDS['google'])
 
 
-def set_profile_image(profile, image_url=None, image_data=None):
-    if image_data:
-        image_data = ImageData(image_data)
-    return _set_profile_image.delay(profile, image_url, image_data)
+def set_profile_media(profile, attr, url=None, data=None):
+    if data:
+        data = ImageData(data)
+    return _set_profile_media.delay(profile, attr, url, data)
 
 
 @job(settings.RQ_QUEUE)
-def _set_profile_image(profile, image_url=None, image_data=None):
-    assert image_url or image_data, 'Must pass image_url or image_data'
-    # todo: better exception handling
-    try:
-        if not image_data:
-            response = requests.get(image_url, timeout=10)
-            image_data = response.content
-
-        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = s3.get_bucket('shoutit-user-image-original')
-        filename = profile.user.pk + '.jpg'
-        key = bucket.new_key(filename)
-        key.set_metadata('Content-Type', 'image/jpg')
-        key.set_contents_from_string(image_data)
-        s3_image_url = 'https://user-image.static.shoutit.com/%s' % filename
-
-        profile.image = s3_image_url
-        profile.save()
-
-    except Exception:
-        error_logger.warn("Setting user profile image failed", exc_info=True)
+def _set_profile_media(profile, attr, url=None, data=None):
+    bucket_name = 'shoutit-user-image-original'
+    public_url = 'https://user-image.static.shoutit.com'
+    file_name = '%s_%s.jpg' % (profile.pk, attr)
+    s3_url = upload_image_to_s3(bucket_name, public_url, url=url, data=data, filename=file_name)
+    if s3_url:
+        setattr(profile, attr, s3_url)
+        profile.save(update_fields=[attr])
 
 
-def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, raise_exception=False):
+def upload_image_to_s3(bucket_name, public_url, url=None, data=None, filename=None, raise_exception=False):
     assert url or data, 'Must pass url or data'
     source = url if url else str(ImageData(data))
     debug_logger.debug("Uploading image to S3 from %s" % source)
@@ -153,7 +140,7 @@ def upload_image_to_s3(bucket, public_url, url=None, data=None, filename=None, r
         Image.open(StringIO(data))
         # Connect to S3
         s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = s3.get_bucket(bucket)
+        bucket = s3.get_bucket(bucket_name)
         key = bucket.new_key(filename)
         key.set_metadata('Content-Type', 'image/jpg')
         # Upload
@@ -390,7 +377,8 @@ def serialize_attached_object(attached_object, version, user=None):
     if isinstance(attached_object, (dict, list)):
         return attached_object
     if isinstance(attached_object, User):
-        if getattr(attached_object, 'detailed', False):
+        # Use ProfileDetailSerializer if the user is the one getting his own profile
+        if user and user.id == request.user.id:
             serializer = serializers.ProfileDetailSerializer
         else:
             serializer = serializers.ProfileSerializer

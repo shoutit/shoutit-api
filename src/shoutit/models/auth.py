@@ -11,7 +11,7 @@ from django.core import validators
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone, six
 from django.utils.http import urlquote
@@ -557,7 +557,18 @@ class LinkedFacebookAccount(UUIDModel):
 
     @property
     def expires_at_unix(self):
-        return date_unix(self.created_at)
+        return date_unix(self.expires_at)
+
+
+@receiver(post_save, sender=LinkedFacebookAccount)
+def linked_facebook_account_post_save(sender, instance, created, **kwargs):
+    action = 'Created' if created else 'Updated'
+    debug_logger.debug('%s LinkedFacebookAccount for %s' % (action, instance.user))
+
+
+@receiver(post_delete, sender=LinkedFacebookAccount)
+def linked_facebook_account_post_delete(sender, instance, **kwargs):
+    debug_logger.debug('Deleted LinkedFacebookAccount for %s' % instance.user)
 
 
 class LinkedGoogleAccount(UUIDModel):
@@ -582,3 +593,6 @@ class ProfileContact(UUIDModel):
 
     def is_empty(self):
         return all([not self.first_name, not self.last_name, not self.emails, not self.mobiles])
+
+    def is_reached(self):
+        return any([self.emails, self.mobiles])

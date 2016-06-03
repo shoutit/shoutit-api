@@ -277,9 +277,6 @@ class ProfileDetailSerializer(ProfileSerializer):
                 video = Video.create(url=video_data['url'], thumbnail_url=video_data['thumbnail_url'],
                                      provider=video_data['provider'], id_on_provider=video_data['id_on_provider'],
                                      duration=video_data['duration'])
-                # # delete existing video first
-                # if ap.video:
-                #     ap.video.delete()
                 ap.video = video
                 ap_update_fields.append('video')
 
@@ -397,20 +394,21 @@ class ProfileContactSerializer(serializers.Serializer):
                 last_name = names[-1]
             elif len(names) == 1:
                 first_name = names[0]
-        ret['first_name'] = first_name
-        ret['last_name'] = last_name
+        ret['first_name'] = first_name[:30]
+        ret['last_name'] = last_name[:30]
         return ret
 
     def validate_emails(self, emails):
-        emails = map(lambda e: e.lower(), emails)
-
         def email(e):
             try:
+                e = e.lower().replace(' ', '')
                 validate_email(e)
                 return e
             except:
                 return None
-        emails = filter(None, filter(email, emails))
+
+        emails = map(email, emails)
+        emails = filter(None, emails)
         return emails
 
     def validate_mobiles(self, mobiles):
@@ -419,9 +417,14 @@ class ProfileContactSerializer(serializers.Serializer):
         country = user.ap.country
 
         def mobile(m):
-            if m.startswith('+'):
-                return m
-            correct_mobile(mobile=m, country=country)
+            try:
+                m = "".join(i for i in m if ord(i) < 128)
+                m = m.replace(' ', '')
+                if m.startswith('+'):
+                    return m
+                return correct_mobile(mobile=m, country=country)
+            except:
+                return None
 
         mobiles = map(mobile, mobiles)
         mobiles = filter(None, mobiles)
@@ -446,6 +449,6 @@ class ProfileContactsSerializer(serializers.Serializer):
 
         user.contacts.all().delete()
         profile_contacts = map(profile_contact, contacts)
-        profile_contacts = filter(lambda pc: not pc.is_empty(), profile_contacts)
+        profile_contacts = filter(lambda pc: pc.is_reached(), profile_contacts)
         ProfileContact.objects.bulk_create(profile_contacts)
         return ret

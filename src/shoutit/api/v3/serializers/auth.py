@@ -27,8 +27,7 @@ class FacebookAuthSerializer(serializers.Serializer):
         ret = super(FacebookAuthSerializer, self).to_internal_value(data)
         request = self.context.get('request')
         facebook_access_token = ret.get('facebook_access_token')
-        initial_profile = ret.get('profile', {}) or ret.get('user', {})
-        initial_profile['ip'] = get_real_ip(request)
+        initial_profile = ret.get('profile') or ret.get('user')
         user = facebook_controller.user_from_facebook_auth_response(facebook_access_token, initial_profile, request.is_test)
         self.instance = user
         return ret
@@ -43,7 +42,7 @@ class GplusAuthSerializer(serializers.Serializer):
         ret = super(GplusAuthSerializer, self).to_internal_value(data)
         request = self.context.get('request')
         gplus_code = ret.get('gplus_code')
-        initial_profile = ret.get('profile', {}) or ret.get('user', {})
+        initial_profile = ret.get('profile', {}) or ret.get('user', {})  # Todo (mo) apply Facebook logic for initialuser
         initial_profile['ip'] = get_real_ip(request)
         user = gplus_controller.user_from_gplus_code(gplus_code, initial_profile, request.client, request.is_test)
         self.instance = user

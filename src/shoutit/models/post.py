@@ -244,6 +244,7 @@ class InactiveShout(object):
             "thumbnail": "",
             "video_url": "",
             "user": InactiveUser().to_dict,
+            "profile": InactiveUser().to_dict,
             "date_published": 0,
             "published_at": 0,
             "is_expired": True,
