@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+import responses
 from mock import patch
 from django_dynamic_fixture import G
 
 from shoutit.models import (
-    Message, Conversation, Notification, MessageRead, Profile)
+    Message, Conversation, Notification, MessageRead, Profile, GoogleLocation)
 from common.constants import (
     CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_PUBLIC_CHAT,
-    NOTIFICATION_TYPE_READ_BY, NOTIFICATION_TYPE_STATS_UPDATE)
+    NOTIFICATION_TYPE_READ_BY, NOTIFICATION_TYPE_STATS_UPDATE,
+    DEFAULT_LOCATION)
 from tests.base import BaseTestCase, mocked_pusher
 
 
@@ -157,9 +159,10 @@ class PublicChatsTestCase(BaseTestCase):
         """Can't create non-public conversation"""
         self.client.login(username=self.user1.username, password='123')
         resp = self.client.post(
-            self.reverse(self.url_name),
-            {'subject': 'mychat', 'icon': '',
-            'type': CONVERSATION_TYPE_CHAT.text})
+            self.reverse(self.url_name), {
+                'subject': 'mychat', 'icon': '',
+                'type': CONVERSATION_TYPE_CHAT.text
+            })
         self.assert400(resp)
 
     def test_public_chat_created(self):
@@ -175,13 +178,120 @@ class PublicChatsTestCase(BaseTestCase):
             conversation.location['country'],
             Profile.objects.get(user=self.user1).location['country'])
 
-    def test_public_chat_created_another_country(self):
-        """Public chat is created with user's country (US)"""
-        # pass New York coordinates
+    @responses.activate
+    def test_public_chat_created_another_country_taken_from_google(self):
+        """Public chat country is taken from googleapis"""
+        self.delete_elasticsearch_index(index='*')
+        # New York coordinates from googleapis
+        self.add_googleapis_geocode_response('us_new_york.json')
         conversation = self._send_public_chat_create_request(
             self.user1,
             location={'latitude': 40.7141667, 'longitude': -74.0063889})
         self.assertEqual(conversation.location['country'], 'US')
+
+    @responses.activate
+    def test_public_chat_created_another_country_taken_from_es(self):
+        """Public chat country is taken from elasticsearch"""
+        self.delete_elasticsearch_index(index='*')
+
+        # New York coordinates from elasticsearch
+        new_york_location = {
+            'address': '267 Canyon of Heroes, New York, NY 10007, USA',
+            'city': 'New York',
+            'country': 'US',
+            'latitude': 40.714057,
+            'longitude': -74.006625,
+            'postal_code': '10007',
+            'state': 'New York'
+        }
+        GoogleLocation.create(geocode_response={'status': 'OK'},
+                              **new_york_location)
+        self.refresh_elasticsearch_index(index='*')
+        # googleapis returns bad response
+        self.add_googleapis_geocode_response('request_denied.json')
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 40.7141667, 'longitude': -74.0063889})
+        self.assertEqual(conversation.location['country'], 'US')
+
+    @responses.activate
+    def test_public_chat_created_another_country_google_failed(self):
+        """Default country is used, since can't find country from any source"""
+        self.delete_elasticsearch_index(index='*')
+        # googleapis returns bad response
+        self.add_googleapis_geocode_response('request_denied.json')
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 40.7141667, 'longitude': -74.0063889})
+        self.assertEqual(conversation.location['country'],
+                         DEFAULT_LOCATION['country'])
+
+    @responses.activate
+    def test_public_chat_created_country_from_ip(self):
+        """Public chat country is taken from ip"""
+        self.delete_elasticsearch_index(index='*')
+        # googleapis returns bad response
+        self.add_googleapis_geocode_response('request_denied.json')
+        # request with China ip
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 0, 'longitude': 0},
+            headers={'REMOTE_ADDR': self.IPS['CHINA']})
+        self.assertEqual(conversation.location['country'], 'CN')
+
+    @responses.activate
+    def test_public_chat_created_default_country_empty_ip(self):
+        """Default country is used, since no location data is available"""
+        self.delete_elasticsearch_index(index='*')
+        # New York coordinates from googleapis
+        self.add_googleapis_geocode_response('us_new_york.json')
+        # request with China ip
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 0, 'longitude': 0},
+            headers={'REMOTE_ADDR': ''})
+        self.assertEqual(conversation.location['country'],
+                         DEFAULT_LOCATION['country'])
+
+    @responses.activate
+    def test_public_chat_created_country_from_ip_elasticsearch_error(self):
+        """Country is taken from ip, when elasticsearch fails"""
+        # don't create indexes in elasticsearch (to raise elasticsearch error)
+        self.delete_elasticsearch_index(index='*', reinit=False)
+        # googleapis returns bad response
+        self.add_googleapis_geocode_response('request_denied.json')
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 1, 'longitude': 1},
+            headers={'REMOTE_ADDR': self.IPS['USA']})
+        self.assertEqual(conversation.location['country'], 'US')
+
+    @responses.activate
+    def test_public_chat_created_default_country_elasticsearch_error(self):
+        """Default country is used, when elasticsearch fails and no ip"""
+        # don't create indexes in elasticsearch (to raise elasticsearch error)
+        self.delete_elasticsearch_index(index='*', reinit=False)
+        # googleapis returns bad response
+        self.add_googleapis_geocode_response('request_denied.json')
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 1, 'longitude': 1},
+            headers={'REMOTE_ADDR': ''})
+        self.assertEqual(conversation.location['country'],
+                         DEFAULT_LOCATION['country'])
+
+    @responses.activate
+    def test_public_chat_created_country_ip_no_ll_elasticsearch_error(self):
+        """Country is taken from ip, when elasticsearch fails and no lat lng"""
+        # don't create indexes in elasticsearch (to raise elasticsearch error)
+        self.delete_elasticsearch_index(index='*', reinit=False)
+        # googleapis returns bad response
+        self.add_googleapis_geocode_response('request_denied.json')
+        conversation = self._send_public_chat_create_request(
+            self.user1,
+            location={'latitude': 0, 'longitude': 0},
+            headers={'REMOTE_ADDR': self.IPS['CHINA']})
+        self.assertEqual(conversation.location['country'], 'CN')
 
     def test_public_chat_created_members(self):
         """Creator of public chat is chat member"""
@@ -194,11 +304,14 @@ class PublicChatsTestCase(BaseTestCase):
         self.assertTrue(conversation.last_message.pk)
 
     def _send_public_chat_create_request(self, user, subject='mychat',
-                                         icon='', **kwargs):
-        self.client.login(username=user.username, password='123')
+                                         icon='', headers=None, **kwargs):
+        if headers is None:
+            headers = {}
+        self.client.login(username=user.username, password='123', **headers)
         req_data = {'subject': subject, 'icon': icon}
         req_data.update(kwargs)
-        resp = self.client.post(self.reverse(self.url_name), req_data)
+        resp = self.client.post(self.reverse(self.url_name), req_data,
+                                **headers)
         self.assert201(resp)
         resp_data = self.decode_json(resp)
         return Conversation.objects.get(pk=resp_data['id'])
