@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import json
 from datetime import timedelta
 
@@ -9,24 +10,35 @@ from django_dynamic_fixture import N
 from django.utils import timezone
 from mock import MagicMock
 from push_notifications import apns
+import responses
 
-from shoutit_pusher import utils
+from shoutit_pusher import utils as pusher_utils
+from shoutit import ES, utils as shoutit_utils
+from shoutit.models.misc import LocationIndex
+from shoutit.models.post import ShoutIndex
 
 
 # mock pusher
 mocked_pusher = MagicMock()
 mocked_pusher.authenticate = MagicMock(return_value={'pusher': 'success'})
 mocked_pusher.validate_webhook = MagicMock()
-unmocked_pusher, utils.pusher = utils.pusher, mocked_pusher
+unmocked_pusher, pusher_utils.pusher = pusher_utils.pusher, mocked_pusher
 
 # mock push
 apns.apns_send_message = mocked_apns_send_message = MagicMock()
 apns.apns_send_bulk_message = mocked_apns_send_bulk_message = MagicMock()
 apns.apns_fetch_inactive_ids = mocked_apns_fetch_inactive_ids = MagicMock()
 
+# mock Mixpanel
+shoutit_utils.shoutit_mp = MagicMock()
+
 
 class BaseTestCase(APITestCase):
     url_namespace = 'v3'
+    IPS = {
+        'CHINA': '14.131.255.15',
+        'USA': '72.229.28.185',  # New York
+    }
 
     def assert200(self, response):
         self.assertEqual(response.status_code, 200)
@@ -37,6 +49,9 @@ class BaseTestCase(APITestCase):
     def assert202(self, response):
         self.assertEqual(response.status_code, 202)
 
+    def assert204(self, response):
+        self.assertEqual(response.status_code, 204)
+
     def assert400(self, response):
         self.assertEqual(response.status_code, 400)
 
@@ -45,6 +60,9 @@ class BaseTestCase(APITestCase):
 
     def assert404(self, response):
         self.assertEqual(response.status_code, 404)
+
+    def assert403(self, response):
+        self.assertEqual(response.status_code, 403)
 
     def reverse(cls, url_name, *args, **kwargs):
         return reverse(cls.url_namespace + ':' + url_name, *args, **kwargs)
@@ -67,9 +85,10 @@ class BaseTestCase(APITestCase):
 
     def assert_pusher_event(self, mocked_trigger, event_name,
                             channel_name=None,
-                            attached_object_partial_dict=None):
+                            attached_object_partial_dict=None,
+                            call_count=0):
         self.assertTrue(mocked_trigger.called)
-        args, _ = self.get_mock_call_args_kwargs(mocked_trigger)
+        args, _ = self.get_mock_call_args_kwargs(mocked_trigger, call_count)
         self.assertEqual(args[1], event_name, "event_name")
         if channel_name is not None:
             self.assertEqual(args[0], channel_name, "channel_name")
@@ -84,6 +103,33 @@ class BaseTestCase(APITestCase):
     def get_mock_call_args_kwargs(self, mocked_object, call_count=0):
         return (mocked_object.call_args_list[call_count][0],
                 mocked_object.call_args_list[call_count][1])
+
+    @classmethod
+    def delete_elasticsearch_index(cls, index, reinit=True, refresh=True,
+                                   **kwargs):
+        ES.indices.delete(index=index, **kwargs)
+        if reinit:
+            LocationIndex.init()
+            ShoutIndex.init()
+        if refresh:
+            cls.refresh_elasticsearch_index(index=index, **kwargs)
+
+    @classmethod
+    def refresh_elasticsearch_index(cls, index, **kwargs):
+        ES.indices.refresh(index=index, **kwargs)
+
+    @classmethod
+    def add_googleapis_geocode_response(cls, json_file_name, status=200,
+                                        add_path=True):
+        if add_path:
+            json_file_name = os.path.join('tests/data/googleapis', json_file_name)
+
+        with open(json_file_name) as f:
+            responses.add(
+                responses.GET,
+                'https://maps.googleapis.com/maps/api/geocode/json',
+                json=json.load(f),
+                status=status)
 
     @classmethod
     def create_user(cls, username='ivan', first_name='Ivan', password='123',
