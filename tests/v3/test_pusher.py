@@ -23,7 +23,7 @@ class PusherAuthTestCase(BaseTestCase):
 
     def test_pusher_valid_data_received(self):
         mocked_pusher.authenticate.reset_mock()
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         resp = self.client.post(
             self.reverse(self.url_name_auth),
             {'channel_name': self.channel_name, 'socket_id': "1234.12"},
@@ -36,7 +36,7 @@ class PusherAuthTestCase(BaseTestCase):
     @patch.object(mocked_pusher, 'authenticate')
     def test_pusher_invalid_data_received(self, m_auth):
         m_auth.side_effect = ValueError
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         resp = self.client.post(
             self.reverse(self.url_name_auth),
             {'channel_name': self.channel_name, 'socket_id': "1234.12"},

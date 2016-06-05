@@ -110,6 +110,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         """
         Update conversation
         ###REQUIRES AUTH
+        > Allowed only to conversation admins.
         ####Body
         <pre><code>
         {
@@ -135,6 +136,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         """
         Delete a conversation
         ###REQUIRES AUTH
+        > Allowed only to conversation admins.
         ---
         omit_serializer: true
         omit_parameters:

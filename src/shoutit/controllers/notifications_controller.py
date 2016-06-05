@@ -75,7 +75,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
         # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
 
-    # Send Push notification when no pusher channels of any version exit
+    # Send Push notification when no pusher channels of any version exist
     can_push = push_controller.check_push(notification_type)
     can_pusher = pusher_controller.check_pusher(user)
     if can_push and not can_pusher:
