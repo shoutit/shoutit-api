@@ -77,7 +77,8 @@ class ProfileDetailSerializer(ProfileSerializer):
     is_password_set = serializers.BooleanField(read_only=True)
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.ChoiceField(source='profile.gender', choices=gender_choices,
-                                     help_text='`male`, `female` or `null`', **empty_char_input)
+                                     help_text='male, female, other or `null`', **empty_char_input)
+    birthday = serializers.DateField(source='profile.birthday', required=False, allow_null=True, help_text='Formatted as YYYY-MM-DD')
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
@@ -104,7 +105,7 @@ class ProfileDetailSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + (
-            'gender', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
+            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
             'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
             'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
             'pages', 'admins', 'stats'
@@ -153,6 +154,8 @@ class ProfileDetailSerializer(ProfileSerializer):
         if not ret['is_owner']:
             del ret['email']
             del ret['mobile']
+            del ret['gender']
+            del ret['birthday']
             del ret['location']['latitude']
             del ret['location']['longitude']
             del ret['location']['address']
@@ -264,7 +267,7 @@ class ProfileDetailSerializer(ProfileSerializer):
                     ap_update_fields.append(field)
 
         if isinstance(ap, Profile):
-            fill(ap, profile_data, ['bio', 'gender', 'mobile'])
+            fill(ap, profile_data, ['bio', 'gender', 'mobile', 'birthday'])
 
         elif isinstance(ap, Page):
             pass

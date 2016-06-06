@@ -79,7 +79,7 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         Retrieve a Profile
 
         ####These attributes will only show for Profile owner
-        `email`, `mobile`, `location.latitude`, `location.longitude`, `location.address`, `push_tokens`, `linked_accounts`
+        `email`, `mobile`, `gender`, `birthday`, `location.latitude`, `location.longitude`, `location.address`, `push_tokens`, `linked_accounts`, `stats`
 
         ####These attributes will not show for profile owner
         `is_listening`, `is_listener`, `conversation`

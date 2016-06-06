@@ -41,7 +41,7 @@ class Profile(AbstractProfile):
             self.birthday = birthday
             update_fields.append('birthday')
         if bio:
-            self.birthday = bio
+            self.bio = bio
             update_fields.append('bio')
         if mobile:
             self.mobile = mobile
