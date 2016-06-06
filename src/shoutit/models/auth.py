@@ -432,10 +432,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def stats(self):
         from ..controllers import notifications_controller
+        # Todo (mo): crate fields for each stats property which holds the latest value and gets updated
         if not hasattr(self, '_stats'):
             self._stats = {
                 'unread_conversations_count': notifications_controller.get_unread_conversations_count(self),
-                'unread_notifications_count': notifications_controller.get_unread_notifications_count(self)
+                'unread_notifications_count': notifications_controller.get_unread_notifications_count(self),
+                'credit': 0
             }
         return self._stats
 
