@@ -7,3 +7,4 @@ pytest-cov==2.2.1
 django-dynamic-fixture==1.8.5
 mock==2.0.0
 django-fake-model==0.1.4
+responses==0.5.1

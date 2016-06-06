@@ -137,7 +137,7 @@ def send_push_broadcast(push_broadcast, devices, user_ids):
     if DEVICE_ANDROID.value in devices:
         gcm_devices = GCMDevice.objects.filter(user__in=user_ids)
         extra = {
-            'event_name': NotificationType.new_notification(),
+            'event_name': str(NotificationType.new_notification()),
             'title': "Shoutit",
             'body': push_broadcast.message,
 

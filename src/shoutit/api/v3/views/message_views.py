@@ -613,7 +613,7 @@ class PublicChatViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMode
         user = self.request.user
         filters = {
             'type': CONVERSATION_TYPE_PUBLIC_CHAT,
-            'country': self.request.user.location['country']
+            'country': user.location['country']
         }
         return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by('-modified_at')
 
