@@ -22,8 +22,8 @@ from ..serializers import (ConversationSerializer, ConversationDetailSerializer,
 from ..views.viewsets import UUIDViewSetMixin
 
 
-class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                          mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                          mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
