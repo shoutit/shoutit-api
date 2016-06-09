@@ -23,8 +23,8 @@ CREDIT_OUT = CreditTransactionType('out')
 
 class CreditRule(UUIDModel):
     transaction_type = models.SmallIntegerField(choices=CreditTransactionType.choices)
-    type = models.CharField(max_length=10)
-    title = models.CharField(max_length=50)
+    type = models.CharField(max_length=30)
+    name = models.CharField(max_length=50)
     description = models.CharField(max_length=250)
     options = JsonField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
@@ -35,7 +35,7 @@ class CreditRule(UUIDModel):
             self.__class__ = CREDIT_RULES.get(self.type, CreditRule)
 
     def __unicode__(self):
-        return "%s:%s:%s" % (self.get_transaction_type_display(), self.type, self.title)
+        return "%s:%s:%s" % (self.get_transaction_type_display(), self.type, self.name)
 
     def display(self, transaction):
         raise NotImplementedError()
@@ -48,7 +48,7 @@ class CreditTransaction(UUIDModel):
     properties = JsonField(default=dict, blank=True)
 
     def __unicode__(self):
-        return "%s" % unicode(self.user)
+        return "%d:%s by %s" % (self.amount, self.rule, self.user)
 
     @property
     def type(self):
@@ -69,3 +69,23 @@ class CreditTransaction(UUIDModel):
     def web_url(self):
         self.display()
         return getattr(self.target, 'web_url', None) if hasattr(self, 'target') else None
+
+
+class PromoteLabel(UUIDModel):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=250)
+    color = models.CharField(max_length=9)
+    bg_color = models.CharField(max_length=9)
+    rank = models.PositiveSmallIntegerField()
+
+    def __unicode__(self):
+        return "%s:%s" % (self.name, self.color)
+
+    def clean(self):
+        if not self.color.find('#'):
+            self.color = '#' + self.color
+        self.color = self.color.upper()
+
+        if not self.bg_color.find('#'):
+            self.bg_color = '#' + self.bg_color
+        self.bg_color = self.bg_color.upper()

@@ -21,8 +21,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
                 ('transaction_type', models.SmallIntegerField(choices=[(0, 'in'), (1, 'out')])),
-                ('type', models.CharField(max_length=10)),
-                ('title', models.CharField(max_length=50)),
+                ('type', models.CharField(max_length=30)),
+                ('name', models.CharField(max_length=50)),
                 ('description', models.CharField(max_length=250)),
                 ('options', django_pgjson.fields.JsonField(default=dict, blank=True)),
                 ('is_active', models.BooleanField(default=True)),
@@ -41,6 +41,22 @@ class Migration(migrations.Migration):
                 ('properties', django_pgjson.fields.JsonField(default=dict, blank=True)),
                 ('rule', models.ForeignKey(related_name='transactions', to='shoutit_credit.CreditRule')),
                 ('user', models.ForeignKey(related_name='credit_transactions', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='PromoteLabel',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
+                ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
+                ('name', models.CharField(max_length=50)),
+                ('description', models.CharField(max_length=250)),
+                ('color', models.CharField(max_length=9)),
+                ('bg_color', models.CharField(max_length=9)),
+                ('rank', models.PositiveSmallIntegerField()),
             ],
             options={
                 'abstract': False,

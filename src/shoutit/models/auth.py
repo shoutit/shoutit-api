@@ -10,7 +10,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone, six
@@ -434,10 +434,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         from ..controllers import notifications_controller
         # Todo (mo): crate fields for each stats property which holds the latest value and gets updated
         if not hasattr(self, '_stats'):
+            credit = self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
             self._stats = {
                 'unread_conversations_count': notifications_controller.get_unread_conversations_count(self),
                 'unread_notifications_count': notifications_controller.get_unread_notifications_count(self),
-                'credit': 0
+                'credit': credit
             }
         return self._stats
 

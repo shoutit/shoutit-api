@@ -22,17 +22,17 @@ class CompleteProfile(CreditRule):
         return ret
 
 
-CREDIT_RULES['cp'] = CompleteProfile
+CREDIT_RULES['complete_profile'] = CompleteProfile
 
 
-class InviteFriend(CreditRule):
+class InviteFriends(CreditRule):
     text = "You earned 1 credit for inviting %s."
 
     class Meta:
         proxy = True
 
     def display(self, transaction):
-        profile_id = transaction.properties.get('profile')
+        profile_id = transaction.properties.get('profile_id')
         if profile_id:
             profile = User.objects.get(id=profile_id)
             name = profile.name
@@ -47,4 +47,22 @@ class InviteFriend(CreditRule):
         return ret
 
 
-CREDIT_RULES['if'] = InviteFriend
+CREDIT_RULES['invite_friends'] = InviteFriends
+
+
+class ListenToFriends(CreditRule):
+    text = "You earned %d credit for listening to your friends."
+
+    class Meta:
+        proxy = True
+
+    def display(self, transaction):
+        text = self.text % transaction.amount
+        ret = {
+            "text": text,
+            "ranges": []
+        }
+        return ret
+
+
+CREDIT_RULES['listen_to_friends'] = ListenToFriends
