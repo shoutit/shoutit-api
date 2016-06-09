@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from django.conf.urls import url, include
 from rest_framework import routers
 
+from shoutit_credit.views import ShoutitCreditViewSet
 from shoutit_pusher.views import ShoutitPusherViewSet
 from shoutit_twilio.views import ShoutitTwilioViewSet
 from .views import (profile_views, misc_views, message_views, shout_views, notification_views, tag_views,
@@ -31,6 +32,7 @@ router.register('tags', tag_views.TagViewSet, 'tag')
 router.register('misc', misc_views.MiscViewSet, 'misc')
 router.register('pusher', ShoutitPusherViewSet, 'pusher')
 router.register('twilio', ShoutitTwilioViewSet, 'twilio')
+router.register('credit', ShoutitCreditViewSet, 'credit')
 
 urlpatterns = [
     url(r'^oauth2/access_token$', authentication_views.AccessTokenView.as_view(), name='access_token'),

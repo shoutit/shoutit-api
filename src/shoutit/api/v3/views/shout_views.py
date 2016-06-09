@@ -26,10 +26,11 @@ from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
 from ..views.viewsets import UUIDViewSetMixin
+from shoutit_credit.views import PromoteShoutMixin
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                   mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+                   mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet, PromoteShoutMixin):
     """
     Shout API Resource
     """
