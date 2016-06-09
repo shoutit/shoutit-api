@@ -10,25 +10,35 @@ from ..models import CreditRule, CREDIT_RULES, PromoteLabel
 
 
 class ShareShouts(CreditRule):
+    """
+    Transactions of this rule must have: `shout_id`
+    """
     text = "You earned 1 credit for sharing %s on Facebook."
 
     class Meta:
         proxy = True
 
     def display(self, transaction):
+        if hasattr(self, '_display'):
+            return self._display
+
         shout_id = transaction.properties.get('shout_id')
         if shout_id:
             shout = Shout.objects.get(id=shout_id)
-            title = shout.title
+            title = shout.title or 'shout'
             setattr(transaction, 'target', shout)
         else:
-            title = 'a shout'
+            title = 'shout'
         text = self.text % title
         ret = {
             "text": text,
-            "ranges": [{'offset': text.index(title), 'length': len(title)}]
+            "ranges": [
+                {'offset': text.index(title), 'length': len(title)}
+            ]
         }
-        return ret
+
+        setattr(self, '_display', ret)
+        return self._display
 
 
 CREDIT_RULES['share_shouts'] = ShareShouts
@@ -40,7 +50,11 @@ class PromoteShoutsManager(models.Manager):
 
 
 class PromoteShouts(CreditRule):
-    text = "You spent %s credit in promoting %s for %s."
+    """
+    Transactions of this rule must have: `shout_id`, `label_id` and `days`
+    """
+    text = "You spent %d credits in promoting %s as '%s' shout for %d days."
+    text_no_days = "You spent %d credits in promoting %s as '%s' shout."
 
     objects = PromoteShoutsManager()
 
@@ -65,17 +79,32 @@ class PromoteShouts(CreditRule):
         return self.options.get('rank')
 
     def display(self, transaction):
-        profile_id = transaction.properties.get('profile_id')
-        if profile_id:
-            profile = User.objects.get(id=profile_id)
-            name = profile.name
-            setattr(transaction, 'target', profile)
+        shout_id = transaction.properties.get('shout_id')
+        if shout_id:
+            shout = Shout.objects.get(id=shout_id)
+            title = shout.title or 'shout'
+            setattr(transaction, 'target', shout)
         else:
-            name = 'a friend'
-        text = self.text % name
+            title = 'shout'
+
+        label_id = transaction.properties.get('label_id')
+        if label_id:
+            label = PromoteLabel.objects.get(id=label_id)
+            label_name = label.name
+        else:
+            label_name = 'shout'
+
+        days = transaction.properties.get('days')
+        if days:
+            text = self.text % (transaction.amount, title, label_name, days)
+        else:
+            text = self.text_no_days % (transaction.amount, title, label_name)
         ret = {
             "text": text,
-            "ranges": [{'offset': text.index(name), 'length': len(name)}]
+            "ranges": [
+                {'offset': text.index(title), 'length': len(title)},
+                {'offset': text.index(label_name), 'length': len(label_name)}
+            ]
         }
         return ret
 

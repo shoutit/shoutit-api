@@ -26,6 +26,9 @@ CREDIT_RULES['complete_profile'] = CompleteProfile
 
 
 class InviteFriends(CreditRule):
+    """
+    Transactions of this rule must have: `profile_id`
+    """
     text = "You earned 1 credit for inviting %s."
 
     class Meta:
