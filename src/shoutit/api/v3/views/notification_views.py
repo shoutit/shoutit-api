@@ -28,7 +28,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
 
     def list(self, request, *args, **kwargs):
         """
-        List the user notifications.
+        List profile notifications.
         ###REQUIRES AUTH
         [Notifications Pagination](https://github.com/shoutit/shoutit-api/wiki/Notifications)
         ---

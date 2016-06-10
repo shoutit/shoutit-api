@@ -83,7 +83,7 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 
 
 class AttachedUUIDObjectMixin(object):
-    def to_internal_attached_value(self, data):
+    def to_internal_attached_value(self, data, force_validation=False):
         from .message import MessageAttachmentSerializer
         from .conversation import ConversationProfileActionSerializer
         from .notification import AttachedObjectSerializer
@@ -92,7 +92,7 @@ class AttachedUUIDObjectMixin(object):
         if not data:
             data = {}
         # Validate the id only
-        if isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer, ConversationProfileActionSerializer)):
+        if force_validation or isinstance(self.parent, (MessageAttachmentSerializer, AttachedObjectSerializer, ConversationProfileActionSerializer)):
             if not isinstance(data, dict):
                 raise serializers.ValidationError('Invalid data. Expected a dictionary, but got %s' % type(data).__name__)
             object_id = data.get('id')

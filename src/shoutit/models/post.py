@@ -224,6 +224,10 @@ class Shout(Post):
     def is_mobile_set(self):
         return bool(self.mobile)
 
+    @property
+    def promotion(self):
+        return self.promotions.order_by('created_at').last()
+
 
 class InactiveShout(object):
     @property

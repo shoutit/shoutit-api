@@ -173,10 +173,11 @@ INSTALLED_APPS = (
     'corsheaders',
     'heartbeat',
 
-    'shoutit_twilio',
-    'shoutit_pusher',
-    'shoutit_crm',
     'shoutit',
+    'shoutit_credit',
+    'shoutit_crm',
+    'shoutit_pusher',
+    'shoutit_twilio',
 )
 
 TWILIO_ENV = os.environ.get('TWILIO_ENV', SHOUTIT_ENV)
