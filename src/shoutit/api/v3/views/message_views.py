@@ -15,7 +15,7 @@ from shoutit.api.permissions import CanContribute, IsAdminOrCanContribute
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
-from ..serializers import (ConversationSerializer, ConversationDetailSerializer,
+from ..serializers import (ConversationDetailSerializer,
                            MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
                            RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer,
                            MessageAttachmentSerializer, ShoutSerializer)
@@ -27,7 +27,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
     """
     Conversation API Resource.
     """
-    serializer_class = ConversationDetailSerializer
+    serializer_class = ConversationDetailSerializer  # Todo: Use ConversationSerializer when no clients are using the detailed anymore
     serializer_detail_class = ConversationDetailSerializer
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, IsAdminOrCanContribute)
@@ -399,6 +399,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
             - name: body
               paramType: body
         """
+        # Todo (mo): utilize self.get_serializer(instance=conversation, data=request.data)
         context = {
             'conversation': self.get_object(),
             'request': request

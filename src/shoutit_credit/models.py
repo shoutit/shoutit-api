@@ -3,11 +3,13 @@
 """
 from __future__ import unicode_literals
 
+from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django_pgjson.fields import JsonField
 
 from common.constants import Constant
+from common.utils import date_unix
 from shoutit.models import UUIDModel
 
 CREDIT_RULES = {}
@@ -89,3 +91,19 @@ class PromoteLabel(UUIDModel):
         if not self.bg_color.find('#'):
             self.bg_color = '#' + self.bg_color
         self.bg_color = self.bg_color.upper()
+
+
+class ShoutPromotion(UUIDModel):
+    shout = models.ForeignKey('shoutit.Shout', related_name='promotions')
+    transaction = models.OneToOneField(CreditTransaction, related_name='shout_promotion')
+    option = models.ForeignKey(CreditRule)
+    label = models.ForeignKey(PromoteLabel)
+    days = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True)
+
+    @property
+    def expires_at(self):
+        return self.created_at + timedelta(days=self.days)
+
+    @property
+    def expires_at_unix(self):
+        return date_unix(self.expires_at)

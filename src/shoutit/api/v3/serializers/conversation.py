@@ -156,6 +156,7 @@ class ConversationProfileActionSerializer(serializers.Serializer):
         profile = self.fields['profile'].instance
         return {'success': self.success_message % profile.name}
 
+    # Todo (mo): utilize update instead of create. update has the conversation instance from the view
     def update(self, instance, validated_data):
         return self.create(validated_data=validated_data)
 

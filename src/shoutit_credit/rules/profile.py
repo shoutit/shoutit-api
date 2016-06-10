@@ -60,7 +60,7 @@ class ListenToFriends(CreditRule):
         proxy = True
 
     def display(self, transaction):
-        text = self.text % transaction.amount
+        text = self.text % abs(transaction.amount)
         ret = {
             "text": text,
             "ranges": []

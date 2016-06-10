@@ -5,8 +5,9 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-from shoutit.models import User, Shout
-from ..models import CreditRule, CREDIT_RULES, PromoteLabel
+from shoutit.api.v3.exceptions import ShoutitBadRequest
+from shoutit.models import Shout
+from ..models import CreditRule, CREDIT_RULES, PromoteLabel, CreditTransaction, ShoutPromotion
 
 
 class ShareShouts(CreditRule):
@@ -51,7 +52,7 @@ class PromoteShoutsManager(models.Manager):
 
 class PromoteShouts(CreditRule):
     """
-    Transactions of this rule must have: `shout_id`, `label_id` and `days`
+    Transactions of this rule must have: `shout_promotion`
     """
     text = "You spent %d credits in promoting %s as '%s' shout for %d days."
     text_no_days = "You spent %d credits in promoting %s as '%s' shout."
@@ -79,34 +80,43 @@ class PromoteShouts(CreditRule):
         return self.options.get('rank')
 
     def display(self, transaction):
-        shout_id = transaction.properties.get('shout_id')
-        if shout_id:
-            shout = Shout.objects.get(id=shout_id)
-            title = shout.title or 'shout'
-            setattr(transaction, 'target', shout)
-        else:
-            title = 'shout'
+        shout_promotion = transaction.shout_promotion
+        shout = shout_promotion.shout
+        label = shout_promotion.label
+        days = shout_promotion.days
+        shout_title = shout.title
+        label_name = label.name
 
-        label_id = transaction.properties.get('label_id')
-        if label_id:
-            label = PromoteLabel.objects.get(id=label_id)
-            label_name = label.name
-        else:
-            label_name = 'shout'
-
-        days = transaction.properties.get('days')
         if days:
-            text = self.text % (transaction.amount, title, label_name, days)
+            text = self.text % (abs(transaction.amount), shout_title, label_name, days)
         else:
-            text = self.text_no_days % (transaction.amount, title, label_name)
+            text = self.text_no_days % (abs(transaction.amount), shout_title, label_name)
         ret = {
             "text": text,
             "ranges": [
-                {'offset': text.index(title), 'length': len(title)},
+                {'offset': text.index(shout_title), 'length': len(shout_title)},
                 {'offset': text.index(label_name), 'length': len(label_name)}
             ]
         }
         return ret
+
+    def apply(self, shout, user):
+        self.can_promote(shout, user)
+
+        # Create Credit Transaction
+        transaction = CreditTransaction.create(user=user, amount=-self.credits, rule=self)
+
+        # Create ShoutPromotion
+        shout_promotion = ShoutPromotion.create(shout=shout, transaction=transaction, option=self, label=self.label,
+                                                days=self.days)
+        return shout_promotion
+
+    def can_promote(self, shout, user):
+        if user.stats.get('credit', 0) < self.credits:
+            raise ShoutitBadRequest("You don't have enough Shoutit Credit for this action")
+
+        if shout.promotions.exists():
+            raise ShoutitBadRequest('This Shout is already promoted')
 
 
 CREDIT_RULES['promote_shouts'] = PromoteShouts
