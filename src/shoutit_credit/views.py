@@ -8,6 +8,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
 from shoutit.api.v3.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
+from shoutit.controllers.notifications_controller import mark_credit_transactions_as_read
 from shoutit_credit.serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
                                         PromoteShoutSerializer)
 
@@ -54,6 +55,10 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
         queryset = request.user.credit_transactions.all()
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
+
+        # Mark Credit Transactions notifications as read
+        mark_credit_transactions_as_read(request.user)
+
         return self.get_paginated_response(serializer.data)
 
 
