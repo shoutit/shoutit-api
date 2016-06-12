@@ -23,7 +23,7 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
     """
     pagination_class = ShoutitPageNumberPagination
 
-    @list_route(methods=['get'], suffix='Retrieve Shoutit Credit Transactions')
+    @list_route(methods=['get'], suffix='Shoutit Credit Transactions')
     def transactions(self, request, *args, **kwargs):
         """
         List profile Credit Transactions
@@ -63,10 +63,10 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
 
 
 class PromoteShoutMixin(object):
-    @list_route(methods=['get'], suffix='Retrieve Promote Shout Labels')
+    @list_route(methods=['get'], suffix='Shout Promotion Labels')
     def promote_labels(self, request, *args, **kwargs):
         """
-        Retrieve Promote Shout Labels
+        Retrieve shout Promotion Labels
         ###Response
         <pre><code>
         {
@@ -86,9 +86,10 @@ class PromoteShoutMixin(object):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @list_route(methods=['get'], suffix='Retrieve Promote Shout Options')
+    @list_route(methods=['get'], suffix='Shout Promotion Options')
     def promote_options(self, request, *args, **kwargs):
         """
+        Retrieve shout Promotion Options
         ###Response
         <pre><code>
         {
@@ -119,7 +120,7 @@ class PromoteShoutMixin(object):
     @detail_route(methods=['patch'], suffix='Promote Shout')
     def promote(self, request, *args, **kwargs):
         """
-        Promote a Shout using a PromoteOption
+        Promote a Shout using a Promotion Options
 
         ###Body
         <pre><code>
@@ -131,6 +132,7 @@ class PromoteShoutMixin(object):
         </code></pre>
 
         ###Response
+        Returns success message and Shout Promotion object
         <pre><code>
         {
             "promotion": {
