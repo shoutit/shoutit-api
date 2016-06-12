@@ -7,14 +7,13 @@ from __future__ import unicode_literals
 from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
+
 from shoutit.api.v3.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
 from shoutit.controllers.notifications_controller import mark_credit_transactions_as_read
-from shoutit_credit.serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
-                                        PromoteShoutSerializer)
-
-# Todo (mo): Find better way of loading rules. This is important to be kept as is now.
-from rules.profile import *  # noqa
-from rules.shout import *  # noqa
+from .models import PromoteLabel
+from .rules.shout import PromoteShouts
+from .serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
+                          PromoteShoutSerializer)
 
 
 class ShoutitCreditViewSet(viewsets.GenericViewSet):
