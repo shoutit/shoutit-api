@@ -35,7 +35,7 @@ test:
       shoutit/shoutit-api:test
       /bin/bash -c "
       cp -r /host_repo/.git ./
-      && PYTHONPATH='./src' py.test --reuse-db --cov=src --cov-report= --cov-config .coveragerc --junitxml=/circle_test_reports/django/junit.xml
+      && PYTHONPATH='./src' py.test --cov=src --cov-report= --cov-config .coveragerc --junitxml=/circle_test_reports/django/junit.xml
       && CODECLIMATE_REPO_TOKEN=$CODECLIMATE_REPO_TOKEN codeclimate-test-reporter"
   post:
 
