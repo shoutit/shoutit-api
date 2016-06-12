@@ -109,7 +109,7 @@ def apply_invite_friends(user):
 @receiver(post_save, sender=User)
 def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     if created:
-        apply_listen_to_friends.delay(instance)
+        apply_invite_friends.delay(instance)
 
 
 class ListenToFriendsManager(models.Manager):
