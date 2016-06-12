@@ -567,7 +567,7 @@ LOGGING = {
             'formatter': 'simple_dashed'
         },
         'null': {
-            "class": 'django.utils.log.NullHandler',
+            "class": 'logging.NullHandler',
         },
     },
     'loggers': {
