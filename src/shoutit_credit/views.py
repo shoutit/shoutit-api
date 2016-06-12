@@ -27,7 +27,12 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
     def transactions(self, request, *args, **kwargs):
         """
         List profile Credit Transactions
-        ###Response
+        ###REQUIRES AUTH
+
+        ### Pagination
+        like [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
+
+        ### Credit Transaction
         <pre><code>
         {
             "id": "000f8017-4a01-4f39-aa82-28f8eb807dce",
@@ -49,6 +54,24 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
 
         - `type` can be `in` or `out`
 
+        ### Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {CreditTransactionSerializer}
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: before
+              description: timestamp to get credit transactions before
+              paramType: query
+            - name: after
+              description: timestamp to get credit transactions after
+              paramType: query
         """
         self.pagination_class = ReverseDateTimePagination
         self.serializer_class = CreditTransactionSerializer
