@@ -3,18 +3,31 @@
 """
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django_rq import job
 
 from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.models import Shout
 from ..models import CreditRule, CREDIT_RULES, PromoteLabel, CreditTransaction, ShoutPromotion
+
+share_shouts = None
+
+
+class ShareShoutsManager(models.Manager):
+    def get_queryset(self):
+        return super(ShareShoutsManager, self).get_queryset().filter(type='share_shouts')
 
 
 class ShareShouts(CreditRule):
     """
     Transactions of this rule must have: `shout_id`
     """
-    text = "You earned 1 credit for sharing %s on Facebook."
+    text = "You earned 1 Shoutit Credit for sharing %s on Facebook."
+
+    objects = ShareShoutsManager()
 
     class Meta:
         proxy = True
@@ -41,8 +54,30 @@ class ShareShouts(CreditRule):
         setattr(self, '_display', ret)
         return self._display
 
+    def apply(self, shout):
+        shout_id = shout.pk
+        user_id = shout.user_id
 
-CREDIT_RULES['share_shouts'] = ShareShouts
+        # Check for similar existing transaction
+        if CreditTransaction.exists(user_id=user_id, rule=self, properties__at_shout_id=shout_id):
+            return
+
+        # Create Credit Transaction
+        properties = {'shout_id': shout_id}
+        transaction = CreditTransaction.create(user_id=user_id, amount=1, rule=self, properties=properties)
+        return transaction
+
+
+@job(settings.RQ_QUEUE_CREDIT)
+def apply_share_shouts(profile):
+    if share_shouts:
+        share_shouts.apply(profile)
+
+
+@receiver(post_save, sender=Shout)
+def shout_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    if 'facebook' in instance.published_on:
+        apply_share_shouts.delay(instance)
 
 
 class PromoteShoutsManager(models.Manager):
@@ -54,8 +89,8 @@ class PromoteShouts(CreditRule):
     """
     Transactions of this rule must have: `shout_promotion`
     """
-    text = "You spent %d credits in promoting %s as '%s' shout for %d days."
-    text_no_days = "You spent %d credits in promoting %s as '%s' shout."
+    text = "You spent %d Shoutit Credit in promoting %s as %s for %d days."
+    text_no_days = "You spent %d Shoutit Credit in promoting %s as '%s'."
 
     objects = PromoteShoutsManager()
 
@@ -84,7 +119,7 @@ class PromoteShouts(CreditRule):
         shout = shout_promotion.shout
         label = shout_promotion.label
         days = shout_promotion.days
-        shout_title = shout.title
+        shout_title = shout.title or 'a shout'
         label_name = label.name
 
         if days:
@@ -104,11 +139,16 @@ class PromoteShouts(CreditRule):
         self.can_promote(shout, user)
 
         # Create Credit Transaction
-        transaction = CreditTransaction.create(user=user, amount=-self.credits, rule=self)
+        transaction = CreditTransaction.create(save=False, user=user, amount=-self.credits, rule=self)
+        transaction.notify = False
+        transaction.save()
 
         # Create ShoutPromotion
         shout_promotion = ShoutPromotion.create(shout=shout, transaction=transaction, option=self, label=self.label,
                                                 days=self.days)
+
+        # We need to save the promotion before notifying as the notification requires the promotion object
+        transaction.notify_user()
         return shout_promotion
 
     def can_promote(self, shout, user):
@@ -119,4 +159,11 @@ class PromoteShouts(CreditRule):
             raise ShoutitBadRequest('This Shout is already promoted')
 
 
-CREDIT_RULES['promote_shouts'] = PromoteShouts
+def map_rules():
+    import sys
+
+    CREDIT_RULES['share_shouts'] = ShareShouts
+    _share_shouts = ShareShouts.objects.first()
+    setattr(sys.modules[__name__], 'share_shouts', _share_shouts)
+
+    CREDIT_RULES['promote_shouts'] = PromoteShouts

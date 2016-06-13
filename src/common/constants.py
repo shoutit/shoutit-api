@@ -180,7 +180,8 @@ class NotificationType(Constant):
     def requires_notification_object(self):
         types = [
             NOTIFICATION_TYPE_MESSAGE,
-            NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
+            NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
+            NOTIFICATION_TYPE_CREDIT_TRANSACTION
         ]
         return self in types
 
@@ -205,6 +206,7 @@ NOTIFICATION_TYPE_READ_BY = NotificationType('new_read_by')
 NOTIFICATION_TYPE_STATS_UPDATE = NotificationType('stats_update')
 NOTIFICATION_TYPE_INCOMING_VIDEO_CALL = NotificationType('incoming_video_call')
 NOTIFICATION_TYPE_MISSED_VIDEO_CALL = NotificationType('missed_video_call')
+NOTIFICATION_TYPE_CREDIT_TRANSACTION = NotificationType('new_credit_transaction')
 
 
 class ListenType(Constant):

@@ -56,7 +56,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
 
     def list(self, request, *args, **kwargs):
         """
-        List the user conversations.
+        List profile conversations.
         ###REQUIRES AUTH
         [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
@@ -68,10 +68,10 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
             - name: type
               paramType: query
             - name: before
-              description: timestamp to get messages before
+              description: timestamp to get conversations before
               paramType: query
             - name: after
-              description: timestamp to get messages after
+              description: timestamp to get conversations after
               paramType: query
         """
         return super(ConversationViewSet, self).list(request, *args, **kwargs)

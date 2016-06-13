@@ -50,8 +50,8 @@ class UUIDModel(models.Model):
         return self
 
     @classmethod
-    def exists(cls, **kwargs):
-        return cls.objects.filter(**kwargs).exists()
+    def exists(cls, *args, **kwargs):
+        return cls.objects.filter(*args, **kwargs).exists()
 
     @property
     def pk(self):

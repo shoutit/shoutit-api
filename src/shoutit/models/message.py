@@ -22,7 +22,7 @@ from common.constants import (
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
     MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
-    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
+    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_CREDIT_TRANSACTION)
 from common.utils import date_unix
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
@@ -513,6 +513,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
             target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
+            # Todo (mo): is `ranges` needed for messages notifications?
+            title = _("New message")
             name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
             text = self.attached_object.summary
             ranges.append({'offset': text.index(name), 'length': len(name)})
@@ -520,6 +522,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             target = self.attached_object.conversation
 
         elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+            # Todo (mo): is `ranges` needed for incoming video call notifications?
             title = _("Incoming video call")
             name = self.attached_object.name
             text = _("%(name)s is calling you on Shoutit") % {'name': name}
@@ -534,6 +537,10 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
             target = self.attached_object
+
+        elif self.type == NOTIFICATION_TYPE_CREDIT_TRANSACTION:
+            title = _("New Credit Transaction")
+            text = self.attached_object.display()['text']
 
         ret = OrderedDict([
             ('title', title),

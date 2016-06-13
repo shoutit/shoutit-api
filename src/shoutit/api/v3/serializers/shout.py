@@ -38,7 +38,7 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = serializers.ListField(default=list, source='filter_objects')
     api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
-    promotion = ShoutPromotionSerializer()
+    promotion = ShoutPromotionSerializer(read_only=True)
 
     class Meta:
         model = Shout

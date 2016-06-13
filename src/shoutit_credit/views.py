@@ -7,13 +7,13 @@ from __future__ import unicode_literals
 from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
-from shoutit.api.v3.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
-from shoutit_credit.serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
-                                        PromoteShoutSerializer)
 
-# Todo (mo): Find better way of loading rules. This is important to be kept as is now.
-from rules.profile import *  # noqa
-from rules.shout import *  # noqa
+from shoutit.api.v3.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
+from shoutit.controllers.notifications_controller import mark_credit_transactions_as_read
+from .models import PromoteLabel
+from .rules.shout import PromoteShouts
+from .serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
+                          PromoteShoutSerializer)
 
 
 class ShoutitCreditViewSet(viewsets.GenericViewSet):
@@ -22,11 +22,16 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
     """
     pagination_class = ShoutitPageNumberPagination
 
-    @list_route(methods=['get'], suffix='Retrieve Shoutit Credit Transactions')
+    @list_route(methods=['get'], suffix='Shoutit Credit Transactions')
     def transactions(self, request, *args, **kwargs):
         """
         List profile Credit Transactions
-        ###Response
+        ###REQUIRES AUTH
+
+        ### Pagination
+        like [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
+
+        ### Credit Transaction
         <pre><code>
         {
             "id": "000f8017-4a01-4f39-aa82-28f8eb807dce",
@@ -48,20 +53,42 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
 
         - `type` can be `in` or `out`
 
+        ### Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {CreditTransactionSerializer}
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        parameters:
+            - name: before
+              description: timestamp to get credit transactions before
+              paramType: query
+            - name: after
+              description: timestamp to get credit transactions after
+              paramType: query
         """
         self.pagination_class = ReverseDateTimePagination
         self.serializer_class = CreditTransactionSerializer
         queryset = request.user.credit_transactions.all()
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
+
+        # Mark Credit Transactions notifications as read
+        mark_credit_transactions_as_read(request.user)
+
         return self.get_paginated_response(serializer.data)
 
 
 class PromoteShoutMixin(object):
-    @list_route(methods=['get'], suffix='Retrieve Promote Shout Labels')
+    @list_route(methods=['get'], suffix='Shout Promotion Labels')
     def promote_labels(self, request, *args, **kwargs):
         """
-        Retrieve Promote Shout Labels
+        Retrieve shout Promotion Labels
         ###Response
         <pre><code>
         {
@@ -81,9 +108,10 @@ class PromoteShoutMixin(object):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @list_route(methods=['get'], suffix='Retrieve Promote Shout Options')
+    @list_route(methods=['get'], suffix='Shout Promotion Options')
     def promote_options(self, request, *args, **kwargs):
         """
+        Retrieve shout Promotion Options
         ###Response
         <pre><code>
         {
@@ -114,7 +142,7 @@ class PromoteShoutMixin(object):
     @detail_route(methods=['patch'], suffix='Promote Shout')
     def promote(self, request, *args, **kwargs):
         """
-        Promote a Shout using a PromoteOption
+        Promote a Shout using a Promotion Options
 
         ###Body
         <pre><code>
@@ -126,6 +154,7 @@ class PromoteShoutMixin(object):
         </code></pre>
 
         ###Response
+        Returns success message and Shout Promotion object
         <pre><code>
         {
             "promotion": {

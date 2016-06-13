@@ -87,18 +87,20 @@ SESSION_CACHE_ALIAS = "session"
 WORKER_CACHE_ALIAS = "worker"
 WORKER_MAIL_CACHE_ALIAS = "worker_mail"
 WORKER_PUSH_CACHE_ALIAS = "worker_push"
-WORKER_PUSH_BROADCAST_CACHE_ALIAS = "worker_push_broadcast"
 WORKER_PUSHER_CACHE_ALIAS = "worker_pusher"
+WORKER_CREDIT_CACHE_ALIAS = "worker_credit"
+WORKER_PUSH_BROADCAST_CACHE_ALIAS = "worker_push_broadcast"
 WORKER_SSS_CACHE_ALIAS = "worker_sss"
 
 CACHES = {
     "default": default_redis_conf(1),
     SESSION_CACHE_ALIAS: default_redis_conf(2),
-    WORKER_CACHE_ALIAS: default_redis_conf(10),
-    WORKER_MAIL_CACHE_ALIAS: default_redis_conf(11),
-    WORKER_PUSH_CACHE_ALIAS: default_redis_conf(12),
-    WORKER_PUSH_BROADCAST_CACHE_ALIAS: default_redis_conf(13),
-    WORKER_PUSHER_CACHE_ALIAS: default_redis_conf(14),
+    WORKER_CACHE_ALIAS: default_redis_conf(3),
+    WORKER_MAIL_CACHE_ALIAS: default_redis_conf(4),
+    WORKER_PUSH_CACHE_ALIAS: default_redis_conf(5),
+    WORKER_PUSHER_CACHE_ALIAS: default_redis_conf(6),
+    WORKER_CREDIT_CACHE_ALIAS: default_redis_conf(7),
+    WORKER_PUSH_BROADCAST_CACHE_ALIAS: default_redis_conf(14),
     WORKER_SSS_CACHE_ALIAS: default_redis_conf(15),
 }
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -112,8 +114,9 @@ FORCE_SYNC_RQ = strtobool(os.environ.get('FORCE_SYNC_RQ'))
 RQ_QUEUE = 'default'
 RQ_QUEUE_MAIL = 'mail'
 RQ_QUEUE_PUSH = 'push'
-RQ_QUEUE_PUSH_BROADCAST = 'push_broadcast'
 RQ_QUEUE_PUSHER = 'pusher'
+RQ_QUEUE_CREDIT = 'credit'
+RQ_QUEUE_PUSH_BROADCAST = 'push_broadcast'
 RQ_QUEUE_SSS = 'sss'
 RQ_QUEUES = {
     RQ_QUEUE: {
@@ -122,19 +125,23 @@ RQ_QUEUES = {
     },
     RQ_QUEUE_MAIL: {
         'USE_REDIS_CACHE': WORKER_MAIL_CACHE_ALIAS,
-        'DEFAULT_TIMEOUT': 30,
+        'DEFAULT_TIMEOUT': 10,
     },
     RQ_QUEUE_PUSH: {
         'USE_REDIS_CACHE': WORKER_PUSH_CACHE_ALIAS,
-        'DEFAULT_TIMEOUT': 5,
+        'DEFAULT_TIMEOUT': 10,
+    },
+    RQ_QUEUE_PUSHER: {
+        'USE_REDIS_CACHE': WORKER_PUSHER_CACHE_ALIAS,
+        'DEFAULT_TIMEOUT': 10,
+    },
+    RQ_QUEUE_CREDIT: {
+        'USE_REDIS_CACHE': WORKER_CREDIT_CACHE_ALIAS,
+        'DEFAULT_TIMEOUT': 10,
     },
     RQ_QUEUE_PUSH_BROADCAST: {
         'USE_REDIS_CACHE': WORKER_PUSH_BROADCAST_CACHE_ALIAS,
         'DEFAULT_TIMEOUT': 30,
-    },
-    RQ_QUEUE_PUSHER: {
-        'USE_REDIS_CACHE': WORKER_PUSHER_CACHE_ALIAS,
-        'DEFAULT_TIMEOUT': 5,
     },
     RQ_QUEUE_SSS: {
         'USE_REDIS_CACHE': WORKER_SSS_CACHE_ALIAS,
@@ -174,7 +181,7 @@ INSTALLED_APPS = (
     'heartbeat',
 
     'shoutit',
-    'shoutit_credit',
+    'shoutit_credit.appconfig.ShoutitCreditConfig',
     'shoutit_crm',
     'shoutit_pusher',
     'shoutit_twilio',
@@ -567,7 +574,7 @@ LOGGING = {
             'formatter': 'simple_dashed'
         },
         'null': {
-            "class": 'django.utils.log.NullHandler',
+            "class": 'logging.NullHandler',
         },
     },
     'loggers': {

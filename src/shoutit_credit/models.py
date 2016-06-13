@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 from datetime import timedelta
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 
 from common.constants import Constant
@@ -71,6 +73,16 @@ class CreditTransaction(UUIDModel):
     def web_url(self):
         self.display()
         return getattr(self.target, 'web_url', None) if hasattr(self, 'target') else None
+
+    def notify_user(self):
+        from shoutit.controllers.notifications_controller import notify_user_of_credit_transaction
+        notify_user_of_credit_transaction(self)
+
+
+@receiver(post_save, sender=CreditTransaction)
+def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    if created and getattr(instance, 'notify', True):
+        instance.notify_user()
 
 
 class PromoteLabel(UUIDModel):
