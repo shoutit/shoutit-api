@@ -28,4 +28,4 @@ ENV PYTHONIOENCODING UTF-8
 ENV SHOUTIT_ENV $SHOUTIT_ENV
 ENV NEW_RELIC_CONFIG_FILE /api/deploy/newrelic-${SHOUTIT_ENV}.ini
 
-CMD newrelic-admin run-program gunicorn src.wsgi -c /api/src/settings_gunicorn.py
+CMD gunicorn src.wsgi -c /api/src/settings_gunicorn.py
