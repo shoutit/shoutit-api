@@ -51,7 +51,8 @@ class CompleteProfile(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_complete_profile(profile):
-    complete_profile.apply(profile)
+    if complete_profile:
+        complete_profile.apply(profile)
 
 
 @receiver(post_save, sender=Profile)
@@ -103,7 +104,8 @@ class InviteFriends(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_invite_friends(user):
-    invite_friends.apply(user)
+    if invite_friends:
+        invite_friends.apply(user)
 
 
 @receiver(post_save, sender=User)
@@ -168,7 +170,8 @@ class ListenToFriends(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_listen_to_friends(listen):
-    listen_to_friends.apply(listen)
+    if listen_to_friends:
+        listen_to_friends.apply(listen)
 
 
 @receiver(post_save, sender=Listen2)
@@ -179,6 +182,8 @@ def listen_post_save(sender, instance=None, created=False, update_fields=None, *
 def map_rules():
     import sys
     # Todo (mo): This doesn't look good, Find more general way of mapping rules
+    # when testing the populated objects are coming from the actual database defined in env file
+    # while test objects are being saved somewhere else
 
     CREDIT_RULES['complete_profile'] = CompleteProfile
     _complete_profile = CompleteProfile.objects.first()

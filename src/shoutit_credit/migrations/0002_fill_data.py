@@ -40,7 +40,7 @@ def fill_data(apps, schema_editor):
 
 
 def remove_data(apps, schema_editor):
-    CreditRule.objects.all().delete()
+    pass
 
 
 class Migration(migrations.Migration):

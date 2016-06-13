@@ -26,12 +26,6 @@ test:
       docker build
       --build-arg SHOUTIT_ENV=test
       -t shoutit/shoutit-api:test .
-    - >
-      docker run -it
-      --add-host host_machine:$(ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
-      shoutit/shoutit-api:test
-      /bin/bash -c "
-      python ./src/manage.py migrate"
   override:
     - >
       docker run -it

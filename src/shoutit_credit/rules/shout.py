@@ -70,7 +70,8 @@ class ShareShouts(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_share_shouts(profile):
-    share_shouts.apply(profile)
+    if share_shouts:
+        share_shouts.apply(profile)
 
 
 @receiver(post_save, sender=Shout)
