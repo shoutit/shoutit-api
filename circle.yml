@@ -26,6 +26,12 @@ test:
       docker build
       --build-arg SHOUTIT_ENV=test
       -t shoutit/shoutit-api:test .
+    - >
+      docker run -it
+      --add-host host_machine:$(ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+      shoutit/shoutit-api:test
+      /bin/bash -c "
+      python ./src/manage.py migrate"
   override:
     - >
       docker run -it
@@ -35,7 +41,7 @@ test:
       shoutit/shoutit-api:test
       /bin/bash -c "
       cp -r /host_repo/.git ./
-      && PYTHONPATH='./src' py.test --cov=src --cov-report= --cov-config .coveragerc --junitxml=/circle_test_reports/django/junit.xml
+      && PYTHONPATH='./src' py.test --reuse-db --cov=src --cov-report= --cov-config .coveragerc --junitxml=/circle_test_reports/django/junit.xml
       && CODECLIMATE_REPO_TOKEN=$CODECLIMATE_REPO_TOKEN codeclimate-test-reporter"
   post:
 
