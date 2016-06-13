@@ -181,7 +181,7 @@ INSTALLED_APPS = (
     'heartbeat',
 
     'shoutit',
-    'shoutit_credit.appconfig.ShoutitCreditConfig',
+    'shoutit_credit',
     'shoutit_crm',
     'shoutit_pusher',
     'shoutit_twilio',
