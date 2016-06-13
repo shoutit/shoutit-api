@@ -22,12 +22,11 @@ def mark_all_as_read(user):
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
-def mark_notifications_as_read(user):
+def mark_actual_notifications_as_read(user):
     """
-    Mark Notifications that are *not* of type `new_message` or `new_credit_transaction` as read
+    Mark (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction` as read
     """
-    excluded_types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
-    Notification.objects.filter(is_read=False, to_user=user).exclude(type__in=excluded_types).update(is_read=True)
+    user.actual_notifications.filter(is_read=False).update(is_read=True)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -43,15 +42,14 @@ def get_total_unread_count(user):
     """
     Mainly used for setting iOS badge
     """
-    return get_unread_notifications_count(user) + get_unread_conversations_count(user)
+    return get_unread_actual_notifications_count(user) + get_unread_conversations_count(user)
 
 
-def get_unread_notifications_count(user):
+def get_unread_actual_notifications_count(user):
     """
-    Return count of unread Notifications that are *not* of type `new_message` or `new_credit_transaction`
+    Return count of unread (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction`
     """
-    excluded_types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
-    return Notification.objects.filter(is_read=False, to_user=user).exclude(type__in=excluded_types).count()
+    return user.actual_notifications.filter(is_read=False).count()
 
 
 def get_unread_conversations_count(user):

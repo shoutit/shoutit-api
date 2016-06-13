@@ -3,7 +3,6 @@
 """
 from __future__ import unicode_literals
 
-from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
@@ -11,7 +10,6 @@ from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 
 from common.constants import Constant
-from common.utils import date_unix
 from shoutit.models import UUIDModel
 
 CREDIT_RULES = {}
@@ -52,7 +50,7 @@ class CreditTransaction(UUIDModel):
     properties = JsonField(default=dict, blank=True)
 
     def __unicode__(self):
-        return "%d:%s by %s" % (self.amount, self.rule, self.user)
+        return "%s %d:%s by %s" % (self.id, self.amount, self.rule, self.user.username)
 
     @property
     def type(self):
@@ -80,42 +78,6 @@ class CreditTransaction(UUIDModel):
 
 
 @receiver(post_save, sender=CreditTransaction)
-def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+def transaction_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     if created and getattr(instance, 'notify', True):
         instance.notify_user()
-
-
-class PromoteLabel(UUIDModel):
-    name = models.CharField(max_length=50)
-    description = models.CharField(max_length=250)
-    color = models.CharField(max_length=9)
-    bg_color = models.CharField(max_length=9)
-    rank = models.PositiveSmallIntegerField()
-
-    def __unicode__(self):
-        return "%s:%s" % (self.name, self.color)
-
-    def clean(self):
-        if not self.color.find('#'):
-            self.color = '#' + self.color
-        self.color = self.color.upper()
-
-        if not self.bg_color.find('#'):
-            self.bg_color = '#' + self.bg_color
-        self.bg_color = self.bg_color.upper()
-
-
-class ShoutPromotion(UUIDModel):
-    shout = models.ForeignKey('shoutit.Shout', related_name='promotions')
-    transaction = models.OneToOneField(CreditTransaction, related_name='shout_promotion')
-    option = models.ForeignKey(CreditRule)
-    label = models.ForeignKey(PromoteLabel)
-    days = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True)
-
-    @property
-    def expires_at(self):
-        return self.created_at + timedelta(days=self.days)
-
-    @property
-    def expires_at_unix(self):
-        return date_unix(self.expires_at)

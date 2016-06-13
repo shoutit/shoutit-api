@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 from shoutit.admin_utils import UserLinkMixin
+from shoutit_credit.models import ShoutPromotion
 from .models import CreditRule, CreditTransaction, PromoteLabel
 
 
@@ -30,3 +31,11 @@ class PromoteLabelAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', 'name', 'rank', 'color', 'bg_color', 'description', 'created_at')
     readonly_fields = ('created_at',)
     ordering = ('rank',)
+
+
+@admin.register(ShoutPromotion)
+class ShoutPromotionAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', 'shout', 'transaction', 'label', 'days', 'expires_at', 'created_at')
+    raw_id_fields = ('shout', 'transaction')
+    readonly_fields = ('created_at',)
+    ordering = ('-created_at',)

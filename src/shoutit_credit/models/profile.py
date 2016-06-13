@@ -11,7 +11,7 @@ from django.dispatch import receiver
 from django_rq import job
 
 from shoutit.models import User, Profile, Listen2, ProfileContact
-from ..models import CreditRule, CREDIT_RULES, CreditTransaction
+from .base import CreditRule, CreditTransaction
 
 complete_profile = None
 invite_friends = None
@@ -51,6 +51,9 @@ class CompleteProfile(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_complete_profile(profile):
+    global complete_profile
+    if not complete_profile:
+        complete_profile = CompleteProfile.objects.first()
     if complete_profile:
         complete_profile.apply(profile)
 
@@ -104,6 +107,9 @@ class InviteFriends(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_invite_friends(user):
+    global invite_friends
+    if not invite_friends:
+        invite_friends = InviteFriends.objects.first()
     if invite_friends:
         invite_friends.apply(user)
 
@@ -170,6 +176,9 @@ class ListenToFriends(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_listen_to_friends(listen):
+    global listen_to_friends
+    if not listen_to_friends:
+        listen_to_friends = ListenToFriends.objects.first()
     if listen_to_friends:
         listen_to_friends.apply(listen)
 
@@ -177,22 +186,3 @@ def apply_listen_to_friends(listen):
 @receiver(post_save, sender=Listen2)
 def listen_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     apply_listen_to_friends.delay(instance)
-
-
-def map_rules():
-    import sys
-    # Todo (mo): This doesn't look good, Find more general way of mapping rules
-    # when testing the populated objects are coming from the actual database defined in env file
-    # while test objects are being saved somewhere else
-
-    CREDIT_RULES['complete_profile'] = CompleteProfile
-    _complete_profile = CompleteProfile.objects.first()
-    setattr(sys.modules[__name__], 'complete_profile', _complete_profile)
-
-    CREDIT_RULES['invite_friends'] = InviteFriends
-    _invite_friends = InviteFriends.objects.first()
-    setattr(sys.modules[__name__], 'invite_friends', _invite_friends)
-
-    CREDIT_RULES['listen_to_friends'] = ListenToFriends
-    _listen_to_friends = ListenToFriends.objects.first()
-    setattr(sys.modules[__name__], 'listen_to_friends', _listen_to_friends)

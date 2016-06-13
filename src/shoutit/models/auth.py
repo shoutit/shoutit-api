@@ -437,7 +437,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             credit = self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
             self._stats = {
                 'unread_conversations_count': notifications_controller.get_unread_conversations_count(self),
-                'unread_notifications_count': notifications_controller.get_unread_notifications_count(self),
+                'unread_notifications_count': notifications_controller.get_unread_actual_notifications_count(self),
                 'credit': credit
             }
         return self._stats

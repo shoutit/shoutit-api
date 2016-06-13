@@ -8,7 +8,6 @@ from rest_framework import permissions, viewsets, status, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
 
-from common.constants import NOTIFICATION_TYPE_MESSAGE
 from shoutit.controllers import notifications_controller
 from ..pagination import ReverseDateTimePagination
 from ..serializers import NotificationSerializer
@@ -24,7 +23,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return self.request.user.notifications.all().exclude(type=NOTIFICATION_TYPE_MESSAGE).order_by('-created_at')
+        return self.request.user.actual_notifications
 
     def list(self, request, *args, **kwargs):
         """
@@ -52,7 +51,7 @@ class NotificationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, viewsets.Gene
         omit_parameters:
             - form
         """
-        notifications_controller.mark_notifications_as_read(request.user)
+        notifications_controller.mark_actual_notifications_as_read(request.user)
         return Response(status=status.HTTP_202_ACCEPTED)
 
     @detail_route(methods=['post'])

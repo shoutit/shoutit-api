@@ -10,8 +10,7 @@ from rest_framework.response import Response
 
 from shoutit.api.v3.pagination import ShoutitPageNumberPagination, ReverseDateTimePagination
 from shoutit.controllers.notifications_controller import mark_credit_transactions_as_read
-from .models import PromoteLabel
-from .rules.shout import PromoteShouts
+from .models import PromoteLabel, PromoteShouts
 from .serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
                           PromoteShoutSerializer)
 

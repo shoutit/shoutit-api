@@ -4,10 +4,9 @@
 from __future__ import unicode_literals
 
 from rest_framework import serializers
+from .models import PromoteShouts, CreditTransaction, PromoteLabel, ShoutPromotion
 
 from shoutit.api.v3.serializers import AttachedUUIDObjectMixin
-from shoutit_credit.models import CreditTransaction, PromoteLabel, ShoutPromotion
-from shoutit_credit.rules.shout import PromoteShouts
 
 
 class CreditTransactionSerializer(serializers.ModelSerializer):

@@ -3,17 +3,57 @@
 """
 from __future__ import unicode_literals
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_rq import job
 
+from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest
-from shoutit.models import Shout
-from ..models import CreditRule, CREDIT_RULES, PromoteLabel, CreditTransaction, ShoutPromotion
+from shoutit.models import UUIDModel, Shout
+from .base import CreditRule, CreditTransaction
 
 share_shouts = None
+
+
+class PromoteLabel(UUIDModel):
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=250)
+    color = models.CharField(max_length=9)
+    bg_color = models.CharField(max_length=9)
+    rank = models.PositiveSmallIntegerField()
+
+    def __unicode__(self):
+        return "%s:%s" % (self.name, self.color)
+
+    def clean(self):
+        if not self.color.find('#'):
+            self.color = '#' + self.color
+        self.color = self.color.upper()
+
+        if not self.bg_color.find('#'):
+            self.bg_color = '#' + self.bg_color
+        self.bg_color = self.bg_color.upper()
+
+
+class ShoutPromotion(UUIDModel):
+    shout = models.ForeignKey(Shout, related_name='promotions')
+    label = models.ForeignKey(PromoteLabel)
+
+    days = models.PositiveSmallIntegerField(blank=True, null=True, db_index=True)
+    transaction = models.OneToOneField(CreditTransaction, blank=True, null=True, related_name='shout_promotion')
+    option = models.ForeignKey('shoutit_credit.PromoteShouts', blank=True, null=True)
+
+    @property
+    def expires_at(self):
+        return self.created_at + timedelta(days=self.days)
+
+    @property
+    def expires_at_unix(self):
+        return date_unix(self.expires_at)
 
 
 class ShareShoutsManager(models.Manager):
@@ -70,6 +110,9 @@ class ShareShouts(CreditRule):
 
 @job(settings.RQ_QUEUE_CREDIT)
 def apply_share_shouts(profile):
+    global share_shouts
+    if not share_shouts:
+        share_shouts = ShareShouts.objects.first()
     if share_shouts:
         share_shouts.apply(profile)
 
@@ -144,8 +187,8 @@ class PromoteShouts(CreditRule):
         transaction.save()
 
         # Create ShoutPromotion
-        shout_promotion = ShoutPromotion.create(shout=shout, transaction=transaction, option=self, label=self.label,
-                                                days=self.days)
+        shout_promotion = ShoutPromotion.create(shout=shout, label=self.label, days=self.days, transaction=transaction,
+                                                option=self)
 
         # We need to save the promotion before notifying as the notification requires the promotion object
         transaction.notify_user()
@@ -157,13 +200,3 @@ class PromoteShouts(CreditRule):
 
         if shout.promotions.exists():
             raise ShoutitBadRequest('This Shout is already promoted')
-
-
-def map_rules():
-    import sys
-
-    CREDIT_RULES['share_shouts'] = ShareShouts
-    _share_shouts = ShareShouts.objects.first()
-    setattr(sys.modules[__name__], 'share_shouts', _share_shouts)
-
-    CREDIT_RULES['promote_shouts'] = PromoteShouts

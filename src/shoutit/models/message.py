@@ -24,6 +24,7 @@ from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
     NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_CREDIT_TRANSACTION)
 from common.utils import date_unix
+from .auth import User
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
 from ..utils import none_to_blank, track_new_message
@@ -574,6 +575,16 @@ class Notification(UUIDModel, AttachedObjectMixin):
         # Trigger `stats_update` on Pusher
         from ..controllers import pusher_controller
         pusher_controller.trigger_stats_update(self.to_user, 'v3')
+
+
+@property
+def actual_notifications(self):
+    """
+    Notifications that are *not* of type `new_message` or `new_credit_transaction` aka "Notifications" for end users
+    """
+    excluded_types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
+    return self.notifications.exclude(type__in=excluded_types).order_by('-created_at')
+User.add_to_class('actual_notifications', actual_notifications)
 
 
 class Report(UUIDModel, AttachedObjectMixin):
