@@ -86,7 +86,7 @@ class MessagesReadTestCase(BaseTestCase):
         resp = self.client.post(self.reverse(self.url_name,
                                 kwargs={'id': self.m1.pk}))
         self.assert202(resp)
-        self.assertTrue(Notification.objects.get(to_user=self.user2).is_read)
+        self.assertTrue(Notification.objects.get(to_user=self.user2, message=self.m1).is_read)
         message_read = MessageRead.objects.filter(
             user=self.user2, message=self.m1, conversation=self.c1)
         self.assertTrue(message_read.exists())
