@@ -63,5 +63,5 @@ class ShoutPromotionSerializer(serializers.ModelSerializer, AttachedUUIDObjectMi
 
     class Meta:
         model = ShoutPromotion
-        fields = ('id', 'label', 'days', 'expires_at')
+        fields = ('id', 'label', 'days', 'expires_at', 'is_expired')
         extra_kwargs = {'expires_at': {'source': 'expires_at_unix'}}

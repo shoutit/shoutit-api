@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django_rq import job
 
 from common.utils import date_unix
@@ -49,11 +50,15 @@ class ShoutPromotion(UUIDModel):
 
     @property
     def expires_at(self):
-        return self.created_at + timedelta(days=self.days) if self.days else None
+        return self.created_at + timedelta(days=self.days) if self.days is not None else None
 
     @property
     def expires_at_unix(self):
-        return date_unix(self.expires_at) if self.days else None
+        return date_unix(self.expires_at) if self.days is not None else None
+
+    @property
+    def is_expired(self):
+        return False if self.days is None else self.expires_at < timezone.now()
 
 
 class ShareShoutsManager(models.Manager):
