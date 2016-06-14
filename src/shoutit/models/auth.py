@@ -448,7 +448,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return User.objects.none()
         friends = Q(linked_facebook__facebook_id__in=self.linked_facebook.friends)
         friend = Q(linked_facebook__friends__contains=[self.linked_facebook.facebook_id])
-        return User.objects.filter(friends | friend)
+        return User.objects.filter(friends | friend).exclude(id=self.id)
 
     @property
     def mutual_contacts(self):
@@ -460,7 +460,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         emails = filter(None, arrays.flatten(emails_list))
         mobiles = filter(None, arrays.flatten(mobiles_list))
         profile_ids = Profile.objects.filter(mobile__in=mobiles).values_list('id', flat=True)
-        return User.objects.filter(Q(email__in=emails) | Q(id__in=profile_ids))
+        return User.objects.filter(Q(email__in=emails) | Q(id__in=profile_ids)).exclude(id=self.id)
 
 
 @receiver(post_save, sender=User)
