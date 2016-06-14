@@ -49,11 +49,11 @@ class ShoutPromotion(UUIDModel):
 
     @property
     def expires_at(self):
-        return self.created_at + timedelta(days=self.days)
+        return self.created_at + timedelta(days=self.days) if self.days else None
 
     @property
     def expires_at_unix(self):
-        return date_unix(self.expires_at)
+        return date_unix(self.expires_at) if self.days else None
 
 
 class ShareShoutsManager(models.Manager):
