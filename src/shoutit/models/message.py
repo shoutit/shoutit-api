@@ -128,11 +128,11 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         self.mark_as_read(user)
 
         # 1 - record the deletion
-        with transaction.atomic():
-            try:
+        try:
+            with transaction.atomic():
                 ConversationDelete.objects.create(user=user, conversation=self)
-            except IntegrityError:
-                pass
+        except IntegrityError:
+            pass
 
         # 2 - remove the user from the list of users
         if user in self.contributors:
@@ -315,13 +315,12 @@ class Message(Action):
         return read_by
 
     def mark_as_read(self, user):
-        message_read = None
-        with transaction.atomic():
-            try:
-                message_read = MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
-            except IntegrityError:
-                pass
-        if message_read is not None:
+        try:
+            with transaction.atomic():
+                MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
+        except IntegrityError:
+            pass
+        else:
             from ..controllers import pusher_controller
 
             # Trigger `new_read_by` event in the conversation channel
@@ -384,11 +383,11 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
 
         # Todo: move the logic below on a queue
         # Add the message user to conversation users if he isn't already
-        with transaction.atomic():
-            try:
+        try:
+            with transaction.atomic():
                 conversation.users.add(instance.user)
-            except IntegrityError:
-                pass
+        except IntegrityError:
+            pass
 
         # Notify the other participants
         for to_user in conversation.contributors:

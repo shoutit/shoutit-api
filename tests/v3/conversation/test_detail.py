@@ -142,16 +142,17 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         self.assertEqual(
             ConversationDelete.objects.filter(conversation=conv).count(), 1)
 
-    def test_second_delete_conversation_request_is_allowed(self):
+    def test_user_is_excluded_from_deleted_conversation(self):
         """
-        Second attemt to delete conversation is allowed
+        After user has delete the conversation, he is excluded from
+        conversation contributors
         """
         conv = G(Conversation, type=CONVERSATION_TYPE_CHAT, creator=self.user1,
-                 users=[self.user1])
-        self.login(self.user1)
+                 users=[self.user1, self.user2])
+        self.login(self.user2)
         self.client.delete(self.get_url(conv.pk))
-        resp = self.client.delete(self.get_url(conv.pk))
-        self.assert204(resp)
+        self.assertNotIn(self.user2,
+                         Conversation.objects.get(pk=conv.pk).users.all())
 
     def test_delete_conversation_messages_marked_read(self):
         """
@@ -166,7 +167,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
             MessageRead.objects.filter(
                 user=self.user1, message=m, conversation=conv).count(), 1)
 
-    def test_delete_conversation_for_non_admin_is_forbidden(self):
+    def test_delete_conversation_for_non_admin_is_allowed(self):
         """
         Non-admin contributor can't delete conversation
         """
@@ -174,7 +175,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
                  users=[self.user1, self.user2])
         self.login(self.user2)
         resp = self.client.delete(self.get_url(conv.pk))
-        self.assert403(resp)
+        self.assert204(resp)
 
 
 class ConversationDeleteMessagesTestCase(DetailMixin, BaseTestCase):

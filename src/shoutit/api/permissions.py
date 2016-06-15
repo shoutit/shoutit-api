@@ -55,8 +55,7 @@ class IsAdminOrCanContribute(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         assert hasattr(obj, 'can_contribute') and hasattr(obj, 'admins'), "obj must have `is_admin` and `can_contribute` attributes"
-        if (view.suffix == 'Instance' and
-                request.method in ('PATCH', 'PUT', 'DELETE')):
+        if request.method in ('PATCH', 'PUT'):
             return obj.is_admin(request.user)
         else:
             return obj.can_contribute(request.user)
