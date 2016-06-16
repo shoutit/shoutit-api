@@ -103,6 +103,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         _('guest user status'), default=False, help_text=_('Designates whether this user is a guest user.'))
     on_mailing_list = models.BooleanField(
         _('mailing list status'), default=False, help_text=_('Designates whether this user is on the main mailing list.'))
+    on_mp_people = models.BooleanField(
+        _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
     objects = ShoutitUserManager()
 
     USERNAME_FIELD = 'username'
@@ -254,7 +256,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def api_client_names(self):
-        return self.accesstoken_set.values_list('client__name', flat=True)
+        return arrays.unique(self.accesstoken_set.values_list('client__name', flat=True))
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)

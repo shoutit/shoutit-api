@@ -27,7 +27,7 @@ from common.utils import date_unix
 from .auth import User
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
-from ..utils import none_to_blank, track_new_message
+from ..utils import none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -339,19 +339,12 @@ class Message(Action):
     @property
     def track_properties(self):
         conversation = self.conversation
-        properties = {
-            'id': self.pk,
-            'profile': self.user_id,
-            'type': 'text' if self.text else 'attachment',
+        properties = super(Message, self).track_properties
+        properties.update({
             'conversation_id': self.conversation_id,
             'conversation_type': conversation.get_type_display(),
             'is_first': self.is_first,
-            'Country': self.get_country_display(),
-            'Region': self.state,
-            'City': self.city,
-            'api_client': getattr(self, 'api_client', None),
-            'api_version': getattr(self, 'api_version', None),
-        }
+        })
         if properties['type'] == 'attachment':
             first_attachment = self.attachments.first()
             if first_attachment:
@@ -361,6 +354,9 @@ class Message(Action):
             if conversation.about.is_sss:
                 properties.update({'about_sss': True})
         return properties
+
+    def get_type_display(self):
+        return 'text' if self.text else 'attachment'
 
 
 @receiver(post_save, sender=Message)
@@ -395,8 +391,9 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
                 notifications_controller.notify_user_of_message(to_user, instance)
 
         # Track the message on MixPanel
+        from ..controllers import mixpanel_controller
         if instance.user:
-            track_new_message(instance)
+            mixpanel_controller.track_new_message(instance)
 
 
 class MessageRead(UUIDModel):

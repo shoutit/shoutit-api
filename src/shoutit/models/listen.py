@@ -8,7 +8,6 @@ from django.dispatch import receiver
 
 from common.constants import ListenType, LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG
 from .action import Action
-from ..utils import track
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -49,20 +48,15 @@ class Listen2(Action):
 
     @property
     def track_properties(self):
-        properties = {
-            'profile': self.user_id,
-            'type': self.get_type_display(),
-            'target': self.target,
-            'Country': self.get_country_display(),
-            'Region': self.state,
-            'City': self.city,
-            'api_client': getattr(self, 'api_client', None),
-            'api_version': getattr(self, 'api_version', None),
-        }
+        properties = super(Listen2, self).track_properties
+        properties.update({
+            'target': self.target
+        })
         return properties
 
 
 @receiver(post_save, sender=Listen2)
 def post_save_listen(sender, instance=None, created=False, **kwargs):
+    from shoutit.controllers import mixpanel_controller
     if created:
-        track(instance.user.pk, 'new_listen', instance.track_properties)
+        mixpanel_controller.track(instance.user.pk, 'new_listen', instance.track_properties)
