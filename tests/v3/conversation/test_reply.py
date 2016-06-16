@@ -138,20 +138,8 @@ class ConversationReplyProfileTestCase(DetailMixin, BaseTestCase):
         self.login(self.user1)
         image_urls = ['http://s3.com/image1.png', 'http://s3.com/image1.png']
         videos = [
-            {
-                'url': 'http://yout.com/v1',
-                'thumbnail_url': 'http://s3.com/v1.png',
-                'provider': 'youtube',
-                'id_on_provider': 'v1',
-                'duration': 30,
-            },
-            {
-                'url': 'http://yout.com/v2',
-                'thumbnail_url': 'http://s3.com/v2.png',
-                'provider': 'youtube',
-                'id_on_provider': 'v2',
-                'duration': 40,
-            },
+            self.get_video_data(url='http://yout.com/v1'),
+            self.get_video_data(url='http://yout.com/v2'),
         ]
         resp = self.client.post(self.get_url(self.c1.pk), {
             'text': 'm1',

@@ -222,7 +222,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
 class HomeFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, index_queryset, view):
-        user = view.get_object()
+        user = request.user
         listening = []
 
         # Listened Tags
