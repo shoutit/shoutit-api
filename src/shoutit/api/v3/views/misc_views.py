@@ -99,6 +99,9 @@ class MiscViewSet(viewsets.ViewSet):
 
         if 'users' in types:
             users_qs = User.objects.filter(type=USER_TYPE_PROFILE, is_activated=True).order_by('-date_joined')
+            if request.user.is_authenticated():
+                # Todo (mo): handle case when the request.user is a page user
+                users_qs = users_qs.exclude(id=request.user.id)
             if country:
                 users_qs = users_qs.filter(profile__country=country)
             users = ProfileSerializer(users_qs[:page_size], many=True, context={'request': request}).data
