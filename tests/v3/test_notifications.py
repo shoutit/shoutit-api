@@ -46,7 +46,7 @@ class NotificationsTestCase(BaseTestCase):
         self.assert401(resp)
 
     def test_notification_list(self):
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         resp = self.client.get(self.reverse(self.url_name_list))
         self.assert200(resp)
         self.assert_ids_equal(self.decode_json(resp)['results'],
@@ -55,7 +55,7 @@ class NotificationsTestCase(BaseTestCase):
     # reset
 
     def test_notification_reset_marked_as_read(self):
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         Notification.objects.all().update(is_read=False)
         resp = self.client.post(self.reverse(self.url_name_reset))
         self.assert202(resp)
@@ -65,7 +65,7 @@ class NotificationsTestCase(BaseTestCase):
 
     @patch.object(mocked_pusher, 'trigger')
     def test_notification_reset_pusher_event_sent(self, m_trigger):
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         m_trigger.reset_mock()
         self.client.post(self.reverse(self.url_name_reset))
         self.assert_pusher_event(m_trigger,
@@ -73,7 +73,7 @@ class NotificationsTestCase(BaseTestCase):
 
     @patch.object(apns, 'apns_send_bulk_message')
     def test_notification_reset_ios_badge_set(self, m_apns_bulk):
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         self.client.post(self.reverse(self.url_name_reset))
         self.assert_ios_badge_set(m_apns_bulk, [self.device.registration_id],
                                   badge=0)
@@ -90,7 +90,7 @@ class NotificationsTestCase(BaseTestCase):
         self.assert401(resp)
 
     def test_notification_read_bad_id(self):
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         resp = self.client.post(
             self.reverse(self.url_name_read, kwargs={'id': 1}))
         self.assert400(resp)
@@ -98,7 +98,7 @@ class NotificationsTestCase(BaseTestCase):
     def test_notification_read_changed(self):
         self.n2.save()
         Notification.objects.filter(pk=self.n2.pk).update(is_read=False)
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         resp = self.client.post(
             self.reverse(self.url_name_read, kwargs={'id': self.n2.pk}))
         self.assert202(resp)
@@ -107,7 +107,7 @@ class NotificationsTestCase(BaseTestCase):
     @patch.object(mocked_pusher, 'trigger')
     def test_notification_read_event_sent(self, m_trigger):
         Notification.objects.all().update(is_read=False)
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         m_trigger.reset_mock()
         self.client.post(
             self.reverse(self.url_name_read, kwargs={'id': self.n2.pk}))
@@ -121,7 +121,7 @@ class NotificationsTestCase(BaseTestCase):
     @patch.object(apns, 'apns_send_bulk_message')
     def test_notification_ios_badge_set(self, m_apns_bulk):
         Notification.objects.all().update(is_read=False)
-        self.client.login(username=self.user.username, password='123')
+        self.login(self.user)
         self.client.post(
             self.reverse(self.url_name_read, kwargs={'id': self.n2.pk}))
         self.assert_ios_badge_set(m_apns_bulk, [self.device.registration_id],

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Count
 from pydash import arrays
 
@@ -47,7 +47,8 @@ def conversation_exist(conversation_id=None, users=None, about=None, include_pub
 
 def hide_message_from_user(message, user):
     try:
-        MessageDelete(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
+        with transaction.atomic():
+            MessageDelete(user=user, message_id=message.id, conversation_id=message.conversation.id).save(True)
     except IntegrityError:
         pass
 

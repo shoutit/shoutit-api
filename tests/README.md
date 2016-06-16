@@ -9,7 +9,7 @@ Tests
     fab local_test
 
     # OR manually run
-    PYTHONPATH='./src' py.test --reuse-db --cov=src
+    py.test --reuse-db --cov=src
 
 #### Run inside docker
 
@@ -24,6 +24,6 @@ At least following services are required to run on your host:
 Then run docker:
 
     docker build --build-arg SHOUTIT_ENV=test -t shoutit/shoutit-api:test .
-    docker run -it --add-host host_machine:$(ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1) shoutit/shoutit-api:test PYTHONPATH='./src' py.test --reuse-db --cov=src
+    docker run -it --add-host host_machine:$(ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1) shoutit/shoutit-api:test py.test --reuse-db --cov=src
 
 Note, if you are using MacOS, the docker is run inside virtualbox. In that case replace 'docker0' with your virtualbox network interface name (for example vboxnet0). Use ifconfig command to find interface name.

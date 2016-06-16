@@ -110,6 +110,8 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         """
         Update conversation
         ###REQUIRES AUTH
+        The logged in profile should be admin in the conversation
+        ###Request
         ####Body
         <pre><code>
         {

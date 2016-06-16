@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -90,7 +90,10 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
                 title = sub_title
                 sub_title = ''
             if not image:
-                image = contributors_summary[0].ap.image if contributors_summary else user.ap.image
+                if contributors_summary:
+                    image = contributors_summary[0].ap.image
+                elif user.is_authenticated():
+                    image = user.ap.image
 
         dis = OrderedDict([
             ('title', title),
@@ -126,7 +129,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
         # 1 - record the deletion
         try:
-            ConversationDelete.objects.create(user=user, conversation_id=self.id)
+            with transaction.atomic():
+                ConversationDelete.objects.create(user=user, conversation=self)
         except IntegrityError:
             pass
 
@@ -199,7 +203,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     @property
     def shout_attachments(self):
         from .post import Shout
-        return Shout.objects.filter(message_attachments__conversation=self)
+        return (Shout.objects.filter(message_attachments__conversation=self)
+                             .distinct())
 
 
 @receiver(pre_save, sender=Conversation)
@@ -311,7 +316,8 @@ class Message(Action):
 
     def mark_as_read(self, user):
         try:
-            MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
+            with transaction.atomic():
+                MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
         except IntegrityError:
             pass
         else:
@@ -378,7 +384,8 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         # Todo: move the logic below on a queue
         # Add the message user to conversation users if he isn't already
         try:
-            conversation.users.add(instance.user)
+            with transaction.atomic():
+                conversation.users.add(instance.user)
         except IntegrityError:
             pass
 
