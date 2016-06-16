@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import random
 
 from django.conf import settings
+from django.http import Http404
 from django.views.decorators.cache import cache_control
 from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
@@ -58,6 +59,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self, *args, **kwargs)
         return queryset
+
+    def get_object(self):
+        self.get_expired = True
+        shout = super(ShoutViewSet, self).get_object()
+        if shout.is_expired and self.request.user != shout.owner:
+            raise Http404
+        return shout
 
     def get_index_search(self):
         return ShoutIndex.search()
