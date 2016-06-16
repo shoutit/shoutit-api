@@ -19,10 +19,10 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from common.utils import any_in
 from shoutit.api.permissions import IsOwnerModify
 from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller, mixpanel_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import has_unicode, track
+from shoutit.utils import has_unicode
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
@@ -150,7 +150,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                 'api_version': request.version,
             })
             event_name = 'search' if 'search' in search_data else 'browse'
-            track(request.user.pk, event_name, search_data)
+            mixpanel_controller.track(request.user.pk, event_name, search_data)
         return result
 
     @cache_control(max_age=60 * 60 * 24)
@@ -469,13 +469,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         track_properties = {
             'api_client': getattr(request, 'api_client', None),
             'api_version': request.version,
-            'Country': profile.get_country_display(),
-            'Region': profile.state,
-            'City': profile.city,
+            'mp_country_code': profile.country,
+            '$region': profile.state,
+            '$city': profile.city,
             'shout_id': shout.pk,
             'shout_country': shout.get_country_display(),
             'shout_region': shout.state,
             'shout_city': shout.city,
         }
-        track(user.pk, 'show_mobile', track_properties)
+        mixpanel_controller.track(user.pk, 'show_mobile', track_properties)
         return Response({'mobile': mobile})

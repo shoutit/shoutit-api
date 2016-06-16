@@ -18,9 +18,10 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
-from common.constants import TOKEN_TYPE_EMAIL, COUNTRY_ISO
+from common.constants import TOKEN_TYPE_EMAIL
 from shoutit.models import ConfirmToken
-from shoutit.utils import track, alias, error_logger
+from shoutit.controllers import mixpanel_controller
+from shoutit.utils import error_logger
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
@@ -107,17 +108,17 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         if new_signup:
             mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
             if mixpanel_distinct_id:
-                alias(user.pk, mixpanel_distinct_id)
-            track(user.pk, 'signup', {
+                mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
+            mixpanel_controller.track(user.pk, 'signup', {
                 'user_id': user.pk,
                 'is_guest': user.is_guest,
                 'api_client': request_data.get('client_id'),
                 'api_version': self.request.version,
                 'using': request_data.get('grant_type'),
                 'server': self.request.META.get('HTTP_HOST'),
-                'Country': COUNTRY_ISO.get(user.location.get('country')),
-                'Region': user.location.get('state'),
-                'City': user.location.get('city'),
+                'mp_country_code': user.location.get('country'),
+                '$region': user.location.get('state'),
+                '$city': user.location.get('city'),
             })
 
         return Response(response_data)

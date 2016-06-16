@@ -14,6 +14,7 @@ from mock import MagicMock
 from push_notifications import apns, gcm
 import responses
 
+from shoutit.controllers import mixpanel_controller
 from shoutit_pusher import utils as pusher_utils
 from shoutit import ES, utils as shoutit_utils
 from shoutit.models.misc import LocationIndex
@@ -36,7 +37,8 @@ gcm.gcm_send_message = mocked_gcm_send_message = MagicMock()
 gcm.gcm_send_bulk_message = mocked_gcm_send_bulk_message = MagicMock()
 
 # mock Mixpanel
-shoutit_utils.shoutit_mp = MagicMock()
+mixpanel_controller.shoutit_mp = MagicMock()
+mixpanel_controller.shoutit_mp_buffered = MagicMock()
 
 
 class BaseTestCase(APITestCase):

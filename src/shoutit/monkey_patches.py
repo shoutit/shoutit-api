@@ -27,7 +27,7 @@ default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder def
 
 
 # Monkey Patching all the JSON imports
-class ShoutitCustomJSONEncoder(JSONEncoder):
+class ShoutitJSONEncoder(JSONEncoder):
     def default(self, obj):
 
         # case: UUID
@@ -47,6 +47,10 @@ class ShoutitCustomJSONEncoder(JSONEncoder):
             fmt = '%Y-%m-%dT%H:%M:%S'
             return obj.strftime(fmt)
 
+        if isinstance(obj, datetime.date):
+            fmt = '%Y-%m-%d'
+            return obj.strftime(fmt)
+
         # case: Class
         # if isinstance(obj, Class):
         #     return class_to_str(obj)
@@ -55,7 +59,7 @@ class ShoutitCustomJSONEncoder(JSONEncoder):
         return default_json_encoder_default(obj)  # call the saved default function
 
 
-JSONEncoder.default = ShoutitCustomJSONEncoder().default  # replace the JSONEncoder default function with custom one
+JSONEncoder.default = ShoutitJSONEncoder().default  # replace the JSONEncoder default function with custom one
 
 
 # Monkey Patching DRF Request to expose `__getstate__` and `__setstate__` methods.
