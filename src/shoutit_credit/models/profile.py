@@ -40,6 +40,10 @@ class CompleteProfile(CreditRule):
         return ret
 
     def apply(self, profile):
+        # Shouldn't be a guest!
+        if profile.user.is_guest:
+            return
+
         # Check for similar existing transaction
         if CreditTransaction.exists(user_id=profile.user_id, rule=self):
             return
