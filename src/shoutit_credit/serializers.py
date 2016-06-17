@@ -4,6 +4,8 @@
 from __future__ import unicode_literals
 
 from rest_framework import serializers
+
+from shoutit_credit.models.profile import InvitationCode
 from .models import PromoteShouts, CreditTransaction, PromoteLabel, ShoutPromotion
 
 from shoutit.api.v3.serializers import AttachedUUIDObjectMixin
@@ -65,3 +67,11 @@ class ShoutPromotionSerializer(serializers.ModelSerializer, AttachedUUIDObjectMi
         model = ShoutPromotion
         fields = ('id', 'label', 'days', 'expires_at', 'is_expired')
         extra_kwargs = {'expires_at': {'source': 'expires_at_unix'}}
+
+
+class InvitationCodeSerializer(serializers.ModelSerializer):
+    created_at = serializers.IntegerField(source='created_at_unix', read_only=True)
+
+    class Meta:
+        model = InvitationCode
+        fields = ('id', 'code', 'used_count', 'created_at')

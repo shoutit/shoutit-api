@@ -72,7 +72,8 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
         ret = self.to_internal_attached_value(data)
         if ret:
             return ret
-
+        if not data:
+            data = {}
         # Optional price and currency
         price = data.get('price')
         price_is_set = price is not None

@@ -12,7 +12,7 @@ from shoutit.api.v3.pagination import ShoutitPageNumberPagination, ReverseDateTi
 from shoutit.controllers.notifications_controller import mark_credit_transactions_as_read
 from .models import PromoteLabel, PromoteShouts
 from .serializers import (CreditTransactionSerializer, PromoteLabelSerializer, PromoteOptionSerializer,
-                          PromoteShoutSerializer)
+                          PromoteShoutSerializer, InvitationCodeSerializer)
 
 
 class ShoutitCreditViewSet(viewsets.GenericViewSet):
@@ -81,6 +81,29 @@ class ShoutitCreditViewSet(viewsets.GenericViewSet):
         mark_credit_transactions_as_read(request.user)
 
         return self.get_paginated_response(serializer.data)
+
+    @list_route(methods=['get'], suffix='Invitation Code')
+    def invitation_code(self, request, *args, **kwargs):
+        """
+        Generate an invitation code to be used when sending invites
+        ###REQUIRES AUTH
+
+        ### InvitationCode
+        <pre><code>
+        {
+            "id": "000f8017-4a01-4f39-aa82-28f8eb807dce",
+            "created_at": 1463255281,
+            "code": "ABCDEF0123",
+            "used_count": 0
+        }
+        </code></pre>
+
+        ---
+        omit_serializer: true
+        """
+        invitation_code = request.user.invitation_code
+        serializer = InvitationCodeSerializer(instance=invitation_code)
+        return Response(serializer.data)
 
 
 class PromoteShoutMixin(object):
