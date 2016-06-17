@@ -139,3 +139,4 @@ def _remove_from_mp_people(user_ids=None, flush=False):
         shoutit_mp_buffered._consumer.flush()
 
     User.objects.filter(id__in=user_ids).update(on_mp_people=False)
+    debug_logger.debug("Removed %s MixPanel People record(s)" % len(user_ids))
