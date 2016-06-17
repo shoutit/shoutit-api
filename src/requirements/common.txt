@@ -1,6 +1,6 @@
 # core
 django-dotenv
-gunicorn==19.5.0
+gunicorn==19.6.0
 requests==2.10.0
 Django==1.8.13
 psycopg2>=2.6
@@ -20,12 +20,12 @@ drf-extensions
 
 # cache search queues
 redis==2.10.5
-django-redis==4.4.2
+django-redis==4.4.3
 elasticsearch==2.3.0
 elasticsearch-dsl==2.0.0
 click==6.3
 rq==0.6.0
-django_rq==0.9.0
+django-rq==0.9.1
 django-widget-tweaks
 
 # AWS imaging
@@ -51,9 +51,9 @@ markdown==2.6.6
 
 # utils
 django-request-id
-raven==5.19.0
+raven==5.20.0
 pydash
-phonenumbers==7.4.0
+phonenumbers==7.4.2
 django-ipware
 twilio==6.2.dev0
 nexmo

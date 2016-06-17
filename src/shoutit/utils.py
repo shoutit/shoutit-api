@@ -30,7 +30,6 @@ from django_rq import job
 import nexmo as nexmo
 import phonenumbers
 import requests
-from mixpanel import Mixpanel
 from rest_framework.request import Request
 
 from common.constants import COUNTRY_ISO
@@ -38,16 +37,10 @@ from shoutit import settings
 from shoutit.api.versioning import ShoutitNamespaceVersioning
 from common.lib import location
 
-from shoutit.monkey_patches import ShoutitCustomJSONEncoder
-
-
 # Shoutit loggers
 error_logger = logging.getLogger('shoutit.error')
 debug_logger = logging.getLogger('shoutit.debug')
 sss_logger = logging.getLogger('shoutit.sss')
-
-# Shoutit mixpanel
-shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitCustomJSONEncoder)
 
 # IP2Location instant
 ip2location = location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
@@ -153,45 +146,6 @@ def upload_image_to_s3(bucket_name, public_url, url=None, data=None, filename=No
             raise
         else:
             error_logger.warn("Uploading image to S3 failed", exc_info=True)
-
-
-def alias(alias_id, original):
-    if not settings.USE_MIXPANEL:
-        return
-    return _alias.delay(alias_id, original)
-
-
-@job(settings.RQ_QUEUE)
-def _alias(alias_id, original):
-    shoutit_mp.alias(alias_id, original)
-    debug_logger.debug("MP aliased, alias_id: %s original: %s" % (alias_id, original))
-
-
-def track_new_message(message):
-    _track_new_message.delay(message)
-
-
-@job(settings.RQ_QUEUE)
-def _track_new_message(message):
-    distinct_id = message.user.pk if message.user else 'system'
-    track(distinct_id, 'new_message', message.track_properties, delay=False)
-
-
-def track(distinct_id, event_name, properties=None, delay=True):
-    # Todo: properties could be a callable that gets called when the tracking happens
-    if not settings.USE_MIXPANEL:
-        return
-    if delay:
-        return _track.delay(distinct_id, event_name, properties)
-    else:
-        return _track(distinct_id, event_name, properties)
-
-
-@job(settings.RQ_QUEUE)
-def _track(distinct_id, event_name, properties=None):
-    properties = properties or {}
-    shoutit_mp.track(distinct_id, event_name, properties)
-    debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
 
 
 def correct_mobile(mobile, country, raise_exception=False):
@@ -322,6 +276,7 @@ def url_with_querystring(url, params=None, **kwargs):
     query.update(kwargs)
     url_parts[4] = urllib.urlencode(query)
     return urlparse.urlunparse(url_parts)
+
 
 # @receiver(post_save)
 # def model_post_save(sender, instance=None, created=False, **kwargs):

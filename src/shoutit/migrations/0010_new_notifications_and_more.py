@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='notification',
             name='type',
-            field=models.IntegerField(choices=[(0, 'new_listen'), (1, 'new_message'), (2, 'broadcast'), (3, 'profile_update'), (4, 'conversation_update'), (5, 'new_read_by'), (6, 'stats_update'), (7, 'incoming_video_call'), (8, 'missed_video_call')]),
+            field=models.IntegerField(choices=[(0, 'new_listen'), (1, 'new_message'), (2, 'broadcast'), (3, 'profile_update'), (4, 'conversation_update'), (5, 'new_read_by'), (6, 'stats_update'), (7, 'incoming_video_call'), (8, 'missed_video_call'), (9, 'new_credit_transaction')]),
         ),
         migrations.AlterField(
             model_name='shout',

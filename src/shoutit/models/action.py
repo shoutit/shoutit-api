@@ -25,6 +25,20 @@ class Action(UUIDModel, APIModelMixin, LocationMixin):
     def owner(self):
         return self.user
 
+    @property
+    def track_properties(self):
+        properties = {
+            'id': self.pk,
+            'profile': self.user_id,
+            'type': self.get_type_display(),
+            'mp_country_code': self.country,
+            '$region': self.state,
+            '$city': self.city,
+            'api_client': getattr(self, 'api_client', None),
+            'api_version': getattr(self, 'api_version', None),
+        }
+        return properties
+
 
 @receiver(pre_save)
 def action_pre_save(sender, instance=None, **kwargs):

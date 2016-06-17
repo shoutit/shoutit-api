@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.db import models, IntegrityError
+from django.db import models, IntegrityError, transaction
 from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -22,11 +22,12 @@ from common.constants import (
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
     MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
-    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
+    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_CREDIT_TRANSACTION)
 from common.utils import date_unix
+from .auth import User
 from .action import Action
 from .base import UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationMixin
-from ..utils import none_to_blank, track_new_message
+from ..utils import none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -89,7 +90,10 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
                 title = sub_title
                 sub_title = ''
             if not image:
-                image = contributors_summary[0].ap.image if contributors_summary else user.ap.image
+                if contributors_summary:
+                    image = contributors_summary[0].ap.image
+                elif user.is_authenticated():
+                    image = user.ap.image
 
         dis = OrderedDict([
             ('title', title),
@@ -125,7 +129,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
         # 1 - record the deletion
         try:
-            ConversationDelete.objects.create(user=user, conversation_id=self.id)
+            with transaction.atomic():
+                ConversationDelete.objects.create(user=user, conversation=self)
         except IntegrityError:
             pass
 
@@ -198,7 +203,8 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     @property
     def shout_attachments(self):
         from .post import Shout
-        return Shout.objects.filter(message_attachments__conversation=self)
+        return (Shout.objects.filter(message_attachments__conversation=self)
+                             .distinct())
 
 
 @receiver(pre_save, sender=Conversation)
@@ -310,7 +316,8 @@ class Message(Action):
 
     def mark_as_read(self, user):
         try:
-            MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
+            with transaction.atomic():
+                MessageRead.objects.create(user=user, message_id=self.id, conversation_id=self.conversation_id)
         except IntegrityError:
             pass
         else:
@@ -332,19 +339,12 @@ class Message(Action):
     @property
     def track_properties(self):
         conversation = self.conversation
-        properties = {
-            'id': self.pk,
-            'profile': self.user_id,
-            'type': 'text' if self.text else 'attachment',
+        properties = super(Message, self).track_properties
+        properties.update({
             'conversation_id': self.conversation_id,
             'conversation_type': conversation.get_type_display(),
             'is_first': self.is_first,
-            'Country': self.get_country_display(),
-            'Region': self.state,
-            'City': self.city,
-            'api_client': getattr(self, 'api_client', None),
-            'api_version': getattr(self, 'api_version', None),
-        }
+        })
         if properties['type'] == 'attachment':
             first_attachment = self.attachments.first()
             if first_attachment:
@@ -354,6 +354,9 @@ class Message(Action):
             if conversation.about.is_sss:
                 properties.update({'about_sss': True})
         return properties
+
+    def get_type_display(self):
+        return 'text' if self.text else 'attachment'
 
 
 @receiver(post_save, sender=Message)
@@ -377,7 +380,8 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         # Todo: move the logic below on a queue
         # Add the message user to conversation users if he isn't already
         try:
-            conversation.users.add(instance.user)
+            with transaction.atomic():
+                conversation.users.add(instance.user)
         except IntegrityError:
             pass
 
@@ -387,8 +391,9 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
                 notifications_controller.notify_user_of_message(to_user, instance)
 
         # Track the message on MixPanel
+        from ..controllers import mixpanel_controller
         if instance.user:
-            track_new_message(instance)
+            mixpanel_controller.track_new_message(instance)
 
 
 class MessageRead(UUIDModel):
@@ -513,6 +518,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
             target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
+            # Todo (mo): is `ranges` needed for messages notifications?
+            title = _("New message")
             name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
             text = self.attached_object.summary
             ranges.append({'offset': text.index(name), 'length': len(name)})
@@ -520,6 +527,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             target = self.attached_object.conversation
 
         elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+            # Todo (mo): is `ranges` needed for incoming video call notifications?
             title = _("Incoming video call")
             name = self.attached_object.name
             text = _("%(name)s is calling you on Shoutit") % {'name': name}
@@ -534,6 +542,10 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
             target = self.attached_object
+
+        elif self.type == NOTIFICATION_TYPE_CREDIT_TRANSACTION:
+            title = _("New Credit Transaction")
+            text = self.attached_object.display()['text']
 
         ret = OrderedDict([
             ('title', title),
@@ -567,6 +579,16 @@ class Notification(UUIDModel, AttachedObjectMixin):
         # Trigger `stats_update` on Pusher
         from ..controllers import pusher_controller
         pusher_controller.trigger_stats_update(self.to_user, 'v3')
+
+
+@property
+def actual_notifications(self):
+    """
+    Notifications that are *not* of type `new_message` or `new_credit_transaction` aka "Notifications" for end users
+    """
+    excluded_types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
+    return self.notifications.exclude(type__in=excluded_types).order_by('-created_at')
+User.add_to_class('actual_notifications', actual_notifications)
 
 
 class Report(UUIDModel, AttachedObjectMixin):

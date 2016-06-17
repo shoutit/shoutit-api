@@ -7,7 +7,6 @@ from ipware.ip import get_real_ip
 
 from common.constants import DEFAULT_LOCATION
 from shoutit.controllers import facebook_controller
-from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
 from shoutit.utils import error_logger
 
 
@@ -64,6 +63,8 @@ class BadRequestsMiddleware(object):
 class UserPermissionsMiddleware(object):
     @staticmethod
     def attach_permissions_to_request(request):
+        from shoutit.permissions import ConstantPermission, ANONYMOUS_USER_PERMISSIONS
+
         if request.user.is_authenticated():
             # todo: cache permissions
             permissions = request.user.permissions.all()

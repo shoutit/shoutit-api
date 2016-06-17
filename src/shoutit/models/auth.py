@@ -10,7 +10,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone, six
@@ -103,6 +103,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         _('guest user status'), default=False, help_text=_('Designates whether this user is a guest user.'))
     on_mailing_list = models.BooleanField(
         _('mailing list status'), default=False, help_text=_('Designates whether this user is on the main mailing list.'))
+    on_mp_people = models.BooleanField(
+        _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
     objects = ShoutitUserManager()
 
     USERNAME_FIELD = 'username'
@@ -254,7 +256,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def api_client_names(self):
-        return self.accesstoken_set.values_list('client__name', flat=True)
+        return arrays.unique(self.accesstoken_set.values_list('client__name', flat=True))
 
     def get_absolute_url(self):
         return "/users/%s/" % urlquote(self.username)
@@ -434,10 +436,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         from ..controllers import notifications_controller
         # Todo (mo): crate fields for each stats property which holds the latest value and gets updated
         if not hasattr(self, '_stats'):
+            credit = self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
             self._stats = {
                 'unread_conversations_count': notifications_controller.get_unread_conversations_count(self),
-                'unread_notifications_count': notifications_controller.get_unread_notifications_count(self),
-                'credit': 0
+                'unread_notifications_count': notifications_controller.get_unread_actual_notifications_count(self),
+                'credit': credit
             }
         return self._stats
 
@@ -447,7 +450,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return User.objects.none()
         friends = Q(linked_facebook__facebook_id__in=self.linked_facebook.friends)
         friend = Q(linked_facebook__friends__contains=[self.linked_facebook.facebook_id])
-        return User.objects.filter(friends | friend)
+        return User.objects.filter(friends | friend).exclude(id=self.id)
 
     @property
     def mutual_contacts(self):
@@ -459,7 +462,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         emails = filter(None, arrays.flatten(emails_list))
         mobiles = filter(None, arrays.flatten(mobiles_list))
         profile_ids = Profile.objects.filter(mobile__in=mobiles).values_list('id', flat=True)
-        return User.objects.filter(Q(email__in=emails) | Q(id__in=profile_ids))
+        return User.objects.filter(Q(email__in=emails) | Q(id__in=profile_ids)).exclude(id=self.id)
 
 
 @receiver(post_save, sender=User)

@@ -8,7 +8,8 @@ from django_rq import job
 from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE,
-                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
+                              NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NOTIFICATION_TYPE_INCOMING_VIDEO_CALL,
+                              NOTIFICATION_TYPE_CREDIT_TRANSACTION)
 from ..controllers import push_controller, pusher_controller
 from ..models import Notification
 
@@ -21,11 +22,19 @@ def mark_all_as_read(user):
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
-def mark_notifications_as_read(user):
+def mark_actual_notifications_as_read(user):
     """
-    Mark Notifications that are *not* of type `new_message` as read
+    Mark (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction` as read
     """
-    Notification.objects.filter(is_read=False, to_user=user).exclude(type=NOTIFICATION_TYPE_MESSAGE).update(is_read=True)
+    user.actual_notifications.filter(is_read=False).update(is_read=True)
+    pusher_controller.trigger_stats_update(user, 'v3')
+
+
+def mark_credit_transactions_as_read(user):
+    """
+    Mark Notifications that are of type `new_credit_transaction` as read
+    """
+    Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_CREDIT_TRANSACTION).update(is_read=True)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -33,14 +42,14 @@ def get_total_unread_count(user):
     """
     Mainly used for setting iOS badge
     """
-    return get_unread_notifications_count(user) + get_unread_conversations_count(user)
+    return get_unread_actual_notifications_count(user) + get_unread_conversations_count(user)
 
 
-def get_unread_notifications_count(user):
+def get_unread_actual_notifications_count(user):
     """
-    Return count of unread Notifications that are *not* of type `new_message`
+    Return count of unread (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction`
     """
-    return Notification.objects.filter(is_read=False, to_user=user).exclude(type=NOTIFICATION_TYPE_MESSAGE).count()
+    return user.actual_notifications.filter(is_read=False).count()
 
 
 def get_unread_conversations_count(user):
@@ -66,7 +75,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
         # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
 
-    # Send Push notification when no pusher channels of any version exit
+    # Send Push notification when no pusher channels of any version exist
     can_push = push_controller.check_push(notification_type)
     can_pusher = pusher_controller.check_pusher(user)
     if can_push and not can_pusher:
@@ -102,3 +111,8 @@ def notify_user_of_incoming_video_call(user, caller):
 def notify_user_of_missed_video_call(user, caller):
     notify_user.delay(user, notification_type=NOTIFICATION_TYPE_MISSED_VIDEO_CALL, from_user=caller,
                       attached_object=caller, versions=['v3'])
+
+
+def notify_user_of_credit_transaction(transaction):
+    notify_user.delay(transaction.user, notification_type=NOTIFICATION_TYPE_CREDIT_TRANSACTION,
+                      attached_object=transaction, versions=['v3'])

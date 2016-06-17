@@ -15,19 +15,19 @@ from shoutit.api.permissions import CanContribute, IsAdminOrCanContribute
 from shoutit.controllers import message_controller
 from shoutit.models import Message, User, Conversation
 from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, ShoutitPageNumberPagination
-from ..serializers import (ConversationSerializer, ConversationDetailSerializer,
+from ..serializers import (ConversationDetailSerializer,
                            MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
                            RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer,
                            MessageAttachmentSerializer, ShoutSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
-class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                          mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                          mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     Conversation API Resource.
     """
-    serializer_class = ConversationDetailSerializer
+    serializer_class = ConversationDetailSerializer  # Todo: Use ConversationSerializer when no clients are using the detailed anymore
     serializer_detail_class = ConversationDetailSerializer
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, IsAdminOrCanContribute)
@@ -56,7 +56,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
 
     def list(self, request, *args, **kwargs):
         """
-        List the user conversations.
+        List profile conversations.
         ###REQUIRES AUTH
         [Conversations Pagination](https://github.com/shoutit/shoutit-api/wiki/Messaging-Pagination#conversations-pagination)
         ---
@@ -68,10 +68,10 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
             - name: type
               paramType: query
             - name: before
-              description: timestamp to get messages before
+              description: timestamp to get conversations before
               paramType: query
             - name: after
-              description: timestamp to get messages after
+              description: timestamp to get conversations after
               paramType: query
         """
         return super(ConversationViewSet, self).list(request, *args, **kwargs)
@@ -110,6 +110,8 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         """
         Update conversation
         ###REQUIRES AUTH
+        The logged in profile should be admin in the conversation
+        ###Request
         ####Body
         <pre><code>
         {
@@ -125,7 +127,11 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
             - name: body
               paramType: body
         """
-        return super(ConversationViewSet, self).partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -395,6 +401,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
             - name: body
               paramType: body
         """
+        # Todo (mo): utilize self.get_serializer(instance=conversation, data=request.data)
         context = {
             'conversation': self.get_object(),
             'request': request

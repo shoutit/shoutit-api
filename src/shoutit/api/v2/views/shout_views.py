@@ -13,10 +13,10 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from common.utils import any_in
 from shoutit.api.permissions import IsOwnerModify
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller, mixpanel_controller
 from shoutit.models import Shout
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import has_unicode, track
+from shoutit.utils import has_unicode
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
@@ -143,7 +143,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                 'api_version': request.version,
             })
             event_name = 'search' if 'search' in search_data else 'browse'
-            track(request.user.pk, event_name, search_data)
+            mixpanel_controller.track(request.user.pk, event_name, search_data)
         return result
 
     def create(self, request, *args, **kwargs):

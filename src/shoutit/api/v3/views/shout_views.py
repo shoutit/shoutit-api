@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import random
 
 from django.conf import settings
+from django.http import Http404
 from django.views.decorators.cache import cache_control
 from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
@@ -18,18 +19,19 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from common.utils import any_in
 from shoutit.api.permissions import IsOwnerModify
 from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, RequiredParameter
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller, mixpanel_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import has_unicode, track
+from shoutit.utils import has_unicode
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
 from ..views.viewsets import UUIDViewSetMixin
+from shoutit_credit.views import PromoteShoutMixin
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
-                   mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+                   mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet, PromoteShoutMixin):
     """
     Shout API Resource
     """
@@ -57,6 +59,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self, *args, **kwargs)
         return queryset
+
+    def get_object(self):
+        self.get_expired = True
+        shout = super(ShoutViewSet, self).get_object()
+        if shout.is_expired and self.request.user != shout.owner:
+            raise Http404
+        return shout
 
     def get_index_search(self):
         return ShoutIndex.search()
@@ -141,7 +150,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
                 'api_version': request.version,
             })
             event_name = 'search' if 'search' in search_data else 'browse'
-            track(request.user.pk, event_name, search_data)
+            mixpanel_controller.track(request.user.pk, event_name, search_data)
         return result
 
     @cache_control(max_age=60 * 60 * 24)
@@ -460,13 +469,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         track_properties = {
             'api_client': getattr(request, 'api_client', None),
             'api_version': request.version,
-            'Country': profile.get_country_display(),
-            'Region': profile.state,
-            'City': profile.city,
+            'mp_country_code': profile.country,
+            '$region': profile.state,
+            '$city': profile.city,
             'shout_id': shout.pk,
             'shout_country': shout.get_country_display(),
             'shout_region': shout.state,
             'shout_city': shout.city,
         }
-        track(user.pk, 'show_mobile', track_properties)
+        mixpanel_controller.track(user.pk, 'show_mobile', track_properties)
         return Response({'mobile': mobile})

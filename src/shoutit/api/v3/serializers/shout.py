@@ -13,6 +13,7 @@ from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Currency, InactiveShout
 from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none, correct_mobile
+from shoutit_credit.serializers import ShoutPromotionSerializer
 from .base import LocationSerializer, VideoSerializer, empty_char_input, AttachedUUIDObjectMixin
 from .profile import ProfileSerializer
 from .tag import CategorySerializer
@@ -37,13 +38,14 @@ class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = serializers.ListField(default=list, source='filter_objects')
     api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
+    promotion = ShoutPromotionSerializer(read_only=True)
 
     class Meta:
         model = Shout
         fields = (
             'id', 'api_url', 'web_url', 'app_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
             'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
-            'filters', 'is_expired'
+            'filters', 'is_expired', 'promotion'
         )
 
     def validate_currency(self, value):

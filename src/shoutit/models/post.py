@@ -184,23 +184,17 @@ class Shout(Post):
 
     @property
     def track_properties(self):
-        return {
-            'id': self.pk,
-            'profile': self.user_id,
-            'type': self.get_type_display(),
+        properties = super(Shout, self).track_properties
+        properties.update({
             'category': self.category.slug,
-            'Country': self.get_country_display(),
-            'Region': self.state,
-            'City': self.city,
             'images': len(self.images),
             'videos': self.videos.count(),
             'price': self.item.price,
             'currency': self.item.currency.name if self.item.currency else None,
             'has_mobile': bool(self.mobile),
             'published_to_facebook': self.published_on.get('facebook'),
-            'api_client': getattr(self, 'api_client', None),
-            'api_version': getattr(self, 'api_version', None),
-        }
+        })
+        return properties
 
     @property
     def filter_objects(self):
@@ -223,6 +217,10 @@ class Shout(Post):
     @property
     def is_mobile_set(self):
         return bool(self.mobile)
+
+    @property
+    def promotion(self):
+        return self.promotions.order_by('created_at').last()
 
 
 class InactiveShout(object):

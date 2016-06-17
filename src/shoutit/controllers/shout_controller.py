@@ -12,11 +12,11 @@ from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
 
-from shoutit.controllers import email_controller, item_controller, location_controller
+from shoutit.controllers import email_controller, item_controller, location_controller, mixpanel_controller
 from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex
-from shoutit.utils import debug_logger, track, error_logger
+from shoutit.utils import debug_logger, error_logger
 
 
 def delete_post(post):
@@ -182,7 +182,7 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
     if created:
         # Track
         if not instance.is_sss:
-            track(instance.user.pk, 'new_shout', instance.track_properties)
+            mixpanel_controller.track(instance.user.pk, 'new_shout', instance.track_properties)
 
     # Publish to Facebook
     if getattr(instance, 'publish_to_facebook', False) and 'facebook' not in instance.published_on:
