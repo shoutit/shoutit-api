@@ -22,6 +22,7 @@ from shoutit.api.v3.exceptions import (ERROR_REASON, ShoutitBadRequest, Required
                                        RequiredParameter, InvalidParameter)
 from shoutit.controllers import mixpanel_controller
 from shoutit.models import ConfirmToken
+from shoutit_credit.models.profile import apply_invite_friends
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
@@ -71,10 +72,16 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
+
+        # set data in case it is not set [refresh_token, password, etc grants]
+        if not data:
+            data = self.request.data
+
         if user.is_guest:
             user_dict = GuestSerializer(user, context={'request': self.request}).data
         else:
             user_dict = ProfileDetailSerializer(user, context={'request': self.request}).data
+
         new_signup = getattr(user, 'new_signup', False)
         response_data = {
             'access_token': access_token.token,
@@ -94,24 +101,28 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         except ObjectDoesNotExist:
             pass
 
-        # alias the mixpanel id and track registration
-        request_data = self.request.data
         if new_signup:
-            mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
+            # Alias the Mixpanel id and track signup / signup_guest
+            mixpanel_distinct_id = data.get('mixpanel_distinct_id')
             if mixpanel_distinct_id:
                 mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
             event_name = "signup_guest" if user.is_guest else 'signup'
             mixpanel_controller.track(user.pk, event_name, {
                 'profile': user.pk,
-                'api_client': request_data.get('client_id'),
+                'api_client': data.get('client_id'),
                 'api_version': self.request.version,
-                'using': request_data.get('grant_type'),
+                'using': data.get('grant_type'),
                 'server': self.request.META.get('HTTP_HOST'),
                 'mp_country_code': user.location.get('country'),
                 '$region': user.location.get('state'),
                 '$city': user.location.get('city'),
                 'has_push_tokens': user.devices.count() > 0
             })
+
+            # Apply InviteFriends
+            invitation_code = data.get('invitation_code')
+            if invitation_code:
+                apply_invite_friends(self.request.user, invitation_code)
 
         return Response(response_data)
 
@@ -126,7 +137,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = self.get_facebook_access_token_grant(request, data, client)
         scopes = ('read', 'write')
-        return self.prepare_access_token_response(request, client, user, scopes)
+        return self.prepare_access_token_response(request, client, user, scopes, data)
 
     def get_gplus_code_grant(self, request, data, client):
         serializer = GplusAuthSerializer(data=data, context={'request': request})
@@ -139,7 +150,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = self.get_gplus_code_grant(request, data, client)
         scopes = ('read', 'write')
-        return self.prepare_access_token_response(request, client, user, scopes)
+        return self.prepare_access_token_response(request, client, user, scopes, data)
 
     def get_shoutit_signup_grant(self, request, signup_data, client):
         serializer = ShoutitSignupSerializer(data=signup_data, context={'request': request})
@@ -153,7 +164,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = self.get_shoutit_signup_grant(request, data, client)
         scopes = ('read', 'write')
-        return self.prepare_access_token_response(request, client, user, scopes)
+        return self.prepare_access_token_response(request, client, user, scopes, data)
 
     def get_shoutit_login_grant(self, request, login_data, client):
         serializer = ShoutitLoginSerializer(data=login_data, context={'request': request})
@@ -166,7 +177,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = self.get_shoutit_login_grant(request, data, client)
         scopes = ('read', 'write')
-        return self.prepare_access_token_response(request, client, user, scopes)
+        return self.prepare_access_token_response(request, client, user, scopes, data)
 
     def get_shoutit_guest_grant(self, request, guest_data, client):
         serializer = ShoutitGuestSerializer(data=guest_data, context={'request': request})
@@ -179,7 +190,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = self.get_shoutit_guest_grant(request, data, client)
         scopes = ('read',)
-        return self.prepare_access_token_response(request, client, user, scopes)
+        return self.prepare_access_token_response(request, client, user, scopes, data)
 
     def get_sms_code_grant(self, request, data, client):
         serializer = SMSCodeSerializer(data=data, context={'request': request})
@@ -192,9 +203,9 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         user = self.get_sms_code_grant(request, data, client)
         scopes = ('read', 'write')
-        return self.prepare_access_token_response(request, client, user, scopes)
+        return self.prepare_access_token_response(request, client, user, scopes, data)
 
-    def prepare_access_token_response(self, request, client, user, scopes):
+    def prepare_access_token_response(self, request, client, user, scopes, data=None):
         self.request.user = user
         scope = provider_scope.to_int(*scopes)
 
@@ -206,7 +217,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             if client.client_type == provider_constants.CONFIDENTIAL:
                 self.create_refresh_token(request, user, scope, at, client)
 
-        return self.access_token_response(at)
+        return self.access_token_response(at, data)
 
     def get_handler(self, grant_type):
         """
@@ -250,6 +261,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
 
         Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual profile id for later tracking events.
 
+        Passing the optional `invitation_code` 'may' give the owner of that code a shoutit credit.
+
         ##Requesting the access token
         There are various methods to do that. Each has different `grant_type` and attributes.
 
@@ -266,7 +279,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                     "longitude": 11.3796516
                 }
             },
-            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1",
+            "invitation_code": "V61DUM6K5W"
         }
         </code></pre>
 
@@ -283,7 +297,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                     "longitude": 11.3796516
                 }
             },
-            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1",
+            "invitation_code": "V61DUM6K5W"
         }
         </code></pre>
 
@@ -301,7 +316,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                     "longitude": 11.3796516
                 }
             },
-            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1",
+            "invitation_code": "V61DUM6K5W"
         }
         </code></pre>
 
@@ -322,7 +338,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                     "longitude": 11.3796516
                 }
             },
-            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1",
+            "invitation_code": "V61DUM6K5W"
         }
         </code></pre>
 
@@ -342,7 +359,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                     "gcm": "GCM_PUSH_TOKEN"
                 },
             },
-            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1",
+            "invitation_code": "V61DUM6K5W"
         }
         </code></pre>
 
