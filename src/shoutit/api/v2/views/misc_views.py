@@ -23,11 +23,10 @@ from common.constants import POST_TYPE_REQUEST
 from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
 from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
                             Tag)
-from shoutit.utils import debug_logger, error_logger, base64_to_text, base64_to_texts
+from shoutit.utils import debug_logger, error_logger
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           UserSerializer, ShoutSerializer,
-                           TagDetailSerializer)
+                           UserSerializer, ShoutSerializer, TagDetailSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -367,6 +366,48 @@ class MiscViewSet(viewsets.ViewSet):
             return Response({'texts': texts})
         except Exception as e:
             return Response({'error': str(e)})
+
+
+def base64_to_text(b64, box=None, config=None, invert=False):
+    import pytesseract as pytesseract
+    import base64
+    from PIL import Image, ImageOps
+    from cStringIO import StringIO
+
+    data = base64.b64decode(b64)
+    image = Image.open(StringIO(data))
+    if box:
+        w, h = image.size
+        cl, cu, cr, cd = box
+        box = [0 + cl, 0 + cu, w - cr, h - cd]
+        image = image.crop(box)
+    if invert:
+        try:
+            image_no_trans = Image.new("RGB", image.size, (0, 0, 0))
+            image_no_trans.paste(image, image)
+            inverted_image = ImageOps.invert(image_no_trans)
+            image = inverted_image
+        except:
+            pass
+    else:
+        try:
+            image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
+            image_no_trans.paste(image, image)
+            image = image_no_trans
+        except:
+            pass
+    text = pytesseract.image_to_string(image, config=config)
+    return text.decode("utf8")
+
+
+def base64_to_texts(b64, configs, invert=False):
+    texts = []
+    for conf in configs:
+        box = conf.get('box')
+        config = conf.get('config')
+        text = base64_to_text(b64, box, config, invert)
+        texts.append(text)
+    return texts
 
 
 def handle_dbz_reply(in_email, msg, request):

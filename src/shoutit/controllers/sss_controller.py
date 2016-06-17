@@ -6,15 +6,20 @@ import uuid
 import requests
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.core.mail import get_connection
 from django_rq import job
 
 from common.constants import NOTIFICATION_TYPE_MESSAGE
 from ..models import DBCLConversation
-from ..utils import get_google_smtp_connection, error_logger, debug_logger, sss_logger, send_nexmo_sms
+from ..utils import error_logger, debug_logger, sss_logger, send_nexmo_sms
 
 
 class NotifySSSException(Exception):
     pass
+
+
+def get_google_smtp_connection():
+    return get_connection(**settings.EMAIL_BACKENDS['google'])
 
 
 def check_sss(user, notification_type, attached_object, from_user):

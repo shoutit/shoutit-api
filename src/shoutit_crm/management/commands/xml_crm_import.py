@@ -10,10 +10,11 @@ import requests
 from rest_framework.exceptions import ValidationError
 from shoutit.api.v2.serializers import ShoutDetailSerializer
 from shoutit.models import Shout, ShoutIndex
-from shoutit.utils import debug_logger, text_from_html
+from shoutit.utils import debug_logger
 from shoutit_crm.constants import XML_LINK_ENABLED
 from shoutit_crm.models import XMLLinkCRMSource, XMLCRMShout
 import xmltodict
+from HTMLParser import HTMLParser
 
 
 class Command(BaseCommand):
@@ -201,3 +202,38 @@ def _map_list(data, mapping):
     if drop_empty:
         mapped_list = filter(None, mapped_list)
     return mapped_list
+
+
+class DeHTMLParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.__text = []
+
+    def handle_data(self, data):
+        text = data.strip()
+        if len(text) > 0:
+            text = re.sub('[ \t\r\n]+', ' ', text)
+            self.__text.append(text + ' ')
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'p':
+            self.__text.append('\n\n')
+        elif tag == 'br':
+            self.__text.append('\n')
+
+    def handle_startendtag(self, tag, attrs):
+        if tag == 'br':
+            self.__text.append('\n')
+
+    def text(self):
+        return ''.join(self.__text).strip()
+
+
+def text_from_html(text):
+    try:
+        parser = DeHTMLParser()
+        parser.feed(text)
+        parser.close()
+        return parser.text()
+    except:
+        return text
