@@ -15,10 +15,9 @@ from ..models import User
 from ..utils import debug_logger
 
 # Shoutit mixpanel
-shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitJSONEncoder)
 MAX_MP_BUFFER_SIZE = 50
 buffered_consumer = BufferedConsumer(max_size=MAX_MP_BUFFER_SIZE)
-shoutit_mp_buffered = Mixpanel(settings.MIXPANEL_TOKEN, consumer=buffered_consumer, serializer=ShoutitJSONEncoder)
+shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, consumer=buffered_consumer, serializer=ShoutitJSONEncoder)
 
 
 def alias(alias_id, original):
@@ -107,17 +106,17 @@ def _add_to_mp_people(user_ids=None, flush=False):
         meta = {
             '$ignore_time': True  # Don't count this update as a user activity. 'Last Seen' will not be updated
         }
-        shoutit_mp_buffered.people_set(user.pk, properties, meta)
+        shoutit_mp.people_set(user.pk, properties, meta)
 
     if flush:
-        shoutit_mp_buffered._consumer.flush()
+        shoutit_mp._consumer.flush()
 
     users.update(on_mp_people=True)
     debug_logger.debug("Added / Updated %s MixPanel People record(s)" % len(user_ids))
 
 
 @receiver(post_save)
-def post_save_conversation(sender, instance=None, created=False, **kwargs):
+def post_save_profile(sender, instance=None, created=False, **kwargs):
     if isinstance(instance, User):
         add_to_mp_people(user_ids=[instance.id], flush=settings.DEBUG)
     elif isinstance(instance, AbstractProfile):
@@ -133,10 +132,10 @@ def remove_from_mp_people(user_ids=None, flush=False):
 @job(settings.RQ_QUEUE)
 def _remove_from_mp_people(user_ids=None, flush=False):
     for user_id in user_ids:
-        shoutit_mp_buffered.people_delete(user_id)
+        shoutit_mp.people_delete(user_id)
 
     if flush:
-        shoutit_mp_buffered._consumer.flush()
+        shoutit_mp._consumer.flush()
 
     User.objects.filter(id__in=user_ids).update(on_mp_people=False)
     debug_logger.debug("Removed %s MixPanel People record(s)" % len(user_ids))
