@@ -8,7 +8,7 @@ from rest_framework import serializers
 from shoutit_credit.models.profile import InvitationCode
 from .models import PromoteShouts, CreditTransaction, PromoteLabel, ShoutPromotion
 
-from shoutit.api.v3.serializers import AttachedUUIDObjectMixin
+from shoutit.api.v3.serializers.base import AttachedUUIDObjectMixin  # Import it from base not to create import loop in `serialize_attached_object`
 
 
 class CreditTransactionSerializer(serializers.ModelSerializer):
