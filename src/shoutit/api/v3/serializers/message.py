@@ -10,10 +10,11 @@ from rest_framework import serializers
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_PROFILE)
 from common.utils import any_in
+from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit.controllers import message_controller
 from shoutit.models import Message, SharedLocation, MessageAttachment
 from shoutit.utils import blank_to_none
-from .base import VideoSerializer, AttachedUUIDObjectMixin
+from .base import VideoSerializer
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
 
@@ -24,7 +25,7 @@ class SharedLocationSerializer(serializers.ModelSerializer):
         fields = ['latitude', 'longitude']
 
 
-class MessageAttachmentSerializer(serializers.ModelSerializer):
+class MessageAttachmentSerializer(HasAttachedUUIDObjects, serializers.ModelSerializer):
     type = serializers.ChoiceField(choices=MessageAttachmentType.texts, source='get_type_display', read_only=True)
     shout = ShoutSerializer(required=False)
     location = SharedLocationSerializer(required=False)
@@ -60,7 +61,7 @@ class MessageAttachmentSerializer(serializers.ModelSerializer):
         return ret
 
 
-class MessageSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     conversation_id = serializers.UUIDField(read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     created_at = serializers.IntegerField(source='created_at_unix', read_only=True)

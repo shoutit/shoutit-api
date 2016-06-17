@@ -12,8 +12,9 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.settings import api_settings
 
 from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST)
+from shoutit.api.serializers import serialize_attached_object
 from ..models import User, PushBroadcast, Device
-from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
+from ..utils import debug_logger, error_logger, UserIds
 
 
 _apns_devices = GenericRelation('shoutit.Device', related_query_name='apns_devices')
@@ -34,14 +35,14 @@ def send_push(user, notification, version):
         return
 
     # Prepare the push object
-    event_name = notification.event_name
+    event_name = notification.push_event_name
     notification_display = notification.display()
     title = notification_display['title']
     body = notification_display['text']
     image = notification_display['image']
     alert_extra = notification_display.get('alert_extra', {})
     aps_extra = notification_display.get('aps_extra', {})
-    data = serialize_attached_object(attached_object=notification.event_object, version=version, user=user)
+    data = serialize_attached_object(attached_object=notification.push_event_object, version=version, user=user)
     extra = {
         'event_name': event_name,
         'title': title,

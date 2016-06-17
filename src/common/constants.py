@@ -191,6 +191,13 @@ class NotificationType(Constant):
         ]
         return self in types
 
+    def is_new_notification_push_type(self):
+        types = [
+            NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_BROADCAST, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
+            NOTIFICATION_TYPE_CREDIT_TRANSACTION
+        ]
+        return self in types
+
     def include_in_push(self):
         types = [NOTIFICATION_TYPE_INCOMING_VIDEO_CALL]
         requires_obj = self.requires_notification_object()

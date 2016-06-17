@@ -17,7 +17,8 @@ from ..utils import debug_logger
 # Shoutit mixpanel
 MAX_MP_BUFFER_SIZE = 50
 buffered_consumer = BufferedConsumer(max_size=MAX_MP_BUFFER_SIZE)
-shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, consumer=buffered_consumer, serializer=ShoutitJSONEncoder)
+shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitJSONEncoder)
+shoutit_mp_buffered = Mixpanel(settings.MIXPANEL_TOKEN, consumer=buffered_consumer, serializer=ShoutitJSONEncoder)
 
 
 def alias(alias_id, original):
@@ -59,13 +60,13 @@ def _track(distinct_id, event_name, properties=None):
     debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
 
 
-def add_to_mp_people(user_ids=None, flush=False):
-    return _add_to_mp_people.delay(user_ids=user_ids, flush=flush)
+def add_to_mp_people(user_ids=None, buffered=False):
+    return _add_to_mp_people.delay(user_ids=user_ids, buffered=buffered)
 
 
 # Todo (mo): handle Pages properties
 @job(settings.RQ_QUEUE)
-def _add_to_mp_people(user_ids=None, flush=False):
+def _add_to_mp_people(user_ids=None, buffered=False):
     users = User.objects.filter(id__in=user_ids).select_related('profile', 'page')
 
     for user in users:
@@ -106,11 +107,16 @@ def _add_to_mp_people(user_ids=None, flush=False):
         meta = {
             '$ignore_time': True  # Don't count this update as a user activity. 'Last Seen' will not be updated
         }
-        shoutit_mp.people_set(user.pk, properties, meta)
+        if buffered:
+            shoutit_mp_buffered.people_set(user.pk, properties, meta)
+        else:
+            shoutit_mp.people_set(user.pk, properties, meta)
 
-    if flush:
-        shoutit_mp._consumer.flush()
+    # Force sending the requests if necessary
+    if buffered:
+        shoutit_mp_buffered._consumer.flush()
 
+    # Update users
     users.update(on_mp_people=True)
     debug_logger.debug("Added / Updated %s MixPanel People record(s)" % len(user_ids))
 
@@ -118,24 +124,25 @@ def _add_to_mp_people(user_ids=None, flush=False):
 @receiver(post_save)
 def post_save_profile(sender, instance=None, created=False, **kwargs):
     if isinstance(instance, User):
-        add_to_mp_people(user_ids=[instance.id], flush=settings.DEBUG)
+        add_to_mp_people(user_ids=[instance.id])
     elif isinstance(instance, AbstractProfile):
-        add_to_mp_people(user_ids=[instance.user_id], flush=settings.DEBUG)
+        add_to_mp_people(user_ids=[instance.user_id])
     else:
         pass
 
 
-def remove_from_mp_people(user_ids=None, flush=False):
-    return _remove_from_mp_people.delay(user_ids=user_ids, flush=flush)
+def remove_from_mp_people(user_ids=None):
+    return _remove_from_mp_people.delay(user_ids=user_ids)
 
 
 @job(settings.RQ_QUEUE)
-def _remove_from_mp_people(user_ids=None, flush=False):
+def _remove_from_mp_people(user_ids=None):
     for user_id in user_ids:
-        shoutit_mp.people_delete(user_id)
+        shoutit_mp_buffered.people_delete(user_id)
 
-    if flush:
-        shoutit_mp._consumer.flush()
+    # Send requests
+    shoutit_mp_buffered._consumer.flush()
 
+    # Update users
     User.objects.filter(id__in=user_ids).update(on_mp_people=False)
     debug_logger.debug("Removed %s MixPanel People record(s)" % len(user_ids))

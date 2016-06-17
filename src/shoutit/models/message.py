@@ -499,6 +499,22 @@ class Notification(UUIDModel, AttachedObjectMixin):
             obj = self.attached_object
         return obj
 
+    @property
+    def push_event_name(self):
+        if self.notification_type.is_new_notification_push_type():
+            name = str(NotificationType.new_notification())
+        else:
+            name = str(self.notification_type)
+        return name
+
+    @property
+    def push_event_object(self):
+        if self.notification_type.is_new_notification_push_type():
+            obj = self
+        else:
+            obj = self.attached_object
+        return obj
+
     def display(self):
         if hasattr(self, '_display'):
             return self._display
@@ -546,6 +562,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
         elif self.type == NOTIFICATION_TYPE_CREDIT_TRANSACTION:
             title = _("New Credit Transaction")
             text = self.attached_object.display()['text']
+            setattr(self, '_app_url', 'shoutit://credit_transactions')
+            setattr(self, '_web_url', None)
 
         ret = OrderedDict([
             ('title', title),
@@ -565,12 +583,22 @@ class Notification(UUIDModel, AttachedObjectMixin):
     @property
     def app_url(self):
         self.display()
-        return getattr(self.target, 'app_url', None) if hasattr(self, 'target') else None
+        if hasattr(self, '_app_url'):
+            return self._app_url
+        elif hasattr(self, 'target'):
+            return getattr(self.target, 'app_url', None)
+        else:
+            return None
 
     @property
     def web_url(self):
         self.display()
-        return getattr(self.target, 'web_url', None) if hasattr(self, 'target') else None
+        if hasattr(self, '_web_url'):
+            return self._web_url
+        elif hasattr(self, 'target'):
+            return getattr(self.target, 'web_url', None)
+        else:
+            return None
 
     def mark_as_read(self):
         self.is_read = True

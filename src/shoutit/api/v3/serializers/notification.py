@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from common.constants import REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, REPORT_TYPE_CONVERSATION
 from common.utils import any_in
+from shoutit.api.serializers import HasAttachedUUIDObjects
 from shoutit.models import Notification, Report
 from shoutit.utils import blank_to_none
 from .message import MessageSerializer
@@ -17,7 +18,7 @@ from .shout import ShoutSerializer
 from ..exceptions import ERROR_REASON
 
 
-class AttachedObjectSerializer(serializers.Serializer):
+class AttachedObjectSerializer(HasAttachedUUIDObjects, serializers.Serializer):
     profile = ProfileSerializer(source='attached_profile', required=False)
     message = MessageSerializer(source='attached_message', required=False)
     shout = ShoutSerializer(source='attached_shout', required=False)

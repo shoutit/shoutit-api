@@ -7,18 +7,19 @@ from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.reverse import reverse
 
 from common.constants import (ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_PUBLIC_CHAT)
+from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.controllers import message_controller
 from shoutit.models import Conversation
 from shoutit.utils import blank_to_none
-from .base import AttachedUUIDObjectMixin, LocationSerializer
+from .base import LocationSerializer
 from .profile import ProfileSerializer, MiniProfileSerializer
 from .shout import ShoutSerializer
 from .message import MessageSerializer
 from .. import exceptions
 
 
-class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class ConversationSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     modified_at = serializers.IntegerField(source='modified_at_unix', read_only=True)
     api_url = serializers.HyperlinkedIdentityField(view_name='conversation-detail', lookup_field='id')
     type = serializers.ChoiceField(choices=ConversationType.texts, source='get_type_display',
@@ -52,15 +53,6 @@ class ConversationSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixi
         if conversation_type != 'public_chat':
             raise serializers.ValidationError({'type': "Only 'public_chat' conversations can be directly created"})
         return conversation_type
-
-    def to_internal_value(self, data):
-        # Validate when passed as attached object or message attachment
-        ret = self.to_internal_attached_value(data)
-        if ret:
-            return ret
-
-        validated_data = super(ConversationSerializer, self).to_internal_value(data)
-        return validated_data
 
     def to_representation(self, instance):
         ret = super(ConversationSerializer, self).to_representation(instance)
@@ -119,7 +111,7 @@ class ConversationDetailSerializer(ConversationSerializer):
         return conversation
 
 
-class ConversationProfileActionSerializer(serializers.Serializer):
+class ConversationProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializer):
     """
     Should be initialized in Conversation view with
     context = {

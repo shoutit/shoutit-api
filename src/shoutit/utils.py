@@ -14,12 +14,10 @@ import uuid
 from HTMLParser import HTMLParser
 from cStringIO import StringIO
 from datetime import timedelta
-from importlib import import_module
 from re import sub
 
 import boto
 from PIL import Image, ImageOps
-from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.core.mail import get_connection
 # from django.db.models.signals import post_save, post_delete
@@ -319,39 +317,6 @@ def create_fake_request(version):
     request.version = version
     request.versioning_scheme = ShoutitNamespaceVersioning()
     return request
-
-
-def serialize_attached_object(attached_object, version, user=None):
-    from .models import Conversation, Message, User, Notification
-    serializers = import_module('shoutit.api.%s.serializers' % version)
-
-    # Create fake Request and set request.user to the notified user as if he was requesting it.
-    request = create_fake_request(version)
-    request.user = user or AnonymousUser()
-
-    if isinstance(attached_object, (dict, list)):
-        return attached_object
-    if isinstance(attached_object, User):
-        # Use ProfileDetailSerializer if the user is the one getting his own profile
-        if user and user.id == request.user.id:
-            serializer = serializers.ProfileDetailSerializer
-        else:
-            serializer = serializers.ProfileSerializer
-    elif isinstance(attached_object, Message):
-        serializer = serializers.MessageSerializer
-    elif isinstance(attached_object, Conversation):
-        serializer = serializers.ConversationDetailSerializer
-    elif isinstance(attached_object, Notification):
-        serializer = serializers.NotificationSerializer
-    else:
-        serializer = None
-
-    if serializer:
-        attached_object_dict = serializer(attached_object, context={'request': request}).data
-    else:
-        attached_object_dict = {}
-
-    return attached_object_dict
 
 
 class UserIds(list):

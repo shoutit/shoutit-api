@@ -27,7 +27,7 @@ class Command(BaseCommand):
         while len(user_ids) > max_users:
             chunk = user_ids[-max_users:]
             user_ids = user_ids[:-max_users]
-            add_to_mp_people(user_ids=UserIds(chunk), flush=True)
-        add_to_mp_people(user_ids=UserIds(user_ids), flush=True)
+            add_to_mp_people(user_ids=UserIds(chunk), buffered=True)
+        add_to_mp_people(user_ids=UserIds(user_ids), buffered=True)
 
         self.stdout.write('Successfully created queues for %s profiles to be added to MixPanel People' % main_len)

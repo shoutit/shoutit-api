@@ -27,7 +27,7 @@ class Command(BaseCommand):
         while len(user_ids) > max_users:
             chunk = user_ids[-max_users:]
             user_ids = user_ids[:-max_users]
-            remove_from_mp_people(user_ids=UserIds(chunk), flush=True)
-        remove_from_mp_people(user_ids=UserIds(user_ids), flush=True)
+            remove_from_mp_people(user_ids=UserIds(chunk))
+        remove_from_mp_people(user_ids=UserIds(user_ids))
 
         self.stdout.write('Successfully created queues for %s profiles to be removed from MixPanel People' % main_len)

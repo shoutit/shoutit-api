@@ -5,10 +5,9 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
+from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit_credit.models.profile import InvitationCode
 from .models import PromoteShouts, CreditTransaction, PromoteLabel, ShoutPromotion
-
-from shoutit.api.v3.serializers import AttachedUUIDObjectMixin
 
 
 class CreditTransactionSerializer(serializers.ModelSerializer):
@@ -26,7 +25,7 @@ class PromoteLabelSerializer(serializers.ModelSerializer):
         fields = ('name', 'description', 'color', 'bg_color')
 
 
-class PromoteOptionSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class PromoteOptionSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     label = PromoteLabelSerializer(read_only=True)
 
     class Meta:
@@ -34,17 +33,8 @@ class PromoteOptionSerializer(serializers.ModelSerializer, AttachedUUIDObjectMix
         fields = ('id', 'name', 'description', 'label', 'credits', 'days')
         extra_kwargs = {'name': {'read_only': True}, 'description': {'read_only': True}}
 
-    def to_internal_value(self, data):
-        # Validate when passed as attached object
-        ret = self.to_internal_attached_value(data, force_validation=True)
-        if ret:
-            return ret
 
-        validated_data = super(PromoteOptionSerializer, self).to_internal_value(data)
-        return validated_data
-
-
-class PromoteShoutSerializer(serializers.Serializer):
+class PromoteShoutSerializer(HasAttachedUUIDObjects, serializers.Serializer):
     option = PromoteOptionSerializer()
 
     def update(self, instance, validated_data):
@@ -60,7 +50,7 @@ class PromoteShoutSerializer(serializers.Serializer):
         }
 
 
-class ShoutPromotionSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class ShoutPromotionSerializer(serializers.ModelSerializer):
     label = PromoteLabelSerializer(read_only=True)
 
     class Meta:
