@@ -263,8 +263,9 @@ def publish_shout_to_facebook(shout):
     actions_url = 'https://graph.facebook.com/me/shoutitcom:shout'
     params = {
         'access_token': la.access_token,
-        'method': 'POST',
-        shout.get_type_display(): shout.web_url
+        shout.get_type_display(): shout.web_url,
+        'fb:explicitly_shared': True,
+        'privacy': "{'value':'EVERYONE'}"
     }
     res = requests.post(actions_url, params=params).json()
     id_on_facebook = res.get('id')
