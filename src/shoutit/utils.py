@@ -323,6 +323,9 @@ def create_fake_request(version):
 
 def serialize_attached_object(attached_object, version, user=None):
     from .models import Conversation, Message, User, Notification
+    from shoutit_credit.models import CreditTransaction
+    from shoutit_credit.serializers import CreditTransactionSerializer
+
     serializers = import_module('shoutit.api.%s.serializers' % version)
 
     # Create fake Request and set request.user to the notified user as if he was requesting it.
@@ -343,6 +346,8 @@ def serialize_attached_object(attached_object, version, user=None):
         serializer = serializers.ConversationDetailSerializer
     elif isinstance(attached_object, Notification):
         serializer = serializers.NotificationSerializer
+    elif isinstance(attached_object, CreditTransaction):
+        serializer = CreditTransactionSerializer
     else:
         serializer = None
 

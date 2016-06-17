@@ -34,14 +34,14 @@ def send_push(user, notification, version):
         return
 
     # Prepare the push object
-    event_name = notification.event_name
+    event_name = notification.push_event_name
     notification_display = notification.display()
     title = notification_display['title']
     body = notification_display['text']
     image = notification_display['image']
     alert_extra = notification_display.get('alert_extra', {})
     aps_extra = notification_display.get('aps_extra', {})
-    data = serialize_attached_object(attached_object=notification.event_object, version=version, user=user)
+    data = serialize_attached_object(attached_object=notification.push_event_object, version=version, user=user)
     extra = {
         'event_name': event_name,
         'title': title,
