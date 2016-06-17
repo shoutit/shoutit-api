@@ -31,8 +31,8 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     lookup_value_regex = '[0-9a-zA-Z._]+'
     serializer_class = ProfileSerializer
     serializer_detail_class = ProfileDetailSerializer
-    queryset = User.objects.filter(is_active=True, is_activated=True)
-    queryset_detail = User.objects.filter(is_active=True).prefetch_related('profile', 'page')
+    queryset = User.objects.filter(is_active=True, is_activated=True).select_related('profile', 'page')
+    queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page', 'linked_facebook', 'linked_gplus')
     pagination_class = ShoutitPageNumberPaginationNoCount
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')
