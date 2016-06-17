@@ -10,16 +10,17 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
+from shoutit.api.serializers import AttachedUUIDObjectMixin
 from shoutit.controllers import shout_controller
 from shoutit.models import Shout, Currency, InactiveShout
 from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none, correct_mobile
 from shoutit_credit.serializers import ShoutPromotionSerializer
-from .base import LocationSerializer, VideoSerializer, empty_char_input, AttachedUUIDObjectMixin
+from .base import LocationSerializer, VideoSerializer, empty_char_input
 from .profile import ProfileSerializer
 from .tag import CategorySerializer
 
 
-class ShoutSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
     location = LocationSerializer(
         help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")

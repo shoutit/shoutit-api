@@ -6,8 +6,9 @@ from django_rq import job
 
 from common.constants import (NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_READ_BY,
                               NOTIFICATION_TYPE_CONVERSATION_UPDATE, NOTIFICATION_TYPE_STATS_UPDATE)
+from shoutit.api.serializers import serialize_attached_object
 from shoutit_pusher.utils import pusher
-from ..utils import serialize_attached_object, debug_logger
+from ..utils import debug_logger
 
 
 @job(settings.RQ_QUEUE_PUSHER)

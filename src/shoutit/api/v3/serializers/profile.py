@@ -11,16 +11,17 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
+from shoutit.api.serializers import AttachedUUIDObjectMixin
 from shoutit.api.v3.exceptions import RequiredBody
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
                                  gplus_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
 from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
-from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input, AttachedUUIDObjectMixin
+from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input
 
 
-class MiniProfileSerializer(serializers.ModelSerializer, AttachedUUIDObjectMixin):
+class MiniProfileSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'name')
@@ -51,15 +52,6 @@ class ProfileSerializer(MiniProfileSerializer):
 
     def get_is_owner(self, user):
         return self.root.context['request'].user == user
-
-    def to_internal_value(self, data):
-        # Validate when passed as attached object or message attachment
-        ret = self.to_internal_attached_value(data)
-        if ret:
-            return ret
-
-        ret = super(ProfileSerializer, self).to_internal_value(data)
-        return ret
 
     def to_representation(self, instance):
         if not instance.is_active:

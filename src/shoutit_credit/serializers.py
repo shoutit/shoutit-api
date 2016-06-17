@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
+from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit_credit.models.profile import InvitationCode
 from .models import PromoteShouts, CreditTransaction, PromoteLabel, ShoutPromotion
 
@@ -24,7 +25,7 @@ class PromoteLabelSerializer(serializers.ModelSerializer):
         fields = ('name', 'description', 'color', 'bg_color')
 
 
-class PromoteOptionSerializer(serializers.ModelSerializer):
+class PromoteOptionSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     label = PromoteLabelSerializer(read_only=True)
 
     class Meta:
@@ -33,7 +34,7 @@ class PromoteOptionSerializer(serializers.ModelSerializer):
         extra_kwargs = {'name': {'read_only': True}, 'description': {'read_only': True}}
 
 
-class PromoteShoutSerializer(serializers.Serializer):
+class PromoteShoutSerializer(HasAttachedUUIDObjects, serializers.Serializer):
     option = PromoteOptionSerializer()
 
     def update(self, instance, validated_data):

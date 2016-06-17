@@ -76,6 +76,10 @@ class CreditTransaction(UUIDModel):
         from shoutit.controllers.notifications_controller import notify_user_of_credit_transaction
         notify_user_of_credit_transaction(self)
 
+    def serializer(self, version=None):
+        from shoutit_credit.serializers import CreditTransactionSerializer
+        return CreditTransactionSerializer
+
 
 @receiver(post_save, sender=CreditTransaction)
 def transaction_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):

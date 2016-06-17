@@ -12,8 +12,9 @@ from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.settings import api_settings
 
 from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST)
+from shoutit.api.serializers import serialize_attached_object
 from ..models import User, PushBroadcast, Device
-from ..utils import debug_logger, serialize_attached_object, error_logger, UserIds
+from ..utils import debug_logger, error_logger, UserIds
 
 
 _apns_devices = GenericRelation('shoutit.Device', related_query_name='apns_devices')
