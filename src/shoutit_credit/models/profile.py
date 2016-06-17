@@ -3,6 +3,9 @@
 """
 from __future__ import unicode_literals
 
+import random
+import string
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -10,12 +13,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_rq import job
 
-from shoutit.models import User, Profile, Listen2, ProfileContact
+from shoutit.models import User, Profile, Listen2, ProfileContact, UUIDModel
 from .base import CreditRule, CreditTransaction
 
 complete_profile = None
 invite_friends = None
 listen_to_friends = None
+
+INVITATION_CODE_MAX_USAGE = 10
 
 
 class CompleteProfileManager(models.Manager):
@@ -98,30 +103,30 @@ class InviteFriends(CreditRule):
         }
         return ret
 
-    def apply(self, user):
-        invited_by = getattr(user, 'invited_by', None)
-        if not invited_by:
+    def apply(self, user, code):
+        invitation_code = InvitationCode.objects.filter(code=code, used_count__lt=INVITATION_CODE_MAX_USAGE).first()
+        if not invitation_code or not invitation_code.is_active:
             return
 
         # Create Credit Transaction
         properties = {'profile_id': user.pk}
-        transaction = CreditTransaction.create(user_id=invited_by, amount=1, rule=self, properties=properties)
+        transaction = CreditTransaction.create(user=invitation_code.user, amount=1, rule=self, properties=properties)
+        # Update the invitation code
+        invitation_code.update(used_count=invitation_code.used_count + 1)
         return transaction
 
 
 @job(settings.RQ_QUEUE_CREDIT)
-def apply_invite_friends(user):
+def _apply_invite_friends(user, code):
     global invite_friends
     if not invite_friends:
         invite_friends = InviteFriends.objects.first()
     if invite_friends:
-        invite_friends.apply(user)
+        invite_friends.apply(user, code)
 
 
-@receiver(post_save, sender=User)
-def user_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
-    if created:
-        apply_invite_friends.delay(instance)
+def apply_invite_friends(user, code):
+    _apply_invite_friends.delay(user, code)
 
 
 class ListenToFriendsManager(models.Manager):
@@ -190,3 +195,29 @@ def apply_listen_to_friends(listen):
 @receiver(post_save, sender=Listen2)
 def listen_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
     apply_listen_to_friends.delay(instance)
+
+
+class InvitationCode(UUIDModel):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='invitation_codes')
+    code = models.CharField(max_length=10, unique=True)
+    used_count = models.SmallIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+
+@property
+def user_invitation_code(self):
+    invitation_code = self.invitation_codes.filter(is_active=True).first()
+    if invitation_code:
+        if invitation_code.used_count >= INVITATION_CODE_MAX_USAGE:
+            invitation_code.update(is_active=False)
+        else:
+            return invitation_code
+    code = code_generator()
+    return InvitationCode.create(user=self, code=code)
+
+
+User.add_to_class('invitation_code', user_invitation_code)
+
+
+def code_generator(size=10, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
