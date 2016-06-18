@@ -91,7 +91,9 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
     if created:
         # create profile
         profile_fields = getattr(instance, 'profile_fields', {})
-        Profile.create(id=instance.id, user=instance, **profile_fields)
+        profile = Profile.create(save=False, id=instance.id, user=instance, **profile_fields)
+        profile.new_signup = True
+        profile.save()
 
         # todo: give appropriate permissions
         # permissions = FULL_USER_PERMISSIONS if instance.is_activated else INITIAL_USER_PERMISSIONS

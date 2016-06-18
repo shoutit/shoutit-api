@@ -43,9 +43,6 @@ def create_user(email=None, password=None, first_name='', last_name='', username
     })
     user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name,
                                     last_name=last_name, **extra_user_fields)
-
-    # used to later track signup events
-    user.new_signup = True
     return user
 
 
