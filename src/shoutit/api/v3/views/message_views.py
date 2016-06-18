@@ -22,6 +22,17 @@ from ..serializers import (ConversationDetailSerializer,
 from ..views.viewsets import UUIDViewSetMixin
 
 
+def serializer_compat(view_set):
+    # Use ConversationSerializer for web and newer mobile clients
+    request = view_set.request
+    web_condition = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
+    ios_condition = getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no >= 1378
+    android_condition = getattr(request, 'agent', '') == 'android' and request.build_no and request.build_no >= 9999
+    # Todo: ask android clients to provide agent info, once given the compat should be flipped
+    if any([web_condition, ios_condition, android_condition]):
+        view_set.serializer_class = ConversationSerializer
+
+
 class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                           mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
@@ -34,16 +45,8 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
 
     # todo: conversations / messages search
 
-    def serializer_compat(self):
-        # Use ConversationDetailSerializer for newer clients
-        request = self.request
-        ios_condition = getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no >= 1378
-        # Todo: ask android clients to provide agent info, once given the compat should be flipped
-        if ios_condition:
-            self.serializer_class = ConversationSerializer
-
     def get_queryset(self, *args, **kwargs):
-        self.serializer_compat()
+        serializer_compat(self)
 
         user = self.request.user
         exclude = {'blocked__contains': [user.id]}
@@ -658,16 +661,8 @@ class PublicChatViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMode
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, CanContribute)
 
-    def serializer_compat(self):
-        # Use ConversationDetailSerializer for newer clients
-        request = self.request
-        ios_condition = getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no >= 1378
-        # Todo: ask android clients to provide agent info, once given the compat should be flipped
-        if ios_condition:
-            self.serializer_class = ConversationSerializer
-
     def get_queryset(self, *args, **kwargs):
-        self.serializer_compat()
+        serializer_compat(self)
 
         user = self.request.user
         filters = {
