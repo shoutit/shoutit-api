@@ -18,8 +18,19 @@ from ..pagination import DateTimePagination, ReverseModifiedDateTimePagination, 
 from ..serializers import (ConversationDetailSerializer,
                            MessageSerializer, BlockProfileSerializer, PromoteAdminSerializer,
                            RemoveProfileSerializer, AddProfileSerializer, UnblockProfileSerializer, ProfileSerializer,
-                           MessageAttachmentSerializer, ShoutSerializer)
+                           MessageAttachmentSerializer, ShoutSerializer, ConversationSerializer)
 from ..views.viewsets import UUIDViewSetMixin
+
+
+def serializer_compat(view_set):
+    # Use ConversationSerializer for web and newer mobile clients
+    request = view_set.request
+    web_condition = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
+    ios_condition = getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no >= 1378
+    android_condition = getattr(request, 'agent', '') == 'android' and request.build_no and request.build_no >= 9999
+    # Todo: ask android clients to provide agent info, once given the compat should be flipped
+    if any([web_condition, ios_condition, android_condition]):
+        view_set.serializer_class = ConversationSerializer
 
 
 class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
@@ -27,7 +38,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
     """
     Conversation API Resource.
     """
-    serializer_class = ConversationDetailSerializer  # Todo: Use ConversationSerializer when no clients are using the detailed anymore
+    serializer_class = ConversationDetailSerializer
     serializer_detail_class = ConversationDetailSerializer
     pagination_class = ReverseModifiedDateTimePagination
     permission_classes = (permissions.IsAuthenticated, IsAdminOrCanContribute)
@@ -35,22 +46,32 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
     # todo: conversations / messages search
 
     def get_queryset(self, *args, **kwargs):
+        serializer_compat(self)
+
         user = self.request.user
+        exclude = {'blocked__contains': [user.id]}
+
         if self._is_request_to_detail_endpoint():
-            return Conversation.objects.all().exclude(blocked__contains=[user.id])
+            related = ['creator', 'last_message__user']
+            return Conversation.objects.all().exclude(**exclude).select_related(*related)
         else:
             conversation_type = self.request.query_params.get('type')
             if conversation_type == 'public_chat':
+                conversations = Conversation.objects
                 filters = {
                     'type': CONVERSATION_TYPE_PUBLIC_CHAT,
                     'country': self.request.user.location['country']
                 }
-                return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by(
-                    '-modified_at')
             else:
-                return user.conversations.all().exclude(blocked__contains=[user.id]).order_by('-modified_at')
+                conversations = user.conversations
+                filters = {}
+
+            related = ['last_message__user']
+            order = '-modified_at'
+            return conversations.filter(**filters).exclude(**exclude).select_related(*related).order_by(order)
 
     def _is_request_to_detail_endpoint(self):
+        # Todo (mo): Check why this is overridden
         lookup = self.lookup_url_kwarg or self.lookup_field
         return lookup and lookup in self.kwargs
 
@@ -105,6 +126,29 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         serializer: ConversationDetailSerializer
         """
         return super(ConversationViewSet, self).retrieve(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create Public Chat conversation in profile's country.
+        ###REQUIRES AUTH
+        ####Body
+        <pre><code>
+        {
+            "type": "public_chat",
+            "subject": "text goes here",
+            "icon": "icon url"
+        }
+        </code></pre>
+        ---
+        serializer: ConversationDetailSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        self.serializer_class = ConversationDetailSerializer
+        return super(ConversationViewSet, self).create(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         """
@@ -169,7 +213,8 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
               paramType: query
         """
         conversation = self.get_object()
-        messages_qs = conversation.messages.all()
+        related = ['user__profile']
+        messages_qs = conversation.messages.all().select_related(*related)
         self.pagination_class = DateTimePagination
         page = self.paginate_queryset(messages_qs)
 
@@ -617,12 +662,17 @@ class PublicChatViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMode
     permission_classes = (permissions.IsAuthenticated, CanContribute)
 
     def get_queryset(self, *args, **kwargs):
+        serializer_compat(self)
+
         user = self.request.user
         filters = {
             'type': CONVERSATION_TYPE_PUBLIC_CHAT,
             'country': user.location['country']
         }
-        return Conversation.objects.filter(**filters).exclude(blocked__contains=[user.id]).order_by('-modified_at')
+        related = ['last_message__user']
+        exclude = {'blocked__contains': [user.id]}
+        order = '-modified_at'
+        return Conversation.objects.filter(**filters).exclude(**exclude).select_related(*related).order_by(order)
 
     def list(self, request, *args, **kwargs):
         """
@@ -663,4 +713,5 @@ class PublicChatViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMode
             - name: body
               paramType: body
         """
+        self.serializer_class = ConversationDetailSerializer
         return super(PublicChatViewSet, self).create(request, *args, **kwargs)

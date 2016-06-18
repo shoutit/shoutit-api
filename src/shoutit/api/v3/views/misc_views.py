@@ -18,14 +18,11 @@ from rest_framework.response import Response
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
 from shoutit.api.renderers import PlainTextRenderer
 from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
-from shoutit.controllers import location_controller
-from shoutit.controllers.facebook_controller import (update_linked_facebook_account_scopes,
-                                                     delete_linked_facebook_account)
-from shoutit.models import (Currency, Category, PredefinedCity, User, Shout,
-                            Tag)
-from shoutit.utils import debug_logger, parse_signed_request
-from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
-                           ProfileSerializer, ShoutSerializer, TagDetailSerializer, PushTestSerializer)
+from shoutit.controllers import location_controller, facebook_controller
+from shoutit.models import Currency, Category, PredefinedCity, User, Shout, Tag
+from shoutit.utils import debug_logger
+from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer, ProfileSerializer,
+                           ShoutSerializer, TagDetailSerializer, PushTestSerializer)
 
 
 class MiscViewSet(viewsets.ViewSet):
@@ -290,10 +287,10 @@ class MiscViewSet(viewsets.ViewSet):
         """
         signed_request = request.data.get('signed_request')
         if signed_request:
-            parsed_signed_request = parse_signed_request(signed_request)
+            parsed_signed_request = facebook_controller.parse_signed_request(signed_request)
             facebook_user_id = parsed_signed_request.get('user_id')
             if facebook_user_id:
-                delete_linked_facebook_account(facebook_user_id)
+                facebook_controller.delete_linked_facebook_account(facebook_user_id)
         return Response('OK')
 
     @list_route(methods=['get', 'post'], authentication_classes=(), renderer_classes=[PlainTextRenderer],
@@ -313,5 +310,5 @@ class MiscViewSet(viewsets.ViewSet):
         entries = request.data.get('entry', [])
         facebook_ids = filter(None, arrays.unique(map(lambda e: e['id'], entries)))
         for facebook_id in facebook_ids:
-            update_linked_facebook_account_scopes(facebook_id)
+            facebook_controller.update_linked_facebook_account_scopes(facebook_id)
         return Response('OK')

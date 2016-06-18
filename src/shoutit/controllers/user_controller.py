@@ -5,9 +5,9 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
 from shoutit.api.v3.exceptions import ShoutitBadRequest
-from shoutit.controllers import location_controller
-from shoutit.models import (User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User)
-from shoutit.utils import generate_username, debug_logger, set_profile_media
+from shoutit.controllers import location_controller, media_controller
+from shoutit.models import User, LinkedGoogleAccount, CLUser, DBUser, DBZ2User
+from shoutit.utils import generate_username, debug_logger
 
 
 def create_user(email=None, password=None, first_name='', last_name='', username=None, profile_fields=None,
@@ -121,7 +121,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
         raise ShoutitBadRequest(message="Could not access your G+ account, try again later",
                                 developer_message=str(e))
     image_url = gplus_user['image']['url'].split('?')[0]
-    set_profile_media(user.profile, 'image', image_url)
+    media_controller.set_profile_media(user.profile, 'image', image_url)
     return user
 
 

@@ -13,6 +13,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_rq import job
 
+from common.constants import LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE
 from shoutit.models import User, Profile, Listen2, ProfileContact, UUIDModel
 from .base import CreditRule, CreditTransaction
 
@@ -194,7 +195,8 @@ def apply_listen_to_friends(listen):
 
 @receiver(post_save, sender=Listen2)
 def listen_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
-    apply_listen_to_friends.delay(instance)
+    if instance.type in [LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE]:
+        apply_listen_to_friends.delay(instance)
 
 
 class InvitationCode(UUIDModel):

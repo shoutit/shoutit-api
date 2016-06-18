@@ -11,9 +11,9 @@ from rest_framework.reverse import reverse
 
 from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
 from shoutit.api.serializers import AttachedUUIDObjectMixin
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller, media_controller
 from shoutit.models import Shout, Currency, InactiveShout
-from shoutit.utils import upload_image_to_s3, debug_logger, blank_to_none, correct_mobile
+from shoutit.utils import debug_logger, blank_to_none, correct_mobile
 from shoutit_credit.serializers import ShoutPromotionSerializer
 from .base import LocationSerializer, VideoSerializer, empty_char_input
 from .profile import ProfileSerializer
@@ -142,8 +142,9 @@ class ShoutDetailSerializer(ShoutSerializer):
                 valid_images.append(image)
                 continue
             try:
-                s3_image = upload_image_to_s3(bucket_name='shoutit-shout-image-original', url=image,
-                                              public_url='https://shout-image.static.shoutit.com', raise_exception=True)
+                s3_image = media_controller.upload_image_to_s3(
+                    bucket_name='shoutit-shout-image-original', url=image,
+                    public_url='https://shout-image.static.shoutit.com', raise_exception=True)
                 valid_images.append(s3_image)
             except Exception as e:
                 debug_logger.warn(str(e), exc_info=True)

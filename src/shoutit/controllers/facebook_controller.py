@@ -17,9 +17,9 @@ from pydash import objects
 
 from common.utils import utcfromtimestamp
 from shoutit.api.v3.exceptions import ShoutitBadRequest
-from shoutit.controllers import location_controller, user_controller, notifications_controller
+from shoutit.controllers import location_controller, user_controller, notifications_controller, media_controller
 from shoutit.models import LinkedFacebookAccount
-from shoutit.utils import debug_logger, now_plus_delta, error_logger, set_profile_media
+from shoutit.utils import debug_logger, now_plus_delta, error_logger
 
 FB_LINK_ERROR_TRY_AGAIN = "Could not link Facebook account, try again later."
 FB_LINK_ERROR_EMAIL = "Could not access user email, make sure you allowed it."
@@ -256,9 +256,38 @@ def update_profile_using_fb_user(profile, fb_user):
     image_url = objects.get(fb_user, 'picture.data.url')
     is_silhouette = objects.get(fb_user, 'picture.data.is_silhouette')
     if image_url and is_silhouette is False:
-        set_profile_media(profile, 'image', url=image_url)
+        media_controller.set_profile_media(profile, 'image', url=image_url)
 
     # Cover
     cover_source = objects.get(fb_user, 'cover.source')
     if cover_source:
-        set_profile_media(profile, 'cover', url=cover_source)
+        media_controller.set_profile_media(profile, 'cover', url=cover_source)
+
+
+def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECRET):
+    import hashlib
+    import hmac
+
+    l = signed_request.split('.', 2)
+    encoded_sig = l[0]
+    payload = l[1]
+    sig = base64_url_decode(encoded_sig)
+    data = json.loads(base64_url_decode(payload))
+    if data.get('algorithm').upper() != 'HMAC-SHA256':
+        return {}
+
+    # http://stackoverflow.com/questions/20849805/python-hmac-typeerror-character-mapping-must-return-integer-none-or-unicode
+    expected_sig = hmac.new(str(secret), msg=str(payload), digestmod=hashlib.sha256).digest()
+    if sig != expected_sig:
+        return {}
+
+    return data
+
+
+def base64_url_decode(inp):
+    import base64
+
+    inp = inp.replace('-', '+').replace('_', '/')
+    padding_factor = (4 - len(inp) % 4) % 4
+    inp += "=" * padding_factor
+    return base64.decodestring(inp)

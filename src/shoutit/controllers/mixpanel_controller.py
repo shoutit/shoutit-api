@@ -67,7 +67,7 @@ def add_to_mp_people(user_ids=None, buffered=False):
 # Todo (mo): handle Pages properties
 @job(settings.RQ_QUEUE)
 def _add_to_mp_people(user_ids=None, buffered=False):
-    users = User.objects.filter(id__in=user_ids).select_related('profile', 'page')
+    users = User.objects.filter(id__in=user_ids).exclude(accesstoken=None).select_related('profile', 'page')
 
     for user in users:
         ap = user.ap

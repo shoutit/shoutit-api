@@ -24,17 +24,17 @@ from common.constants import (
     REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
     POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
 from common.utils import any_in
-from shoutit.controllers import location_controller
-from shoutit.controllers import shout_controller, user_controller, message_controller
+from shoutit.controllers import (location_controller, shout_controller, user_controller, message_controller,
+                                 media_controller)
 from shoutit.controllers.facebook_controller import user_from_facebook_auth_response
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import (
-    User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification,
-    Category, Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation,
-    DiscoverItem, Profile, Page)
+    User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification, Category,
+    Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation, DiscoverItem,
+    Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
-from shoutit.utils import generate_username, upload_image_to_s3, debug_logger, url_with_querystring
+from shoutit.utils import generate_username, debug_logger, url_with_querystring
 
 
 class LocationSerializer(serializers.Serializer):
@@ -617,8 +617,9 @@ class ShoutDetailSerializer(ShoutSerializer):
                 valid_images.append(image)
                 continue
             try:
-                s3_image = upload_image_to_s3(bucket_name='shoutit-shout-image-original', url=image,
-                                              public_url='https://shout-image.static.shoutit.com', raise_exception=True)
+                s3_image = media_controller.upload_image_to_s3(
+                    bucket_name='shoutit-shout-image-original', url=image,
+                    public_url='https://shout-image.static.shoutit.com', raise_exception=True)
                 valid_images.append(s3_image)
             except Exception as e:
                 debug_logger.warn(str(e), exc_info=True)
