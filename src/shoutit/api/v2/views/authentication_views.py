@@ -103,15 +103,16 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         except ObjectDoesNotExist:
             pass
 
-        # alias the mixpanel id and track registration
         request_data = self.request.data
         if new_signup:
+            # Alias the Mixpanel id
             mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
             if mixpanel_distinct_id:
                 mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
-            mixpanel_controller.track(user.pk, 'signup', {
-                'user_id': user.pk,
-                'is_guest': user.is_guest,
+            # Track signup / signup_guest
+            event_name = "signup_guest" if user.is_guest else 'signup'
+            mixpanel_controller.track(user.pk, event_name, {
+                'profile': user.pk,
                 'api_client': request_data.get('client_id'),
                 'api_version': self.request.version,
                 'using': request_data.get('grant_type'),
@@ -119,7 +120,10 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                 'mp_country_code': user.location.get('country'),
                 '$region': user.location.get('state'),
                 '$city': user.location.get('city'),
+                'has_push_tokens': user.devices.count() > 0
             })
+            # Add the profile to Mixpanel People
+            mixpanel_controller.add_to_mp_people([user.id])
 
         return Response(response_data)
 

@@ -102,10 +102,11 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             pass
 
         if new_signup:
-            # Alias the Mixpanel id and track signup / signup_guest
+            # Alias the Mixpanel id
             mixpanel_distinct_id = data.get('mixpanel_distinct_id')
             if mixpanel_distinct_id:
                 mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
+            # track signup / signup_guest
             event_name = "signup_guest" if user.is_guest else 'signup'
             mixpanel_controller.track(user.pk, event_name, {
                 'profile': user.pk,
@@ -118,6 +119,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
                 '$city': user.location.get('city'),
                 'has_push_tokens': user.devices.count() > 0
             })
+            # Add the profile to Mixpanel People
+            mixpanel_controller.add_to_mp_people([user.id])
 
             # Apply InviteFriends
             invitation_code = data.get('invitation_code')

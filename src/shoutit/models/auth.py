@@ -45,6 +45,8 @@ class ShoutitUserManager(UserManager):
         user.set_password(password)
         user.profile_fields = profile_fields
         user.page_fields = page_fields
+        # used to later track signup events
+        user.new_signup = True
         user.save(using=self._db)
         return user
 
