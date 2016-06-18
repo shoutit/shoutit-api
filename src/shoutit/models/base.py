@@ -53,6 +53,7 @@ class UUIDModel(models.Model):
     def exists(cls, *args, **kwargs):
         return cls.objects.filter(*args, **kwargs).exists()
 
+    # Todo (mo): remove the usage of `.pk` as it leads to unexpected behaviour since Django uses it internally in query matching and other db related functions
     @property
     def pk(self):
         return str(self.id).lower()

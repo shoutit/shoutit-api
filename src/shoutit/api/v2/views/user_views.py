@@ -32,7 +32,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
     serializer_class = UserSerializer
     serializer_detail_class = UserDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True)
-    queryset_detail = User.objects.filter(is_active=True).prefetch_related('profile', 'page')
+    queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page')
     pagination_class = ShoutitPageNumberPaginationNoCount
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_fields = ('username', 'email')

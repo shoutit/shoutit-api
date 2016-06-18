@@ -70,7 +70,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
     def display(self, user):
         title = self.subject
-        contributors_summary = self.contributors.exclude(id=user.id)[:5]
+        contributors_summary = self.contributors.exclude(id=user.id).select_related('profile', 'page')[:5]
         contributors_summary_names = map(lambda u: u.name, contributors_summary)
         contributors_summary_len = len(contributors_summary)
         if contributors_summary_len == 0:
