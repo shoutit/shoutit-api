@@ -124,9 +124,11 @@ def _add_to_mp_people(user_ids=None, buffered=False):
 @receiver(post_save)
 def post_save_profile(sender, instance=None, created=False, **kwargs):
     # We prevent immediate adding to Mixpanel people on new signup until the id is aliased with distinct_mixpanel_id
-    if isinstance(instance, User) and not getattr(instance, 'new_signup', False):
+    notify = getattr(instance, 'notify', True)
+    new_signup = getattr(instance, 'new_signup', False)
+    if isinstance(instance, User) and notify and not new_signup:
         add_to_mp_people(user_ids=[instance.id])
-    elif isinstance(instance, AbstractProfile) and not getattr(instance, 'new_signup', False):
+    elif isinstance(instance, AbstractProfile) and notify and new_signup:
         add_to_mp_people(user_ids=[instance.user_id])
     else:
         pass

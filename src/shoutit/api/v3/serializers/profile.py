@@ -14,7 +14,7 @@ from rest_framework.reverse import reverse
 from shoutit.api.serializers import AttachedUUIDObjectMixin
 from shoutit.api.v3.exceptions import RequiredBody
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
-                                 gplus_controller)
+                                 gplus_controller, mixpanel_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
 from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
@@ -292,6 +292,9 @@ class ProfileDetailSerializer(ProfileSerializer):
 
         # Notify about updates
         notifications_controller.notify_user_of_profile_update(user)
+
+        # Update Mixpanel People record
+        mixpanel_controller.add_to_mp_people([user.id])
         return user
 
 
@@ -319,6 +322,9 @@ class GuestSerializer(ProfileSerializer):
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
             user.update_push_tokens(push_tokens_data, 'v3')
+
+        # Update Mixpanel People record
+        mixpanel_controller.add_to_mp_people([user.id])
 
         return user
 
