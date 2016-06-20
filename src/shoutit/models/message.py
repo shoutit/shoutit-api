@@ -371,13 +371,8 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         from ..controllers import notifications_controller, pusher_controller
         pusher_controller.trigger_new_message(instance, version='v3')
 
-        # Update the conversation without sending `conversation_update` pusher event
-        conversation = instance.conversation
-        conversation.last_message = instance
-        conversation.notify = False
-        conversation.save()
-
         # Todo: move the logic below on a queue
+        conversation = instance.conversation
         # Add the message user to conversation users if he isn't already
         try:
             with transaction.atomic():
@@ -389,6 +384,11 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
         for to_user in conversation.contributors:
             if instance.user and instance.user != to_user:
                 notifications_controller.notify_user_of_message(to_user, instance)
+
+        # Update the conversation which sends a `conversation_update` pusher event
+        conversation.last_message = instance
+        conversation.detailed = False  # Don't send detailed conversation in the push event
+        conversation.save()
 
         # Track the message on MixPanel
         from ..controllers import mixpanel_controller
