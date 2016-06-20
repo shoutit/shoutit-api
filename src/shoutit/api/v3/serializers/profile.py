@@ -169,7 +169,7 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     def ios_compat_la(self, ret):
         request = self.context['request']
-        if getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no < 1280:
+        if request.agent == 'ios' and request.build_no < 1280:
             ret['linked_accounts'] = self.instance.v2_linked_accounts
         return ret
 

@@ -29,13 +29,17 @@ class AgentMiddleware(object):
         if 'com.shoutit-iphone' in user_agent:
             agent = 'ios'
             build_no_re = re.search('com.shoutit-iphone.*\((\d+);', user_agent)
-            build_no = build_no_re.groups()[0] if build_no_re else None
+            build_no = build_no_re.groups()[0] if build_no_re else 0
+        elif 'com.shoutit.app.android' in user_agent:
+            agent = 'android'
+            build_no_re = re.search('com.shoutit.app.android.*\((\d+);', user_agent)
+            build_no = build_no_re.groups()[0] if build_no_re else 0
         else:
             agent = None
-            build_no = None
+            build_no = 0
 
         request.agent = agent
-        request.build_no = int(build_no) if build_no else None
+        request.build_no = int(build_no)
 
 
 class BadRequestsMiddleware(object):
