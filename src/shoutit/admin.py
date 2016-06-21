@@ -138,9 +138,9 @@ class PageAdminAdmin(admin.ModelAdmin):
 
 # PageCategory
 @admin.register(PageCategory)
-class PageCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'slug', 'parent')
-    list_filter = ('parent',)
+class PageCategoryAdmin(DjangoMpttAdmin):
+    tree_auto_open = False
+    form = ImageFileChangeForm
 
 
 # LinkedFacebookAccount
