@@ -117,6 +117,8 @@ def create_fake_request(version):
     request = Request(django_request)
     request.version = version
     request.versioning_scheme = ShoutitNamespaceVersioning()
+    request.agent = None
+    request.build_no = 0
     return request
 
 
