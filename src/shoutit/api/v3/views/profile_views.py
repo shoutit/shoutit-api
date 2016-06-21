@@ -17,13 +17,13 @@ from shoutit.api.v3.views.shout_views import ShoutViewSet
 from shoutit.controllers import listen_controller, message_controller
 from shoutit.models import User
 from ..filters import HomeFilterBackend, ProfileFilter
-from ..pagination import (ShoutitPaginationMixin, ShoutitPageNumberPaginationNoCount)
+from ..pagination import ShoutitPageNumberPaginationNoCount
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
                            ProfileContactsSerializer)
 
 
-class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Profile API Resource.
     """
