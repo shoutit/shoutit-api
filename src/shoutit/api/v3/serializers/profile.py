@@ -35,11 +35,12 @@ class ProfileSerializer(MiniProfileSerializer):
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
     listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
     is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
+    location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
 
     class Meta(MiniProfileSerializer.Meta):
         parent_fields = MiniProfileSerializer.Meta.fields
         fields = parent_fields + ('type', 'api_url', 'web_url', 'app_url', 'first_name', 'last_name', 'is_activated',
-                                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
+                                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner', 'location')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ProfileSerializer, self).__init__(instance, data, **kwargs)
@@ -58,6 +59,11 @@ class ProfileSerializer(MiniProfileSerializer):
             ret = InactiveUser().to_dict
         else:
             ret = super(ProfileSerializer, self).to_representation(instance)
+        # hide sensitive attributes from other users than owner
+        if not ret['is_owner']:
+            del ret['location']['latitude']
+            del ret['location']['longitude']
+            del ret['location']['address']
         blank_to_none(ret, ['image', 'cover'])
         return ret
 
@@ -74,7 +80,6 @@ class ProfileDetailSerializer(ProfileSerializer):
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
-    location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     website = serializers.CharField(source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
@@ -97,7 +102,7 @@ class ProfileDetailSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + (
-            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
+            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'email', 'mobile', 'website',
             'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
             'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
             'pages', 'admins', 'stats'
@@ -148,9 +153,6 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['mobile']
             del ret['gender']
             del ret['birthday']
-            del ret['location']['latitude']
-            del ret['location']['longitude']
-            del ret['location']['address']
             del ret['push_tokens']
             del ret['linked_accounts']
             del ret['stats']
