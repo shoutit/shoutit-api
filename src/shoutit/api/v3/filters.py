@@ -8,8 +8,9 @@ from datetime import timedelta
 
 import django_filters
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
-from elasticsearch_dsl import Search, Q
+from elasticsearch_dsl import Search, Q as EQ
 from pydash import parse_int, arrays
 from rest_framework import filters
 
@@ -68,7 +69,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         if isinstance(exclude, basestring):
             exclude = exclude.split(',')
         if exclude:
-            index_queryset = index_queryset.filter(~Q('terms', _id=exclude))
+            index_queryset = index_queryset.filter(~EQ('terms', _id=exclude))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -185,12 +186,12 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             min_published = now - timedelta(days=int(settings.MAX_EXPIRY_DAYS))
 
             # Recently published and no specified expires_at
-            recently_published = Q('range', **{'published_at': {'gte': min_published}})
-            no_expiry_still_valid = Q('bool', filter=[Q('missing', field='expires_at'), recently_published])
+            recently_published = EQ('range', **{'published_at': {'gte': min_published}})
+            no_expiry_still_valid = EQ('bool', filter=[EQ('missing', field='expires_at'), recently_published])
 
             # Not expired
-            not_expired = Q('range', **{'expires_at': {'gte': now}})
-            expiry_still_valid = Q('bool', filter=[Q('exists', field='expires_at'), not_expired])
+            not_expired = EQ('range', **{'expires_at': {'gte': now}})
+            expiry_still_valid = EQ('bool', filter=[EQ('exists', field='expires_at'), not_expired])
 
             index_queryset = index_queryset.filter(no_expiry_still_valid | expiry_still_valid)
 
@@ -226,16 +227,16 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         tags = user.listening2_tags_names
         if tags:
             country = user.location.get('country')
-            listening_tags = Q('terms', tags=tags) & Q('term', country=country)
+            listening_tags = EQ('terms', tags=tags) & EQ('term', country=country)
             listening.append(listening_tags)
 
         # Listened Profiles + user himself
         profiles = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if profiles:
-            listening_profiles = Q('terms', uid=profiles)
+            listening_profiles = EQ('terms', uid=profiles)
             listening.append(listening_profiles)
 
-        index_queryset = index_queryset.filter(Q('bool', should=listening))
+        index_queryset = index_queryset.filter(EQ('bool', should=listening))
         index_queryset = index_queryset.sort('-published_at')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset
@@ -287,7 +288,7 @@ class TagFilter(django_filters.FilterSet):
             category = Category.objects.get(name=value)
             # return all tags that belong to the category except the main tag
             # todo: check if we really need to exclude the main tag or not
-            # return queryset.filter(category=category).filter(~Q(id=category.main_tag_id))
+            # return queryset.filter(category=category).exclude(id=category.main_tag_id)
             return queryset.filter(category=category)
         except Category.DoesNotExist:
             raise InvalidParameter('category', "Category '%s' does not exist" % value)
@@ -353,3 +354,16 @@ class TagFilter(django_filters.FilterSet):
                 'country': country, 'state': state, 'city': city,
             })
         return queryset
+
+
+class ProfileFilter(filters.BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        if view.action != 'list':
+            return queryset
+
+        data = request.query_params
+        country = data.get('country', '').upper()
+        if country:
+            queryset = queryset.filter(Q(profile__country=country) | Q(page__country=country))
+        return queryset
+
