@@ -15,10 +15,11 @@ from common.constants import USER_TYPE_PAGE
 from shoutit.api.v3.filters import ProfileFilter
 from shoutit.api.v3.pagination import ShoutitPageNumberPaginationNoCount
 from shoutit.models import User, PageCategory
-from ..serializers import (PageCategorySerializer, ProfileSerializer, ProfileDetailSerializer, AddAdminSerializer, RemoveAdminSerializer)
+from ..serializers import (PageCategorySerializer, ProfileSerializer, ProfileDetailSerializer, AddAdminSerializer, RemoveAdminSerializer,
+                           CreatePageSerializer)
 
 
-class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     Profile API Resource.
     """
@@ -77,6 +78,32 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Generic
         categories = PageCategory.objects.root_nodes()
         serializer = self.get_serializer(categories, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a Page
+        ###REQUIRES AUTH
+        ###Request
+        ####Body Example
+        <pre><code>
+        {
+            "page_name": "New Page",
+            "page_category": {
+                "slug": "local-business"
+            }
+        }
+        </code></pre>
+
+        ---
+        serializer: ProfileDetailSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        self.serializer_class = CreatePageSerializer
+        return super(PageViewSet, self).create(request, *args, **kwargs)
 
     @detail_route(methods=['get'], suffix='Page Admins')
     def admins(self, request, *args, **kwargs):

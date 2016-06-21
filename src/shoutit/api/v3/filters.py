@@ -366,4 +366,3 @@ class ProfileFilter(filters.BaseFilterBackend):
         if country:
             queryset = queryset.filter(Q(profile__country=country) | Q(page__country=country))
         return queryset
-

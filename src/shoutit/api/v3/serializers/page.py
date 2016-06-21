@@ -5,10 +5,11 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
+from shoutit.controllers import page_controller
 from shoutit.models import PageCategory
 from shoutit.utils import blank_to_none
 from .base import RecursiveSerializer
-from .profile import ObjectProfileActionSerializer
+from .profile import ObjectProfileActionSerializer, ProfileDetailSerializer
 
 
 class PageCategorySerializer(serializers.ModelSerializer):
@@ -64,3 +65,18 @@ class RemoveAdminSerializer(ObjectProfileActionSerializer):
         profile = self.fields['profile'].instance
         instance.remove_admin(profile)
         return instance
+
+
+class CreatePageSerializer(serializers.Serializer):
+    page_category = PageCategorySerializer()
+    page_name = serializers.CharField(max_length=60, min_length=2)
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        name = validated_data['page_name']
+        category = validated_data['page_category']
+        page = page_controller.create_page(creator=request.user, name=name, category=category)
+        return page
+
+    def to_representation(self, instance):
+        return ProfileDetailSerializer(instance=instance, context=self.context).data
