@@ -27,7 +27,7 @@ from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
     ProfileDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer,
-    GuestSerializer)
+    GuestSerializer, ShoutitPageSerializer)
 
 
 class RequestParamsClientBackend(object):
@@ -59,14 +59,17 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
     authentication_classes = ()
     permission_classes = ()
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
-                   'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest']
+                   'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest', 'shoutit_page']
 
     def access_token_response(self, access_token, data=None):
         """
         Returns a successful response after creating the access token
         as defined in :rfc:`5.1`.
         """
-        user = access_token.user
+        if self.action == 'shoutit_page':
+            user = self.page
+        else:
+            user = access_token.user
         if not user.is_active:
             raise AuthenticationFailed('Account inactive or deleted.')
 
@@ -88,10 +91,13 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             'token_type': provider_constants.TOKEN_TYPE,
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
-            'user': user_dict,
             'profile': user_dict,
             'new_signup': new_signup
         }
+
+        # Todo (mo): deprecate as it is used by old clients only
+        if self.action != 'shoutit_page':
+            response_data['user'] = user_dict
 
         # Not all access_tokens are given a refresh_token
         # (for example, public clients doing password auth)
@@ -182,6 +188,21 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         scopes = ('read', 'write')
         return self.prepare_access_token_response(request, client, user, scopes, data)
 
+    def get_shoutit_page_grant(self, request, login_data, client):
+        serializer = ShoutitPageSerializer(data=login_data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user, page = serializer.save()
+        return user, page
+
+    def shoutit_page(self, request, data, client):
+        """
+        Handle ``grant_type=shoutit_page`` requests.
+        """
+        user, page = self.get_shoutit_page_grant(request, data, client)
+        self.page = page
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes, data)
+
     def get_shoutit_guest_grant(self, request, guest_data, client):
         serializer = ShoutitGuestSerializer(data=guest_data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -244,6 +265,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             return self.shoutit_signup
         elif grant_type == 'shoutit_login':
             return self.shoutit_login
+        elif grant_type == 'shoutit_page':
+            return self.shoutit_page
         elif grant_type == 'shoutit_guest':
             return self.shoutit_guest
         elif grant_type == 'sms_code':
@@ -265,6 +288,11 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         Passing the optional `mixpanel_distinct_id` will allow API server to alias it with the actual profile id for later tracking events.
 
         Passing the optional `invitation_code` 'may' give the owner of that code a shoutit credit.
+
+        ##Page Signup notes
+        - returned `access_token` and `refresh_token` belog to the page creator (user)
+        - returned `profile` is the Page profile
+        - clients should set http header `Authorization-Page-Id` using the returned `profile.id` for all later requests. This makes sure these calls are treated as if the Page is acting not its owner.
 
         ##Requesting the access token
         There are various methods to do that. Each has different `grant_type` and attributes.
@@ -332,6 +360,30 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
             "client_id": "shoutit-test",
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "shoutit_signup",
+            "name": "Barack Hussein Obama",
+            "email": "i.also.shout@whitehouse.gov",
+            "password": "iW@ntToPl*YaGam3",
+            "profile": {
+                "location": {
+                    "latitude": 48.7533744,
+                    "longitude": 11.3796516
+                }
+            },
+            "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1",
+            "invitation_code": "V61DUM6K5W"
+        }
+        </code></pre>
+
+        ###Creating Shoutit Page
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "shoutit_page",
+            "page_category": {
+                "slug": "page-slug"
+            },
+            "page_name": "The White House",
             "name": "Barack Hussein Obama",
             "email": "i.also.shout@whitehouse.gov",
             "password": "iW@ntToPl*YaGam3",
