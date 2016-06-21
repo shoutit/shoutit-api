@@ -8,7 +8,6 @@ from rest_framework.reverse import reverse
 
 from common.constants import (ConversationType, CONVERSATION_TYPE_ABOUT_SHOUT, CONVERSATION_TYPE_PUBLIC_CHAT)
 from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
-from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.controllers import message_controller
 from shoutit.models import Conversation
 from shoutit.utils import blank_to_none
@@ -120,7 +119,7 @@ class ConversationProfileActionSerializer(HasAttachedUUIDObjects, serializers.Se
     }
     Subclasses must
     - Define these attributes
-    `success_message`, `error_messages`
+    `success_message`, `error_message`
     - Implement these methods
     `condition(self, conversation, actor, profile)`, `create(self, validated_data)`
     """
@@ -138,7 +137,7 @@ class ConversationProfileActionSerializer(HasAttachedUUIDObjects, serializers.Se
 
         if actor.id == profile.id:
             raise exceptions.ShoutitBadRequest("You can't make chat actions against your own profile",
-                                               reason=ERROR_REASON.BAD_REQUEST)
+                                               reason=exceptions.ERROR_REASON.BAD_REQUEST)
         if not self.condition(conversation, actor, profile):
             raise exceptions.InvalidBody('profile', self.error_message % profile.name)
 
@@ -149,6 +148,7 @@ class ConversationProfileActionSerializer(HasAttachedUUIDObjects, serializers.Se
         return {'success': self.success_message % profile.name}
 
     # Todo (mo): utilize update instead of create. update has the conversation instance from the view
+    # A better and more general example is done in `ObjectProfileActionSerializer`
     def update(self, instance, validated_data):
         return self.create(validated_data=validated_data)
 

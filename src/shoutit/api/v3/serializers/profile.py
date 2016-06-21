@@ -7,11 +7,12 @@ from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.validators import URLValidator, validate_email
-from rest_framework import serializers
+from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
-from shoutit.api.serializers import AttachedUUIDObjectMixin
+from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
+from shoutit.api.v3 import exceptions
 from shoutit.api.v3.exceptions import RequiredBody
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
                                  gplus_controller, mixpanel_controller)
@@ -455,3 +456,49 @@ class ProfileContactsSerializer(serializers.Serializer):
         profile_contacts = filter(lambda pc: pc.is_reached(), profile_contacts)
         ProfileContact.objects.bulk_create(profile_contacts)
         return ret
+
+
+class ObjectProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializer):
+    """
+    Should be initialized in the view
+    ```
+    instance = self.get_object()
+    serializer = self.get_serializer(instance, data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    ```
+
+    Object must have `is_admin(user)`
+
+    Subclasses must
+    - Define these attributes
+    `success_message`, `error_message`
+    - Implement these methods
+    `condition(self, instance, actor, profile)`, `create(self, validated_data)`
+    """
+    profile = ProfileSerializer()
+
+    def to_internal_value(self, data):
+        instance = self.instance
+        request = self.context['request']
+        actor = request.user
+        if not instance.is_admin(actor):
+            raise drf_exceptions.PermissionDenied()
+
+        validated_data = super(ObjectProfileActionSerializer, self).to_internal_value(data)
+        profile = self.fields['profile'].instance
+
+        if actor.id == profile.id:
+            raise exceptions.ShoutitBadRequest("You can't make chat actions against your own profile",
+                                               reason=exceptions.ERROR_REASON.BAD_REQUEST)
+        if not self.condition(instance, actor, profile):
+            raise exceptions.InvalidBody('profile', self.error_message % profile.name)
+
+        return validated_data
+
+    def to_representation(self, instance):
+        profile = self.fields['profile'].instance
+        return {'success': self.success_message % profile.name}
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError('`update()` must be implemented.')
