@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 from mptt.models import MPTTModel, TreeForeignKey
 
-from common.constants import PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER
+from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER,
+                              PAGE_ADMIN_TYPE_ADMIN)
 from shoutit.models.base import UUIDModel
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
@@ -68,6 +69,15 @@ class Page(AbstractProfile):
     def clean(self):
         super(Page, self).clean()
         self.phone = correct_mobile(self.phone, self.country)
+
+    def is_admin(self, user):
+        return user in self.admins.all()
+
+    def add_admin(self, user, admin_type=PAGE_ADMIN_TYPE_ADMIN):
+        PageAdmin.create(page=self, admin=user, type=admin_type)
+
+    def remove_admin(self, user):
+        PageAdmin.objects.filter(page=self, admin=user).delete()
 
 
 class PageAdmin(UUIDModel):

@@ -8,6 +8,7 @@ from rest_framework import serializers
 from shoutit.models import PageCategory
 from shoutit.utils import blank_to_none
 from .base import RecursiveSerializer
+from .profile import ObjectProfileActionSerializer
 
 
 class PageCategorySerializer(serializers.ModelSerializer):
@@ -35,3 +36,31 @@ class PageCategorySerializer(serializers.ModelSerializer):
             self.instance = PageCategory.objects.get(slug=value)
         except (PageCategory.DoesNotExist, AttributeError):
             raise serializers.ValidationError("PageCategory with slug '%s' does not exist" % value)
+
+
+class AddAdminSerializer(ObjectProfileActionSerializer):
+    success_message = "Added %s to the admins of this page"
+
+    def condition(self, instance, actor, profile):
+        return True
+
+    def update(self, instance, validated_data):
+        profile = self.fields['profile'].instance
+        if not instance.is_admin(profile):
+            instance.add_admin(profile)
+        else:
+            self.success_message = "%s is already admin in this page"
+        return instance
+
+
+class RemoveAdminSerializer(ObjectProfileActionSerializer):
+    error_message = "%s is not admin in this page"
+    success_message = "Removed %s from the admins of this page"
+
+    def condition(self, instance, actor, profile):
+        return instance.is_admin(profile)
+
+    def update(self, instance, validated_data):
+        profile = self.fields['profile'].instance
+        instance.remove_admin(profile)
+        return instance
