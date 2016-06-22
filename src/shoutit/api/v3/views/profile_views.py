@@ -57,7 +57,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         """
         List Profiles based on `search` and `country` query params.
 
-        ####These attributes will only show for Profile owner
+        ####These attributes are omitted
         `location.latitude`, `location.longitude`, `location.address`
 
         ###Response

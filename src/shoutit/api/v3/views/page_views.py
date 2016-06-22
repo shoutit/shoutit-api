@@ -43,9 +43,9 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
 
     def list(self, request, *args, **kwargs):
         """
-        List Profiles based on `search` and `country` query params.
+        List Pages based on `search` and `country` query params.
 
-        ####These attributes will only show for Profile owner
+        ####These attributes are omitted
         `location.latitude`, `location.longitude`, `location.address`
 
         ###Response
