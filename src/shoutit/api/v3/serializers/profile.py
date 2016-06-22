@@ -61,10 +61,11 @@ class ProfileSerializer(MiniProfileSerializer):
             ret = InactiveUser().to_dict
         else:
             ret = super(ProfileSerializer, self).to_representation(instance)
-        # hide sensitive attributes
-        del ret['location']['latitude']
-        del ret['location']['longitude']
-        del ret['location']['address']
+        # hide sensitive attributes from other users than owner
+        if not ret['is_owner']:
+            del ret['location']['latitude']
+            del ret['location']['longitude']
+            del ret['location']['address']
         blank_to_none(ret, ['image', 'cover'])
         if instance.type == USER_TYPE_PAGE and self.context['view'].action == 'pages':
             user = self.context['request'].user
