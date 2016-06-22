@@ -16,6 +16,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext as _
 from django_pgjson.fields import JsonField
+from pydash import strings
 
 from common.constants import (
     ReportType, NotificationType, NOTIFICATION_TYPE_LISTEN, MessageAttachmentType, MESSAGE_ATTACHMENT_TYPE_SHOUT,
@@ -69,15 +70,17 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         return self.messages.exclude(read_set__user=user).exclude(Q(user=user) | Q(user=None))
 
     def display(self, user):
+        # Todo (mo): Optimize!
         title = self.subject
+        is_contributor = self.contributors.only('id').filter(id=user.id).exists()
         contributors_summary = self.contributors.exclude(id=user.id).select_related('profile', 'page')[:5]
         contributors_summary_names = map(lambda u: u.name, contributors_summary)
         contributors_summary_len = len(contributors_summary)
         if contributors_summary_len == 0:
-            sub_title = "You only"
+            sub_title = "You only" if is_contributor else ''
         else:
             sub_title = ", ".join(contributors_summary_names)
-            if contributors_summary_len > 1 or self.type == CONVERSATION_TYPE_PUBLIC_CHAT:
+            if is_contributor and (contributors_summary_len > 1 or self.type == CONVERSATION_TYPE_PUBLIC_CHAT):
                 sub_title = "You, " + sub_title
         image = self.icon
         last_message_summary = self.last_message.summary if self.last_message else None
@@ -273,7 +276,8 @@ class Message(Action):
     @property
     def summary(self):
         # Todo: Create summary attribute and set it while saving
-        _summary = (getattr(self, 'text') or 'attachment')[:30]
+        text = getattr(self, 'text') or 'attachment'
+        _summary = strings.truncate(text, 100, '', ' ')
         if self.user_id:
             return _("%(name)s: %(message)s") % {'name': self.user.name, 'message': _summary}
         else:
