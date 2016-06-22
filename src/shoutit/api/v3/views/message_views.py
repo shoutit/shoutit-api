@@ -51,8 +51,9 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         exclude = {'blocked__contains': [user.id]}
 
         if self._is_request_to_detail_endpoint():
-            related = ['creator', 'last_message__user']
-            return Conversation.objects.all().exclude(**exclude).select_related(*related)
+            related = ['creator', 'last_message__user__profile']
+            related2 = ['last_message__attachments']
+            return Conversation.objects.all().exclude(**exclude).select_related(*related).prefetch_related(*related2)
         else:
             conversation_type = self.request.query_params.get('type')
             if conversation_type == 'public_chat':
@@ -65,9 +66,11 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
                 conversations = user.conversations
                 filters = {}
 
-            related = ['last_message__user']
+            related = ['last_message__user__profile']
+            related2 = ['creator', 'last_message__attachments']
             order = '-modified_at'
-            return conversations.filter(**filters).exclude(**exclude).select_related(*related).order_by(order)
+            return conversations.filter(**filters).exclude(**exclude).select_related(*related).prefetch_related(*related2).order_by(order)
+            # return conversations.filter(**filters).exclude(**exclude).select_related(*related).order_by(order)
 
     def _is_request_to_detail_endpoint(self):
         # Todo (mo): Check why this is overridden
@@ -213,7 +216,8 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         """
         conversation = self.get_object()
         related = ['user__profile']
-        messages_qs = conversation.messages.all().select_related(*related)
+        related2 = ['attachments']
+        messages_qs = conversation.messages.all().select_related(*related).prefetch_related(*related2)
         self.pagination_class = DateTimePagination
         page = self.paginate_queryset(messages_qs)
 
