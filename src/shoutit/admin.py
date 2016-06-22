@@ -262,14 +262,15 @@ class DiscoverItemAdmin(DjangoMpttAdmin):
 # Conversation
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', '_users', '_messages', '_attached_object', 'modified_at', 'created_at')
-    readonly_fields = ('_last_message', '_attached_object', '_messages')
+    list_display = ('id', '_web_url', 'type', 'country', '_users', '_messages', 'modified_at', 'created_at')
+    readonly_fields = ('_last_message', '_attached_object', '_messages', '_web_url')
     fieldsets = (
-        (None, {'fields': ('type', 'users', '_attached_object', '_last_message')}),
-        (_('Extra'), {'fields': ('_messages', 'subject', 'admins')}),
+        (None, {'fields': ('type', 'subject', 'icon', '_web_url')}),
+        (_('Users'), {'fields': ('creator', 'users', 'admins', 'blocked')}),
+        (_('Extra'), {'fields': ('_attached_object', '_last_message', '_messages')}),
     )
-    raw_id_fields = ('users',)
-    list_filter = (('created_at', ShoutitDateFieldListFilter),)
+    raw_id_fields = ('users', 'creator')
+    list_filter = ('type', 'country', ('created_at', ShoutitDateFieldListFilter),)
     ordering = ('-created_at',)
 
     def _users(self, conversation):
@@ -305,13 +306,19 @@ class ConversationAdmin(admin.ModelAdmin):
     _last_message.allow_tags = True
     _last_message.short_description = 'Last Message'
 
+    def _web_url(self, instance):
+        return links(instance)
+
+    _web_url.allow_tags = True
+    _web_url.short_description = 'Web url'
+
 
 # Message
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('id', '_conversation', '_user', 'summary', 'has_attachments', 'created_at')
     search_fields = ('user__id', 'user__username', 'text')
-    readonly_fields = ('conversation', '_conversation', 'user', '_user')
+    readonly_fields = ('_conversation', '_user')
     raw_id_fields = ('conversation', 'user')
     fieldsets = (
         (None, {'fields': ('conversation', '_conversation', 'user', '_user', 'text')}),
