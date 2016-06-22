@@ -5,6 +5,7 @@ import random
 import string
 from datetime import timedelta
 
+from django.db.models.query import QuerySet
 from rest_framework.test import APITestCase
 from django.core.urlresolvers import reverse
 from django.contrib.auth import get_user_model
@@ -90,6 +91,10 @@ class BaseTestCase(APITestCase):
         self.assertEqual(response.status_code, 403)
 
     def assert_ids_equal(self, dict_iter, objects_iter, order=False):
+        if not isinstance(dict_iter, (list, QuerySet)):
+            dict_iter = [dict_iter]
+        if not isinstance(objects_iter, (list, QuerySet)):
+            objects_iter = [objects_iter]
         id_list_1 = [str(o['id']) for o in dict_iter]
         id_list_2 = [str(o.id) for o in objects_iter]
         self.assertEqual(len(id_list_1), len(id_list_2))

@@ -117,7 +117,7 @@ class Shout(Post):
     objects = ShoutManager()
 
     def __unicode__(self):
-        return unicode("%s: %s, %s: %s" % (self.pk, self.item.name, self.country, self.city))
+        return "%s: %s, %s: %s" % (self.pk, self.item, self.country, self.city)
 
     def clean(self):
         from common.utils import process_tags
@@ -330,4 +330,4 @@ class Video(UUIDModel):
     duration = models.PositiveIntegerField()
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + self.id_on_provider + " @ " + unicode(self.provider)
+        return "%s: %s @ %s" % (self.pk, self.id_on_provider, self.provider)

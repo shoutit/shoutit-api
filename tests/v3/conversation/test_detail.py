@@ -38,7 +38,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         self.login(self.user1)
         resp = self.client.get(self.get_url(self.c1.pk))
         self.assert200(resp)
-        self.assertEqual(self.decode_json(resp)['id'], self.c1.pk)
+        self.assert_ids_equal(self.decode_json(resp), self.c1)
 
     def test_detail_not_contributor_forbidden(self):
         """
@@ -63,7 +63,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         self.login(self.user1)
         resp = self.client.get(self.get_url(self.c4.pk))
         self.assert200(resp)
-        self.assertEqual(self.decode_json(resp)['id'], self.c4.pk)
+        self.assert_ids_equal(self.decode_json(resp), self.c4)
 
     def test_detail_public_chat_with_shout(self):
         """

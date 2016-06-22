@@ -13,6 +13,7 @@ from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import UserType
+from shoutit.utils import url_with_querystring
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
 from .admin_forms import PushBroadcastForm, ItemForm, CategoryForm, ImageFileChangeForm
@@ -73,10 +74,11 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     _profile.short_description = 'Profile / Page'
 
     def _messaging(self, user):
-        conversations = '<a href="%s">Conversations</a>' % (
-            reverse('admin:shoutit_conversation_changelist') + '?users=' + user.pk)
-        messages = '<a href="%s">Messages</a>' % (reverse('admin:shoutit_message_changelist') + '?user=' + user.pk)
-        return conversations + '<br/>' + messages
+        conversations_url = '<a href="%s">Conversations</a>'
+        conversations_url %= url_with_querystring(reverse('admin:shoutit_conversation_changelist'), users=user.pk)
+        messages_url = '<a href="%s">Messages</a>'
+        messages_url %= url_with_querystring(reverse('admin:shoutit_message_changelist'), user=user.pk)
+        return conversations_url + '<br/>' + messages_url
 
     _messaging.allow_tags = True
     _messaging.short_description = 'Messaging'
@@ -283,9 +285,10 @@ class ConversationAdmin(admin.ModelAdmin):
     _users.allow_tags = True
 
     def _messages(self, conversation):
-        return '<a href="%s">Messages [%s]</a>' % (
-            reverse('admin:shoutit_message_changelist') + '?conversation__id=' + conversation.pk,
-            conversation.messages_count)
+        messages_url = '<a href="%s">Messages [%s]</a>'
+        messages = reverse('admin:shoutit_message_changelist')
+        messages_url %= url_with_querystring(messages, conversation__id=conversation.pk), conversation.messages_count
+        return messages_url
 
     _messages.allow_tags = True
     _messages.short_description = 'Messages'
@@ -332,8 +335,7 @@ class MessageAdmin(admin.ModelAdmin):
     _user.short_description = 'User'
 
     def _conversation(self, message):
-        conversation_link = reverse('admin:shoutit_conversation_change',
-                                    args=(message.conversation.pk,))
+        conversation_link = reverse('admin:shoutit_conversation_change', args=(message.conversation.pk,))
         return '<a href="%s">%s</a>' % (conversation_link, message.conversation.pk)
 
     _conversation.allow_tags = True

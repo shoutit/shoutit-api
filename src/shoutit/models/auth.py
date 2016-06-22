@@ -117,7 +117,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
-        return "{} [{}:{}]".format(self.name if not self.is_guest else 'Guest', self.pk, self.username)
+        name = self.name if not self.is_guest else 'Guest'
+        return "%s [%s:%s]" % (name, self.id, self.username)
 
     def clean(self):
         self.email = self.email.lower()
