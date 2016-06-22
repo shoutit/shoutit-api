@@ -163,6 +163,9 @@ class PromoteShouts(CreditRule):
         return self.options.get('rank')
 
     def display(self, transaction):
+        if hasattr(self, '_display'):
+            return self._display
+
         shout_promotion = transaction.shout_promotion
         shout = shout_promotion.shout
         label = shout_promotion.label
@@ -181,7 +184,9 @@ class PromoteShouts(CreditRule):
                 {'offset': text.index(label_name), 'length': len(label_name)}
             ]
         }
-        return ret
+        setattr(transaction, 'target', shout)
+        setattr(self, '_display', ret)
+        return self._display
 
     def apply(self, shout, user):
         self.can_promote(shout, user)

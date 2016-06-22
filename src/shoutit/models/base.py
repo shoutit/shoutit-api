@@ -99,6 +99,7 @@ class APIModelMixin(object):
             'tag': ('tag', 'name'),
             'shout': ('shout', 'id'),
             'discoveritem': ('discover', 'id'),
+            'conversation': ('messages', 'id'),
         }
         netloc, identity_attr = lookups.get(name, (name, 'id'))
         identity = getattr(self, identity_attr, '')

@@ -10,7 +10,7 @@ from rest_framework import routers
 from shoutit_credit.views import ShoutitCreditViewSet
 from shoutit_pusher.views import ShoutitPusherViewSet
 from shoutit_twilio.views import ShoutitTwilioViewSet
-from .views import (profile_views, misc_views, message_views, shout_views, notification_views, tag_views,
+from .views import (profile_views, page_views, misc_views, message_views, shout_views, notification_views, tag_views,
                     authentication_views, discover_views)
 
 
@@ -22,6 +22,7 @@ class ShoutitRouter(routers.DefaultRouter):
 router = ShoutitRouter(trailing_slash=False)
 router.register('auth', authentication_views.ShoutitAuthViewSet, 'shoutit_auth')
 router.register('profiles', profile_views.ProfileViewSet, 'profile')
+router.register('pages', page_views.PageViewSet, 'page')
 router.register('shouts', shout_views.ShoutViewSet, 'shout')
 router.register('conversations', message_views.ConversationViewSet, 'conversation')
 router.register('public_chats', message_views.PublicChatViewSet, 'public_chats')

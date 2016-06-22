@@ -10,5 +10,6 @@ from .message import *  # NOQA
 from .conversation import *  # NOQA
 from .notification import *  # NOQA
 from .profile import *  # NOQA
+from .page import *  # NOQA
 from .shout import *  # NOQA
 from .tag import *  # NOQA

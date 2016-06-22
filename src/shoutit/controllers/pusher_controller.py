@@ -61,14 +61,14 @@ def trigger_new_message(message, version):
 
 
 def trigger_new_read_by(message, version):
+    """
+    Trigger `new_read_by` event on Pusher conversation channel
+    """
     _trigger_new_read_by.delay(message, version)
 
 
 @job(settings.RQ_QUEUE_PUSHER)
 def _trigger_new_read_by(message, version):
-    """
-    Trigger `new_read_by` event on Pusher conversation channel
-    """
     event_name = str(NOTIFICATION_TYPE_READ_BY)
     message_summary = {
         'id': message.id,
@@ -79,10 +79,21 @@ def _trigger_new_read_by(message, version):
 
 def trigger_conversation_update(conversation, version):
     """
-    Trigger `conversation_update` event on Pusher conversation channel
+    Trigger `conversation_update` event on Pusher conversation channel, also for each profile channel of its members
     """
+    _trigger_conversation_update.delay(conversation, version)
+
+
+@job(settings.RQ_QUEUE_PUSHER)
+def _trigger_conversation_update(conversation, version):
     event_name = str(NOTIFICATION_TYPE_CONVERSATION_UPDATE)
+
+    # On conversation channel
     trigger_conversation_event(conversation.id, event_name, conversation, version)
+
+    # On profiles channel
+    for user in conversation.users.all():
+        trigger_profile_event(user, event_name, conversation, version)
 
 
 def check_pusher(user):

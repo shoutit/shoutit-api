@@ -6,8 +6,10 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
+from mptt.models import MPTTModel, TreeForeignKey
 
-from common.constants import PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER
+from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER,
+                              PAGE_ADMIN_TYPE_ADMIN)
 from shoutit.models.base import UUIDModel
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
@@ -16,10 +18,14 @@ from shoutit.utils import correct_mobile
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class PageCategory(UUIDModel):
-    name = models.CharField(max_length=100, unique=True, db_index=True)
+class PageCategory(MPTTModel, UUIDModel):
+    name = models.CharField(max_length=100, db_index=True)
     slug = ShoutitSlugField(unique=True)
-    parent = models.ForeignKey('shoutit.PageCategory', null=True, blank=True)
+    image = models.URLField(blank=True, default='')
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
+
+    class MPTTMeta:
+        order_insertion_by = ['slug']
 
     def __unicode__(self):
         return unicode(self.name)
@@ -63,6 +69,15 @@ class Page(AbstractProfile):
     def clean(self):
         super(Page, self).clean()
         self.phone = correct_mobile(self.phone, self.country)
+
+    def is_admin(self, user):
+        return user in self.admins.all()
+
+    def add_admin(self, user, admin_type=PAGE_ADMIN_TYPE_ADMIN):
+        PageAdmin.create(page=self, admin=user, type=admin_type)
+
+    def remove_admin(self, user):
+        PageAdmin.objects.filter(page=self, admin=user).delete()
 
 
 class PageAdmin(UUIDModel):

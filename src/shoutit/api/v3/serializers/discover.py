@@ -8,7 +8,7 @@ from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 
 from shoutit.models import DiscoverItem
-from shoutit.utils import url_with_querystring
+from shoutit.utils import url_with_querystring, blank_to_none
 
 
 class DiscoverItemSerializer(serializers.ModelSerializer):
@@ -19,12 +19,7 @@ class DiscoverItemSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super(DiscoverItemSerializer, self).to_representation(instance)
-        if not ret.get('image'):
-            ret['image'] = None
-        if not ret.get('cover'):
-            ret['cover'] = None
-        if not ret.get('icon'):
-            ret['icon'] = None
+        blank_to_none(ret, ['image', 'cover', 'icon'])
         return ret
 
 
@@ -44,12 +39,7 @@ class DiscoverItemDetailSerializer(serializers.ModelSerializer):
         ret = super(DiscoverItemDetailSerializer, self).to_representation(instance)
         if not instance.show_shouts:
             ret.pop('shouts_url', None)
-        if not ret.get('image'):
-            ret['image'] = None
-        if not ret.get('cover'):
-            ret['cover'] = None
-        if not ret.get('icon'):
-            ret['icon'] = None
+        blank_to_none(ret, ['image', 'cover', 'icon'])
         return ret
 
     def get_shouts_url(self, discover_item):

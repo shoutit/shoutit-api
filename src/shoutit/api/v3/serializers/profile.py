@@ -7,14 +7,16 @@ from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.validators import URLValidator, validate_email
-from rest_framework import serializers
+from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
-from shoutit.api.serializers import AttachedUUIDObjectMixin
+from common.constants import USER_TYPE_PAGE
+from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
+from shoutit.api.v3 import exceptions
 from shoutit.api.v3.exceptions import RequiredBody
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
-                                 gplus_controller)
+                                 gplus_controller, mixpanel_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
 from shoutit.models.user import gender_choices
 from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
@@ -35,11 +37,12 @@ class ProfileSerializer(MiniProfileSerializer):
     is_listening = serializers.SerializerMethodField(help_text="Whether you are listening to this Profile")
     listeners_count = serializers.ReadOnlyField(help_text="Number of profiles (users, pages) Listening to this Profile")
     is_owner = serializers.SerializerMethodField(help_text="Whether this profile is yours")
+    location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
 
     class Meta(MiniProfileSerializer.Meta):
         parent_fields = MiniProfileSerializer.Meta.fields
         fields = parent_fields + ('type', 'api_url', 'web_url', 'app_url', 'first_name', 'last_name', 'is_activated',
-                                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner')
+                                  'image', 'cover', 'is_listening', 'listeners_count', 'is_owner', 'location')
 
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ProfileSerializer, self).__init__(instance, data, **kwargs)
@@ -58,7 +61,15 @@ class ProfileSerializer(MiniProfileSerializer):
             ret = InactiveUser().to_dict
         else:
             ret = super(ProfileSerializer, self).to_representation(instance)
+        # hide sensitive attributes
+        del ret['location']['latitude']
+        del ret['location']['longitude']
+        del ret['location']['address']
         blank_to_none(ret, ['image', 'cover'])
+        if instance.type == USER_TYPE_PAGE and self.context['view'].action == 'pages':
+            user = self.context['request'].user
+            if instance.page.is_admin(user):
+                ret['stats'] = instance.stats
         return ret
 
 
@@ -74,7 +85,6 @@ class ProfileDetailSerializer(ProfileSerializer):
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
-    location = LocationSerializer(help_text="latitude and longitude are only shown for owner", required=False)
     website = serializers.CharField(source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
@@ -97,7 +107,7 @@ class ProfileDetailSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + (
-            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'location', 'email', 'mobile', 'website',
+            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'email', 'mobile', 'website',
             'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
             'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
             'pages', 'admins', 'stats'
@@ -148,9 +158,6 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['mobile']
             del ret['gender']
             del ret['birthday']
-            del ret['location']['latitude']
-            del ret['location']['longitude']
-            del ret['location']['address']
             del ret['push_tokens']
             del ret['linked_accounts']
             del ret['stats']
@@ -169,7 +176,7 @@ class ProfileDetailSerializer(ProfileSerializer):
 
     def ios_compat_la(self, ret):
         request = self.context['request']
-        if getattr(request, 'agent', '') == 'ios' and request.build_no and request.build_no < 1280:
+        if request.agent == 'ios' and request.build_no < 1280:
             ret['linked_accounts'] = self.instance.v2_linked_accounts
         return ret
 
@@ -292,6 +299,9 @@ class ProfileDetailSerializer(ProfileSerializer):
 
         # Notify about updates
         notifications_controller.notify_user_of_profile_update(user)
+
+        # Update Mixpanel People record
+        mixpanel_controller.add_to_mp_people([user.id])
         return user
 
 
@@ -319,6 +329,9 @@ class GuestSerializer(ProfileSerializer):
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
             user.update_push_tokens(push_tokens_data, 'v3')
+
+        # Update Mixpanel People record
+        mixpanel_controller.add_to_mp_people([user.id])
 
         return user
 
@@ -447,3 +460,49 @@ class ProfileContactsSerializer(serializers.Serializer):
         profile_contacts = filter(lambda pc: pc.is_reached(), profile_contacts)
         ProfileContact.objects.bulk_create(profile_contacts)
         return ret
+
+
+class ObjectProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializer):
+    """
+    Should be initialized in the view
+    ```
+    instance = self.get_object()
+    serializer = self.get_serializer(instance, data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    ```
+
+    Object must have `is_admin(user)`
+
+    Subclasses must
+    - Define these attributes
+    `success_message`, `error_message`
+    - Implement these methods
+    `condition(self, instance, actor, profile)`, `create(self, validated_data)`
+    """
+    profile = ProfileSerializer()
+
+    def to_internal_value(self, data):
+        instance = self.instance
+        request = self.context['request']
+        actor = request.user
+        if not instance.is_admin(actor):
+            raise drf_exceptions.PermissionDenied()
+
+        validated_data = super(ObjectProfileActionSerializer, self).to_internal_value(data)
+        profile = self.fields['profile'].instance
+
+        if actor.id == profile.id:
+            raise exceptions.ShoutitBadRequest("You can't make chat actions against your own profile",
+                                               reason=exceptions.ERROR_REASON.BAD_REQUEST)
+        if not self.condition(instance, actor, profile):
+            raise exceptions.InvalidBody('profile', self.error_message % profile.name)
+
+        return validated_data
+
+    def to_representation(self, instance):
+        profile = self.fields['profile'].instance
+        return {'success': self.success_message % profile.name}
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError('`update()` must be implemented.')

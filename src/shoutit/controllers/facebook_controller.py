@@ -253,15 +253,17 @@ def delete_linked_facebook_account(facebook_user_id):
 
 def update_profile_using_fb_user(profile, fb_user):
     # Image
-    image_url = objects.get(fb_user, 'picture.data.url')
-    is_silhouette = objects.get(fb_user, 'picture.data.is_silhouette')
-    if image_url and is_silhouette is False:
-        media_controller.set_profile_media(profile, 'image', url=image_url)
+    if not profile.image:
+        image_url = objects.get(fb_user, 'picture.data.url')
+        is_silhouette = objects.get(fb_user, 'picture.data.is_silhouette')
+        if image_url and is_silhouette is False:
+            media_controller.set_profile_media(profile, 'image', url=image_url)
 
     # Cover
-    cover_source = objects.get(fb_user, 'cover.source')
-    if cover_source:
-        media_controller.set_profile_media(profile, 'cover', url=cover_source)
+    if not profile.cover:
+        cover_source = objects.get(fb_user, 'cover.source')
+        if cover_source:
+            media_controller.set_profile_media(profile, 'cover', url=cover_source)
 
 
 def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECRET):

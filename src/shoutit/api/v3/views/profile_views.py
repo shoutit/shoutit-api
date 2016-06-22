@@ -16,14 +16,14 @@ from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.api.v3.views.shout_views import ShoutViewSet
 from shoutit.controllers import listen_controller, message_controller
 from shoutit.models import User
-from ..filters import HomeFilterBackend
-from ..pagination import (ShoutitPaginationMixin, ShoutitPageNumberPaginationNoCount)
+from ..filters import HomeFilterBackend, ProfileFilter
+from ..pagination import ShoutitPageNumberPaginationNoCount
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
                            ProfileContactsSerializer)
 
 
-class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Profile API Resource.
     """
@@ -34,9 +34,8 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
     queryset = User.objects.filter(is_active=True, is_activated=True).select_related('profile', 'page')
     queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page', 'linked_facebook', 'linked_gplus')
     pagination_class = ShoutitPageNumberPaginationNoCount
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_fields = ('username', 'email')
-    search_fields = ('=id', 'username', 'first_name', 'last_name', '=email')
+    filter_backends = (ProfileFilter, filters.SearchFilter)
+    search_fields = ('=id', '=email', 'username', 'first_name', 'last_name')
     permission_classes = (IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_object(self):
@@ -56,7 +55,10 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
 
     def list(self, request, *args, **kwargs):
         """
-        List Profiles based on `search` query param
+        List Profiles based on `search` and `country` query params.
+
+        ####These attributes are omitted
+        `location.latitude`, `location.longitude`, `location.address`
 
         ###Response
         <pre><code>
@@ -70,6 +72,8 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         serializer: ProfileSerializer
         parameters:
             - name: search
+              paramType: query
+            - name: country
               paramType: query
         """
         return super(ProfileViewSet, self).list(request, *args, **kwargs)
@@ -632,3 +636,38 @@ class ProfileViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListM
         serializer = ProfileDeactivationSerializer(data=request.data, context={'profile': user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @detail_route(methods=['get'], suffix='Profile Pages')
+    def pages(self, request, *args, **kwargs):
+        """
+        List the Profile pages
+        Returned list is profiles of type `page`
+        ###Response
+        <pre><code>
+        {
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ProfileSerializer}
+        }
+        </code></pre>
+        ---
+        serializer: ProfileSerializer
+        omit_parameters:
+            - form
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        self.serializer_detail_class = ProfileSerializer
+        user = self.get_object()
+        pages = user.pages.all()
+        page = self.paginate_queryset(pages)
+        serializer = self.get_serializer(page, many=True)
+        return self.get_paginated_response(serializer.data)

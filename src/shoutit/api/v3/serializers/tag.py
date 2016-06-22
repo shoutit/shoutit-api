@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from shoutit.models import Tag, FeaturedTag, Category
-from shoutit.utils import url_with_querystring
+from shoutit.utils import url_with_querystring, blank_to_none
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -26,8 +26,7 @@ class TagSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super(TagSerializer, self).to_representation(instance)
-        if not ret.get('image'):
-            ret['image'] = None
+        blank_to_none(ret, ['image'])
         return ret
 
 
@@ -89,10 +88,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)
-        if not ret.get('image'):
-            ret['image'] = None
-        if not ret.get('icon'):
-            ret['icon'] = None
+        blank_to_none(ret, ['image', 'icon'])
         return ret
 
 

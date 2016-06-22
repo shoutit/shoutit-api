@@ -32,7 +32,10 @@ def serialize_attached_object(attached_object, version, user=None):
     elif isinstance(attached_object, Message):
         serializer = shoutit_serializers.MessageSerializer
     elif isinstance(attached_object, Conversation):
-        serializer = shoutit_serializers.ConversationDetailSerializer
+        if getattr(attached_object, 'detailed', True):
+            serializer = shoutit_serializers.ConversationDetailSerializer
+        else:
+            serializer = shoutit_serializers.ConversationSerializer
     elif isinstance(attached_object, Notification):
         serializer = shoutit_serializers.NotificationSerializer
     elif hasattr(attached_object, 'serializer') and callable(attached_object.serializer):

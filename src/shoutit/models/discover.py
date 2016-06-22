@@ -21,7 +21,7 @@ class DiscoverItem(MPTTModel, UUIDModel, APIModelMixin):
     cover = models.URLField(blank=True, default='')
     icon = models.URLField(blank=True, default='')
 
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
     show_children = models.BooleanField(default=True)
     shouts_query = HStoreField(blank=True)
     show_shouts = models.BooleanField(default=False)

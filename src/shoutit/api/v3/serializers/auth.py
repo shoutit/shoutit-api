@@ -12,7 +12,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
 from common.constants import TOKEN_TYPE_RESET_PASSWORD
-from shoutit.controllers import (facebook_controller, gplus_controller, user_controller, location_controller)
+from .page import PageCategorySerializer
+from shoutit.controllers import (facebook_controller, gplus_controller, user_controller, location_controller,
+                                 page_controller)
 from shoutit.models import User, DBCLConversation, ConfirmToken
 from .profile import ProfileDetailSerializer, GuestSerializer
 
@@ -113,6 +115,48 @@ class ShoutitLoginSerializer(serializers.Serializer):
         if location:
             location_controller.update_profile_location(user.ap, location)
         return ret
+
+
+class ShoutitPageSerializer(serializers.Serializer):
+    page_category = PageCategorySerializer()
+    page_name = serializers.CharField(max_length=60, min_length=2)
+    name = serializers.CharField(max_length=70)
+    first_name = serializers.CharField(min_length=2, max_length=30, required=False)
+    last_name = serializers.CharField(min_length=1, max_length=30, required=False)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=6, max_length=30)
+    profile = ProfileDetailSerializer(required=False)
+
+    def to_internal_value(self, data):
+        if not data:
+            data = {}
+        name = data.get('name', 'user')
+        names = name.split()
+        if len(names) >= 2:
+            data['first_name'] = " ".join(names[0:-1])
+            data['last_name'] = names[-1]
+        elif len(names) >= 1:
+            data['first_name'] = names[0]
+            data['last_name'] = random.randint(0, 999)
+        else:
+            data['first_name'] = 'user'
+            data['last_name'] = random.randint(0, 999)
+
+        ret = super(ShoutitPageSerializer, self).to_internal_value(data)
+        return ret
+
+    def validate_email(self, email):
+        email = email.lower()
+        if User.exists(email=email):
+            raise serializers.ValidationError('Email is already used by another account')
+        return email
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        initial_profile = validated_data.get('profile', {}) or validated_data.get('user', {})
+        initial_profile['ip'] = get_real_ip(request)
+        user, page = page_controller.user_and_page_from_shoutit_page_data(validated_data, initial_profile, request.is_test)
+        return user, page
 
 
 class ShoutitGuestSerializer(serializers.Serializer):

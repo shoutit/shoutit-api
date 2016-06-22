@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.forms import URLField, SlugField
 
 from common.utils import process_tags
-from shoutit.models import PushBroadcast, Item, Tag
+from shoutit.models import PushBroadcast, Item
 from common.constants import DeviceOS, COUNTRY_CHOICES
 from django.utils.translation import string_concat
 
@@ -116,10 +116,6 @@ class CategoryForm(forms.ModelForm):
 
 class ImageFileChangeForm(forms.ModelForm):
     image_file = forms.FileField(required=False)
-
-    class Meta:
-        model = Tag
-        fields = '__all__'
 
     def clean_image_file(self):
         image_file = self.cleaned_data.get('image_file')
