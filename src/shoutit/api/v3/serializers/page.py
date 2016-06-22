@@ -18,8 +18,8 @@ class PageCategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PageCategory
-        fields = ['id', 'name', 'slug', 'children']
-        extra_kwargs = {'name': {'read_only': True}}
+        fields = ['id', 'name', 'slug', 'image', 'children']
+        extra_kwargs = {'name': {'read_only': True}, 'image': {'read_only': True}}
 
     def to_representation(self, instance):
         ret = super(PageCategorySerializer, self).to_representation(instance)
