@@ -11,6 +11,7 @@ from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
 
+from common.constants import USER_TYPE_PAGE
 from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit.api.v3 import exceptions
 from shoutit.api.v3.exceptions import RequiredBody
@@ -66,6 +67,10 @@ class ProfileSerializer(MiniProfileSerializer):
             del ret['location']['longitude']
             del ret['location']['address']
         blank_to_none(ret, ['image', 'cover'])
+        if instance.type == USER_TYPE_PAGE and self.context['view'].action == 'pages':
+            user = self.context['request'].user
+            if instance.page.is_admin(user):
+                ret['stats'] = instance.stats
         return ret
 
 
