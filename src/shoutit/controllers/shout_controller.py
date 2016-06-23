@@ -260,11 +260,13 @@ def publish_shout_to_facebook(shout):
     if 'publish_actions' not in la.scopes:
         debug_logger.debug('No publish_actions in scopes, skip publishing Shout %s on Facebook' % shout)
         return
-    actions_url = 'https://graph.facebook.com/me/shoutitcom:shout'
+    prod = settings.SHOUTIT_ENV == 'prod'
+    namespace = 'shoutitcom' if prod else 'shoutitcom-' + settings.SHOUTIT_ENV
+    actions_url = 'https://graph.facebook.com/me/%s:shout' % namespace
     params = {
         'access_token': la.access_token,
         shout.get_type_display(): shout.web_url,
-        'fb:explicitly_shared': True,
+        'fb:explicitly_shared': prod,
         'privacy': "{'value':'EVERYONE'}"
     }
     res = requests.post(actions_url, params=params).json()
