@@ -66,7 +66,11 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         except KeyError as e:
             msg = _('Malformed filters, missing key: %(key)s') % {'key': e.message.encode('utf')}
             raise serializers.ValidationError(msg)
+        except TypeError:
+            raise serializers.ValidationError(_('Malformed filters'))
         else:
+            # Ignore filters with None as its their value
+            filter_tuples = filter(lambda t: isinstance(t[1], basestring), filter_tuples)
             filters = dict(filter_tuples)
         return filters
 

@@ -499,12 +499,15 @@ class InactiveUser(AnonymousUser):
     def to_dict(self):
         return OrderedDict({
             "id": "",
-            "api_url": "",
-            "web_url": "",
             "username": "",
-            "name": "Shoutit User",
+            "name": _("Shoutit User"),
+            "api_url": None,
+            "web_url": None,
+            "app_url": None,
             "is_activated": False,
             "image": "",
+            "cover": "",
+            "is_owner": False
         })
 
 # Todo: Add DeletedUser class
