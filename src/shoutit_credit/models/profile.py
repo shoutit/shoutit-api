@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import ugettext_lazy as _
 from django_rq import job
 
 from common.constants import LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE
@@ -30,7 +31,7 @@ class CompleteProfileManager(models.Manager):
 
 
 class CompleteProfile(CreditRule):
-    text = "You earned 1 Shoutit Credit for completing your profile."
+    text = _("You earned 1 Shoutit Credit for completing your profile.")
 
     objects = CompleteProfileManager()
 
@@ -49,6 +50,9 @@ class CompleteProfile(CreditRule):
         # Shouldn't be a guest!
         if profile.user.is_guest:
             return
+        # Todo (mo): should have an access token
+
+        # Todo (mo): Check profile completeness :)
 
         # Check for similar existing transaction
         if CreditTransaction.exists(user_id=profile.user_id, rule=self):
@@ -82,7 +86,7 @@ class InviteFriends(CreditRule):
     """
     Transactions of this rule must have: `profile_id`
     """
-    text = "You earned 1 Shoutit Credit for inviting %s."
+    text = _("You earned 1 Shoutit Credit for inviting %(name)s.")
 
     objects = InviteFriendsManager()
 
@@ -97,7 +101,7 @@ class InviteFriends(CreditRule):
             setattr(transaction, 'target', profile)
         else:
             name = 'a friend'
-        text = self.text % name
+        text = self.text % {'name': name}
         ret = {
             "text": text,
             "ranges": [{'offset': text.index(name), 'length': len(name)}]
@@ -136,7 +140,7 @@ class ListenToFriendsManager(models.Manager):
 
 
 class ListenToFriends(CreditRule):
-    text = "You earned %d Shoutit Credit for listening to your friends."
+    text = _("You earned %(amount)d Shoutit Credit for listening to your friends.")
     max_listens = 3
 
     objects = ListenToFriendsManager()
@@ -145,7 +149,7 @@ class ListenToFriends(CreditRule):
         proxy = True
 
     def display(self, transaction):
-        text = self.text % abs(transaction.amount)
+        text = self.text % {'amount': abs(transaction.amount)}
         ret = {
             "text": text,
             "ranges": []

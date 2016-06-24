@@ -8,6 +8,7 @@ import random
 
 from django.conf import settings
 from django.http import Http404
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import cache_control
 from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
@@ -23,11 +24,11 @@ from shoutit.controllers import shout_controller, mixpanel_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
 from shoutit.utils import has_unicode
+from shoutit_credit.views import PromoteShoutMixin
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
 from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
 from ..views.viewsets import UUIDViewSetMixin
-from shoutit_credit.views import PromoteShoutMixin
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
@@ -219,7 +220,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         # Todo: improve!
         search = request.query_params.get('search', '').strip()
         if not search:
-            raise RequiredParameter('search', "This parameter is required")
+            raise RequiredParameter('search', _("This parameter is required"))
         # category = request.query_params.get('category')
         # country = request.query_params.get('country')
         if len(search) >= 2:
@@ -227,7 +228,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             random.shuffle(terms)
             terms = map(lambda t: {'term': strings.human_case(t)}, terms)
         else:
-            raise InvalidParameter('search', "At least two characters are required")
+            raise InvalidParameter('search', _("At least two characters are required"))
         return Response(terms)
 
     def create(self, request, *args, **kwargs):
@@ -382,7 +383,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         shout = self.get_object()
         if request.user == shout.owner:
-            raise ShoutitBadRequest("You can not start a conversation about your own shout")
+            raise ShoutitBadRequest(_("You can not start a conversation about your own shout"))
         context = {
             'request': request,
             'conversation': None,
@@ -462,7 +463,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         shout = self.get_object()
         mobile = shout.mobile if shout.is_mobile_set else None
         if not mobile:
-            raise ShoutitBadRequest(message="No mobile to be called")
+            raise ShoutitBadRequest(_("No mobile to be called"))
         track_properties = {
             'api_client': getattr(request, 'api_client', None),
             'api_version': request.version,

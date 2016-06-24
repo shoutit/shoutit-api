@@ -3,6 +3,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from shoutit.controllers import page_controller
@@ -32,15 +33,15 @@ class PageCategorySerializer(serializers.ModelSerializer):
         super(PageCategorySerializer, self).to_internal_value(data)
         return self.instance
 
-    def validate_slug(self, value):
+    def validate_slug(self, slug):
         try:
-            self.instance = PageCategory.objects.get(slug=value)
+            self.instance = PageCategory.objects.get(slug=slug)
         except (PageCategory.DoesNotExist, AttributeError):
-            raise serializers.ValidationError("PageCategory with slug '%s' does not exist" % value)
+            raise serializers.ValidationError(_("PageCategory with slug '%(slug)s' does not exist") % {'slug': slug})
 
 
 class AddAdminSerializer(ObjectProfileActionSerializer):
-    success_message = "Added %s to the admins of this page"
+    success_message = _("Added %(name)s to the admins of this page")
 
     def condition(self, instance, actor, profile):
         return True
@@ -50,13 +51,13 @@ class AddAdminSerializer(ObjectProfileActionSerializer):
         if not instance.is_admin(profile):
             instance.add_admin(profile)
         else:
-            self.success_message = "%s is already admin in this page"
+            self.success_message = _("%(name)s is already admin in this page")
         return instance
 
 
 class RemoveAdminSerializer(ObjectProfileActionSerializer):
-    error_message = "%s is not admin in this page"
-    success_message = "Removed %s from the admins of this page"
+    error_message = _("%(name)s is not admin in this page")
+    success_message = _("Removed %(name)s from the admins of this page")
 
     def condition(self, instance, actor, profile):
         return instance.is_admin(profile)

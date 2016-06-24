@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.validators import URLValidator, validate_email
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.fields import empty
 from rest_framework.reverse import reverse
@@ -82,7 +83,8 @@ class ProfileDetailSerializer(ProfileSerializer):
     date_joined = serializers.IntegerField(source='created_at_unix', read_only=True)
     gender = serializers.ChoiceField(source='profile.gender', choices=gender_choices,
                                      help_text='male, female, other or `null`', **empty_char_input)
-    birthday = serializers.DateField(source='profile.birthday', required=False, allow_null=True, help_text='Formatted as YYYY-MM-DD')
+    birthday = serializers.DateField(source='profile.birthday', required=False, allow_null=True,
+                                     help_text='Formatted as YYYY-MM-DD')
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
@@ -98,8 +100,9 @@ class ProfileDetailSerializer(ProfileSerializer):
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts of this profile")
     conversation = serializers.SerializerMethodField(
         help_text="Conversation with type `chat` between you and this profile if exists")
-    chat_url = serializers.SerializerMethodField(
-        help_text="URL to message this profile if it is possible. This is the case when the profile is one of your listeners or an existing previous conversation")
+    chat_url = serializers.SerializerMethodField(help_text="URL to message this profile if it is possible. This is the "
+                                                           "case when the profile is one of your listeners or an "
+                                                           "existing previous conversation")
     pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
     admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
     stats = serializers.ReadOnlyField(
@@ -185,16 +188,13 @@ class ProfileDetailSerializer(ProfileSerializer):
         validated_data = super(ProfileDetailSerializer, self).to_internal_value(data)
 
         # Force partial=false validation for video
-        errors = OrderedDict()
         has_video = 'video' in data
         profile_data = validated_data.get('ap', {})
         video_data = profile_data.get('video', {})
         if has_video and isinstance(video_data, OrderedDict):
             vs = VideoSerializer(data=video_data)
             if not vs.is_valid():
-                errors['video'] = vs.errors
-        if errors:
-            raise serializers.ValidationError(errors)
+                raise serializers.ValidationError({['video']: vs.errors})
 
         return validated_data
 
@@ -202,7 +202,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         user = self.context['request'].user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise serializers.ValidationError("Email is already used by another profile")
+            raise serializers.ValidationError(_('The email is already used by another profile'))
         return email
 
     def validate_website(self, website):
@@ -346,37 +346,40 @@ class ProfileLinkSerializer(serializers.Serializer):
         validated_data = super(ProfileLinkSerializer, self).to_internal_value(data)
         request = self.context['request']
         user = request.user
-        account = validated_data['account']
         action = None
+        account = validated_data['account']
+        account_name = _("Facebook") if account == 'facebook' else _("Google") if account == 'gplus' else ''
+        could_not_link = _("Couldn't link your %(account)s account") % {'account': account_name}
 
         if request.method == 'PATCH':
-            action = 'linked'
+            action = _('linked')
             if account == 'gplus':
                 gplus_code = validated_data.get('gplus_code')
                 if not gplus_code:
-                    raise RequiredBody('gplus_code', message="Couldn't link your G+ account",
-                                       developer_message="provide a valid `gplus_code`")
+                    raise RequiredBody('gplus_code', message=could_not_link,
+                                       developer_message="Provide a valid `gplus_code`")
                 client = request.auth.client.name if hasattr(request.auth, 'client') else 'shoutit-test'
                 gplus_controller.link_gplus_account(user, gplus_code, client)
 
             elif account == 'facebook':
                 facebook_access_token = validated_data.get('facebook_access_token')
                 if not facebook_access_token:
-                    raise RequiredBody('facebook_access_token', message="Couldn't link your Facebook account",
-                                       developer_message="provide a valid `facebook_access_token`")
+                    raise RequiredBody('facebook_access_token', message=could_not_link,
+                                       developer_message="Provide a valid `facebook_access_token`")
                 facebook_controller.link_facebook_account(user, facebook_access_token)
 
         elif request.method == 'DELETE':
-            action = 'unlinked'
+            action = _('unlinked')
             if account == 'gplus':
                 gplus_controller.unlink_gplus_user(user)
             elif account == 'facebook':
                 facebook_controller.unlink_facebook_user(user)
 
         if action:
-            res = {'success': "Successfully %s your %s account" % (action, account.title())}
+            success = _("Successfully %(action)s your %(account)s") % {'action': action, 'account': account_name}
+            res = {'success': success}
         else:
-            res = {'success': "No changes were made"}
+            res = {'success': _("No changes were made")}
         return res
 
     def to_representation(self, instance):
@@ -476,7 +479,7 @@ class ObjectProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializ
     Object must have `is_admin(user)`
 
     Subclasses must
-    - Define these attributes
+    - Define these attributes that contain `%(name)s`
     `success_message`, `error_message`
     - Implement these methods
     `condition(self, instance, actor, profile)`, `create(self, validated_data)`
@@ -494,16 +497,16 @@ class ObjectProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializ
         profile = self.fields['profile'].instance
 
         if actor.id == profile.id:
-            raise exceptions.ShoutitBadRequest("You can't make chat actions against your own profile",
+            raise exceptions.ShoutitBadRequest(_("You can't make actions against your own profile"),
                                                reason=exceptions.ERROR_REASON.BAD_REQUEST)
         if not self.condition(instance, actor, profile):
-            raise exceptions.InvalidBody('profile', self.error_message % profile.name)
+            raise exceptions.InvalidBody('profile', self.error_message % {'name': profile.name})
 
         return validated_data
 
     def to_representation(self, instance):
         profile = self.fields['profile'].instance
-        return {'success': self.success_message % profile.name}
+        return {'success': self.success_message % {'name': profile.name}}
 
     def update(self, instance, validated_data):
         raise NotImplementedError('`update()` must be implemented.')

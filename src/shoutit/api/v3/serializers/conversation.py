@@ -3,6 +3,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.reverse import reverse
 
@@ -12,9 +13,9 @@ from shoutit.controllers import message_controller
 from shoutit.models import Conversation
 from shoutit.utils import blank_to_none
 from .base import LocationSerializer
+from .message import MessageSerializer
 from .profile import ProfileSerializer, MiniProfileSerializer
 from .shout import ShoutSerializer
-from .message import MessageSerializer
 from .. import exceptions
 
 
@@ -50,7 +51,7 @@ class ConversationSerializer(AttachedUUIDObjectMixin, serializers.ModelSerialize
 
     def validate_type(self, conversation_type):
         if conversation_type != 'public_chat':
-            raise serializers.ValidationError({'type': "Only 'public_chat' conversations can be directly created"})
+            raise serializers.ValidationError({'type': _("Only 'public_chat' conversations can be directly created")})
         return conversation_type
 
     def to_representation(self, instance):
@@ -95,7 +96,7 @@ class ConversationDetailSerializer(ConversationSerializer):
             location = validated_data.get('location')
             conversation = message_controller.create_public_chat(user, subject, icon, location)
         else:
-            raise exceptions.InvalidBody('type', 'Only `public_chat` is allowed')
+            raise exceptions.InvalidBody('type', _('Only `public_chat` is allowed'))
         return conversation
 
     def update(self, conversation, validated_data):
@@ -136,16 +137,16 @@ class ConversationProfileActionSerializer(HasAttachedUUIDObjects, serializers.Se
         profile = self.fields['profile'].instance
 
         if actor.id == profile.id:
-            raise exceptions.ShoutitBadRequest("You can't make chat actions against your own profile",
+            raise exceptions.ShoutitBadRequest(_("You can't make chat actions against your own profile"),
                                                reason=exceptions.ERROR_REASON.BAD_REQUEST)
         if not self.condition(conversation, actor, profile):
-            raise exceptions.InvalidBody('profile', self.error_message % profile.name)
+            raise exceptions.InvalidBody('profile', self.error_message % {'name': profile.name})
 
         return validated_data
 
     def to_representation(self, instance):
         profile = self.fields['profile'].instance
-        return {'success': self.success_message % profile.name}
+        return {'success': self.success_message % {'name': profile.name}}
 
     # Todo (mo): utilize update instead of create. update has the conversation instance from the view
     # A better and more general example is done in `ObjectProfileActionSerializer`
@@ -157,8 +158,8 @@ class ConversationProfileActionSerializer(HasAttachedUUIDObjects, serializers.Se
 
 
 class AddProfileSerializer(ConversationProfileActionSerializer):
-    error_message = "%s is not one of your listeners and can't be added to this conversation"
-    success_message = "Added %s to this conversation"
+    error_message = _("%(name)s is not one of your listeners and can't be added to this conversation")
+    success_message = _("Added %(name)s to this conversation")
 
     def condition(self, conversation, actor, profile):
         return profile.is_listening(actor)
@@ -174,8 +175,8 @@ class AddProfileSerializer(ConversationProfileActionSerializer):
 
 
 class RemoveProfileSerializer(ConversationProfileActionSerializer):
-    error_message = "%s is not a member of this conversation and can't be removed from it"
-    success_message = "Removed %s from this conversation"
+    error_message = _("%(name)s is not a member of this conversation and can't be removed from it")
+    success_message = _("Removed %(name)s from this conversation")
 
     def condition(self, conversation, actor, profile):
         return conversation.users.filter(id=profile.id).exists()
@@ -188,8 +189,8 @@ class RemoveProfileSerializer(ConversationProfileActionSerializer):
 
 
 class PromoteAdminSerializer(ConversationProfileActionSerializer):
-    error_message = "%s is not a member of this conversation and can't be promoted to admin it"
-    success_message = "Promoted %s to admin in this conversation"
+    error_message = _("%(name)s is not a member of this conversation and can't be promoted to admin it")
+    success_message = _("Promoted %(name)s to admin in this conversation")
 
     def condition(self, conversation, actor, profile):
         return conversation.users.filter(id=profile.id).exists()
@@ -200,13 +201,13 @@ class PromoteAdminSerializer(ConversationProfileActionSerializer):
         if profile.id not in conversation.admins:
             conversation.promote_admin(profile)
         else:
-            self.success_message = "%s is already admin on this conversation"
+            self.success_message = _("%(name)s is already admin on this conversation")
         return conversation
 
 
 class BlockProfileSerializer(ConversationProfileActionSerializer):
-    error_message = "%s is not a member of this conversation and can't be blocked"
-    success_message = "Blocked %s from this conversation"
+    error_message = _("%(name)s is not a member of this conversation and can't be blocked")
+    success_message = _("Blocked %(name)s from this conversation")
 
     def condition(self, conversation, actor, profile):
         return conversation.users.filter(id=profile.id).exists()
@@ -217,13 +218,13 @@ class BlockProfileSerializer(ConversationProfileActionSerializer):
         if profile.id not in conversation.blocked:
             conversation.block_profile(profile)
         else:
-            self.success_message = "%s is already blocked from this conversation"
+            self.success_message = _("%(name)s is already blocked from this conversation")
         return conversation
 
 
 class UnblockProfileSerializer(ConversationProfileActionSerializer):
-    error_message = "%s is not a blocked from this conversation"
-    success_message = "Unblocked %s from this conversation"
+    error_message = _("%(name)s is not a blocked from this conversation")
+    success_message = _("Unblocked %(name)s from this conversation")
 
     def condition(self, conversation, actor, profile):
         return profile.id in conversation.blocked

@@ -14,7 +14,7 @@ from django.db import models, IntegrityError, transaction
 from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.utils.translation import gettext as _
+from django.utils.translation import ugettext_lazy as _
 from django_pgjson.fields import JsonField
 from pydash import strings
 
@@ -227,7 +227,7 @@ def post_save_conversation(sender, instance=None, created=False, **kwargs):
 
     if created:
         if instance.type == CONVERSATION_TYPE_PUBLIC_CHAT:
-            text = "{} created this public chat".format(instance.creator.name)
+            text = _("%(name)s created this public chat") % {'name': instance.creator.name}
             message = Message.create(save=False, user=None, text=text, conversation=instance)
             message.skip_post_save = True
             message.save()

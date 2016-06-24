@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -32,7 +33,8 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
     serializer_class = ProfileSerializer
     serializer_detail_class = ProfileDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True).select_related('profile', 'page')
-    queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page', 'linked_facebook', 'linked_gplus')
+    queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page', 'linked_facebook',
+                                                                         'linked_gplus')
     pagination_class = ShoutitPageNumberPaginationNoCount
     filter_backends = (ProfileFilter, filters.SearchFilter)
     search_fields = ('=id', '=email', 'username', 'first_name', 'last_name')
@@ -224,14 +226,14 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         api_client = getattr(request, 'api_client', None)
 
         if request.user == user:
-            raise ShoutitBadRequest("You can't listen to your self")
+            raise ShoutitBadRequest(_("You can't listen to your self"))
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap, api_client=api_client, api_version=request.version)
-            msg = "You started listening to %s shouts" % user.name
+            msg = _("You started listening to shouts from %(name)s") % {'name': user.name}
         else:
             listen_controller.stop_listening_to_object(request.user, ap)
-            msg = "You stopped listening to %s shouts" % user.name
+            msg = _("You stopped listening to shouts from %(name)s") % {'name': user.name}
 
         data = {
             'success': msg,
@@ -431,9 +433,9 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         user = self.get_object()
         logged_user = request.user
         if logged_user == user:
-            raise ShoutitBadRequest("You can not start a conversation with your self")
+            raise ShoutitBadRequest(_("You can not start a conversation with your self"))
         if not (message_controller.conversation_exist(users=[user, logged_user]) or user.is_listening(logged_user)):
-            raise ShoutitBadRequest("You can only start a conversation with your listeners")
+            raise ShoutitBadRequest(_("You can only start a conversation with your listeners"))
         context = {
             'request': request,
             'conversation': None,
@@ -579,7 +581,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
             """
         serializer = ProfileContactsSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response({'success': "Your contacts have been uploaded successfully"})
+        return Response({'success': _("You have uploaded your contacts successfully")})
 
     @detail_route(methods=['get'], suffix='Mutual Contacts')
     def mutual_contacts(self, request, *arg, **kwargs):

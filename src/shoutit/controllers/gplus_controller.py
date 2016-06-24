@@ -11,6 +11,7 @@ from apiclient import discovery
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
+from django.utils.translation import ugettext_lazy as _
 from oauth2client.client import (AccessTokenRefreshError, FlowExchangeError, credentials_from_clientsecrets_and_code,
                                  OOB_CALLBACK_URN)
 
@@ -19,9 +20,9 @@ from shoutit.controllers import user_controller, location_controller
 from shoutit.models import LinkedGoogleAccount
 from shoutit.utils import debug_logger
 
-GPLUS_LINK_ERROR_EMAIL = "Could not access user email, make sure you allowed it"
-GPLUS_LINK_ERROR_NO_LINK = "No G+ account to unlink"
-GPLUS_LINK_ERROR_TRY_AGAIN = "Could not access your G+ account, try again later"
+GPLUS_LINK_ERROR_EMAIL = _("Could not access user email, make sure you allowed it")
+GPLUS_LINK_ERROR_NO_LINK = _("No G+ account to unlink")
+GPLUS_LINK_ERROR_TRY_AGAIN = _("Could not access your G+ account, try again later")
 
 
 # Todo: Compare with user_from_facebook_auth_response, check why linking is not happening here
@@ -72,7 +73,7 @@ def link_gplus_account(user, gplus_code, client=None):
         la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         debug_logger.warning('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
         if la.user != user:
-            raise ShoutitBadRequest("This G+ account is already linked to somebody else's profile")
+            raise ShoutitBadRequest(_("This G+ account is already linked to somebody else's profile"))
     except LinkedGoogleAccount.DoesNotExist:
         pass
 
@@ -117,7 +118,8 @@ def redirect_uri_from_client(client='shoutit-test'):
     elif client == 'shoutit-test':
         redirect_uri = 'https://developers.google.com/oauthplayground'
     else:
-        raise ShoutitBadRequest(message=GPLUS_LINK_ERROR_TRY_AGAIN, developer_message="Invalid API client '%s'" % client)
+        raise ShoutitBadRequest(message=GPLUS_LINK_ERROR_TRY_AGAIN,
+                                developer_message="Invalid API client '%s'" % client)
     debug_logger.debug("client: %s, redirect_uri: %s" % (client, redirect_uri))
     return redirect_uri
 

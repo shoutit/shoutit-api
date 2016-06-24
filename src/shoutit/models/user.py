@@ -9,13 +9,13 @@ from common.constants import USER_TYPE_PROFILE, TOKEN_TYPE_EMAIL
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.misc import ConfirmToken
 from shoutit.utils import correct_mobile, none_to_blank
-
+from django.utils.translation import ugettext_lazy as _
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 gender_choices = [
-    ('male', "Male"),
-    ('female', "Female"),
-    ('other', "Other"),
+    ('male', _("Male")),
+    ('female', _("Female")),
+    ('other', _("Other")),
 ]
 
 

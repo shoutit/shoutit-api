@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
@@ -128,10 +129,10 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             listen_controller.listen_to_objects(request.user, tags, api_client=api_client, api_version=request.version)
-            msg = "You started listening to %s shouts" % tag_names
+            msg = _("You started listening to shouts about %(name)s") % {'name': tag_names}
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)
-            msg = "You stopped listening to %s shouts" % tag_names
+            msg = _("You stopped listening to shouts about %(name)s") % {'name': tag_names}
 
         return Response(data={'success': msg}, status=status.HTTP_202_ACCEPTED)
 
@@ -173,10 +174,10 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, tag, api_client=api_client, api_version=request.version)
-            msg = "You started listening to %s shouts" % tag.name
+            msg = _("You started listening to shouts about %(name)s") % {'name': tag.name}
         else:
             listen_controller.stop_listening_to_object(request.user, tag)
-            msg = "You stopped listening to %s shouts" % tag.name
+            msg = _("You stopped listening to shouts about %(name)s") % {'name': tag.name}
 
         data = {
             'success': msg,

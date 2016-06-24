@@ -7,15 +7,16 @@ import random
 
 from django.contrib.auth import login
 from django.db.models import Q
+from django.utils.translation import ugettext_lazy as _
 from ipware.ip import get_real_ip
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
 from common.constants import TOKEN_TYPE_RESET_PASSWORD
-from .page import PageCategorySerializer
 from shoutit.controllers import (facebook_controller, gplus_controller, user_controller, location_controller,
                                  page_controller)
 from shoutit.models import User, DBCLConversation, ConfirmToken
+from .page import PageCategorySerializer
 from .profile import ProfileDetailSerializer, GuestSerializer
 
 
@@ -30,7 +31,8 @@ class FacebookAuthSerializer(serializers.Serializer):
         request = self.context.get('request')
         facebook_access_token = ret.get('facebook_access_token')
         initial_profile = ret.get('profile') or ret.get('user')
-        user = facebook_controller.user_from_facebook_auth_response(facebook_access_token, initial_profile, request.is_test)
+        user = facebook_controller.user_from_facebook_auth_response(facebook_access_token, initial_profile,
+                                                                    request.is_test)
         self.instance = user
         return ret
 
@@ -44,7 +46,8 @@ class GplusAuthSerializer(serializers.Serializer):
         ret = super(GplusAuthSerializer, self).to_internal_value(data)
         request = self.context.get('request')
         gplus_code = ret.get('gplus_code')
-        initial_profile = ret.get('profile', {}) or ret.get('user', {})  # Todo (mo) apply Facebook logic for initialuser
+        # Todo (mo) apply Facebook logic for initial_profile
+        initial_profile = ret.get('profile', {}) or ret.get('user', {})
         initial_profile['ip'] = get_real_ip(request)
         user = gplus_controller.user_from_gplus_code(gplus_code, initial_profile, request.client, request.is_test)
         self.instance = user
@@ -81,7 +84,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def validate_email(self, email):
         email = email.lower()
         if User.exists(email=email):
-            raise serializers.ValidationError('Email is already used by another user')
+            raise serializers.ValidationError(_('The email is already used by another profile'))
         return email
 
     def create(self, validated_data):
@@ -107,10 +110,11 @@ class ShoutitLoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(Q(email=email) | Q(username=email))
         except User.DoesNotExist:
-            raise serializers.ValidationError({'email': 'The email or username you entered do not belong to any account'})
+            raise serializers.ValidationError(
+                {'email': _('The email or username you entered do not belong to any account')})
 
         if not user.check_password(password):
-            raise serializers.ValidationError({'password': 'The password you entered is incorrect'})
+            raise serializers.ValidationError({'password': _('The password you entered is incorrect')})
         self.instance = user
         if location:
             location_controller.update_profile_location(user.ap, location)
@@ -148,14 +152,15 @@ class ShoutitPageSerializer(serializers.Serializer):
     def validate_email(self, email):
         email = email.lower()
         if User.exists(email=email):
-            raise serializers.ValidationError('Email is already used by another account')
+            raise serializers.ValidationError(_('The email is already used by another profile'))
         return email
 
     def create(self, validated_data):
         request = self.context.get('request')
         initial_profile = validated_data.get('profile', {}) or validated_data.get('user', {})
         initial_profile['ip'] = get_real_ip(request)
-        user, page = page_controller.user_and_page_from_shoutit_page_data(validated_data, initial_profile, request.is_test)
+        user, page = page_controller.user_and_page_from_shoutit_page_data(validated_data, initial_profile,
+                                                                          request.is_test)
         return user, page
 
 
@@ -187,7 +192,7 @@ class ShoutitGuestSerializer(serializers.Serializer):
 
         # Todo: Check when this case happens
         if not user:
-            raise serializers.ValidationError("Could not create guest account")
+            raise serializers.ValidationError(_('Could not create guest account'))
         self.instance = user
         return ret
 
@@ -199,7 +204,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         user = self.context.get('request').user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise serializers.ValidationError('Email is already used by another account')
+            raise serializers.ValidationError(_('The email is already used by another profile'))
         return email
 
     def to_internal_value(self, data):
@@ -226,7 +231,8 @@ class ShoutitResetPasswordSerializer(serializers.Serializer):
             if not user.is_active:
                 raise AuthenticationFailed('User inactive or deleted.')
         except User.DoesNotExist:
-            raise serializers.ValidationError({'email': 'The email or username you entered do not belong to any account'})
+            raise serializers.ValidationError(
+                {'email': _('The email or username you entered do not belong to any profile')})
         self.instance = user
         return ret
 
@@ -247,7 +253,7 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         new_password2 = ret.get('new_password2')
 
         if new_password != new_password2:
-            raise serializers.ValidationError({'new_password': 'New passwords did not match'})
+            raise serializers.ValidationError({'new_password': _('New passwords did not match')})
 
         user.set_password(new_password)
         user.save(update_fields=['password'])
@@ -260,7 +266,7 @@ class ShoutitChangePasswordSerializer(serializers.Serializer):
         user = self.context.get('request').user
         if user.is_password_set:
             if not user.check_password(value):
-                raise serializers.ValidationError('Old password is incorrect')
+                raise serializers.ValidationError(_('Old password is incorrect'))
 
 
 class ShoutitSetPasswordSerializer(serializers.Serializer):
@@ -273,7 +279,7 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
         new_password = ret.get('new_password')
         new_password2 = ret.get('new_password2')
         if new_password != new_password2:
-            raise serializers.ValidationError({'new_password': 'New passwords did not match'})
+            raise serializers.ValidationError({'new_password': _('New passwords did not match')})
         user = self.instance
         user.set_password(new_password)
         user.save(update_fields=['password'])
@@ -285,10 +291,10 @@ class ShoutitSetPasswordSerializer(serializers.Serializer):
         try:
             user = ConfirmToken.objects.get(type=TOKEN_TYPE_RESET_PASSWORD, token=value, is_disabled=False).user
             if not user.is_active:
-                raise AuthenticationFailed('Account inactive or deleted')
+                raise AuthenticationFailed(_('Account inactive or deleted'))
             self.instance = user
         except ConfirmToken.DoesNotExist:
-            raise serializers.ValidationError('Reset token is invalid')
+            raise serializers.ValidationError(_('Reset token is invalid'))
 
 
 class ProfileDeactivationSerializer(serializers.Serializer):
@@ -299,7 +305,7 @@ class ProfileDeactivationSerializer(serializers.Serializer):
         password = ret.get('password')
         user = self.context.get('user')
         if not user.check_password(password):
-            raise serializers.ValidationError({'password': 'The password you entered is incorrect'})
+            raise serializers.ValidationError({'password': _('The password you entered is incorrect')})
         user.update(is_active=False)
         return ret
 
@@ -314,5 +320,5 @@ class SMSCodeSerializer(serializers.Serializer):
             dbcl_conversation = DBCLConversation.objects.get(sms_code__iexact=sms_code)
             self.instance = dbcl_conversation.to_user
         except DBCLConversation.DoesNotExist:
-            raise serializers.ValidationError({'sms_code': "Invalid sms_code"})
+            raise serializers.ValidationError({'sms_code': _('Invalid sms_code')})
         return ret

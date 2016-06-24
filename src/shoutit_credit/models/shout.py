@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 
 from datetime import timedelta
-
+from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
@@ -70,7 +70,7 @@ class ShareShouts(CreditRule):
     """
     Transactions of this rule must have: `shout_id`
     """
-    text = "You earned 1 Shoutit Credit for sharing %s on Facebook."
+    text = _("You earned 1 Shoutit Credit for sharing %(title)s on Facebook.")
 
     objects = ShareShoutsManager()
 
@@ -88,7 +88,7 @@ class ShareShouts(CreditRule):
             setattr(transaction, 'target', shout)
         else:
             title = 'shout'
-        text = self.text % title
+        text = self.text % {'title': title}
         ret = {
             "text": text,
             "ranges": [
@@ -137,8 +137,8 @@ class PromoteShouts(CreditRule):
     """
     Transactions of this rule must have: `shout_promotion`
     """
-    text = "You spent %d Shoutit Credit in promoting %s as %s for %d days."
-    text_no_days = "You spent %d Shoutit Credit in promoting %s as '%s'."
+    text = _("You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %(days)d days.")
+    text_no_days = _("You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s.")
 
     objects = PromoteShoutsManager()
 
@@ -174,9 +174,9 @@ class PromoteShouts(CreditRule):
         label_name = label.name
 
         if days:
-            text = self.text % (abs(transaction.amount), shout_title, label_name, days)
+            text = self.text % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label, 'days': days}
         else:
-            text = self.text_no_days % (abs(transaction.amount), shout_title, label_name)
+            text = self.text_no_days % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label}
         ret = {
             "text": text,
             "ranges": [
@@ -206,7 +206,7 @@ class PromoteShouts(CreditRule):
 
     def can_promote(self, shout, user):
         if user.stats.get('credit', 0) < self.credits:
-            raise ShoutitBadRequest("You don't have enough Shoutit Credit for this action")
+            raise ShoutitBadRequest(_("You don't have enough Shoutit Credit for this action"))
 
         if shout.promotions.exists():
-            raise ShoutitBadRequest('This Shout is already promoted')
+            raise ShoutitBadRequest(_('This Shout is already promoted'))

@@ -13,6 +13,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 from pydash import objects
 
 from common.utils import utcfromtimestamp
@@ -21,9 +22,9 @@ from shoutit.controllers import location_controller, user_controller, notificati
 from shoutit.models import LinkedFacebookAccount
 from shoutit.utils import debug_logger, now_plus_delta, error_logger
 
-FB_LINK_ERROR_TRY_AGAIN = "Could not link Facebook account, try again later."
-FB_LINK_ERROR_EMAIL = "Could not access user email, make sure you allowed it."
-FB_LINK_ERROR_NO_LINK = "No Facebook account to unlink."
+FB_LINK_ERROR_TRY_AGAIN = _("Could not link Facebook account, try again later.")
+FB_LINK_ERROR_EMAIL = _("Could not access user email, make sure you allowed it.")
+FB_LINK_ERROR_NO_LINK = _("No Facebook account to unlink.")
 
 
 def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=False):
@@ -141,7 +142,7 @@ def link_facebook_account(user, facebook_access_token):
         la = LinkedFacebookAccount.objects.get(facebook_id=facebook_id)
         debug_logger.warning('User %s tried to link already linked facebook account id: %s.' % (user, facebook_id))
         if la.user != user:
-            raise ShoutitBadRequest("Facebook account is already linked to somebody else's profile.")
+            raise ShoutitBadRequest(_("Facebook account is already linked to somebody else's profile."))
     except LinkedFacebookAccount.DoesNotExist:
         pass
 

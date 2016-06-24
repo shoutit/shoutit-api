@@ -9,6 +9,7 @@ from collections import OrderedDict
 
 from django.conf import settings
 from django.core.paginator import Paginator as DjangoPaginator
+from django.utils.translation import ugettext_lazy as _
 from elasticsearch import ElasticsearchException, SerializationError
 from elasticsearch_dsl.result import Result
 from rest_framework.pagination import CursorPagination
@@ -43,7 +44,8 @@ class DateTimePagination(CursorPagination):
         before_query_param = request.query_params.get(self.before_field)
         after_query_param = request.query_params.get(self.after_field)
         if before_query_param and after_query_param:
-            msg = "Using '%s' and '%s' query params together is not allowed" % (self.before_field, self.after_field)
+            msg = _("Using '%(before)s' and '%(after)s' query params together is not allowed") % {
+                'before': self.before_field, 'after': self.after_field}
             raise InvalidParameter('', msg)
 
         if before_query_param:
@@ -54,7 +56,7 @@ class DateTimePagination(CursorPagination):
                 queryset = queryset.filter(**filters).order_by('-' + self.datetime_attribute)
 
             except (TypeError, ValueError):
-                raise InvalidParameter(self.before_field, "Should be a valid timestamp")
+                raise InvalidParameter(self.before_field, _("Should be a valid timestamp"))
         elif after_query_param:
             try:
                 filters = {
@@ -62,7 +64,7 @@ class DateTimePagination(CursorPagination):
                 }
                 queryset = queryset.filter(**filters).order_by(self.datetime_attribute)
             except (TypeError, ValueError):
-                raise InvalidParameter(self.after_field, "Should be a valid timestamp")
+                raise InvalidParameter(self.after_field, _("Should be a valid timestamp"))
         else:
             queryset = queryset.order_by('-' + self.datetime_attribute)
 
@@ -204,7 +206,7 @@ class PageNumberIndexPagination(PageNumberPagination):
                         self._max_possible_page_number_exceeded = True
                 else:
                     if isinstance(index_response[0], Result):
-                        raise SerializationError("Results from different index")
+                        raise SerializationError(_("Results from different index"))
 
                         # Logging success calls - to compare
                         # extra = {'request': request._request, 'query_dict': index_queryset.__dict__}
@@ -268,7 +270,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         if self.show_count:
             res.insert(0, ('count', self._num_results))
         if self._max_page_number_exceeded:
-            res.insert(0, ('error', 'We do not return more than 1000 results for any query.'))
+            res.insert(0, ('error', _('We do not return more than 1000 results for any query.')))
         return Response(OrderedDict(res))
 
     def get_page_size(self, request):

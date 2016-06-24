@@ -3,6 +3,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
@@ -84,7 +85,7 @@ class CategorySerializer(serializers.ModelSerializer):
         try:
             self.instance = Category.objects.get(slug=value)
         except (Category.DoesNotExist, AttributeError):
-            raise serializers.ValidationError("Category with slug '%s' does not exist" % value)
+            raise serializers.ValidationError(_("Category with slug '%(value)s' does not exist") % {'value': 'value'})
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)
