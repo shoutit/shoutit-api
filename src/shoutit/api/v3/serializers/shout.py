@@ -68,7 +68,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
             raise serializers.ValidationError('Malformed filters')
         else:
             # Ignore filters with None as its their value
-            filter_tuples = filter(lambda t: t[1], filter_tuples)
+            filter_tuples = filter(lambda t: isinstance(t[1], basestring), filter_tuples)
             filters = dict(filter_tuples)
         return filters
 
