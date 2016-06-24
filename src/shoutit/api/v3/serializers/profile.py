@@ -67,7 +67,7 @@ class ProfileSerializer(MiniProfileSerializer):
             del ret['location']['longitude']
             del ret['location']['address']
         blank_to_none(ret, ['image', 'cover'])
-        if instance.type == USER_TYPE_PAGE and self.context['view'].action == 'pages':
+        if instance.type == USER_TYPE_PAGE and 'view' in self.context and self.context['view'].action == 'pages':
             user = self.context['request'].user
             if instance.page.is_admin(user):
                 ret['stats'] = instance.stats

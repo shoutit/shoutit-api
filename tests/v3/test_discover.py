@@ -31,7 +31,7 @@ class DiscoverTestCase(BaseTestCase):
             self.reverse(self.url_detail, kwargs={'pk': self.d1.pk}))
         self.assert200(resp)
         data = json.loads(resp.content)
-        self.assertEqual(data['id'], self.d1.pk)
+        self.assert_ids_equal(data, self.d1)
         self.assert_ids_equal(data['parents'], [])
         self.assert_ids_equal(data['children'], [self.d2])
 
@@ -40,7 +40,7 @@ class DiscoverTestCase(BaseTestCase):
             self.reverse(self.url_detail, kwargs={'pk': self.d3.pk}))
         self.assert200(resp)
         data = json.loads(resp.content)
-        self.assertEqual(data['id'], self.d3.pk)
+        self.assert_ids_equal(data, self.d3)
         self.assert_ids_equal(data['parents'], [self.d1, self.d2])
         self.assert_ids_equal(data['children'], [])
 
@@ -49,7 +49,7 @@ class DiscoverTestCase(BaseTestCase):
             self.reverse(self.url_detail, kwargs={'pk': self.d2.pk}))
         self.assert200(resp)
         data = json.loads(resp.content)
-        self.assertEqual(data['id'], self.d2.pk)
+        self.assert_ids_equal(data, self.d2)
         self.assert_ids_equal(data['parents'], [self.d1])
         self.assert_ids_equal(data['children'], [self.d3])
 
@@ -58,7 +58,7 @@ class DiscoverTestCase(BaseTestCase):
             self.reverse(self.url_detail, kwargs={'pk': self.d4.pk}))
         self.assert200(resp)
         data = json.loads(resp.content)
-        self.assertEqual(data['id'], self.d4.pk)
+        self.assert_ids_equal(data, self.d4)
         self.assert_ids_equal(data['parents'], [])
         self.assert_ids_equal(data['children'], [])
 

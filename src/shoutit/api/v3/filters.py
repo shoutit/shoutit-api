@@ -68,8 +68,10 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         exclude = data.get('exclude')
         if isinstance(exclude, basestring):
             exclude = exclude.split(',')
+        if exclude and not isinstance(exclude, list):
+            exclude = [exclude]
         if exclude:
-            index_queryset = index_queryset.filter(~EQ('terms', _id=exclude))
+            index_queryset = index_queryset.filter(~EQ('terms', _id=map(str, exclude)))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -233,10 +235,10 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         # Listened Profiles + user himself
         profiles = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if profiles:
-            listening_profiles = EQ('terms', uid=profiles)
+            listening_profiles = EQ('terms', uid=map(str, profiles))
             listening.append(listening_profiles)
 
-        index_queryset = index_queryset.filter(EQ('bool', should=listening))
+        index_queryset = index_queryset.query('bool', should=listening)
         index_queryset = index_queryset.sort('-published_at')
         debug_logger.debug(index_queryset.to_dict())
         return index_queryset

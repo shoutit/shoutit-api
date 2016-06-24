@@ -481,7 +481,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
     expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     def __unicode__(self):
-        return self.pk + ": " + self.get_type_display()
+        return "%s: %s" % (self.pk, self.get_type_display())
 
     @property
     def notification_type(self):
@@ -644,4 +644,4 @@ class PushBroadcast(UUIDModel, AttachedObjectMixin):
     data = JsonField(default=dict, blank=True)
 
     def __unicode__(self):
-        return self.pk
+        return "%s" % self.pk

@@ -18,7 +18,7 @@ class Item(UUIDModel):
     videos = models.ManyToManyField('shoutit.Video', blank=True, related_name='items')
 
     def __unicode__(self):
-        return unicode(self.name[:30]) if self.name else '[Item]'
+        return "%s" % (self.name[:30] or '[Item]')
 
     def clean(self):
         none_to_blank(self, ['name', 'description'])

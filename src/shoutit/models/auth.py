@@ -117,7 +117,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
-        return "{} [{}:{}]".format(self.name if not self.is_guest else 'Guest', self.pk, self.username)
+        name = self.name if not self.is_guest else 'Guest'
+        return "%s [%s:%s]" % (name, self.id, self.username)
 
     def clean(self):
         self.email = self.email.lower()
@@ -498,12 +499,15 @@ class InactiveUser(AnonymousUser):
     def to_dict(self):
         return OrderedDict({
             "id": "",
-            "api_url": "",
-            "web_url": "",
             "username": "",
-            "name": "Shoutit User",
+            "name": _("Shoutit User"),
+            "api_url": None,
+            "web_url": None,
+            "app_url": None,
             "is_activated": False,
             "image": "",
+            "cover": "",
+            "is_owner": False
         })
 
 # Todo: Add DeletedUser class

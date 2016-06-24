@@ -233,8 +233,8 @@ class PageNumberIndexPagination(PageNumberPagination):
             qs = []
 
         # Replace the values of objects_dict with the actual db objects and filter out the non existing ones
-        # pk is used to make sure the ids are converted to strings otherwise setitem will create new keys
-        map(lambda s: objects_dict.__setitem__(s.pk, s), qs)
+        # str(pk) is used to make sure the ids are converted to strings otherwise setitem will create new keys
+        map(lambda s: objects_dict.__setitem__(str(s.pk), s), qs)
         self.page = filter(None, objects_dict.values())
 
         self._num_results = index_response.hits.total if self.page else 0

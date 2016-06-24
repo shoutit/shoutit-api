@@ -18,7 +18,7 @@ class DBCLUser(UUIDModel):
         abstract = True
 
     def __unicode__(self):
-        return unicode(self.pk) + ": " + unicode(self.user)
+        return "%s:%s" % (self.pk, self.user)
 
     @property
     def shout(self):
