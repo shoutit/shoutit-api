@@ -63,7 +63,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         shout_type = data.get('shout_type')
         if shout_type:
             if shout_type not in ['all', 'offer', 'request']:
-                raise ValidationError({'shout_type': ["should be `all`, `request` or `offer`."]})
+                raise ValidationError({'shout_type': ["Should be `all`, `request` or `offer`"]})
             if shout_type != 'all':
                 index_queryset = index_queryset.filter('term', type=shout_type)
 
@@ -171,7 +171,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             'price_desc': ('-price',),
         }
         if sort and sort not in sort_types:
-            raise ValidationError({'sort': ["Invalid sort."]})
+            raise ValidationError({'sort': ["Invalid sort"]})
         # selected_sort = ('-priority',) + sort_types[sort]
         selected_sort = sort_types[sort]
         if search:
@@ -215,7 +215,7 @@ class HomeFilterBackend(filters.BaseFilterBackend):
             'price_desc': ('-price',),
         }
         if sort and sort not in sort_types:
-            raise ValidationError({'sort': ["Invalid sort."]})
+            raise ValidationError({'sort': ["Invalid sort"]})
         # selected_sort = ('-priority',) + sort_types[sort]
         selected_sort = sort_types[sort]
         index_queryset = index_queryset.sort(*selected_sort)
@@ -257,7 +257,7 @@ class TagFilter(django_filters.FilterSet):
 
     def filter_type(self, queryset, value):
         if value not in ['all', 'top', 'featured']:
-            raise ValidationError({'type': ["should be `all`, `top` or `featured`."]})
+            raise ValidationError({'type': ["Should be `all`, `top` or `featured`"]})
 
         if value == 'featured':
             queryset = FeaturedTag.objects.all().order_by('rank')
@@ -267,7 +267,7 @@ class TagFilter(django_filters.FilterSet):
     def filter_category(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type == 'featured':
-            raise ValidationError({'category': ["does not work when type is `featured`."]})
+            raise ValidationError({'category': ["does not work when type is `featured`"]})
         try:
             category = Category.objects.get(name=value)
             # return all tags that belong to the category except the main tag
@@ -280,19 +280,19 @@ class TagFilter(django_filters.FilterSet):
     def filter_country(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
-            raise ValidationError({'country': ["only works when type equals `top` or `featured`."]})
+            raise ValidationError({'country': ["only works when type equals `top` or `featured`"]})
         return queryset
 
     def filter_state(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
-            raise ValidationError({'state': ["only works when type equals `top` or `featured`."]})
+            raise ValidationError({'state': ["only works when type equals `top` or `featured`"]})
         return queryset
 
     def filter_city(self, queryset, value):
         tag_type = self.data.get('type')
         if tag_type not in ['top', 'featured']:
-            raise ValidationError({'city': ["only works when type equals `top` or `featured`."]})
+            raise ValidationError({'city': ["only works when type equals `top` or `featured`"]})
         return queryset
 
     def filter_location(self, queryset):
@@ -334,7 +334,7 @@ class TagFilter(django_filters.FilterSet):
 
         if not queryset:
             queryset = queryset.filter(country='')
-            error_logger.warn("Discover returned 0 Featured Tags.", extra={
+            error_logger.warn("Discover returned 0 Featured Tags", extra={
                 'country': country, 'state': state, 'city': city,
             })
         return queryset

@@ -136,7 +136,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Shout
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "shout": {
                     "id": ""
@@ -148,7 +148,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Profile
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "profile": {
                     "id": ""
@@ -160,7 +160,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Conversation (`public_chat`)
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "conversation": {
                     "id": ""

@@ -360,7 +360,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         if self.show_count:
             res.insert(0, ('count', self._num_results))
         if self._max_page_number_exceeded:
-            res.insert(0, ('error', 'We do not return more than 1000 results for any query.'))
+            res.insert(0, ('error', 'We do not return more than 1000 results for any query'))
         return Response(OrderedDict(res))
 
     def get_page_size(self, request):

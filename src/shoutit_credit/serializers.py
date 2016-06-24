@@ -46,7 +46,7 @@ class PromoteShoutSerializer(HasAttachedUUIDObjects, serializers.Serializer):
 
     def to_representation(self, instance):
         return {
-            'success': _('The shout was successfully promoted'),
+            'success': _('The shout has been promoted'),
             'promotion': ShoutPromotionSerializer(instance.promotion).data
         }
 

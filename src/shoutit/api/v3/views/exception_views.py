@@ -89,7 +89,7 @@ def drf_exception_handler(exc, context):
         if not settings.USE_SENTRY:
             return None
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        message = _('Server Error, try again later.')
+        message = _('Server Error, try again later')
         developer_message = unicode(exc)
         errors = [{'message': message}]
 

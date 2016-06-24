@@ -199,4 +199,4 @@ def notify_cl_user2(cl_user, from_user, message):
     if email.send(True) == 1:
         debug_logger.debug("Sent message to cl user about his ad id: %s" % cl_user.cl_ad_id)
     else:
-        error_logger.warn("Error sending message to cl user.", exc_info=True)
+        error_logger.warn("Error sending message to cl user", exc_info=True)

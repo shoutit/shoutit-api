@@ -84,7 +84,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     def validate_email(self, email):
         email = email.lower()
         if User.exists(email=email):
-            raise serializers.ValidationError(_('The email is already used by another profile'))
+            raise serializers.ValidationError(_('This email is used by another account'))
         return email
 
     def create(self, validated_data):
@@ -152,7 +152,7 @@ class ShoutitPageSerializer(serializers.Serializer):
     def validate_email(self, email):
         email = email.lower()
         if User.exists(email=email):
-            raise serializers.ValidationError(_('The email is already used by another profile'))
+            raise serializers.ValidationError(_('This email is used by another account'))
         return email
 
     def create(self, validated_data):
@@ -204,7 +204,7 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         user = self.context.get('request').user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise serializers.ValidationError(_('The email is already used by another profile'))
+            raise serializers.ValidationError(_('This email is used by another account'))
         return email
 
     def to_internal_value(self, data):
@@ -232,7 +232,7 @@ class ShoutitResetPasswordSerializer(serializers.Serializer):
                 raise AuthenticationFailed('User inactive or deleted.')
         except User.DoesNotExist:
             raise serializers.ValidationError(
-                {'email': _('The email or username you entered do not belong to any profile')})
+                {'email': _('The email or username you entered do not belong to any account')})
         self.instance = user
         return ret
 

@@ -581,7 +581,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
             """
         serializer = ProfileContactsSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response({'success': _("You have uploaded your contacts successfully")})
+        return Response({'success': _("Your contacts have been uploaded")})
 
     @detail_route(methods=['get'], suffix='Mutual Contacts')
     def mutual_contacts(self, request, *arg, **kwargs):

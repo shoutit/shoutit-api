@@ -19,14 +19,14 @@ class ShoutitSlugField(models.CharField):
     default_validators = [
         validators.MinLengthValidator(1),
         validators.RegexValidator(re.compile('^[-a-z0-9_]+$'),
-                                  "Enter a valid 'slug' consisting of small letters, numbers, underscores or hyphens.",
+                                  "Enter a valid 'slug' consisting of small letters, numbers, underscores or hyphens",
                                   'invalid')
     ]
 
     def __init__(self, *args, **kwargs):
         max_length = kwargs.get('max_length', 30)
         kwargs['max_length'] = max_length
-        help_text = "Required. 1 to %s characters and can only contain small letters, numbers, underscores or hyphens." % max_length
+        help_text = "Required. 1 to %s characters and can only contain small letters, numbers, underscores or hyphens" % max_length
         kwargs['help_text'] = kwargs.get('help_text', help_text)
         # Set db_index=True unless it's been set manually.
         if 'db_index' not in kwargs:

@@ -99,7 +99,7 @@ class PushTestSerializer(serializers.Serializer):
             valid_keys = ['alert', 'badge', 'sound', 'category', 'expiration', 'priority']
             if not all([k in valid_keys for k in aps.keys()]):
                 keys = ", ".join(valid_keys)
-                raise serializers.ValidationError({'aps': _("can only contain %(keys)s") % {'keys': keys}})
+                raise serializers.ValidationError({'aps': _("Can only contain %(keys)s") % {'keys': keys}})
         return value
 
     def create(self, validated_data):

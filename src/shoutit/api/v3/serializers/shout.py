@@ -195,7 +195,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                 try:
                     mobile = correct_mobile(mobile, location['country'], raise_exception=True)
                 except ValidationError:
-                    raise serializers.ValidationError({'mobile': _("Must be valid in your or in the shout's country")})
+                    raise serializers.ValidationError({'mobile': _("Is not valid in your or in the shout's country")})
 
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']

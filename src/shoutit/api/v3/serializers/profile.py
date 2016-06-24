@@ -202,7 +202,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         user = self.context['request'].user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise serializers.ValidationError(_('The email is already used by another profile'))
+            raise serializers.ValidationError(_('This email is used by another account'))
         return email
 
     def validate_website(self, website):
@@ -376,7 +376,7 @@ class ProfileLinkSerializer(serializers.Serializer):
                 facebook_controller.unlink_facebook_user(user)
 
         if action:
-            success = _("Successfully %(action)s your %(account)s") % {'action': action, 'account': account_name}
+            success = _("Your %(account)s has been %(action)s") % {'account': account_name, 'action': action}
             res = {'success': success}
         else:
             res = {'success': _("No changes were made")}

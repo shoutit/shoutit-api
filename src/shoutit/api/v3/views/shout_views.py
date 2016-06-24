@@ -180,10 +180,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         ---
         """
         return Response([
-            {'type': 'time', 'name': 'Latest'},
+            {'type': 'time', 'name': _('Newest')},
             # {'type': 'distance', 'name': 'Nearest'},
-            {'type': 'price_asc', 'name': 'Price Increasing'},
-            {'type': 'price_desc', 'name': 'Price Decreasing'},
+            {'type': 'price_asc', 'name': _('Price: Low to High')},
+            {'type': 'price_desc', 'name': _('Price: High to Low')},
             # {'type': 'recommended', 'name': 'Recommended'},
         ])
 
@@ -241,7 +241,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         {
             "type": "offer",
             "title": "BMW M6",
-            "text": "Brand new black bmw m6 2016.",
+            "text": "Brand new black bmw m6 2016",
             "price": 1000,
             "currency": "EUR",
             "available_count": 4,

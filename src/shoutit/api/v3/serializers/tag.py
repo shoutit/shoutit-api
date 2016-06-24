@@ -81,11 +81,11 @@ class CategorySerializer(serializers.ModelSerializer):
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance
 
-    def validate_slug(self, value):
+    def validate_slug(self, slug):
         try:
-            self.instance = Category.objects.get(slug=value)
+            self.instance = Category.objects.get(slug=slug)
         except (Category.DoesNotExist, AttributeError):
-            raise serializers.ValidationError(_("Category with slug '%(value)s' does not exist") % {'value': 'value'})
+            raise serializers.ValidationError(_("Category with slug '%(slug)s' does not exist") % {'value': slug})
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)

@@ -89,8 +89,8 @@ def send_verified_email(user):
 def _send_verified_email(user):
     subject = _('Your email has been verified!')
     subs = {
-        'text1': _("Thank you for verifying your email. Your account has been verified and you can now use Shoutit full"
-                   " potential."),
+        'text1': _("Thank you for verifying your email. Your account has been verified and you can now use Shoutit "
+                   "full potential."),
         'action': _("Take me to my profile"),
         'link': user.web_url
     }

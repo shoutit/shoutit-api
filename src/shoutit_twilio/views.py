@@ -102,7 +102,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         try:
             other_user = User.objects.get(username=other_username)
         except User.DoesNotExist:
-            msg = _("Profile with username %(username)s doesn't exist") % {'username': other_username}
+            msg = _("Profile with username '%(username)s' does not exist") % {'username': other_username}
             raise InvalidParameter('profile', message=msg)
 
         if hasattr(other_user, 'video_client'):
@@ -146,7 +146,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         try:
             video_client = VideoClient.objects.get(id=identity)
         except VideoClient.DoesNotExist:
-            msg = _("Profile with identity %(identity)s doesn't exist") % {'identity': identity}
+            msg = _("Profile with identity %(identity)s does not exist") % {'identity': identity}
             raise InvalidParameter('identity', message=msg)
         except ValueError:
             msg = _("Invalid identity")
@@ -192,7 +192,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         try:
             video_client = VideoClient.objects.get(id=identity)
         except VideoClient.DoesNotExist:
-            msg = _("Profile with identity %(identity)s doesn't exist") % {'identity': identity}
+            msg = _("Profile with identity %(identity)s does not exist") % {'identity': identity}
             raise InvalidParameter('identity', message=msg)
         except ValueError:
             msg = _("Invalid identity")

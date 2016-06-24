@@ -201,7 +201,7 @@ class PromoteAdminSerializer(ConversationProfileActionSerializer):
         if profile.id not in conversation.admins:
             conversation.promote_admin(profile)
         else:
-            self.success_message = _("%(name)s is already admin on this conversation")
+            self.success_message = _("%(name)s is already admin in this conversation")
         return conversation
 
 
@@ -223,7 +223,7 @@ class BlockProfileSerializer(ConversationProfileActionSerializer):
 
 
 class UnblockProfileSerializer(ConversationProfileActionSerializer):
-    error_message = _("%(name)s is not a blocked from this conversation")
+    error_message = _("%(name)s is not blocked from this conversation")
     success_message = _("Unblocked %(name)s from this conversation")
 
     def condition(self, conversation, actor, profile):

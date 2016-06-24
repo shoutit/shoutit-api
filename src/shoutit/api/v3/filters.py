@@ -56,7 +56,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             try:
                 user_id = str(User.objects.values('pk').get(username=user)['pk'])
             except User.DoesNotExist:
-                msg = _("Profile with username '%(user)s' does not exist") % {'user': user}
+                msg = _("Profile with username '%(username)s' does not exist") % {'username': user}
                 raise InvalidParameter('profile', msg)
             else:
                 index_queryset = index_queryset.filter('term', uid=user_id)
@@ -78,7 +78,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         shout_type = data.get('shout_type')
         if shout_type:
             if shout_type not in ['all', 'offer', 'request']:
-                msg = _("should be `all`, `request` or `offer`")
+                msg = _("Should be `all`, `request` or `offer`")
                 raise InvalidParameter('shout_type', msg)
             if shout_type != 'all':
                 index_queryset = index_queryset.filter('term', type=shout_type)
@@ -156,7 +156,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
             try:
                 category = Category.objects.get(slug=category)
             except Category.DoesNotExist:
-                msg = _("Category with slug '%(category)s' does not exist") % {'category': category}
+                msg = _("Category with slug '%(slug)s' does not exist") % {'slug': category}
                 raise InvalidParameter('category', msg)
             else:
                 data['category'] = category.slug
@@ -295,7 +295,7 @@ class TagFilter(django_filters.FilterSet):
             # return queryset.filter(category=category).exclude(id=category.main_tag_id)
             return queryset.filter(category=category)
         except Category.DoesNotExist:
-            raise InvalidParameter('category', _("Category '%(value)s' does not exist") % {'value': value})
+            raise InvalidParameter('category', _("Category with slug '%(slug)s' does not exist") % {'slug': value})
 
     def filter_country(self, queryset, value):
         tag_type = self.data.get('type')
@@ -354,7 +354,7 @@ class TagFilter(django_filters.FilterSet):
 
         if not queryset:
             queryset = queryset.filter(country='')
-            error_logger.warn("Discover returned 0 Featured Tags.", extra={
+            error_logger.warn("Discover returned 0 Featured Tags", extra={
                 'country': country, 'state': state, 'city': city,
             })
         return queryset

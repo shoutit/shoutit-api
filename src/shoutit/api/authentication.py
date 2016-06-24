@@ -48,22 +48,22 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             return ret
 
         if len(page_id_auth) != 1:
-            msg = _('Invalid page id header. No credentials provided.')
+            msg = _('Invalid page id header. No credentials provided')
             raise exceptions.AuthenticationFailed(msg)
 
         try:
             page_id = page_id_auth[0].decode()
             uuid.UUID(page_id)
         except (UnicodeError, ValueError):
-            raise exceptions.AuthenticationFailed(_('Invalid page id.'))
+            raise exceptions.AuthenticationFailed(_('Invalid page id'))
 
         try:
             page = Page.objects.select_related('user').get(id=page_id)
         except Page.DoesNotExist:
-            raise exceptions.AuthenticationFailed(_('Page does not exist.'))
+            raise exceptions.AuthenticationFailed(_('Page does not exist'))
 
         if not page.user.is_active:
-            raise exceptions.AuthenticationFailed(_('Page inactive or deleted.'))
+            raise exceptions.AuthenticationFailed(_('Page inactive or deleted'))
 
         setattr(request, '_user', page.user)
         setattr(request, 'page_admin_user', ret[0])

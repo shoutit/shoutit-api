@@ -60,7 +60,7 @@ def correct_mobile(mobile, country, raise_exception=False):
             raise ValueError()
     except (phonenumbers.NumberParseException, ValueError):
         if raise_exception:
-            raise ValidationError(_("Invalid mobile for %(country)s") % {'country': COUNTRY_ISO[country]})
+            raise ValidationError(_("Is not valid in %(country)s") % {'country': COUNTRY_ISO[country]})
         mobile = ''
     return mobile
 

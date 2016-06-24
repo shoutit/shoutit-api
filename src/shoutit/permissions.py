@@ -25,15 +25,15 @@ class ConstantPermission(Constant):
     def __eq__(self, other):
         return self.value.int == other.value.int
 
-PERMISSION_USE_SHOUTIT = ConstantPermission("USE_SHOUT_IT", _("You're not allowed to use Shoutit"))
-PERMISSION_SHOUT_MORE = ConstantPermission("SHOUT_MORE", _("Please, activate your account to add more shouts (check your email for activation link)"))
-PERMISSION_SHOUT_REQUEST = ConstantPermission("SHOUT_REQUEST", _("You're not allowed to use make request shouts."))
-PERMISSION_SHOUT_OFFER = ConstantPermission("SHOUT_OFFER", _("You're not allowed to use make offer shouts."))
-PERMISSION_LISTEN_TO_TAG = ConstantPermission("LISTEN_TO_TAG", _("You're not allowed to listen to tags."))
-PERMISSION_LISTEN_TO_PROFILE = ConstantPermission("LISTEN_TO_PROFILE", _("You're not allowed to listen to profiles."))
-PERMISSION_SEND_MESSAGE = ConstantPermission("SEND_MESSAGE", _("You are not allowed to send messages."))
-PERMISSION_COMMENT_ON_POST = ConstantPermission("", _("You're not allowed to comment on posts."))
-PERMISSION_REPORT = ConstantPermission("REPORT", _("You're not allowed to use reporting."))
+PERMISSION_USE_SHOUTIT = ConstantPermission("USE_SHOUTIT", _("You're not allowed to use Shoutit"))
+PERMISSION_SHOUT_MORE = ConstantPermission("SHOUT_MORE", _("Activate your account to create more shouts (check your "
+                                                           "email for activation link)"))
+PERMISSION_SHOUT_REQUEST = ConstantPermission("SHOUT_REQUEST", _("You're not allowed to create requests"))
+PERMISSION_SHOUT_OFFER = ConstantPermission("SHOUT_OFFER", _("You're not allowed to create offers"))
+PERMISSION_LISTEN_TO_TAG = ConstantPermission("LISTEN_TO_TAG", _("You're not allowed to listen to interests"))
+PERMISSION_LISTEN_TO_PROFILE = ConstantPermission("LISTEN_TO_PROFILE", _("You're not allowed to listen to profiles"))
+PERMISSION_SEND_MESSAGE = ConstantPermission("SEND_MESSAGE", _("You are not allowed to send messages"))
+PERMISSION_REPORT = ConstantPermission("SEND_REPORT", _("You're not allowed to send reports"))
 
 INITIAL_USER_PERMISSIONS = [
     PERMISSION_USE_SHOUTIT,

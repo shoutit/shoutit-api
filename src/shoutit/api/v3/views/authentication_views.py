@@ -30,7 +30,7 @@ from ..serializers import (
     FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer, GuestSerializer
 )
 
-INACTIVE_OR_DELETED = AuthenticationFailed(_('Account inactive or deleted.'))
+INACTIVE_OR_DELETED = AuthenticationFailed(_('Account inactive or deleted'))
 
 
 class RequestParamsClientBackend(object):
@@ -496,9 +496,6 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         # Set `action` to be used when handling exceptions
         self.action = 'post'
         auth_failed = _("Authentication failed")
-        if provider_constants.ENFORCE_SECURE and not request.is_secure():
-            raise ShoutitBadRequest(message=auth_failed, developer_message="A secure connection is required",
-                                    reason=ERROR_REASON.INSECURE_CONNECTION)
 
         if 'grant_type' not in request.data:
             raise RequiredBody('grant_type', message=auth_failed)
@@ -589,7 +586,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         serializer = ShoutitChangePasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response("Password changed.")
+        return self.success_response("Password changed")
 
     @list_route(methods=['post'], permission_classes=(), suffix='Reset Password')
     def reset_password(self, request):
@@ -612,7 +609,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         serializer = ShoutitResetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.instance.reset_password()
-        return self.success_response(_("Password reset email will be sent soon."))
+        return self.success_response(_("Password reset email will be sent soon"))
 
     @list_route(methods=['post'], permission_classes=(), suffix='Set Password')
     def set_password(self, request):
@@ -635,7 +632,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         serializer = ShoutitSetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response(_("New password set."))
+        return self.success_response(_("New password set"))
 
     @list_route(methods=['get', 'post'], permission_classes=(), suffix='Verify Email')
     def verify_email(self, request):
@@ -680,7 +677,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         or
         <pre><code>
         {
-            "success": "Verification email will be soon sent to xxx@mail.com."
+            "success": "Verification email will be soon sent to xxx@mail.com"
         }
         </code></pre>
 
@@ -747,7 +744,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
                 except Exception:
-                    return self.success_response(_("New password set."))
+                    return self.success_response(_("New password set"))
             except ConfirmToken.DoesNotExist:
                 raise InvalidParameter('token', _("Token does not exist"))
             except ValueError:
@@ -759,11 +756,11 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                                 status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
                 return self.success_response(
-                    _("Your email '%(email)s' is already verified.") % {'email': request.user.email})
+                    _("Your email '%(email)s' is already verified") % {'email': request.user.email})
             serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
             return self.success_response(
-                "Verification email will be soon sent to %(email)s." % {'email': request.user.email})
+                "Verification email will be soon sent to %(email)s" % {'email': request.user.email})
         else:
             return Response()
 

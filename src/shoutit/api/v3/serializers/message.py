@@ -111,7 +111,7 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
                         images = attachment.get('images')
                         videos = attachment.get('videos')
                         if not (images or videos):
-                            attachment_error = {'': _("Should have at least one item in a 'images' or 'videos'")}
+                            attachment_error = {'': _("Should have at least one item in 'images' or 'videos'")}
                         if videos:
                             for v in videos:
                                 vs = VideoSerializer(data=v)

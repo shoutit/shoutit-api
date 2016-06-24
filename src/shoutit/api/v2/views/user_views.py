@@ -206,11 +206,11 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap, api_client=api_client, api_version=request.version)
-            msg = "you started listening to {} shouts.".format(user.name)
+            msg = "you started listening to {} shouts".format(user.name)
             _status = status.HTTP_201_CREATED
         else:
             listen_controller.stop_listening_to_object(request.user, ap)
-            msg = "you stopped listening to {} shouts.".format(user.name)
+            msg = "you stopped listening to {} shouts".format(user.name)
             _status = status.HTTP_202_ACCEPTED
         ret = {
             'data': {'success': msg},
@@ -291,7 +291,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
 
         listening_type = request.query_params.get('type', 'users')
         if listening_type not in ['users', 'pages', 'tags']:
-            raise ValidationError({'type': "should be `users`, `pages` or `tags`."})
+            raise ValidationError({'type': "should be `users`, `pages` or `tags`"})
 
         user = self.get_object()
         listening = getattr(user, 'listening2_' + listening_type)
@@ -369,7 +369,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
-            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
+            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`"})
 
         # todo: refactor to use shout index filter
         self.pagination_class = PageNumberIndexPagination
@@ -495,9 +495,9 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         user = self.get_object()
         account = request.data.get('account') or request.query_params.get('account')
         if not account:
-            raise ValidationError({'account': "This field is required."})
+            raise ValidationError({'account': "This field is required"})
         if account not in ['facebook', 'gplus']:
-            raise ValidationError({'account': "Unsupported social account."})
+            raise ValidationError({'account': "Unsupported social account"})
 
         if request.method in ['PATCH', 'POST']:
             if account == 'gplus':
@@ -513,8 +513,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
                     raise ValidationError({'facebook_access_token': "provide a valid `facebook_access_token`"})
                 facebook_controller.link_facebook_account(user, facebook_access_token)
 
-                # msg = "{} linked successfully.".format(account.capitalize())
-
         else:
             if account == 'gplus':
                 gplus_controller.unlink_gplus_user(user)
@@ -522,14 +520,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             elif account == 'facebook':
                 facebook_controller.unlink_facebook_user(user)
 
-                # msg = "{} unlinked successfully.".format(account.capitalize())
-
-        # Todo: check if this breaks something in the Apps
-        # ret = {
-        #     'data': {'success': msg},
-        #     'status': status.HTTP_202_ACCEPTED
-        # }
-        # return Response(**ret)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
 

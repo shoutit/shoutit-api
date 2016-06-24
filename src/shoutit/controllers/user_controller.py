@@ -15,7 +15,7 @@ def create_user(email=None, password=None, first_name='', last_name='', username
                 **extra_user_fields):
     # email
     if email and User.exists(email=email.lower()):
-        raise DRFValidationError({'email': _('The email is already used by another profile')})
+        raise DRFValidationError({'email': _('This email is used by another account')})
 
     # first, last and username
     if not username:
@@ -117,7 +117,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     try:
         LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
     except IntegrityError as e:
-        raise ShoutitBadRequest(message=_("Could not access your G+ account, try again later"),
+        raise ShoutitBadRequest(message=_("Could not access your Google account, try again later"),
                                 developer_message=str(e))
     image_url = gplus_user['image']['url'].split('?')[0]
     media_controller.set_profile_media(user.profile, 'image', image_url)

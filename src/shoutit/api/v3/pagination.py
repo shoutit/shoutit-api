@@ -206,7 +206,7 @@ class PageNumberIndexPagination(PageNumberPagination):
                         self._max_possible_page_number_exceeded = True
                 else:
                     if isinstance(index_response[0], Result):
-                        raise SerializationError(_("Results from different index"))
+                        raise SerializationError("Results from different index")
 
                         # Logging success calls - to compare
                         # extra = {'request': request._request, 'query_dict': index_queryset.__dict__}
@@ -270,7 +270,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         if self.show_count:
             res.insert(0, ('count', self._num_results))
         if self._max_page_number_exceeded:
-            res.insert(0, ('error', _('We do not return more than 1000 results for any query.')))
+            res.insert(0, ('error', _('We do not return more than 1000 results for any query')))
         return Response(OrderedDict(res))
 
     def get_page_size(self, request):

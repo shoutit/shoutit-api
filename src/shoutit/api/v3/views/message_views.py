@@ -349,7 +349,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         message_controller.hide_messages_from_user(messages, request.user)
         ret = {
             'data': {
-                'success': _("Successfully deleted the messages"),
+                'success': _("The messages have been deleted"),
                 'deleted_messages': map(lambda m: {'id': m}, message_ids)
             },
             'status': status.HTTP_202_ACCEPTED

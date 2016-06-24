@@ -319,7 +319,7 @@ try:
 except RequestError:
     pass
 except ConnectionTimeout:
-    error_logger.warn("ES Server is down.", exc_info=True)
+    error_logger.warn("ES Server is down", exc_info=True)
 
 
 class Video(UUIDModel):
