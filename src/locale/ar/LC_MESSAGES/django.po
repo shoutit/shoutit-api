@@ -1,0 +1,1056 @@
+# Shoutit API Arabic Translations.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Mohamad Nour Chawich <mo.chawich@shoutit.com>, 2016.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Shoutit API\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-06-24 13:28+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Mohamad Nour Chawich <mo.chawich@shoutit.com>\n"
+"Language-Team: Arabic <info@shoutit.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: .\shoutit\admin.py:34
+msgid "Username"
+msgstr ""
+
+#: .\shoutit\admin.py:36 .\shoutit\models\auth.py:79
+msgid ""
+"Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
+"(.)"
+msgstr ""
+
+#: .\shoutit\admin.py:38
+msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
+msgstr ""
+
+#: .\shoutit\admin.py:51
+msgid "Personal info"
+msgstr ""
+
+#: .\shoutit\admin.py:52
+msgid "Permissions"
+msgstr ""
+
+#: .\shoutit\admin.py:54
+msgid "Important dates"
+msgstr ""
+
+#: .\shoutit\admin.py:55 .\shoutit\admin.py:272
+msgid "Extra"
+msgstr ""
+
+#: .\shoutit\admin.py:271
+msgid "Users"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:16
+msgid "with email"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:21
+msgid "only shoutit users"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:22
+msgid "yes"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:23
+msgid "no"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:24
+msgid "only cl users"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:49
+msgid "Push Device"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:54
+msgid "Android"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:55
+msgid "iOs"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:56
+msgid "Android and iOS"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:57
+msgid "No device"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:72
+msgid "API Client"
+msgstr ""
+
+#: .\shoutit\admin_filters.py:90
+msgid "Published On"
+msgstr ""
+
+#: .\shoutit\api\authentication.py:51
+msgid "Invalid page id header. No credentials provided"
+msgstr ""
+
+#: .\shoutit\api\authentication.py:58
+msgid "Invalid page id"
+msgstr ""
+
+#: .\shoutit\api\authentication.py:63
+msgid "Page does not exist"
+msgstr ""
+
+#: .\shoutit\api\authentication.py:66
+msgid "Page inactive or deleted"
+msgstr ""
+
+#: .\shoutit\api\permissions.py:24
+msgid "Secure connection is required"
+msgstr ""
+
+#: .\shoutit\api\serializers.py:75
+#, python-format
+msgid "Invalid data. Expected a dictionary, but got %(type)s"
+msgstr ""
+
+#: .\shoutit\api\serializers.py:78
+msgid "This field can not be empty"
+msgstr ""
+
+#: .\shoutit\api\serializers.py:84
+#, python-format
+msgid "'%(id)s' is not a valid id"
+msgstr ""
+
+#: .\shoutit\api\serializers.py:87
+#, python-format
+msgid "%(model)s with id '%(id)s' does not exist"
+msgstr ""
+
+#: .\shoutit\api\serializers.py:94
+msgid "This field is required"
+msgstr ""
+
+#: .\shoutit\api\v3\exceptions.py:78
+#: .\shoutit\api\v3\views\exception_views.py:92
+#: .\shoutit\api\v3\views\exception_views.py:177
+msgid "Server Error, try again later"
+msgstr ""
+
+#: .\shoutit\api\v3\exceptions.py:155
+msgid "Missing header"
+msgstr ""
+
+#: .\shoutit\api\v3\exceptions.py:161
+msgid "Missing parameter"
+msgstr ""
+
+#: .\shoutit\api\v3\exceptions.py:167
+msgid "Missing field"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:41
+msgid "Invalid discover id"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:43
+#, python-format
+msgid "Discover Item with id '%(discover)s' does not exist"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:59 .\shoutit_twilio\views.py:105
+#, python-format
+msgid "Profile with username '%(username)s' does not exist"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:81
+msgid "Should be `all`, `request` or `offer`"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:130
+msgid "Should be between -90 and 90, also not greater than 'up_right_lat'"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:138
+msgid "Should be between -180 and 180, also not greater than 'up_right_lng'"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:143
+msgid "Should be between -90 and 90"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:148
+msgid "Should be between -180 and 180"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:151
+msgid "Invalid number"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:159 .\shoutit\api\v3\filters.py:298
+#: .\shoutit\api\v3\serializers\tag.py:88
+#, python-format
+msgid "Category with slug '%(slug)s' does not exist"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:211
+msgid "Invalid sort"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:280
+msgid "Should be `all`, `top` or `featured`"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:290
+msgid "Does not work when type is `featured`"
+msgstr ""
+
+#: .\shoutit\api\v3\filters.py:303 .\shoutit\api\v3\filters.py:309
+#: .\shoutit\api\v3\filters.py:315
+msgid "Only works when type equals `top` or `featured`"
+msgstr ""
+
+#: .\shoutit\api\v3\pagination.py:47
+#, python-format
+msgid "Using '%(before)s' and '%(after)s' query params together is not allowed"
+msgstr ""
+
+#: .\shoutit\api\v3\pagination.py:59 .\shoutit\api\v3\pagination.py:67
+msgid "Should be a valid timestamp"
+msgstr ""
+
+#: .\shoutit\api\v3\pagination.py:273
+msgid "We do not return more than 1000 results for any query"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:87
+#: .\shoutit\api\v3\serializers\auth.py:155
+#: .\shoutit\api\v3\serializers\auth.py:207
+#: .\shoutit\api\v3\serializers\profile.py:205
+#: .\shoutit\controllers\user_controller.py:18
+msgid "This email is used by another account"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:114
+#: .\shoutit\api\v3\serializers\auth.py:235
+msgid "The email or username you entered do not belong to any account"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:117
+#: .\shoutit\api\v3\serializers\auth.py:308
+msgid "The password you entered is incorrect"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:195
+msgid "Could not create guest account"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:256
+#: .\shoutit\api\v3\serializers\auth.py:282
+msgid "New passwords did not match"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:269
+msgid "Old password is incorrect"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:294
+#: .\shoutit\api\v3\views\authentication_views.py:33
+msgid "Account inactive or deleted"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:297
+msgid "Reset token is invalid"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:323
+msgid "Invalid sms_code"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\base.py:56
+msgid "Could not find (`latitude` and `longitude`) or figure the IP Address"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\base.py:73
+msgid "Only one of `apns` or `gcm` is required not both"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\base.py:98
+msgid "Must be a non-empty dictionary"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\base.py:102
+#, python-format
+msgid "Can only contain %(keys)s"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:54
+msgid "Only 'public_chat' conversations can be directly created"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:99
+msgid "Only `public_chat` is allowed"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:140
+msgid "You can't make chat actions against your own profile"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:161
+#, python-format
+msgid ""
+"%(name)s is not one of your listeners and can't be added to this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:162
+#, python-format
+msgid "Added %(name)s to this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:178
+#, python-format
+msgid ""
+"%(name)s is not a member of this conversation and can't be removed from it"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:179
+#, python-format
+msgid "Removed %(name)s from this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:192
+#, python-format
+msgid ""
+"%(name)s is not a member of this conversation and can't be promoted to admin "
+"it"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:193
+#, python-format
+msgid "Promoted %(name)s to admin in this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:204
+#, python-format
+msgid "%(name)s is already admin in this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:209
+#, python-format
+msgid "%(name)s is not a member of this conversation and can't be blocked"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:210
+#, python-format
+msgid "Blocked %(name)s from this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:221
+#, python-format
+msgid "%(name)s is already blocked from this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:226
+#, python-format
+msgid "%(name)s is not blocked from this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\conversation.py:227
+#, python-format
+msgid "Unblocked %(name)s from this conversation"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\message.py:90
+msgid "Provide 'text' or 'attachments'"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\message.py:101
+msgid "Should have any of these properties: %(types)"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\message.py:108
+msgid "location object should have 'latitude' and 'longitude'"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\message.py:114
+msgid "Should have at least one item in 'images' or 'videos'"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\message.py:127
+msgid "Can not be empty"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\notification.py:41
+msgid "Should have a single property"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\notification.py:75
+msgid "Should have either 'profile', 'shout' or 'conversation'"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\page.py:40
+#, python-format
+msgid "PageCategory with slug '%(slug)s' does not exist"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\page.py:44
+#, python-format
+msgid "Added %(name)s to the admins of this page"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\page.py:54
+#, python-format
+msgid "%(name)s is already admin in this page"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\page.py:59
+#, python-format
+msgid "%(name)s is not admin in this page"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\page.py:60
+#, python-format
+msgid "Removed %(name)s from the admins of this page"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:351
+msgid "Facebook"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:351
+msgid "Google"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:352
+#, python-format
+msgid "Couldn't link your %(account)s account"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:355
+msgid "linked"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:372
+msgid "unlinked"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:379
+#, python-format
+msgid "Your %(account)s has been %(action)s"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:382
+msgid "No changes were made"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\profile.py:500
+msgid "You can't make actions against your own profile"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:67
+#, python-format
+msgid "Malformed filters, missing key: %(key)s"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:70
+msgid "Malformed filters"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:89
+msgid "The currency must be set when the price is set"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:198
+msgid "Is not valid in your or in the shout's country"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:207
+msgid "You didn't provide enough information for creating a shout"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:498
+#: .\shoutit\api\v3\views\exception_views.py:27
+#: .\shoutit\api\v3\views\exception_views.py:42
+msgid "Authentication failed"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:505
+msgid "Unsupported grant_type"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:612
+msgid "Password reset email will be sent soon"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:635
+#: .\shoutit\api\v3\views\authentication_views.py:747
+msgid "New password set"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:749
+msgid "Token does not exist"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:751
+msgid "Email address is already verified"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:755
+msgid "Authentication credentials were not provided"
+msgstr ""
+
+#: .\shoutit\api\v3\views\authentication_views.py:759
+#, python-format
+msgid "Your email '%(email)s' is already verified"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:26
+#: .\shoutit\api\v3\views\exception_views.py:32
+#: .\shoutit\api\v3\views\exception_views.py:180
+msgid "Bad request"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:28
+msgid "Not authenticated"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:29
+msgid "Action not allowed"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:30
+#: .\shoutit\api\v3\views\viewsets.py:22
+msgid "Resource not found"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:31
+msgid "Request not allowed"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:33
+msgid "Too many requests"
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:39
+msgid "Resource not found."
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:40
+msgid "Permission denied."
+msgstr ""
+
+#: .\shoutit\api\v3\views\exception_views.py:75
+msgid "Invalid input"
+msgstr ""
+
+#: .\shoutit\api\v3\views\message_views.py:352
+msgid "The messages have been deleted"
+msgstr ""
+
+#: .\shoutit\api\v3\views\misc_views.py:93
+msgid "Invalid `type`"
+msgstr ""
+
+#: .\shoutit\api\v3\views\misc_views.py:274
+msgid "Invalid `latlng`"
+msgstr ""
+
+#: .\shoutit\api\v3\views\profile_views.py:229
+msgid "You can't listen to your self"
+msgstr ""
+
+#: .\shoutit\api\v3\views\profile_views.py:233
+#, python-format
+msgid "You started listening to shouts from %(name)s"
+msgstr ""
+
+#: .\shoutit\api\v3\views\profile_views.py:236
+#, python-format
+msgid "You stopped listening to shouts from %(name)s"
+msgstr ""
+
+#: .\shoutit\api\v3\views\profile_views.py:436
+msgid "You can not start a conversation with your self"
+msgstr ""
+
+#: .\shoutit\api\v3\views\profile_views.py:438
+msgid "You can only start a conversation with your listeners"
+msgstr ""
+
+#: .\shoutit\api\v3\views\profile_views.py:584
+msgid "Your contacts have been uploaded"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:183
+msgid "Newest"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:185
+msgid "Price: Low to High"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:186
+msgid "Price: High to Low"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:223
+msgid "This parameter is required"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:231
+msgid "At least two characters are required"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:386
+msgid "You can not start a conversation about your own shout"
+msgstr ""
+
+#: .\shoutit\api\v3\views\shout_views.py:466
+msgid "No mobile to be called"
+msgstr ""
+
+#: .\shoutit\api\v3\views\tag_views.py:132
+#: .\shoutit\api\v3\views\tag_views.py:177
+#, python-format
+msgid "You started listening to shouts about %(name)s"
+msgstr ""
+
+#: .\shoutit\api\v3\views\tag_views.py:135
+#: .\shoutit\api\v3\views\tag_views.py:180
+#, python-format
+msgid "You stopped listening to shouts about %(name)s"
+msgstr ""
+
+#: .\shoutit\api\versioning.py:13
+#, python-format
+msgid "Invalid version in URL path. Please use version: %(version)s"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:45
+msgid "Welcome!"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:52
+#: .\shoutit\controllers\email_controller.py:94
+msgid "Take me to my profile"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:57
+msgid "To get started using Shoutit, please activate your account below"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:58
+msgid "Activate your account"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:72
+msgid "Verify your email"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:74
+msgid ""
+"Your have changed your email therefore your account is not verified. To use "
+"Shoutit with full potential we need to verify your email."
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:76
+msgid "Verify it now"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:90
+msgid "Your email has been verified!"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:92
+msgid ""
+"Thank you for verifying your email. Your account has been verified and you "
+"can now use Shoutit full potential."
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:108
+msgid "Reset your password"
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:110
+msgid ""
+"You have requested to reset your password. If it wasn't you please let us "
+"know as soon as possible."
+msgstr ""
+
+#: .\shoutit\controllers\email_controller.py:111
+msgid "Reset my password"
+msgstr ""
+
+#: .\shoutit\controllers\facebook_controller.py:25
+msgid "Could not link Facebook account, try again later"
+msgstr ""
+
+#: .\shoutit\controllers\facebook_controller.py:26
+#: .\shoutit\controllers\gplus_controller.py:23
+msgid "Could not access your email, make sure you allowed it"
+msgstr ""
+
+#: .\shoutit\controllers\facebook_controller.py:27
+msgid "No Facebook account to unlink"
+msgstr ""
+
+#: .\shoutit\controllers\facebook_controller.py:145
+msgid "Facebook account is already linked to somebody else's profile"
+msgstr ""
+
+#: .\shoutit\controllers\gplus_controller.py:24
+msgid "No Google account to unlink"
+msgstr ""
+
+#: .\shoutit\controllers\gplus_controller.py:25
+#: .\shoutit\controllers\user_controller.py:120
+msgid "Could not access your Google account, try again later"
+msgstr ""
+
+#: .\shoutit\controllers\gplus_controller.py:76
+msgid "This Google account is already linked to somebody else's profile"
+msgstr ""
+
+#: .\shoutit\models\auth.py:78
+msgid "username"
+msgstr ""
+
+#: .\shoutit\models\auth.py:82
+msgid "Enter a valid username."
+msgstr ""
+
+#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:599
+msgid "first name"
+msgstr ""
+
+#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:600
+msgid "last name"
+msgstr ""
+
+#: .\shoutit\models\auth.py:90 .\shoutit\models\auth.py:601
+msgid "email address"
+msgstr ""
+
+#: .\shoutit\models\auth.py:92
+msgid "staff status"
+msgstr ""
+
+#: .\shoutit\models\auth.py:92
+msgid "Designates whether the user can log into this admin site."
+msgstr ""
+
+#: .\shoutit\models\auth.py:94
+msgid "active"
+msgstr ""
+
+#: .\shoutit\models\auth.py:95
+msgid ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
+msgstr ""
+
+#: .\shoutit\models\auth.py:97
+msgid "activated"
+msgstr ""
+
+#: .\shoutit\models\auth.py:97
+msgid "Designates whether this user have a verified email."
+msgstr ""
+
+#: .\shoutit\models\auth.py:98
+msgid "date joined"
+msgstr ""
+
+#: .\shoutit\models\auth.py:103
+msgid "testuser status"
+msgstr ""
+
+#: .\shoutit\models\auth.py:103
+msgid "Designates whether this user is a test user."
+msgstr ""
+
+#: .\shoutit\models\auth.py:105
+msgid "guest user status"
+msgstr ""
+
+#: .\shoutit\models\auth.py:105
+msgid "Designates whether this user is a guest user."
+msgstr ""
+
+#: .\shoutit\models\auth.py:107
+msgid "mailing list status"
+msgstr ""
+
+#: .\shoutit\models\auth.py:107
+msgid "Designates whether this user is on the main mailing list."
+msgstr ""
+
+#: .\shoutit\models\auth.py:109
+msgid "mixpanel people status"
+msgstr ""
+
+#: .\shoutit\models\auth.py:109
+msgid "Designates whether this user is on MixPanel People."
+msgstr ""
+
+#: .\shoutit\models\auth.py:116
+msgid "user"
+msgstr ""
+
+#: .\shoutit\models\auth.py:117
+msgid "users"
+msgstr ""
+
+#: .\shoutit\models\auth.py:503
+msgid "Shoutit User"
+msgstr ""
+
+#: .\shoutit\models\auth.py:602
+msgid "mobile"
+msgstr ""
+
+#: .\shoutit\models\base.py:21
+msgid "Creation time"
+msgstr ""
+
+#: .\shoutit\models\base.py:22
+msgid "Modification time"
+msgstr ""
+
+#: .\shoutit\models\message.py:146
+#, python-format
+msgid "%(name)s has left the conversation"
+msgstr ""
+
+#: .\shoutit\models\message.py:230
+#, python-format
+msgid "%(name)s created this public chat"
+msgstr ""
+
+#: .\shoutit\models\message.py:282
+#, python-format
+msgid "%(name)s: %(message)s"
+msgstr ""
+
+#: .\shoutit\models\message.py:526
+msgid "Shoutit"
+msgstr ""
+
+#: .\shoutit\models\message.py:534
+#, python-format
+msgid "%(name)s started listening to you"
+msgstr ""
+
+#: .\shoutit\models\message.py:542
+msgid "New message"
+msgstr ""
+
+#: .\shoutit\models\message.py:551
+msgid "Incoming video call"
+msgstr ""
+
+#: .\shoutit\models\message.py:553
+#, python-format
+msgid "%(name)s is calling you on Shoutit"
+msgstr ""
+
+#: .\shoutit\models\message.py:559
+msgid "Missed video call"
+msgstr ""
+
+#: .\shoutit\models\message.py:561
+#, python-format
+msgid "You missed a call from %(name)s"
+msgstr ""
+
+#: .\shoutit\models\message.py:567
+msgid "New Credit Transaction"
+msgstr ""
+
+#: .\shoutit\models\message.py:580
+msgid "Answer"
+msgstr ""
+
+#: .\shoutit\models\page.py:37
+msgid "name"
+msgstr ""
+
+#: .\shoutit\models\page.py:40
+msgid "published"
+msgstr ""
+
+#: .\shoutit\models\page.py:41
+msgid "Designates whether the page is publicly visible."
+msgstr ""
+
+#: .\shoutit\models\page.py:42
+msgid "claimed"
+msgstr ""
+
+#: .\shoutit\models\page.py:43
+msgid "Designates whether the page is claimed."
+msgstr ""
+
+#: .\shoutit\models\page.py:45
+msgid "about"
+msgstr ""
+
+#: .\shoutit\models\page.py:46
+msgid "description"
+msgstr ""
+
+#: .\shoutit\models\page.py:47
+msgid "phone"
+msgstr ""
+
+#: .\shoutit\models\page.py:48
+msgid "founded"
+msgstr ""
+
+#: .\shoutit\models\page.py:49
+msgid "impressum"
+msgstr ""
+
+#: .\shoutit\models\page.py:50
+msgid "overview"
+msgstr ""
+
+#: .\shoutit\models\page.py:51
+msgid "mission"
+msgstr ""
+
+#: .\shoutit\models\page.py:52
+msgid "general info"
+msgstr ""
+
+#: .\shoutit\models\user.py:16
+msgid "Male"
+msgstr ""
+
+#: .\shoutit\models\user.py:17
+msgid "Female"
+msgstr ""
+
+#: .\shoutit\models\user.py:18
+msgid "Other"
+msgstr ""
+
+#: .\shoutit\permissions.py:28
+msgid "You're not allowed to use Shoutit"
+msgstr ""
+
+#: .\shoutit\permissions.py:29
+msgid ""
+"Activate your account to create more shouts (check your email for activation "
+"link)"
+msgstr ""
+
+#: .\shoutit\permissions.py:31
+msgid "You're not allowed to create requests"
+msgstr ""
+
+#: .\shoutit\permissions.py:32
+msgid "You're not allowed to create offers"
+msgstr ""
+
+#: .\shoutit\permissions.py:33
+msgid "You're not allowed to listen to interests"
+msgstr ""
+
+#: .\shoutit\permissions.py:34
+msgid "You're not allowed to listen to profiles"
+msgstr ""
+
+#: .\shoutit\permissions.py:35
+msgid "You are not allowed to send messages"
+msgstr ""
+
+#: .\shoutit\permissions.py:36
+msgid "You're not allowed to send reports"
+msgstr ""
+
+#: .\shoutit\settings.py:249
+msgid "English"
+msgstr ""
+
+#: .\shoutit\settings.py:250
+msgid "Arabic"
+msgstr ""
+
+#: .\shoutit\utils.py:63
+#, python-format
+msgid "Is not valid in %(country)s"
+msgstr ""
+
+#: .\shoutit_credit\models\profile.py:34
+msgid "You earned 1 Shoutit Credit for completing your profile."
+msgstr ""
+
+#: .\shoutit_credit\models\profile.py:89
+#, python-format
+msgid "You earned 1 Shoutit Credit for inviting %(name)s."
+msgstr ""
+
+#: .\shoutit_credit\models\profile.py:143
+#, python-format
+msgid "You earned %(amount)d Shoutit Credit for listening to your friends."
+msgstr ""
+
+#: .\shoutit_credit\models\shout.py:73
+#, python-format
+msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
+msgstr ""
+
+#: .\shoutit_credit\models\shout.py:140
+#, python-format
+msgid ""
+"You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
+"(days)d days."
+msgstr ""
+
+#: .\shoutit_credit\models\shout.py:141
+#, python-format
+msgid ""
+"You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
+msgstr ""
+
+#: .\shoutit_credit\models\shout.py:209
+msgid "You don't have enough Shoutit Credit for this action"
+msgstr ""
+
+#: .\shoutit_credit\models\shout.py:212
+msgid "This Shout is already promoted"
+msgstr ""
+
+#: .\shoutit_credit\serializers.py:49
+msgid "The shout has been promoted"
+msgstr ""
+
+#: .\shoutit_twilio\views.py:57
+msgid "Couldn't authorize you to make video calls"
+msgstr ""
+
+#: .\shoutit_twilio\views.py:115
+#, python-format
+msgid "Error calling %(name)s"
+msgstr ""
+
+#: .\shoutit_twilio\views.py:149 .\shoutit_twilio\views.py:195
+#, python-format
+msgid "Profile with identity %(identity)s does not exist"
+msgstr ""
+
+#: .\shoutit_twilio\views.py:152 .\shoutit_twilio\views.py:198
+msgid "Invalid identity"
+msgstr ""
