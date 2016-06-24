@@ -98,7 +98,7 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
                     attachment_error = None
 
                     if not any_in(valid_types, attachment):
-                        attachment_error = {'': _("Should have any of these properties: %(types)") % {'types': types}}
+                        attachment_error = {'': _("Should have any of these properties: %(types)s") % {'types': types}}
                         errors['attachments'].insert(i, attachment_error)
                         i += 1
                         continue
