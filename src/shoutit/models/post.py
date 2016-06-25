@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.utils import timezone
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
-
+from django.utils.translation import ugettext_lazy as _
 from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
 from shoutit.models.action import Action
@@ -232,10 +232,9 @@ class InactiveShout(object):
             "web_url": "",
             "type": "",
             "location": {
-                "latitude": 0, "longitude": 0, "country": "", "postal_code": "",
-                "state": "", "city": "", "address": ""
+                "latitude": 0, "longitude": 0, "country": "", "postal_code": "", "state": "", "city": "", "address": ""
             },
-            "title": "Deleted Shout",
+            "title": _("Deleted Shout"),
             "text": "",
             "price": 0,
             "currency": "",
