@@ -34,10 +34,12 @@ class UUIDModel(models.Model):
             obj.save()
         return obj
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, exclude=None, validate_unique=True):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, exclude=None,
+             validate_unique=True):
         if not (force_insert or force_update):
-            self.full_clean(exclude, validate_unique)
-        super(UUIDModel, self).save(force_insert, force_update, using, update_fields)
+            self.full_clean(exclude=exclude, validate_unique=validate_unique)
+        super(UUIDModel, self).save(force_insert=force_insert, force_update=force_update, using=using,
+                                    update_fields=update_fields)
 
     def update(self, **kwargs):
         field_names = self._meta.get_all_field_names()
