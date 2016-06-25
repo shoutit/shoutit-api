@@ -6,6 +6,7 @@ Django==1.8.13
 psycopg2>=2.6
 kitchen==1.2.4
 django-mptt==0.8.4
+django-hvad==1.5.1
 sendgrid==2.2.1
 
 # admin

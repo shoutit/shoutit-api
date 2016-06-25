@@ -13,6 +13,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 from django_rq import job
+from hvad.manager import TranslationManager
 
 from common.constants import LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE
 from shoutit.models import User, Profile, Listen2, ProfileContact, UUIDModel
@@ -25,7 +26,7 @@ listen_to_friends = None
 INVITATION_CODE_MAX_USAGE = 10
 
 
-class CompleteProfileManager(models.Manager):
+class CompleteProfileManager(TranslationManager):
     def get_queryset(self):
         return super(CompleteProfileManager, self).get_queryset().filter(type='complete_profile')
 
@@ -77,7 +78,7 @@ def profile_post_save(sender, instance=None, created=False, update_fields=None, 
     apply_complete_profile.delay(instance)
 
 
-class InviteFriendsManager(models.Manager):
+class InviteFriendsManager(TranslationManager):
     def get_queryset(self):
         return super(InviteFriendsManager, self).get_queryset().filter(type='invite_friends')
 
@@ -134,7 +135,7 @@ def apply_invite_friends(user, code):
     _apply_invite_friends.delay(user, code)
 
 
-class ListenToFriendsManager(models.Manager):
+class ListenToFriendsManager(TranslationManager):
     def get_queryset(self):
         return super(ListenToFriendsManager, self).get_queryset().filter(type='listen_to_friends')
 

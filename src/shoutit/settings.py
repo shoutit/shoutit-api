@@ -185,6 +185,7 @@ INSTALLED_APPS = (
     'shoutit_crm',
     'shoutit_pusher',
     'shoutit_twilio',
+    'hvad'
 )
 
 TWILIO_ENV = os.environ.get('TWILIO_ENV', SHOUTIT_ENV)
@@ -211,7 +212,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Shoutit Custom Middleware
-    'shoutit.middleware.UserPermissionsMiddleware',
+    # 'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
     'shoutit.middleware.BadRequestsMiddleware',
     'shoutit.api.exceptions.APIExceptionMiddleware',

@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('transaction_type', models.SmallIntegerField(choices=[(0, 'in'), (1, 'out')])),
                 ('type', models.CharField(max_length=30)),
                 ('name', models.CharField(max_length=50)),
-                ('description', models.CharField(max_length=250)),
+                ('description', models.CharField(max_length=250, blank=True, default='')),
                 ('options', django_pgjson.fields.JsonField(default=dict, blank=True)),
                 ('is_active', models.BooleanField(default=True)),
             ],

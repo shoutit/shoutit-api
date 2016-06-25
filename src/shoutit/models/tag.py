@@ -7,6 +7,7 @@ from django.core import validators
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from hvad.models import TranslatedFields, TranslatableModel
 
 from common.constants import TagValueType, TAG_TYPE_STR
 from shoutit.settings import AUTH_USER_MODEL
@@ -46,13 +47,17 @@ class ShoutitSlugField(models.CharField):
     # todo: clean the field before saving
 
 
-class Tag(UUIDModel, APIModelMixin):
+class Tag(APIModelMixin, TranslatableModel, UUIDModel):
     name = ShoutitSlugField()
     key = ShoutitSlugField(blank=True, default='')
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True,
                                 on_delete=models.SET_NULL)
     image = models.URLField(max_length=1024, blank=True, default='')
     definition = models.TextField(blank=True, max_length=512, default='New Tag!')
+
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=30, blank=True, default='', db_index=True)
+    )
 
     class Meta:
         unique_together = ('name', 'key')
@@ -70,7 +75,7 @@ class Tag(UUIDModel, APIModelMixin):
         return Listen2.objects.filter(type=listen_type, target=target).count()
 
 
-class TagKey(UUIDModel):
+class TagKey(TranslatableModel, UUIDModel):
     key = ShoutitSlugField()
     values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices, default=TAG_TYPE_STR.value)
     category = models.ForeignKey('shoutit.Category', related_name='tag_keys')
@@ -78,6 +83,10 @@ class TagKey(UUIDModel):
 
     def __unicode__(self):
         return self.key
+
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=30, blank=True, default='')
+    )
 
     class Meta:
         unique_together = ['key', 'category']
@@ -91,13 +100,17 @@ def tag_key_post_save(sender, instance=None, created=False, **kwargs):
         category.save()
 
 
-class Category(UUIDModel):
+class Category(TranslatableModel, UUIDModel):
     name = models.CharField(max_length=100, unique=True, db_index=True)
     slug = ShoutitSlugField(unique=True)
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
     tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='category')
     filters = ArrayField(ShoutitSlugField(), size=10, blank=True, default=list)
     icon = models.URLField(max_length=1024, blank=True, default='')
+
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=30, blank=True, default='', db_index=True)
+    )
 
     def __unicode__(self):
         return self.name

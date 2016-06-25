@@ -11,9 +11,10 @@ from django.conf import settings
 from django.contrib.postgres.forms import SplitArrayField
 from django.core.exceptions import ValidationError
 from django.forms import URLField, SlugField
+from hvad.forms import TranslatableModelForm
 
 from common.utils import process_tags
-from shoutit.models import PushBroadcast, Item
+from shoutit.models import PushBroadcast
 from common.constants import DeviceOS, COUNTRY_CHOICES
 from django.utils.translation import string_concat
 
@@ -97,24 +98,16 @@ class ShoutitSplitArrayField(SplitArrayField):
 class ItemForm(forms.ModelForm):
     images = ShoutitSplitArrayField(URLField(required=False), required=False, size=10, remove_trailing_nulls=True)
 
-    class Meta:
-        model = Item
-        fields = '__all__'
 
-
-class CategoryForm(forms.ModelForm):
+class CategoryForm(TranslatableModelForm):
     filters = ShoutitSplitArrayField(SlugField(required=False), required=False, size=10, remove_trailing_nulls=True)
-
-    class Meta:
-        model = Item
-        fields = '__all__'
 
     def clean_filters(self):
         filters = process_tags(self.cleaned_data['filters'], snake_case=True)
         return filters
 
 
-class ImageFileChangeForm(forms.ModelForm):
+class ImageFileChangeForm(TranslatableModelForm):
     image_file = forms.FileField(required=False)
 
     def clean_image_file(self):

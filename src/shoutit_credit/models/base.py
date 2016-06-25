@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
+from hvad.models import TranslatedFields, TranslatableModel
 
 from common.constants import Constant
 from shoutit.models import UUIDModel
@@ -23,13 +24,17 @@ CREDIT_IN = CreditTransactionType('in')
 CREDIT_OUT = CreditTransactionType('out')
 
 
-class CreditRule(UUIDModel):
+class CreditRule(TranslatableModel, UUIDModel):
     transaction_type = models.SmallIntegerField(choices=CreditTransactionType.choices)
     type = models.CharField(max_length=30)
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=250)
+    description = models.CharField(max_length=250, blank=True, default='')
     options = JsonField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
+
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=50, blank=True, default='')
+    )
 
     def __init__(self, *args, **kwargs):
         super(CreditRule, self).__init__(*args, **kwargs)

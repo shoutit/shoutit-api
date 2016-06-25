@@ -11,6 +11,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django_rq import job
+from hvad.manager import TranslationManager
+from hvad.models import TranslatedFields, TranslatableModel
 
 from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest
@@ -20,22 +22,27 @@ from .base import CreditRule, CreditTransaction
 share_shouts = None
 
 
-class PromoteLabel(UUIDModel):
+class PromoteLabel(TranslatableModel, UUIDModel):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=250)
     color = models.CharField(max_length=9)
     bg_color = models.CharField(max_length=9)
     rank = models.PositiveSmallIntegerField()
 
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=50, blank=True, default=''),
+        _local_description=models.CharField(max_length=250, blank=True, default='')
+    )
+
     def __unicode__(self):
         return "%s:%s" % (self.name, self.color)
 
     def clean(self):
-        if not self.color.find('#'):
+        if not self.color.startswith('#'):
             self.color = '#' + self.color
         self.color = self.color.upper()
 
-        if not self.bg_color.find('#'):
+        if not self.bg_color.startswith('#'):
             self.bg_color = '#' + self.bg_color
         self.bg_color = self.bg_color.upper()
 
@@ -61,7 +68,7 @@ class ShoutPromotion(UUIDModel):
         return False if self.days is None else self.expires_at < timezone.now()
 
 
-class ShareShoutsManager(models.Manager):
+class ShareShoutsManager(TranslationManager):
     def get_queryset(self):
         return super(ShareShoutsManager, self).get_queryset().filter(type='share_shouts')
 
@@ -128,7 +135,7 @@ def shout_post_save(sender, instance=None, created=False, update_fields=None, **
         apply_share_shouts.delay(instance)
 
 
-class PromoteShoutsManager(models.Manager):
+class PromoteShoutsManager(TranslationManager):
     def get_queryset(self):
         return super(PromoteShoutsManager, self).get_queryset().filter(type='promote_shouts')
 

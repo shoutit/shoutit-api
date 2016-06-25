@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
+from hvad.admin import TranslatableAdmin
 from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -206,7 +207,7 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 
 # Tag
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin, LinksMixin):
+class TagAdmin(LinksMixin, TranslatableAdmin):
     list_display = ('name', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
@@ -215,7 +216,7 @@ class TagAdmin(admin.ModelAdmin, LinksMixin):
 
 # TagKey
 @admin.register(TagKey)
-class TagKeyAdmin(admin.ModelAdmin):
+class TagKeyAdmin(TranslatableAdmin):
     list_display = ('category', 'key', 'values_type')
     search_fields = ('key',)
     list_filter = ('category', 'values_type')
@@ -223,7 +224,7 @@ class TagKeyAdmin(admin.ModelAdmin):
 
 # Category
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+class CategoryAdmin(TranslatableAdmin):
     list_display = ('name', '_main_tag', 'filters', 'image', 'icon')
     raw_id_fields = ('main_tag', 'tags')
     ordering = ('name',)
@@ -256,7 +257,7 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 # DiscoverItem
 @admin.register(DiscoverItem)
-class DiscoverItemAdmin(DjangoMpttAdmin):
+class DiscoverItemAdmin(TranslatableAdmin, DjangoMpttAdmin):
     tree_auto_open = False
     form = ImageFileChangeForm
 

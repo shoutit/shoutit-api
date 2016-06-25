@@ -11,9 +11,11 @@ from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from hvad.manager import TranslationManager
+from mptt.managers import TreeManager
 
-from common.utils import date_unix
 from common.constants import COUNTRY_ISO, COUNTRY_CHOICES
+from common.utils import date_unix
 
 
 class UUIDModel(models.Model):
@@ -66,6 +68,10 @@ class UUIDModel(models.Model):
     @property
     def model_name(self):
         return type(self).__name__
+
+
+class TranslationTreeManager(TranslationManager, TreeManager):
+    use_for_related_fields = True
 
 
 class AttachedObjectMixinManager(models.Manager):
