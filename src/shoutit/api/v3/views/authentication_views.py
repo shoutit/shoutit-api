@@ -19,8 +19,7 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL
-from shoutit.api.v3.exceptions import (ERROR_REASON, ShoutitBadRequest, RequiredBody, InvalidBody,
-                                       RequiredParameter, InvalidParameter)
+from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredBody, InvalidBody, RequiredParameter, InvalidParameter
 from shoutit.controllers import mixpanel_controller
 from shoutit.models import ConfirmToken
 from shoutit_credit.models.profile import apply_invite_friends

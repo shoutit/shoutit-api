@@ -1,16 +1,15 @@
 from __future__ import unicode_literals
-import re
-from collections import OrderedDict
 
-from django.contrib.postgres.fields import ArrayField
+import re
+
 from django.core import validators
 from django.db import models
 from hvad.models import TranslatedFields, TranslatableModel
 
 from common.constants import TagValueType, TAG_TYPE_STR
-from shoutit.settings import AUTH_USER_MODEL
 from shoutit.models.base import UUIDModel, APIModelMixin, NamedLocationMixin, TranslatedModelFallbackMixin
 from shoutit.models.listen import Listen2
+from shoutit.settings import AUTH_USER_MODEL
 
 
 class ShoutitSlugField(models.CharField):
@@ -42,7 +41,7 @@ class ShoutitSlugField(models.CharField):
             del kwargs['db_index']
         return name, path, args, kwargs
 
-    # todo: clean the field before saving
+        # todo: clean the field before saving
 
 
 class Tag(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):

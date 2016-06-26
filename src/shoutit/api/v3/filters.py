@@ -216,9 +216,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         index_queryset = index_queryset.sort(*selected_sort)
 
         debug_logger.debug(index_queryset.to_dict())
-        index_queryset.search_data = {
-            k: parse_int(v, 10) or v for k, v in data.items()
-            }
+        index_queryset.search_data = {k: parse_int(v, 10) or v for k, v in data.items()}
         return index_queryset
 
 
