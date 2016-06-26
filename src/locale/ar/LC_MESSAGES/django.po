@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Shoutit API\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-24 13:28+0200\n"
+"POT-Creation-Date: 2016-06-26 20:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Mohamad Nour Chawich <mo.chawich@shoutit.com>\n"
 "Language-Team: Arabic <info@shoutit.com>\n"
@@ -17,37 +17,37 @@ msgstr ""
 "Language: ar\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: .\shoutit\admin.py:34
+#: .\shoutit\admin.py:35
 msgid "Username"
 msgstr ""
 
-#: .\shoutit\admin.py:36 .\shoutit\models\auth.py:79
+#: .\shoutit\admin.py:37 .\shoutit\models\auth.py:79
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
 msgstr ""
 
-#: .\shoutit\admin.py:38
+#: .\shoutit\admin.py:39
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr ""
 
-#: .\shoutit\admin.py:51
+#: .\shoutit\admin.py:52
 msgid "Personal info"
 msgstr ""
 
-#: .\shoutit\admin.py:52
+#: .\shoutit\admin.py:53
 msgid "Permissions"
 msgstr ""
 
-#: .\shoutit\admin.py:54
+#: .\shoutit\admin.py:55
 msgid "Important dates"
 msgstr ""
 
-#: .\shoutit\admin.py:55 .\shoutit\admin.py:272
+#: .\shoutit\admin.py:56 .\shoutit\admin.py:273
 msgid "Extra"
 msgstr ""
 
-#: .\shoutit\admin.py:271
+#: .\shoutit\admin.py:272
 msgid "Users"
 msgstr ""
 
@@ -199,7 +199,7 @@ msgid "Invalid number"
 msgstr ""
 
 #: .\shoutit\api\v3\filters.py:159 .\shoutit\api\v3\filters.py:298
-#: .\shoutit\api\v3\serializers\tag.py:88
+#: .\shoutit\api\v3\serializers\tag.py:115
 #, python-format
 msgid "Category with slug '%(slug)s' does not exist"
 msgstr ""
@@ -376,7 +376,8 @@ msgid "Provide 'text' or 'attachments'"
 msgstr ""
 
 #: .\shoutit\api\v3\serializers\message.py:101
-msgid "Should have any of these properties: %(types)"
+#, python-format
+msgid "Should have any of these properties: %(types)s"
 msgstr ""
 
 #: .\shoutit\api\v3\serializers\message.py:108
@@ -399,27 +400,27 @@ msgstr ""
 msgid "Should have either 'profile', 'shout' or 'conversation'"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\page.py:40
+#: .\shoutit\api\v3\serializers\page.py:42
 #, python-format
 msgid "PageCategory with slug '%(slug)s' does not exist"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\page.py:44
+#: .\shoutit\api\v3\serializers\page.py:46
 #, python-format
 msgid "Added %(name)s to the admins of this page"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\page.py:54
+#: .\shoutit\api\v3\serializers\page.py:56
 #, python-format
 msgid "%(name)s is already admin in this page"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\page.py:59
+#: .\shoutit\api\v3\serializers\page.py:61
 #, python-format
 msgid "%(name)s is not admin in this page"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\page.py:60
+#: .\shoutit\api\v3\serializers\page.py:62
 #, python-format
 msgid "Removed %(name)s from the admins of this page"
 msgstr ""
@@ -592,31 +593,31 @@ msgstr ""
 msgid "Your contacts have been uploaded"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:183
+#: .\shoutit\api\v3\views\shout_views.py:179
 msgid "Newest"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:185
+#: .\shoutit\api\v3\views\shout_views.py:181
 msgid "Price: Low to High"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:186
+#: .\shoutit\api\v3\views\shout_views.py:182
 msgid "Price: High to Low"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:223
+#: .\shoutit\api\v3\views\shout_views.py:219
 msgid "This parameter is required"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:231
+#: .\shoutit\api\v3\views\shout_views.py:227
 msgid "At least two characters are required"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:386
+#: .\shoutit\api\v3\views\shout_views.py:382
 msgid "You can not start a conversation about your own shout"
 msgstr ""
 
-#: .\shoutit\api\v3\views\shout_views.py:466
+#: .\shoutit\api\v3\views\shout_views.py:462
 msgid "No mobile to be called"
 msgstr ""
 
@@ -730,15 +731,15 @@ msgstr ""
 msgid "Enter a valid username."
 msgstr ""
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:599
+#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:602
 msgid "first name"
 msgstr ""
 
-#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:600
+#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:603
 msgid "last name"
 msgstr ""
 
-#: .\shoutit\models\auth.py:90 .\shoutit\models\auth.py:601
+#: .\shoutit\models\auth.py:90 .\shoutit\models\auth.py:604
 msgid "email address"
 msgstr ""
 
@@ -816,15 +817,15 @@ msgstr ""
 msgid "Shoutit User"
 msgstr ""
 
-#: .\shoutit\models\auth.py:602
+#: .\shoutit\models\auth.py:605
 msgid "mobile"
 msgstr ""
 
-#: .\shoutit\models\base.py:21
+#: .\shoutit\models\base.py:23
 msgid "Creation time"
 msgstr ""
 
-#: .\shoutit\models\base.py:22
+#: .\shoutit\models\base.py:24
 msgid "Modification time"
 msgstr ""
 
@@ -882,56 +883,60 @@ msgstr ""
 msgid "Answer"
 msgstr ""
 
-#: .\shoutit\models\page.py:37
+#: .\shoutit\models\page.py:44
 msgid "name"
 msgstr ""
 
-#: .\shoutit\models\page.py:40
+#: .\shoutit\models\page.py:47
 msgid "published"
 msgstr ""
 
-#: .\shoutit\models\page.py:41
+#: .\shoutit\models\page.py:48
 msgid "Designates whether the page is publicly visible."
 msgstr ""
 
-#: .\shoutit\models\page.py:42
+#: .\shoutit\models\page.py:49
 msgid "claimed"
 msgstr ""
 
-#: .\shoutit\models\page.py:43
+#: .\shoutit\models\page.py:50
 msgid "Designates whether the page is claimed."
 msgstr ""
 
-#: .\shoutit\models\page.py:45
+#: .\shoutit\models\page.py:52
 msgid "about"
 msgstr ""
 
-#: .\shoutit\models\page.py:46
+#: .\shoutit\models\page.py:53
 msgid "description"
 msgstr ""
 
-#: .\shoutit\models\page.py:47
+#: .\shoutit\models\page.py:54
 msgid "phone"
 msgstr ""
 
-#: .\shoutit\models\page.py:48
+#: .\shoutit\models\page.py:55
 msgid "founded"
 msgstr ""
 
-#: .\shoutit\models\page.py:49
+#: .\shoutit\models\page.py:56
 msgid "impressum"
 msgstr ""
 
-#: .\shoutit\models\page.py:50
+#: .\shoutit\models\page.py:57
 msgid "overview"
 msgstr ""
 
-#: .\shoutit\models\page.py:51
+#: .\shoutit\models\page.py:58
 msgid "mission"
 msgstr ""
 
-#: .\shoutit\models\page.py:52
+#: .\shoutit\models\page.py:59
 msgid "general info"
+msgstr ""
+
+#: .\shoutit\models\post.py:237
+msgid "Deleted Shout"
 msgstr ""
 
 #: .\shoutit\models\user.py:16
@@ -980,11 +985,11 @@ msgstr ""
 msgid "You're not allowed to send reports"
 msgstr ""
 
-#: .\shoutit\settings.py:249
+#: .\shoutit\settings.py:250
 msgid "English"
 msgstr ""
 
-#: .\shoutit\settings.py:250
+#: .\shoutit\settings.py:251
 msgid "Arabic"
 msgstr ""
 
@@ -993,47 +998,47 @@ msgstr ""
 msgid "Is not valid in %(country)s"
 msgstr ""
 
-#: .\shoutit_credit\models\profile.py:34
+#: .\shoutit_credit\models\profile.py:35
 msgid "You earned 1 Shoutit Credit for completing your profile."
 msgstr ""
 
-#: .\shoutit_credit\models\profile.py:89
+#: .\shoutit_credit\models\profile.py:90
 #, python-format
 msgid "You earned 1 Shoutit Credit for inviting %(name)s."
 msgstr ""
 
-#: .\shoutit_credit\models\profile.py:143
+#: .\shoutit_credit\models\profile.py:144
 #, python-format
 msgid "You earned %(amount)d Shoutit Credit for listening to your friends."
 msgstr ""
 
-#: .\shoutit_credit\models\shout.py:73
+#: .\shoutit_credit\models\shout.py:81
 #, python-format
 msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
 msgstr ""
 
-#: .\shoutit_credit\models\shout.py:140
+#: .\shoutit_credit\models\shout.py:148
 #, python-format
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
 "(days)d days."
 msgstr ""
 
-#: .\shoutit_credit\models\shout.py:141
+#: .\shoutit_credit\models\shout.py:149
 #, python-format
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
 msgstr ""
 
-#: .\shoutit_credit\models\shout.py:209
+#: .\shoutit_credit\models\shout.py:217
 msgid "You don't have enough Shoutit Credit for this action"
 msgstr ""
 
-#: .\shoutit_credit\models\shout.py:212
+#: .\shoutit_credit\models\shout.py:220
 msgid "This Shout is already promoted"
 msgstr ""
 
-#: .\shoutit_credit\serializers.py:49
+#: .\shoutit_credit\serializers.py:55
 msgid "The shout has been promoted"
 msgstr ""
 
