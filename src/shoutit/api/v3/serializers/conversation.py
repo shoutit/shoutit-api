@@ -72,7 +72,7 @@ class ConversationDetailSerializer(ConversationSerializer):
     about = serializers.SerializerMethodField(help_text="Only set if the conversation of type 'about_shout'")
     profiles = ProfileSerializer(many=True, source='contributors', help_text="List of users in this conversations",
                                  read_only=True)
-    # Deprecate
+    # Deprecate in 3.1
     last_message = MessageSerializer(read_only=True)
 
     class Meta(ConversationSerializer.Meta):
