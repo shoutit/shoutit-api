@@ -21,7 +21,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     """
     Tag API Resource.
     """
-    lookup_field = 'name'
+    lookup_field = 'slug'
 
     serializer_class = TagSerializer
     serializer_detail_class = TagDetailSerializer

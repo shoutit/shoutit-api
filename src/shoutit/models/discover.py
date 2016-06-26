@@ -8,10 +8,11 @@ from django.db import models
 from hvad.models import TranslatedFields, TranslatableModel
 from mptt.models import MPTTModel, TreeForeignKey
 
-from shoutit.models.base import CountriesField, APIModelMixin, TranslationTreeManager, UUIDModel
+from shoutit.models.base import (CountriesField, APIModelMixin, TranslationTreeManager, UUIDModel,
+                                 TranslatedModelFallbackMixin)
 
 
-class DiscoverItem(APIModelMixin, TranslatableModel, MPTTModel, UUIDModel):
+class DiscoverItem(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, MPTTModel, UUIDModel):
     title = models.CharField(max_length=100)
     subtitle = models.CharField(max_length=100, blank=True)
     description = models.CharField(max_length=100, blank=True)

@@ -5,13 +5,11 @@ from collections import OrderedDict
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from hvad.models import TranslatedFields, TranslatableModel
 
 from common.constants import TagValueType, TAG_TYPE_STR
 from shoutit.settings import AUTH_USER_MODEL
-from shoutit.models.base import UUIDModel, APIModelMixin, NamedLocationMixin
+from shoutit.models.base import UUIDModel, APIModelMixin, NamedLocationMixin, TranslatedModelFallbackMixin
 from shoutit.models.listen import Listen2
 
 
@@ -47,9 +45,11 @@ class ShoutitSlugField(models.CharField):
     # todo: clean the field before saving
 
 
-class Tag(APIModelMixin, TranslatableModel, UUIDModel):
-    name = ShoutitSlugField()
-    key = ShoutitSlugField(blank=True, default='')
+class Tag(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
+    name = models.CharField(max_length=30, db_index=True)
+    slug = ShoutitSlugField()
+    key = models.ForeignKey('shoutit.TagKey', related_name='tags', null=True, blank=True)
+
     creator = models.ForeignKey(AUTH_USER_MODEL, related_name='TagsCreated', null=True, blank=True,
                                 on_delete=models.SET_NULL)
     image = models.URLField(max_length=1024, blank=True, default='')
@@ -60,10 +60,10 @@ class Tag(APIModelMixin, TranslatableModel, UUIDModel):
     )
 
     class Meta:
-        unique_together = ('name', 'key')
+        unique_together = ('slug', 'key')
 
     def __unicode__(self):
-        return self.name
+        return "%s:%s" % (self.key, self.slug)
 
     @property
     def is_category(self):
@@ -75,33 +75,26 @@ class Tag(APIModelMixin, TranslatableModel, UUIDModel):
         return Listen2.objects.filter(type=listen_type, target=target).count()
 
 
-class TagKey(TranslatableModel, UUIDModel):
-    key = ShoutitSlugField()
+class TagKey(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
+    name = models.CharField(max_length=30, db_index=True)
+    slug = ShoutitSlugField()
     values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices, default=TAG_TYPE_STR.value)
     category = models.ForeignKey('shoutit.Category', related_name='tag_keys')
     definition = models.CharField(max_length=100, blank=True, default='')
 
     def __unicode__(self):
-        return self.key
+        return "%s" % self.slug
 
     translations = TranslatedFields(
         _local_name=models.CharField(max_length=30, blank=True, default='')
     )
 
     class Meta:
-        unique_together = ['key', 'category']
+        unique_together = ['slug', 'category']
 
 
-@receiver(post_save, sender='shoutit.TagKey')
-def tag_key_post_save(sender, instance=None, created=False, **kwargs):
-    category = instance.category
-    if instance.key not in category.filters:
-        category.filters.append(instance.key)
-        category.save()
-
-
-class Category(TranslatableModel, UUIDModel):
-    name = models.CharField(max_length=100, unique=True, db_index=True)
+class Category(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
+    name = models.CharField(max_length=30, unique=True, db_index=True)
     slug = ShoutitSlugField(unique=True)
     main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
     tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='category')
@@ -136,12 +129,6 @@ class Category(TranslatableModel, UUIDModel):
             objects.append(filter_object)
         objects.sort(key=lambda e: e.get('name'))
         return objects
-
-
-@receiver(post_save, sender='shoutit.Category')
-def category_post_save(sender, instance=None, created=False, **kwargs):
-    for f in instance.filters:
-        TagKey.objects.get_or_create(key=f, category=instance)
 
 
 class FeaturedTag(UUIDModel, NamedLocationMixin):

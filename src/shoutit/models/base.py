@@ -74,6 +74,32 @@ class TranslationTreeManager(TranslationManager, TreeManager):
     use_for_related_fields = True
 
 
+class TranslatedModelFallbackMixin(object):
+    """
+    This returns the shared field value of the Translated Model if the translated field value is empty.
+    Subclasses must define translated fields named after the shared ones according to this example
+
+    ```
+    class Tag(TranslatableModel):
+        name = CharField(max_length=30)  # Shared Field
+
+        translations = TranslatedFields(
+            _local_name=models.CharField(max_length=30)  # Translated Field
+        )
+    ```
+    """
+    def __getattribute__(self, item):
+        if not item.startswith('_local_'):
+            return super(TranslatedModelFallbackMixin, self).__getattribute__(item)
+
+        translated_value = super(TranslatedModelFallbackMixin, self).__getattribute__(item)
+        if item in self._translated_field_names and translated_value == '':
+            shared_item = item.replace('_local_', '')
+            return super(TranslatedModelFallbackMixin, self).__getattribute__(shared_item)
+
+        return translated_value
+
+
 class AttachedObjectMixinManager(models.Manager):
     def with_attached_object(self, attached_object):
         ct = ContentType.objects.get_for_model(attached_object)

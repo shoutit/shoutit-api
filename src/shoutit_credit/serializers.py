@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
+from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
 
 from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
@@ -20,13 +21,18 @@ class CreditTransactionSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'display', 'app_url', 'web_url', 'type')
 
 
-class PromoteLabelSerializer(serializers.ModelSerializer):
+class PromoteLabelSerializer(TranslatableModelSerializer):
+    name = serializers.CharField(read_only=True, source='_local_name')
+    description = serializers.CharField(read_only=True, source='_local_description')
+
     class Meta:
         model = PromoteLabel
         fields = ('name', 'description', 'color', 'bg_color')
 
 
-class PromoteOptionSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
+class PromoteOptionSerializer(AttachedUUIDObjectMixin, TranslatableModelSerializer):
+    name = serializers.CharField(read_only=True, source='_local_name')
+    description = serializers.CharField(read_only=True, source='_local_description')
     label = PromoteLabelSerializer(read_only=True)
 
     class Meta:

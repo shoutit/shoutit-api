@@ -141,7 +141,7 @@ class PageAdminAdmin(admin.ModelAdmin):
 
 # PageCategory
 @admin.register(PageCategory)
-class PageCategoryAdmin(DjangoMpttAdmin):
+class PageCategoryAdmin(TranslatableAdmin, DjangoMpttAdmin):
     tree_auto_open = False
     form = ImageFileChangeForm
 
@@ -208,7 +208,7 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 # Tag
 @admin.register(Tag)
 class TagAdmin(LinksMixin, TranslatableAdmin):
-    list_display = ('name', 'image', '_links')
+    list_display = ('name', 'slug', 'key', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     form = ImageFileChangeForm
@@ -217,7 +217,7 @@ class TagAdmin(LinksMixin, TranslatableAdmin):
 # TagKey
 @admin.register(TagKey)
 class TagKeyAdmin(TranslatableAdmin):
-    list_display = ('category', 'key', 'values_type')
+    list_display = ('category', 'name', 'slug', 'values_type')
     search_fields = ('key',)
     list_filter = ('category', 'values_type')
 
@@ -225,7 +225,7 @@ class TagKeyAdmin(TranslatableAdmin):
 # Category
 @admin.register(Category)
 class CategoryAdmin(TranslatableAdmin):
-    list_display = ('name', '_main_tag', 'filters', 'image', 'icon')
+    list_display = ('name', 'slug', '_main_tag', 'filters', 'image', 'icon')
     raw_id_fields = ('main_tag', 'tags')
     ordering = ('name',)
     form = CategoryForm

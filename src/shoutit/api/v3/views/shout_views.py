@@ -159,17 +159,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def categories(self, request):
         """
         List Categories
-
-        Passing `shuffle=1` will return randomized results
         ---
         serializer: CategoryDetailSerializer
         """
-        categories = Category.objects.all().order_by('name').select_related('main_tag')
-        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
-        # Everyday I'm shuffling!
-        shuffle = request.query_params.get('shuffle')
-        if shuffle:
-            random.shuffle(categories_data)
+        self.serializer_class = CategoryDetailSerializer
+        categories = Category.objects.all()
+        categories_data = self.get_serializer(categories, many=True).data
+        categories_data.sort(key=lambda c: c['name'])
         return Response(categories_data)
 
     @cache_control(max_age=60 * 60 * 24)

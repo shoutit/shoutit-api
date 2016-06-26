@@ -33,7 +33,8 @@ class CreditRule(TranslatableModel, UUIDModel):
     is_active = models.BooleanField(default=True)
 
     translations = TranslatedFields(
-        _local_name=models.CharField(max_length=50, blank=True, default='')
+        _local_name=models.CharField(max_length=50, blank=True, default=''),
+        _local_description=models.CharField(max_length=250, blank=True, default='')
     )
 
     def __init__(self, *args, **kwargs):

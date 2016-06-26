@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
+from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
 
 from shoutit.controllers import page_controller
@@ -13,7 +14,8 @@ from .base import RecursiveSerializer
 from .profile import ObjectProfileActionSerializer, ProfileDetailSerializer
 
 
-class PageCategorySerializer(serializers.ModelSerializer):
+class PageCategorySerializer(TranslatableModelSerializer):
+    name = serializers.CharField(read_only=True, source='_local_name')
     slug = serializers.CharField()
     children = RecursiveSerializer(many=True, read_only=True)
 

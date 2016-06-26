@@ -18,7 +18,7 @@ from rest_framework import filters
 from common.constants import TAG_TYPE_STR, TAG_TYPE_INT
 from common.utils import process_tags
 from shoutit.api.v3.exceptions import InvalidParameter
-from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, TagKey, DiscoverItem, User
+from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, DiscoverItem, User
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -154,26 +154,26 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         category = data.get('category')
         if category and category != 'all':
             try:
-                category = Category.objects.get(slug=category)
+                category = Category.objects.prefetch_related('tag_keys').get(slug=category)
             except Category.DoesNotExist:
                 msg = _("Category with slug '%(slug)s' does not exist") % {'slug': category}
                 raise InvalidParameter('category', msg)
             else:
                 data['category'] = category.slug
                 index_queryset = index_queryset.filter('terms', category=[category.name, category.slug])
-                cat_filters = TagKey.objects.filter(key__in=category.filters).values_list('key', 'values_type')
-                for cat_f_key, cat_f_type in cat_filters:
+                cat_filters = category.tag_keys.values_list('slug', 'values_type')
+                for cat_f_slug, cat_f_type in cat_filters:
                     if cat_f_type == TAG_TYPE_STR:
-                        cat_f_param = data.get(cat_f_key)
+                        cat_f_param = data.get(cat_f_slug)
                         if cat_f_param:
                             cat_f_params = cat_f_param.split(',')
-                            index_queryset = index_queryset.filter('terms', **{'filters__%s' % cat_f_key: cat_f_params})
+                            index_queryset = index_queryset.filter('terms', **{'filters__%s' % cat_f_slug: cat_f_params})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
-                            cat_f_param = data.get('%s_%s' % (m1, cat_f_key))
+                            cat_f_param = data.get('%s_%s' % (m1, cat_f_slug))
                             if cat_f_param:
                                 index_queryset = index_queryset.filter('range',
-                                                                       **{'filters__%s' % cat_f_key: {m2: cat_f_param}})
+                                                                       **{'filters__%s' % cat_f_slug: {m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')

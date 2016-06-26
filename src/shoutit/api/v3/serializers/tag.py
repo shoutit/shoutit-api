@@ -4,20 +4,29 @@
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
+from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from shoutit.models import Tag, FeaturedTag, Category
+from shoutit.models import Tag, FeaturedTag, Category, TagKey
 from shoutit.utils import url_with_querystring, blank_to_none
 
 
-class TagSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=30)
-    api_url = serializers.HyperlinkedIdentityField(view_name='tag-detail', lookup_field='name')
+class MiniTagSerializer(TranslatableModelSerializer):
+    name = serializers.CharField(read_only=True, source='_local_name')
+    slug = serializers.CharField(read_only=True)
 
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'api_url', 'image')
+        fields = ('id', 'name', 'slug')
+
+
+class TagSerializer(MiniTagSerializer):
+    api_url = serializers.HyperlinkedIdentityField(view_name='tag-detail', lookup_field='slug')
+
+    class Meta(MiniTagSerializer.Meta):
+        parent_fields = MiniTagSerializer.Meta.fields
+        fields = parent_fields + ('api_url', 'image')
 
     def to_internal_value(self, data):
         if isinstance(data, basestring):
@@ -28,6 +37,17 @@ class TagSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super(TagSerializer, self).to_representation(instance)
         blank_to_none(ret, ['image'])
+        # Compatibility for older clients expecting `name` to be the unique identifier of Tag object
+        self.compat_name(ret)
+        return ret
+
+    def compat_name(self, ret):
+        request = self.context['request']
+        from_web = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
+        ios_condition = request.agent == 'ios' and request.build_no >= 22312
+        android_condition = request.agent == 'android' and request.build_no >= 1450
+        if not any([from_web, ios_condition, android_condition]):
+            ret['name'] = ret['slug']
         return ret
 
 
@@ -37,7 +57,6 @@ class TagDetailSerializer(TagSerializer):
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts with this tag")
 
     class Meta(TagSerializer.Meta):
-        model = Tag
         parent_fields = TagSerializer.Meta.fields
         fields = parent_fields + ('web_url', 'listeners_count', 'listeners_url', 'is_listening', 'shouts_url')
 
@@ -67,8 +86,18 @@ class FeaturedTagSerializer(serializers.ModelSerializer):
         return reverse('tag-detail', kwargs={'name': f_tag.tag.name}, request=self.context['request'])
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(read_only=True)
+class TagKeySerializer(TranslatableModelSerializer):
+    name = serializers.CharField(read_only=True, source='_local_name')
+    slug = serializers.CharField(read_only=True)
+    values = MiniTagSerializer(source='tags', many=True)
+
+    class Meta:
+        model = TagKey
+        fields = ('name', 'slug', 'values')
+
+
+class CategorySerializer(TranslatableModelSerializer):
+    name = serializers.CharField(read_only=True, source='_local_name')
     slug = serializers.CharField()
 
     class Meta:
@@ -94,7 +123,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CategoryDetailSerializer(CategorySerializer):
-    filters = serializers.ListField(source='filter_objects')
+    filters = TagKeySerializer(source='tag_keys', many=True)
 
     class Meta(CategorySerializer.Meta):
         parent_fields = CategorySerializer.Meta.fields

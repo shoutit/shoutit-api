@@ -17,12 +17,13 @@ from hvad.models import TranslatedFields, TranslatableModel
 from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.models import UUIDModel, Shout
+from shoutit.models.base import TranslatedModelFallbackMixin
 from .base import CreditRule, CreditTransaction
 
 share_shouts = None
 
 
-class PromoteLabel(TranslatableModel, UUIDModel):
+class PromoteLabel(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=250)
     color = models.CharField(max_length=9)
