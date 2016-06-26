@@ -48,15 +48,16 @@ class CompleteProfile(CreditRule):
         return ret
 
     def apply(self, profile):
-        # Shouldn't be a guest!
-        if profile.user.is_guest:
-            return
-        # Todo (mo): should have an access token
-
-        # Todo (mo): Check profile completeness :)
-
         # Check for similar existing transaction
         if CreditTransaction.exists(user_id=profile.user_id, rule=self):
+            return
+
+        # Terms and conditions apply!
+        not_guest = not profile.user.is_guest
+        has_token = profile.user.accesstoken_set.exists()
+        completed_profile = all([profile.image is not None, profile.gender is not None, profile.birthday is not None])
+
+        if not all([not_guest, has_token, completed_profile]):
             return
 
         # Create Credit Transaction
