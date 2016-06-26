@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from common.constants import REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, REPORT_TYPE_CONVERSATION
@@ -11,8 +12,8 @@ from common.utils import any_in
 from shoutit.api.serializers import HasAttachedUUIDObjects
 from shoutit.models import Notification, Report
 from shoutit.utils import blank_to_none
-from .message import MessageSerializer
 from .conversation import ConversationDetailSerializer
+from .message import MessageSerializer
 from .profile import ProfileSerializer
 from .shout import ShoutSerializer
 from ..exceptions import ERROR_REASON
@@ -37,7 +38,7 @@ class AttachedObjectSerializer(HasAttachedUUIDObjects, serializers.Serializer):
         ret = super(AttachedObjectSerializer, self).to_internal_value(data)
         keys = data.keys()
         if len(keys) != 1:
-            raise serializers.ValidationError(("Should have a single property", ERROR_REASON.REQUIRED))
+            raise serializers.ValidationError((_("Should have a single property"), ERROR_REASON.REQUIRED))
         return ret
 
 
@@ -71,7 +72,7 @@ class ReportSerializer(serializers.ModelSerializer):
         attached_object = validated_data['attached_object']
 
         if not any_in(['attached_profile', 'attached_shout', 'attached_conversation'], attached_object):
-            error_tuple = ("Should have either 'profile', 'shout' or 'conversation'", ERROR_REASON.REQUIRED)
+            error_tuple = (_("Should have either 'profile', 'shout' or 'conversation'"), ERROR_REASON.REQUIRED)
             raise serializers.ValidationError({'attached_object': error_tuple})
 
         if 'attached_profile' in attached_object:

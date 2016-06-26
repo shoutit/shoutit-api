@@ -3,6 +3,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from ipware.ip import get_real_ip
 from push_notifications.apns import apns_send_bulk_message
 from push_notifications.gcm import gcm_send_bulk_message
@@ -52,7 +53,7 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
         else:
-            raise serializers.ValidationError("Could not find (`latitude` and `longitude`) or figure the IP Address")
+            raise serializers.ValidationError(_("Could not find (`latitude` and `longitude`) or figure the IP Address"))
 
         if address:
             location.update({'address': address})
@@ -69,7 +70,7 @@ class PushTokensSerializer(serializers.Serializer):
         apns = ret.get('apns')
         gcm = ret.get('gcm')
         if apns and gcm:
-            raise serializers.ValidationError("Only one of `apns` or `gcm` is required not both")
+            raise serializers.ValidationError(_("Only one of `apns` or `gcm` is required not both"))
         return ret
 
 
@@ -94,10 +95,11 @@ class PushTestSerializer(serializers.Serializer):
         aps = value.get('aps')
         if aps is not None:
             if not isinstance(aps, dict) or aps.keys() == []:
-                raise serializers.ValidationError({'aps': "Must be a non-empty dictionary"})
+                raise serializers.ValidationError({'aps': _("Must be a non-empty dictionary")})
             valid_keys = ['alert', 'badge', 'sound', 'category', 'expiration', 'priority']
             if not all([k in valid_keys for k in aps.keys()]):
-                raise serializers.ValidationError({'aps': "can only contain %s" % ", ".join(valid_keys)})
+                keys = ", ".join(valid_keys)
+                raise serializers.ValidationError({'aps': _("Can only contain %(keys)s") % {'keys': keys}})
         return value
 
     def create(self, validated_data):

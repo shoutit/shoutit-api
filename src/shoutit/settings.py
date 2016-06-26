@@ -185,6 +185,7 @@ INSTALLED_APPS = (
     'shoutit_crm',
     'shoutit_pusher',
     'shoutit_twilio',
+    'hvad'
 )
 
 TWILIO_ENV = os.environ.get('TWILIO_ENV', SHOUTIT_ENV)
@@ -203,15 +204,15 @@ MIDDLEWARE_CLASSES = (
     'request_id.middleware.RequestIdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     # Shoutit Custom Middleware
-    'shoutit.middleware.UserPermissionsMiddleware',
+    # 'shoutit.middleware.UserPermissionsMiddleware',
     'shoutit.middleware.FBMiddleware',
     'shoutit.middleware.BadRequestsMiddleware',
     'shoutit.api.exceptions.APIExceptionMiddleware',
@@ -243,12 +244,16 @@ DATABASES = {
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
-USE_L10N = True
+USE_L10N = False
 USE_TZ = True
 LANGUAGES = (
     ('en', _('English')),
+    ('ar', _('Arabic')),
 )
 DEFAULT_LANGUAGE_CODE = 'en'
+LOCALE_PATHS = (
+    os.path.join(SRC_DIR, 'locale'),
+)
 
 """
 =================================

@@ -5,8 +5,10 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 from rest_framework.permissions import (BasePermission)
+
+from shoutit.api.v3.exceptions import ShoutitBadRequest, ERROR_REASON
 
 SAFE_METHODS = ('GET', 'HEAD', 'OPTIONS')
 MODIFY_METHODS = ['PUT', 'PATCH', 'DELETE']
@@ -19,9 +21,7 @@ class IsSecure(BasePermission):
 
     def has_permission(self, request, view):
         if settings.ENFORCE_SECURE and not request.is_secure():
-            raise ValidationError({
-                'error': 'invalid_request',
-                'error_description': "A secure connection is required."})
+            raise ShoutitBadRequest(message=_("Secure connection is required"), reason=ERROR_REASON.INSECURE_CONNECTION)
         return True
 
 
@@ -54,7 +54,8 @@ class IsAdminOrCanContribute(BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        assert hasattr(obj, 'can_contribute') and hasattr(obj, 'admins'), "obj must have `is_admin` and `can_contribute` attributes"
+        assert hasattr(obj, 'can_contribute') and hasattr(obj,
+                                                          'admins'), "obj must have `is_admin` and `can_contribute` attributes"
         if request.method in ('PATCH', 'PUT'):
             return obj.is_admin(request.user)
         else:

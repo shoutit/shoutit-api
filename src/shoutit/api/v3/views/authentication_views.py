@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import ugettext_lazy as _
 from provider import constants as provider_constants, scope as provider_scope
 from provider.oauth2.forms import ClientAuthForm
 from provider.oauth2.models import AccessToken, RefreshToken, Client
@@ -18,16 +19,17 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL
-from shoutit.api.v3.exceptions import (ERROR_REASON, ShoutitBadRequest, RequiredBody, InvalidBody,
-                                       RequiredParameter, InvalidParameter)
+from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredBody, InvalidBody, RequiredParameter, InvalidParameter
 from shoutit.controllers import mixpanel_controller
 from shoutit.models import ConfirmToken
 from shoutit_credit.models.profile import apply_invite_friends
 from ..serializers import (
-    ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
-    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer,
-    ProfileDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer,
-    GuestSerializer, ShoutitPageSerializer)
+    ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer, ShoutitPageSerializer,
+    ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer, ProfileDetailSerializer,
+    FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer, GuestSerializer
+)
+
+INACTIVE_OR_DELETED = AuthenticationFailed(_('Account inactive or deleted'))
 
 
 class RequestParamsClientBackend(object):
@@ -71,7 +73,7 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         else:
             user = access_token.user
         if not user.is_active:
-            raise AuthenticationFailed('Account inactive or deleted.')
+            raise INACTIVE_OR_DELETED
 
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
@@ -492,22 +494,18 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         """
         # Set `action` to be used when handling exceptions
         self.action = 'post'
-
-        if provider_constants.ENFORCE_SECURE and not request.is_secure():
-            raise ShoutitBadRequest(message="Authentication failed",
-                                    developer_message="A secure connection is required",
-                                    reason=ERROR_REASON.INSECURE_CONNECTION)
+        auth_failed = _("Authentication failed")
 
         if 'grant_type' not in request.data:
-            raise RequiredBody('grant_type', message="Authentication failed")
+            raise RequiredBody('grant_type', message=auth_failed)
 
         grant_type = request.data.get('grant_type')
         if grant_type not in self.grant_types:
-            raise InvalidBody('grant_type', message="Unsupported grant_type")
+            raise InvalidBody('grant_type', message=_("Unsupported grant_type"))
 
         client = self.authenticate(request)
         if client is None:
-            raise InvalidBody('client', message="Authentication failed", developer_message="Invalid client")
+            raise InvalidBody('client', message=auth_failed, developer_message="Invalid client")
         request.client = client
         request.is_test = client.name == 'shoutit-test'
 
@@ -539,7 +537,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         user = access_token.user
         if not user.is_active:
-            raise AuthenticationFailed("Account inactive or deleted.")
+            raise INACTIVE_OR_DELETED
 
         # set the request user in case it is not set
         self.request.user = user
@@ -587,7 +585,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         serializer = ShoutitChangePasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response("Password changed.")
+        return self.success_response("Password changed")
 
     @list_route(methods=['post'], permission_classes=(), suffix='Reset Password')
     def reset_password(self, request):
@@ -610,7 +608,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         serializer = ShoutitResetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.instance.reset_password()
-        return self.success_response("Password reset email will be sent soon.")
+        return self.success_response(_("Password reset email will be sent soon"))
 
     @list_route(methods=['post'], permission_classes=(), suffix='Set Password')
     def set_password(self, request):
@@ -633,7 +631,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         serializer = ShoutitSetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response("New password set.")
+        return self.success_response(_("New password set"))
 
     @list_route(methods=['get', 'post'], permission_classes=(), suffix='Verify Email')
     def verify_email(self, request):
@@ -678,7 +676,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         or
         <pre><code>
         {
-            "success": "Verification email will be soon sent to xxx@mail.com."
+            "success": "Verification email will be soon sent to xxx@mail.com"
         }
         </code></pre>
 
@@ -735,7 +733,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                     raise ValueError()
                 user = cf.user
                 if not user.is_active:
-                    raise AuthenticationFailed("Account inactive or deleted")
+                    raise INACTIVE_OR_DELETED
                 user.activate()
                 cf.is_disabled = True
                 cf.save(update_fields=['is_disabled'])
@@ -745,21 +743,23 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
                 except Exception:
-                    return self.success_response("Your email has been verified")
+                    return self.success_response(_("New password set"))
             except ConfirmToken.DoesNotExist:
-                raise InvalidParameter('token', "Token does not exist")
+                raise InvalidParameter('token', _("Token does not exist"))
             except ValueError:
-                raise ShoutitBadRequest("Email address is already verified")
+                raise ShoutitBadRequest(_("Email address is already verified"))
 
         elif request.method == 'POST':
             if request.user.is_anonymous():
-                return Response({"detail": "Authentication credentials were not provided"},
+                return Response({"detail": _("Authentication credentials were not provided")},
                                 status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
-                return self.success_response("Your email '{}' is already verified.".format(request.user.email))
+                return self.success_response(
+                    _("Your email '%(email)s' is already verified") % {'email': request.user.email})
             serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
-            return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
+            return self.success_response(
+                "Verification email will be soon sent to %(email)s" % {'email': request.user.email})
         else:
             return Response()
 

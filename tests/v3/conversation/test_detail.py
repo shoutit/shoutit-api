@@ -71,7 +71,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         """
         user = self.user1
         shout = self.create_shout(user=user,
-                                  category=F(name='velo'),
+                                  category=F(slug='velo'),
                                   item=F(name='Marin'))
         conv = G(Conversation,
                  type=CONVERSATION_TYPE_ABOUT_SHOUT,
@@ -84,7 +84,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         self.assert200(resp)
         about = self.decode_json(resp)['about']
         self.assertEqual(about['title'], 'Marin')
-        self.assertEqual(about['category']['name'], 'velo')
+        self.assertEqual(about['category']['slug'], 'velo')
 
     def test_update_subject(self):
         """

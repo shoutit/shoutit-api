@@ -6,11 +6,12 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
+from hvad.models import TranslatedFields, TranslatableModel
 from mptt.models import MPTTModel, TreeForeignKey
 
 from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER,
                               PAGE_ADMIN_TYPE_ADMIN)
-from shoutit.models.base import UUIDModel
+from shoutit.models.base import UUIDModel, APIModelMixin, TranslationTreeManager
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
 from shoutit.utils import correct_mobile
@@ -18,14 +19,20 @@ from shoutit.utils import correct_mobile
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class PageCategory(MPTTModel, UUIDModel):
+class PageCategory(APIModelMixin, TranslatableModel, MPTTModel, UUIDModel):
     name = models.CharField(max_length=100, db_index=True)
     slug = ShoutitSlugField(unique=True)
     image = models.URLField(blank=True, default='')
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children')
 
+    objects = TranslationTreeManager()
+
     class MPTTMeta:
         order_insertion_by = ['slug']
+
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=30, blank=True, default='')
+    )
 
     def __unicode__(self):
         return unicode(self.name)

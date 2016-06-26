@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
+from hvad.admin import TranslatableAdmin
 from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -16,7 +17,7 @@ from common.constants import UserType
 from shoutit.utils import url_with_querystring
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
-from .admin_forms import PushBroadcastForm, ItemForm, CategoryForm, ImageFileChangeForm
+from .admin_forms import PushBroadcastForm, ItemForm, ImageFileChangeForm
 from .admin_utils import (UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
 from .models import *  # NOQA
 
@@ -140,7 +141,7 @@ class PageAdminAdmin(admin.ModelAdmin):
 
 # PageCategory
 @admin.register(PageCategory)
-class PageCategoryAdmin(DjangoMpttAdmin):
+class PageCategoryAdmin(TranslatableAdmin, DjangoMpttAdmin):
     tree_auto_open = False
     form = ImageFileChangeForm
 
@@ -206,8 +207,8 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 
 # Tag
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin, LinksMixin):
-    list_display = ('name', 'image', '_links')
+class TagAdmin(LinksMixin, TranslatableAdmin):
+    list_display = ('name', 'slug', 'key', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     form = ImageFileChangeForm
@@ -215,19 +216,19 @@ class TagAdmin(admin.ModelAdmin, LinksMixin):
 
 # TagKey
 @admin.register(TagKey)
-class TagKeyAdmin(admin.ModelAdmin):
-    list_display = ('category', 'key', 'values_type')
+class TagKeyAdmin(TranslatableAdmin):
+    list_display = ('name', 'slug', 'values_type')
     search_fields = ('key',)
-    list_filter = ('category', 'values_type')
+    list_filter = ('categories', 'values_type')
 
 
 # Category
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', '_main_tag', 'filters', 'image', 'icon')
-    raw_id_fields = ('main_tag', 'tags')
+class CategoryAdmin(TranslatableAdmin):
+    list_display = ('name', 'slug', '_main_tag', 'image', 'icon')
+    raw_id_fields = ('main_tag',)
+    filter_horizontal = ('filters',)
     ordering = ('name',)
-    form = CategoryForm
 
     def _main_tag(self, category):
         return tag_link(category.main_tag)
@@ -256,7 +257,7 @@ class FeaturedTagAdmin(admin.ModelAdmin):
 
 # DiscoverItem
 @admin.register(DiscoverItem)
-class DiscoverItemAdmin(DjangoMpttAdmin):
+class DiscoverItemAdmin(TranslatableAdmin, DjangoMpttAdmin):
     tree_auto_open = False
     form = ImageFileChangeForm
 

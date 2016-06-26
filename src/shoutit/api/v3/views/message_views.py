@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import permissions, viewsets, mixins, status
 from rest_framework.decorators import detail_route
 from rest_framework.response import Response
@@ -69,7 +70,8 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
             related = ['last_message__user__profile']
             related2 = ['creator', 'last_message__attachments']
             order = '-modified_at'
-            return conversations.filter(**filters).exclude(**exclude).select_related(*related).prefetch_related(*related2).order_by(order)
+            return conversations.filter(**filters).exclude(**exclude).select_related(*related).prefetch_related(
+                *related2).order_by(order)
             # return conversations.filter(**filters).exclude(**exclude).select_related(*related).order_by(order)
 
     def _is_request_to_detail_endpoint(self):
@@ -347,7 +349,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         message_controller.hide_messages_from_user(messages, request.user)
         ret = {
             'data': {
-                'success': "You deleted these messages ",
+                'success': _("The messages have been deleted"),
                 'deleted_messages': map(lambda m: {'id': m}, message_ids)
             },
             'status': status.HTTP_202_ACCEPTED

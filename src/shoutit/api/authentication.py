@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import uuid
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from rest_framework.authentication import BaseAuthentication, TokenAuthentication, SessionAuthentication
 from rest_framework_oauth.authentication import OAuth2Authentication
@@ -47,22 +48,22 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             return ret
 
         if len(page_id_auth) != 1:
-            msg = 'Invalid page id header. No credentials provided.'
+            msg = _('Invalid page id header. No credentials provided')
             raise exceptions.AuthenticationFailed(msg)
 
         try:
             page_id = page_id_auth[0].decode()
             uuid.UUID(page_id)
         except (UnicodeError, ValueError):
-            raise exceptions.AuthenticationFailed('Invalid page id.')
+            raise exceptions.AuthenticationFailed(_('Invalid page id'))
 
         try:
             page = Page.objects.select_related('user').get(id=page_id)
         except Page.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Page does not exist.')
+            raise exceptions.AuthenticationFailed(_('Page does not exist'))
 
         if not page.user.is_active:
-            raise exceptions.AuthenticationFailed('Page inactive or deleted.')
+            raise exceptions.AuthenticationFailed(_('Page inactive or deleted'))
 
         setattr(request, '_user', page.user)
         setattr(request, 'page_admin_user', ret[0])
@@ -77,9 +78,9 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             api_client = auth.client.name
             request.api_client = api_client
 
-        # Todo: when no authorized it could be that this is from `shoutit-web`. A header must be agreed on to identify webapp requests even for guests. This should be done in a middleware outside auth.
-        # elif 'node-superagent' in request.META.get('USER_AGENT', ''):
-        #     request.api_client = 'shoutit-web'
+            # Todo: when no authorized it could be that this is from `shoutit-web`. A header must be agreed on to identify webapp requests even for guests. This should be done in a middleware outside auth.
+            # elif 'node-superagent' in request.META.get('USER_AGENT', ''):
+            #     request.api_client = 'shoutit-web'
 
 
 class ShoutitTokenAuthentication(ShoutitPageAuthenticationMixin, TokenAuthentication):

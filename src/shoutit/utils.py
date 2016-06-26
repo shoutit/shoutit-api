@@ -15,7 +15,7 @@ from django.utils.timezone import now as django_now
 import nexmo as nexmo
 import phonenumbers
 from rest_framework.request import Request
-
+from django.utils.translation import ugettext_lazy as _
 from common.constants import COUNTRY_ISO
 from shoutit import settings
 from shoutit.api.versioning import ShoutitNamespaceVersioning
@@ -60,7 +60,7 @@ def correct_mobile(mobile, country, raise_exception=False):
             raise ValueError()
     except (phonenumbers.NumberParseException, ValueError):
         if raise_exception:
-            raise ValidationError("Invalid mobile for %s" % COUNTRY_ISO[country])
+            raise ValidationError(_("Is not valid in %(country)s") % {'country': COUNTRY_ISO[country]})
         mobile = ''
     return mobile
 

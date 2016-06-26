@@ -71,7 +71,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
             raise ValidationError(str(e))
         if webhook:
             events = webhook.get('events', [])
-            events.sort(key=lambda e: e.get('name'))
+            events.sort(key=lambda ev: ev.get('name'))
             for event in events:
                 event_name = event.get('name')
                 channel_name = event.get('channel')
@@ -88,4 +88,4 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
                     add_member(channel_name, user_id)
                 elif event_name == 'member_removed':
                     remove_member(channel_name, user_id)
-        return Response({'status': 'ok'})
+        return Response({'status': 'OK'})

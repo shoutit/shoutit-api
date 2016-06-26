@@ -9,6 +9,7 @@ from collections import OrderedDict
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from rest_framework.response import Response
@@ -53,7 +54,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             try:
                 video_client = create_video_client(user)
             except (ValidationError, IntegrityError) as e:
-                msg = "Couldn't authorize you to make video calls"
+                msg = _("Couldn't authorize you to make video calls")
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
 
         # Return token info
@@ -101,7 +102,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         try:
             other_user = User.objects.get(username=other_username)
         except User.DoesNotExist:
-            msg = "Profile with username %s doesn't exist" % other_username
+            msg = _("Profile with username '%(username)s' does not exist") % {'username': other_username}
             raise InvalidParameter('profile', message=msg)
 
         if hasattr(other_user, 'video_client'):
@@ -111,7 +112,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             try:
                 video_client = create_video_client(other_user)
             except (ValidationError, IntegrityError) as e:
-                msg = "Error calling %s" % other_username.name
+                msg = _("Error calling %(name)s") % {'name': other_username.name}
                 raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
 
         # Notify the other user
@@ -145,10 +146,10 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         try:
             video_client = VideoClient.objects.get(id=identity)
         except VideoClient.DoesNotExist:
-            msg = "Profile with identity %s doesn't exist" % identity
+            msg = _("Profile with identity %(identity)s does not exist") % {'identity': identity}
             raise InvalidParameter('identity', message=msg)
         except ValueError:
-            msg = "Invalid identity"
+            msg = _("Invalid identity")
             raise InvalidParameter('identity', message=msg)
         other_user = video_client.user
 
@@ -191,10 +192,10 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         try:
             video_client = VideoClient.objects.get(id=identity)
         except VideoClient.DoesNotExist:
-            msg = "Profile with identity %s doesn't exist" % identity
+            msg = _("Profile with identity %(identity)s does not exist") % {'identity': identity}
             raise InvalidParameter('identity', message=msg)
         except ValueError:
-            msg = "Invalid identity"
+            msg = _("Invalid identity")
             raise InvalidParameter('identity', message=msg)
 
         res = ProfileSerializer(video_client.user, context={'request': request}).data

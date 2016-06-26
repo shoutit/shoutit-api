@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
@@ -63,9 +64,10 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         try:
             filter_tuples = map(lambda f: (f['slug'], f['value']['slug']), value)
         except KeyError as e:
-            raise serializers.ValidationError('Malformed filters, missing key: %s' % e.message.encode('utf'))
+            msg = _('Malformed filters, missing key: %(key)s') % {'key': e.message.encode('utf')}
+            raise serializers.ValidationError(msg)
         except TypeError:
-            raise serializers.ValidationError('Malformed filters')
+            raise serializers.ValidationError(_('Malformed filters'))
         else:
             # Ignore filters with None as its their value
             filter_tuples = filter(lambda t: isinstance(t[1], basestring), filter_tuples)
@@ -84,7 +86,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         price_is_set = price is not None
         currency_is_none = data.get('currency') is None
         if price_is_set and price != 0 and currency_is_none:
-            raise serializers.ValidationError({'currency': "The currency must be set when the price is set"})
+            raise serializers.ValidationError({'currency': _("The currency must be set when the price is set")})
         # Optional category defaults to "Other"
         if data.get('category') is None:
             data['category'] = 'other'
@@ -193,7 +195,7 @@ class ShoutDetailSerializer(ShoutSerializer):
                 try:
                     mobile = correct_mobile(mobile, location['country'], raise_exception=True)
                 except ValidationError:
-                    raise serializers.ValidationError({'mobile': "Invalid mobile"})
+                    raise serializers.ValidationError({'mobile': _("Is not valid in your or in the shout's country")})
 
         images = item.get('images', None)
         videos = item.get('videos', {'all': None})['all']
@@ -202,7 +204,7 @@ class ShoutDetailSerializer(ShoutSerializer):
             case_1 = shout_type is POST_TYPE_REQUEST and title
             case_2 = shout_type is POST_TYPE_OFFER and (title or images or videos)
             if not (case_1 or case_2):
-                raise serializers.ValidationError("Not enough info to create a shout")
+                raise serializers.ValidationError(_("You didn't provide enough information for creating a shout"))
             shout = shout_controller.create_shout(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,

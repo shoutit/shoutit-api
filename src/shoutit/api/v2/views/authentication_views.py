@@ -418,13 +418,13 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         if provider_constants.ENFORCE_SECURE and not request.is_secure():
             return self.error_response({
                 'error': 'invalid_request',
-                'error_description': "A secure connection is required."
+                'error_description': "A secure connection is required"
             })
 
         if 'grant_type' not in request.data:
             return self.error_response({
                 'error': 'invalid_request',
-                'error_description': "No 'grant_type' included in the request."
+                'error_description': "No 'grant_type' included in the request"
             })
 
         grant_type = request.data.get('grant_type')
@@ -528,7 +528,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         serializer = ShoutitChangePasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response("Password changed.")
+        return self.success_response("Password changed")
 
     @list_route(methods=['post'], permission_classes=(), suffix='Reset Password')
     def reset_password(self, request):
@@ -551,7 +551,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         serializer = ShoutitResetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.instance.reset_password()
-        return self.success_response("Password reset email will be sent soon.")
+        return self.success_response("Password reset email will be sent soon")
 
     @list_route(methods=['post'], permission_classes=(), suffix='Set Password')
     def set_password(self, request):
@@ -574,7 +574,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         """
         serializer = ShoutitSetPasswordSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return self.success_response("New password set.")
+        return self.success_response("New password set")
 
     @list_route(methods=['get', 'post'], permission_classes=(), suffix='Verify Email')
     def verify_email(self, request):
@@ -619,7 +619,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         or
         <pre><code>
         {
-            "success": "Verification email will be soon sent to xxx@mail.com."
+            "success": "Verification email will be soon sent to xxx@mail.com"
         }
         </code></pre>
 
@@ -669,7 +669,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
         if request.method == 'GET':
             token = request.query_params.get('token')
             if not token:
-                raise ValidationError({'token': "This parameter is required."})
+                raise ValidationError({'token': "This parameter is required"})
             try:
                 cf = ConfirmToken.objects.get(type=TOKEN_TYPE_EMAIL, token=token)
                 if cf.is_disabled:
@@ -686,21 +686,21 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
                 except Exception:
-                    return self.success_response("Your email has been verified.")
+                    return self.success_response("Your email has been verified")
             except ConfirmToken.DoesNotExist:
-                return self.error_response("Token does not exist.")
+                return self.error_response("Token does not exist")
             except ValueError:
-                return self.error_response("Email address is already verified.")
+                return self.error_response("Email address is already verified")
 
         elif request.method == 'POST':
             if request.user.is_anonymous():
-                return Response({"detail": "Authentication credentials were not provided."},
+                return Response({"detail": "Authentication credentials were not provided"},
                                 status=HTTP_401_UNAUTHORIZED)
             if request.user.is_activated:
-                return self.success_response("Your email '{}' is already verified.".format(request.user.email))
+                return self.success_response("Your email '{}' is already verified".format(request.user.email))
             serializer = ShoutitVerifyEmailSerializer(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
-            return self.success_response("Verification email will be soon sent to {}.".format(request.user.email))
+            return self.success_response("Verification email will be soon sent to {}".format(request.user.email))
         else:
             return Response()
 

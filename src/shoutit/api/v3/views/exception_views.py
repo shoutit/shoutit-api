@@ -23,18 +23,18 @@ from shoutit.utils import error_logger
 
 # key: (message, reason)
 drf_exceptions_map = {
-    drf_exceptions.ParseError: ("Bad request", ERROR_REASON.PARSE_ERROR),
-    drf_exceptions.AuthenticationFailed: ("Authentication failed", ERROR_REASON.AUTH_FAILED),
-    drf_exceptions.NotAuthenticated: ("Not authenticated", ERROR_REASON.NOT_AUTHENTICATED),
-    drf_exceptions.PermissionDenied: ("Action not allowed", ERROR_REASON.PERMISSION_DENIED),
-    drf_exceptions.NotFound: ("Resource not found", ERROR_REASON.NOT_FOUND),
-    drf_exceptions.MethodNotAllowed: ("Request not allowed", ERROR_REASON.METHOD_NOT_ALLOWED),
-    drf_exceptions.UnsupportedMediaType: ("Bad request", ERROR_REASON.UNSUPPORTED_MEDIA_TYPE),
-    drf_exceptions.Throttled: ("Too many requests", ERROR_REASON.THROTTLED),
+    drf_exceptions.ParseError: (_("Bad request"), ERROR_REASON.PARSE_ERROR),
+    drf_exceptions.AuthenticationFailed: (_("Authentication failed"), ERROR_REASON.AUTH_FAILED),
+    drf_exceptions.NotAuthenticated: (_("Not authenticated"), ERROR_REASON.NOT_AUTHENTICATED),
+    drf_exceptions.PermissionDenied: (_("Action not allowed"), ERROR_REASON.PERMISSION_DENIED),
+    drf_exceptions.NotFound: (_("Resource not found"), ERROR_REASON.NOT_FOUND),
+    drf_exceptions.MethodNotAllowed: (_("Request not allowed"), ERROR_REASON.METHOD_NOT_ALLOWED),
+    drf_exceptions.UnsupportedMediaType: (_("Bad request"), ERROR_REASON.UNSUPPORTED_MEDIA_TYPE),
+    drf_exceptions.Throttled: (_("Too many requests"), ERROR_REASON.THROTTLED),
 }
 
 # key: (code, message, developer_message, reason)
-# `developer_message` can be a callable that accepts the exception as its single parameter and return a string
+# `developer_message` can be a callable that accepts the exception as its single parameter and returns a string
 other_exceptions_map = {
     Http404: (status.HTTP_404_NOT_FOUND, _('Resource not found.'), "", ERROR_REASON.NOT_FOUND),
     django_exceptions.PermissionDenied: (status.HTTP_403_FORBIDDEN, _('Permission denied.'), "",
@@ -89,7 +89,7 @@ def drf_exception_handler(exc, context):
         if not settings.USE_SENTRY:
             return None
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        message = _('Server Error, try again later.')
+        message = _('Server Error, try again later')
         developer_message = unicode(exc)
         errors = [{'message': message}]
 
