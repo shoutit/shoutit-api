@@ -134,13 +134,13 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
         category = data.get('category')
         if category and category != 'all':
             try:
-                category = Category.objects.prefetch_related('tag_keys').get(DQ(name=category) | DQ(slug=category))
+                category = Category.objects.prefetch_related('filters').get(DQ(name=category) | DQ(slug=category))
             except Category.DoesNotExist:
                 raise ValidationError({'category': ["Category with name or slug '%s' does not exist" % category]})
             else:
                 data['category'] = category.slug
                 index_queryset = index_queryset.filter('terms', category=[category.name, category.slug])
-                cat_filters = category.tag_keys.values_list('slug', 'values_type')
+                cat_filters = category.filters.values_list('slug', 'values_type')
                 for cat_f_slug, cat_f_type in cat_filters:
                     if cat_f_type == TAG_TYPE_STR:
                         cat_f_param = data.get(cat_f_slug)

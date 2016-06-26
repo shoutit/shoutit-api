@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='category',
             name='name',
-            field=models.CharField(unique=True, max_length=30, db_index=True),
+            field=models.CharField(unique=True, max_length=30),
         ),
 
         # TagKey

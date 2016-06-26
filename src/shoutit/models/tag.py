@@ -79,7 +79,6 @@ class TagKey(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     name = models.CharField(max_length=30, db_index=True)
     slug = ShoutitSlugField()
     values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices, default=TAG_TYPE_STR.value)
-    category = models.ForeignKey('shoutit.Category', related_name='tag_keys')
     definition = models.CharField(max_length=100, blank=True, default='')
 
     def __unicode__(self):
@@ -89,16 +88,12 @@ class TagKey(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
         _local_name=models.CharField(max_length=30, blank=True, default='')
     )
 
-    class Meta:
-        unique_together = ['slug', 'category']
-
 
 class Category(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
-    name = models.CharField(max_length=30, unique=True, db_index=True)
+    name = models.CharField(max_length=30, unique=True)
     slug = ShoutitSlugField(unique=True)
-    main_tag = models.OneToOneField('shoutit.Tag', related_name='+', null=True, blank=True)
-    tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='category')
-    filters = ArrayField(ShoutitSlugField(), size=10, blank=True, default=list)
+    main_tag = models.OneToOneField('shoutit.Tag', null=True, blank=True)
+    filters = models.ManyToManyField(TagKey, blank=True, related_name='categories')
     icon = models.URLField(max_length=1024, blank=True, default='')
 
     translations = TranslatedFields(
@@ -111,24 +106,6 @@ class Category(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     @property
     def image(self):
         return self.main_tag.image
-
-    @property
-    def filter_objects(self):
-        objects = []
-        # Get all the tags in one call
-        tags = Tag.objects.filter(key__in=self.filters).values('name', 'key')
-        for cat_filter in self.filters:
-            filter_tags = filter(lambda t: t['key'] == cat_filter, tags)
-            filter_tag_names = map(lambda t: t['name'], filter_tags)
-            values = map(lambda ftn: {'name': ftn.title(), 'slug': ftn}, filter_tag_names)
-            values.sort(key=lambda v: v['name'])
-            filter_object = OrderedDict()
-            filter_object['name'] = cat_filter.title()
-            filter_object['slug'] = cat_filter
-            filter_object['values'] = values
-            objects.append(filter_object)
-        objects.sort(key=lambda e: e.get('name'))
-        return objects
 
 
 class FeaturedTag(UUIDModel, NamedLocationMixin):

@@ -17,7 +17,7 @@ from common.constants import UserType
 from shoutit.utils import url_with_querystring
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
-from .admin_forms import PushBroadcastForm, ItemForm, CategoryForm, ImageFileChangeForm
+from .admin_forms import PushBroadcastForm, ItemForm, ImageFileChangeForm
 from .admin_utils import (UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
 from .models import *  # NOQA
 
@@ -217,18 +217,18 @@ class TagAdmin(LinksMixin, TranslatableAdmin):
 # TagKey
 @admin.register(TagKey)
 class TagKeyAdmin(TranslatableAdmin):
-    list_display = ('category', 'name', 'slug', 'values_type')
+    list_display = ('name', 'slug', 'values_type')
     search_fields = ('key',)
-    list_filter = ('category', 'values_type')
+    list_filter = ('categories', 'values_type')
 
 
 # Category
 @admin.register(Category)
 class CategoryAdmin(TranslatableAdmin):
-    list_display = ('name', 'slug', '_main_tag', 'filters', 'image', 'icon')
-    raw_id_fields = ('main_tag', 'tags')
+    list_display = ('name', 'slug', '_main_tag', 'image', 'icon')
+    raw_id_fields = ('main_tag',)
+    filter_horizontal = ('filters',)
     ordering = ('name',)
-    form = CategoryForm
 
     def _main_tag(self, category):
         return tag_link(category.main_tag)

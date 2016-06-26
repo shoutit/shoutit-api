@@ -52,7 +52,7 @@ class ShoutitUserManager(UserManager):
 
 
 class Permission(UUIDModel):
-    name = models.CharField(max_length=512, unique=True, db_index=True)
+    name = models.CharField(max_length=512, unique=True)
 
     def __unicode__(self):
         return self.name

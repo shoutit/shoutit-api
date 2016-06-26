@@ -30,7 +30,7 @@ class TagSerializer(MiniTagSerializer):
 
     def to_internal_value(self, data):
         if isinstance(data, basestring):
-            data = {'name': data}
+            data = {'slug': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
 
@@ -53,7 +53,8 @@ class TagSerializer(MiniTagSerializer):
 
 class TagDetailSerializer(TagSerializer):
     is_listening = serializers.SerializerMethodField(help_text="Whether logged in user is listening to this tag")
-    listeners_url = serializers.SerializerMethodField(help_text="URL to show listeners of this tag")
+    listeners_url = serializers.HyperlinkedIdentityField(view_name='tag-listeners', lookup_field='slug',
+                                                         help_text="URL to show listeners of this tag")
     shouts_url = serializers.SerializerMethodField(help_text="URL to show shouts with this tag")
 
     class Meta(TagSerializer.Meta):
@@ -64,9 +65,6 @@ class TagDetailSerializer(TagSerializer):
         request = self.root.context.get('request')
         user = request and request.user
         return user and user.is_authenticated() and user.is_listening(tag)
-
-    def get_listeners_url(self, tag):
-        return reverse('tag-listeners', kwargs={'name': tag.name}, request=self.context['request'])
 
     def get_shouts_url(self, tag):
         shouts_url = reverse('shout-list', request=self.context['request'])
@@ -123,7 +121,7 @@ class CategorySerializer(TranslatableModelSerializer):
 
 
 class CategoryDetailSerializer(CategorySerializer):
-    filters = TagKeySerializer(source='tag_keys', many=True)
+    filters = TagKeySerializer(many=True)
 
     class Meta(CategorySerializer.Meta):
         parent_fields = CategorySerializer.Meta.fields
