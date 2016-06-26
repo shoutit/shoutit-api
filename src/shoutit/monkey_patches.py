@@ -4,13 +4,15 @@
 """
 from __future__ import unicode_literals
 
-import datetime
 import uuid
 from json import JSONEncoder
 
 import request_id
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
+from django.utils.encoding import force_text
+from django.utils.functional import Promise
 from elasticsearch_dsl import DocType
 from elasticsearch_dsl.result import Response
 from rest_framework import exceptions
@@ -23,43 +25,27 @@ from shoutit.api.v3.exceptions import _force_text_recursive
 
 pyopenssl.inject_into_urllib3()
 
-default_json_encoder_default = JSONEncoder().default  # save the JSONEncoder default function
 
-
-# Monkey Patching all the JSON imports
-class ShoutitJSONEncoder(JSONEncoder):
+# Monkey Patch all the JSON imports
+class ShoutitJSONEncoder(DjangoJSONEncoder):
     def default(self, obj):
-
-        # case: UUID
-        if isinstance(obj, uuid.UUID):
-            return str(obj)
-
-        if isinstance(obj, QuerySet):
-            return list(obj)
-
-        if isinstance(obj, Response):
-            return list(obj)
-
-        if isinstance(obj, DocType):
-            return dict(obj)
-
-        if isinstance(obj, datetime.datetime):
-            fmt = '%Y-%m-%dT%H:%M:%S'
-            return obj.strftime(fmt)
-
-        if isinstance(obj, datetime.date):
-            fmt = '%Y-%m-%d'
-            return obj.strftime(fmt)
-
         # case: Class
         # if isinstance(obj, Class):
         #     return class_to_str(obj)
 
-        # default:
-        return default_json_encoder_default(obj)  # call the saved default function
+        if isinstance(obj, QuerySet):
+            return list(obj)
+        elif isinstance(obj, Response):
+            return list(obj)
+        elif isinstance(obj, DocType):
+            return dict(obj)
+        elif isinstance(obj, Promise):
+            return force_text(obj)
+        return super(ShoutitJSONEncoder, self).default(obj)
 
 
-JSONEncoder.default = ShoutitJSONEncoder().default  # replace the JSONEncoder default function with custom one
+# Replace the JSONEncoder default function with a custom one
+JSONEncoder.default = ShoutitJSONEncoder().default
 
 
 # Monkey Patching DRF Request to expose `__getstate__` and `__setstate__` methods.
@@ -97,8 +83,8 @@ Request.__setstate__ = __setstate__
 def patched_generate_request_id():
     return uuid.uuid4().hex
 
-request_id.__dict__['generate_request_id'] = patched_generate_request_id
 
+request_id.__dict__['generate_request_id'] = patched_generate_request_id
 
 # Monkey patch DRF _force_text_recursive to use modified version
 exceptions.__dict__['_force_text_recursive'] = _force_text_recursive
