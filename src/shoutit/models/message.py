@@ -533,7 +533,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             name = self.attached_object.name
             text = _("%(name)s started listening to you") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
-            ranges.append({'offset': text.index('you'), 'length': len('you')})
+            ranges.append({'offset': text.index(unicode(_('you'))), 'length': len('you')})
             image = self.attached_object.ap.image
             target = self.attached_object
 

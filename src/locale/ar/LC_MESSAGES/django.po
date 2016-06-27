@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-26 20:58+0200\n"
+"POT-Creation-Date: 2016-06-27 18:49+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,7 +13,7 @@ msgstr ""
 msgid "Username"
 msgstr "إسم المستخدم"
 
-#: .\shoutit\admin.py:37 .\shoutit\models\auth.py:79
+#: .\shoutit\admin.py:36 .\shoutit\models\auth.py:79
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
@@ -21,27 +21,27 @@ msgstr ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
 
-#: .\shoutit\admin.py:39
+#: .\shoutit\admin.py:37
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 
-#: .\shoutit\admin.py:52
+#: .\shoutit\admin.py:50
 msgid "Personal info"
 msgstr "المعلومات الشخصية"
 
-#: .\shoutit\admin.py:53
+#: .\shoutit\admin.py:51
 msgid "Permissions"
 msgstr "أذونات"
 
-#: .\shoutit\admin.py:55
+#: .\shoutit\admin.py:53
 msgid "Important dates"
 msgstr "تواريخ مهمة"
 
-#: .\shoutit\admin.py:56 .\shoutit\admin.py:273
+#: .\shoutit\admin.py:54 .\shoutit\admin.py:281
 msgid "Extra"
 msgstr "إضافي"
 
-#: .\shoutit\admin.py:272
+#: .\shoutit\admin.py:280
 msgid "Users"
 msgstr "المستخدمين"
 
@@ -93,19 +93,19 @@ msgstr "API Client"
 msgid "Published On"
 msgstr "Published On"
 
-#: .\shoutit\api\authentication.py:51
+#: .\shoutit\api\authentication.py:54
 msgid "Invalid page id header. No credentials provided"
 msgstr "معرف ترويسة صفحة غير صحيح, لاتوجد معلومات تسجيل دخول"
 
-#: .\shoutit\api\authentication.py:58
+#: .\shoutit\api\authentication.py:61
 msgid "Invalid page id"
 msgstr "معرف صفحة غير صحيح"
 
-#: .\shoutit\api\authentication.py:63
+#: .\shoutit\api\authentication.py:66
 msgid "Page does not exist"
 msgstr "الصفحة غير موجودة"
 
-#: .\shoutit\api\authentication.py:66
+#: .\shoutit\api\authentication.py:69
 msgid "Page inactive or deleted"
 msgstr "الصفحة غير مفعلة أو محذوفة"
 
@@ -192,7 +192,7 @@ msgstr "يجب أن تكون بين -180 و 180"
 msgid "Invalid number"
 msgstr "رقم خاطئ"
 
-#: .\shoutit\api\v3\filters.py:159 .\shoutit\api\v3\filters.py:298
+#: .\shoutit\api\v3\filters.py:159 .\shoutit\api\v3\filters.py:296
 #: .\shoutit\api\v3\serializers\tag.py:115
 #, python-format
 msgid "Category with slug '%(slug)s' does not exist"
@@ -202,16 +202,16 @@ msgstr "التصنيف '%(slug)s' غير موجود"
 msgid "Invalid sort"
 msgstr "فرز خاطئ"
 
-#: .\shoutit\api\v3\filters.py:280
+#: .\shoutit\api\v3\filters.py:278
 msgid "Should be `all`, `top` or `featured`"
 msgstr "يجب أن يكون `all`, `top` أو `featured`"
 
-#: .\shoutit\api\v3\filters.py:290
+#: .\shoutit\api\v3\filters.py:288
 msgid "Does not work when type is `featured`"
 msgstr "لاتعمل عند النوع `featured`"
 
-#: .\shoutit\api\v3\filters.py:303 .\shoutit\api\v3\filters.py:309
-#: .\shoutit\api\v3\filters.py:315
+#: .\shoutit\api\v3\filters.py:301 .\shoutit\api\v3\filters.py:307
+#: .\shoutit\api\v3\filters.py:313
 msgid "Only works when type equals `top` or `featured`"
 msgstr "تعمل فقط عندما يكون النوع `top` أو `featured`"
 
@@ -232,7 +232,7 @@ msgstr "لانقوم بإرجاع أكثر من 1000 نتيجة لأي بحث"
 #: .\shoutit\api\v3\serializers\auth.py:155
 #: .\shoutit\api\v3\serializers\auth.py:207
 #: .\shoutit\api\v3\serializers\profile.py:205
-#: .\shoutit\controllers\user_controller.py:18
+#: .\shoutit\controllers\user_controller.py:20
 msgid "This email is used by another account"
 msgstr "هذا البريد الإلكتروني مستخدم سابقاً"
 
@@ -260,7 +260,7 @@ msgid "Old password is incorrect"
 msgstr "كلمة المرور القديمة خاطئة"
 
 #: .\shoutit\api\v3\serializers\auth.py:294
-#: .\shoutit\api\v3\views\authentication_views.py:33
+#: .\shoutit\api\v3\views\authentication_views.py:31
 msgid "Account inactive or deleted"
 msgstr "الحساب غير مفعل أو محذوف"
 
@@ -474,38 +474,38 @@ msgstr "غير صالح في بلدك او بلد الاعلان"
 msgid "You didn't provide enough information for creating a shout"
 msgstr "معلومات غير كافية لإنشاء إعلان"
 
-#: .\shoutit\api\v3\views\authentication_views.py:498
+#: .\shoutit\api\v3\views\authentication_views.py:468
 #: .\shoutit\api\v3\views\exception_views.py:27
 #: .\shoutit\api\v3\views\exception_views.py:42
 msgid "Authentication failed"
 msgstr "خطأ في المصادقة"
 
-#: .\shoutit\api\v3\views\authentication_views.py:505
+#: .\shoutit\api\v3\views\authentication_views.py:475
 msgid "Unsupported grant_type"
 msgstr "طريقة تسجيل دخول غير مدعومة"
 
-#: .\shoutit\api\v3\views\authentication_views.py:612
+#: .\shoutit\api\v3\views\authentication_views.py:582
 msgid "Password reset email will be sent soon"
 msgstr "سيتم إرسال بريد إلكتروني لإستعادة كلمة المرور قريباً"
 
-#: .\shoutit\api\v3\views\authentication_views.py:635
-#: .\shoutit\api\v3\views\authentication_views.py:747
+#: .\shoutit\api\v3\views\authentication_views.py:605
+#: .\shoutit\api\v3\views\authentication_views.py:717
 msgid "New password set"
 msgstr "تم وضع كلمة مرور جديدة"
 
-#: .\shoutit\api\v3\views\authentication_views.py:749
+#: .\shoutit\api\v3\views\authentication_views.py:719
 msgid "Token does not exist"
 msgstr "رمز غير موجود"
 
-#: .\shoutit\api\v3\views\authentication_views.py:751
+#: .\shoutit\api\v3\views\authentication_views.py:721
 msgid "Email address is already verified"
 msgstr "البريد الإلكتروني مفعل مسبقاً"
 
-#: .\shoutit\api\v3\views\authentication_views.py:755
+#: .\shoutit\api\v3\views\authentication_views.py:725
 msgid "Authentication credentials were not provided"
 msgstr "لا توجد بيانات مصادقة التسجيل"
 
-#: .\shoutit\api\v3\views\authentication_views.py:759
+#: .\shoutit\api\v3\views\authentication_views.py:729
 #, python-format
 msgid "Your email '%(email)s' is already verified"
 msgstr "بريدك الإلكتروني '%(email)s' مفعل مسبقاً"
@@ -632,28 +632,28 @@ msgstr "لقد توقفت عن الإستماع إلى الإعلانات حول
 msgid "Invalid version in URL path. Please use version: %(version)s"
 msgstr "إصدار الرابط غير صحيح, يرجى إستخدام %(version)s"
 
-#: .\shoutit\controllers\email_controller.py:45
+#: .\shoutit\controllers\email_controller.py:46
 msgid "Welcome!"
 msgstr "أهلاً"
 
-#: .\shoutit\controllers\email_controller.py:52
-#: .\shoutit\controllers\email_controller.py:94
+#: .\shoutit\controllers\email_controller.py:53
+#: .\shoutit\controllers\email_controller.py:95
 msgid "Take me to my profile"
 msgstr "الذهاب الى صفحتي الشخصية"
 
-#: .\shoutit\controllers\email_controller.py:57
+#: .\shoutit\controllers\email_controller.py:58
 msgid "To get started using Shoutit, please activate your account below"
 msgstr "لتبدأ بإستخدام شاوت ات, يرجى تفعيل حسابك في الأسفل"
 
-#: .\shoutit\controllers\email_controller.py:58
+#: .\shoutit\controllers\email_controller.py:59
 msgid "Activate your account"
 msgstr "تفعيل الحساب"
 
-#: .\shoutit\controllers\email_controller.py:72
+#: .\shoutit\controllers\email_controller.py:73
 msgid "Verify your email"
 msgstr "قم بتأكيد بريدك الإلكتروني"
 
-#: .\shoutit\controllers\email_controller.py:74
+#: .\shoutit\controllers\email_controller.py:75
 msgid ""
 "Your have changed your email therefore your account is not verified. To use "
 "Shoutit with full potential we need to verify your email."
@@ -661,15 +661,15 @@ msgstr ""
 "حسابك غير مفعل لأنك قمت بتغيير بريدك الإلكتروني, لتتمع بجميع ميزات شاوت ات "
 "نحتاج لتأكيد بريدك الإلكتروني"
 
-#: .\shoutit\controllers\email_controller.py:76
+#: .\shoutit\controllers\email_controller.py:77
 msgid "Verify it now"
 msgstr "التأكيد الآن"
 
-#: .\shoutit\controllers\email_controller.py:90
+#: .\shoutit\controllers\email_controller.py:91
 msgid "Your email has been verified!"
 msgstr "تم تأكيد بريدك الإلكتروني!"
 
-#: .\shoutit\controllers\email_controller.py:92
+#: .\shoutit\controllers\email_controller.py:93
 msgid ""
 "Thank you for verifying your email. Your account has been verified and you "
 "can now use Shoutit full potential."
@@ -677,18 +677,18 @@ msgstr ""
 "شكراً لتأكيد بريدك الإلكتروني, حسابك الآن مفعل يمكنك إستخدام جميع ميزات شاوت "
 "ات"
 
-#: .\shoutit\controllers\email_controller.py:108
+#: .\shoutit\controllers\email_controller.py:109
 msgid "Reset your password"
 msgstr "إعادة ضبط كلمة المرور"
 
-#: .\shoutit\controllers\email_controller.py:110
+#: .\shoutit\controllers\email_controller.py:111
 msgid ""
 "You have requested to reset your password. If it wasn't you please let us "
 "know as soon as possible."
 msgstr ""
 "لقد قمت بطلب إستعادة كلمة المرور, إذا لم تكن أنت يرجى إخبارنا بأسرع وقت"
 
-#: .\shoutit\controllers\email_controller.py:111
+#: .\shoutit\controllers\email_controller.py:112
 msgid "Reset my password"
 msgstr "إعادة ضبط كلمة المرور"
 
@@ -714,7 +714,7 @@ msgid "No Google account to unlink"
 msgstr "لايوجد حساب غوغل لإلغائه"
 
 #: .\shoutit\controllers\gplus_controller.py:25
-#: .\shoutit\controllers\user_controller.py:120
+#: .\shoutit\controllers\user_controller.py:122
 msgid "Could not access your Google account, try again later"
 msgstr "لايمكن الوصول لحساب غوغل, يرجى المحاولة لاحقاً"
 
@@ -851,6 +851,10 @@ msgstr "شاوت ات"
 #, python-format
 msgid "%(name)s started listening to you"
 msgstr "%(name)s بدأ بالإستماع إليك"
+
+#: .\shoutit\models\message.py:536
+msgid "you"
+msgstr "إليك"
 
 #: .\shoutit\models\message.py:542
 msgid "New message"
@@ -1019,6 +1023,10 @@ msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
 msgstr "لقد حصلت على 1 شاوت ات كريدت لمشاركتك %(title)s على الفيسبوك"
 
 #: .\shoutit_credit\models\shout.py:148
+#, fuzzy, python-format
+#| msgid ""
+#| "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s "
+#| "for %(days)d days."
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
 "(days)d days."
