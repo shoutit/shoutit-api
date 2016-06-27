@@ -5,6 +5,7 @@ import json
 
 import sendgrid
 from django.conf import settings
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django_rq import job
 
@@ -23,7 +24,7 @@ sg_api = sendgrid.SendGridAPIClient(apikey=SG_API_KEY)
 def prepare_message(user, subject, template, subs=None):
     message = sendgrid.Mail()
     message.add_to(user.email)
-    message.set_subject(subject)
+    message.set_subject(force_text(subject))
     message.set_from(settings.DEFAULT_FROM_EMAIL)
     message.set_html(' ')
     message.add_filter('templates', 'enable', '1')
@@ -32,7 +33,7 @@ def prepare_message(user, subject, template, subs=None):
     message.add_substitution('{{name}}', user.name)
     if subs:
         for key, val in subs.items():
-            message.add_substitution('{{%s}}' % key, val)
+            message.add_substitution('{{%s}}' % key, force_text(val))
     return message
 
 
