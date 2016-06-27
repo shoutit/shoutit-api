@@ -371,6 +371,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
               paramType: query
         """
         # Borrow `serializer_class`, `pagination_class` and `get_queryset` from ShoutViewSet
+        self.get_object()  # to apply object permissions
         shout_view_set = ShoutViewSet()
         setattr(self, 'serializer_detail_class',
                 shout_view_set.serializer_class)  # Using detail since this is a detail endpoint
@@ -635,7 +636,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
             - form
         """
         user = self.get_object()
-        serializer = ProfileDeactivationSerializer(data=request.data, context={'profile': user})
+        serializer = ProfileDeactivationSerializer(data=request.data, context={'user': user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
