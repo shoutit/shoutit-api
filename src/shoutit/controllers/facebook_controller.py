@@ -184,7 +184,7 @@ def unlink_facebook_user(user, strict=True, notify=True):
 def fb_user_from_facebook_access_token(facebook_access_token):
     graph_url = 'https://graph.facebook.com/v2.6/me'
     params = {
-        'fields': "id,email,first_name,last_name,gender,picture.width(1000),cover,friends",
+        'fields': "id,email,first_name,last_name,gender,birthday,picture.width(1000),cover,friends",
         'access_token': facebook_access_token
     }
     try:
@@ -253,6 +253,8 @@ def delete_linked_facebook_account(facebook_user_id):
 
 
 def update_profile_using_fb_user(profile, fb_user):
+    # Todo (mo): Update `gender`, `birthday`, ?
+
     # Image
     if not profile.image:
         image_url = objects.get(fb_user, 'picture.data.url')

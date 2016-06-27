@@ -54,10 +54,9 @@ class CompleteProfile(CreditRule):
 
         # Terms and conditions apply!
         not_guest = not profile.user.is_guest
-        has_token = profile.user.accesstoken_set.exists()
-        completed_profile = all([profile.image is not None, profile.gender is not None, profile.birthday is not None])
+        completed_profile = all([profile.image != '', profile.gender is not None, profile.birthday is not None])
 
-        if not all([not_guest, has_token, completed_profile]):
+        if not all([not_guest, completed_profile]):
             return
 
         # Create Credit Transaction

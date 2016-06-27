@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
+
 from django.db import IntegrityError
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -130,6 +132,7 @@ def auth_with_facebook(fb_user, initial_user=None, is_test=False):
     last_name = fb_user.get('last_name')
     facebook_id = fb_user.get('id')
     gender = fb_user.get('gender')
+    birthday = fb_user.get('birthday')
     username = initial_user and initial_user.get('username')
     location = initial_user and initial_user.get('location')
     profile_fields = {}
@@ -141,6 +144,10 @@ def auth_with_facebook(fb_user, initial_user=None, is_test=False):
     if gender:
         profile_fields.update({'gender': gender})
         update_fields.append('gender')
+    if birthday:
+        birthday = datetime.strptime(birthday, "%d/%m/%Y").date()
+        profile_fields.update({'birthday': birthday})
+        update_fields.append('birthday')
 
     try:
         user = User.objects.filter(email=email).select_related('profile').first()
