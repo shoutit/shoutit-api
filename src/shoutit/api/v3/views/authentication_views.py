@@ -19,10 +19,9 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL
+from shoutit.api.authentication import PostAccessTokenRequestMixin
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredBody, InvalidBody, RequiredParameter, InvalidParameter
-from shoutit.controllers import mixpanel_controller
 from shoutit.models import ConfirmToken
-from shoutit_credit.models.profile import apply_invite_friends
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer, ShoutitPageSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer, ProfileDetailSerializer,
@@ -51,7 +50,7 @@ class RequestParamsClientBackend(object):
         return None
 
 
-class AccessTokenView(OAuthAccessTokenView, APIView):
+class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView):
     """
     OAuth2 Resource
     """
@@ -78,23 +77,18 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
 
-        # set data in case it is not set [refresh_token, password, etc grants]
-        if not data:
-            data = self.request.data
-
         if user.is_guest:
             user_dict = GuestSerializer(user, context={'request': self.request}).data
         else:
             user_dict = ProfileDetailSerializer(user, context={'request': self.request}).data
 
-        new_signup = getattr(user, 'new_signup', False)
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
             'profile': user_dict,
-            'new_signup': new_signup
+            'new_signup': getattr(user, 'new_signup', False)
         }
 
         # Todo (mo): deprecate as it is used by old clients only
@@ -109,31 +103,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         except ObjectDoesNotExist:
             pass
 
-        if new_signup:
-            # Alias the Mixpanel id
-            mixpanel_distinct_id = data.get('mixpanel_distinct_id')
-            if mixpanel_distinct_id:
-                mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
-            # track signup / signup_guest
-            event_name = "signup_guest" if user.is_guest else 'signup'
-            mixpanel_controller.track(user.pk, event_name, {
-                'profile': user.pk,
-                'api_client': data.get('client_id'),
-                'api_version': self.request.version,
-                'using': data.get('grant_type'),
-                'server': self.request.META.get('HTTP_HOST'),
-                'mp_country_code': user.location.get('country'),
-                '$region': user.location.get('state'),
-                '$city': user.location.get('city'),
-                'has_push_tokens': user.devices.count() > 0
-            })
-            # Add the profile to Mixpanel People
-            mixpanel_controller.add_to_mp_people([user.id])
-
-            # Apply InviteFriends
-            invitation_code = data.get('invitation_code')
-            if invitation_code:
-                apply_invite_friends(self.request.user, invitation_code)
+        # Alias, Track, Apply InviteFriends, etc
+        self.post_access_token_request()
 
         return Response(response_data)
 

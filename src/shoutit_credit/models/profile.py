@@ -8,7 +8,7 @@ import string
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -119,7 +119,7 @@ class InviteFriends(CreditRule):
         properties = {'profile_id': user.pk}
         transaction = CreditTransaction.create(user=invitation_code.user, amount=1, rule=self, properties=properties)
         # Update the invitation code
-        invitation_code.update(used_count=invitation_code.used_count + 1)
+        InvitationCode.objects.filter(id=invitation_code.id).update(used_count=F('used_count') + 1)
         return transaction
 
 

@@ -19,8 +19,8 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL
+from shoutit.api.authentication import PostAccessTokenRequestMixin
 from shoutit.models import ConfirmToken
-from shoutit.controllers import mixpanel_controller
 from shoutit.utils import error_logger
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (
@@ -48,7 +48,7 @@ class RequestParamsClientBackend(object):
         return None
 
 
-class AccessTokenView(OAuthAccessTokenView, APIView):
+class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView):
     """
     OAuth2 Resource
     """
@@ -85,14 +85,13 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         # set the request user in case it is not set [refresh_token, password, etc grants]
         self.request.user = user
         user_dict = UserDetailSerializer(user, context={'request': self.request}).data
-        new_signup = getattr(user, 'new_signup', False)
         response_data = {
             'access_token': access_token.token,
             'token_type': provider_constants.TOKEN_TYPE,
             'expires_in': access_token.get_expire_delta(),
             'scope': ' '.join(provider_scope.names(access_token.scope)),
             'user': user_dict,
-            'new_signup': new_signup
+            'new_signup': getattr(user, 'new_signup', False)
         }
 
         # Not all access_tokens are given a refresh_token
@@ -103,27 +102,8 @@ class AccessTokenView(OAuthAccessTokenView, APIView):
         except ObjectDoesNotExist:
             pass
 
-        request_data = self.request.data
-        if new_signup:
-            # Alias the Mixpanel id
-            mixpanel_distinct_id = request_data.get('mixpanel_distinct_id')
-            if mixpanel_distinct_id:
-                mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
-            # Track signup / signup_guest
-            event_name = "signup_guest" if user.is_guest else 'signup'
-            mixpanel_controller.track(user.pk, event_name, {
-                'profile': user.pk,
-                'api_client': request_data.get('client_id'),
-                'api_version': self.request.version,
-                'using': request_data.get('grant_type'),
-                'server': self.request.META.get('HTTP_HOST'),
-                'mp_country_code': user.location.get('country'),
-                '$region': user.location.get('state'),
-                '$city': user.location.get('city'),
-                'has_push_tokens': user.devices.count() > 0
-            })
-            # Add the profile to Mixpanel People
-            mixpanel_controller.add_to_mp_people([user.id])
+        # Alias, Track, Apply InviteFriends, etc
+        self.post_access_token_request()
 
         return Response(response_data)
 
