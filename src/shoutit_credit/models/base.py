@@ -12,6 +12,7 @@ from hvad.models import TranslatedFields, TranslatableModel
 
 from common.constants import Constant
 from shoutit.models import UUIDModel
+from shoutit.models.base import TranslatedModelFallbackMixin
 
 CREDIT_RULES = {}
 
@@ -24,7 +25,7 @@ CREDIT_IN = CreditTransactionType('in')
 CREDIT_OUT = CreditTransactionType('out')
 
 
-class CreditRule(TranslatableModel, UUIDModel):
+class CreditRule(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     transaction_type = models.SmallIntegerField(choices=CreditTransactionType.choices)
     type = models.CharField(max_length=30)
     name = models.CharField(max_length=50)

@@ -11,7 +11,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 
 from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER,
                               PAGE_ADMIN_TYPE_ADMIN)
-from shoutit.models.base import UUIDModel, APIModelMixin, TranslationTreeManager
+from shoutit.models.base import UUIDModel, APIModelMixin, TranslationTreeManager, TranslatedModelFallbackMixin
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
 from shoutit.utils import correct_mobile
@@ -19,7 +19,7 @@ from shoutit.utils import correct_mobile
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
 
-class PageCategory(APIModelMixin, TranslatableModel, MPTTModel, UUIDModel):
+class PageCategory(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, MPTTModel, UUIDModel):
     name = models.CharField(max_length=100, db_index=True)
     slug = ShoutitSlugField(unique=True)
     image = models.URLField(blank=True, default='')
