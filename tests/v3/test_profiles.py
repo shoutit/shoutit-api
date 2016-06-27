@@ -598,10 +598,11 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
         }
     }
 
+    # fb_exchange_token requests return `expires` unlike other Facebook access token requests which return `expires_in`
     facebook_access_token = urlencode({
         "access_token": "EAAEM8234sdf",
         "token_type": "bearer",
-        "expires_in": 5183341
+        "expires": 5183341
     })
 
     @classmethod
