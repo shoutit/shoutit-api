@@ -18,7 +18,7 @@ from shoutit.utils import url_with_querystring
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
 from .admin_forms import PushBroadcastForm, ItemForm, ImageFileChangeForm
-from .admin_utils import (UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links)
+from .admin_utils import UserLinkMixin, tag_link, user_link, reply_link, LocationMixin, item_link, LinksMixin, links
 from .models import *  # NOQA
 
 
@@ -33,10 +33,8 @@ models.Model.add_to_class('admin_url', admin_url)
 class CustomUserChangeForm(UserChangeForm):
     username = forms.RegexField(
         label=_("Username"), max_length=30, min_length=2, regex=r"^[0-9a-zA-Z.]{2,30}$",
-        help_text=_(
-            'Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
-        error_messages={
-            'invalid': _("This value may only contain A-Z, a-z, 0-9, and periods (.)")})
+        help_text=_('Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
+        error_messages={'invalid': _("This value may only contain A-Z, a-z, 0-9, and periods (.)")})
 
 
 # User
@@ -44,19 +42,19 @@ class CustomUserChangeForm(UserChangeForm):
 class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     save_on_top = True
     list_display = (
-        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_clients',
-        '_devices', '_messaging', '_location', 'is_active', 'is_activated', 'is_guest', 'last_login', 'created_at')
+        'id', '_links', 'username', '_profile', 'email', 'first_name', 'last_name', 'api_clients', '_devices',
+        '_messaging', '_location', 'is_active', 'is_activated', 'is_guest', 'last_login', 'created_at')
     list_per_page = 50
     fieldsets = (
         (None, {'fields': ('type', 'username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', '_profile')}),
-        (_('Permissions'), {'fields': ('is_active', 'is_activated', 'is_staff', 'is_superuser',
-                                       'is_test', 'is_guest', 'groups', 'user_permissions')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_activated', 'is_staff', 'is_superuser', 'is_test', 'is_guest',
+                                       'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
-    list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter),
-                   UserDeviceFilter, 'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
+    list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
+                   'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
@@ -211,7 +209,14 @@ class TagAdmin(LinksMixin, TranslatableAdmin):
     list_display = ('name', 'slug', 'key', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
+    list_filter = ('key',)
     form = ImageFileChangeForm
+
+
+class TagInline(admin.TabularInline):
+    model = Tag
+    fields = ('name', 'slug')
+    extra = 1
 
 
 # TagKey
@@ -220,6 +225,9 @@ class TagKeyAdmin(TranslatableAdmin):
     list_display = ('name', 'slug', 'values_type')
     search_fields = ('key',)
     list_filter = ('categories', 'values_type')
+    inlines = [
+        TagInline,
+    ]
 
 
 # Category
