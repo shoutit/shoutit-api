@@ -601,7 +601,7 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
     facebook_access_token = urlencode({
         "access_token": "EAAEM8234sdf",
         "token_type": "bearer",
-        "expires_in": 5183341
+        "expires": 5183341
     })
 
     @classmethod

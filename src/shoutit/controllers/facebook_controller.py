@@ -100,7 +100,7 @@ def extend_token(short_lived_token):
             raise ValueError("Invalid access token: %s" % response.content)
         response_params = dict(urlparse.parse_qsl(response.content))
         access_token = response_params.get('access_token')
-        expires = response_params.get('expires_in')
+        expires = response_params.get('expires')
         if not any((access_token, expires)):
             raise ValueError('`access_token` or `expires` not in response: %s' % response.content)
     except (requests.RequestException, ValueError) as e:
@@ -202,7 +202,7 @@ def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
     if abs((timezone.now() - expires_at).days) < 30:
         long_lived_token = extend_token(access_token)
         access_token = long_lived_token.get('access_token')
-        expires = long_lived_token.get('expires_in')
+        expires = long_lived_token.get('expires')
         expires_at = now_plus_delta(datetime.timedelta(seconds=int(expires)))
     facebook_id = token_data.get('user_id')
     scopes = token_data.get('scopes')
