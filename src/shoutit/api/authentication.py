@@ -68,6 +68,9 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
         if not page.user.is_active:
             raise exceptions.AuthenticationFailed(_('Page inactive or deleted'))
 
+        if not page.is_admin(ret[0]):
+            raise exceptions.PermissionDenied(_("You can't act as an admin of the provided page"))
+
         setattr(request, '_user', page.user)
         setattr(request, 'page_admin_user', ret[0])
         return page.user, ret[1]
