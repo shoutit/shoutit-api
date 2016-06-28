@@ -263,8 +263,8 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
         Passing the optional `invitation_code` 'may' give the owner of that code a shoutit credit.
 
         ##Page Signup notes
-        - returned `access_token` and `refresh_token` belog to the page creator (user)
-        - returned `profile` is the Page profile
+        - returned `access_token` and `refresh_token` belong to the page creator (user)
+        - returned `profile` is the Page profile and it contains `admin` which is a DetailedProfile for the page creator
         - clients should set http header `Authorization-Page-Id` using the returned `profile.id` for all later requests. This makes sure these calls are treated as if the Page is acting not its owner.
 
         ##Requesting the access token

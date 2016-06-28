@@ -10,6 +10,7 @@ from django.core.validators import URLValidator, validate_email
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers, exceptions as drf_exceptions
 from rest_framework.fields import empty
+from rest_framework.request import clone_request
 from rest_framework.reverse import reverse
 
 from common.constants import USER_TYPE_PAGE
@@ -103,10 +104,15 @@ class ProfileDetailSerializer(ProfileSerializer):
     chat_url = serializers.SerializerMethodField(help_text="URL to message this profile if it is possible. This is the "
                                                            "case when the profile is one of your listeners or an "
                                                            "existing previous conversation")
-    pages = ProfileSerializer(source='pages.all', many=True, read_only=True)
-    admins = ProfileSerializer(source='ap.admins.all', many=True, read_only=True)
+
     stats = serializers.ReadOnlyField(
         help_text="Object specifying `unread_conversations_count` and `unread_notifications_count`")
+    admin = serializers.SerializerMethodField(help_text="DetailedProfile for the currently logged in page admin if any."
+                                                        "This is only shown for Pages")
+
+    # Deprecate in 3.1
+    pages = serializers.SerializerMethodField()
+    admins = serializers.SerializerMethodField()
 
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
@@ -114,7 +120,7 @@ class ProfileDetailSerializer(ProfileSerializer):
             'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'email', 'mobile', 'website',
             'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
             'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
-            'pages', 'admins', 'stats'
+            'stats', 'admin', 'pages', 'admins'
         )
 
     def get_is_listener(self, user):
@@ -148,6 +154,23 @@ class ProfileDetailSerializer(ProfileSerializer):
             return None
         return ConversationDetailSerializer(conversation, context=self.root.context).data
 
+    def get_admin(self, user):
+        request = self.root.context.get('request')
+        page_admin_user = request and getattr(request, 'page_admin_user', None)
+        if not page_admin_user:
+            return None
+        # Serializing the admin profile requires a request with its user set to him
+        admin_request = clone_request(request, request.method)
+        admin_request._user = page_admin_user
+        context = {'request': admin_request}
+        return ProfileDetailSerializer(instance=page_admin_user, context=context).data
+
+    def get_admins(self, user):
+        return []
+
+    def get_pages(self, user):
+        return []
+
     def to_representation(self, instance):
         if not instance.is_active:
             return InactiveUser().to_dict
@@ -174,6 +197,9 @@ class ProfileDetailSerializer(ProfileSerializer):
             del ret['is_listener']
             del ret['conversation']
             del ret['chat_url']
+
+        if not ret['type'] == 'page':  # v3 profile type
+            del ret['admin']
 
         blank_to_none(ret, ['image', 'cover', 'gender', 'video', 'bio', 'about', 'mobile', 'website'])
         return ret

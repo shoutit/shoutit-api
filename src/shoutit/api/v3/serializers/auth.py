@@ -161,6 +161,8 @@ class ShoutitPageSerializer(serializers.Serializer):
         initial_profile['ip'] = get_real_ip(request)
         user, page = page_controller.user_and_page_from_shoutit_page_data(validated_data, initial_profile,
                                                                           request.is_test)
+        # Set the page admin user for serializing the admin property of this page
+        request.page_admin_user = user
         return user, page
 
 

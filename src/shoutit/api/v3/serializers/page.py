@@ -79,6 +79,9 @@ class CreatePageSerializer(serializers.Serializer):
         name = validated_data['page_name']
         category = validated_data['page_category']
         page = page_controller.create_page(creator=request.user, name=name, category=category)
+        # Set the user and page admin user for correctly serializing this page and its admin property
+        request.page_admin_user = request.user
+        request._user = page
         return page
 
     def to_representation(self, instance):

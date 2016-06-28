@@ -1,6 +1,11 @@
 # shoutit-api v3 changelog
 
 
+## Update
+
+- `pages` and `admins` in **DetailedProfile** are now empty lists. The endpoints `/profiles/{username}/pages` and `/pages/{username}/admins` can be used instead.
+- Added `admin` property to **DetailedProfile** when it is of type `page`. This has a DetailedProfile of the currently logged in admin if any.
+
 ## Update (2016-06-26) 
 
 ### Internationalization
