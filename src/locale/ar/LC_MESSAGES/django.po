@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-27 18:49+0200\n"
+"POT-Creation-Date: 2016-06-29 10:06+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -108,6 +108,10 @@ msgstr "الصفحة غير موجودة"
 #: .\shoutit\api\authentication.py:69
 msgid "Page inactive or deleted"
 msgstr "الصفحة غير مفعلة أو محذوفة"
+
+#: .\shoutit\api\authentication.py:72
+msgid "You can't act as an admin of the provided page"
+msgstr ""
 
 #: .\shoutit\api\permissions.py:24
 msgid "Secure connection is required"
@@ -230,45 +234,45 @@ msgstr "لانقوم بإرجاع أكثر من 1000 نتيجة لأي بحث"
 
 #: .\shoutit\api\v3\serializers\auth.py:87
 #: .\shoutit\api\v3\serializers\auth.py:155
-#: .\shoutit\api\v3\serializers\auth.py:207
-#: .\shoutit\api\v3\serializers\profile.py:205
+#: .\shoutit\api\v3\serializers\auth.py:209
+#: .\shoutit\api\v3\serializers\profile.py:231
 #: .\shoutit\controllers\user_controller.py:20
 msgid "This email is used by another account"
 msgstr "هذا البريد الإلكتروني مستخدم سابقاً"
 
 #: .\shoutit\api\v3\serializers\auth.py:114
-#: .\shoutit\api\v3\serializers\auth.py:235
+#: .\shoutit\api\v3\serializers\auth.py:237
 msgid "The email or username you entered do not belong to any account"
 msgstr "البريد الإلكتروني أو إسم المستخدم غير معروف"
 
 #: .\shoutit\api\v3\serializers\auth.py:117
-#: .\shoutit\api\v3\serializers\auth.py:308
+#: .\shoutit\api\v3\serializers\auth.py:310
 msgid "The password you entered is incorrect"
 msgstr "كلمة المرور خطأ"
 
-#: .\shoutit\api\v3\serializers\auth.py:195
+#: .\shoutit\api\v3\serializers\auth.py:197
 msgid "Could not create guest account"
 msgstr "لايمكن إنشاء حساب ضيف"
 
-#: .\shoutit\api\v3\serializers\auth.py:256
-#: .\shoutit\api\v3\serializers\auth.py:282
+#: .\shoutit\api\v3\serializers\auth.py:258
+#: .\shoutit\api\v3\serializers\auth.py:284
 msgid "New passwords did not match"
 msgstr "كلمة المرور الجديدة غير مطابقة"
 
-#: .\shoutit\api\v3\serializers\auth.py:269
+#: .\shoutit\api\v3\serializers\auth.py:271
 msgid "Old password is incorrect"
 msgstr "كلمة المرور القديمة خاطئة"
 
-#: .\shoutit\api\v3\serializers\auth.py:294
+#: .\shoutit\api\v3\serializers\auth.py:296
 #: .\shoutit\api\v3\views\authentication_views.py:31
 msgid "Account inactive or deleted"
 msgstr "الحساب غير مفعل أو محذوف"
 
-#: .\shoutit\api\v3\serializers\auth.py:297
+#: .\shoutit\api\v3\serializers\auth.py:299
 msgid "Reset token is invalid"
 msgstr "رمز إعادة تعيين غير صالح"
 
-#: .\shoutit\api\v3\serializers\auth.py:323
+#: .\shoutit\api\v3\serializers\auth.py:325
 msgid "Invalid sms_code"
 msgstr "Invalid sms_code"
 
@@ -419,37 +423,37 @@ msgstr "%(name)s ليس مدير في هذه الصفحة"
 msgid "Removed %(name)s from the admins of this page"
 msgstr "تم حذف %(name)s من مدراء هذه الصفحة"
 
-#: .\shoutit\api\v3\serializers\profile.py:351
+#: .\shoutit\api\v3\serializers\profile.py:377
 msgid "Facebook"
 msgstr "فيسبوك"
 
-#: .\shoutit\api\v3\serializers\profile.py:351
+#: .\shoutit\api\v3\serializers\profile.py:377
 msgid "Google"
 msgstr "غوغل"
 
-#: .\shoutit\api\v3\serializers\profile.py:352
+#: .\shoutit\api\v3\serializers\profile.py:378
 #, python-format
 msgid "Couldn't link your %(account)s account"
 msgstr "لايمكن ربط حساب %(account)s"
 
-#: .\shoutit\api\v3\serializers\profile.py:355
+#: .\shoutit\api\v3\serializers\profile.py:381
 msgid "linked"
 msgstr "ربط"
 
-#: .\shoutit\api\v3\serializers\profile.py:372
+#: .\shoutit\api\v3\serializers\profile.py:398
 msgid "unlinked"
 msgstr "فك ربط"
 
-#: .\shoutit\api\v3\serializers\profile.py:379
+#: .\shoutit\api\v3\serializers\profile.py:405
 #, python-format
 msgid "Your %(account)s has been %(action)s"
 msgstr "تم %(action)s  حساب %(account)s"
 
-#: .\shoutit\api\v3\serializers\profile.py:382
+#: .\shoutit\api\v3\serializers\profile.py:408
 msgid "No changes were made"
 msgstr "لم يتم إجراء أية تغييرات"
 
-#: .\shoutit\api\v3\serializers\profile.py:500
+#: .\shoutit\api\v3\serializers\profile.py:526
 msgid "You can't make actions against your own profile"
 msgstr "لايمكنك إتخاذ إجراء على ملفك الشخصي"
 
@@ -575,15 +579,15 @@ msgstr "لقد بدأت بالإستماع إلى إعلانات %(name)s"
 msgid "You stopped listening to shouts from %(name)s"
 msgstr "لقد توقفت عن الإستماع إلى إعلانات %(name)s"
 
-#: .\shoutit\api\v3\views\profile_views.py:436
+#: .\shoutit\api\v3\views\profile_views.py:437
 msgid "You can not start a conversation with your self"
 msgstr "لايمكنك بدئ محادثة مع حسابك"
 
-#: .\shoutit\api\v3\views\profile_views.py:438
+#: .\shoutit\api\v3\views\profile_views.py:439
 msgid "You can only start a conversation with your listeners"
 msgstr "تستطيع بدء محادثة فقط مع مستمعيك"
 
-#: .\shoutit\api\v3\views\profile_views.py:584
+#: .\shoutit\api\v3\views\profile_views.py:585
 msgid "Your contacts have been uploaded"
 msgstr "تم تحميل جهات الإتصال"
 
@@ -1023,16 +1027,13 @@ msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
 msgstr "لقد حصلت على 1 شاوت ات كريدت لمشاركتك %(title)s على الفيسبوك"
 
 #: .\shoutit_credit\models\shout.py:148
-#, fuzzy, python-format
-#| msgid ""
-#| "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s "
-#| "for %(days)d days."
+#, python-format
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
 "(days)d days."
 msgstr ""
 "لقد إستخدمت %(amount)d شاوت ات كريدت لترقية %(title)s ك %(label)s لمدة %"
-"(days) أيام"
+"%(days)d أيام"
 
 #: .\shoutit_credit\models\shout.py:149
 #, python-format
