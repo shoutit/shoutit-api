@@ -22,11 +22,6 @@ from shoutit import ES
 from shoutit.models.misc import LocationIndex
 from shoutit.models.post import ShoutIndex, Post, Shout
 from shoutit.models import Profile
-# TODO: refactor application code, so shout signal will be applied
-#       automatically (currently shout_post_save signal is not called
-#       because it is not automatically imported)
-#       Following import is present only to apply signals
-from shoutit.controllers import shout_controller
 
 # mock pusher
 mocked_pusher = MagicMock()
@@ -48,6 +43,13 @@ mixpanel_controller.shoutit_mp_buffered = MagicMock()
 
 # mock s3 boto
 boto.connect_s3 = MagicMock()
+
+# TODO: refactor application code, so shout signal will be applied
+#       automatically (currently shout_post_save signal is not called
+#       because it is not automatically imported)
+#       Following import is present only to apply signals
+#       The mocking has to be done first
+from shoutit.controllers import shout_controller
 
 
 class BaseTestCase(APITestCase):

@@ -2,6 +2,12 @@
 
 
 ## Update
+- Added `/shouts/{id}/like` which allows a profile to like a shout. Shout owner will be notified
+- Added `/shouts/{id}/bookmark` which allows a profile to bookmark a shout to come to it later. Shout owner won't be notified
+- Added `/profiles/{username}/bookmarks` which returns a list of bookmarked shouts. Profiles can get their own bookmarked shouts only not those for other profiles
+
+
+## Update (2016-06-27)
 
 - `pages` and `admins` in **DetailedProfile** are now empty lists. The endpoints `/profiles/{username}/pages` and `/pages/{username}/admins` can be used instead.
 - Added `admin` property to **DetailedProfile** when it is of type `page`. This has a DetailedProfile of the currently logged in admin if any.

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-29 10:06+0200\n"
+"POT-Creation-Date: 2016-06-29 03:11+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -457,26 +457,48 @@ msgstr "لم يتم إجراء أية تغييرات"
 msgid "You can't make actions against your own profile"
 msgstr "لايمكنك إتخاذ إجراء على ملفك الشخصي"
 
-#: .\shoutit\api\v3\serializers\shout.py:67
+#: .\shoutit\api\v3\serializers\shout.py:68
 #, python-format
 msgid "Malformed filters, missing key: %(key)s"
 msgstr "معلومات فرز غير صحيحة, المفتاح %(key)s مفقود"
 
-#: .\shoutit\api\v3\serializers\shout.py:70
+#: .\shoutit\api\v3\serializers\shout.py:71
 msgid "Malformed filters"
 msgstr "معلومات فرز غير صحيحة"
 
-#: .\shoutit\api\v3\serializers\shout.py:89
+#: .\shoutit\api\v3\serializers\shout.py:90
 msgid "The currency must be set when the price is set"
 msgstr "يجب تحديد العملة عند إدخال السعر"
 
-#: .\shoutit\api\v3\serializers\shout.py:198
+#: .\shoutit\api\v3\serializers\shout.py:199
 msgid "Is not valid in your or in the shout's country"
 msgstr "غير صالح في بلدك او بلد الاعلان"
 
-#: .\shoutit\api\v3\serializers\shout.py:207
+#: .\shoutit\api\v3\serializers\shout.py:208
 msgid "You didn't provide enough information for creating a shout"
 msgstr "معلومات غير كافية لإنشاء إعلان"
+
+#: .\shoutit\api\v3\serializers\shout.py:232
+#, python-format
+msgid "You liked %(shout)s"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:233
+#, python-format
+msgid "You unliked %(shout)s"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\shout.py:238
+#, fuzzy
+#| msgid "You can not start a conversation about your own shout"
+msgid "You can not like your own shouts"
+msgstr "لايمكنك بدء محادثة حول إعلانك"
+
+#: .\shoutit\api\v3\serializers\shout.py:254
+#, fuzzy
+#| msgid "about"
+msgid "a shout"
+msgstr "حول"
 
 #: .\shoutit\api\v3\views\authentication_views.py:468
 #: .\shoutit\api\v3\views\exception_views.py:27
@@ -591,31 +613,31 @@ msgstr "تستطيع بدء محادثة فقط مع مستمعيك"
 msgid "Your contacts have been uploaded"
 msgstr "تم تحميل جهات الإتصال"
 
-#: .\shoutit\api\v3\views\shout_views.py:179
+#: .\shoutit\api\v3\views\shout_views.py:180
 msgid "Newest"
 msgstr "الأحدث"
 
-#: .\shoutit\api\v3\views\shout_views.py:181
+#: .\shoutit\api\v3\views\shout_views.py:182
 msgid "Price: Low to High"
 msgstr "السعر: الاقل إلى الأعلى"
 
-#: .\shoutit\api\v3\views\shout_views.py:182
+#: .\shoutit\api\v3\views\shout_views.py:183
 msgid "Price: High to Low"
 msgstr "السعر: الأعلى إلى الأقل"
 
-#: .\shoutit\api\v3\views\shout_views.py:219
+#: .\shoutit\api\v3\views\shout_views.py:220
 msgid "This parameter is required"
 msgstr "هذا المتغيير مطلوب"
 
-#: .\shoutit\api\v3\views\shout_views.py:227
+#: .\shoutit\api\v3\views\shout_views.py:228
 msgid "At least two characters are required"
 msgstr "يتطلب حرفين على الأقل"
 
-#: .\shoutit\api\v3\views\shout_views.py:382
+#: .\shoutit\api\v3\views\shout_views.py:383
 msgid "You can not start a conversation about your own shout"
 msgstr "لايمكنك بدء محادثة حول إعلانك"
 
-#: .\shoutit\api\v3\views\shout_views.py:462
+#: .\shoutit\api\v3\views\shout_views.py:463
 msgid "No mobile to be called"
 msgstr "لايوجد رقم موبايل للإتصال"
 
@@ -860,33 +882,43 @@ msgstr "%(name)s بدأ بالإستماع إليك"
 msgid "you"
 msgstr "إليك"
 
-#: .\shoutit\models\message.py:542
+#: .\shoutit\models\message.py:541
 msgid "New message"
 msgstr "رسالة جديدة"
 
-#: .\shoutit\models\message.py:551
+#: .\shoutit\models\message.py:550
 msgid "Incoming video call"
 msgstr "مكالمة فيديو واردة"
 
-#: .\shoutit\models\message.py:553
+#: .\shoutit\models\message.py:552
 #, python-format
 msgid "%(name)s is calling you on Shoutit"
 msgstr "%(name)s يتصل بك على شاوت ات"
 
-#: .\shoutit\models\message.py:559
+#: .\shoutit\models\message.py:557
 msgid "Missed video call"
 msgstr "مكالمة فيديو فائته"
 
-#: .\shoutit\models\message.py:561
+#: .\shoutit\models\message.py:559
 #, python-format
 msgid "You missed a call from %(name)s"
 msgstr "مكالمة فيديو فائته من %(name)s"
 
-#: .\shoutit\models\message.py:567
+#: .\shoutit\models\message.py:564
 msgid "New Credit Transaction"
 msgstr "معاملة شاوت ات كريدت جديدة"
 
-#: .\shoutit\models\message.py:580
+#: .\shoutit\models\message.py:570
+msgid "New Shout Like"
+msgstr ""
+
+#: .\shoutit\models\message.py:573
+#, fuzzy, python-format
+#| msgid "%(name)s is calling you on Shoutit"
+msgid "%(name)s liked your shout %(title)s"
+msgstr "%(name)s يتصل بك على شاوت ات"
+
+#: .\shoutit\models\message.py:586
 msgid "Answer"
 msgstr "إجابة"
 
@@ -942,7 +974,7 @@ msgstr "المهمة"
 msgid "general info"
 msgstr "معلومات عامة"
 
-#: .\shoutit\models\post.py:237
+#: .\shoutit\models\post.py:240
 msgid "Deleted Shout"
 msgstr "إعلان ملغي"
 

@@ -28,18 +28,23 @@ class Action(UUIDModel, APIModelMixin, LocationMixin):
     def owner(self):
         return self.user
 
+    def is_owner(self, user):
+        return user == self.user or user == self.page_admin_user
+
     @property
     def track_properties(self):
         properties = {
             'id': self.pk,
             'profile': self.user_id,
-            'type': self.get_type_display(),
             'mp_country_code': self.country,
             '$region': self.state,
             '$city': self.city,
             'api_client': getattr(self, 'api_client', None),
             'api_version': getattr(self, 'api_version', None),
         }
+        if hasattr(self, 'get_type_display'):
+            properties['type'] = self.get_type_display()
+
         return properties
 
 
