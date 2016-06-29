@@ -12,10 +12,10 @@ from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
 
-from shoutit.controllers import email_controller, item_controller, location_controller, mixpanel_controller
+from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller, notifications_controller)
 from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
-from shoutit.models.post import ShoutIndex
+from shoutit.models.post import ShoutIndex, ShoutLike
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -277,3 +277,24 @@ def publish_shout_to_facebook(shout):
         debug_logger.debug('Published shout %s on Facebook' % shout)
     else:
         error_logger.warn('Error publishing shout on Facebook', extra={'res': res, 'shout': shout})
+
+
+def like_shout(user, shout, api_client=None, api_version=None, page_admin_user=None):
+    shout_like = ShoutLike.create(save=False, user=user, shout=shout, page_admin_user=page_admin_user)
+    shout_like.api_client, shout_like.api_version = api_client, api_version
+    try:
+        shout_like.save()
+        notifications_controller.notify_shout_owner_of_shout_like(shout, user)
+    except (ValidationError, IntegrityError):
+        pass
+
+
+def unlike_shout(user, shout):
+    ShoutLike.objects.filter(user=user, shout=shout).delete()
+
+
+@receiver(post_save, sender=ShoutLike)
+def shout_like_post_save(sender, instance=None, created=False, **kwargs):
+    if created:
+        # Track
+        mixpanel_controller.track(instance.user.pk, 'new_shout_like', instance.track_properties)

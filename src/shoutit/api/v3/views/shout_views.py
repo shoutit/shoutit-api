@@ -27,7 +27,8 @@ from shoutit.utils import has_unicode
 from shoutit_credit.views import PromoteShoutMixin
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
-from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
+from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer, \
+    ShoutLikeSerializer
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -473,3 +474,29 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         }
         mixpanel_controller.track(user.pk, 'show_mobile', track_properties)
         return Response({'mobile': mobile})
+
+    @detail_route(methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated], suffix='Like')
+    def like(self, request, *args, **kwargs):
+        """
+        Like / unlike a Shout
+        ###REQUIRES AUTH
+        ###Like
+        <pre><code>
+        POST: /shouts/{id}/like
+        </code></pre>
+
+        ###Unlike
+        <pre><code>
+        DELETE: /shouts/{id}/like
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        shout = self.get_object()
+        self.serializer_detail_class = ShoutLikeSerializer
+        serializer = self.get_serializer(instance=shout, data={})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

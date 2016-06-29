@@ -214,6 +214,7 @@ NOTIFICATION_TYPE_STATS_UPDATE = NotificationType('stats_update')
 NOTIFICATION_TYPE_INCOMING_VIDEO_CALL = NotificationType('incoming_video_call')
 NOTIFICATION_TYPE_MISSED_VIDEO_CALL = NotificationType('missed_video_call')
 NOTIFICATION_TYPE_CREDIT_TRANSACTION = NotificationType('new_credit_transaction')
+NOTIFICATION_TYPE_SHOUT_LIKE = NotificationType('new_shout_like')
 
 
 class ListenType(Constant):

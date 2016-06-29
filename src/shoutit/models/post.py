@@ -84,10 +84,6 @@ class Post(Action):
         return date_unix(self.published_at)
 
     @property
-    def title(self):
-        return self.item.name
-
-    @property
     def thumbnail(self):
         return self.item.thumbnail
 
@@ -141,6 +137,10 @@ class Shout(Post):
             mobile_owner_country = correct_mobile(self.mobile, self.owner.ap.country)
             self.mobile = mobile_shout_country or mobile_owner_country
         none_to_blank(self, ['mobile'])
+
+    @property
+    def title(self):
+        return self.item.name
 
     @property
     def images(self):
@@ -221,6 +221,9 @@ class Shout(Post):
     @property
     def promotion(self):
         return self.promotions.order_by('created_at').last()
+
+    def is_liked(self, user):
+        return ShoutLike.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
 
 
 class InactiveShout(object):
@@ -330,3 +333,15 @@ class Video(UUIDModel):
 
     def __unicode__(self):
         return "%s: %s @ %s" % (self.pk, self.id_on_provider, self.provider)
+
+
+class ShoutLike(Action):
+    shout = models.ForeignKey(Shout, related_name='likes')
+
+    @property
+    def track_properties(self):
+        properties = super(ShoutLike, self).track_properties
+        properties.update({
+            'shout': self.shout_id
+        })
+        return properties

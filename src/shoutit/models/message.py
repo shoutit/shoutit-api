@@ -23,7 +23,7 @@ from common.constants import (
     ConversationType, MESSAGE_ATTACHMENT_TYPE_LOCATION, REPORT_TYPE_GENERAL, CONVERSATION_TYPE_ABOUT_SHOUT,
     CONVERSATION_TYPE_PUBLIC_CHAT, NOTIFICATION_TYPE_MESSAGE, MESSAGE_ATTACHMENT_TYPE_MEDIA,
     MESSAGE_ATTACHMENT_TYPE_PROFILE, CONVERSATION_TYPE_CHAT, NOTIFICATION_TYPE_MISSED_VIDEO_CALL,
-    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_CREDIT_TRANSACTION)
+    NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_CREDIT_TRANSACTION, NOTIFICATION_TYPE_SHOUT_LIKE)
 from common.utils import date_unix
 from .auth import User
 from .action import Action
@@ -527,7 +527,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
         text = None
         ranges = []
         image = None
-        target = None
+        target = self.attached_object
 
         if self.type == NOTIFICATION_TYPE_LISTEN:
             name = self.attached_object.name
@@ -535,7 +535,6 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ranges.append({'offset': text.index(name), 'length': len(name)})
             ranges.append({'offset': text.index(unicode(_('you'))), 'length': len('you')})
             image = self.attached_object.ap.image
-            target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
             # Todo (mo): is `ranges` needed for messages notifications?
@@ -553,7 +552,6 @@ class Notification(UUIDModel, AttachedObjectMixin):
             text = _("%(name)s is calling you on Shoutit") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
-            target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_MISSED_VIDEO_CALL:
             title = _("Missed video call")
@@ -561,13 +559,21 @@ class Notification(UUIDModel, AttachedObjectMixin):
             text = _("You missed a call from %(name)s") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
-            target = self.attached_object
 
         elif self.type == NOTIFICATION_TYPE_CREDIT_TRANSACTION:
             title = _("New Credit Transaction")
             text = self.attached_object.display()['text']
             setattr(self, '_app_url', 'shoutit://credit_transactions')
             setattr(self, '_web_url', None)
+
+        elif self.type == NOTIFICATION_TYPE_SHOUT_LIKE:
+            title = _('New Shout Like')
+            name = self.from_user.name
+            shout_title = self.attached_object.title
+            text = _('%(name)s liked your shout %(title)s') % {'name': name, 'title': shout_title}
+            ranges.append({'offset': text.index(name), 'length': len(name)})
+            ranges.append({'offset': text.index(shout_title), 'length': len(shout_title)})
+            image = self.from_user.ap.image
 
         ret = OrderedDict([
             ('title', title),
