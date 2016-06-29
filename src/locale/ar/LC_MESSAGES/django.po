@@ -940,7 +940,7 @@ msgstr "لقد حصلت على 1 شاوت ات كريدت لمشاركتك %(tit
 
 #: .\shoutit_credit\models\shout.py:148
 msgid "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %(days)d days."
-msgstr "لقد إستخدمت %(amount)d شاوت ات كريدت لترقية %(title)s ك %(label)s لمدة %(days) أيام"
+msgstr "لقد إستخدمت %(amount)d شاوت ات كريدت لترقية %(title)s ك %(label)s لمدة %(days)d أيام"
 
 #: .\shoutit_credit\models\shout.py:149
 msgid "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
