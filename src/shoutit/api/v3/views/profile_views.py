@@ -21,7 +21,7 @@ from ..filters import HomeFilterBackend, ProfileFilter
 from ..pagination import ShoutitPageNumberPaginationNoCount
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
-                           ProfileContactsSerializer)
+                           ProfileContactsSerializer, ShoutSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -674,3 +674,39 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         page = self.paginate_queryset(pages)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], permission_classes=(IsAuthenticated, IsOwner), suffix='Bookmarks')
+    def bookmarks(self, request, *args, **kwargs):
+        """
+        List the Profile bookmarked shouts. Profile can't see the bookmarks of other profiles.
+        [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
+        ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "count": 0, // number of results
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        user = self.get_object()
+        self.serializer_detail_class = ShoutSerializer
+        shouts = self.filter_queryset(user.bookmarks.all().order_by('-bookmarks__created_at'))
+        page = self.paginate_queryset(shouts)
+        serializer = self.get_serializer(page, many=True)
+        result = self.get_paginated_response(serializer.data)
+        return result
