@@ -27,8 +27,7 @@ from shoutit.utils import has_unicode
 from shoutit_credit.views import PromoteShoutMixin
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
-from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer, \
-    ShoutLikeSerializer
+from ..serializers import (ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer, ShoutLikeSerializer, ShoutBookmarkSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 
@@ -475,7 +474,33 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         mixpanel_controller.track(user.pk, 'show_mobile', track_properties)
         return Response({'mobile': mobile})
 
-    @detail_route(methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated], suffix='Like')
+    @detail_route(methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated], suffix='Bookmark Shout')
+    def bookmark(self, request, *args, **kwargs):
+        """
+        Add / remove a Shout to profile bookmarked shouts
+        ###REQUIRES AUTH
+        ###Add
+        <pre><code>
+        POST: /shouts/{id}/like
+        </code></pre>
+
+        ###Remove
+        <pre><code>
+        DELETE: /shouts/{id}/like
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        shout = self.get_object()
+        self.serializer_detail_class = ShoutBookmarkSerializer
+        serializer = self.get_serializer(instance=shout, data={})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @detail_route(methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated], suffix='Like Shout')
     def like(self, request, *args, **kwargs):
         """
         Like / unlike a Shout

@@ -107,6 +107,8 @@ class Shout(Post):
     is_sss = models.BooleanField(default=False)
     mobile = models.CharField(blank=True, max_length=20, default='')
 
+    bookmarked_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='ShoutBookmark',
+                                           through_fields=('shout', 'user'), related_name='bookmarks')
     conversations = GenericRelation('shoutit.Conversation', related_query_name='about_shout')
     message_attachments = GenericRelation('shoutit.MessageAttachment', related_query_name='attached_shout')
 
@@ -221,6 +223,9 @@ class Shout(Post):
     @property
     def promotion(self):
         return self.promotions.order_by('created_at').last()
+
+    def is_bookmarked(self, user):
+        return ShoutBookmark.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
 
     def is_liked(self, user):
         return ShoutLike.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
@@ -338,9 +343,27 @@ class Video(UUIDModel):
 class ShoutLike(Action):
     shout = models.ForeignKey(Shout, related_name='likes')
 
+    class Meta:
+        unique_together = ('user', 'shout')
+
     @property
     def track_properties(self):
         properties = super(ShoutLike, self).track_properties
+        properties.update({
+            'shout': self.shout_id
+        })
+        return properties
+
+
+class ShoutBookmark(Action):
+    shout = models.ForeignKey(Shout, related_name='bookmarks')
+
+    class Meta:
+        unique_together = ('user', 'shout')
+
+    @property
+    def track_properties(self):
+        properties = super(ShoutBookmark, self).track_properties
         properties.update({
             'shout': self.shout_id
         })

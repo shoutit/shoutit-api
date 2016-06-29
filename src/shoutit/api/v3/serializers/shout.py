@@ -42,6 +42,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     filters = serializers.ListField(default=list, source='filter_objects')
     api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
     promotion = ShoutPromotionSerializer(read_only=True)
+    is_bookmarked = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
 
     class Meta:
@@ -49,8 +50,13 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         fields = (
             'id', 'api_url', 'web_url', 'app_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
             'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
-            'filters', 'is_expired', 'promotion', 'is_liked'
+            'filters', 'is_expired', 'promotion', 'is_bookmarked', 'is_liked'
         )
+
+    def get_is_bookmarked(self, shout):
+        request = self.root.context.get('request')
+        user = request and request.user
+        return user and user.is_authenticated() and shout.is_bookmarked(user)
 
     def get_is_liked(self, shout):
         request = self.root.context.get('request')
@@ -262,4 +268,28 @@ class ShoutLikeSerializer(serializers.Serializer):
             msg = self.like_message % title
         else:
             msg = self.unlike_message % title
+        return {'success': msg}
+
+
+class ShoutBookmarkSerializer(serializers.Serializer):
+    bookmark_message = _('You bookmarked %(shout)s')
+    unbookmark_message_message = _('You unbookmarked %(shout)s')
+
+    def update(self, instance, validated_data):
+        request = self.context['request']
+        page_admin_user = getattr(request, 'page_admin_user', None)
+        api_client = getattr(request, 'api_client', None)
+        api_version = request.version
+        if request.method == 'POST':
+            shout_controller.bookmark_shout(user=request.user, shout=instance, api_client=api_client, api_version=api_version, page_admin_user=page_admin_user)
+        else:
+            shout_controller.unbookmark_shout(user=request.user, shout=instance)
+        return instance
+
+    def to_representation(self, instance):
+        title = {'shout': instance.title or _('a shout')}
+        if self.context['request'].method == 'POST':
+            msg = self.bookmark_message % title
+        else:
+            msg = self.unbookmark_message % title
         return {'success': msg}

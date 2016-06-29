@@ -15,7 +15,7 @@ from elasticsearch import NotFoundError
 from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller, notifications_controller)
 from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
-from shoutit.models.post import ShoutIndex, ShoutLike
+from shoutit.models.post import ShoutIndex, ShoutLike, ShoutBookmark
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -298,3 +298,23 @@ def shout_like_post_save(sender, instance=None, created=False, **kwargs):
     if created:
         # Track
         mixpanel_controller.track(instance.user.pk, 'new_shout_like', instance.track_properties)
+
+
+def bookmark_shout(user, shout, api_client=None, api_version=None, page_admin_user=None):
+    shout_save = ShoutBookmark.create(save=False, user=user, shout=shout, page_admin_user=page_admin_user)
+    shout_save.api_client, shout_save.api_version = api_client, api_version
+    try:
+        shout_save.save()
+    except (ValidationError, IntegrityError):
+        pass
+
+
+def unbookmark_shout(user, shout):
+    ShoutBookmark.objects.filter(user=user, shout=shout).delete()
+
+
+@receiver(post_save, sender=ShoutBookmark)
+def shout_bookmark_post_save(sender, instance=None, created=False, **kwargs):
+    if created:
+        # Track
+        mixpanel_controller.track(instance.user.pk, 'new_shout_bookmark', instance.track_properties)
