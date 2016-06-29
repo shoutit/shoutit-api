@@ -142,10 +142,10 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             listen_controller.listen_to_objects(request.user, tags, api_client=api_client, api_version=request.version)
-            msg = "you started listening to {} shouts.".format(tag_names)
+            msg = "you started listening to {} shouts".format(tag_names)
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)
-            msg = "you stopped listening to {} shouts.".format(tag_names)
+            msg = "you stopped listening to {} shouts".format(tag_names)
 
         ret = {
             'data': {'success': msg},
@@ -191,10 +191,10 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, tag, api_client=api_client, api_version=request.version)
-            msg = "you started listening to {} shouts.".format(tag.name)
+            msg = "you started listening to {} shouts".format(tag.name)
         else:
             listen_controller.stop_listening_to_object(request.user, tag)
-            msg = "you stopped listening to {} shouts.".format(tag.name)
+            msg = "you stopped listening to {} shouts".format(tag.name)
 
         ret = {
             'data': {'success': msg},
@@ -256,7 +256,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         # todo: refactor to use shout index filter
         shout_type = request.query_params.get('shout_type', 'all')
         if shout_type not in ['offer', 'request', 'all']:
-            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`."})
+            raise ValidationError({'shout_type': "should be `offer`, `request` or `all`"})
 
         self.pagination_class = PageNumberIndexPagination
         setattr(self, 'model', Shout)

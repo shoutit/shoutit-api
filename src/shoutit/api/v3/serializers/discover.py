@@ -3,6 +3,7 @@
 """
 from __future__ import unicode_literals
 
+from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
@@ -11,7 +12,10 @@ from shoutit.models import DiscoverItem
 from shoutit.utils import url_with_querystring, blank_to_none
 
 
-class DiscoverItemSerializer(serializers.ModelSerializer):
+class DiscoverItemSerializer(TranslatableModelSerializer):
+    title = serializers.CharField(read_only=True, source='_local_title')
+    subtitle = serializers.CharField(read_only=True, source='_local_subtitle')
+
     class Meta:
         model = DiscoverItem
         fields = ('id', 'api_url', 'web_url', 'app_url', 'title', 'subtitle', 'position', 'image', 'icon')
@@ -23,7 +27,8 @@ class DiscoverItemSerializer(serializers.ModelSerializer):
         return ret
 
 
-class DiscoverItemDetailSerializer(serializers.ModelSerializer):
+class DiscoverItemDetailSerializer(DiscoverItemSerializer):
+    description = serializers.CharField(read_only=True, source='_local_description')
     shouts_url = serializers.SerializerMethodField()
     parents = DiscoverItemSerializer(many=True)
     children = DiscoverItemSerializer(many=True)

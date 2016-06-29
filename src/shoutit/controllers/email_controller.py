@@ -5,13 +5,15 @@ import json
 
 import sendgrid
 from django.conf import settings
-from django.utils.translation import ugettext as _
+from django.utils.encoding import force_text
+from django.utils.translation import ugettext_lazy as _
 from django_rq import job
 
 from common.utils import date_unix
 from shoutit.models import User
 from shoutit.utils import debug_logger
 
+# Todo (mo): add localized templates and fallback to english ones
 SG_WELCOME_TEMPLATE = 'f34f9b3a-92f3-4b11-932e-f0205003897a'
 SG_GENERAL_TEMPLATE = '487198e5-5479-4aca-aa6c-f5f36b0a8a61'
 SG_API_KEY = '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'
@@ -22,7 +24,7 @@ sg_api = sendgrid.SendGridAPIClient(apikey=SG_API_KEY)
 def prepare_message(user, subject, template, subs=None):
     message = sendgrid.Mail()
     message.add_to(user.email)
-    message.set_subject(subject)
+    message.set_subject(force_text(subject))
     message.set_from(settings.DEFAULT_FROM_EMAIL)
     message.set_html(' ')
     message.add_filter('templates', 'enable', '1')
@@ -31,7 +33,7 @@ def prepare_message(user, subject, template, subs=None):
     message.add_substitution('{{name}}', user.name)
     if subs:
         for key, val in subs.items():
-            message.add_substitution('{{%s}}' % key, val)
+            message.add_substitution('{{%s}}' % key, force_text(val))
     return message
 
 
@@ -88,8 +90,8 @@ def send_verified_email(user):
 def _send_verified_email(user):
     subject = _('Your email has been verified!')
     subs = {
-        'text1': _("Thank you for verifying your email. Your account has been verified and you can now use Shoutit full"
-                   " potential."),
+        'text1': _("Thank you for verifying your email. Your account has been verified and you can now use Shoutit "
+                   "full potential."),
         'action': _("Take me to my profile"),
         'link': user.web_url
     }

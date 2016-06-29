@@ -60,7 +60,7 @@ def hide_messages_from_user(messages, user):
 
 def send_message(conversation, user, to_users=None, about=None, text=None, attachments=None, request=None,
                  page_admin_user=None):
-    assert conversation or to_users, "Either an existing conversation or a list of to_users should be provided to create a message."
+    assert conversation or to_users, "Either an existing conversation or a list of to_users should be provided to create a message"
 
     if to_users and isinstance(to_users, list):
         # conversation users include everyone in it

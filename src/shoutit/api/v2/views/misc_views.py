@@ -166,7 +166,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Shout
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "shout": {
                     "id": ""
@@ -178,7 +178,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report User
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "user": {
                     "id": ""
@@ -263,15 +263,15 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             if source == 'cl':
                 CLUser.objects.get(cl_email=shout.get('cl_email'))
-                msg = "CL ad already exits."
+                msg = "CL ad already exits"
             elif source == 'dbz':
                 DBUser.objects.get(db_link=link)
-                msg = "DBZ ad already exits."
+                msg = "DBZ ad already exits"
             elif source == 'dbz2':
                 DBZ2User.objects.get(db_link=link)
-                msg = "DBZ2 ad already exits."
+                msg = "DBZ2 ad already exits"
             else:
-                msg = "Unknown ad source."
+                msg = "Unknown ad source"
             # error_logger.info(msg, extra={'link': link, 'source': source})
             return Response({'error': msg})
         except (CLUser.DoesNotExist, DBUser.DoesNotExist, DBZ2User.DoesNotExist):
@@ -289,7 +289,7 @@ class MiscViewSet(viewsets.ViewSet):
             else:
                 raise Exception('Unknown ad source.')
         except Exception as e:
-            msg = "User Creation Error."
+            msg = "User Creation Error"
             error_logger.info(msg, exc_info=True)
             return Response({'error': msg, 'detail': str(e)})
 
@@ -308,7 +308,7 @@ class MiscViewSet(viewsets.ViewSet):
                 published_at=published_at, exp_days=settings.MAX_EXPIRY_DAYS_SSS, priority=-10
             )
         except Exception as e:
-            msg = "Shout Creation Error. Deleting user."
+            msg = "Shout Creation Error. Deleting user"
             error_logger.info(msg, exc_info=True)
             user.delete()
             return Response({'error': msg, 'detail': str(e)})
@@ -415,7 +415,7 @@ def handle_dbz_reply(in_email, msg, request):
     try:
         dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
     except DBCLConversation.DoesNotExist:
-        error = {'error': "Unknown in_email."}
+        error = {'error': "Unknown in_email"}
         error_logger.info(error['error'], exc_info=True)
         return Response(error)
 
@@ -450,7 +450,7 @@ def handle_dbz_reply(in_email, msg, request):
         if text.strip() == "":
             text = '\n'.join(lines)
     except AttributeError:
-        error = {'error': "Couldn't process the message text."}
+        error = {'error': "Couldn't process the message text"}
         error_logger.info(error['error'], exc_info=True)
         return Response(error)
 
@@ -485,11 +485,11 @@ def handle_cl_reply(msg, request):
         ref = re.search("\{ref:(.+)\}", text).groups()[0]
     except AttributeError:
         return Response({
-            'error': "ref wasn't passed in the reply, we can't process the message any further."})
+            'error': "ref wasn't passed in the reply, we can't process the message any further"})
     try:
         text = '\n'.join(text.split('\n> ')[0].splitlines()[:-2])
     except AttributeError:
-        return Response({'error': "we couldn't process the message text."})
+        return Response({'error': "we couldn't process the message text"})
     try:
         dbcl_conversation = DBCLConversation.objects.get(ref=ref)
     except DBCLConversation.DoesNotExist as e:

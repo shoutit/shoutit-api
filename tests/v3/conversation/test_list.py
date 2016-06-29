@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import responses
 from django_dynamic_fixture import G
 
 from common.constants import (
@@ -91,12 +92,14 @@ class ConversationTestCase(BaseTestCase):
         conv = Conversation.objects.get(pk=self.decode_json(resp)['id'])
         self.assertTrue(Message.objects.filter(conversation=conv).exists())
 
+    @responses.activate
     def test_create_public_conversation_with_location(self):
         """
         Provided location is assigned to created conversation
         """
         self.login(self.user3)
         data = {'subject': 'Public chat', 'location': self.COORDINATES['USA']}
+        self.add_googleapis_geocode_response('us_new_york.json')
         resp = self.client.post(self.get_url(), data)
         conv = Conversation.objects.get(pk=self.decode_json(resp)['id'])
         self.assertEqual(conv.location['country'], 'US')

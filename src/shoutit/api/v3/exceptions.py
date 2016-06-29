@@ -75,10 +75,11 @@ class ShoutitAPIException(drf_exceptions.APIException):
     Example usage can be inside views, controllers and pagination classes.
     """
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    default_message = _('A server error occurred.')
+    default_message = _('Server Error, try again later')
     default_developer_message = 'Contact API admin and mention the `request_id`'
 
     def __init__(self, message=None, developer_message=None, errors=None):
+        self.original_message = message
         if message is not None:
             self.message = force_text(message)
         else:
@@ -97,7 +98,7 @@ class ShoutitAPIException(drf_exceptions.APIException):
             self.errors = [{'message': self.message}]
 
     def __str__(self):
-        return self.message
+        return self.original_message
 
 
 class ShoutitSingleAPIException(ShoutitAPIException):

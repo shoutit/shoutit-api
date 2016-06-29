@@ -4,38 +4,46 @@
 from __future__ import unicode_literals
 
 from datetime import timedelta
-
+from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django_rq import job
+from hvad.manager import TranslationManager
+from hvad.models import TranslatedFields, TranslatableModel
 
 from common.utils import date_unix
 from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.models import UUIDModel, Shout
+from shoutit.models.base import TranslatedModelFallbackMixin
 from .base import CreditRule, CreditTransaction
 
 share_shouts = None
 
 
-class PromoteLabel(UUIDModel):
+class PromoteLabel(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=250)
     color = models.CharField(max_length=9)
     bg_color = models.CharField(max_length=9)
     rank = models.PositiveSmallIntegerField()
 
+    translations = TranslatedFields(
+        _local_name=models.CharField(max_length=50, blank=True, default=''),
+        _local_description=models.CharField(max_length=250, blank=True, default='')
+    )
+
     def __unicode__(self):
         return "%s:%s" % (self.name, self.color)
 
     def clean(self):
-        if not self.color.find('#'):
+        if not self.color.startswith('#'):
             self.color = '#' + self.color
         self.color = self.color.upper()
 
-        if not self.bg_color.find('#'):
+        if not self.bg_color.startswith('#'):
             self.bg_color = '#' + self.bg_color
         self.bg_color = self.bg_color.upper()
 
@@ -61,7 +69,7 @@ class ShoutPromotion(UUIDModel):
         return False if self.days is None else self.expires_at < timezone.now()
 
 
-class ShareShoutsManager(models.Manager):
+class ShareShoutsManager(TranslationManager):
     def get_queryset(self):
         return super(ShareShoutsManager, self).get_queryset().filter(type='share_shouts')
 
@@ -70,7 +78,7 @@ class ShareShouts(CreditRule):
     """
     Transactions of this rule must have: `shout_id`
     """
-    text = "You earned 1 Shoutit Credit for sharing %s on Facebook."
+    text = _("You earned 1 Shoutit Credit for sharing %(title)s on Facebook.")
 
     objects = ShareShoutsManager()
 
@@ -88,7 +96,7 @@ class ShareShouts(CreditRule):
             setattr(transaction, 'target', shout)
         else:
             title = 'shout'
-        text = self.text % title
+        text = self.text % {'title': title}
         ret = {
             "text": text,
             "ranges": [
@@ -128,7 +136,7 @@ def shout_post_save(sender, instance=None, created=False, update_fields=None, **
         apply_share_shouts.delay(instance)
 
 
-class PromoteShoutsManager(models.Manager):
+class PromoteShoutsManager(TranslationManager):
     def get_queryset(self):
         return super(PromoteShoutsManager, self).get_queryset().filter(type='promote_shouts')
 
@@ -137,8 +145,8 @@ class PromoteShouts(CreditRule):
     """
     Transactions of this rule must have: `shout_promotion`
     """
-    text = "You spent %d Shoutit Credit in promoting %s as %s for %d days."
-    text_no_days = "You spent %d Shoutit Credit in promoting %s as '%s'."
+    text = _("You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %(days)d days.")
+    text_no_days = _("You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s.")
 
     objects = PromoteShoutsManager()
 
@@ -174,9 +182,9 @@ class PromoteShouts(CreditRule):
         label_name = label.name
 
         if days:
-            text = self.text % (abs(transaction.amount), shout_title, label_name, days)
+            text = self.text % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label, 'days': days}
         else:
-            text = self.text_no_days % (abs(transaction.amount), shout_title, label_name)
+            text = self.text_no_days % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label}
         ret = {
             "text": text,
             "ranges": [
@@ -206,7 +214,7 @@ class PromoteShouts(CreditRule):
 
     def can_promote(self, shout, user):
         if user.stats.get('credit', 0) < self.credits:
-            raise ShoutitBadRequest("You don't have enough Shoutit Credit for this action")
+            raise ShoutitBadRequest(_("You don't have enough Shoutit Credit for this action"))
 
         if shout.promotions.exists():
-            raise ShoutitBadRequest('This Shout is already promoted')
+            raise ShoutitBadRequest(_('This Shout is already promoted'))

@@ -8,10 +8,12 @@ import string
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import ugettext_lazy as _
 from django_rq import job
+from hvad.manager import TranslationManager
 
 from common.constants import LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE
 from shoutit.models import User, Profile, Listen2, ProfileContact, UUIDModel
@@ -24,13 +26,13 @@ listen_to_friends = None
 INVITATION_CODE_MAX_USAGE = 10
 
 
-class CompleteProfileManager(models.Manager):
+class CompleteProfileManager(TranslationManager):
     def get_queryset(self):
         return super(CompleteProfileManager, self).get_queryset().filter(type='complete_profile')
 
 
 class CompleteProfile(CreditRule):
-    text = "You earned 1 Shoutit Credit for completing your profile."
+    text = _("You earned 1 Shoutit Credit for completing your profile.")
 
     objects = CompleteProfileManager()
 
@@ -46,12 +48,15 @@ class CompleteProfile(CreditRule):
         return ret
 
     def apply(self, profile):
-        # Shouldn't be a guest!
-        if profile.user.is_guest:
-            return
-
         # Check for similar existing transaction
         if CreditTransaction.exists(user_id=profile.user_id, rule=self):
+            return
+
+        # Terms and conditions apply!
+        not_guest = not profile.user.is_guest
+        completed_profile = all([profile.image != '', profile.gender is not None, profile.birthday is not None])
+
+        if not all([not_guest, completed_profile]):
             return
 
         # Create Credit Transaction
@@ -73,7 +78,7 @@ def profile_post_save(sender, instance=None, created=False, update_fields=None, 
     apply_complete_profile.delay(instance)
 
 
-class InviteFriendsManager(models.Manager):
+class InviteFriendsManager(TranslationManager):
     def get_queryset(self):
         return super(InviteFriendsManager, self).get_queryset().filter(type='invite_friends')
 
@@ -82,7 +87,7 @@ class InviteFriends(CreditRule):
     """
     Transactions of this rule must have: `profile_id`
     """
-    text = "You earned 1 Shoutit Credit for inviting %s."
+    text = _("You earned 1 Shoutit Credit for inviting %(name)s.")
 
     objects = InviteFriendsManager()
 
@@ -97,7 +102,7 @@ class InviteFriends(CreditRule):
             setattr(transaction, 'target', profile)
         else:
             name = 'a friend'
-        text = self.text % name
+        text = self.text % {'name': name}
         ret = {
             "text": text,
             "ranges": [{'offset': text.index(name), 'length': len(name)}]
@@ -113,7 +118,7 @@ class InviteFriends(CreditRule):
         properties = {'profile_id': user.pk}
         transaction = CreditTransaction.create(user=invitation_code.user, amount=1, rule=self, properties=properties)
         # Update the invitation code
-        invitation_code.update(used_count=invitation_code.used_count + 1)
+        InvitationCode.objects.filter(id=invitation_code.id).update(used_count=F('used_count') + 1)
         return transaction
 
 
@@ -130,13 +135,13 @@ def apply_invite_friends(user, code):
     _apply_invite_friends.delay(user, code)
 
 
-class ListenToFriendsManager(models.Manager):
+class ListenToFriendsManager(TranslationManager):
     def get_queryset(self):
         return super(ListenToFriendsManager, self).get_queryset().filter(type='listen_to_friends')
 
 
 class ListenToFriends(CreditRule):
-    text = "You earned %d Shoutit Credit for listening to your friends."
+    text = _("You earned %(amount)d Shoutit Credit for listening to your friends.")
     max_listens = 3
 
     objects = ListenToFriendsManager()
@@ -145,7 +150,7 @@ class ListenToFriends(CreditRule):
         proxy = True
 
     def display(self, transaction):
-        text = self.text % abs(transaction.amount)
+        text = self.text % {'amount': abs(transaction.amount)}
         ret = {
             "text": text,
             "ranges": []

@@ -52,7 +52,7 @@ class ShoutitUserManager(UserManager):
 
 
 class Permission(UUIDModel):
-    name = models.CharField(max_length=512, unique=True, db_index=True)
+    name = models.CharField(max_length=512, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -507,6 +507,9 @@ class InactiveUser(AnonymousUser):
             "is_activated": False,
             "image": "",
             "cover": "",
+            "location": {
+                "latitude": 0, "longitude": 0, "country": "", "postal_code": "", "state": "", "city": "", "address": ""
+            },
             "is_owner": False
         })
 

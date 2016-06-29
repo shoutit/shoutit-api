@@ -7,6 +7,7 @@ import uuid
 from importlib import import_module
 
 from django.contrib.auth.models import AnonymousUser
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers as rest_serializers
 
 from shoutit.api.v3.exceptions import ERROR_REASON
@@ -61,6 +62,7 @@ class AttachedUUIDObjectMixin(object):
     - inherit `AttachedUUIDObjectMixin` as their first super class.
     - be included as properties of a serializer that inherits `HasAttachedUUIDObjects` as its first super class
     """
+
     def to_internal_attached_value(self, data):
         model = self.Meta.model
         # Make sure no empty JSON body was posted
@@ -70,25 +72,26 @@ class AttachedUUIDObjectMixin(object):
         if isinstance(self.parent, HasAttachedUUIDObjects):
             if not isinstance(data, dict):
                 raise rest_serializers.ValidationError(
-                    'Invalid data. Expected a dictionary, but got %s' % type(data).__name__)
+                    _('Invalid data. Expected a dictionary, but got %(type)s' % {'type': type(data).__name__}))
             object_id = data.get('id')
             if object_id == '':
-                raise rest_serializers.ValidationError({'id': 'This field can not be empty'})
+                raise rest_serializers.ValidationError({'id': _('This field can not be empty')})
             if object_id:
                 try:
                     uuid.UUID(object_id)
                     instance = model.objects.filter(id=object_id).first()
                 except (ValueError, TypeError, AttributeError):
-                    raise rest_serializers.ValidationError({'id': "'%s' is not a valid id" % object_id})
+                    raise rest_serializers.ValidationError({'id': _("'%(id)s' is not a valid id") % {'id': object_id}})
                 else:
                     if not instance:
-                        raise rest_serializers.ValidationError(
-                            {'id': "%s with id '%s' does not exist" % (model.__name__, object_id)})
+                        msg = _("%(model)s with id '%(id)s' does not exist") % {'model': model.__name__,
+                                                                                'id': object_id}
+                        raise rest_serializers.ValidationError({'id': msg})
                     # Todo: utilize the fetched instance
                     self.instance = instance
                     return {'id': object_id}
             else:
-                raise rest_serializers.ValidationError({'id': ("This field is required", ERROR_REASON.REQUIRED)})
+                raise rest_serializers.ValidationError({'id': (_('This field is required'), ERROR_REASON.REQUIRED)})
 
     def to_internal_value(self, data):
         ret = self.to_internal_attached_value(data)

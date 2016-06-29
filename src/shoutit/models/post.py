@@ -9,6 +9,7 @@ from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
 
@@ -84,10 +85,6 @@ class Post(Action):
         return date_unix(self.published_at)
 
     @property
-    def title(self):
-        return self.item.name
-
-    @property
     def thumbnail(self):
         return self.item.thumbnail
 
@@ -111,6 +108,8 @@ class Shout(Post):
     is_sss = models.BooleanField(default=False)
     mobile = models.CharField(blank=True, max_length=20, default='')
 
+    bookmarked_by = models.ManyToManyField(AUTH_USER_MODEL, blank=True, through='ShoutBookmark',
+                                           through_fields=('shout', 'user'), related_name='bookmarks')
     conversations = GenericRelation('shoutit.Conversation', related_query_name='about_shout')
     message_attachments = GenericRelation('shoutit.MessageAttachment', related_query_name='attached_shout')
 
@@ -141,6 +140,10 @@ class Shout(Post):
             mobile_owner_country = correct_mobile(self.mobile, self.owner.ap.country)
             self.mobile = mobile_shout_country or mobile_owner_country
         none_to_blank(self, ['mobile'])
+
+    @property
+    def title(self):
+        return self.item.name
 
     @property
     def images(self):
@@ -222,6 +225,12 @@ class Shout(Post):
     def promotion(self):
         return self.promotions.order_by('created_at').last()
 
+    def is_bookmarked(self, user):
+        return ShoutBookmark.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
+
+    def is_liked(self, user):
+        return ShoutLike.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
+
 
 class InactiveShout(object):
     @property
@@ -232,10 +241,9 @@ class InactiveShout(object):
             "web_url": "",
             "type": "",
             "location": {
-                "latitude": 0, "longitude": 0, "country": "", "postal_code": "",
-                "state": "", "city": "", "address": ""
+                "latitude": 0, "longitude": 0, "country": "", "postal_code": "", "state": "", "city": "", "address": ""
             },
-            "title": "Deleted Shout",
+            "title": _("Deleted Shout"),
             "text": "",
             "price": 0,
             "currency": "",
@@ -319,7 +327,7 @@ try:
 except RequestError:
     pass
 except ConnectionTimeout:
-    error_logger.warn("ES Server is down.", exc_info=True)
+    error_logger.warn("ES Server is down", exc_info=True)
 
 
 class Video(UUIDModel):
@@ -331,3 +339,33 @@ class Video(UUIDModel):
 
     def __unicode__(self):
         return "%s: %s @ %s" % (self.pk, self.id_on_provider, self.provider)
+
+
+class ShoutLike(Action):
+    shout = models.ForeignKey(Shout, related_name='likes')
+
+    class Meta:
+        unique_together = ('user', 'shout')
+
+    @property
+    def track_properties(self):
+        properties = super(ShoutLike, self).track_properties
+        properties.update({
+            'shout': self.shout_id
+        })
+        return properties
+
+
+class ShoutBookmark(Action):
+    shout = models.ForeignKey(Shout, related_name='bookmarks')
+
+    class Meta:
+        unique_together = ('user', 'shout')
+
+    @property
+    def track_properties(self):
+        properties = super(ShoutBookmark, self).track_properties
+        properties.update({
+            'shout': self.shout_id
+        })
+        return properties

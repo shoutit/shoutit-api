@@ -9,7 +9,7 @@ from rest_framework.settings import api_settings
 
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE,
                               NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NOTIFICATION_TYPE_INCOMING_VIDEO_CALL,
-                              NOTIFICATION_TYPE_CREDIT_TRANSACTION)
+                              NOTIFICATION_TYPE_CREDIT_TRANSACTION, NOTIFICATION_TYPE_SHOUT_LIKE)
 from ..controllers import push_controller, pusher_controller
 from ..models import Notification
 
@@ -116,3 +116,7 @@ def notify_user_of_missed_video_call(user, caller):
 def notify_user_of_credit_transaction(transaction):
     notify_user.delay(transaction.user, notification_type=NOTIFICATION_TYPE_CREDIT_TRANSACTION,
                       attached_object=transaction, versions=['v3'])
+
+
+def notify_shout_owner_of_shout_like(shout, user):
+    notify_user.delay(shout.owner, notification_type=NOTIFICATION_TYPE_SHOUT_LIKE, from_user=user, attached_object=user)

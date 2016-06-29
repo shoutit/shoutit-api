@@ -5,11 +5,15 @@ from __future__ import unicode_literals
 
 import uuid
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import HTTP_HEADER_ENCODING, exceptions
 from rest_framework.authentication import BaseAuthentication, TokenAuthentication, SessionAuthentication
 from rest_framework_oauth.authentication import OAuth2Authentication
 
+from shoutit.controllers import mixpanel_controller
 from shoutit.models import Page
+from shoutit.utils import error_logger
+from shoutit_credit.models.profile import apply_invite_friends
 
 
 def get_authorization_header(request):
@@ -47,22 +51,25 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             return ret
 
         if len(page_id_auth) != 1:
-            msg = 'Invalid page id header. No credentials provided.'
+            msg = _('Invalid page id header. No credentials provided')
             raise exceptions.AuthenticationFailed(msg)
 
         try:
             page_id = page_id_auth[0].decode()
             uuid.UUID(page_id)
         except (UnicodeError, ValueError):
-            raise exceptions.AuthenticationFailed('Invalid page id.')
+            raise exceptions.AuthenticationFailed(_('Invalid page id'))
 
         try:
             page = Page.objects.select_related('user').get(id=page_id)
         except Page.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Page does not exist.')
+            raise exceptions.AuthenticationFailed(_('Page does not exist'))
 
         if not page.user.is_active:
-            raise exceptions.AuthenticationFailed('Page inactive or deleted.')
+            raise exceptions.AuthenticationFailed(_('Page inactive or deleted'))
+
+        if not page.is_admin(ret[0]):
+            raise exceptions.PermissionDenied(_("You can't act as an admin of the provided page"))
 
         setattr(request, '_user', page.user)
         setattr(request, 'page_admin_user', ret[0])
@@ -77,9 +84,9 @@ class ShoutitPageAuthenticationMixin(BaseAuthentication):
             api_client = auth.client.name
             request.api_client = api_client
 
-        # Todo: when no authorized it could be that this is from `shoutit-web`. A header must be agreed on to identify webapp requests even for guests. This should be done in a middleware outside auth.
-        # elif 'node-superagent' in request.META.get('USER_AGENT', ''):
-        #     request.api_client = 'shoutit-web'
+            # Todo: when no authorized it could be that this is from `shoutit-web`. A header must be agreed on to identify webapp requests even for guests. This should be done in a middleware outside auth.
+            # elif 'node-superagent' in request.META.get('USER_AGENT', ''):
+            #     request.api_client = 'shoutit-web'
 
 
 class ShoutitTokenAuthentication(ShoutitPageAuthenticationMixin, TokenAuthentication):
@@ -92,3 +99,45 @@ class ShoutitOAuth2Authentication(ShoutitPageAuthenticationMixin, OAuth2Authenti
 
 class ShoutitSessionAuthentication(ShoutitPageAuthenticationMixin, SessionAuthentication):
     pass
+
+
+class PostAccessTokenRequestMixin(object):
+    def post_access_token_request(self):
+        request = self.request
+        data = request.data
+        user = request.user
+        new_signup = getattr(user, 'new_signup', False)
+
+        mixpanel_distinct_id = data.get('mixpanel_distinct_id')
+        invitation_code = data.get('invitation_code')
+        track_properties = {
+            'profile': user.pk,
+            'api_client': data.get('client_id'),
+            'api_version': request.version,
+            'using': data.get('grant_type'),
+            'server': request.META.get('HTTP_HOST'),
+            'mp_country_code': user.location.get('country'),
+            '$region': user.location.get('state'),
+            '$city': user.location.get('city'),
+            'has_push_tokens': user.devices.count() > 0,
+            'invitation_code': invitation_code
+        }
+
+        if new_signup:
+            event_name = "signup_guest" if user.is_guest else 'signup'
+            # Apply InviteFriends
+            if invitation_code:
+                apply_invite_friends(request.user, invitation_code)
+        else:
+            event_name = 'login'
+
+        if mixpanel_distinct_id:
+            # Alias the Mixpanel id and track
+            mixpanel_controller.alias(user.pk, mixpanel_distinct_id, event_name, track_properties, add=True)
+        else:
+            # Track only
+            mixpanel_controller.track(user.pk, event_name, track_properties, add=True)
+            # Y U NO send us Mixpanel?
+            extra = {'request': request._request, 'agent': request.agent, 'build_no': request.build_no,
+                     'track_properties': track_properties, 'request_data': data}
+            error_logger.warning('AccessToken request without mixpanel_distinct_id', extra=extra)

@@ -14,14 +14,14 @@ from django.utils import timezone
 from mock import MagicMock
 from push_notifications import apns, gcm
 import responses
+import boto
 
 from shoutit.controllers import mixpanel_controller
 from shoutit_pusher import utils as pusher_utils
-from shoutit import ES, utils as shoutit_utils
+from shoutit import ES
 from shoutit.models.misc import LocationIndex
 from shoutit.models.post import ShoutIndex, Post, Shout
 from shoutit.models import Profile
-
 
 # mock pusher
 mocked_pusher = MagicMock()
@@ -41,9 +41,20 @@ gcm.gcm_send_bulk_message = mocked_gcm_send_bulk_message = MagicMock()
 mixpanel_controller.shoutit_mp = MagicMock()
 mixpanel_controller.shoutit_mp_buffered = MagicMock()
 
+# mock s3 boto
+boto.connect_s3 = MagicMock()
+
+# TODO: refactor application code, so shout signal will be applied
+#       automatically (currently shout_post_save signal is not called
+#       because it is not automatically imported)
+#       Following import is present only to apply signals
+#       The mocking has to be done first
+from shoutit.controllers import shout_controller
+
 
 class BaseTestCase(APITestCase):
     url_namespace = 'v3'
+    default_password = '123'
     IPS = {
         'CHINA': '14.131.255.15',
         'USA': '72.229.28.185',  # New York
@@ -90,6 +101,9 @@ class BaseTestCase(APITestCase):
     def assert403(self, response):
         self.assertEqual(response.status_code, 403)
 
+    def assert406(self, response):
+        self.assertEqual(response.status_code, 406)
+
     def assert_ids_equal(self, dict_iter, objects_iter, order=False):
         if not isinstance(dict_iter, (list, QuerySet)):
             dict_iter = [dict_iter]
@@ -126,8 +140,17 @@ class BaseTestCase(APITestCase):
     def assert_pusher_event(self, mocked_trigger, event_name,
                             channel_name=None,
                             attached_object_partial_dict=None,
-                            call_count=0):
+                            call_count=0, try_all=False):
         self.assertTrue(mocked_trigger.called)
+        if try_all:
+            for i in range(mocked_trigger.call_count):
+                args, _ = self.get_mock_call_args_kwargs(mocked_trigger, i)
+                if args[1] == event_name:
+                    call_count = i
+                    break
+            else:
+                self.assertTrue(False,
+                                'No call for Pusher event %s' % event_name)
         args, _ = self.get_mock_call_args_kwargs(mocked_trigger, call_count)
         self.assertEqual(args[1], event_name)
         if channel_name is not None:
@@ -154,18 +177,28 @@ class BaseTestCase(APITestCase):
         return (mocked_object.call_args_list[call_count][0],
                 mocked_object.call_args_list[call_count][1])
 
-    def create_shout(self, **kwargs):
+    @classmethod
+    def create_shout(cls, **kwargs):
         if 'post_ptr' not in kwargs:
             kwargs['post_ptr'] = G(
                 Post,
-                user=self.create_user(username=self.get_random_string(10))
+                user=cls.create_user(username=cls.get_random_string(10))
             )
         if 'category' not in kwargs:
             kwargs['category'] = F()
         if 'user' not in kwargs:
-            kwargs['user'] = self.create_user(
-                username=self.get_random_string(10))
+            kwargs['user'] = cls.create_user(
+                username=cls.get_random_string(10))
         return G(Shout, **kwargs)
+
+    @classmethod
+    def get_video_data(cls, **data):
+        data.setdefault('url', 'http://yout.com/v1')
+        data.setdefault('thumbnail_url', 'http://s3.com/v1.png')
+        data.setdefault('provider', 'youtube')
+        data.setdefault('id_on_provider', 'v1')
+        data.setdefault('duration', 30)
+        return data
 
     @classmethod
     def get_random_string(cls, length):
@@ -194,7 +227,8 @@ class BaseTestCase(APITestCase):
     def add_googleapis_geocode_response(cls, json_file_name, status=200,
                                         add_path=True):
         if add_path:
-            json_file_name = os.path.join('tests/data/googleapis', json_file_name)
+            json_file_name = os.path.join('tests/data/googleapis',
+                                          json_file_name)
 
         with open(json_file_name) as f:
             responses.add(
@@ -204,8 +238,9 @@ class BaseTestCase(APITestCase):
                 status=status)
 
     @classmethod
-    def create_user(cls, username='ivan', first_name='Ivan', password='123',
-                    is_test=True, country=None, **kwargs):
+    def create_user(cls, username='ivan', first_name='Ivan',
+                    password=default_password, is_test=True, country=None,
+                    **kwargs):
         user = N(
             get_user_model(),
             username=username,
@@ -234,3 +269,8 @@ class BaseTestCase(APITestCase):
         instance.__class__.objects.filter(pk=instance.pk).update(**kwargs)
         # to update value in current instance
         setattr(instance, field_name, value)
+
+    @classmethod
+    def get_1pixel_jpg_image_data(self):
+        with open('tests/data/images/1x1_pixel.jpg', 'rb') as f:
+            return f.read()

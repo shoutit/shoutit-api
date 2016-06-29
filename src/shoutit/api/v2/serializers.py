@@ -280,9 +280,9 @@ class UserSerializer(serializers.ModelSerializer):
                     raise ValidationError("user with id '{}' does not exist".format(user_id))
                 ret['id'] = user_id
             except (ValueError, TypeError):
-                raise ValidationError({'id': "'%s' is not a valid id." % user_id})
+                raise ValidationError({'id': "'%s' is not a valid id" % user_id})
         else:
-            raise ValidationError({'id': "This field is required."})
+            raise ValidationError({'id': "This field is required"})
 
         return ret
 
@@ -403,7 +403,7 @@ class UserDetailSerializer(UserSerializer):
         user = self.context['request'].user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
-            raise ValidationError(["Email is already used by another user."])
+            raise ValidationError(["Email is already used by another user"])
         return email
 
     def update(self, user, validated_data):
@@ -548,9 +548,9 @@ class ShoutSerializer(serializers.ModelSerializer):
                         raise ValidationError({'id': ["shout with id '%s' does not exist" % shout_id]})
                     return {'id': shout_id}
                 except (ValueError, TypeError):
-                    raise ValidationError({'id': ["'%s' is not a valid id." % shout_id]})
+                    raise ValidationError({'id': ["'%s' is not a valid id" % shout_id]})
             else:
-                raise ValidationError({'id': ["This field is required."]})
+                raise ValidationError({'id': ["This field is required"]})
 
         # todo: hack!
         if not data:
@@ -582,7 +582,7 @@ class ShoutDetailSerializer(ShoutSerializer):
     videos = VideoSerializer(source='item.videos.all', many=True, required=False)
     publish_to_facebook = serializers.BooleanField(write_only=True, required=False)
     reply_url = serializers.SerializerMethodField(
-        help_text="URL to reply to this shout if possible, not set for shout owner.")
+        help_text="URL to reply to this shout if possible, not set for shout owner")
     related_requests = ShoutSerializer(many=True, read_only=True)
     related_offers = ShoutSerializer(many=True, read_only=True)
     conversations = serializers.SerializerMethodField()
@@ -920,7 +920,7 @@ class ReportSerializer(serializers.ModelSerializer):
             if 'attached_shout' in attached_object:
                 validated_data['type'] = REPORT_TYPE_SHOUT
         else:
-            errors['attached_object'] = ["This field is required."]
+            errors['attached_object'] = ["This field is required"]
         if errors:
             raise ValidationError(errors)
 

@@ -4,6 +4,7 @@
 """
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -20,7 +21,7 @@ from ..filters import HomeFilterBackend, ProfileFilter
 from ..pagination import ShoutitPageNumberPaginationNoCount
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
-                           ProfileContactsSerializer)
+                           ProfileContactsSerializer, ShoutSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -32,7 +33,8 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
     serializer_class = ProfileSerializer
     serializer_detail_class = ProfileDetailSerializer
     queryset = User.objects.filter(is_active=True, is_activated=True).select_related('profile', 'page')
-    queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page', 'linked_facebook', 'linked_gplus')
+    queryset_detail = User.objects.filter(is_active=True).select_related('profile', 'page', 'linked_facebook',
+                                                                         'linked_gplus')
     pagination_class = ShoutitPageNumberPaginationNoCount
     filter_backends = (ProfileFilter, filters.SearchFilter)
     search_fields = ('=id', '=email', 'username', 'first_name', 'last_name')
@@ -224,14 +226,14 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         api_client = getattr(request, 'api_client', None)
 
         if request.user == user:
-            raise ShoutitBadRequest("You can't listen to your self")
+            raise ShoutitBadRequest(_("You can't listen to your self"))
 
         if request.method == 'POST':
             listen_controller.listen_to_object(request.user, ap, api_client=api_client, api_version=request.version)
-            msg = "You started listening to %s shouts" % user.name
+            msg = _("You started listening to shouts from %(name)s") % {'name': user.name}
         else:
             listen_controller.stop_listening_to_object(request.user, ap)
-            msg = "You stopped listening to %s shouts" % user.name
+            msg = _("You stopped listening to shouts from %(name)s") % {'name': user.name}
 
         data = {
             'success': msg,
@@ -369,6 +371,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
               paramType: query
         """
         # Borrow `serializer_class`, `pagination_class` and `get_queryset` from ShoutViewSet
+        self.get_object()  # to apply object permissions
         shout_view_set = ShoutViewSet()
         setattr(self, 'serializer_detail_class',
                 shout_view_set.serializer_class)  # Using detail since this is a detail endpoint
@@ -431,9 +434,9 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         user = self.get_object()
         logged_user = request.user
         if logged_user == user:
-            raise ShoutitBadRequest("You can not start a conversation with your self")
+            raise ShoutitBadRequest(_("You can not start a conversation with your self"))
         if not (message_controller.conversation_exist(users=[user, logged_user]) or user.is_listening(logged_user)):
-            raise ShoutitBadRequest("You can only start a conversation with your listeners")
+            raise ShoutitBadRequest(_("You can only start a conversation with your listeners"))
         context = {
             'request': request,
             'conversation': None,
@@ -579,7 +582,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
             """
         serializer = ProfileContactsSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        return Response({'success': "Your contacts have been uploaded successfully"})
+        return Response({'success': _("Your contacts have been uploaded")})
 
     @detail_route(methods=['get'], suffix='Mutual Contacts')
     def mutual_contacts(self, request, *arg, **kwargs):
@@ -633,7 +636,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
             - form
         """
         user = self.get_object()
-        serializer = ProfileDeactivationSerializer(data=request.data, context={'profile': user})
+        serializer = ProfileDeactivationSerializer(data=request.data, context={'user': user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -671,3 +674,39 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         page = self.paginate_queryset(pages)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
+
+    @detail_route(methods=['get'], permission_classes=(IsAuthenticated, IsOwner), suffix='Bookmarks')
+    def bookmarks(self, request, *args, **kwargs):
+        """
+        List the Profile bookmarked shouts. Profile can't see the bookmarks of other profiles.
+        [Shouts Pagination](https://github.com/shoutit/shoutit-api/wiki/Searching-Shouts#pagination)
+        ###REQUIRES AUTH
+        ###Response
+        <pre><code>
+        {
+          "count": 0, // number of results
+          "next": null, // next results page url
+          "previous": null, // previous results page url
+          "results": [] // list of {ShoutSerializer}
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        parameters:
+            - name: username
+              description: me for logged in profile
+              paramType: path
+              required: true
+              defaultValue: me
+            - name: page
+              paramType: query
+            - name: page_size
+              paramType: query
+        """
+        user = self.get_object()
+        self.serializer_detail_class = ShoutSerializer
+        shouts = self.filter_queryset(user.bookmarks.all().order_by('-bookmarks__created_at'))
+        page = self.paginate_queryset(shouts)
+        serializer = self.get_serializer(page, many=True)
+        result = self.get_paginated_response(serializer.data)
+        return result

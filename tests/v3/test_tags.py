@@ -15,7 +15,7 @@ class TagDetailTestCase(BaseTestCase):
 
     def test_tag_detail_unknown(self):
         resp = self.client.get(
-            self.reverse(self.url_name, kwargs={'name': 'unknown'}))
+            self.reverse(self.url_name, kwargs={'slug': 'unknown'}))
         self.assert404(resp)
 
 
@@ -24,7 +24,7 @@ class TagListenTestCase(BaseTestCase):
 
     def test_tag_listen_unknown_unauth(self):
         resp = self.client.post(
-            self.reverse(self.url_name, kwargs={'name': 'unknown'}))
+            self.reverse(self.url_name, kwargs={'slug': 'unknown'}))
         self.assert401(resp)
 
 
@@ -33,7 +33,7 @@ class TagListenersTestCase(BaseTestCase):
 
     def test_tag_listeners_unknown_unauth(self):
         resp = self.client.get(
-            self.reverse(self.url_name, kwargs={'name': 'unknown'}))
+            self.reverse(self.url_name, kwargs={'slug': 'unknown'}))
         self.assert404(resp)
 
 
@@ -42,7 +42,7 @@ class TagRelatedTestCase(BaseTestCase):
 
     def test_tag_related_unknown_unauth(self):
         resp = self.client.get(
-            self.reverse(self.url_name, kwargs={'name': 'unknown'}))
+            self.reverse(self.url_name, kwargs={'slug': 'unknown'}))
         self.assert404(resp)
 
 

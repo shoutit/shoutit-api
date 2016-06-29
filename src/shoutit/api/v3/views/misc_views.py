@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import random
 from collections import OrderedDict
-
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
 from pydash import arrays
@@ -90,7 +90,7 @@ class MiscViewSet(viewsets.ViewSet):
         try:
             types = type_qp.split(',')
         except:
-            raise InvalidParameter('type', "Invalid `type`")
+            raise InvalidParameter('type', _("Invalid `type`"))
 
         suggestions = OrderedDict()
 
@@ -136,7 +136,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Shout
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "shout": {
                     "id": ""
@@ -148,7 +148,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Profile
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "profile": {
                     "id": ""
@@ -160,7 +160,7 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Conversation (`public_chat`)
         <pre><code>
         {
-            "text": "the reason of this report, any text.",
+            "text": "the reason of this report, any text",
             "attached_object": {
                 "conversation": {
                     "id": ""
@@ -271,7 +271,7 @@ class MiscViewSet(viewsets.ViewSet):
             lat = float(latlng.split(',')[0])
             lng = float(latlng.split(',')[1])
         except Exception:
-            raise InvalidParameter('latlng', 'Invalid `latlng`')
+            raise InvalidParameter('latlng', _('Invalid `latlng`'))
         ip = get_real_ip(request)
         location = location_controller.from_location_index(lat, lng, ip)
         return Response(location)

@@ -3,13 +3,14 @@
 
 """
 from __future__ import unicode_literals
+
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import exceptions
 from rest_framework.versioning import NamespaceVersioning
 
 
 class ShoutitNamespaceVersioning(NamespaceVersioning):
-
-    invalid_version_message = 'Invalid version in URL path. Please use version: %s'
+    invalid_version_message = _('Invalid version in URL path. Please use version: %(version)s')
 
     def determine_version(self, request, *args, **kwargs):
         resolver_match = getattr(request, 'resolver_match', None)
@@ -17,7 +18,7 @@ class ShoutitNamespaceVersioning(NamespaceVersioning):
             return self.default_version
         version = resolver_match.namespace
         if not self.is_allowed_version(version):
-            raise exceptions.NotFound(self.invalid_version_message % self.default_version)
+            raise exceptions.NotFound(self.invalid_version_message % {'version': self.default_version})
         return version
 
     def reverse(self, viewname, args=None, kwargs=None, request=None, format=None, **extra):

@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
+
 from django.db import IntegrityError
+from django.utils.translation import ugettext_lazy as _
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
@@ -14,7 +17,7 @@ def create_user(email=None, password=None, first_name='', last_name='', username
                 **extra_user_fields):
     # email
     if email and User.exists(email=email.lower()):
-        raise DRFValidationError({'email': "User with same email exists."})
+        raise DRFValidationError({'email': _('This email is used by another account')})
 
     # first, last and username
     if not username:
@@ -102,7 +105,8 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
         if location:
             location_controller.update_profile_location(user.profile, location, add_pc=False)
     except User.DoesNotExist:
-        user = create_user(email=email, first_name=first_name, last_name=last_name, username=username, is_activated=True,
+        user = create_user(email=email, first_name=first_name, last_name=last_name, username=username,
+                           is_activated=True,
                            profile_fields=profile_fields, is_test=is_test)
 
     if not user.is_activated:
@@ -115,7 +119,7 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     try:
         LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials_json, gplus_id=gplus_id)
     except IntegrityError as e:
-        raise ShoutitBadRequest(message="Could not access your G+ account, try again later",
+        raise ShoutitBadRequest(message=_("Could not access your Google account, try again later"),
                                 developer_message=str(e))
     image_url = gplus_user['image']['url'].split('?')[0]
     media_controller.set_profile_media(user.profile, 'image', image_url)
@@ -128,6 +132,7 @@ def auth_with_facebook(fb_user, initial_user=None, is_test=False):
     last_name = fb_user.get('last_name')
     facebook_id = fb_user.get('id')
     gender = fb_user.get('gender')
+    birthday = fb_user.get('birthday')
     username = initial_user and initial_user.get('username')
     location = initial_user and initial_user.get('location')
     profile_fields = {}
@@ -139,6 +144,10 @@ def auth_with_facebook(fb_user, initial_user=None, is_test=False):
     if gender:
         profile_fields.update({'gender': gender})
         update_fields.append('gender')
+    if birthday:
+        birthday = datetime.strptime(birthday, "%d/%m/%Y").date()
+        profile_fields.update({'birthday': birthday})
+        update_fields.append('birthday')
 
     try:
         user = User.objects.filter(email=email).select_related('profile').first()

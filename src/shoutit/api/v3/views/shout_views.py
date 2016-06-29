@@ -8,6 +8,7 @@ import random
 
 from django.conf import settings
 from django.http import Http404
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import cache_control
 from pydash import strings
 from rest_framework import permissions, status, mixins, viewsets
@@ -23,11 +24,12 @@ from shoutit.controllers import shout_controller, mixpanel_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
 from shoutit.utils import has_unicode
+from shoutit_credit.views import PromoteShoutMixin
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
-from ..serializers import ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer
+from ..serializers import (ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer,
+                           ShoutLikeSerializer, ShoutBookmarkSerializer)
 from ..views.viewsets import UUIDViewSetMixin
-from shoutit_credit.views import PromoteShoutMixin
 
 
 class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin,
@@ -158,17 +160,13 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     def categories(self, request):
         """
         List Categories
-
-        Passing `shuffle=1` will return randomized results
         ---
         serializer: CategoryDetailSerializer
         """
-        categories = Category.objects.all().order_by('name').select_related('main_tag')
-        categories_data = CategoryDetailSerializer(categories, many=True, context={'request': request}).data
-        # Everyday I'm shuffling!
-        shuffle = request.query_params.get('shuffle')
-        if shuffle:
-            random.shuffle(categories_data)
+        self.serializer_class = CategoryDetailSerializer
+        categories = Category.objects.all()
+        categories_data = self.get_serializer(categories, many=True).data
+        categories_data.sort(key=lambda c: c['name'])
         return Response(categories_data)
 
     @cache_control(max_age=60 * 60 * 24)
@@ -179,10 +177,10 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         ---
         """
         return Response([
-            {'type': 'time', 'name': 'Latest'},
+            {'type': 'time', 'name': _('Newest')},
             # {'type': 'distance', 'name': 'Nearest'},
-            {'type': 'price_asc', 'name': 'Price Increasing'},
-            {'type': 'price_desc', 'name': 'Price Decreasing'},
+            {'type': 'price_asc', 'name': _('Price: Low to High')},
+            {'type': 'price_desc', 'name': _('Price: High to Low')},
             # {'type': 'recommended', 'name': 'Recommended'},
         ])
 
@@ -219,7 +217,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         # Todo: improve!
         search = request.query_params.get('search', '').strip()
         if not search:
-            raise RequiredParameter('search', "This parameter is required")
+            raise RequiredParameter('search', _("This parameter is required"))
         # category = request.query_params.get('category')
         # country = request.query_params.get('country')
         if len(search) >= 2:
@@ -227,7 +225,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             random.shuffle(terms)
             terms = map(lambda t: {'term': strings.human_case(t)}, terms)
         else:
-            raise InvalidParameter('search', "At least two characters are required")
+            raise InvalidParameter('search', _("At least two characters are required"))
         return Response(terms)
 
     def create(self, request, *args, **kwargs):
@@ -240,7 +238,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         {
             "type": "offer",
             "title": "BMW M6",
-            "text": "Brand new black bmw m6 2016.",
+            "text": "Brand new black bmw m6 2016",
             "price": 1000,
             "currency": "EUR",
             "available_count": 4,
@@ -382,7 +380,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         """
         shout = self.get_object()
         if request.user == shout.owner:
-            raise ShoutitBadRequest("You can not start a conversation about your own shout")
+            raise ShoutitBadRequest(_("You can not start a conversation about your own shout"))
         context = {
             'request': request,
             'conversation': None,
@@ -462,7 +460,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         shout = self.get_object()
         mobile = shout.mobile if shout.is_mobile_set else None
         if not mobile:
-            raise ShoutitBadRequest(message="No mobile to be called")
+            raise ShoutitBadRequest(_("No mobile to be called"))
         track_properties = {
             'api_client': getattr(request, 'api_client', None),
             'api_version': request.version,
@@ -476,3 +474,55 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         }
         mixpanel_controller.track(user.pk, 'show_mobile', track_properties)
         return Response({'mobile': mobile})
+
+    @detail_route(methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated], suffix='Bookmark Shout')
+    def bookmark(self, request, *args, **kwargs):
+        """
+        Add / remove a Shout to profile bookmarked shouts
+        ###REQUIRES AUTH
+        ###Add
+        <pre><code>
+        POST: /shouts/{id}/like
+        </code></pre>
+
+        ###Remove
+        <pre><code>
+        DELETE: /shouts/{id}/like
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        shout = self.get_object()
+        self.serializer_detail_class = ShoutBookmarkSerializer
+        serializer = self.get_serializer(instance=shout, data={})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @detail_route(methods=['post', 'delete'], permission_classes=[permissions.IsAuthenticated], suffix='Like Shout')
+    def like(self, request, *args, **kwargs):
+        """
+        Like / unlike a Shout
+        ###REQUIRES AUTH
+        ###Like
+        <pre><code>
+        POST: /shouts/{id}/like
+        </code></pre>
+
+        ###Unlike
+        <pre><code>
+        DELETE: /shouts/{id}/like
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        """
+        shout = self.get_object()
+        self.serializer_detail_class = ShoutLikeSerializer
+        serializer = self.get_serializer(instance=shout, data={})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

@@ -11,9 +11,11 @@ from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from hvad.manager import TranslationManager
+from mptt.managers import TreeManager
 
-from common.utils import date_unix
 from common.constants import COUNTRY_ISO, COUNTRY_CHOICES
+from common.utils import date_unix
 
 
 class UUIDModel(models.Model):
@@ -34,10 +36,12 @@ class UUIDModel(models.Model):
             obj.save()
         return obj
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, exclude=None, validate_unique=True):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, exclude=None,
+             validate_unique=True):
         if not (force_insert or force_update):
-            self.full_clean(exclude, validate_unique)
-        super(UUIDModel, self).save(force_insert, force_update, using, update_fields)
+            self.full_clean(exclude=exclude, validate_unique=validate_unique)
+        super(UUIDModel, self).save(force_insert=force_insert, force_update=force_update, using=using,
+                                    update_fields=update_fields)
 
     def update(self, **kwargs):
         field_names = self._meta.get_all_field_names()
@@ -64,6 +68,36 @@ class UUIDModel(models.Model):
     @property
     def model_name(self):
         return type(self).__name__
+
+
+class TranslationTreeManager(TranslationManager, TreeManager):
+    use_for_related_fields = True
+
+
+class TranslatedModelFallbackMixin(object):
+    """
+    This returns the shared field value of the Translated Model if the translated field value is empty.
+    Subclasses must define translated fields named after the shared ones according to this example
+
+    ```
+    class Tag(TranslatableModel):
+        name = CharField(max_length=30)  # Shared Field
+
+        translations = TranslatedFields(
+            _local_name=models.CharField(max_length=30)  # Translated Field
+        )
+    ```
+    """
+    def __getattribute__(self, item):
+        if not item.startswith('_local_'):
+            return super(TranslatedModelFallbackMixin, self).__getattribute__(item)
+
+        translated_value = super(TranslatedModelFallbackMixin, self).__getattribute__(item)
+        if item in self._translated_field_names and translated_value == '':
+            shared_item = item.replace('_local_', '')
+            return super(TranslatedModelFallbackMixin, self).__getattribute__(shared_item)
+
+        return translated_value
 
 
 class AttachedObjectMixinManager(models.Manager):

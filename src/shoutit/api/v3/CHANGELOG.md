@@ -1,9 +1,50 @@
 # shoutit-api v3 changelog
 
-## Dev update
 
+## Update
+- Added `/shouts/{id}/like` which allows a profile to like a shout. Shout owner will be notified
+- Added `/shouts/{id}/bookmark` which allows a profile to bookmark a shout to come to it later. Shout owner won't be notified
+- Added `/profiles/{username}/bookmarks` which returns a list of bookmarked shouts. Profiles can get their own bookmarked shouts only not those for other profiles
+
+
+## Update (2016-06-27)
+
+- `pages` and `admins` in **DetailedProfile** are now empty lists. The endpoints `/profiles/{username}/pages` and `/pages/{username}/admins` can be used instead.
+- Added `admin` property to **DetailedProfile** when it is of type `page`. This has a DetailedProfile of the currently logged in admin if any.
+
+## Update (2016-06-26) 
+
+### Internationalization
+API now returns localized responses based on client request's `Accept-Language` header.
+
+- Added `slug` to Tag object. Clients should start using the Tag `slug` instead of its `name` in all Tag endpoints. e.g Tag retrieve endpoint is now `/tags/{slug}`. The `name` will be a localized string that should be used only for display
+
+### Shoutit Pages
+More about the features and endpoints can be found on this wiki article [Shoutit Pages](https://github.com/shoutit/shoutit-api/wiki/Pages)
+
+### Shoutit Credit and Social additions
+Introducing Shoutit Credit system. more about it can be found on this wiki article [Shoutit Credit](https://github.com/shoutit/shoutit-api/wiki/Shoutit-Credit)
+
+- Added `PATCH /profiles/{username}/contacts` to allow users to upload their address book. [Profile Contacts](https://dev.api.shoutit.com/docs/#!/profiles/Profile_contacts) on live docs
+- Added `GET /profiles/{username}/mutual_contacts` which lists the mutual contacts that use Shoutit
+- Added `GET /profiles/{username}/mutual_friends` which lists the mutual Facebook friends that use Shoutit
+
+### Other Changes
+- Shared shouts on Facebook using Prod API will be explicitly shared i.e they will appear on both Timeline and News Feed.
+- Sharing on Facebook using DEV API is now possible. Shared shouts should appear on the Facebook user Activity Log. They won't be shown on his Timeline or News Feed.
+- Added `total_unread_count` to Profile `stats`. This is useful for iOS clients to set the app badge
+- Moved `location` from **Detailed Profile** to **Profile** This is useful when listing pages to display their location information
+- Now sending `conversation_update` on new messages. This helps clients to update the list of conversations when the user is on My Chats or Public Chats screens
+- Mixpanel People records are being created for profiles
+- Shout owners can open / edit / delete their expired shouts
+- Added `birthday` and `gender` fields to **Detailed Profile**
+
+### Deprecations
 - Moved `app_url` and `web_url` in **Notification** out of `display` to be more consistent inside native push. Check [Profile Notifications](https://github.com/shoutit/shoutit-api/wiki/Profile-Notifications)
 - `missed_video_call` push events is now under `new_notification` and will appear in Profile notifications list. Check [Native Push](https://github.com/shoutit/shoutit-api/wiki/Native-Push)
+- Conversation objects in `GET /conversations` and `GET /public_chats` are of type **Conversation** and not **Detailed Conversation**. They don't include `profiles` or `about`. This can be retrieved from `GET /conversations/{id}`
+- Removed `subject` and `icon` from **Detailed Conversation**. They are *write only* properties used only when creating a Public Chat conversation
+
 
 ## Conversation (2016-05-20)
 

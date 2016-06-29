@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
+from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION,
@@ -86,43 +87,44 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         if not text and not attachments:
             # Todo: check why having string as the detail results in exception
             # raise serializers.ValidationError("Provide 'text' or 'attachments'")
-            raise serializers.ValidationError({'': "Provide 'text' or 'attachments'"})
-
+            raise serializers.ValidationError({'': _("Provide 'text' or 'attachments'")})
         if attachments is not None:
             if isinstance(attachments, list) and len(attachments):
                 i = 0
                 errors['attachments'] = []
+                valid_types = ['shout', 'location', 'profile', 'images', 'videos']
+                types = ", ".join(map(str, valid_types))
                 for attachment in attachments:
                     attachment_error = None
-                    if not any_in(['shout', 'location', 'profile', 'images', 'videos'], attachment):
-                        attachment_error = {
-                            '': "attachment should have at least a 'shout', 'location', 'profile', 'images' or 'videos'"}
+
+                    if not any_in(valid_types, attachment):
+                        attachment_error = {'': _("Should have any of these properties: %(types)s") % {'types': types}}
                         errors['attachments'].insert(i, attachment_error)
                         i += 1
                         continue
 
-                    if 'location' in attachment and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
-                        attachment_error = {'location': "location object should have 'latitude' and 'longitude'"}
+                    if 'location' in attachment:
+                        if 'latitude' not in attachment['location'] or 'longitude' not in attachment['location']:
+                            attachment_error = {'location': _("location object should have 'latitude' and 'longitude'")}
 
                     if 'images' in attachment or 'videos' in attachment:
                         images = attachment.get('images')
                         videos = attachment.get('videos')
                         if not (images or videos):
-                            attachment_error = {
-                                '': "attachment should have at least one item in a 'images' or 'videos'"
-                            }
+                            attachment_error = {'': _("Should have at least one item in 'images' or 'videos'")}
                         if videos:
                             for v in videos:
                                 vs = VideoSerializer(data=v)
                                 if not vs.is_valid():
                                     attachment_error = {'videos': str(vs.errors)}
+
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1
                 if not any(errors['attachments']):
                     del errors['attachments']
 
         if text is not None and text == "" and attachments is None:
-            errors['text'] = "text can not be empty"
+            errors['text'] = _("Can not be empty")
 
         # Todo: Raise errors directly that is fine
         if errors:

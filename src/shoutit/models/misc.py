@@ -51,7 +51,7 @@ def generate_email_confirm_token():
 class ConfirmToken(UUIDModel):
     type = models.IntegerField(choices=TokenType.choices, default=TOKEN_TYPE_EMAIL.value)
     user = models.ForeignKey(AUTH_USER_MODEL, related_name="confirmation_tokens")
-    token = models.CharField(max_length=64, db_index=True, unique=True, default=generate_email_confirm_token)
+    token = models.CharField(max_length=64, unique=True, default=generate_email_confirm_token)
     email = models.EmailField(blank=True, null=True)
     is_disabled = models.BooleanField(default=False)
 
@@ -109,7 +109,7 @@ try:
 except RequestError:
     pass
 except ConnectionTimeout:
-    error_logger.warn("ES Server is down.", exc_info=True)
+    error_logger.warn("ES Server is down", exc_info=True)
 
 
 @receiver(post_save, sender=GoogleLocation)

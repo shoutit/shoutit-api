@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from unittest import skip
+
 from mock import patch
 from django_dynamic_fixture import G, F
 
@@ -19,8 +21,9 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
     def setUpTestData(cls):
         cls.user1 = cls.create_user()
         cls.user2 = cls.create_user(username='john')
+        cls.user3 = cls.create_user(username='akakiy', is_active=False)
         cls.c1 = G(Conversation, type=CONVERSATION_TYPE_CHAT,
-                   users=[cls.user1])
+                   users=[cls.user1, cls.user3])
         cls.c2 = G(Conversation, type=CONVERSATION_TYPE_CHAT)
         cls.c3 = G(Conversation, type=CONVERSATION_TYPE_CHAT,
                    users=[cls.user1], blocked=[cls.user1.pk])
@@ -71,7 +74,7 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         """
         user = self.user1
         shout = self.create_shout(user=user,
-                                  category=F(name='velo'),
+                                  category=F(slug='velo'),
                                   item=F(name='Marin'))
         conv = G(Conversation,
                  type=CONVERSATION_TYPE_ABOUT_SHOUT,
@@ -84,7 +87,17 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         self.assert200(resp)
         about = self.decode_json(resp)['about']
         self.assertEqual(about['title'], 'Marin')
-        self.assertEqual(about['category']['name'], 'velo')
+        self.assertEqual(about['category']['slug'], 'velo')
+
+    def test_detail_conversation_profiles(self):
+        """
+        User profiles are shown for conversation (including not active)
+        """
+        self.login(self.user1)
+        resp = self.client.get(self.get_url(self.c1.pk))
+        resp_ids = [p['id'] for p in self.decode_json(resp)['profiles']]
+        self.assertEqual(set(resp_ids), set(['', str(self.user1.id)]))
+        self.decode_json(resp)['profiles']
 
     def test_update_subject(self):
         """
