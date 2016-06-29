@@ -12,7 +12,8 @@ from django.utils import timezone
 from django_rq import job
 from elasticsearch import NotFoundError
 
-from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller, notifications_controller)
+from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller,
+                                 notifications_controller)
 from shoutit.models import Shout
 from shoutit.models.misc import delete_object_index
 from shoutit.models.post import ShoutIndex, ShoutLike, ShoutBookmark

@@ -9,9 +9,10 @@ from django.contrib.postgres.fields import ArrayField, HStoreField
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
-from django.utils.translation import ugettext_lazy as _
+
 from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
 from shoutit.models.action import Action

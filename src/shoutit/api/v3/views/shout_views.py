@@ -27,7 +27,8 @@ from shoutit.utils import has_unicode
 from shoutit_credit.views import PromoteShoutMixin
 from ..filters import ShoutIndexFilterBackend
 from ..pagination import PageNumberIndexPagination
-from ..serializers import (ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer, ShoutLikeSerializer, ShoutBookmarkSerializer)
+from ..serializers import (ShoutSerializer, ShoutDetailSerializer, MessageSerializer, CategoryDetailSerializer,
+                           ShoutLikeSerializer, ShoutBookmarkSerializer)
 from ..views.viewsets import UUIDViewSetMixin
 
 

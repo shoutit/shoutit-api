@@ -257,7 +257,8 @@ class ShoutLikeSerializer(serializers.Serializer):
         api_client = getattr(request, 'api_client', None)
         api_version = request.version
         if request.method == 'POST':
-            shout_controller.like_shout(user=request.user, shout=instance, api_client=api_client, api_version=api_version, page_admin_user=page_admin_user)
+            shout_controller.like_shout(user=request.user, shout=instance, api_client=api_client,
+                                        api_version=api_version, page_admin_user=page_admin_user)
         else:
             shout_controller.unlike_shout(user=request.user, shout=instance)
         return instance
@@ -273,7 +274,7 @@ class ShoutLikeSerializer(serializers.Serializer):
 
 class ShoutBookmarkSerializer(serializers.Serializer):
     bookmark_message = _('You bookmarked %(shout)s')
-    unbookmark_message_message = _('You unbookmarked %(shout)s')
+    unbookmark_message = _('You unbookmarked %(shout)s')
 
     def update(self, instance, validated_data):
         request = self.context['request']
@@ -281,7 +282,8 @@ class ShoutBookmarkSerializer(serializers.Serializer):
         api_client = getattr(request, 'api_client', None)
         api_version = request.version
         if request.method == 'POST':
-            shout_controller.bookmark_shout(user=request.user, shout=instance, api_client=api_client, api_version=api_version, page_admin_user=page_admin_user)
+            shout_controller.bookmark_shout(user=request.user, shout=instance, api_client=api_client,
+                                            api_version=api_version, page_admin_user=page_admin_user)
         else:
             shout_controller.unbookmark_shout(user=request.user, shout=instance)
         return instance
