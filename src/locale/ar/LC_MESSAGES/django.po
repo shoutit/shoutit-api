@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-29 03:11+0200\n"
+"POT-Creation-Date: 2016-06-29 13:45+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -110,10 +110,8 @@ msgid "Page inactive or deleted"
 msgstr "الصفحة غير مفعلة أو محذوفة"
 
 #: .\shoutit\api\authentication.py:72
-#, fuzzy
-#| msgid "You can't make chat actions against your own profile"
 msgid "You can't act as an admin of the provided page"
-msgstr "لايمكنك إنشاء محادثة مع حسابك"
+msgstr "لا يمكنك التصرف كمدير للصفحة المعطاة"
 
 #: .\shoutit\api\permissions.py:24
 msgid "Secure connection is required"
@@ -459,48 +457,55 @@ msgstr "لم يتم إجراء أية تغييرات"
 msgid "You can't make actions against your own profile"
 msgstr "لايمكنك إتخاذ إجراء على ملفك الشخصي"
 
-#: .\shoutit\api\v3\serializers\shout.py:68
+#: .\shoutit\api\v3\serializers\shout.py:80
 #, python-format
 msgid "Malformed filters, missing key: %(key)s"
 msgstr "معلومات فرز غير صحيحة, المفتاح %(key)s مفقود"
 
-#: .\shoutit\api\v3\serializers\shout.py:71
+#: .\shoutit\api\v3\serializers\shout.py:83
 msgid "Malformed filters"
 msgstr "معلومات فرز غير صحيحة"
 
-#: .\shoutit\api\v3\serializers\shout.py:90
+#: .\shoutit\api\v3\serializers\shout.py:102
 msgid "The currency must be set when the price is set"
 msgstr "يجب تحديد العملة عند إدخال السعر"
 
-#: .\shoutit\api\v3\serializers\shout.py:199
+#: .\shoutit\api\v3\serializers\shout.py:211
 msgid "Is not valid in your or in the shout's country"
 msgstr "غير صالح في بلدك او بلد الاعلان"
 
-#: .\shoutit\api\v3\serializers\shout.py:208
+#: .\shoutit\api\v3\serializers\shout.py:220
 msgid "You didn't provide enough information for creating a shout"
 msgstr "معلومات غير كافية لإنشاء إعلان"
 
-#: .\shoutit\api\v3\serializers\shout.py:232
+#: .\shoutit\api\v3\serializers\shout.py:244
 #, python-format
 msgid "You liked %(shout)s"
-msgstr ""
+msgstr "لقد اعجبك %(shout)s"
 
-#: .\shoutit\api\v3\serializers\shout.py:233
+#: .\shoutit\api\v3\serializers\shout.py:245
 #, python-format
 msgid "You unliked %(shout)s"
-msgstr ""
+msgstr "لقد الغيت اعجابك ب %(shout)s"
 
-#: .\shoutit\api\v3\serializers\shout.py:238
-#, fuzzy
-#| msgid "You can not start a conversation about your own shout"
+#: .\shoutit\api\v3\serializers\shout.py:250
 msgid "You can not like your own shouts"
-msgstr "لايمكنك بدء محادثة حول إعلانك"
+msgstr "لا يمكنك الاعجاب بإعلاناتك"
 
-#: .\shoutit\api\v3\serializers\shout.py:254
-#, fuzzy
-#| msgid "about"
+#: .\shoutit\api\v3\serializers\shout.py:267
+#: .\shoutit\api\v3\serializers\shout.py:292
 msgid "a shout"
-msgstr "حول"
+msgstr "إعلان"
+
+#: .\shoutit\api\v3\serializers\shout.py:276
+#, python-format
+msgid "You bookmarked %(shout)s"
+msgstr "تم حفظ %(shout)s"
+
+#: .\shoutit\api\v3\serializers\shout.py:277
+#, python-format
+msgid "You unbookmarked %(shout)s"
+msgstr "تم إلغاء حفظ %(shout)s"
 
 #: .\shoutit\api\v3\views\authentication_views.py:468
 #: .\shoutit\api\v3\views\exception_views.py:27
@@ -912,13 +917,12 @@ msgstr "معاملة شاوت ات كريدت جديدة"
 
 #: .\shoutit\models\message.py:570
 msgid "New Shout Like"
-msgstr ""
+msgstr "إعجاب جديد"
 
 #: .\shoutit\models\message.py:573
-#, fuzzy, python-format
-#| msgid "%(name)s is calling you on Shoutit"
+#, python-format
 msgid "%(name)s liked your shout %(title)s"
-msgstr "%(name)s يتصل بك على شاوت ات"
+msgstr "%(name)s قام بالإعجاب بإعلانك %(title)s"
 
 #: .\shoutit\models\message.py:586
 msgid "Answer"
@@ -976,7 +980,7 @@ msgstr "المهمة"
 msgid "general info"
 msgstr "معلومات عامة"
 
-#: .\shoutit\models\post.py:240
+#: .\shoutit\models\post.py:246
 msgid "Deleted Shout"
 msgstr "إعلان ملغي"
 
@@ -1061,16 +1065,13 @@ msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
 msgstr "لقد حصلت على 1 شاوت ات كريدت لمشاركتك %(title)s على الفيسبوك"
 
 #: .\shoutit_credit\models\shout.py:148
-#, fuzzy, python-format
-#| msgid ""
-#| "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s "
-#| "for %(days)d days."
+#, python-format
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
 "(days)d days."
 msgstr ""
 "لقد إستخدمت %(amount)d شاوت ات كريدت لترقية %(title)s ك %(label)s لمدة %"
-"(days) أيام"
+"(days)d أيام"
 
 #: .\shoutit_credit\models\shout.py:149
 #, python-format
