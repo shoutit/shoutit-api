@@ -10,8 +10,8 @@ from rest_framework import serializers
 from shoutit.controllers import page_controller
 from shoutit.models import PageCategory
 from shoutit.utils import blank_to_none
-from .base import RecursiveSerializer
-from .profile import ObjectProfileActionSerializer, ProfileDetailSerializer
+from .base import RecursiveSerializer, empty_char_input
+from .profile import ObjectProfileActionSerializer, ProfileDetailSerializer, MiniProfileSerializer
 
 
 class PageCategorySerializer(TranslatableModelSerializer):
@@ -40,6 +40,33 @@ class PageCategorySerializer(TranslatableModelSerializer):
             self.instance = PageCategory.objects.get(slug=slug)
         except (PageCategory.DoesNotExist, AttributeError):
             raise serializers.ValidationError(_("PageCategory with slug '%(slug)s' does not exist") % {'slug': slug})
+
+
+class PageDetailSerializer(ProfileDetailSerializer):
+    name = serializers.CharField(max_length=30, min_length=2)
+    creator = MiniProfileSerializer(source='page.creator', read_only=True)
+    category = PageCategorySerializer(source='page.category', required=False)
+    is_published = serializers.BooleanField(source='page.is_published', default=False)
+    is_claimed = serializers.BooleanField(source='page.is_claimed', read_only=True)
+    about = serializers.CharField(source='page.about', max_length=150, **empty_char_input)
+    description = serializers.CharField(source='page.description', max_length=1000, **empty_char_input)
+    phone = serializers.CharField(source='page.phone', max_length=30, **empty_char_input)
+    founded = serializers.CharField(source='page.founded', max_length=50, **empty_char_input)
+    impressum = serializers.CharField(source='page.impressum', max_length=2000, **empty_char_input)
+    overview = serializers.CharField(source='page.overview', max_length=1000, **empty_char_input)
+    mission = serializers.CharField(source='page.mission', max_length=1000, **empty_char_input)
+    general_info = serializers.CharField(source='page.general_info', max_length=1000, **empty_char_input)
+
+    class Meta(ProfileDetailSerializer.Meta):
+        parent_fields = ProfileDetailSerializer.Meta.fields
+        fields = parent_fields + ('creator', 'category', 'about', 'is_published', 'is_claimed', 'description', 'phone',
+                                  'founded', 'impressum', 'overview', 'mission', 'general_info')
+
+    def to_representation(self, instance):
+        ret = super(PageDetailSerializer, self).to_representation(instance)
+        blank_to_none(ret, ['about', 'description', 'phone', 'founded', 'impressum', 'overview', 'mission',
+                            'general_info'])
+        return ret
 
 
 class AddAdminSerializer(ObjectProfileActionSerializer):

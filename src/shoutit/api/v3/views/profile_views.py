@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
+from common.constants import USER_TYPE_PAGE
 from shoutit.api.permissions import IsOwnerModify, IsOwner
 from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.api.v3.views.shout_views import ShoutViewSet
@@ -21,7 +22,7 @@ from ..filters import HomeFilterBackend, ProfileFilter
 from ..pagination import ShoutitPageNumberPaginationNoCount
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
-                           ProfileContactsSerializer, ShoutSerializer)
+                           ProfileContactsSerializer, ShoutSerializer, PageDetailSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -102,6 +103,8 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
               defaultValue: me
         """
         instance = self.get_object()
+        if instance.type == USER_TYPE_PAGE:
+            self.serializer_detail_class = PageDetailSerializer
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -173,6 +176,8 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
               paramType: body
         """
         instance = self.get_object()
+        if instance.type == USER_TYPE_PAGE:
+            self.serializer_detail_class = PageDetailSerializer
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

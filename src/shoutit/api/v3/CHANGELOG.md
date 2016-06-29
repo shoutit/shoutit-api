@@ -5,7 +5,7 @@
 - Added `/shouts/{id}/like` which allows a profile to like a shout. Shout owner will be notified
 - Added `/shouts/{id}/bookmark` which allows a profile to bookmark a shout to come to it later. Shout owner won't be notified
 - Added `/profiles/{username}/bookmarks` which returns a list of bookmarked shouts. Profiles can get their own bookmarked shouts only not those for other profiles
-
+- Now returning **PageDetail** object in profile endpoints `GET /profiles/{username}` and `PATCH /profiles/{username}` Check its properties in [Shoutit Pages](https://github.com/shoutit/shoutit-api/wiki/Pages) wiki article
 
 ## Update (2016-06-27)
 

@@ -87,7 +87,6 @@ class ProfileDetailSerializer(ProfileSerializer):
     birthday = serializers.DateField(source='profile.birthday', required=False, allow_null=True,
                                      help_text='Formatted as YYYY-MM-DD')
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
-    about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     website = serializers.CharField(source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
@@ -117,10 +116,9 @@ class ProfileDetailSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + (
-            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'email', 'mobile', 'website',
-            'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
-            'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
-            'stats', 'admin', 'pages', 'admins'
+            'gender', 'birthday', 'video', 'date_joined', 'bio', 'email', 'mobile', 'website', 'linked_accounts',
+            'push_tokens', 'is_password_set', 'is_listener', 'shouts_url', 'listeners_url', 'listening_count',
+            'listening_url', 'interests_url', 'conversation', 'chat_url', 'stats', 'admin', 'pages', 'admins'
         )
 
     def get_is_listener(self, user):
@@ -296,7 +294,11 @@ class ProfileDetailSerializer(ProfileSerializer):
             fill(ap, profile_data, ['bio', 'gender', 'mobile', 'birthday'])
 
         elif isinstance(ap, Page):
-            pass
+            fill(ap, page_data, ['is_published', 'about', 'description', 'phone', 'founded', 'impressum',
+                                 'overview', 'mission', 'general_info'])
+            if 'name' in validated_data:
+                ap.name = validated_data['name']
+                ap_update_fields.append('name')
 
         if ap_data:
             fill(ap, ap_data, ['image', 'cover', 'website'])
