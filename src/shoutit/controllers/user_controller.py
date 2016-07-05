@@ -145,7 +145,7 @@ def auth_with_facebook(fb_user, initial_user=None, is_test=False):
         profile_fields.update({'gender': gender})
         update_fields.append('gender')
     if birthday:
-        birthday = datetime.strptime(birthday, "%d/%m/%Y").date()
+        birthday = datetime.strptime(birthday, "%m/%d/%Y").date()
         profile_fields.update({'birthday': birthday})
         update_fields.append('birthday')
 
