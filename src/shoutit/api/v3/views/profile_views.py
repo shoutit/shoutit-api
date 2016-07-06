@@ -710,7 +710,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         """
         user = self.get_object()
         self.serializer_detail_class = ShoutSerializer
-        shouts = self.filter_queryset(user.bookmarks.all().order_by('-bookmarks__created_at'))
+        shouts = self.filter_queryset(user.bookmarks.get_valid_shouts().order_by('-bookmarks__created_at'))
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
         result = self.get_paginated_response(serializer.data)
