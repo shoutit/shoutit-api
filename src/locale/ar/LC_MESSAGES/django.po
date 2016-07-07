@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-29 13:45+0200\n"
+"POT-Creation-Date: 2016-07-07 12:59+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -235,7 +235,7 @@ msgstr "لانقوم بإرجاع أكثر من 1000 نتيجة لأي بحث"
 #: .\shoutit\api\v3\serializers\auth.py:87
 #: .\shoutit\api\v3\serializers\auth.py:155
 #: .\shoutit\api\v3\serializers\auth.py:209
-#: .\shoutit\api\v3\serializers\profile.py:231
+#: .\shoutit\api\v3\serializers\profile.py:229
 #: .\shoutit\controllers\user_controller.py:20
 msgid "This email is used by another account"
 msgstr "هذا البريد الإلكتروني مستخدم سابقاً"
@@ -403,57 +403,57 @@ msgstr "يجب أن يحتوي الملحق على 'profile', 'shout' أو 'conv
 msgid "PageCategory with slug '%(slug)s' does not exist"
 msgstr "تصنيف الصفحة '%(slug)s' غير موجود"
 
-#: .\shoutit\api\v3\serializers\page.py:46
+#: .\shoutit\api\v3\serializers\page.py:73
 #, python-format
 msgid "Added %(name)s to the admins of this page"
 msgstr "تم إضافة %(name)s إلى مدراء هذه الصفحة"
 
-#: .\shoutit\api\v3\serializers\page.py:56
+#: .\shoutit\api\v3\serializers\page.py:83
 #, python-format
 msgid "%(name)s is already admin in this page"
 msgstr "%(name)s مدير في هذه الصفحة مسبقاً"
 
-#: .\shoutit\api\v3\serializers\page.py:61
+#: .\shoutit\api\v3\serializers\page.py:88
 #, python-format
 msgid "%(name)s is not admin in this page"
 msgstr "%(name)s ليس مدير في هذه الصفحة"
 
-#: .\shoutit\api\v3\serializers\page.py:62
+#: .\shoutit\api\v3\serializers\page.py:89
 #, python-format
 msgid "Removed %(name)s from the admins of this page"
 msgstr "تم حذف %(name)s من مدراء هذه الصفحة"
 
-#: .\shoutit\api\v3\serializers\profile.py:377
+#: .\shoutit\api\v3\serializers\profile.py:379
 msgid "Facebook"
 msgstr "فيسبوك"
 
-#: .\shoutit\api\v3\serializers\profile.py:377
+#: .\shoutit\api\v3\serializers\profile.py:379
 msgid "Google"
 msgstr "غوغل"
 
-#: .\shoutit\api\v3\serializers\profile.py:378
+#: .\shoutit\api\v3\serializers\profile.py:380
 #, python-format
 msgid "Couldn't link your %(account)s account"
 msgstr "لايمكن ربط حساب %(account)s"
 
-#: .\shoutit\api\v3\serializers\profile.py:381
+#: .\shoutit\api\v3\serializers\profile.py:383
 msgid "linked"
 msgstr "ربط"
 
-#: .\shoutit\api\v3\serializers\profile.py:398
+#: .\shoutit\api\v3\serializers\profile.py:400
 msgid "unlinked"
 msgstr "فك ربط"
 
-#: .\shoutit\api\v3\serializers\profile.py:405
+#: .\shoutit\api\v3\serializers\profile.py:407
 #, python-format
 msgid "Your %(account)s has been %(action)s"
 msgstr "تم %(action)s  حساب %(account)s"
 
-#: .\shoutit\api\v3\serializers\profile.py:408
+#: .\shoutit\api\v3\serializers\profile.py:410
 msgid "No changes were made"
 msgstr "لم يتم إجراء أية تغييرات"
 
-#: .\shoutit\api\v3\serializers\profile.py:526
+#: .\shoutit\api\v3\serializers\profile.py:528
 msgid "You can't make actions against your own profile"
 msgstr "لايمكنك إتخاذ إجراء على ملفك الشخصي"
 
@@ -594,29 +594,29 @@ msgstr "`type` خاطئ"
 msgid "Invalid `latlng`"
 msgstr "`latlng` خاطئ"
 
-#: .\shoutit\api\v3\views\profile_views.py:229
+#: .\shoutit\api\v3\views\profile_views.py:234
 msgid "You can't listen to your self"
 msgstr "لايمكنك الإستماع إلى حسابك"
 
-#: .\shoutit\api\v3\views\profile_views.py:233
+#: .\shoutit\api\v3\views\profile_views.py:238
 #, python-format
 msgid "You started listening to shouts from %(name)s"
 msgstr "لقد بدأت بالإستماع إلى إعلانات %(name)s"
 
-#: .\shoutit\api\v3\views\profile_views.py:236
+#: .\shoutit\api\v3\views\profile_views.py:241
 #, python-format
 msgid "You stopped listening to shouts from %(name)s"
 msgstr "لقد توقفت عن الإستماع إلى إعلانات %(name)s"
 
-#: .\shoutit\api\v3\views\profile_views.py:437
+#: .\shoutit\api\v3\views\profile_views.py:442
 msgid "You can not start a conversation with your self"
 msgstr "لايمكنك بدئ محادثة مع حسابك"
 
-#: .\shoutit\api\v3\views\profile_views.py:439
+#: .\shoutit\api\v3\views\profile_views.py:444
 msgid "You can only start a conversation with your listeners"
 msgstr "تستطيع بدء محادثة فقط مع مستمعيك"
 
-#: .\shoutit\api\v3\views\profile_views.py:585
+#: .\shoutit\api\v3\views\profile_views.py:590
 msgid "Your contacts have been uploaded"
 msgstr "تم تحميل جهات الإتصال"
 
@@ -763,15 +763,15 @@ msgstr "إسم المستخدم"
 msgid "Enter a valid username."
 msgstr "أدخل إسم مستخدم صالح"
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:602
+#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:605
 msgid "first name"
 msgstr "الإسم الأول"
 
-#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:603
+#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:606
 msgid "last name"
 msgstr "الإسم الأخير"
 
-#: .\shoutit\models\auth.py:90 .\shoutit\models\auth.py:604
+#: .\shoutit\models\auth.py:90 .\shoutit\models\auth.py:607
 msgid "email address"
 msgstr "البريد الإلكتروني"
 
@@ -845,11 +845,11 @@ msgstr "مستخدم"
 msgid "users"
 msgstr "المستخدمين"
 
-#: .\shoutit\models\auth.py:503
+#: .\shoutit\models\auth.py:506
 msgid "Shoutit User"
 msgstr "مستخدم شاوت ات"
 
-#: .\shoutit\models\auth.py:605
+#: .\shoutit\models\auth.py:608
 msgid "mobile"
 msgstr "رقم الموبايل"
 
@@ -880,51 +880,55 @@ msgstr "%(name)s: %(message)s"
 msgid "Shoutit"
 msgstr "شاوت ات"
 
-#: .\shoutit\models\message.py:534
+#: .\shoutit\models\message.py:533
+msgid "New listen"
+msgstr "استماعة جديدة"
+
+#: .\shoutit\models\message.py:535
+msgid "you"
+msgstr "إليك"
+
+#: .\shoutit\models\message.py:536
 #, python-format
 msgid "%(name)s started listening to you"
 msgstr "%(name)s بدأ بالإستماع إليك"
 
-#: .\shoutit\models\message.py:536
-msgid "you"
-msgstr "إليك"
-
-#: .\shoutit\models\message.py:541
+#: .\shoutit\models\message.py:542
 msgid "New message"
 msgstr "رسالة جديدة"
 
-#: .\shoutit\models\message.py:550
+#: .\shoutit\models\message.py:548
 msgid "Incoming video call"
 msgstr "مكالمة فيديو واردة"
 
-#: .\shoutit\models\message.py:552
+#: .\shoutit\models\message.py:550
 #, python-format
 msgid "%(name)s is calling you on Shoutit"
 msgstr "%(name)s يتصل بك على شاوت ات"
 
-#: .\shoutit\models\message.py:557
+#: .\shoutit\models\message.py:554
 msgid "Missed video call"
 msgstr "مكالمة فيديو فائته"
 
-#: .\shoutit\models\message.py:559
+#: .\shoutit\models\message.py:556
 #, python-format
 msgid "You missed a call from %(name)s"
 msgstr "مكالمة فيديو فائته من %(name)s"
 
-#: .\shoutit\models\message.py:564
+#: .\shoutit\models\message.py:561
 msgid "New Credit Transaction"
 msgstr "معاملة شاوت ات كريدت جديدة"
 
-#: .\shoutit\models\message.py:570
+#: .\shoutit\models\message.py:567
 msgid "New Shout Like"
 msgstr "إعجاب جديد"
 
-#: .\shoutit\models\message.py:573
+#: .\shoutit\models\message.py:570
 #, python-format
 msgid "%(name)s liked your shout %(title)s"
 msgstr "%(name)s قام بالإعجاب بإعلانك %(title)s"
 
-#: .\shoutit\models\message.py:586
+#: .\shoutit\models\message.py:583
 msgid "Answer"
 msgstr "إجابة"
 
