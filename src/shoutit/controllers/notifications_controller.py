@@ -119,4 +119,5 @@ def notify_user_of_credit_transaction(transaction):
 
 
 def notify_shout_owner_of_shout_like(shout, user):
-    notify_user.delay(shout.owner, notification_type=NOTIFICATION_TYPE_SHOUT_LIKE, from_user=user, attached_object=user)
+    notify_user.delay(shout.owner, notification_type=NOTIFICATION_TYPE_SHOUT_LIKE, from_user=user, attached_object=user,
+                      versions=['v3'])
