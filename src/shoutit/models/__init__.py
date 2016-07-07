@@ -9,8 +9,8 @@ from shoutit.models.misc import (  # NOQA
     ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation, GoogleLocation, LocationIndex, Device
 )
 from shoutit.models.user import Profile  # NOQA
-from shoutit.models.page import Page, PageAdmin, PageCategory  # NOQA
-from shoutit.models.post import Post, Shout, Video, ShoutIndex, InactiveShout  # NOQA
+from shoutit.models.page import Page, PageAdmin, PageCategory, PageVerification  # NOQA
+from shoutit.models.post import Post, Shout, Video, ShoutIndex, InactiveShout, ShoutBookmark, ShoutLike  # NOQA
 from shoutit.models.dbcl import DBUser, DBZ2User, CLUser, DBCLConversation  # NOQA
 from shoutit.models.message import (  # NOQA
     Conversation, ConversationDelete, Message, MessageDelete, MessageRead, MessageAttachment, Report, Notification,
