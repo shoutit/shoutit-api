@@ -441,14 +441,17 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if not hasattr(self, '_stats'):
             unread_conversations_count = notifications_controller.get_unread_conversations_count(self)
             unread_notifications_count = notifications_controller.get_unread_actual_notifications_count(self)
-            credit = self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
             self._stats = OrderedDict([
                 ('unread_conversations_count', unread_conversations_count),
                 ('unread_notifications_count', unread_notifications_count),
                 ('total_unread_count', unread_conversations_count + unread_notifications_count),
-                ('credit', credit),
+                ('credit', self.credit),
             ])
         return self._stats
+
+    @property
+    def credit(self):
+        return self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
 
     @property
     def mutual_friends(self):

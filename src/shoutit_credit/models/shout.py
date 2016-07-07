@@ -213,7 +213,7 @@ class PromoteShouts(CreditRule):
         return shout_promotion
 
     def can_promote(self, shout, user):
-        if user.stats.get('credit', 0) < self.credits:
+        if user.credit < self.credits:
             raise ShoutitBadRequest(_("You don't have enough Shoutit Credit for this action"))
 
         if shout.promotions.exists():
