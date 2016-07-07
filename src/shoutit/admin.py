@@ -144,6 +144,31 @@ class PageCategoryAdmin(TranslatableAdmin, DjangoMpttAdmin):
     form = ImageFileChangeForm
 
 
+# PageVerification
+@admin.register(PageVerification)
+class PageVerificationAdmin(admin.ModelAdmin):
+    list_display = ('page', 'admin', 'status', 'created_at')
+    list_filter = ('status',)
+    raw_id_fields = ('page', 'admin')
+
+    actions = ['accept', 'reject']
+
+    def accept(self, request, queryset):
+        from shoutit.models.page import PAGE_VERIFICATION_STATUS_ACCEPTED
+        queryset.update(status=PAGE_VERIFICATION_STATUS_ACCEPTED)
+        for unverified_page in Page.objects.filter(id__in=queryset.values_list('page_id', flat=True),
+                                                   is_verified=False):
+            unverified_page.update(is_verified=True)
+
+    accept.short_description = _('Accept the selected verifications')
+
+    def reject(self, request, queryset):
+        from shoutit.models.page import PAGE_VERIFICATION_STATUS_REJECTED
+        queryset.update(status=PAGE_VERIFICATION_STATUS_REJECTED)
+
+    reject.short_description = _('Reject the selected verifications')
+
+
 # LinkedFacebookAccount
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):

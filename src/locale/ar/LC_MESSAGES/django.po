@@ -2,18 +2,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-07 12:59+0200\n"
+"POT-Creation-Date: 2016-07-07 18:20+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: POEditor.com\n"
 "Language: ar\n"
 
-#: .\shoutit\admin.py:35
+#: .\shoutit\admin.py:36
 msgid "Username"
 msgstr "إسم المستخدم"
 
-#: .\shoutit\admin.py:36 .\shoutit\models\auth.py:79
+#: .\shoutit\admin.py:37 .\shoutit\models\auth.py:79
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
@@ -21,27 +21,27 @@ msgstr ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
 
-#: .\shoutit\admin.py:37
+#: .\shoutit\admin.py:38
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 
-#: .\shoutit\admin.py:50
+#: .\shoutit\admin.py:51
 msgid "Personal info"
 msgstr "المعلومات الشخصية"
 
-#: .\shoutit\admin.py:51
+#: .\shoutit\admin.py:52
 msgid "Permissions"
 msgstr "أذونات"
 
-#: .\shoutit\admin.py:53
+#: .\shoutit\admin.py:54
 msgid "Important dates"
 msgstr "تواريخ مهمة"
 
-#: .\shoutit\admin.py:54 .\shoutit\admin.py:281
+#: .\shoutit\admin.py:55 .\shoutit\admin.py:290
 msgid "Extra"
 msgstr "إضافي"
 
-#: .\shoutit\admin.py:280
+#: .\shoutit\admin.py:289
 msgid "Users"
 msgstr "المستخدمين"
 
@@ -398,30 +398,38 @@ msgstr "يجب أن يكون له خاصية واحدة فقط"
 msgid "Should have either 'profile', 'shout' or 'conversation'"
 msgstr "يجب أن يحتوي الملحق على 'profile', 'shout' أو 'conversation'"
 
-#: .\shoutit\api\v3\serializers\page.py:42
+#: .\shoutit\api\v3\serializers\page.py:43
 #, python-format
 msgid "PageCategory with slug '%(slug)s' does not exist"
 msgstr "تصنيف الصفحة '%(slug)s' غير موجود"
 
-#: .\shoutit\api\v3\serializers\page.py:73
+#: .\shoutit\api\v3\serializers\page.py:74
 #, python-format
 msgid "Added %(name)s to the admins of this page"
 msgstr "تم إضافة %(name)s إلى مدراء هذه الصفحة"
 
-#: .\shoutit\api\v3\serializers\page.py:83
+#: .\shoutit\api\v3\serializers\page.py:84
 #, python-format
 msgid "%(name)s is already admin in this page"
 msgstr "%(name)s مدير في هذه الصفحة مسبقاً"
 
-#: .\shoutit\api\v3\serializers\page.py:88
+#: .\shoutit\api\v3\serializers\page.py:89
 #, python-format
 msgid "%(name)s is not admin in this page"
 msgstr "%(name)s ليس مدير في هذه الصفحة"
 
-#: .\shoutit\api\v3\serializers\page.py:89
+#: .\shoutit\api\v3\serializers\page.py:90
 #, python-format
 msgid "Removed %(name)s from the admins of this page"
 msgstr "تم حذف %(name)s من مدراء هذه الصفحة"
+
+#: .\shoutit\api\v3\serializers\page.py:120
+msgid "Your business verification request has been submitted"
+msgstr "لقد تم تقديم طلب التوثيق"
+
+#: .\shoutit\api\v3\serializers\page.py:121
+msgid "Your business verification request has been updated"
+msgstr "لقد تم تحديث طلب التوثيق"
 
 #: .\shoutit\api\v3\serializers\profile.py:379
 msgid "Facebook"
@@ -932,57 +940,77 @@ msgstr "%(name)s قام بالإعجاب بإعلانك %(title)s"
 msgid "Answer"
 msgstr "إجابة"
 
-#: .\shoutit\models\page.py:44
+#: .\shoutit\models\page.py:45
 msgid "name"
 msgstr "الإسم"
 
-#: .\shoutit\models\page.py:47
+#: .\shoutit\models\page.py:48
 msgid "published"
 msgstr "تم النشر"
 
-#: .\shoutit\models\page.py:48
+#: .\shoutit\models\page.py:49
 msgid "Designates whether the page is publicly visible."
 msgstr "محدد إذا كانت هذه الصفحة معروضة للجميع"
 
-#: .\shoutit\models\page.py:49
-msgid "claimed"
-msgstr "claimed"
-
 #: .\shoutit\models\page.py:50
-msgid "Designates whether the page is claimed."
-msgstr "Designates whether the page is claimed."
+msgid "verified"
+msgstr "verified"
 
-#: .\shoutit\models\page.py:52
+#: .\shoutit\models\page.py:51
+msgid "Designates whether the page is verified."
+msgstr "Designates whether the page is verified."
+
+#: .\shoutit\models\page.py:53
 msgid "about"
 msgstr "حول"
 
-#: .\shoutit\models\page.py:53
+#: .\shoutit\models\page.py:54
 msgid "description"
 msgstr "الشرح"
 
-#: .\shoutit\models\page.py:54
+#: .\shoutit\models\page.py:55
 msgid "phone"
 msgstr "الموبايل"
 
-#: .\shoutit\models\page.py:55
+#: .\shoutit\models\page.py:56
 msgid "founded"
 msgstr "founded"
 
-#: .\shoutit\models\page.py:56
+#: .\shoutit\models\page.py:57
 msgid "impressum"
 msgstr "impressum"
 
-#: .\shoutit\models\page.py:57
+#: .\shoutit\models\page.py:58
 msgid "overview"
 msgstr "نظرة عامة"
 
-#: .\shoutit\models\page.py:58
+#: .\shoutit\models\page.py:59
 msgid "mission"
 msgstr "المهمة"
 
-#: .\shoutit\models\page.py:59
+#: .\shoutit\models\page.py:60
 msgid "general info"
 msgstr "معلومات عامة"
+
+#: .\shoutit\models\page.py:123
+msgid "Not submitted"
+msgstr "غير مقدم بعد"
+
+#: .\shoutit\models\page.py:124
+msgid "Waiting"
+msgstr "في الانتظار"
+
+#: .\shoutit\models\page.py:125
+msgid "In review"
+msgstr "قيد المراجعة"
+
+#: .\shoutit\models\page.py:126
+msgid "Rejected"
+msgstr "مرفوض"
+
+#: .\shoutit\models\page.py:127
+msgid "Accepted"
+msgstr "مقبول"
 
 #: .\shoutit\models\post.py:246
 msgid "Deleted Shout"

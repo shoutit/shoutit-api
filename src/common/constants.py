@@ -238,7 +238,6 @@ REPORT_TYPE_PROFILE = ReportType('profile')
 REPORT_TYPE_SHOUT = ReportType('shout')
 REPORT_TYPE_CONVERSATION = ReportType('conversation')
 
-
 DEFAULT_LOCATIONS_LATLNG = {
     'Dubai': [25.1993957, 55.2738326],
     'Abu Dhabi': [24.4886619466, 54.3677276373],

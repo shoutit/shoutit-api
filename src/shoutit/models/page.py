@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
 from django.db.models.signals import post_save
@@ -10,7 +11,7 @@ from hvad.models import TranslatedFields, TranslatableModel
 from mptt.models import MPTTModel, TreeForeignKey
 
 from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_PAGE, PAGE_ADMIN_TYPE_OWNER,
-                              PAGE_ADMIN_TYPE_ADMIN)
+                              PAGE_ADMIN_TYPE_ADMIN, Constant)
 from shoutit.models.base import UUIDModel, APIModelMixin, TranslationTreeManager, TranslatedModelFallbackMixin
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
@@ -46,8 +47,8 @@ class Page(AbstractProfile):
 
     is_published = models.BooleanField(_('published'), default=False,
                                        help_text=_('Designates whether the page is publicly visible.'))
-    is_claimed = models.BooleanField(_('claimed'), default=False,
-                                     help_text=_('Designates whether the page is claimed.'))
+    is_verified = models.BooleanField(_('verified'), default=False,
+                                      help_text=_('Designates whether the page is verified.'))
 
     about = models.TextField(_('about'), max_length=150, blank=True, default='')
     description = models.TextField(_('description'), max_length=1000, blank=True, default='')
@@ -64,14 +65,6 @@ class Page(AbstractProfile):
 
     def __unicode__(self):
         return unicode(self.user)
-
-    def update(self, name=None):
-        # Todo (mo): UUIDModel already has update method, use it maybe?
-        update_fields = []
-        if name is not None:
-            self.name = name
-            update_fields.append('name')
-        self.save(update_fields=update_fields)
 
     def clean(self):
         super(Page, self).clean()
@@ -113,3 +106,27 @@ def user_post_save(sender, instance=None, created=False, update_fields=None, **k
         Page.create(id=instance.id, user=instance, **page_fields)
 
         # Todo: give appropriate permissions
+
+
+class PageVerificationStatus(Constant):
+    counter, values, texts, choices = 0, {}, {}, ()
+
+
+PAGE_VERIFICATION_STATUS_NOT_SUBMITTED = PageVerificationStatus(_('Not submitted'))
+PAGE_VERIFICATION_STATUS_WAITING = PageVerificationStatus(_('Waiting'))
+PAGE_VERIFICATION_STATUS_IN_REVIEW = PageVerificationStatus(_('In review'))
+PAGE_VERIFICATION_STATUS_REJECTED = PageVerificationStatus(_('Rejected'))
+PAGE_VERIFICATION_STATUS_ACCEPTED = PageVerificationStatus(_('Accepted'))
+
+
+class PageVerification(UUIDModel):
+    page = models.OneToOneField('shoutit.Page', related_name='verification')
+    admin = models.ForeignKey(AUTH_USER_MODEL)
+    status = models.PositiveSmallIntegerField(choices=PageVerificationStatus.choices,
+                                              default=PAGE_VERIFICATION_STATUS_NOT_SUBMITTED.value)
+
+    business_name = models.CharField(max_length=50, validators=[validators.MinLengthValidator(2)])
+    business_email = models.EmailField()
+    contact_person = models.CharField(max_length=50, validators=[validators.MinLengthValidator(2)])
+    contact_number = models.CharField(max_length=20, validators=[validators.MinLengthValidator(8)])
+    images = ArrayField(models.URLField(), default=list, blank=True)
