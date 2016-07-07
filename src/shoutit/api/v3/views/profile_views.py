@@ -19,7 +19,7 @@ from shoutit.api.v3.views.shout_views import ShoutViewSet
 from shoutit.controllers import listen_controller, message_controller
 from shoutit.models import User
 from ..filters import HomeFilterBackend, ProfileFilter
-from ..pagination import ShoutitPageNumberPaginationNoCount
+from ..pagination import ShoutitPageNumberPaginationNoCount, ShoutitPageNumberPagination
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
                            ProfileContactsSerializer, ShoutSerializer, PageDetailSerializer)
@@ -710,6 +710,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         """
         user = self.get_object()
         self.serializer_detail_class = ShoutSerializer
+        self.pagination_class = ShoutitPageNumberPagination
         shouts = self.filter_queryset(user.bookmarks.get_valid_shouts().order_by('-bookmarks__created_at'))
         page = self.paginate_queryset(shouts)
         serializer = self.get_serializer(page, many=True)
