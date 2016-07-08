@@ -226,10 +226,10 @@ class Shout(Post):
         return self.promotions.order_by('created_at').last()
 
     def is_bookmarked(self, user):
-        return ShoutBookmark.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
+        return ShoutBookmark.exists(user=user, shout=self)
 
     def is_liked(self, user):
-        return ShoutLike.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
+        return ShoutLike.exists(user=user, shout=self)
 
 
 class InactiveShout(object):
