@@ -286,8 +286,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         send_mail(subject, message, from_email, [self.email])
 
     def activate(self):
-        self.is_activated = True
-        self.save(update_fields=['is_activated'])
+        # Activate the user himself
+        if not self.is_activated:
+            self.update(is_activated=True)
+        # Activate his inactivated pages, when he is of type user
+        if self.type == LISTEN_TYPE_PROFILE:
+            for page in self.pages.filter(user__is_activated=False).select_related('user'):
+                page.user.activate()
 
     def give_activate_permission(self):
         # from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
