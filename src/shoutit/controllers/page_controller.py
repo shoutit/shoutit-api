@@ -29,7 +29,8 @@ def create_page(creator, name, category, page_fields=None, **extra_user_fields):
     # User fields
     extra_user_fields.update({
         'type': USER_TYPE_PAGE,
-        'page_fields': page_fields
+        'page_fields': page_fields,
+        'is_activated': creator.is_activated
     })
     user = User.objects.create_user(username=username, **extra_user_fields)
 
