@@ -205,7 +205,6 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
         {
             "message": "Your business verification request has been submitted",
             "status": "Waiting",
-
             "business_name": "Shoutit",
             "business_email": "info@shoutit.com",
             "contact_person": "Mo Ch.",
@@ -214,15 +213,13 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
         }
         </code></pre>
 
-        - `message` will be returned only when submitting the request
+        - `message` will be returned only when submitting / updating the request
         - `status` can be used to display the verification request status
         ---
         omit_serializer: true
         parameters:
             - name: body
               paramType: body
-            - name: token
-              paramType: query
         """
         self.serializer_detail_class = PageVerificationSerializer
         page = self.get_object().page
