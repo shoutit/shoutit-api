@@ -56,7 +56,7 @@ class ProfileSerializer(MiniProfileSerializer):
         return user and user.is_authenticated() and user.is_listening(tag)
 
     def get_is_owner(self, user):
-        return self.root.context['request'].user == user
+        return user.is_owner(self.root.context['request'].user)
 
     def to_representation(self, instance):
         if not instance.is_active:

@@ -20,7 +20,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from pydash import arrays
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
-                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
+                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG, USER_TYPE_PAGE)
 from common.utils import AllowedUsernamesValidator, date_unix
 from shoutit.utils import debug_logger, none_to_blank
 from .base import UUIDModel, APIModelMixin, LocationMixin
@@ -140,6 +140,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def owner(self):
         return self
+
+    def is_owner(self, user):
+        if self.type == USER_TYPE_PAGE:
+            return self == user or self.page.admins.filter(id=user.id).exists()
+        else:
+            return self == user
 
     @property
     def location(self):
