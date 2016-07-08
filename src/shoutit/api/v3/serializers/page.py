@@ -113,7 +113,7 @@ class CreatePageSerializer(serializers.Serializer):
         return page
 
     def to_representation(self, instance):
-        return ProfileDetailSerializer(instance=instance, context=self.context).data
+        return PageDetailSerializer(instance=instance, context=self.context).data
 
 
 class PageVerificationSerializer(serializers.Serializer):
