@@ -117,8 +117,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
-        name = self.name if not self.is_guest else 'Guest'
-        return "%s [%s:%s]" % (name, self.id, self.username)
+        return "%s [%s:%s]" % (self.name, self.id, self.username)
 
     def clean(self):
         self.email = self.email.lower()
@@ -135,7 +134,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name_username(self):
-        return "{} [{}]".format(self.name if not self.is_guest else 'Guest', self.username)
+        return "%s [%s]" % (self.name, self.username)
 
     @property
     def owner(self):
@@ -153,12 +152,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name(self):
-        if self.type == USER_TYPE_PROFILE:
-            return self.get_full_name()
-        elif hasattr(self, 'page'):
+        if self.type == USER_TYPE_PAGE:
             return self.page.name
         else:
-            return self.v3_type_name.capitalize()
+            first_name = _('Guest') if self.is_guest or not self.first_name else self.first_name
+            last_name = '%s.' % self.last_name[:3 if self.is_guest else 1].upper()
+            full_name = '%s %s' % (first_name, last_name)
+            return full_name
 
     @property
     def apns_device(self):

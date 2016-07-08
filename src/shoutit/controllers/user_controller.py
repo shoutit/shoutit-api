@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.db import IntegrityError
 from django.utils.translation import ugettext_lazy as _
+from pydash import strings
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from common.constants import USER_TYPE_PROFILE, DEFAULT_LOCATION
@@ -21,17 +22,21 @@ def create_user(email=None, password=None, first_name='', last_name='', username
 
     # first, last and username
     if not username:
-        username = generate_username()
+        if first_name and last_name:
+            username = strings.slugify(strings.deburr('%s %s' % (first_name, last_name)), separator='.')
+        else:
+            username = generate_username()
+
     while len(username) < 2 or User.exists(username=username):
         username = generate_username()
+
     if first_name and len(first_name) < 2:
         first_name = ''
     if last_name and len(last_name) < 1:
         last_name = ''
-    if not first_name:
-        first_name = 'user'
     if not last_name:
         last_name = username
+
     username = username[:30]
     first_name = first_name[:30]
     last_name = last_name[:30]
