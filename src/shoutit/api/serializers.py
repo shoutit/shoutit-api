@@ -26,7 +26,7 @@ def serialize_attached_object(attached_object, version, user=None):
         return attached_object
     if isinstance(attached_object, User):
         # Use ProfileDetailSerializer if the user is the one getting his own profile
-        if user and user.id == request.user.id:
+        if user == attached_object:
             serializer = shoutit_serializers.ProfileDetailSerializer
         else:
             serializer = shoutit_serializers.ProfileSerializer
