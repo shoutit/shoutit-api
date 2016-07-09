@@ -27,7 +27,12 @@ def admin_url(self):
     return reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=(self.pk,))
 
 
+@property
+def admin_link(self):
+    return '<a href="%s">%s</a>' % (self.admin_url, unicode(self))
+
 models.Model.add_to_class('admin_url', admin_url)
+models.Model.add_to_class('admin_link', admin_link)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -231,11 +236,17 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 # Tag
 @admin.register(Tag)
 class TagAdmin(LinksMixin, TranslatableAdmin):
-    list_display = ('name', 'slug', 'key', 'image', '_links')
+    list_display = ('name', 'slug', '_key', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     list_filter = ('key',)
     form = ImageFileChangeForm
+    ordering = ('key', 'slug')
+
+    def _key(self, tag):
+        return tag.key.admin_link if tag.key else '(None)'
+    _key.allow_tags = True
+    _key.short_description = 'Key'
 
 
 class TagInline(admin.TabularInline):
@@ -253,6 +264,7 @@ class TagKeyAdmin(TranslatableAdmin):
     inlines = [
         TagInline,
     ]
+    ordering = ('slug',)
 
 
 # Category
