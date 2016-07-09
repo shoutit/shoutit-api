@@ -14,7 +14,7 @@ from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.utils import create_fake_request
 
 
-def serialize_attached_object(attached_object, version, user=None):
+def serialize_attached_object(attached_object, version, user=None, serializing_options=None):
     from ..models import Conversation, Message, User, Notification
     shoutit_serializers = import_module('shoutit.api.%s.serializers' % version)
 
@@ -22,23 +22,28 @@ def serialize_attached_object(attached_object, version, user=None):
     request = create_fake_request(version)
     request.user = user or AnonymousUser()
 
+    # List or Dict
     if isinstance(attached_object, (dict, list)):
         return attached_object
+    # User
     if isinstance(attached_object, User):
-        # Use ProfileDetailSerializer if the user is the one getting his own profile
-        if user == attached_object:
+        if serializing_options and serializing_options.get('detailed', False):
             serializer = shoutit_serializers.ProfileDetailSerializer
         else:
             serializer = shoutit_serializers.ProfileSerializer
+    # Message
     elif isinstance(attached_object, Message):
         serializer = shoutit_serializers.MessageSerializer
+    # Conversation
     elif isinstance(attached_object, Conversation):
-        if getattr(attached_object, 'detailed', True):
+        if serializing_options and serializing_options.get('detailed', True):
             serializer = shoutit_serializers.ConversationDetailSerializer
         else:
             serializer = shoutit_serializers.ConversationSerializer
+    # Notification
     elif isinstance(attached_object, Notification):
         serializer = shoutit_serializers.NotificationSerializer
+    # Object with `serializer` method that accepts version
     elif hasattr(attached_object, 'serializer') and callable(attached_object.serializer):
         serializer = attached_object.serializer(version)
     else:

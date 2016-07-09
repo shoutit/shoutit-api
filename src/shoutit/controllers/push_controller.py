@@ -25,7 +25,7 @@ GCMDevice.add_to_class('devices', _gcm_devices)
 
 
 @job(settings.RQ_QUEUE_PUSH)
-def send_push(user, notification, version, pushed_for=None):
+def send_push(user, notification, version, pushed_for=None, serializing_options=None):
     from shoutit.controllers.notifications_controller import get_total_unread_count
 
     # Notify the page admins if the notified user is a Page
@@ -49,7 +49,7 @@ def send_push(user, notification, version, pushed_for=None):
     alert_extra = notification_display.get('alert_extra', {})
     aps_extra = notification_display.get('aps_extra', {})
     data = serialize_attached_object(attached_object=notification.push_event_object, version=version,
-                                     user=pushed_for or user)
+                                     user=pushed_for or user, serializing_options=serializing_options)
     extra = {
         'event_name': event_name,
         'title': title,

@@ -12,16 +12,17 @@ from ..utils import debug_logger
 
 
 @job(settings.RQ_QUEUE_PUSHER)
-def trigger_event(channel_name, event_name, attached_object, version, user=None):
+def trigger_event(channel_name, event_name, attached_object, version, user=None, serializing_options=None):
     """
     Trigger event on Pusher profile channel
     """
-    attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user)
+    attached_object_dict = serialize_attached_object(attached_object=attached_object, version=version, user=user,
+                                                     serializing_options=serializing_options)
     pusher.trigger(channel_name, event_name, attached_object_dict)
     debug_logger.debug("Sent Pusher event: %s in channel: %s" % (event_name, channel_name))
 
 
-def trigger_profile_event(user, event_name, attached_object, version):
+def trigger_profile_event(user, event_name, attached_object, version, serializing_options=None):
     """
     Trigger event on Pusher profile channel
     """
@@ -29,15 +30,15 @@ def trigger_profile_event(user, event_name, attached_object, version):
         channel_name = 'presence-u-%s' % user.pk
     else:
         channel_name = 'presence-%s-p-%s' % (version, user.pk)
-    trigger_event.delay(channel_name, event_name, attached_object, version, user)
+    trigger_event.delay(channel_name, event_name, attached_object, version, user, serializing_options)
 
 
-def trigger_conversation_event(conversation_id, event_name, attached_object, version):
+def trigger_conversation_event(conversation_id, event_name, attached_object, version, serializing_options=None):
     """
     Trigger event on Pusher conversation channel
     """
     channel_name = 'presence-%s-c-%s' % (version, conversation_id)
-    trigger_event.delay(channel_name, event_name, attached_object, version)
+    trigger_event.delay(channel_name, event_name, attached_object, version, None, serializing_options)
 
 
 def trigger_stats_update(user, version):
@@ -77,23 +78,23 @@ def _trigger_new_read_by(message, version):
     trigger_conversation_event(message.conversation_id, event_name, message_summary, version)
 
 
-def trigger_conversation_update(conversation, version):
+def trigger_conversation_update(conversation, version, serializing_options=None):
     """
     Trigger `conversation_update` event on Pusher conversation channel, also for each profile channel of its members
     """
-    _trigger_conversation_update.delay(conversation, version)
+    _trigger_conversation_update.delay(conversation, version, serializing_options)
 
 
 @job(settings.RQ_QUEUE_PUSHER)
-def _trigger_conversation_update(conversation, version):
+def _trigger_conversation_update(conversation, version, serializing_options=None):
     event_name = str(NOTIFICATION_TYPE_CONVERSATION_UPDATE)
 
     # On conversation channel
-    trigger_conversation_event(conversation.id, event_name, conversation, version)
+    trigger_conversation_event(conversation.id, event_name, conversation, version, serializing_options)
 
     # On profiles channel
     for user in conversation.users.all():
-        trigger_profile_event(user, event_name, conversation, version)
+        trigger_profile_event(user, event_name, conversation, version, serializing_options)
 
 
 def check_pusher(user):

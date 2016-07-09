@@ -238,7 +238,8 @@ def post_save_conversation(sender, instance=None, created=False, **kwargs):
     else:
         if getattr(instance, 'notify', True):
             # Trigger `conversation_update` event in the conversation channel
-            pusher_controller.trigger_conversation_update(instance, 'v3')
+            serializing_options = {'detailed': getattr(instance, 'detailed', True)}
+            pusher_controller.trigger_conversation_update(instance, 'v3', serializing_options)
 
 
 class ConversationDelete(UUIDModel):
