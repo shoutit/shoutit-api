@@ -14,9 +14,7 @@ from elasticsearch import NotFoundError
 
 from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller,
                                  notifications_controller)
-from shoutit.models import Shout
-from shoutit.models.misc import delete_object_index
-from shoutit.models.post import ShoutIndex, ShoutLike, ShoutBookmark
+from shoutit.models import Shout, Tag, ShoutIndex, ShoutLike, ShoutBookmark, delete_object_index
 from shoutit.utils import debug_logger, error_logger
 
 
@@ -54,22 +52,14 @@ def NotifyPreExpiry():
                     shout.save()
 
 
-def create_shout_v2(user, shout_type, title, text, price, currency, category, tags, location, filters=None, images=None,
-                    videos=None, published_at=None, exp_days=None, priority=0, page_admin_user=None,
-                    publish_to_facebook=None, api_client=None, api_version=None):
-    # tags
-    # if passed as [{'name': 'tag-x'},...]
-    if tags:
-        if not isinstance(tags[0], basestring):
-            tags = map(lambda t: t.get('name'), tags)
-    # filters
-    if not filters:
-        filters = {}
+def create_shout_v2(user, shout_type, title, text, price, currency, category, location, images=None, videos=None,
+                    published_at=None, exp_days=None, priority=0, page_admin_user=None, publish_to_facebook=None,
+                    api_client=None, api_version=None):
     # item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos)
-    shout = Shout(user=user, type=shout_type, text=text, category=category, tags=tags, filters=filters, item=item,
-                  priority=priority, page_admin_user=page_admin_user)
+    shout = Shout(user=user, type=shout_type, text=text, category=category, item=item, priority=priority,
+                  page_admin_user=page_admin_user)
     location_controller.update_object_location(shout, location, save=False)
 
     # Published and Expires
@@ -90,9 +80,6 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
                  videos=None, published_at=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
                  publish_to_facebook=None, available_count=None, is_sold=None, mobile=None, api_client=None,
                  api_version=None):
-    # Filters
-    if not filters:
-        filters = {}
 
     # Create the Item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
@@ -114,10 +101,22 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
 
     # Save
     try:
+        # Don't save the index, wait for the tags
+        shout.save_shout_index = False
         shout.save()
     except (ValidationError, IntegrityError):
         item.delete()
         raise
+    else:
+        # Tags
+        if filters:
+            tag_ids = map(lambda f: f['value']['id'], filters)
+            tags = Tag.objects.filter(id__in=tag_ids)
+            shout.tags.add(*tags)
+
+        # Now save the index
+        save_shout_index(shout=shout, created=True)
+
     location_controller.add_predefined_city(location)
     return shout
 
@@ -131,12 +130,15 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
     shout.text = text
     shout.mobile = mobile
 
+    if filters is not None:
+        tag_ids = map(lambda f: f['value']['id'], filters)
+        tags = Tag.objects.filter(id__in=tag_ids)
+        shout.tags.clear()
+        shout.tags.add(*tags)
+
     # Can't be unset
     if category is not None:
         shout.category = category
-
-    if filters is not None:
-        shout.filters = filters
 
     if location is not None:
         location_controller.update_object_location(shout, location, save=False)
@@ -150,8 +152,8 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
     return shout
 
 
-def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, tags=None,
-                  filters=None, images=None, videos=None, location=None, page_admin_user=None):
+def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, currency=None, category=None, images=None,
+                  videos=None, location=None, page_admin_user=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
                               videos=videos)
     if shout_type:
@@ -160,13 +162,6 @@ def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, cur
         shout.text = text
     if category:
         shout.category = category
-    if tags:
-        # if passed as [{'name': 'tag-x'},...]
-        if not isinstance(tags[0], basestring):
-            tags = [tag.get('name') for tag in tags]
-        shout.tags = tags
-    if filters:
-        shout.filters = filters
     if location:
         location_controller.update_object_location(shout, location, save=False)
         location_controller.add_predefined_city(location)
@@ -179,7 +174,9 @@ def edit_shout_v2(shout, shout_type=None, title=None, text=None, price=None, cur
 @receiver(post_save, sender=Shout)
 def shout_post_save(sender, instance=None, created=False, **kwargs):
     # Create / Update ShoutIndex
-    save_shout_index(instance, created)
+    if getattr(instance, 'save_shout_index', True):
+        save_shout_index(instance, created)
+
     if created:
         # Track
         if not instance.is_sss:
@@ -213,8 +210,9 @@ def _save_shout_index(shout=None, created=False):
         debug_logger.debug('Created ShoutIndex: %s' % shout.pk)
     else:
         debug_logger.debug('Updated ShoutIndex: %s' % shout.pk)
-    # Update the shout object without dispatching signals
-    shout._meta.model.objects.filter(id=shout.id).update(is_indexed=True)
+    # Update the shout without saving the index not to fall in endless loop
+    shout.save_shout_index = False
+    shout.update(is_indexed=True)
 
 
 def shout_index_from_shout(shout, shout_index=None):
@@ -224,10 +222,10 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.type = shout.get_type_display()
     shout_index.title = shout.item.name
     shout_index.text = shout.text
-    shout_index.tags = shout.tags
-    shout_index.tags_count = len(shout.tags)
-    for k, v in shout.filters.items():
-        shout_index.filters[k] = v
+    tags = shout.tags.all().select_related('key')
+    shout_index.tags = map(lambda t: t.slug, tags) + [shout.category.slug]
+    shout_index.tags_count = len(tags) + 1
+    shout_index.filters = {tag.key.slug: tag.slug for tag in tags if tag.key}
     shout_index.category = shout.category.slug
     shout_index.country = shout.country
     shout_index.postal_code = shout.postal_code

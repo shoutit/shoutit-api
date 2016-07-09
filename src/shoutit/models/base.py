@@ -125,7 +125,7 @@ class APIModelMixin(object):
         lookups = {
             # class: ('netloc', 'identity_attr')
             'user': ('user', 'username'),
-            'tag': ('tag', 'name'),
+            'tag': ('tag', 'slug'),
             'shout': ('shout', 'id'),
             'discoveritem': ('discover', 'id'),
             'conversation': ('messages', 'id'),

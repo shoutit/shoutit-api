@@ -7,6 +7,7 @@ from django.db import models
 from hvad.models import TranslatedFields, TranslatableModel
 
 from common.constants import TagValueType, TAG_TYPE_STR
+from common.utils import process_tag
 from shoutit.models.base import UUIDModel, APIModelMixin, NamedLocationMixin, TranslatedModelFallbackMixin
 from shoutit.models.listen import Listen2
 from shoutit.settings import AUTH_USER_MODEL
@@ -41,7 +42,9 @@ class ShoutitSlugField(models.CharField):
             del kwargs['db_index']
         return name, path, args, kwargs
 
-        # todo: clean the field before saving
+    def clean(self, value, model_instance):
+        value = process_tag(value)
+        return super(ShoutitSlugField, self).clean(value, model_instance)
 
 
 class Tag(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
@@ -76,7 +79,7 @@ class Tag(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, UUIDMo
 
 class TagKey(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     name = models.CharField(max_length=30, db_index=True)
-    slug = ShoutitSlugField()
+    slug = ShoutitSlugField(unique=True)
     values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices, default=TAG_TYPE_STR.value)
     definition = models.CharField(max_length=100, blank=True, default='')
 

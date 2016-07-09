@@ -22,7 +22,7 @@ from rest_framework.settings import api_settings
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, MAX_TAGS_PER_SHOUT, ConversationType)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType)
 from common.utils import any_in
 from shoutit.controllers import (location_controller, shout_controller, user_controller, message_controller,
                                  media_controller)
@@ -513,17 +513,19 @@ class ShoutSerializer(serializers.ModelSerializer):
     date_published = serializers.IntegerField(source='published_at_unix', read_only=True)
     user = UserSerializer(read_only=True)
     category = CategorySerializer()
-    tags = TagSerializer(default=list, many=True, source='tag_objects')
-    filters = serializers.DictField(default=dict)
+    tags = serializers.SerializerMethodField()
     api_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Shout
         fields = ('id', 'api_url', 'web_url', 'type', 'location', 'title', 'text', 'price',
-                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags', 'filters')
+                  'currency', 'thumbnail', 'video_url', 'user', 'date_published', 'category', 'tags')
 
     def get_api_url(self, shout):
         return reverse('shout-detail', kwargs={'id': shout.id}, request=self.context['request'])
+
+    def get_tags(self, shout):
+        return []
 
     def validate_currency(self, value):
         try:
@@ -583,14 +585,20 @@ class ShoutDetailSerializer(ShoutSerializer):
     publish_to_facebook = serializers.BooleanField(write_only=True, required=False)
     reply_url = serializers.SerializerMethodField(
         help_text="URL to reply to this shout if possible, not set for shout owner")
-    related_requests = ShoutSerializer(many=True, read_only=True)
-    related_offers = ShoutSerializer(many=True, read_only=True)
+    related_requests = serializers.SerializerMethodField()
+    related_offers = serializers.SerializerMethodField()
     conversations = serializers.SerializerMethodField()
 
     class Meta(ShoutSerializer.Meta):
         parent_fields = ShoutSerializer.Meta.fields
         fields = parent_fields + ('images', 'videos', 'published_on', 'publish_to_facebook', 'reply_url',
                                   'related_requests', 'related_offers', 'conversations')
+
+    def get_related_requests(self, shout):
+        return []
+
+    def get_related_offers(self, shout):
+        return []
 
     def get_reply_url(self, shout):
         return reverse('shout-reply', kwargs={'id': shout.id}, request=self.context['request'])
@@ -648,10 +656,6 @@ class ShoutDetailSerializer(ShoutSerializer):
         currency = item.get('currency_code')
 
         category = validated_data.get('category')
-        tags = validated_data.get('tag_objects')
-        if isinstance(tags, list):
-            tags = tags[:MAX_TAGS_PER_SHOUT]
-        filters = validated_data.get('filters')
 
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
@@ -666,14 +670,14 @@ class ShoutDetailSerializer(ShoutSerializer):
         if not shout:
             shout = shout_controller.create_shout_v2(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
-                category=category, tags=tags, filters=filters, location=location, images=images, videos=videos,
+                category=category, location=location, images=images, videos=videos,
                 page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
                 api_client=getattr(request, 'api_client', None), api_version=request.version
             )
         else:
             shout = shout_controller.edit_shout_v2(
                 shout, shout_type=shout_type, title=title, text=text, price=price, currency=currency, category=category,
-                tags=tags, filters=filters, location=location, images=images, videos=videos, page_admin_user=page_admin_user
+                location=location, images=images, videos=videos, page_admin_user=page_admin_user
             )
         return shout
 
