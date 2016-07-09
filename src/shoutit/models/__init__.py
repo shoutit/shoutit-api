@@ -6,7 +6,8 @@ from shoutit.models.item import Currency, Item  # NOQA
 from shoutit.models.listen import Listen2  # NOQA
 from shoutit.models.tag import Tag, TagKey, Category, FeaturedTag  # NOQA
 from shoutit.models.misc import (  # NOQA
-    ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation, GoogleLocation, LocationIndex, Device
+    ConfirmToken, PredefinedCity, SharedLocation, SMSInvitation, GoogleLocation, LocationIndex, Device,
+    delete_object_index
 )
 from shoutit.models.user import Profile  # NOQA
 from shoutit.models.page import Page, PageAdmin, PageCategory, PageVerification  # NOQA

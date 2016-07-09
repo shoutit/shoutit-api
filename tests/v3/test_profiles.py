@@ -405,7 +405,7 @@ class ProfileInterestTestCase(DetailMixin, BaseTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user1 = cls.create_user(username='dima', email='dima@email.com')
-        cls.tag1 = G(Tag, name='bicycle')
+        cls.tag1 = G(Tag, name='bicycle', slug='bicycle')
         G(Listen2, user=cls.user1, type=int(LISTEN_TYPE_TAG),
           target=cls.tag1.name)
 
@@ -434,20 +434,22 @@ class ProfileHomeTestCase(DetailMixin, BaseTestCase):
                                     country='RU')
         cls.user2 = cls.create_user(username='john', email='john@email.com')
         cls.shout1 = cls.create_shout(
-            user=cls.user1, category=F(name='velo'), item=F(name='Marin'))
+            user=cls.user1, category=F(name='velo', slug='velo'), item=F(name='Marin'))
 
-        cls.tag1 = G(Tag, name='bicycle')
-        cls.tag2 = G(Tag, name='avto')
+        cls.tag1 = G(Tag, name='bicycle', slug='bicycle', key=F(name='filter1', slug='filter1'))
+        cls.tag2 = G(Tag, name='avto', slug='avto', key=F(name='filter2', slug='filter2'))
         # shout2 is tagged by tag1 and in same country as user1
         cls.shout2 = cls.create_shout(
             user=cls.user2, category=cls.shout1.category,
-            item=F(name='Specialized AWOL'), tags=[cls.tag1.name],
-            country='RU')
+            item=F(name='Specialized AWOL'), country='RU')
+        cls.shout2.tags.add(cls.tag1)
+        cls.shout2.save()  # this makes sure the shout index is updated with the added tags
         # shout3 is tagged by tag2 and in same different as user1
         cls.shout3 = cls.create_shout(
             user=cls.user2, category=cls.shout1.category,
-            item=F(name='Reno'), tags=[cls.tag2.name],
-            country='US')
+            item=F(name='Reno'), country='US')
+        cls.shout3.tags.add(cls.tag2)
+        cls.shout3.save()
         cls.refresh_elasticsearch_index(index='*')
 
     def test_profile_home_unknown(self):
@@ -788,7 +790,8 @@ class ProfilePagesTestCase(DetailMixin, BaseTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user1 = cls.create_user(username='dima', email='dima@email.com')
-        cls.page1 = G(Page, user=cls.user1, creator=cls.user1, name='page1')
+        cls.page1 = G(Page, user=cls.user1, creator=cls.user1, name='page1', slug='page1',
+                      category=F(name='pagecat', slug='pagecat'))
 
     def test_profile_pages(self):
         """

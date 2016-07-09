@@ -80,9 +80,9 @@ class ConversationShoutsTestCase(DetailMixin, AttachmentsMixin, BaseTestCase):
         m1 = G(Message, user=self.user1, conversation=self.c1)
         m2 = G(Message, user=self.user1, conversation=c2)
         shout1 = self.create_shout(
-            user=self.user1, category=F(name='velo'), item=F(name='Marin'))
+            user=self.user1, category=F(name='velo', slug='velo'), item=F(name='Marin'))
         shout2 = self.create_shout(
-            user=self.user1, category=F(name='flower'), item=F(name='Rose'))
+            user=self.user1, category=F(name='flower', slug='flower'), item=F(name='Rose'))
         shout1.message_attachments.add(
             G(MessageAttachment, type=MESSAGE_ATTACHMENT_TYPE_SHOUT,
               message=m1, conversation=self.c1),

@@ -94,9 +94,8 @@ class Post(Action):
 
 
 class Shout(Post):
-    tags = ArrayField(ShoutitSlugField(), blank=True, default=list)
-    filters = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
+    tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='shouts')
     is_indexed = models.BooleanField(default=False, db_index=True)
 
     item = models.OneToOneField('shoutit.Item', db_index=True)
@@ -119,20 +118,8 @@ class Shout(Post):
         return "%s: %s, %s: %s" % (self.pk, self.item, self.country, self.city)
 
     def clean(self):
-        from common.utils import process_tags
-        from ..controllers import tag_controller
-
         # Super clean
         super(Shout, self).clean()
-
-        # Tags and Filters
-        tags = self.filters.values() or self.tags  # V2 shouts have no filters, use their existing tags
-        tags.insert(0, self.category.slug)
-        tags = process_tags(tags)
-        if self.tags != tags:
-            # Create actual tags objects (when necessary)
-            tag_controller.get_or_create_tags(tags, self.user)
-        self.tags = tags
 
         # Mobile
         if self.mobile:
@@ -175,16 +162,6 @@ class Shout(Post):
             return True
         return False
 
-    # Todo: Deprecate
-    @property
-    def related_requests(self):
-        return []
-
-    # Todo: Deprecate
-    @property
-    def related_offers(self):
-        return []
-
     @property
     def track_properties(self):
         properties = super(Shout, self).track_properties
@@ -200,18 +177,12 @@ class Shout(Post):
         return properties
 
     @property
-    def filter_objects(self):
-        objects = []
-        for key, value in self.filters.items():
-            objects.append({
-                'name': key.title() if isinstance(key, basestring) else key,
-                'slug': key,
-                'value': {
-                    'name': value.title() if isinstance(value, basestring) else key,
-                    'slug': value
-                }
-            })
-        return objects
+    def filters(self):
+        _filters = []
+        for tag in self.tags.all().select_related('key'):
+            tag.key.value = tag
+            _filters.append(tag.key)
+        return _filters
 
     @property
     def mobile_hint(self):
@@ -296,15 +267,16 @@ class ShoutIndex(DocType):
     class Meta:
         index = '%s_shout' % settings.ES_BASE_INDEX
         dynamic_templates = MetaField([
-            {
-                "filters_integer_keys": {
-                    "match_pattern": "regex",
-                    "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
-                    "mapping": {
-                        "type": "integer"
-                    }
-                }
-            },
+            # Todo (mo): disabled for now since we are filtering only on string values
+            # {
+            #     "filters_integer_keys": {
+            #         "match_pattern": "regex",
+            #         "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
+            #         "mapping": {
+            #             "type": "integer"
+            #         }
+            #     }
+            # },
             {
                 "filters_string_keys": {
                     "path_match": "filters.*",

@@ -66,7 +66,7 @@ class ConversationReplyProfileTestCase(DetailMixin, BaseTestCase):
         Shout attachment is saved in message
         """
         shout = self.create_shout(
-            user=self.user1, category=F(name='velo'), item=F(name='Marin'))
+            user=self.user1, category=F(name='velo', slug='velo'), item=F(name='Marin'))
         self.login(self.user1)
         resp = self.client.post(self.get_url(self.c1.pk), {
             'text': 'm1',

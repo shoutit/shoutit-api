@@ -19,6 +19,7 @@ class MiniTagSerializer(TranslatableModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'slug')
+        extra_kwargs = {'id': {'required': False, 'read_only': False}}
 
 
 class TagSerializer(MiniTagSerializer):
@@ -92,6 +93,13 @@ class TagKeySerializer(TranslatableModelSerializer):
     class Meta:
         model = TagKey
         fields = ('name', 'slug', 'values')
+
+
+class SingleValueTagKeySerializer(TagKeySerializer):
+    value = MiniTagSerializer()
+
+    class Meta(TagKeySerializer.Meta):
+        fields = ('name', 'slug', 'value')
 
 
 class CategorySerializer(TranslatableModelSerializer):
