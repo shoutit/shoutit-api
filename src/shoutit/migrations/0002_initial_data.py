@@ -45,7 +45,9 @@ def fill_initial_data(apps, schema_editor):
         ('Real Estate', 'real-estate'),
         ('Services', 'services'),
         ('Sport, Leisure & Games', 'sport-leisure-games'),
-        ('Toys, Children & Baby', 'toys-children-baby'),
+        ('Beauty & Health', 'beauty-health'),
+        ('Hotels & Restaurants', 'hotels-restaurants'),
+        ('Groceries & Beverages', 'groceries-beverages'),
     ]
 
     Category.objects.bulk_create(
@@ -53,7 +55,7 @@ def fill_initial_data(apps, schema_editor):
     )
 
     Tag.objects.bulk_create(
-        map(lambda t: Tag(name=t[1]), categories)
+        map(lambda t: Tag(name=t[1], slug=t[1]), categories)
     )
 
     # Currencies
