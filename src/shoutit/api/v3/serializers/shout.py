@@ -73,6 +73,11 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         except (Currency.DoesNotExist, ValueError):
             raise serializers.ValidationError('Invalid currency')
 
+    def validate_filters(self, filters):
+        # Ignore filter values that have no id. Old clients used to send the slug
+        filters = filter(lambda f: 'id' in f['value'], filters)
+        return filters
+
     def to_internal_value(self, data):
         # Validate when passed as attached object or message attachment
         ret = self.to_internal_attached_value(data)
