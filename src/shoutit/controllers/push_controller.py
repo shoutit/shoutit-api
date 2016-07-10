@@ -11,7 +11,7 @@ from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.settings import api_settings
 
-from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST)
+from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST, USER_TYPE_PAGE)
 from shoutit.api.serializers import serialize_attached_object
 from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, error_logger, UserIds
@@ -25,8 +25,14 @@ GCMDevice.add_to_class('devices', _gcm_devices)
 
 
 @job(settings.RQ_QUEUE_PUSH)
-def send_push(user, notification, version):
+def send_push(user, notification, version, pushed_for=None, serializing_options=None):
     from shoutit.controllers.notifications_controller import get_total_unread_count
+
+    # Notify the page admins if the notified user is a Page
+    if user.type == USER_TYPE_PAGE:
+        for admin in user.page.admins.all():
+            send_push.delay(admin, notification, version, pushed_for=user)
+        return
 
     # Check whether we are really going to send anything
     sending_apns = user.has_apns and getattr(user.apns_device.devices.first(), 'api_version', None) == version
@@ -42,13 +48,15 @@ def send_push(user, notification, version):
     image = notification_display['image']
     alert_extra = notification_display.get('alert_extra', {})
     aps_extra = notification_display.get('aps_extra', {})
-    data = serialize_attached_object(attached_object=notification.push_event_object, version=version, user=user)
+    data = serialize_attached_object(attached_object=notification.push_event_object, version=version,
+                                     user=pushed_for or user, serializing_options=serializing_options)
     extra = {
         'event_name': event_name,
         'title': title,
         'body': body,
         'icon': image,
         'data': data,
+        'pushed_for': pushed_for.id if pushed_for else user.id,
         # Todo: Deprecate old properties
         'type': str(notification.type),
         'message': body
@@ -69,20 +77,24 @@ def send_push(user, notification, version):
         aps.update(aps_extra)
         try:
             user.send_apns(alert=alert, extra=extra, **aps)
-            debug_logger.debug("Sent %s APNS:%s to %s" % (version, event_name, user))
+            debug_logger.debug("Sent %s APNS:%s to %s, pushed for %s" % (version, event_name, user, pushed_for))
         except APNSError:
-            error_logger.warn("Could not send %s APNS:%s to %s" % (version, event_name, user), exc_info=True)
+            error_logger.warn("Could not send %s APNS:%s to %s, pushed for %s" % (version, event_name, user, pushed_for), exc_info=True)
 
     if sending_gcm:
         try:
             user.send_gcm(data=extra)
-            debug_logger.debug("Sent %s GCM:%s to %s" % (version, event_name, user))
+            debug_logger.debug("Sent %s GCM:%s to %s, pushed for %s" % (version, event_name, user, pushed_for))
         except GCMError:
-            error_logger.warn("Could not send %s GCM:%s to %s" % (version, event_name, user), exc_info=True)
+            error_logger.warn("Could not send %s GCM:%s to %s, pushed for %s" % (version, event_name, user, pushed_for), exc_info=True)
 
 
 @job(settings.RQ_QUEUE_PUSH)
 def set_ios_badge(user):
+    # Todo: figure out badge setting for pages
+    if user.type == USER_TYPE_PAGE:
+        return
+
     from .notifications_controller import get_total_unread_count
 
     if user.apns_device:

@@ -14,9 +14,9 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 from common.constants import USER_TYPE_PAGE
 from shoutit.api.v3.filters import ProfileFilter
 from shoutit.api.v3.pagination import ShoutitPageNumberPaginationNoCount
-from shoutit.models import User, PageCategory
+from shoutit.models import User, PageCategory, PageVerification
 from ..serializers import (PageCategorySerializer, ProfileSerializer, ProfileDetailSerializer, AddAdminSerializer, RemoveAdminSerializer,
-                           CreatePageSerializer)
+                           CreatePageSerializer, PageVerificationSerializer)
 
 
 class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -146,8 +146,7 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
         Add profile to / remove from the admins of this page
         ###REQUIRES AUTH
         The logged in profile should be admin in this page.
-        ###Request
-        ####Body
+        ###Request body
         <pre><code>
         {
             "profile": {
@@ -171,4 +170,64 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
         serializer = self.get_serializer(instance=page, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)
+
+    @detail_route(methods=['get', 'post'], suffix='Business Verification')
+    def verification(self, request, *args, **kwargs):
+        """
+        Verify business page.
+
+        ###REQUIRES AUTH
+        The logged in profile should be admin in this page.
+
+        ### Creating / updating verification request
+        <pre><code>
+        POST: /pages/{username}/verification
+        </code></pre>
+        ###Request body
+        <pre><code>
+        {
+            "business_name": "Shoutit",
+            "business_email": "info@shoutit.com",
+            "contact_person": "Mo Ch.",
+            "contact_number": "+491234567890",
+            "images": []
+        }
+        </code></pre>
+
+        ### Retrieving existing verification request
+        <pre><code>
+        GET: /pages/{username}/verification
+        </code></pre>
+
+        ### Response
+        <pre><code>
+        {
+            "message": "Your business verification request has been submitted",
+            "status": "Waiting",
+            "business_name": "Shoutit",
+            "business_email": "info@shoutit.com",
+            "contact_person": "Mo Ch.",
+            "contact_number": "+491234567890",
+            "images": []
+        }
+        </code></pre>
+
+        - `message` will be returned only when submitting / updating the request
+        - `status` can be used to display the verification request status
+        ---
+        omit_serializer: true
+        parameters:
+            - name: body
+              paramType: body
+        """
+        self.serializer_detail_class = PageVerificationSerializer
+        page = self.get_object().page
+        if request.method == 'GET':
+            page_verification = getattr(page, 'verification', PageVerification())
+            serializer = self.get_serializer(instance=page_verification)
+        else:
+            serializer = self.get_serializer(instance=page, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
         return Response(serializer.data)

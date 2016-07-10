@@ -182,9 +182,9 @@ class PromoteShouts(CreditRule):
         label_name = label.name
 
         if days:
-            text = self.text % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label, 'days': days}
+            text = self.text % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label_name, 'days': days}
         else:
-            text = self.text_no_days % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label}
+            text = self.text_no_days % {'amount': abs(transaction.amount), 'title': shout_title, 'label': label_name}
         ret = {
             "text": text,
             "ranges": [
@@ -213,7 +213,7 @@ class PromoteShouts(CreditRule):
         return shout_promotion
 
     def can_promote(self, shout, user):
-        if user.stats.get('credit', 0) < self.credits:
+        if user.credit < self.credits:
             raise ShoutitBadRequest(_("You don't have enough Shoutit Credit for this action"))
 
         if shout.promotions.exists():

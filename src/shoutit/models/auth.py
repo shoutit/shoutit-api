@@ -20,7 +20,7 @@ from push_notifications.models import APNSDevice, GCMDevice
 from pydash import arrays
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
-                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG)
+                              LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG, USER_TYPE_PAGE)
 from common.utils import AllowedUsernamesValidator, date_unix
 from shoutit.utils import debug_logger, none_to_blank
 from .base import UUIDModel, APIModelMixin, LocationMixin
@@ -117,8 +117,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name_plural = _('users')
 
     def __unicode__(self):
-        name = self.name if not self.is_guest else 'Guest'
-        return "%s [%s:%s]" % (name, self.id, self.username)
+        return "%s [%s:%s]" % (self.name, self.id, self.username)
 
     def clean(self):
         self.email = self.email.lower()
@@ -135,11 +134,17 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name_username(self):
-        return "{} [{}]".format(self.name if not self.is_guest else 'Guest', self.username)
+        return "%s [%s]" % (self.name, self.username)
 
     @property
     def owner(self):
         return self
+
+    def is_owner(self, user):
+        if self.type == USER_TYPE_PAGE:
+            return self == user or self.page.admins.filter(id=user.id).exists()
+        else:
+            return self == user
 
     @property
     def location(self):
@@ -147,12 +152,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def name(self):
-        if self.type == USER_TYPE_PROFILE:
-            return self.get_full_name()
-        elif hasattr(self, 'page'):
-            return self.page.name
+        if self.type == USER_TYPE_PAGE:
+            return self.page.name if hasattr(self, 'page') else _('Page')
         else:
-            return self.v3_type_name.capitalize()
+            first_name = _('Guest') if self.is_guest or not self.first_name else self.first_name
+            last_name = '%s.' % self.last_name[:3 if self.is_guest else 1].upper()
+            full_name = '%s %s' % (first_name, last_name)
+            return full_name
 
     @property
     def apns_device(self):
@@ -286,8 +292,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         send_mail(subject, message, from_email, [self.email])
 
     def activate(self):
-        self.is_activated = True
-        self.save(update_fields=['is_activated'])
+        # Activate the user himself
+        if not self.is_activated:
+            self.update(is_activated=True)
+        # Activate his inactivated pages, when he is of type user
+        if self.type == LISTEN_TYPE_PROFILE:
+            for page in self.pages.filter(user__is_activated=False).select_related('user'):
+                page.user.activate()
 
     def give_activate_permission(self):
         # from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
@@ -441,14 +452,17 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if not hasattr(self, '_stats'):
             unread_conversations_count = notifications_controller.get_unread_conversations_count(self)
             unread_notifications_count = notifications_controller.get_unread_actual_notifications_count(self)
-            credit = self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
             self._stats = OrderedDict([
                 ('unread_conversations_count', unread_conversations_count),
                 ('unread_notifications_count', unread_notifications_count),
                 ('total_unread_count', unread_conversations_count + unread_notifications_count),
-                ('credit', credit),
+                ('credit', self.credit),
             ])
         return self._stats
+
+    @property
+    def credit(self):
+        return self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
 
     @property
     def mutual_friends(self):

@@ -45,7 +45,9 @@ def fill_initial_data(apps, schema_editor):
         ('Real Estate', 'real-estate'),
         ('Services', 'services'),
         ('Sport, Leisure & Games', 'sport-leisure-games'),
-        ('Toys, Children & Baby', 'toys-children-baby'),
+        ('Beauty & Health', 'beauty-health'),
+        ('Hotels & Restaurants', 'hotels-restaurants'),
+        ('Groceries & Beverages', 'groceries-beverages'),
     ]
 
     Category.objects.bulk_create(

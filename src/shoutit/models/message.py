@@ -238,7 +238,8 @@ def post_save_conversation(sender, instance=None, created=False, **kwargs):
     else:
         if getattr(instance, 'notify', True):
             # Trigger `conversation_update` event in the conversation channel
-            pusher_controller.trigger_conversation_update(instance, 'v3')
+            serializing_options = {'detailed': getattr(instance, 'detailed', True)}
+            pusher_controller.trigger_conversation_update(instance, 'v3', serializing_options)
 
 
 class ConversationDelete(UUIDModel):
@@ -530,27 +531,24 @@ class Notification(UUIDModel, AttachedObjectMixin):
         target = self.attached_object
 
         if self.type == NOTIFICATION_TYPE_LISTEN:
+            title = _("New listen")
             name = self.attached_object.name
+            you = unicode(_('you'))
             text = _("%(name)s started listening to you") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
-            ranges.append({'offset': text.index(unicode(_('you'))), 'length': len('you')})
+            ranges.append({'offset': text.index(you), 'length': len(you)})
             image = self.attached_object.ap.image
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
-            # Todo (mo): is `ranges` needed for messages notifications?
             title = _("New message")
-            name = self.attached_object.user.first_name if self.attached_object.user else 'Shoutit'
             text = self.attached_object.summary
-            ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.user.ap.image
             target = self.attached_object.conversation
 
         elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
-            # Todo (mo): is `ranges` needed for incoming video call notifications?
             title = _("Incoming video call")
             name = self.attached_object.name
             text = _("%(name)s is calling you on Shoutit") % {'name': name}
-            ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
 
         elif self.type == NOTIFICATION_TYPE_MISSED_VIDEO_CALL:

@@ -12,6 +12,8 @@ from django.contrib.postgres.forms import SplitArrayField
 from django.core.exceptions import ValidationError
 from django.forms import URLField
 from hvad.forms import TranslatableModelForm
+
+from common.utils import process_tag
 from shoutit.models import PushBroadcast
 from common.constants import DeviceOS, COUNTRY_CHOICES
 from django.utils.translation import string_concat
@@ -106,7 +108,8 @@ class ImageFileChangeForm(TranslatableModelForm):
             return
         s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
         bucket = s3.get_bucket('shoutit-tag-image-original')
-        filename = "%s.jpg" % uuid.uuid4()
+        slug = self.cleaned_data.get('slug', 'tag')
+        filename = "%s-%s.jpg" % (uuid.uuid4(), process_tag(slug))
         key = bucket.new_key(filename)
         key.set_metadata('Content-Type', 'image/jpg')
         key.set_contents_from_file(image_file)

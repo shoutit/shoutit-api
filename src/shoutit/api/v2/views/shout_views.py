@@ -322,8 +322,9 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
               paramType: query
         """
         shout = self.get_object()
+        tags = shout.tags.values_list('slug', flat=True)
         extra_query_params = {
-            'search': "%s %s" % (shout.item.name if not has_unicode(shout.item.name) else "", " ".join(shout.tags)),
+            'search': "%s %s" % (shout.item.name if not has_unicode(shout.item.name) else "", " ".join(tags)),
             'country': shout.country,
             'shout_type': shout.get_type_display(),
             'category': shout.category.name,

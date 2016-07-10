@@ -27,7 +27,12 @@ def admin_url(self):
     return reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=(self.pk,))
 
 
+@property
+def admin_link(self):
+    return '<a href="%s">%s</a>' % (self.admin_url, unicode(self))
+
 models.Model.add_to_class('admin_url', admin_url)
+models.Model.add_to_class('admin_link', admin_link)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -144,6 +149,31 @@ class PageCategoryAdmin(TranslatableAdmin, DjangoMpttAdmin):
     form = ImageFileChangeForm
 
 
+# PageVerification
+@admin.register(PageVerification)
+class PageVerificationAdmin(admin.ModelAdmin):
+    list_display = ('page', 'admin', 'status', 'created_at')
+    list_filter = ('status',)
+    raw_id_fields = ('page', 'admin')
+
+    actions = ['accept', 'reject']
+
+    def accept(self, request, queryset):
+        from shoutit.models.page import PAGE_VERIFICATION_STATUS_ACCEPTED
+        queryset.update(status=PAGE_VERIFICATION_STATUS_ACCEPTED)
+        for unverified_page in Page.objects.filter(id__in=queryset.values_list('page_id', flat=True),
+                                                   is_verified=False):
+            unverified_page.update(is_verified=True)
+
+    accept.short_description = _('Accept the selected verifications')
+
+    def reject(self, request, queryset):
+        from shoutit.models.page import PAGE_VERIFICATION_STATUS_REJECTED
+        queryset.update(status=PAGE_VERIFICATION_STATUS_REJECTED)
+
+    reject.short_description = _('Reject the selected verifications')
+
+
 # LinkedFacebookAccount
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
@@ -206,11 +236,17 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 # Tag
 @admin.register(Tag)
 class TagAdmin(LinksMixin, TranslatableAdmin):
-    list_display = ('name', 'slug', 'key', 'image', '_links')
+    list_display = ('name', 'slug', '_key', 'image', '_links')
     search_fields = ('name',)
     raw_id_fields = ('creator',)
     list_filter = ('key',)
     form = ImageFileChangeForm
+    ordering = ('key', 'slug')
+
+    def _key(self, tag):
+        return tag.key.admin_link if tag.key else '(None)'
+    _key.allow_tags = True
+    _key.short_description = 'Key'
 
 
 class TagInline(admin.TabularInline):
@@ -228,6 +264,7 @@ class TagKeyAdmin(TranslatableAdmin):
     inlines = [
         TagInline,
     ]
+    ordering = ('slug',)
 
 
 # Category

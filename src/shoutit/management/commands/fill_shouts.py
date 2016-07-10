@@ -9,8 +9,8 @@ from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from rest_framework.request import Request
 from shoutit.api.v2.serializers import ShoutDetailSerializer
-from shoutit.models import User, Category, PredefinedCity
-from shoutit.utils import debug_logger
+from shoutit.models import User, Category, PredefinedCity, Tag
+from shoutit.utils import debug_logger, create_fake_request
 
 
 class Command(BaseCommand):
@@ -26,7 +26,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         users = list(User.objects.filter(username__startswith='test_100'))
-        categories = list(Category.objects.all().prefetch_related('tags'))
+        categories = list(Category.objects.all())
         cities = PredefinedCity.objects.all()
 
         # adding test users if we don't have them
@@ -53,7 +53,8 @@ class Command(BaseCommand):
             type = random.choice(['offer', 'request'])
             category = random.choice(categories)
             city = random.choice(cities)
-            tags = ['filling-shout'] + random.sample(category.tags.all().values_list('name', flat=1), random.randint(1, min(5, category.tags.count())))
+            tags = Tag.objects.filter(key__categories=category).values_list('slug', flat=True)
+            tags = ['filling-shout'] + random.sample(tags, random.randint(0, min(5, len(tags))))
             self.stdout.write(str(tags))
             images = [
                 "https://shout-image.static.shoutit.com/opo0928a.jpg",
@@ -77,7 +78,7 @@ class Command(BaseCommand):
                     "longitude": city.longitude + random.uniform(-4, 3) / 100.0
                 }
             }
-            request = Request(HttpRequest())
+            request = create_fake_request('v2')
             request._user = user
             shout = ShoutDetailSerializer(data=shout_data, context={'request': request})
             shout.is_valid(True)

@@ -188,9 +188,15 @@ def fb_user_from_facebook_access_token(facebook_access_token):
         'access_token': facebook_access_token
     }
     try:
-        fb_user = requests.get(graph_url, params=params, timeout=20).json()
-        return fb_user
-    except (requests.RequestException, ValueError) as e:
+        response = requests.get(graph_url, params=params, timeout=20)
+        response_data = response.json()
+        error = response_data.get('error')
+        if response.status_code != 200 or error:
+            dev_msg = error.get('message') if isinstance(error, dict) else str(response_data)
+            dev_msg = "Facebook Graph error: %s" % dev_msg
+            raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)
+        return response_data
+    except requests.RequestException as e:
         dev_msg = "Facebook Graph error: %s" % str(e)
         debug_logger.error(dev_msg)
         raise ShoutitBadRequest(message=FB_LINK_ERROR_TRY_AGAIN, developer_message=dev_msg)

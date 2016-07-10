@@ -34,7 +34,7 @@ nexmo_client = nexmo.Client(key=settings.NEXMO_API_KEY, secret=settings.NEXMO_AP
 
 
 def generate_username():
-    return str(random.randint(10000000000, 19999999999))
+    return str(random.randint(10000000000, 19999999999))[1:]
 
 
 def has_unicode(s):

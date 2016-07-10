@@ -94,9 +94,8 @@ class Post(Action):
 
 
 class Shout(Post):
-    tags = ArrayField(ShoutitSlugField(), blank=True, default=list)
-    filters = HStoreField(blank=True, default=dict)
     category = models.ForeignKey('shoutit.Category', related_name='shouts', null=True)
+    tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='shouts')
     is_indexed = models.BooleanField(default=False, db_index=True)
 
     item = models.OneToOneField('shoutit.Item', db_index=True)
@@ -119,20 +118,8 @@ class Shout(Post):
         return "%s: %s, %s: %s" % (self.pk, self.item, self.country, self.city)
 
     def clean(self):
-        from common.utils import process_tags
-        from ..controllers import tag_controller
-
         # Super clean
         super(Shout, self).clean()
-
-        # Tags and Filters
-        tags = self.filters.values() or self.tags  # V2 shouts have no filters, use their existing tags
-        tags.insert(0, self.category.slug)
-        tags = process_tags(tags)
-        if self.tags != tags:
-            # Create actual tags objects (when necessary)
-            tag_controller.get_or_create_tags(tags, self.user)
-        self.tags = tags
 
         # Mobile
         if self.mobile:
@@ -162,10 +149,6 @@ class Shout(Post):
         return self.item.is_sold
 
     @property
-    def tag_objects(self):
-        return Tag.objects.filter(name__in=self.tags)
-
-    @property
     def is_expired(self):
         now = timezone.now()
         should_expire_at = self.published_at + timedelta(days=int(settings.MAX_EXPIRY_DAYS))
@@ -174,16 +157,6 @@ class Shout(Post):
         if no_expiry_invalid or expiry_invalid:
             return True
         return False
-
-    # Todo: Deprecate
-    @property
-    def related_requests(self):
-        return []
-
-    # Todo: Deprecate
-    @property
-    def related_offers(self):
-        return []
 
     @property
     def track_properties(self):
@@ -200,18 +173,12 @@ class Shout(Post):
         return properties
 
     @property
-    def filter_objects(self):
-        objects = []
-        for key, value in self.filters.items():
-            objects.append({
-                'name': key.title() if isinstance(key, basestring) else key,
-                'slug': key,
-                'value': {
-                    'name': value.title() if isinstance(value, basestring) else key,
-                    'slug': value
-                }
-            })
-        return objects
+    def filters(self):
+        _filters = []
+        for tag in self.tags.all().select_related('key'):
+            tag.key.value = tag
+            _filters.append(tag.key)
+        return _filters
 
     @property
     def mobile_hint(self):
@@ -226,10 +193,10 @@ class Shout(Post):
         return self.promotions.order_by('created_at').last()
 
     def is_bookmarked(self, user):
-        return ShoutBookmark.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
+        return ShoutBookmark.exists(user=user, shout=self)
 
     def is_liked(self, user):
-        return ShoutLike.exists((Q(user=user) | Q(page_admin_user=user)) & Q(shout=self))
+        return ShoutLike.exists(user=user, shout=self)
 
 
 class InactiveShout(object):
@@ -265,7 +232,6 @@ class ShoutIndex(DocType):
     type = String(index='not_analyzed')
     title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
     text = String(analyzer='snowball')
-    tags_count = Integer()
     tags = String(index='not_analyzed')
     filters = Object()
     category = String(index='not_analyzed')
@@ -296,15 +262,16 @@ class ShoutIndex(DocType):
     class Meta:
         index = '%s_shout' % settings.ES_BASE_INDEX
         dynamic_templates = MetaField([
-            {
-                "filters_integer_keys": {
-                    "match_pattern": "regex",
-                    "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
-                    "mapping": {
-                        "type": "integer"
-                    }
-                }
-            },
+            # Todo (mo): disabled for now since we are filtering only on string values
+            # {
+            #     "filters_integer_keys": {
+            #         "match_pattern": "regex",
+            #         "match": "^(num_.*|.*size|.*length|.*width|.*area|.*vol|.*qty|.*speed|.*year|age|mileage|.*weight)$",
+            #         "mapping": {
+            #             "type": "integer"
+            #         }
+            #     }
+            # },
             {
                 "filters_string_keys": {
                     "path_match": "filters.*",

@@ -19,7 +19,7 @@ from shoutit.utils import debug_logger, blank_to_none, correct_mobile
 from shoutit_credit.serializers import ShoutPromotionSerializer
 from .base import LocationSerializer, VideoSerializer, empty_char_input
 from .profile import ProfileSerializer
-from .tag import CategorySerializer
+from .tag import CategorySerializer, SingleValueTagKeySerializer
 
 
 class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
@@ -39,7 +39,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     published_at = serializers.IntegerField(source='published_at_unix', read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
-    filters = serializers.ListField(default=list, source='filter_objects')
+    filters = SingleValueTagKeySerializer(many=True, required=False)
     api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
     promotion = ShoutPromotionSerializer(read_only=True)
     is_bookmarked = serializers.SerializerMethodField()
@@ -73,18 +73,9 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         except (Currency.DoesNotExist, ValueError):
             raise serializers.ValidationError('Invalid currency')
 
-    def validate_filters(self, value):
-        try:
-            filter_tuples = map(lambda f: (f['slug'], f['value']['slug']), value)
-        except KeyError as e:
-            msg = _('Malformed filters, missing key: %(key)s') % {'key': e.message.encode('utf')}
-            raise serializers.ValidationError(msg)
-        except TypeError:
-            raise serializers.ValidationError(_('Malformed filters'))
-        else:
-            # Ignore filters with None as its their value
-            filter_tuples = filter(lambda t: isinstance(t[1], basestring), filter_tuples)
-            filters = dict(filter_tuples)
+    def validate_filters(self, filters):
+        # Ignore filter values that have no id. Old clients used to send the slug
+        filters = filter(lambda f: 'id' in f['value'], filters)
         return filters
 
     def to_internal_value(self, data):
@@ -196,7 +187,7 @@ class ShoutDetailSerializer(ShoutSerializer):
         is_sold = validated_data.get('is_sold')
 
         category = validated_data.get('category')
-        filters = validated_data.get('filter_objects')
+        filters = validated_data.get('filters')
 
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')

@@ -16,7 +16,7 @@ from rest_framework.reverse import reverse
 from common.constants import USER_TYPE_PAGE
 from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit.api.v3 import exceptions
-from shoutit.api.v3.exceptions import RequiredBody
+from shoutit.api.v3.exceptions import RequiredBody, ShoutitBadRequest
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
                                  gplus_controller, mixpanel_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
@@ -56,7 +56,7 @@ class ProfileSerializer(MiniProfileSerializer):
         return user and user.is_authenticated() and user.is_listening(tag)
 
     def get_is_owner(self, user):
-        return self.root.context['request'].user == user
+        return user.is_owner(self.root.context['request'].user)
 
     def to_representation(self, instance):
         if not instance.is_active:
@@ -87,7 +87,6 @@ class ProfileDetailSerializer(ProfileSerializer):
     birthday = serializers.DateField(source='profile.birthday', required=False, allow_null=True,
                                      help_text='Formatted as YYYY-MM-DD')
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
-    about = serializers.CharField(source='page.about', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
     website = serializers.CharField(source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
@@ -117,10 +116,9 @@ class ProfileDetailSerializer(ProfileSerializer):
     class Meta(ProfileSerializer.Meta):
         parent_fields = ProfileSerializer.Meta.fields
         fields = parent_fields + (
-            'gender', 'birthday', 'video', 'date_joined', 'bio', 'about', 'email', 'mobile', 'website',
-            'linked_accounts', 'push_tokens', 'is_password_set', 'is_listener', 'shouts_url',
-            'listeners_url', 'listening_count', 'listening_url', 'interests_url', 'conversation', 'chat_url',
-            'stats', 'admin', 'pages', 'admins'
+            'gender', 'birthday', 'video', 'date_joined', 'bio', 'email', 'mobile', 'website', 'linked_accounts',
+            'push_tokens', 'is_password_set', 'is_listener', 'shouts_url', 'listeners_url', 'listening_count',
+            'listening_url', 'interests_url', 'conversation', 'chat_url', 'stats', 'admin', 'pages', 'admins'
         )
 
     def get_is_listener(self, user):
@@ -296,7 +294,11 @@ class ProfileDetailSerializer(ProfileSerializer):
             fill(ap, profile_data, ['bio', 'gender', 'mobile', 'birthday'])
 
         elif isinstance(ap, Page):
-            pass
+            fill(ap, page_data, ['is_published', 'about', 'description', 'phone', 'founded', 'impressum',
+                                 'overview', 'mission', 'general_info'])
+            if 'name' in validated_data:
+                ap.name = validated_data['name']
+                ap_update_fields.append('name')
 
         if ap_data:
             fill(ap, ap_data, ['image', 'cover', 'website'])
@@ -376,6 +378,7 @@ class ProfileLinkSerializer(serializers.Serializer):
         account = validated_data['account']
         account_name = _("Facebook") if account == 'facebook' else _("Google") if account == 'gplus' else ''
         could_not_link = _("Couldn't link your %(account)s account") % {'account': account_name}
+        could_not_unlink = _("Couldn't unlink your %(account)s account. You must set your password first.") % {'account': account_name}
 
         if request.method == 'PATCH':
             action = _('linked')
@@ -397,12 +400,16 @@ class ProfileLinkSerializer(serializers.Serializer):
         elif request.method == 'DELETE':
             action = _('unlinked')
             if account == 'gplus':
+                if not user.is_password_set and not getattr(user, 'linked_facebook', None):
+                    raise ShoutitBadRequest(could_not_unlink)
                 gplus_controller.unlink_gplus_user(user)
             elif account == 'facebook':
+                if not user.is_password_set and not getattr(user, 'linked_gplus', None):
+                    raise ShoutitBadRequest(could_not_unlink)
                 facebook_controller.unlink_facebook_user(user)
 
         if action:
-            success = _("Your %(account)s has been %(action)s") % {'account': account_name, 'action': action}
+            success = _("Your %(account)s account has been %(action)s") % {'account': account_name, 'action': action}
             res = {'success': success}
         else:
             res = {'success': _("No changes were made")}

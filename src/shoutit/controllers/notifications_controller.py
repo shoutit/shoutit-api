@@ -62,7 +62,7 @@ def get_unread_conversations_count(user):
 
 
 @job(settings.RQ_QUEUE)
-def notify_user(user, notification_type, from_user=None, attached_object=None, versions=None):
+def notify_user(user, notification_type, from_user=None, attached_object=None, versions=None, serializing_options=None):
     if not versions:
         versions = api_settings.ALLOWED_VERSIONS
 
@@ -80,27 +80,29 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
     can_pusher = pusher_controller.check_pusher(user)
     if can_push and not can_pusher:
         for v in versions:
-            push_controller.send_push.delay(user, notification, v)
+            push_controller.send_push.delay(user=user, notification=notification, version=v,
+                                            serializing_options=serializing_options)
 
     # Trigger event on Pusher profile channel
     for v in versions:
-        pusher_controller.trigger_profile_event(user, notification.event_name, notification.event_object, v)
+        pusher_controller.trigger_profile_event(user=user, event_name=notification.event_name,
+                                                attached_object=notification.event_object, version=v,
+                                                serializing_options=serializing_options)
 
 
 def notify_user_of_listen(user, listener):
-    listener = deepcopy(listener)  # Avoid pickling issues
     notify_user.delay(user, notification_type=NOTIFICATION_TYPE_LISTEN, from_user=listener, attached_object=listener)
 
 
 def notify_user_of_message(user, message):
-    from_user = deepcopy(message.user)  # Avoid pickling issues
+    from_user = message.user
     notify_user.delay(user, notification_type=NOTIFICATION_TYPE_MESSAGE, from_user=from_user, attached_object=message)
 
 
 def notify_user_of_profile_update(user):
-    attached_object = deepcopy(user)  # Avoid pickling issues
-    notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=attached_object,
-                      versions=['v3'])
+    serializing_options = {'detailed': True}
+    notify_user.delay(user, notification_type=NOTIFICATION_TYPE_PROFILE_UPDATE, attached_object=user, versions=['v3'],
+                      serializing_options=serializing_options)
 
 
 def notify_user_of_incoming_video_call(user, caller):
@@ -119,4 +121,5 @@ def notify_user_of_credit_transaction(transaction):
 
 
 def notify_shout_owner_of_shout_like(shout, user):
-    notify_user.delay(shout.owner, notification_type=NOTIFICATION_TYPE_SHOUT_LIKE, from_user=user, attached_object=user)
+    notify_user.delay(shout.owner, notification_type=NOTIFICATION_TYPE_SHOUT_LIKE, from_user=user, attached_object=user,
+                      versions=['v3'])
