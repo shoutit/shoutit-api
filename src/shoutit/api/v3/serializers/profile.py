@@ -16,7 +16,7 @@ from rest_framework.reverse import reverse
 from common.constants import USER_TYPE_PAGE
 from shoutit.api.serializers import AttachedUUIDObjectMixin, HasAttachedUUIDObjects
 from shoutit.api.v3 import exceptions
-from shoutit.api.v3.exceptions import RequiredBody
+from shoutit.api.v3.exceptions import RequiredBody, ShoutitBadRequest
 from shoutit.controllers import (message_controller, location_controller, notifications_controller, facebook_controller,
                                  gplus_controller, mixpanel_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
@@ -378,6 +378,7 @@ class ProfileLinkSerializer(serializers.Serializer):
         account = validated_data['account']
         account_name = _("Facebook") if account == 'facebook' else _("Google") if account == 'gplus' else ''
         could_not_link = _("Couldn't link your %(account)s account") % {'account': account_name}
+        could_not_unlink = _("Couldn't unlink your %(account)s account. You must set your password first.") % {'account': account_name}
 
         if request.method == 'PATCH':
             action = _('linked')
@@ -399,12 +400,16 @@ class ProfileLinkSerializer(serializers.Serializer):
         elif request.method == 'DELETE':
             action = _('unlinked')
             if account == 'gplus':
+                if not user.is_password_set and not getattr(user, 'linked_facebook', None):
+                    raise ShoutitBadRequest(could_not_unlink)
                 gplus_controller.unlink_gplus_user(user)
             elif account == 'facebook':
+                if not user.is_password_set and not getattr(user, 'linked_gplus', None):
+                    raise ShoutitBadRequest(could_not_unlink)
                 facebook_controller.unlink_facebook_user(user)
 
         if action:
-            success = _("Your %(account)s has been %(action)s") % {'account': account_name, 'action': action}
+            success = _("Your %(account)s account has been %(action)s") % {'account': account_name, 'action': action}
             res = {'success': success}
         else:
             res = {'success': _("No changes were made")}
