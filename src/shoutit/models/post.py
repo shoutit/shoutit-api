@@ -149,10 +149,6 @@ class Shout(Post):
         return self.item.is_sold
 
     @property
-    def tag_objects(self):
-        return Tag.objects.filter(name__in=self.tags)
-
-    @property
     def is_expired(self):
         now = timezone.now()
         should_expire_at = self.published_at + timedelta(days=int(settings.MAX_EXPIRY_DAYS))
@@ -236,7 +232,6 @@ class ShoutIndex(DocType):
     type = String(index='not_analyzed')
     title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
     text = String(analyzer='snowball')
-    tags_count = Integer()
     tags = String(index='not_analyzed')
     filters = Object()
     category = String(index='not_analyzed')

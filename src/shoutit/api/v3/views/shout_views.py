@@ -425,7 +425,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             title = shout.item.name
         else:
             title = ""
-        search = "%s %s" % (title, " ".join(shout.tags))
+        tags = shout.tags.values_list('slug', flat=True)
+        search = "%s %s" % (title, " ".join(tags))
         extra_query_params = {
             'search': search,
             'country': shout.country,
