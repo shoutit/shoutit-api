@@ -153,7 +153,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def name(self):
         if self.type == USER_TYPE_PAGE:
-            return self.page.name
+            return self.page.name if hasattr(self, 'page') else _('Page')
         else:
             first_name = _('Guest') if self.is_guest or not self.first_name else self.first_name
             last_name = '%s.' % self.last_name[:3 if self.is_guest else 1].upper()
