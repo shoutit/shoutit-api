@@ -55,7 +55,7 @@ def fill_initial_data(apps, schema_editor):
     )
 
     Tag.objects.bulk_create(
-        map(lambda t: Tag(name=t[1], slug=t[1]), categories)
+        map(lambda t: Tag(name=t[1]), categories)
     )
 
     # Currencies
