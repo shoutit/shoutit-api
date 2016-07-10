@@ -39,7 +39,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     published_at = serializers.IntegerField(source='published_at_unix', read_only=True)
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
-    filters = SingleValueTagKeySerializer(many=True)
+    filters = SingleValueTagKeySerializer(many=True, required=False)
     api_url = serializers.HyperlinkedIdentityField(view_name='shout-detail', lookup_field='id')
     promotion = ShoutPromotionSerializer(read_only=True)
     is_bookmarked = serializers.SerializerMethodField()
