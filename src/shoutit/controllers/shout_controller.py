@@ -222,9 +222,9 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.type = shout.get_type_display()
     shout_index.title = shout.item.name
     shout_index.text = shout.text
-    tags = map(lambda t: t.slug, shout.tags.all().select_related('key'))
+    tags = shout.tags.all().select_related('key')
     # Add category slug to be able to filter on it as one of the tags
-    shout_index.tags = tags + [shout.category.slug]
+    shout_index.tags = map(lambda t: t.slug, tags) + [shout.category.slug]
     shout_index.filters = {tag.key.slug: tag.slug for tag in tags if tag.key}
     shout_index.category = shout.category.slug
     shout_index.country = shout.country
