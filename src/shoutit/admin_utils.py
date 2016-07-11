@@ -47,7 +47,8 @@ def user_link(user):
     if not user:
         return 'system'
     user_url = reverse('admin:shoutit_user_change', args=(user.pk,))
-    return '<a href="%s">%s</a>' % (user_url, user.name_username)
+    name_username = "%s [%s]" % (user.name, user.username)
+    return '<a href="%s">%s</a>' % (user_url, name_username)
 
 
 def item_link(item):

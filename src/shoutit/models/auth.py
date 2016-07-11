@@ -8,13 +8,11 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager, AnonymousUser
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
-from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone, six
-from django.utils.http import urlquote
 from django.utils.translation import ugettext_lazy as _
 from push_notifications.models import APNSDevice, GCMDevice
 from pydash import arrays
@@ -104,7 +102,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     is_guest = models.BooleanField(
         _('guest user status'), default=False, help_text=_('Designates whether this user is a guest user.'))
     on_mailing_list = models.BooleanField(
-        _('mailing list status'), default=False, help_text=_('Designates whether this user is on the main mailing list.'))
+        _('mailing list status'), default=False,
+        help_text=_('Designates whether this user is on the main mailing list.'))
     on_mp_people = models.BooleanField(
         _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
     objects = ShoutitUserManager()
@@ -129,26 +128,30 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return "user" if self.type == USER_TYPE_PROFILE else "page"
 
     @property
-    def ap(self):
-        return getattr(self, UserType.values[self.type].lower(), None)
-
-    @property
-    def name_username(self):
-        return "%s [%s]" % (self.name, self.username)
+    def is_password_set(self):
+        return self.has_usable_password()
 
     @property
     def owner(self):
         return self
 
     def is_owner(self, user):
-        if self.type == USER_TYPE_PAGE:
-            return self == user or self.page.admins.filter(id=user.id).exists()
+        if self.type == USER_TYPE_PAGE and hasattr(self, 'page'):
+            return self.page.is_admin(user)
         else:
             return self == user
+
+    # AbstractProfile
+
+    @property
+    def ap(self):
+        return getattr(self, UserType.values[self.type].lower(), None)
 
     @property
     def location(self):
         return self.ap.location
+
+    # Names
 
     @property
     def name(self):
@@ -156,70 +159,45 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return self.page.name if hasattr(self, 'page') else _('Page')
         else:
             first_name = _('Guest') if self.is_guest or not self.first_name else self.first_name
-            last_name = '%s.' % self.last_name[:3 if self.is_guest else 1].upper()
+            last_name = '%s.' % self.last_name[:5 if self.is_guest or not self.first_name else 2].upper()
             full_name = '%s %s' % (first_name, last_name)
             return full_name
 
-    @property
-    def apns_device(self):
-        return APNSDevice.objects.filter(user=self).first()
+    def get_full_name(self):
+        """
+        Returns the first_name plus the last_name, with a space in between.
+        username in case the above is empty string
+        """
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        full_name = full_name.strip()
+        return full_name or self.username
+
+    def get_short_name(self):
+        """
+        Returns the short name for the user.
+        """
+        return self.first_name
+
+    # Misc properties
 
     @property
-    def has_apns(self):
-        return self.apns_device is not None
-
-    def send_apns(self, alert, **kwargs):
-        from push_notifications.apns import apns_send_bulk_message
-        if not self.has_apns:
-            return
-        apns_send_bulk_message(registration_ids=[self.apns_device.registration_id], alert=alert, **kwargs)
-
-    def delete_apns_devices(self):
-        APNSDevice.objects.filter(user=self).delete()
-        debug_logger.debug("Deleted APNSDevices for %s" % self)
-
-    @property
-    def gcm_device(self):
-        return GCMDevice.objects.filter(user=self).first()
+    def stats(self):
+        from ..controllers import notifications_controller
+        # Todo (mo): crate fields for each stats property which holds the latest value and gets updated
+        if not hasattr(self, '_stats'):
+            unread_conversations_count = notifications_controller.get_unread_conversations_count(self)
+            unread_notifications_count = notifications_controller.get_unread_actual_notifications_count(self)
+            self._stats = OrderedDict([
+                ('unread_conversations_count', unread_conversations_count),
+                ('unread_notifications_count', unread_notifications_count),
+                ('total_unread_count', unread_conversations_count + unread_notifications_count),
+                ('credit', self.credit),
+            ])
+        return self._stats
 
     @property
-    def has_gcm(self):
-        return self.gcm_device is not None
-
-    def send_gcm(self, data, **kwargs):
-        from push_notifications.gcm import gcm_send_bulk_message
-        if not self.has_gcm:
-            return
-        gcm_send_bulk_message(registration_ids=[self.gcm_device.registration_id], data=data, **kwargs)
-
-    def delete_gcm_devices(self):
-        GCMDevice.objects.filter(user=self).delete()
-        debug_logger.debug("Deleted GCMDevices for %s" % self)
-
-    def update_push_tokens(self, push_tokens_data, api_version):
-        if 'apns' in push_tokens_data:
-            apns_token = push_tokens_data.get('apns')
-            # Delete user devices
-            self.delete_apns_devices()
-            if apns_token is not None:
-                # Delete devices with same apns_token
-                APNSDevice.objects.filter(registration_id=apns_token).delete()
-                # Create new device for user with apns_token
-                apns_device = APNSDevice(registration_id=apns_token, user=self)
-                apns_device.api_version = api_version
-                apns_device.save()
-
-        if 'gcm' in push_tokens_data:
-            gcm_token = push_tokens_data.get('gcm')
-            # Delete user devices
-            self.delete_gcm_devices()
-            if gcm_token is not None:
-                # Delete devices with same gcm_token
-                GCMDevice.objects.filter(registration_id=gcm_token).delete()
-                # Create new gcm device for user with gcm_token
-                gcm_device = GCMDevice(registration_id=gcm_token, user=self)
-                gcm_device.api_version = api_version
-                gcm_device.save()
+    def credit(self):
+        return self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
 
     @property
     def linked_accounts(self):
@@ -255,41 +233,20 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return _linked_accounts
 
     @property
-    def push_tokens(self):
-        if not hasattr(self, '_push_tokens'):
-            self._push_tokens = {
-                'apns': self.apns_device.registration_id if self.apns_device else None,
-                'gcm': self.gcm_device.registration_id if self.gcm_device else None
-            }
-        return self._push_tokens
-
-    @property
     def api_client_names(self):
         return arrays.unique(self.accesstoken_set.values_list('client__name', flat=True))
 
-    def get_absolute_url(self):
-        return "/users/%s/" % urlquote(self.username)
+    # Actions
 
-    def get_full_name(self):
-        """
-        Returns the first_name plus the last_name, with a space in between.
-        username in case the above is empty string
-        """
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        full_name = full_name.strip()
-        return full_name or self.username
-
-    def get_short_name(self):
-        """
-        Returns the short name for the user.
-        """
-        return self.first_name
-
-    def email_user(self, subject, message, from_email=None):
-        """
-        Sends an email to this User.
-        """
-        send_mail(subject, message, from_email, [self.email])
+    def reset_password(self):
+        from .misc import ConfirmToken
+        from ..controllers import email_controller
+        # invalidate other reset tokens
+        self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD).update(is_disabled=True)
+        # create new reset token
+        ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_RESET_PASSWORD)
+        # email the user
+        email_controller.send_password_reset_email(self)
 
     def activate(self):
         # Activate the user himself
@@ -300,10 +257,9 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             for page in self.pages.filter(user__is_activated=False).select_related('user'):
                 page.user.activate()
 
-    def give_activate_permission(self):
-        # from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
-        # give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
-        pass
+    def deactivate(self):
+        self.is_activated = False
+        self.save(update_fields=['is_activated'])
 
     def mute_shouts(self):
         # Todo: optimize
@@ -317,26 +273,17 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         for shout in Shout.objects.filter(user_id=self.id):
             shout.unmute()
 
-    def deactivate(self):
-        self.is_activated = False
-        self.save(update_fields=['is_activated'])
-
     def take_activate_permission(self):
         # from shoutit.permissions import take_permissions_from_user, ACTIVATED_USER_PERMISSIONS
         # take_permissions_from_user(self, ACTIVATED_USER_PERMISSIONS)
         pass
 
-    def send_welcome_email(self):
-        from ..controllers import email_controller
-        email_controller.send_welcome_email(self)
+    def give_activate_permission(self):
+        # from shoutit.permissions import give_user_permissions, ACTIVATED_USER_PERMISSIONS
+        # give_user_permissions(self, ACTIVATED_USER_PERMISSIONS)
+        pass
 
-    def subscribe_to_mailing_list(self):
-        from ..controllers import email_controller
-        email_controller.subscribe_users_to_mailing_list([self])
-
-    def send_verified_email(self):
-        from ..controllers import email_controller
-        email_controller.send_verified_email(self)
+    # Mailing, Todo (mo): move to email_controller
 
     @property
     def verification_link(self):
@@ -345,6 +292,22 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return settings.SITE_LINK + 'auth/verify_email?token=' + cf.token
         except IndexError:
             return settings.SITE_LINK
+
+    @property
+    def password_reset_link(self):
+        try:
+            cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD, is_disabled=False)[0]
+            return settings.SITE_LINK + 'services/reset_password?reset_token=' + cf.token
+        except IndexError:
+            return settings.SITE_LINK
+
+    def send_welcome_email(self):
+        from ..controllers import email_controller
+        email_controller.send_welcome_email(self)
+
+    def send_verified_email(self):
+        from ..controllers import email_controller
+        email_controller.send_verified_email(self)
 
     def send_verification_email(self):
         from .misc import ConfirmToken
@@ -356,27 +319,83 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         # email the user
         email_controller.send_verification_email(self)
 
-    @property
-    def password_reset_link(self):
-        try:
-            cf = self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD, is_disabled=False)[0]
-            return settings.SITE_LINK + 'services/reset_password?reset_token=' + cf.token
-        except IndexError:
-            return settings.SITE_LINK
-
-    def reset_password(self):
-        from .misc import ConfirmToken
+    def subscribe_to_mailing_list(self):
         from ..controllers import email_controller
-        # invalidate other reset tokens
-        self.confirmation_tokens.filter(type=TOKEN_TYPE_RESET_PASSWORD).update(is_disabled=True)
-        # create new reset token
-        ConfirmToken.objects.create(user=self, type=TOKEN_TYPE_RESET_PASSWORD)
-        # email the user
-        email_controller.send_password_reset_email(self)
+        email_controller.subscribe_users_to_mailing_list([self])
+
+    # Push, Todo (mo): move to pusher_controller
 
     @property
-    def is_password_set(self):
-        return self.has_usable_password()
+    def apns_device(self):
+        return APNSDevice.objects.filter(user=self).first()
+
+    @property
+    def gcm_device(self):
+        return GCMDevice.objects.filter(user=self).first()
+
+    @property
+    def has_apns(self):
+        return self.apns_device is not None
+
+    @property
+    def has_gcm(self):
+        return self.gcm_device is not None
+
+    def send_apns(self, alert, **kwargs):
+        from push_notifications.apns import apns_send_bulk_message
+        if not self.has_apns:
+            return
+        apns_send_bulk_message(registration_ids=[self.apns_device.registration_id], alert=alert, **kwargs)
+
+    def send_gcm(self, data, **kwargs):
+        from push_notifications.gcm import gcm_send_bulk_message
+        if not self.has_gcm:
+            return
+        gcm_send_bulk_message(registration_ids=[self.gcm_device.registration_id], data=data, **kwargs)
+
+    def delete_apns_devices(self):
+        APNSDevice.objects.filter(user=self).delete()
+        debug_logger.debug("Deleted APNSDevices for %s" % self)
+
+    def delete_gcm_devices(self):
+        GCMDevice.objects.filter(user=self).delete()
+        debug_logger.debug("Deleted GCMDevices for %s" % self)
+
+    def update_push_tokens(self, push_tokens_data, api_version):
+        if 'apns' in push_tokens_data:
+            apns_token = push_tokens_data.get('apns')
+            # Delete user devices
+            self.delete_apns_devices()
+            if apns_token is not None:
+                # Delete devices with same apns_token
+                APNSDevice.objects.filter(registration_id=apns_token).delete()
+                # Create new device for user with apns_token
+                apns_device = APNSDevice(registration_id=apns_token, user=self)
+                apns_device.api_version = api_version
+                apns_device.save()
+
+        if 'gcm' in push_tokens_data:
+            gcm_token = push_tokens_data.get('gcm')
+            # Delete user devices
+            self.delete_gcm_devices()
+            if gcm_token is not None:
+                # Delete devices with same gcm_token
+                GCMDevice.objects.filter(registration_id=gcm_token).delete()
+                # Create new gcm device for user with gcm_token
+                gcm_device = GCMDevice(registration_id=gcm_token, user=self)
+                gcm_device.api_version = api_version
+                gcm_device.save()
+
+    @property
+    def push_tokens(self):
+        if not hasattr(self, '_push_tokens'):
+            self._push_tokens = {
+                'apns': self.apns_device.registration_id if self.apns_device else None,
+                'gcm': self.gcm_device.registration_id if self.gcm_device else None
+            }
+        return self._push_tokens
+
+    # Listens # todo (mo): move to models.listen
 
     @property
     def listening_count(self):
@@ -385,13 +404,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             'pages': Listen2.objects.filter(user=self, type=LISTEN_TYPE_PAGE).count(),
             'tags': Listen2.objects.filter(user=self, type=LISTEN_TYPE_TAG).count(),
         }
-
-    def is_listening(self, obj):
-        """
-        Check whether the user of this profile is listening to this obj or not
-        """
-        listen_type, target = Listen2.listen_type_and_target_from_object(obj)
-        return Listen2.exists(user=self, type=listen_type, target=target)
 
     @property
     def listening2_profile_ids(self):
@@ -445,24 +457,14 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         listen_type, target = Listen2.listen_type_and_target_from_object(self)
         return Listen2.objects.filter(type=listen_type, target=target).count()
 
-    @property
-    def stats(self):
-        from ..controllers import notifications_controller
-        # Todo (mo): crate fields for each stats property which holds the latest value and gets updated
-        if not hasattr(self, '_stats'):
-            unread_conversations_count = notifications_controller.get_unread_conversations_count(self)
-            unread_notifications_count = notifications_controller.get_unread_actual_notifications_count(self)
-            self._stats = OrderedDict([
-                ('unread_conversations_count', unread_conversations_count),
-                ('unread_notifications_count', unread_notifications_count),
-                ('total_unread_count', unread_conversations_count + unread_notifications_count),
-                ('credit', self.credit),
-            ])
-        return self._stats
+    def is_listening(self, obj):
+        """
+        Check whether the user of this profile is listening to this obj or not
+        """
+        listen_type, target = Listen2.listen_type_and_target_from_object(obj)
+        return Listen2.exists(user=self, type=listen_type, target=target)
 
-    @property
-    def credit(self):
-        return self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
+    # Mutuals
 
     @property
     def mutual_friends(self):
@@ -526,6 +528,7 @@ class InactiveUser(AnonymousUser):
             },
             "is_owner": False
         })
+
 
 # Todo: Add DeletedUser class
 
