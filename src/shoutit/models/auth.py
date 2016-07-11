@@ -159,18 +159,23 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return self.page.name if hasattr(self, 'page') else _('Page')
         else:
             first_name = _('Guest') if self.is_guest or not self.first_name else self.first_name
-            last_name = '%s.' % self.last_name[:5 if self.is_guest or not self.first_name else 2].upper()
+            last_name = '%s' % self.last_name[:5 if self.is_guest or not self.first_name else 2].capitalize()
+            if not self.first_name or len(self.last_name) > 2:
+                last_name += '.'
             full_name = '%s %s' % (first_name, last_name)
             return full_name
 
     def get_full_name(self):
         """
         Returns the first_name plus the last_name, with a space in between.
-        username in case the above is empty string
+        username in case the above is empty string and page name in case the user is of type `page`
         """
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        full_name = full_name.strip()
-        return full_name or self.username
+        if self.type == USER_TYPE_PAGE:
+            return self.page.name if hasattr(self, 'page') else _('Page')
+        else:
+            full_name = '%s %s' % (self.first_name, self.last_name)
+            full_name = full_name.strip()
+            return full_name or self.username
 
     def get_short_name(self):
         """
