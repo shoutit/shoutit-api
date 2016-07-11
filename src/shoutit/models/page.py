@@ -71,7 +71,7 @@ class Page(AbstractProfile):
         self.phone = correct_mobile(self.phone, self.country)
 
     def is_admin(self, user):
-        return user.id == self.id or user in self.admins.all()
+        return user.id == self.id or self.admins.filter(id=user.id).exists()
 
     def add_admin(self, user, admin_type=PAGE_ADMIN_TYPE_ADMIN):
         PageAdmin.create(page=self, admin=user, type=admin_type)
