@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-10 15:17+0200\n"
+"POT-Creation-Date: 2016-07-11 15:03+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,7 +13,7 @@ msgstr ""
 msgid "Username"
 msgstr "إسم المستخدم"
 
-#: .\shoutit\admin.py:41 .\shoutit\models\auth.py:79
+#: .\shoutit\admin.py:41 .\shoutit\models\auth.py:77
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
@@ -43,11 +43,11 @@ msgstr "إضافي"
 
 #: .\shoutit\admin.py:168
 msgid "Accept the selected verifications"
-msgstr ""
+msgstr "Accept the selected verifications"
 
 #: .\shoutit\admin.py:174
 msgid "Reject the selected verifications"
-msgstr ""
+msgstr "Reject the selected verifications"
 
 #: .\shoutit\admin.py:317
 msgid "Users"
@@ -453,6 +453,7 @@ msgid "Couldn't link your %(account)s account"
 msgstr "لايمكن ربط حساب %(account)s"
 
 #: .\shoutit\api\v3\serializers\profile.py:381
+#, python-format
 msgid ""
 "Couldn't unlink your %(account)s account. You must set your password first."
 msgstr "لايمكن ربط حساب %(account)s. يجب تعيين كلمة مرور لحسابك أولا."
@@ -466,6 +467,7 @@ msgid "unlinked"
 msgstr "فك ربط"
 
 #: .\shoutit\api\v3\serializers\profile.py:412
+#, python-format
 msgid "Your %(account)s account has been %(action)s"
 msgstr "تم %(action)s  حساب %(account)s"
 
@@ -676,28 +678,28 @@ msgstr "لقد توقفت عن الإستماع إلى الإعلانات حول
 msgid "Invalid version in URL path. Please use version: %(version)s"
 msgstr "إصدار الرابط غير صحيح, يرجى إستخدام %(version)s"
 
-#: .\shoutit\controllers\email_controller.py:46
+#: .\shoutit\controllers\email_controller.py:47
 msgid "Welcome!"
 msgstr "أهلاً"
 
-#: .\shoutit\controllers\email_controller.py:53
-#: .\shoutit\controllers\email_controller.py:95
+#: .\shoutit\controllers\email_controller.py:54
+#: .\shoutit\controllers\email_controller.py:96
 msgid "Take me to my profile"
 msgstr "الذهاب الى صفحتي الشخصية"
 
-#: .\shoutit\controllers\email_controller.py:58
+#: .\shoutit\controllers\email_controller.py:59
 msgid "To get started using Shoutit, please activate your account below"
 msgstr "لتبدأ بإستخدام شاوت ات, يرجى تفعيل حسابك في الأسفل"
 
-#: .\shoutit\controllers\email_controller.py:59
+#: .\shoutit\controllers\email_controller.py:60
 msgid "Activate your account"
 msgstr "تفعيل الحساب"
 
-#: .\shoutit\controllers\email_controller.py:73
+#: .\shoutit\controllers\email_controller.py:74
 msgid "Verify your email"
 msgstr "قم بتأكيد بريدك الإلكتروني"
 
-#: .\shoutit\controllers\email_controller.py:75
+#: .\shoutit\controllers\email_controller.py:76
 msgid ""
 "Your have changed your email therefore your account is not verified. To use "
 "Shoutit with full potential we need to verify your email."
@@ -705,15 +707,15 @@ msgstr ""
 "حسابك غير مفعل لأنك قمت بتغيير بريدك الإلكتروني, لتتمع بجميع ميزات شاوت ات "
 "نحتاج لتأكيد بريدك الإلكتروني"
 
-#: .\shoutit\controllers\email_controller.py:77
+#: .\shoutit\controllers\email_controller.py:78
 msgid "Verify it now"
 msgstr "التأكيد الآن"
 
-#: .\shoutit\controllers\email_controller.py:91
+#: .\shoutit\controllers\email_controller.py:92
 msgid "Your email has been verified!"
 msgstr "تم تأكيد بريدك الإلكتروني!"
 
-#: .\shoutit\controllers\email_controller.py:93
+#: .\shoutit\controllers\email_controller.py:94
 msgid ""
 "Thank you for verifying your email. Your account has been verified and you "
 "can now use Shoutit full potential."
@@ -721,20 +723,29 @@ msgstr ""
 "شكراً لتأكيد بريدك الإلكتروني, حسابك الآن مفعل يمكنك إستخدام جميع ميزات شاوت "
 "ات"
 
-#: .\shoutit\controllers\email_controller.py:109
+#: .\shoutit\controllers\email_controller.py:110
 msgid "Reset your password"
 msgstr "إعادة ضبط كلمة المرور"
 
-#: .\shoutit\controllers\email_controller.py:111
+#: .\shoutit\controllers\email_controller.py:112
 msgid ""
 "You have requested to reset your password. If it wasn't you please let us "
 "know as soon as possible."
 msgstr ""
 "لقد قمت بطلب إستعادة كلمة المرور, إذا لم تكن أنت يرجى إخبارنا بأسرع وقت"
 
-#: .\shoutit\controllers\email_controller.py:112
+#: .\shoutit\controllers\email_controller.py:113
 msgid "Reset my password"
 msgstr "إعادة ضبط كلمة المرور"
+
+#: .\shoutit\controllers\email_controller.py:136
+#, python-format
+msgid "Your page '%(page)s' has a new notification"
+msgstr "لدى صفحتك '%(page)s' اشعار جديد"
+
+#: .\shoutit\controllers\email_controller.py:138
+msgid "You have a new notification"
+msgstr "لديك اشعار جديد"
 
 #: .\shoutit\controllers\facebook_controller.py:25
 msgid "Could not link Facebook account, try again later"
@@ -766,109 +777,109 @@ msgstr "لايمكن الوصول لحساب غوغل, يرجى المحاولة
 msgid "This Google account is already linked to somebody else's profile"
 msgstr "حساب غوغل مرتبط بحساب آخر على شاوت ات"
 
-#: .\shoutit\models\auth.py:78
+#: .\shoutit\models\auth.py:76
 msgid "username"
 msgstr "إسم المستخدم"
 
-#: .\shoutit\models\auth.py:82
+#: .\shoutit\models\auth.py:80
 msgid "Enter a valid username."
 msgstr "أدخل إسم مستخدم صالح"
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:616
+#: .\shoutit\models\auth.py:85 .\shoutit\models\auth.py:624
 msgid "first name"
 msgstr "الإسم الأول"
 
-#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:617
+#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:625
 msgid "last name"
 msgstr "الإسم الأخير"
 
-#: .\shoutit\models\auth.py:90 .\shoutit\models\auth.py:618
+#: .\shoutit\models\auth.py:88 .\shoutit\models\auth.py:626
 msgid "email address"
 msgstr "البريد الإلكتروني"
 
-#: .\shoutit\models\auth.py:92
+#: .\shoutit\models\auth.py:90
 msgid "staff status"
 msgstr "وضع الموظفين"
 
-#: .\shoutit\models\auth.py:92
+#: .\shoutit\models\auth.py:90
 msgid "Designates whether the user can log into this admin site."
 msgstr "محدد أي يمكن للمستخدم بالدخول إلى إدارة هذا الموقع"
 
-#: .\shoutit\models\auth.py:94
+#: .\shoutit\models\auth.py:92
 msgid "active"
 msgstr "فعال"
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:93
 msgid ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
 msgstr "محدد أي أن هذا المستخدم موثوق كفعال, الغاء التحديد بديل عن حذف الحساب"
 
-#: .\shoutit\models\auth.py:97
+#: .\shoutit\models\auth.py:95
 msgid "activated"
 msgstr "مفعل"
 
-#: .\shoutit\models\auth.py:97
+#: .\shoutit\models\auth.py:95
 msgid "Designates whether this user have a verified email."
 msgstr "محدد إذا كان هذا المستخدم قد أكد بريده الإلكتروني"
 
-#: .\shoutit\models\auth.py:98
+#: .\shoutit\models\auth.py:96
 msgid "date joined"
 msgstr "تاريخ التسجيل"
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:101
 msgid "testuser status"
 msgstr "حالة مستخدم التجريب"
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:101
 msgid "Designates whether this user is a test user."
 msgstr "محدد إذا كان هذا المستخدم هو مستخدم تجريب"
 
-#: .\shoutit\models\auth.py:105
+#: .\shoutit\models\auth.py:103
 msgid "guest user status"
 msgstr "حالة مستخدم ضيف"
 
-#: .\shoutit\models\auth.py:105
+#: .\shoutit\models\auth.py:103
 msgid "Designates whether this user is a guest user."
 msgstr "محدد اذا كان هذا المستخدم ضيف"
 
-#: .\shoutit\models\auth.py:107
+#: .\shoutit\models\auth.py:105
 msgid "mailing list status"
 msgstr "حالة القائمة البريدية"
 
-#: .\shoutit\models\auth.py:107
+#: .\shoutit\models\auth.py:106
 msgid "Designates whether this user is on the main mailing list."
 msgstr "محدد إذا كان هذا المستخدم موجود بالقائمة البريدية الرئيسية"
 
-#: .\shoutit\models\auth.py:109
+#: .\shoutit\models\auth.py:108
 msgid "mixpanel people status"
 msgstr "Mixpanel people status"
 
-#: .\shoutit\models\auth.py:109
+#: .\shoutit\models\auth.py:108
 msgid "Designates whether this user is on MixPanel People."
 msgstr "Designates whether this user is on MixPanel People."
 
-#: .\shoutit\models\auth.py:116
+#: .\shoutit\models\auth.py:115
 msgid "user"
 msgstr "مستخدم"
 
-#: .\shoutit\models\auth.py:117
+#: .\shoutit\models\auth.py:116
 msgid "users"
 msgstr "المستخدمين"
 
-#: .\shoutit\models\auth.py:156
+#: .\shoutit\models\auth.py:159 .\shoutit\models\auth.py:174
 msgid "Page"
-msgstr ""
+msgstr "صفحة"
 
-#: .\shoutit\models\auth.py:158
+#: .\shoutit\models\auth.py:161
 msgid "Guest"
 msgstr "ضيف"
 
-#: .\shoutit\models\auth.py:517
+#: .\shoutit\models\auth.py:524
 msgid "Shoutit User"
 msgstr "مستخدم شاوت ات"
 
-#: .\shoutit\models\auth.py:619
+#: .\shoutit\models\auth.py:627
 msgid "mobile"
 msgstr "رقم الموبايل"
 
@@ -899,57 +910,70 @@ msgstr "%(name)s: %(message)s"
 msgid "Shoutit"
 msgstr "شاوت ات"
 
-#: .\shoutit\models\message.py:534
+#: .\shoutit\models\message.py:535
 msgid "New listen"
 msgstr "استماعة جديدة"
 
-#: .\shoutit\models\message.py:536
+#: .\shoutit\models\message.py:536 .\shoutit\models\message.py:560
+#: .\shoutit\models\message.py:575
+msgid "View Profile"
+msgstr "اظهار الملف الشخصي"
+
+#: .\shoutit\models\message.py:538
 msgid "you"
 msgstr "إليك"
 
-#: .\shoutit\models\message.py:537
+#: .\shoutit\models\message.py:539
 #, python-format
 msgid "%(name)s started listening to you"
 msgstr "%(name)s بدأ بالإستماع إليك"
 
-#: .\shoutit\models\message.py:543
+#: .\shoutit\models\message.py:545
 msgid "New message"
 msgstr "رسالة جديدة"
 
-#: .\shoutit\models\message.py:549
+#: .\shoutit\models\message.py:546
+msgid "Reply"
+msgstr "اجابة"
+
+#: .\shoutit\models\message.py:552
 msgid "Incoming video call"
 msgstr "مكالمة فيديو واردة"
 
-#: .\shoutit\models\message.py:551
+#: .\shoutit\models\message.py:553
+msgid "Answer"
+msgstr "إجابة"
+
+#: .\shoutit\models\message.py:555
 #, python-format
 msgid "%(name)s is calling you on Shoutit"
 msgstr "%(name)s يتصل بك على شاوت ات"
 
-#: .\shoutit\models\message.py:555
+#: .\shoutit\models\message.py:559
 msgid "Missed video call"
 msgstr "مكالمة فيديو فائته"
 
-#: .\shoutit\models\message.py:557
+#: .\shoutit\models\message.py:562
 #, python-format
 msgid "You missed a call from %(name)s"
 msgstr "مكالمة فيديو فائته من %(name)s"
 
-#: .\shoutit\models\message.py:562
-msgid "New Credit Transaction"
+#: .\shoutit\models\message.py:567
+msgid "New Shoutit Credit transaction"
 msgstr "معاملة شاوت ات كريدت جديدة"
 
 #: .\shoutit\models\message.py:568
+msgid "View Transactions"
+msgstr ""
+
+#: .\shoutit\models\message.py:574
 msgid "New Shout Like"
 msgstr "إعجاب جديد"
 
-#: .\shoutit\models\message.py:571
+#: .\shoutit\models\message.py:578
 #, python-format
 msgid "%(name)s liked your shout %(title)s"
 msgstr "%(name)s قام بالإعجاب بإعلانك %(title)s"
-
-#: .\shoutit\models\message.py:584
-msgid "Answer"
-msgstr "إجابة"
 
 #: .\shoutit\models\page.py:45
 msgid "name"

@@ -200,8 +200,11 @@ class NotificationType(Constant):
 
     def include_in_push(self):
         types = [NOTIFICATION_TYPE_INCOMING_VIDEO_CALL]
-        requires_obj = self.requires_notification_object()
-        return self in types or requires_obj
+        return self in types or self.requires_notification_object()
+
+    def include_in_email(self):
+        types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
+        return self in types
 
 
 NOTIFICATION_TYPE_LISTEN = NotificationType('new_listen')
