@@ -152,10 +152,10 @@ class PageCategoryAdmin(TranslatableAdmin, DjangoMpttAdmin):
 # PageVerification
 @admin.register(PageVerification)
 class PageVerificationAdmin(admin.ModelAdmin):
-    list_display = ('page', 'admin', 'status', 'created_at')
+    list_display = ('page', 'admin', 'status', 'modified_at', 'created_at')
     list_filter = ('status',)
     raw_id_fields = ('page', 'admin')
-
+    ordering = ('created_at',)
     actions = ['accept', 'reject']
 
     def accept(self, request, queryset):
