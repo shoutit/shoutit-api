@@ -34,7 +34,7 @@ def user_from_gplus_code(gplus_code, initial_user=None, client=None, is_test=Fal
         linked_account = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         user = linked_account.user
         if initial_user and initial_user.get('location'):
-            location_controller.update_profile_location(user.profile, initial_user.get('location'))
+            location_controller.update_profile_location(user.ap, initial_user.get('location'))
     except LinkedGoogleAccount.DoesNotExist:
         debug_logger.debug('LinkedGoogleAccount.DoesNotExist for gplus_id %s.' % gplus_id)
         try:

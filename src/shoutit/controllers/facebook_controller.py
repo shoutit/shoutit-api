@@ -45,7 +45,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
         user = linked_facebook.user
         location = initial_user and initial_user.get('location')
         if location:
-            location_controller.update_profile_location(user.profile, location)
+            location_controller.update_profile_location(user.ap, location)
     except LinkedFacebookAccount.DoesNotExist:
         debug_logger.debug('LinkedFacebookAccount.DoesNotExist for facebook_id %s' % facebook_id)
         if 'email' not in fb_user:
@@ -210,7 +210,8 @@ def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
         linked_facebook = LinkedFacebookAccount.create(user=user, facebook_id=facebook_id, access_token=access_token,
                                                        scopes=scopes, expires_at=expires_at, friends=friends, name=name)
 
-    update_profile_using_fb_user(user.profile, fb_user)
+    if hasattr(user, 'profile'):
+        update_profile_using_fb_user(user.profile, fb_user)
     return linked_facebook
 
 
