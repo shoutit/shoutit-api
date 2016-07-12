@@ -91,7 +91,7 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
                                                 serializing_options=serializing_options)
 
     # Send notification email
-    if notification_type.include_in_email():
+    if notification_type.include_in_email() and not can_pusher:
         email_controller.send_notification_email(user, notification)
 
 

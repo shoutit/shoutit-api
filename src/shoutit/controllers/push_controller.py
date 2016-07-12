@@ -51,27 +51,22 @@ def send_push(user, notification, version, pushed_for=None, serializing_options=
     aps_extra = notification_display.get('aps_extra', {})
     data = serialize_attached_object(attached_object=notification.push_event_object, version=version,
                                      user=pushed_for or user, serializing_options=serializing_options)
-    extra = {
-        'event_name': event_name,
-        'title': title,
-        'body': body,
-        'icon': image,
-        'data': data,
-        'pushed_for': pushed_for.id if pushed_for else user.id,
-        # Todo: Deprecate legacy properties
-        'type': str(notification.type),
-        'message': body
-    }
 
     # Todo (mo): Make sure this doesn't break anything!
+    # Todo (mo): Maybe we don't need to serialize attached objects here, app_url should be enough in most cases
     # Keep `app_url` only except for incoming_video_call notifications which have the caller profile properties
     if notification.type != NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
-        extra['data'] = {
-            'app_url': extra['data'].get('app_url'),
+        data = {
+            'app_url': data.get('app_url'),
         }
 
     # Send the Push
     if sending_apns:
+        ios_extra = {
+            'event_name': event_name,
+            'data': data,
+            'pushed_for': pushed_for.id if pushed_for else user.id,
+        }
         badge = get_total_unread_count(user)
         alert = {
             'title': title,
@@ -83,21 +78,27 @@ def send_push(user, notification, version, pushed_for=None, serializing_options=
             'badge': badge
         }
         aps.update(aps_extra)
-        # Remove legacy and unused properties which may cause Fix
-        del extra['message']
-        del extra['type']
-        del extra['title']
-        del extra['body']
-        del extra['icon']
         try:
-            user.send_apns(alert=alert, extra=extra, **aps)
+            user.send_apns(alert=alert, extra=ios_extra, **aps)
             debug_logger.debug("Sent %s APNS:%s to %s, pushed for %s" % (version, event_name, user, pushed_for))
         except APNSError:
             error_logger.warn("Could not send %s APNS:%s to %s, pushed for %s" % (version, event_name, user, pushed_for), exc_info=True)
 
     if sending_gcm:
+        gcm_extra = {
+            'event_name': event_name,
+            'title': title,
+            'body': body,
+            'icon': image,
+            'data': data,
+            'pushed_for': pushed_for.id if pushed_for else user.id,
+            # Todo: Deprecate legacy properties
+            'type': str(notification.type),
+            'message': body
+        }
+
         try:
-            user.send_gcm(data=extra)
+            user.send_gcm(data=gcm_extra)
             debug_logger.debug("Sent %s GCM:%s to %s, pushed for %s" % (version, event_name, user, pushed_for))
         except GCMError:
             error_logger.warn("Could not send %s GCM:%s to %s, pushed for %s" % (version, event_name, user, pushed_for), exc_info=True)
