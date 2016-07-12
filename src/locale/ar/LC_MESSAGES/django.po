@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-11 15:03+0200\n"
+"POT-Creation-Date: 2016-07-12 00:46+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -459,10 +459,12 @@ msgid ""
 msgstr "لايمكن ربط حساب %(account)s. يجب تعيين كلمة مرور لحسابك أولا."
 
 #: .\shoutit\api\v3\serializers\profile.py:384
+#: .\shoutit\api\v3\serializers\profile.py:439
 msgid "linked"
 msgstr "ربط"
 
 #: .\shoutit\api\v3\serializers\profile.py:401
+#: .\shoutit\api\v3\serializers\profile.py:446
 msgid "unlinked"
 msgstr "فك ربط"
 
@@ -472,10 +474,27 @@ msgid "Your %(account)s account has been %(action)s"
 msgstr "تم %(action)s  حساب %(account)s"
 
 #: .\shoutit\api\v3\serializers\profile.py:415
+#: .\shoutit\api\v3\serializers\profile.py:456
 msgid "No changes were made"
 msgstr "لم يتم إجراء أية تغييرات"
 
-#: .\shoutit\api\v3\serializers\profile.py:533
+#: .\shoutit\api\v3\serializers\profile.py:432
+msgid "You must link your Facebook account first"
+msgstr "يجب ربط حساب الفيسبوك أولا"
+
+#: .\shoutit\api\v3\serializers\profile.py:435
+msgid "Couldn't link your Facebook Page"
+msgstr "لايمكن ربط صفحة الفيسبوك"
+
+#: .\shoutit\api\v3\serializers\profile.py:436
+msgid "Couldn't unlink your Facebook Page"
+msgstr "لايمكن فك ربط صفحة الفيسبوك"
+
+#: .\shoutit\api\v3\serializers\profile.py:453
+msgid "Your Facebook Page has been %(action)s"
+msgstr "تم %(action)s صفحة الفيسبوك"
+
+#: .\shoutit\api\v3\serializers\profile.py:574
 msgid "You can't make actions against your own profile"
 msgstr "لايمكنك إتخاذ إجراء على ملفك الشخصي"
 
@@ -629,7 +648,7 @@ msgstr "لايمكنك بدئ محادثة مع حسابك"
 msgid "You can only start a conversation with your listeners"
 msgstr "تستطيع بدء محادثة فقط مع مستمعيك"
 
-#: .\shoutit\api\v3\views\profile_views.py:590
+#: .\shoutit\api\v3\views\profile_views.py:625
 msgid "Your contacts have been uploaded"
 msgstr "تم تحميل جهات الإتصال"
 
@@ -747,22 +766,30 @@ msgstr "لدى صفحتك '%(page)s' اشعار جديد"
 msgid "You have a new notification"
 msgstr "لديك اشعار جديد"
 
-#: .\shoutit\controllers\facebook_controller.py:25
-msgid "Could not link Facebook account, try again later"
-msgstr "لا يمكن ربط حساب الفيس بوك, يرجى المحاولة لاحقاً"
-
 #: .\shoutit\controllers\facebook_controller.py:26
+msgid "Could not link Facebook account, try again later"
+msgstr "لا يمكن ربط حساب الفيسبوك, يرجى المحاولة لاحقاً"
+
+#: .\shoutit\controllers\facebook_controller.py:27
+msgid "Facebook error, try again later"
+msgstr "خطأ في الاتصال مع الفيسبوك, حاول لاحقاً"
+
+#: .\shoutit\controllers\facebook_controller.py:28
 #: .\shoutit\controllers\gplus_controller.py:23
 msgid "Could not access your email, make sure you allowed it"
 msgstr "لايمكن الوصول لبريدك الإلكتروني, تأكد من السماح بذلك"
 
-#: .\shoutit\controllers\facebook_controller.py:27
+#: .\shoutit\controllers\facebook_controller.py:29
 msgid "No Facebook account to unlink"
-msgstr "لايوجد حساب فيس بوك لإلغائه"
+msgstr "لايوجد حساب فيسبوك لإلغائه"
 
-#: .\shoutit\controllers\facebook_controller.py:145
+#: .\shoutit\controllers\facebook_controller.py:110
+msgid "Couldn't find the specified Facebook Page"
+msgstr "لم يتم العثور على صفحة الفيسبوك المحددة"
+
+#: .\shoutit\controllers\facebook_controller.py:148
 msgid "Facebook account is already linked to somebody else's profile"
-msgstr "حساب الفيس بوك مرتبط بحساب آخر على شاوت ات"
+msgstr "حساب الفيسبوك مرتبط بحساب آخر على شاوت ات"
 
 #: .\shoutit\controllers\gplus_controller.py:24
 msgid "No Google account to unlink"
@@ -785,15 +812,15 @@ msgstr "إسم المستخدم"
 msgid "Enter a valid username."
 msgstr "أدخل إسم مستخدم صالح"
 
-#: .\shoutit\models\auth.py:85 .\shoutit\models\auth.py:624
+#: .\shoutit\models\auth.py:85 .\shoutit\models\auth.py:637
 msgid "first name"
 msgstr "الإسم الأول"
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:625
+#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:638
 msgid "last name"
 msgstr "الإسم الأخير"
 
-#: .\shoutit\models\auth.py:88 .\shoutit\models\auth.py:626
+#: .\shoutit\models\auth.py:88 .\shoutit\models\auth.py:639
 msgid "email address"
 msgstr "البريد الإلكتروني"
 
@@ -879,7 +906,7 @@ msgstr "ضيف"
 msgid "Shoutit User"
 msgstr "مستخدم شاوت ات"
 
-#: .\shoutit\models\auth.py:627
+#: .\shoutit\models\auth.py:640
 msgid "mobile"
 msgstr "رقم الموبايل"
 
@@ -964,7 +991,7 @@ msgstr "معاملة شاوت ات كريدت جديدة"
 
 #: .\shoutit\models\message.py:568
 msgid "View Transactions"
-msgstr ""
+msgstr "عرض المعاملات"
 
 #: .\shoutit\models\message.py:574
 msgid "New Shout Like"
