@@ -561,6 +561,7 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
     facebook_response = {
         "id": "123456",
         "email": "user1@mail.com",
+        "name": "Dima Goshev",
         "first_name": "Dima",
         "last_name": "Goshev",
         "gender": "male",
@@ -622,7 +623,7 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
         """
         responses.add(responses.GET, 'https://graph.facebook.com/v2.6/me',
                       json=self.facebook_response, status=200)
-        responses.add(responses.GET, 'https://graph.facebook.com/debug_token',
+        responses.add(responses.GET, 'https://graph.facebook.com/v2.6/debug_token',
                       json=self.facebook_debug, status=200)
         responses.add(responses.GET,
                       'https://graph.facebook.com/oauth/access_token',

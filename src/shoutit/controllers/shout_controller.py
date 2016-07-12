@@ -261,7 +261,7 @@ def publish_shout_to_facebook(shout):
         return
     prod = settings.SHOUTIT_ENV == 'prod'
     namespace = 'shoutitcom' if prod else 'shoutitcom-' + settings.SHOUTIT_ENV
-    actions_url = 'https://graph.facebook.com/me/%s:shout' % namespace
+    actions_url = 'https://graph.facebook.com/v2.6/me/%s:shout' % namespace
     params = {
         'access_token': la.access_token,
         shout.get_type_display(): shout.web_url,

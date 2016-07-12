@@ -1,6 +1,7 @@
 from shoutit.models.base import UUIDModel  # NOQA
 from shoutit.models.auth import (  # NOQA
-    User, InactiveUser, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission, ProfileContact
+    User, InactiveUser, LinkedFacebookAccount, LinkedGoogleAccount, UserPermission, Permission, ProfileContact,
+    LinkedFacebookPage
 )
 from shoutit.models.item import Currency, Item  # NOQA
 from shoutit.models.listen import Listen2  # NOQA
