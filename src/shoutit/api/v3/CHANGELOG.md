@@ -22,7 +22,7 @@ Shoutit Profiles can now link their Facebook Page in addition to their Facebook 
 - API now tries to generate better usernames using the provided first and last names
 
 
-## Pages Verification and Notifications
+## Pages Verification and Notifications (2016-07-10)
 
 - Page admins can now verify their businesses. More on that here [Pages Verification](https://github.com/shoutit/shoutit-api/wiki/Pages#pages-verification)
 - Page admins now receives notifications about activities related to their pages. Clients should subscribe to the correct notification channels as described in [Pages Notifications](https://github.com/shoutit/shoutit-api/wiki/Pages-Notifications)
