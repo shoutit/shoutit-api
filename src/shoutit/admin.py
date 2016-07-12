@@ -237,7 +237,7 @@ class ShoutAdmin(admin.ModelAdmin, UserLinkMixin, LocationMixin, LinksMixin):
 @admin.register(Tag)
 class TagAdmin(LinksMixin, TranslatableAdmin):
     list_display = ('name', 'slug', '_key', 'image', '_links')
-    search_fields = ('name',)
+    search_fields = ('name', 'slug', 'key__name', 'key__slug')
     raw_id_fields = ('creator',)
     list_filter = ('key',)
     form = ImageFileChangeForm
@@ -259,7 +259,7 @@ class TagInline(admin.TabularInline):
 @admin.register(TagKey)
 class TagKeyAdmin(TranslatableAdmin):
     list_display = ('name', 'slug', 'values_type')
-    search_fields = ('key',)
+    search_fields = ('name', 'slug')
     list_filter = ('categories', 'values_type')
     inlines = [
         TagInline,

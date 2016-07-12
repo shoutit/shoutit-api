@@ -11,7 +11,8 @@ from push_notifications.gcm import GCMError
 from push_notifications.models import APNSDevice, GCMDevice
 from rest_framework.settings import api_settings
 
-from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST, USER_TYPE_PAGE)
+from common.constants import (DEVICE_ANDROID, DEVICE_IOS, NotificationType, NOTIFICATION_TYPE_BROADCAST, USER_TYPE_PAGE,
+                              NOTIFICATION_TYPE_INCOMING_VIDEO_CALL)
 from shoutit.api.serializers import serialize_attached_object
 from ..models import User, PushBroadcast, Device
 from ..utils import debug_logger, error_logger, UserIds
@@ -57,10 +58,17 @@ def send_push(user, notification, version, pushed_for=None, serializing_options=
         'icon': image,
         'data': data,
         'pushed_for': pushed_for.id if pushed_for else user.id,
-        # Todo: Deprecate old properties
+        # Todo: Deprecate legacy properties
         'type': str(notification.type),
         'message': body
     }
+
+    # Todo (mo): Make sure this doesn't break anything!
+    # Keep `app_url` only except for incoming_video_call notifications which have the caller profile properties
+    if notification.type != NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
+        extra['data'] = {
+            'app_url': extra['data'].get('app_url'),
+        }
 
     # Send the Push
     if sending_apns:
@@ -75,6 +83,12 @@ def send_push(user, notification, version, pushed_for=None, serializing_options=
             'badge': badge
         }
         aps.update(aps_extra)
+        # Remove legacy and unused properties which may cause Fix
+        del extra['message']
+        del extra['type']
+        del extra['title']
+        del extra['body']
+        del extra['icon']
         try:
             user.send_apns(alert=alert, extra=extra, **aps)
             debug_logger.debug("Sent %s APNS:%s to %s, pushed for %s" % (version, event_name, user, pushed_for))

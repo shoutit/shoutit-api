@@ -2,15 +2,46 @@
 
 
 ## Update
+
+- Push Notifications `data` property has the `app_url` only except for incoming video calls which have caller profile properties. This was necessary as Apple only allows max payload of 2048 bytes. Check [Native Push](https://github.com/shoutit/shoutit-api/wiki/Native-Push)
+
+
+## Facebook Pages (2016-07-12)
+
+Shoutit Profiles can now link their Facebook Page in addition to their Facebook account. Check the updated wiki article [Linked Accounts](https://github.com/shoutit/shoutit-api/wiki/Linked-Accounts)
+
+- Added `POST: /profiles/{username}/facebook_page` and `DELETE: /profiles/{username}/facebook_page` to link and unlike Facebook Pages
+- Now returning `facebook_page` under `linked_accounts` property of **Detailed Profile**
+- Added `name` to `linked_accounts.facebook` property of **Detailed Profile**
+
+## Update (2016-07-11)
+
+- API now sends emails about few notifications like new message, new listen and new credit transaction
+- `name` of User objects is now truncated not to show the full `last_name` e.g. "John Doe" will be returned as "John Do." The `last_name` is still being fully saved.
+- Unlinking accounts now gives an error if the profile has no password set and no other linked accounts
+- API now tries to generate better usernames using the provided first and last names
+
+
+## Pages Verification and Notifications (2016-07-10)
+
+- Page admins can now verify their businesses. More on that here [Pages Verification](https://github.com/shoutit/shoutit-api/wiki/Pages#pages-verification)
+- Page admins now receives notifications about activities related to their pages. Clients should subscribe to the correct notification channels as described in [Pages Notifications](https://github.com/shoutit/shoutit-api/wiki/Pages-Notifications)
+
+
+## Update (2016-07-08)
+
 - Added `/shouts/{id}/like` which allows a profile to like a shout. Shout owner will be notified
 - Added `/shouts/{id}/bookmark` which allows a profile to bookmark a shout to come to it later. Shout owner won't be notified
 - Added `/profiles/{username}/bookmarks` which returns a list of bookmarked shouts. Profiles can get their own bookmarked shouts only not those for other profiles
 - Now returning **PageDetail** object in profile endpoints `GET /profiles/{username}` and `PATCH /profiles/{username}` Check its properties in [Shoutit Pages](https://github.com/shoutit/shoutit-api/wiki/Pages) wiki article
+- Filter values for **Category** and **Shout** have now an `id` which should be passed when creating and editing shouts. More on that in [Filters](https://github.com/shoutit/shoutit-api/wiki/Filters)
+
 
 ## Update (2016-06-27)
 
 - `pages` and `admins` in **DetailedProfile** are now empty lists. The endpoints `/profiles/{username}/pages` and `/pages/{username}/admins` can be used instead.
 - Added `admin` property to **DetailedProfile** when it is of type `page`. This has a DetailedProfile of the currently logged in admin if any.
+
 
 ## Update (2016-06-26) 
 

@@ -528,10 +528,12 @@ class Notification(UUIDModel, AttachedObjectMixin):
         text = None
         ranges = []
         image = None
+        action = None
         target = self.attached_object
 
         if self.type == NOTIFICATION_TYPE_LISTEN:
             title = _("New listen")
+            action = _("View Profile")
             name = self.attached_object.name
             you = unicode(_('you'))
             text = _("%(name)s started listening to you") % {'name': name}
@@ -541,31 +543,36 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
             title = _("New message")
+            action = _("Reply")
             text = self.attached_object.summary
             image = self.attached_object.user.ap.image
             target = self.attached_object.conversation
 
         elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
             title = _("Incoming video call")
+            action = _("Answer")
             name = self.attached_object.name
             text = _("%(name)s is calling you on Shoutit") % {'name': name}
             image = self.attached_object.ap.image
 
         elif self.type == NOTIFICATION_TYPE_MISSED_VIDEO_CALL:
             title = _("Missed video call")
+            action = _("View Profile")
             name = self.attached_object.name
             text = _("You missed a call from %(name)s") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             image = self.attached_object.ap.image
 
         elif self.type == NOTIFICATION_TYPE_CREDIT_TRANSACTION:
-            title = _("New Credit Transaction")
+            title = _("New Shoutit Credit transaction")
+            action = _('View Transactions')
             text = self.attached_object.display()['text']
             setattr(self, '_app_url', 'shoutit://credit_transactions')
             setattr(self, '_web_url', None)
 
         elif self.type == NOTIFICATION_TYPE_SHOUT_LIKE:
             title = _('New Shout Like')
+            action = _('View Profile')
             name = self.from_user.name
             shout_title = self.attached_object.title
             text = _('%(name)s liked your shout %(title)s') % {'name': name, 'title': shout_title}
@@ -578,10 +585,11 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ('text', text),
             ('ranges', ranges),
             ('image', image),
+            ('action', action),
         ])
 
         if self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
-            ret['alert_extra'] = {'action-loc-key': _('Answer')}
+            ret['alert_extra'] = {'action-loc-key': action}
             ret['aps_extra'] = {'category': 'VIDEO_CALL_CATEGORY'}
 
         setattr(self, 'target', target)

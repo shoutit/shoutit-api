@@ -419,6 +419,47 @@ class ProfileLinkSerializer(serializers.Serializer):
         return self.validated_data
 
 
+class FacebookPageLinkSerializer(serializers.Serializer):
+    facebook_page_id = serializers.CharField()
+
+    def to_internal_value(self, data):
+        validated_data = super(FacebookPageLinkSerializer, self).to_internal_value(data)
+        request = self.context['request']
+        user = request.user
+        action = None
+        linked_facebook = getattr(user, 'linked_facebook', None)
+        if not linked_facebook:
+            raise ShoutitBadRequest(_('You must link your Facebook account first'))
+        facebook_page_id = validated_data['facebook_page_id']
+
+        could_not_link = _("Couldn't link your Facebook Page")
+        could_not_unlink = _("Couldn't unlink your Facebook Page")
+
+        if request.method == 'POST':
+            action = _('linked')
+            try:
+                facebook_controller.link_facebook_page(linked_facebook, facebook_page_id)
+            except Exception as e:
+                raise ShoutitBadRequest(could_not_link, developer_message=str(e))
+
+        elif request.method == 'DELETE':
+            action = _('unlinked')
+            try:
+                facebook_controller.unlink_facebook_page(linked_facebook, facebook_page_id)
+            except Exception as e:
+                raise ShoutitBadRequest(could_not_unlink, developer_message=str(e))
+
+        if action:
+            success = _("Your Facebook Page has been %(action)s") % {'action': action}
+            res = {'success': success}
+        else:
+            res = {'success': _("No changes were made")}
+        return res
+
+    def to_representation(self, instance):
+        return self.validated_data
+
+
 class ProfileContactSerializer(serializers.Serializer):
     first_name = serializers.CharField(**empty_char_input)
     last_name = serializers.CharField(**empty_char_input)

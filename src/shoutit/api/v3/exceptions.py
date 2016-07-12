@@ -98,7 +98,11 @@ class ShoutitAPIException(drf_exceptions.APIException):
             self.errors = [{'message': self.message}]
 
     def __str__(self):
-        return self.original_message
+        dev_msg = self.developer_message if self.developer_message != self.default_developer_message else ''
+        if dev_msg:
+            return '%s, Dev msg: %s' % (self.original_message, self.developer_message)
+        else:
+            return self.original_message
 
 
 class ShoutitSingleAPIException(ShoutitAPIException):

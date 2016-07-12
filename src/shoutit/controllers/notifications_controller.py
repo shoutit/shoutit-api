@@ -10,6 +10,7 @@ from rest_framework.settings import api_settings
 from common.constants import (NOTIFICATION_TYPE_LISTEN, NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_PROFILE_UPDATE,
                               NOTIFICATION_TYPE_MISSED_VIDEO_CALL, NOTIFICATION_TYPE_INCOMING_VIDEO_CALL,
                               NOTIFICATION_TYPE_CREDIT_TRANSACTION, NOTIFICATION_TYPE_SHOUT_LIKE)
+from shoutit.controllers import email_controller
 from ..controllers import push_controller, pusher_controller
 from ..models import Notification
 
@@ -88,6 +89,10 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
         pusher_controller.trigger_profile_event(user=user, event_name=notification.event_name,
                                                 attached_object=notification.event_object, version=v,
                                                 serializing_options=serializing_options)
+
+    # Send notification email
+    if notification_type.include_in_email():
+        email_controller.send_notification_email(user, notification)
 
 
 def notify_user_of_listen(user, listener):

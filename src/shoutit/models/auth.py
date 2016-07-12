@@ -159,18 +159,23 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             return self.page.name if hasattr(self, 'page') else _('Page')
         else:
             first_name = _('Guest') if self.is_guest or not self.first_name else self.first_name
-            last_name = '%s.' % self.last_name[:5 if self.is_guest or not self.first_name else 2].upper()
+            last_name = '%s' % self.last_name[:5 if self.is_guest or not self.first_name else 2].capitalize()
+            if not self.first_name or len(self.last_name) > 2:
+                last_name += '.'
             full_name = '%s %s' % (first_name, last_name)
             return full_name
 
     def get_full_name(self):
         """
         Returns the first_name plus the last_name, with a space in between.
-        username in case the above is empty string
+        username in case the above is empty string and page name in case the user is of type `page`
         """
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        full_name = full_name.strip()
-        return full_name or self.username
+        if self.type == USER_TYPE_PAGE:
+            return self.page.name if hasattr(self, 'page') else _('Page')
+        else:
+            full_name = '%s %s' % (self.first_name, self.last_name)
+            full_name = full_name.strip()
+            return full_name or self.username
 
     def get_short_name(self):
         """
@@ -202,6 +207,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     @property
     def linked_accounts(self):
         linked_facebook = getattr(self, 'linked_facebook', None)
+        linked_facebook_page = linked_facebook.pages.first() if linked_facebook else None
         linked_gplus = getattr(self, 'linked_gplus', None)
         _linked_accounts = {
             'gplus': {
@@ -209,9 +215,15 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             } if linked_gplus else None,
             'facebook': OrderedDict([
                 ('facebook_id', linked_facebook.facebook_id),
+                ('name', linked_facebook.name),
                 ('expires_at', linked_facebook.expires_at_unix),
                 ('scopes', linked_facebook.scopes)
             ]) if linked_facebook else None,
+            'facebook_page': OrderedDict([
+                ('facebook_id', linked_facebook_page.facebook_id),
+                ('name', linked_facebook_page.name),
+                ('perms', linked_facebook_page.perms)
+            ]) if linked_facebook_page else None
         }
         return _linked_accounts
 
@@ -581,6 +593,7 @@ def abstract_profile_post_save(sender, instance=None, created=False, **kwargs):
 class LinkedFacebookAccount(UUIDModel):
     user = models.OneToOneField(User, related_name='linked_facebook')
     facebook_id = models.CharField(max_length=24, unique=True)
+    name = models.CharField(max_length=50, blank=True)
     access_token = models.CharField(max_length=512)
     expires_at = models.DateTimeField()
     scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'], blank=True)
@@ -592,6 +605,18 @@ class LinkedFacebookAccount(UUIDModel):
     @property
     def expires_at_unix(self):
         return date_unix(self.expires_at)
+
+
+class LinkedFacebookPage(UUIDModel):
+    linked_facebook = models.ForeignKey('LinkedFacebookAccount', related_name='pages')
+    facebook_id = models.CharField(max_length=24)
+    name = models.CharField(max_length=50)
+    access_token = models.CharField(max_length=512)
+    category = models.CharField(max_length=50)
+    perms = ArrayField(models.CharField(max_length=25), default=list, blank=True)
+
+    def __unicode__(self):
+        return '%s:%s' % (self.name, self.facebook_id)
 
 
 @receiver(post_save, sender=LinkedFacebookAccount)

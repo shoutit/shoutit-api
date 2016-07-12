@@ -22,7 +22,7 @@ from ..filters import HomeFilterBackend, ProfileFilter
 from ..pagination import ShoutitPageNumberPaginationNoCount, ShoutitPageNumberPagination
 from ..serializers import (ProfileSerializer, ProfileDetailSerializer, MessageSerializer, TagDetailSerializer,
                            ProfileDeactivationSerializer, GuestSerializer, ProfileLinkSerializer,
-                           ProfileContactsSerializer, ShoutSerializer, PageDetailSerializer)
+                           ProfileContactsSerializer, ShoutSerializer, PageDetailSerializer, FacebookPageLinkSerializer)
 
 
 class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -457,7 +457,7 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
         loc = reverse('conversation-messages', kwargs={'id': data['conversation_id']}, request=self.request)
         return {'Location': loc}
 
-    @detail_route(methods=['patch', 'delete'], suffix='Link / Unlink Accounts')
+    @detail_route(methods=['patch', 'delete'], suffix='Linked Accounts')
     def link(self, request, *args, **kwargs):
         """
         Link/Unlink external social accounts
@@ -504,7 +504,42 @@ class ProfileViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.Gene
             - name: body
               paramType: body
         """
-        serializer = ProfileLinkSerializer(data=request.data, context={'request': request})
+        self.serializer_detail_class = ProfileLinkSerializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @detail_route(methods=['post', 'delete'], suffix='Facebook Pages')
+    def facebook_page(self, request, *args, **kwargs):
+        """
+        Link / unlink Facebook Page
+        ###REQUIRES AUTH
+
+        ###Link
+        <pre><code>
+        POST: /profiles/{username}/facebook_page
+        {
+            "facebook_page_id": "1234567890"
+        }
+        </code></pre>
+
+        ###Unlink
+        <pre><code>
+        DELETE: /profiles/{username}/facebook_page
+        {
+            "facebook_page_id": "1234567890"
+        }
+        </code></pre>
+        ---
+        omit_serializer: true
+        omit_parameters:
+            - form
+        parameters:
+            - name: body
+              paramType: body
+        """
+        self.serializer_detail_class = FacebookPageLinkSerializer
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 

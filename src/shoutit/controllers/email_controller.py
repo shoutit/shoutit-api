@@ -9,6 +9,7 @@ from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 from django_rq import job
 
+from common.constants import USER_TYPE_PAGE
 from common.utils import date_unix
 from shoutit.models import User
 from shoutit.utils import debug_logger
@@ -30,7 +31,7 @@ def prepare_message(user, subject, template, subs=None):
     message.add_filter('templates', 'enable', '1')
     message.add_filter('templates', 'template_id', template)
     message.add_substitution('{{site_link}}', settings.SITE_LINK)
-    message.add_substitution('{{name}}', user.name)
+    message.add_substitution('{{name}}', user.get_full_name())
     if subs:
         for key, val in subs.items():
             message.add_substitution('{{%s}}' % key, force_text(val))
@@ -115,6 +116,38 @@ def _send_password_reset_email(user):
     message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
     result = sg.send(message)
     debug_logger.debug("Sent Password Reset Email to %s Result: %s" % (user, result))
+
+
+def send_notification_email(user, notification):
+    # Notify the page admins if the notified user is a Page
+    if user.type == USER_TYPE_PAGE:
+        for admin in user.page.admins.all():
+            _send_notification_email.delay(admin, notification, emailed_for=user)
+        return
+    else:
+        return _send_notification_email.delay(user, notification)
+
+
+@job(settings.RQ_QUEUE_MAIL)
+def _send_notification_email(user, notification, emailed_for=None):
+    display = notification.display()
+    subject = display['title']
+    if emailed_for:
+        intro = _("Your page '%(page)s' has a new notification") % {'page': emailed_for.name}
+    else:
+        intro = _("You have a new notification")
+    subs = {
+        'text1':
+            """
+            %(intro)s
+            <blockquote><b>%(text)s</b></blockquote>
+            """ % {'intro': intro, 'text': display['text']},
+        'action': display['action'],
+        'link': notification.web_url
+    }
+    message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
+    result = sg.send(message)
+    debug_logger.debug("Sent Notification Email to %s Result: %s" % (user, result))
 
 
 def subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=True):
