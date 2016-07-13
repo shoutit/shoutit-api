@@ -76,7 +76,7 @@ class ProfileSerializer(MiniProfileSerializer):
         return ret
 
 
-# Todo: create two subclasses UserSerializer/UserDetailSerializer and PageSerializer/PageDetailSerializer
+# Todo: subclasses UserSerializer, UserDetailSerializer and PageSerializer
 class ProfileDetailSerializer(ProfileSerializer):
     email = serializers.EmailField(allow_blank=True, max_length=254, required=False, help_text="Only shown for owner")
     mobile = serializers.CharField(source='profile.mobile', min_length=4, max_length=20, **empty_char_input)
