@@ -28,7 +28,7 @@ class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.L
 
     def get_queryset(self):
         if self.action == 'list':
-            return DiscoverItem.objects.filter(parent=None)
+            return DiscoverItem.objects.root_nodes()
         else:
             return DiscoverItem.objects.all()
 

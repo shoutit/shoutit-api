@@ -33,6 +33,7 @@ class DiscoverItem(APIModelMixin, TranslatedModelFallbackMixin, TranslatableMode
     class Meta:
         unique_together = ('countries', 'position', 'parent')
 
+    # Todo (mo): Remove position, ordering can be done using mptt attrs
     class MPTTMeta:
         order_insertion_by = ['position']
 

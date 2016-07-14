@@ -75,7 +75,7 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
         serializer: PageCategorySerializer
         """
         self.serializer_class = PageCategorySerializer
-        categories = PageCategory.objects.root_nodes()
+        categories = PageCategory.objects.root_nodes().order_by('tree_id')
         serializer = self.get_serializer(categories, many=True)
         return Response(serializer.data)
 
