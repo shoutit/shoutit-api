@@ -25,8 +25,8 @@ from shoutit.models import ConfirmToken
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer, ShoutitPageSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer, ProfileDetailSerializer,
-    FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer, GuestSerializer
-)
+    FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer, GuestSerializer,
+    PageDetailSerializer)
 
 INACTIVE_OR_DELETED = AuthenticationFailed(_('Account inactive or deleted'))
 
@@ -79,6 +79,8 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
 
         if user.is_guest:
             user_dict = GuestSerializer(user, context={'request': self.request}).data
+        elif hasattr(user, 'page'):
+            user_dict = PageDetailSerializer(user, context={'request': self.request}).data
         else:
             user_dict = ProfileDetailSerializer(user, context={'request': self.request}).data
 
@@ -264,7 +266,7 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
 
         ##Page Signup notes
         - returned `access_token` and `refresh_token` belong to the page creator (user)
-        - returned `profile` is the Page profile and it contains `admin` which is a DetailedProfile for the page creator
+        - returned `profile` is a DetailedPage and it contains `admin` which is a DetailedProfile for the page creator
         - clients should set http header `Authorization-Page-Id` using the returned `profile.id` for all later requests. This makes sure these calls are treated as if the Page is acting not its owner.
 
         ##Requesting the access token
@@ -420,14 +422,14 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
             "expires_in": 31480817,
             "refresh_token": "f2994c7507d5649c49ea50065e52a944b2324697",
             "scope": "read write read+write",
-            "profile": {Detailed or Guest profile object},
+            "profile": {DetailedProfile, DetailedPage or Guest object},
             "new_signup": true
         }
         </code></pre>
 
         If the profile newly signed up `new_signup` will be set to true otherwise false.
 
-        ###Guest profile object
+        ###Guest object
         <pre><code>
          {
             "id": "349b2dfb-899d-4c00-9514-689e6f2cdeae",
