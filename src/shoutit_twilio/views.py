@@ -18,6 +18,7 @@ from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, Inva
 from shoutit.api.v3.serializers import ProfileSerializer
 from shoutit.controllers import notifications_controller
 from shoutit.models import User
+from shoutit.utils import debug_logger
 from .controllers import create_video_client
 from .models import VideoClient
 
@@ -63,6 +64,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
             ('token', video_client.token),
             ('expires_at', video_client.expires_at_unix)
         ])
+        debug_logger.debug("Authorized %s to use Twilio with identity: %s" % (user, video_client.identity))
         return Response(res)
 
     @list_route(methods=['get'], suffix='Retrieve Identity')
