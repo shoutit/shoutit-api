@@ -575,13 +575,14 @@ class ObjectProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializ
         instance = self.instance
         request = self.context['request']
         actor = request.user
+        page_admin_user = getattr(request, 'page_admin_user', None)
         if not instance.is_admin(actor):
             raise drf_exceptions.PermissionDenied()
 
         validated_data = super(ObjectProfileActionSerializer, self).to_internal_value(data)
         profile = self.fields['profile'].instance
 
-        if actor.id == profile.id:
+        if actor == profile or page_admin_user == profile:
             raise exceptions.ShoutitBadRequest(_("You can't make actions against your own profile"),
                                                reason=exceptions.ERROR_REASON.BAD_REQUEST)
         if not self.condition(instance, actor, profile):
