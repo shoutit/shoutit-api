@@ -150,7 +150,10 @@ class APIModelMixin(object):
         if isinstance(attr_name, basestring):
             attr_name = (attr_name, attr_name)
         attr_value = getattr(self, attr_name[0], '')
-        params = urlencode({attr_name[1]: attr_value})
+        if name == 'user':
+            params = urlencode({attr_name[1]: attr_value, 'type': self.v3_type_name})
+        else:
+            params = urlencode({attr_name[1]: attr_value})
         url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, netloc, '', '', params, ''))
         return url
 
