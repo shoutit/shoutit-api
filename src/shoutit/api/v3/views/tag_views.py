@@ -4,9 +4,11 @@
 """
 from __future__ import unicode_literals
 
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route, list_route
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
@@ -31,6 +33,32 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     filter_class = TagFilter
     search_fields = ('=id', 'name')
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_object(self):
+        """
+        Returns the object the view is displaying.
+
+        You may want to override this if you need to provide non-standard
+        queryset lookups.  Eg if objects are referenced using multiple
+        keyword arguments in the url conf.
+        """
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            'Expected view %s to be called with a URL keyword argument '
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            'attribute on the view correctly.' %
+            (self.__class__.__name__, lookup_url_kwarg)
+        )
+        value = self.kwargs[lookup_url_kwarg]
+        queryset = self.filter_queryset(self.get_queryset())
+        obj = get_object_or_404(queryset, Q(name=value) | Q(slug=value))
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
 
     def list(self, request, *args, **kwargs):
         """
