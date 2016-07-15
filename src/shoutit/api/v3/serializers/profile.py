@@ -245,6 +245,8 @@ class ProfileDetailSerializer(ProfileSerializer):
         return mobile
 
     def update(self, user, validated_data):
+        request = self.context['request']
+        page_admin_user = getattr(request, 'page_admin_user', None)
         user_update_fields = []
         ap = user.ap
         ap_update_fields = []
@@ -324,7 +326,16 @@ class ProfileDetailSerializer(ProfileSerializer):
         # Push Tokens
         push_tokens_data = validated_data.get('push_tokens', {})
         if push_tokens_data:
-            user.update_push_tokens(push_tokens_data, 'v3')
+            # Pages shouldn't update their push token, only admins should.
+            if page_admin_user:
+                # Push Tokens (admin)
+                page_admin_user.update_push_tokens(push_tokens_data, 'v3')
+                # Notify about the push token update
+                notifications_controller.notify_user_of_profile_update(page_admin_user)
+                # Update Mixpanel People record with new push tokens
+                mixpanel_controller.add_to_mp_people([page_admin_user.id])
+            else:
+                user.update_push_tokens(push_tokens_data, 'v3')
 
         # Notify about updates
         notifications_controller.notify_user_of_profile_update(user)
@@ -564,13 +575,14 @@ class ObjectProfileActionSerializer(HasAttachedUUIDObjects, serializers.Serializ
         instance = self.instance
         request = self.context['request']
         actor = request.user
+        page_admin_user = getattr(request, 'page_admin_user', None)
         if not instance.is_admin(actor):
             raise drf_exceptions.PermissionDenied()
 
         validated_data = super(ObjectProfileActionSerializer, self).to_internal_value(data)
         profile = self.fields['profile'].instance
 
-        if actor.id == profile.id:
+        if actor == profile or page_admin_user == profile:
             raise exceptions.ShoutitBadRequest(_("You can't make actions against your own profile"),
                                                reason=exceptions.ERROR_REASON.BAD_REQUEST)
         if not self.condition(instance, actor, profile):

@@ -28,6 +28,8 @@ FB_ERROR_TRY_AGAIN = _("Facebook error, try again later")
 FB_LINK_ERROR_EMAIL = _("Could not access your email, make sure you allowed it")
 FB_LINK_ERROR_NO_LINK = _("No Facebook account to unlink")
 
+SIXTY_DAYS = 60 * 60 * 24 * 60
+
 
 def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=False):
     if 'accessToken' in auth_response:
@@ -126,7 +128,7 @@ def extend_token(short_lived_token):
             raise ValueError('`access_token` not in response: %s' % response.content)
         expires = response_params.get('expires')
         # Sometimes Facebook doesn't return expiry, assume 60 days
-        response_params['expires'] = expires or 60 * 60 * 24 * 60
+        response_params['expires'] = expires or SIXTY_DAYS
     except (requests.RequestException, ValueError) as e:
         debug_logger.error("Facebook token extend error: %s" % str(e))
         raise ShoutitBadRequest(message=FB_ERROR_TRY_AGAIN, developer_message=str(e))
@@ -192,7 +194,11 @@ def unlink_facebook_user(user, strict=True, notify=True):
 
 def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
     token_data = debug_token(access_token)
-    expires_at = utcfromtimestamp(float(token_data['expires_at']))
+    expires_at = token_data['expires_at']
+    if expires_at == 0:
+        expires_at = timezone.now() + datetime.timedelta(days=60)
+    else:
+        expires_at = utcfromtimestamp(float(expires_at))
     if abs((timezone.now() - expires_at).days) < 30:
         long_lived_token = extend_token(access_token)
         access_token = long_lived_token['access_token']
