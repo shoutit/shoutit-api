@@ -53,7 +53,8 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
             auth = pusher.authenticate(channel=channel, socket_id=socket_id, custom_data=custom_data)
         except ValueError as e:
             raise ValidationError(str(e))
-        debug_logger.debug("Authorized %s to use %s Pusher on socket_id: %s" % (user, api_version, socket_id))
+        debug_logger.debug("Authorized %s to subscribe to %s on %s Pusher on socket_id: %s" % (user, channel,
+                                                                                               api_version, socket_id))
         return Response(auth)
 
     @list_route(methods=['post'], permission_classes=(), suffix='Webhook')
