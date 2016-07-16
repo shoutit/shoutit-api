@@ -69,29 +69,25 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
 
     # Create notification object
     notification = Notification(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
-
     if notification_type.requires_notification_object():
         # Save the notification
         notification.save()
         # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
 
-    # Send Push notification when no pusher channels of any version exist
-    can_push = push_controller.check_push(notification_type)
-    can_pusher = pusher_controller.check_pusher(user)
-    if can_push and not can_pusher:
-        for v in versions:
-            push_controller.send_push.delay(user=user, notification=notification, version=v,
-                                            serializing_options=serializing_options)
-
-    # Trigger event on Pusher profile channel
+    # Pusher
     for v in versions:
         pusher_controller.trigger_profile_event(user=user, event_name=notification.event_name,
                                                 attached_object=notification.event_object, version=v,
                                                 serializing_options=serializing_options)
+    # Push
+    if push_controller.check_push(notification_type):
+        for v in versions:
+            push_controller.send_push.delay(user=user, notification=notification, version=v,
+                                            serializing_options=serializing_options)
 
-    # Send notification email
-    if notification_type.include_in_email() and not can_pusher:
+    # Email
+    if notification_type.include_in_email():
         email_controller.send_notification_email(user, notification)
 
 

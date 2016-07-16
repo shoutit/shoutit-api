@@ -34,18 +34,21 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         ---
         """
         user = request.user
+        page_admin_user = getattr(request, 'page_admin_user', None)
+        authorized = page_admin_user or user
         channel = request.data.get('channel_name', '')
         # Todo: check if the user is allowed to subscribe to the channel
         socket_id = request.data.get('socket_id', '')
         api_version = request.version
         data = {
             'v2': {
-                'user_id': user.pk,
-                'user': v2_serializers.UserSerializer(user, context={'request': create_fake_request('v2')}).data
+                'user_id': authorized.pk,
+                'user': v2_serializers.UserSerializer(authorized, context={'request': create_fake_request('v2')}).data
             },
             'v3': {
-                'user_id': user.pk,
-                'profile': v3_serializers.ProfileSerializer(user, context={'request': create_fake_request('v3')}).data
+                'user_id': authorized.pk,
+                'profile': v3_serializers.ProfileSerializer(authorized,
+                                                            context={'request': create_fake_request('v3')}).data
             }
         }
         custom_data = data[api_version]
@@ -53,7 +56,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
             auth = pusher.authenticate(channel=channel, socket_id=socket_id, custom_data=custom_data)
         except ValueError as e:
             raise ValidationError(str(e))
-        debug_logger.debug("Authorized %s to subscribe to %s on %s Pusher on socket_id: %s" % (user, channel,
+        debug_logger.debug("Authorized %s to subscribe to %s on %s Pusher on socket_id: %s" % (authorized, channel,
                                                                                                api_version, socket_id))
         return Response(auth)
 

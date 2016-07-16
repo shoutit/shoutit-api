@@ -119,7 +119,7 @@ def _send_password_reset_email(user):
 
 
 def send_notification_email(user, notification):
-    # Notify the page admins if the notified user is a Page
+    # Email the page admins if the notified user is a Page
     if user.type == USER_TYPE_PAGE:
         for admin in user.page.admins.all():
             _send_notification_email.delay(admin, notification, emailed_for=user)
@@ -130,6 +130,12 @@ def send_notification_email(user, notification):
 
 @job(settings.RQ_QUEUE_MAIL)
 def _send_notification_email(user, notification, emailed_for=None):
+    from shoutit.controllers import pusher_controller
+
+    # Do nothing if the user is in app (subscribed to Pusher)
+    if pusher_controller.check_pusher(user):
+        return
+
     display = notification.display()
     subject = display['title']
     if emailed_for:

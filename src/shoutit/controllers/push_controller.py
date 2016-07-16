@@ -28,11 +28,16 @@ GCMDevice.add_to_class('devices', _gcm_devices)
 @job(settings.RQ_QUEUE_PUSH)
 def send_push(user, notification, version, pushed_for=None, serializing_options=None):
     from shoutit.controllers.notifications_controller import get_total_unread_count
+    from shoutit.controllers import pusher_controller
 
-    # Notify the page admins if the notified user is a Page
+    # Notify the Page admins if the notified user is a Page
     if user.type == USER_TYPE_PAGE:
         for admin in user.page.admins.all():
             send_push.delay(admin, notification, version, pushed_for=user)
+        return
+
+    # Do nothing if the user is in app (subscribed to Pusher)
+    if pusher_controller.check_pusher(user):
         return
 
     # Check whether we are really going to send anything
