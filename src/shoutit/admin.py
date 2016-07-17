@@ -446,7 +446,7 @@ admin.site.register(GCMDevice, CustomPushDeviceAdmin)
 # Device
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'api_version', '_push_device')
+    list_display = ('id', 'type', 'api_version', '_push_device', 'created_at')
     fieldsets = (
         (None, {'fields': ('type', 'api_version', '_push_device')}),
     )
@@ -454,6 +454,7 @@ class DeviceAdmin(admin.ModelAdmin):
     list_filter = ('type', 'api_version')
     search_fields = ('apns_devices__user__id', 'apns_devices__user__username',
                      'gcm_devices__user__id', 'gcm_devices__user__username')
+    ordering = ('-created_at',)
 
     def _push_device(self, obj):
         return '<a href="%s">%s</a>' % (obj.push_device.admin_url, unicode(obj.push_device))

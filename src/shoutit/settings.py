@@ -7,7 +7,6 @@ from settings_env import *  # NOQA
 from common.utils import get_address_port, strtobool
 from django.utils.translation import ugettext_lazy as _
 
-
 """
 =================================
         Connection
@@ -428,6 +427,12 @@ REST_FRAMEWORK = {
     'URL_FIELD_NAME': 'api_url',
 }
 DEFAULT_MAX_PAGE_SIZE = 30
+CACHE_CONTROL_MAX_AGE = 60 * 5
+
+REST_FRAMEWORK_EXTENSIONS = {
+    'DEFAULT_CACHE_RESPONSE_TIMEOUT': CACHE_CONTROL_MAX_AGE,
+    'DEFAULT_CACHE_ERRORS': False
+}
 
 # OAuth2 settings
 OAUTH_SINGLE_ACCESS_TOKEN = True
