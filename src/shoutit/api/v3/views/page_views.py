@@ -9,12 +9,14 @@ from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from common.constants import USER_TYPE_PAGE
 from shoutit.api.v3.filters import ProfileFilter
 from shoutit.api.v3.pagination import ShoutitPageNumberPaginationNoCount
 from shoutit.models import User, PageCategory, PageVerification
+from shoutit.settings import CACHE_CONTROL_MAX_AGE
 from ..serializers import (PageCategorySerializer, ProfileSerializer, ProfileDetailSerializer, AddAdminSerializer, RemoveAdminSerializer,
                            CreatePageSerializer, PageVerificationSerializer)
 
@@ -66,7 +68,8 @@ class PageViewSet(DetailSerializerMixin, mixins.ListModelMixin, mixins.CreateMod
         """
         return super(PageViewSet, self).list(request, *args, **kwargs)
 
-    @cache_control(max_age=60 * 60 * 24)
+    @cache_control(max_age=CACHE_CONTROL_MAX_AGE)
+    @cache_response()
     @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """

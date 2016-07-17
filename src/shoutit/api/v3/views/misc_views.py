@@ -14,12 +14,14 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
 from rest_framework.parsers import FormParser
 from rest_framework.response import Response
+from rest_framework_extensions.cache.decorators import cache_response
 
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
 from shoutit.api.renderers import PlainTextRenderer
 from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
 from shoutit.controllers import location_controller, facebook_controller
 from shoutit.models import Currency, Category, PredefinedCity, User, Shout, Tag
+from shoutit.settings import CACHE_CONTROL_MAX_AGE
 from shoutit.utils import debug_logger
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer, ProfileSerializer,
                            ShoutSerializer, TagDetailSerializer, PushTestSerializer)
@@ -42,7 +44,8 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = PredefinedCitySerializer(cities, many=True, context={'request': request})
         return Response(serializer.data)
 
-    @cache_control(max_age=60 * 60 * 24)
+    @cache_control(max_age=CACHE_CONTROL_MAX_AGE)
+    @cache_response()
     @list_route(methods=['get'], suffix='Currencies')
     def currencies(self, request):
         """

@@ -15,6 +15,7 @@ from rest_framework import permissions, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework_extensions.cache.decorators import cache_response
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from common.utils import any_in
@@ -23,6 +24,7 @@ from shoutit.api.v3.exceptions import ShoutitBadRequest, InvalidParameter, Requi
 from shoutit.controllers import shout_controller, mixpanel_controller
 from shoutit.models import Shout, Category, Tag
 from shoutit.models.post import ShoutIndex
+from shoutit.settings import CACHE_CONTROL_MAX_AGE
 from shoutit.utils import has_unicode
 from shoutit_credit.views import PromoteShoutMixin
 from ..filters import ShoutIndexFilterBackend
@@ -155,7 +157,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
             mixpanel_controller.track(request.user.pk, event_name, search_data)
         return result
 
-    @cache_control(max_age=60 * 60 * 24)
+    @cache_control(max_age=CACHE_CONTROL_MAX_AGE)
+    @cache_response()
     @list_route(methods=['get'], suffix='Categories')
     def categories(self, request):
         """
@@ -169,7 +172,8 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         categories_data.sort(key=lambda c: c['name'])
         return Response(categories_data)
 
-    @cache_control(max_age=60 * 60 * 24)
+    @cache_control(max_age=CACHE_CONTROL_MAX_AGE)
+    @cache_response()
     @list_route(methods=['get'], suffix='Shouts Sort Types')
     def sort_types(self, request):
         """
