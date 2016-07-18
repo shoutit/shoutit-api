@@ -129,13 +129,13 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         {
             "tags": [
                 {
-                    "name": "2002-honda-cbr-954rr"
+                    "slug": "2002-honda-cbr-954rr"
                 },
                 {
-                    "name": "paradox"
+                    "slug": "paradox"
                 },
                 {
-                    "name": "shanghai"
+                    "slug": "shanghai"
                 }
             ]
         }
@@ -149,18 +149,21 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             - name: body
               paramType: body
         """
+        # Todo (mo): Move to serializer
         tag_dicts = request.data.get('tags', [])
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
-        tag_names = ", ".join(map(lambda x: str(x['name']), tag_dicts))
-        tags = Tag.objects.filter(name__in=tag_names)
+        tag_names = map(lambda x: str(x.get('name')), tag_dicts)
+        tag_slugs = map(lambda x: str(x.get('slug')), tag_dicts)
+        tags = Tag.objects.filter(Q(name__in=tag_names) | Q(slug__in=tag_slugs))
         api_client = getattr(request, 'api_client', None)
 
+        names = ', '.join(map(lambda t: t._local_name, tags))
         if request.method == 'POST':
             listen_controller.listen_to_objects(request.user, tags, api_client=api_client, api_version=request.version)
-            msg = _("You started listening to shouts about %(name)s") % {'name': tag_names}
+            msg = _("You started listening to shouts about %(name)s") % {'name': names}
         else:
             listen_controller.stop_listening_to_objects(request.user, tags)
-            msg = _("You stopped listening to shouts about %(name)s") % {'name': tag_names}
+            msg = _("You stopped listening to shouts about %(name)s") % {'name': names}
 
         return Response(data={'success': msg}, status=status.HTTP_202_ACCEPTED)
 
