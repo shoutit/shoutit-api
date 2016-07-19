@@ -104,6 +104,8 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         if instance.is_muted or instance.is_disabled:
             return InactiveShout().to_dict
         ret = super(ShoutSerializer, self).to_representation(instance)
+        if 'filters' in ret:
+            ret['filters'].sort(key=lambda c: c['name'])
         blank_to_none(ret, ['title', 'text'])
         return ret
 
