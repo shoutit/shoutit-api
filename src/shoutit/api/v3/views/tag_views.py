@@ -260,7 +260,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
               paramType: query
         """
         tag = self.get_object()
-        tags = Tag.objects.filter(key__categories__filters__tags=tag).exclude(id=tag.id)
+        tags = Tag.objects.filter(key=tag.key).exclude(id=tag.id)
         page = self.paginate_queryset(tags)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
