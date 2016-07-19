@@ -94,6 +94,12 @@ class TagKeySerializer(TranslatableModelSerializer):
         model = TagKey
         fields = ('name', 'slug', 'values')
 
+    def to_representation(self, instance):
+        ret = super(TagKeySerializer, self).to_representation(instance)
+        if 'values' in ret:
+            ret['values'].sort(key=lambda c: c['name'])
+        return ret
+
 
 class SingleValueTagKeySerializer(TagKeySerializer):
     value = MiniTagSerializer()
@@ -134,3 +140,9 @@ class CategoryDetailSerializer(CategorySerializer):
     class Meta(CategorySerializer.Meta):
         parent_fields = CategorySerializer.Meta.fields
         fields = parent_fields + ('filters',)
+
+    def to_representation(self, instance):
+        ret = super(CategoryDetailSerializer, self).to_representation(instance)
+        if 'filters' in ret:
+            ret['filters'].sort(key=lambda c: c['name'])
+        return ret
