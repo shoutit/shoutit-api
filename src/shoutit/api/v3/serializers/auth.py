@@ -64,6 +64,7 @@ class ShoutitSignupSerializer(serializers.Serializer):
     profile = ProfileDetailSerializer(required=False)
 
     def to_internal_value(self, data):
+        # Todo (mo): better names (empty ones :))
         if not data:
             data = {}
         name = data.get('name', 'user')
