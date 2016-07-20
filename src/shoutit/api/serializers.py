@@ -10,6 +10,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers as rest_serializers
 
+from common.utils import date_unix, utcfromtimestamp
 from shoutit.api.v3.exceptions import ERROR_REASON
 from shoutit.utils import create_fake_request
 
@@ -104,3 +105,11 @@ class AttachedUUIDObjectMixin(object):
             return ret
         validated_data = super(AttachedUUIDObjectMixin, self).to_internal_value(data)
         return validated_data
+
+
+class TimestampField(rest_serializers.Field):
+    def to_representation(self, instance):
+        return date_unix(instance)
+
+    def to_internal_value(self, data):
+        return utcfromtimestamp(data)

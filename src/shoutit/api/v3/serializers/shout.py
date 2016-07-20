@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from common.constants import POST_TYPE_REQUEST, POST_TYPE_OFFER
-from shoutit.api.serializers import AttachedUUIDObjectMixin
+from shoutit.api.serializers import AttachedUUIDObjectMixin, TimestampField
 from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.controllers import shout_controller, media_controller
 from shoutit.models import Shout, Currency, InactiveShout
@@ -32,11 +32,11 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
     available_count = serializers.IntegerField(default=1, help_text="Only used for Offers")
     is_sold = serializers.BooleanField(default=False, help_text="Only used for Offers")
-
     currency = serializers.CharField(source='item.currency_code', allow_null=True, required=False,
                                      help_text="3 characters currency code taken from the list of available currencies")
     date_published = serializers.IntegerField(source='published_at_unix', read_only=True)
     published_at = serializers.IntegerField(source='published_at_unix', read_only=True)
+    expires_at = TimestampField(required=False, allow_null=True)
     profile = ProfileSerializer(source='user', read_only=True)
     category = CategorySerializer(help_text="Either Category object or simply the category `slug`")
     filters = SingleValueTagKeySerializer(many=True, required=False)
@@ -50,7 +50,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         fields = (
             'id', 'api_url', 'web_url', 'app_url', 'type', 'category', 'title', 'location', 'text', 'price', 'currency',
             'available_count', 'is_sold', 'thumbnail', 'video_url', 'profile', 'date_published', 'published_at',
-            'filters', 'is_expired', 'promotion', 'is_bookmarked', 'is_liked'
+            'filters', 'expires_at', 'is_expired', 'promotion', 'is_bookmarked', 'is_liked'
         )
 
     def get_is_bookmarked(self, shout):
@@ -187,10 +187,9 @@ class ShoutDetailSerializer(ShoutSerializer):
         currency = item.get('currency_code')
         available_count = validated_data.get('available_count')
         is_sold = validated_data.get('is_sold')
-
+        expires_at = validated_data.get('expires_at')
         category = validated_data.get('category')
         filters = validated_data.get('filters')
-
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
         mobile = validated_data.get('mobile')
@@ -212,17 +211,18 @@ class ShoutDetailSerializer(ShoutSerializer):
             if not (case_1 or case_2):
                 raise serializers.ValidationError(_("You didn't provide enough information for creating a shout"))
             shout = shout_controller.create_shout(
-                user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency,
+                user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency, mobile=mobile,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,
                 images=images, videos=videos, page_admin_user=page_admin_user, publish_to_facebook=publish_to_facebook,
-                mobile=mobile, api_client=getattr(request, 'api_client', None), api_version=request.version
+                expires_at=expires_at, api_client=getattr(request, 'api_client', None), api_version=request.version
             )
         else:
             # Todo: Check when updating shouts not to break requirements [case_1, case_2] better have that done at class level
             shout = shout_controller.edit_shout(
                 shout, title=title, text=text, price=price, currency=currency, available_count=available_count,
                 is_sold=is_sold, category=category, filters=filters, location=location, images=images, videos=videos,
-                page_admin_user=page_admin_user, mobile=mobile, publish_to_facebook=publish_to_facebook
+                expires_at=expires_at, page_admin_user=page_admin_user, mobile=mobile,
+                publish_to_facebook=publish_to_facebook
             )
         return shout
 
