@@ -177,11 +177,25 @@ class PageVerificationAdmin(admin.ModelAdmin):
 # LinkedFacebookAccount
 @admin.register(LinkedFacebookAccount)
 class LinkedFacebookAccountAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'facebook_id', 'access_token', 'scopes', 'expires_at', 'created_at')
+    list_display = ('id', '_user', 'facebook_id', 'scopes', 'expires_at', 'created_at')
     search_fields = ('user__first_name', 'user__last_name', 'user__username', 'user__email', 'facebook_id')
     ordering = ('-created_at',)
     readonly_fields = ('_user',)
     exclude = ('user',)
+
+
+# LinkedFacebookPage
+@admin.register(LinkedFacebookPage)
+class LinkedFacebookPageAdmin(admin.ModelAdmin):
+    list_display = ('id', '_linked_facebook', 'facebook_id', 'name', 'category', 'perms', 'created_at')
+    search_fields = ('facebook_id', 'name')
+    ordering = ('-created_at',)
+    raw_id_fields = ('linked_facebook',)
+
+    def _linked_facebook(self, la):
+        return la.linked_facebook.admin_link
+    _linked_facebook.allow_tags = True
+    _linked_facebook.short_description = 'LinkedFacebookAccount'
 
 
 # LinkedGoogleAccount
