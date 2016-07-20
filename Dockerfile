@@ -26,6 +26,5 @@ EXPOSE 8001
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONIOENCODING UTF-8
 ENV SHOUTIT_ENV $SHOUTIT_ENV
-ENV NEW_RELIC_CONFIG_FILE /api/deploy/newrelic-${SHOUTIT_ENV}.ini
 
 CMD newrelic-admin run-program gunicorn src.wsgi -c /api/src/settings_gunicorn.py
