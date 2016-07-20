@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.postgres.fields import ArrayField, HStoreField
+from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -18,7 +18,6 @@ from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
 from shoutit.models.base import UUIDModel
-from shoutit.models.tag import Tag, ShoutitSlugField
 from shoutit.utils import error_logger, none_to_blank, correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
