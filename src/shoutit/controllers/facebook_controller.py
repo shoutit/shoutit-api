@@ -203,7 +203,7 @@ def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
         long_lived_token = extend_token(access_token)
         access_token = long_lived_token['access_token']
         expires = long_lived_token['expires']
-        expires_at = now_plus_delta(datetime.timedelta(seconds=int(expires)))
+        expires_at = now_plus_delta(seconds=int(expires))
     facebook_id = token_data['user_id']
     name = fb_user['name']
     scopes = token_data['scopes']

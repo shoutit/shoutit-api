@@ -3,11 +3,12 @@
 Fill database with test shouts from test users
 """
 from __future__ import unicode_literals
+
 import random
 import time
+
 from django.core.management.base import BaseCommand
-from django.http import HttpRequest
-from rest_framework.request import Request
+
 from shoutit.api.v2.serializers import ShoutDetailSerializer
 from shoutit.models import User, Category, PredefinedCity, Tag
 from shoutit.utils import debug_logger, create_fake_request

@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from copy import deepcopy
-
 from django.conf import settings
 from django.db.models import Count
 from django_rq import job
@@ -35,7 +33,8 @@ def mark_credit_transactions_as_read(user):
     """
     Mark Notifications that are of type `new_credit_transaction` as read
     """
-    Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_CREDIT_TRANSACTION).update(is_read=True)
+    Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_CREDIT_TRANSACTION).update(
+        is_read=True)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -68,7 +67,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
         versions = api_settings.ALLOWED_VERSIONS
 
     # Create notification object
-    notification = Notification(to_user=user, type=notification_type, from_user=from_user, attached_object=attached_object)
+    notification = Notification(to_user=user, type=notification_type, from_user=from_user,
+                                attached_object=attached_object)
     if notification_type.requires_notification_object():
         # Save the notification
         notification.save()

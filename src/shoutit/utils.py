@@ -88,13 +88,13 @@ def send_nexmo_sms(mobile, text, len_restriction=True):
         return False
 
 
-def now_plus_delta(delta=None):
+def now_plus_delta(**kwargs):
     """
     Returns an aware or naive datetime.datetime, depending on settings.USE_TZ with delta.
     """
     now = django_now()
-    if delta and isinstance(delta, timedelta):
-        return now + delta
+    if kwargs:
+        return now + timedelta(**kwargs)
     return now
 
 

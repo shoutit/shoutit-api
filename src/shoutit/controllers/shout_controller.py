@@ -15,7 +15,7 @@ from elasticsearch import NotFoundError
 from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller,
                                  notifications_controller)
 from shoutit.models import Shout, Tag, ShoutIndex, ShoutLike, ShoutBookmark, delete_object_index
-from shoutit.utils import debug_logger, error_logger
+from shoutit.utils import debug_logger, error_logger, now_plus_delta
 
 
 def delete_post(post):
@@ -77,10 +77,9 @@ def create_shout_v2(user, shout_type, title, text, price, currency, category, lo
 
 
 def create_shout(user, shout_type, title, text, price, currency, category, location, filters=None, images=None,
-                 videos=None, published_at=None, is_sss=False, exp_days=None, priority=0, page_admin_user=None,
-                 publish_to_facebook=None, available_count=None, is_sold=None, mobile=None, api_client=None,
-                 api_version=None):
-
+                 videos=None, published_at=None, is_sss=False, exp_days=None, expires_at=None, priority=0,
+                 page_admin_user=None, publish_to_facebook=None, available_count=None, is_sold=None, mobile=None,
+                 api_client=None, api_version=None):
     # Create the Item
     item = item_controller.create_item(name=title, description=text, price=price, currency=currency, images=images,
                                        videos=videos, available_count=available_count, is_sold=is_sold)
@@ -92,8 +91,8 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     # Published and Expires
     if published_at:
         shout.published_at = published_at
-    if exp_days:
-        shout.expires_at = published_at + timedelta(days=exp_days)
+    if exp_days is not None or expires_at is not None:
+        shout.expires_at = now_plus_delta(days=exp_days) if exp_days is not None else expires_at
 
     # Set attributes for post saving and tracking
     shout.api_client, shout.api_version = api_client, api_version
@@ -122,13 +121,14 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
 
 
 def edit_shout(shout, title=None, text=None, price=None, currency=None, category=None, filters=None, images=None,
-               videos=None, location=None, page_admin_user=None, available_count=None, is_sold=None, mobile=None,
-               publish_to_facebook=None):
+               videos=None, location=None, expires_at=None, page_admin_user=None, available_count=None, is_sold=None,
+               mobile=None, publish_to_facebook=None):
     item_controller.edit_item(shout.item, name=title, description=text, price=price, currency=currency, images=images,
                               videos=videos, available_count=available_count, is_sold=is_sold)
     # Can be unset
     shout.text = text
     shout.mobile = mobile
+    shout.expires_at = expires_at
 
     if filters is not None:
         tag_ids = map(lambda f: f['value']['id'], filters)

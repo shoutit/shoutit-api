@@ -21,6 +21,7 @@ class CreditRuleAdmin(TranslatableAdmin):
 @admin.register(CreditTransaction)
 class CreditTransactionAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', '_user', 'rule', 'amount', 'created_at', 'properties')
+    list_filter = ('rule',)
     search_fields = ('user__username',)
     raw_id_fields = ('user',)
     readonly_fields = ('created_at',)
@@ -37,6 +38,7 @@ class PromoteLabelAdmin(TranslatableAdmin):
 @admin.register(ShoutPromotion)
 class ShoutPromotionAdmin(admin.ModelAdmin):
     list_display = ('id', 'shout', 'transaction', 'label', 'days', 'expires_at', 'created_at')
+    list_filter = ('label', 'days', 'option')
     raw_id_fields = ('shout', 'transaction')
     readonly_fields = ('created_at',)
     ordering = ('-created_at',)
