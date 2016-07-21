@@ -10,8 +10,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
+from shoutit.api.v2.views.shout_views import ShoutViewSet
 from shoutit.controllers import listen_controller
-from shoutit.models import ShoutIndex, Tag, Shout
+from shoutit.models import ShoutIndex, Tag
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import TagFilter
 from ..pagination import (ShoutitPageNumberPagination, PageNumberIndexPagination)
@@ -259,11 +260,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`"})
 
         self.pagination_class = PageNumberIndexPagination
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
+        setattr(self, 'get_queryset', ShoutViewSet().get_queryset)
         shouts = ShoutIndex.search().filter('term', tags=tag.name).sort('-published_at')
         if shout_type != 'all':
             shouts = shouts.query('match', type=shout_type)

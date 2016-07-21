@@ -14,7 +14,6 @@ from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.controllers import listen_controller
 from shoutit.models import Tag
-from ..filters import TagFilter
 from ..pagination import (ShoutitPageNumberPagination)
 from ..serializers import (TagSerializer, TagDetailSerializer, FeaturedTagSerializer, ProfileSerializer)
 
@@ -29,9 +28,8 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
     serializer_detail_class = TagDetailSerializer
     queryset = Tag.objects.all()
     pagination_class = ShoutitPageNumberPagination
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_class = TagFilter
-    search_fields = ('=id', 'name')
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=id', 'slug')
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_object(self):

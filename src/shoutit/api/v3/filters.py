@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 from datetime import timedelta
 
-import django_filters
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
@@ -18,8 +17,8 @@ from rest_framework import filters
 from common.constants import TAG_TYPE_STR, TAG_TYPE_INT
 from common.utils import process_tags
 from shoutit.api.v3.exceptions import InvalidParameter
-from shoutit.models import Category, Tag, PredefinedCity, FeaturedTag, DiscoverItem, User
-from shoutit.utils import debug_logger, error_logger
+from shoutit.models import Category, PredefinedCity, DiscoverItem, User
+from shoutit.utils import debug_logger
 
 
 class ShoutIndexFilterBackend(filters.BaseFilterBackend):
@@ -167,13 +166,15 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                         cat_f_param = data.get(cat_f_slug)
                         if cat_f_param:
                             cat_f_params = cat_f_param.split(',')
-                            index_queryset = index_queryset.filter('terms', **{'filters__%s' % cat_f_slug: cat_f_params})
+                            index_queryset = index_queryset.filter('terms',
+                                                                   **{'filters__%s' % cat_f_slug: cat_f_params})
                     elif cat_f_type == TAG_TYPE_INT:
                         for m1, m2 in [('min', 'gte'), ('max', 'lte')]:
                             cat_f_param = data.get('%s_%s' % (m1, cat_f_slug))
                             if cat_f_param:
                                 index_queryset = index_queryset.filter('range',
-                                                                       **{'filters__%s' % cat_f_slug: {m2: cat_f_param}})
+                                                                       **{'filters__%s' % cat_f_slug: {
+                                                                           m2: cat_f_param}})
 
         # Price
         min_price = data.get('min_price')
@@ -257,104 +258,6 @@ class DiscoverItemFilter(filters.BaseFilterBackend):
             queryset = country_queryset
         else:
             queryset = no_country_queryset
-        return queryset
-
-
-# Todo: check usage!
-class TagFilter(django_filters.FilterSet):
-    name = django_filters.CharFilter(lookup_type='icontains')
-    type = django_filters.MethodFilter(action='filter_type')
-    category = django_filters.MethodFilter(action='filter_category')
-    country = django_filters.MethodFilter(action='filter_country')
-    state = django_filters.MethodFilter(action='filter_state')
-    city = django_filters.MethodFilter(action='filter_city')
-
-    class Meta:
-        model = Tag
-        fields = ('name', 'type', 'category', 'country', 'state', 'city')
-
-    def filter_type(self, queryset, value):
-        if value not in ['all', 'top', 'featured']:
-            raise InvalidParameter('type', _("Should be `all`, `top` or `featured`"))
-
-        if value == 'featured':
-            queryset = FeaturedTag.objects.all().order_by('rank')
-            queryset = self.filter_location(queryset)
-        return queryset
-
-    def filter_category(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type == 'featured':
-            raise InvalidParameter('category', _("Does not work when type is `featured`"))
-        try:
-            category = Category.objects.get(name=value)
-            # return all tags that belong to the category except the main tag
-            # todo: check if we really need to exclude the main tag or not
-            # return queryset.filter(category=category).exclude(id=category.main_tag_id)
-            return queryset.filter(category=category)
-        except Category.DoesNotExist:
-            raise InvalidParameter('category', _("Category with slug '%(slug)s' does not exist") % {'slug': value})
-
-    def filter_country(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type not in ['top', 'featured']:
-            raise InvalidParameter('country', _("Only works when type equals `top` or `featured`"))
-        return queryset
-
-    def filter_state(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type not in ['top', 'featured']:
-            raise InvalidParameter('state', _("Only works when type equals `top` or `featured`"))
-        return queryset
-
-    def filter_city(self, queryset, value):
-        tag_type = self.data.get('type')
-        if tag_type not in ['top', 'featured']:
-            raise InvalidParameter('city', _("Only works when type equals `top` or `featured`"))
-        return queryset
-
-    def filter_location(self, queryset):
-        country = self.data.get('country', '')
-        state = self.data.get('state', '')
-        city = self.data.get('city', '')
-
-        # country
-        if country:
-            country_qs = queryset.filter(country=country)
-            if not country_qs:
-                country = ''
-                country_qs = queryset.filter(country=country)
-            queryset = country_qs
-
-            # state
-            if country:
-                if state:
-                    state_qs = queryset.filter(state=state)
-                    if not state_qs:
-                        state = ''
-                        state_qs = queryset.filter(state=state)
-                    queryset = state_qs
-
-                    # city
-                    if state:
-                        if city:
-                            city_qs = queryset.filter(city=city)
-                            if not city_qs:
-                                city = ''
-                                city_qs = queryset.filter(city=city)
-                            queryset = city_qs
-                        else:
-                            queryset = queryset.filter(city=city)
-                else:
-                    queryset = queryset.filter(state=state)
-        else:
-            queryset = queryset.filter(country=country)
-
-        if not queryset:
-            queryset = queryset.filter(country='')
-            error_logger.warn("Discover returned 0 Featured Tags", extra={
-                'country': country, 'state': state, 'city': city,
-            })
         return queryset
 
 

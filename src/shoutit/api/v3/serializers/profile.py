@@ -55,6 +55,7 @@ class ProfileSerializer(MiniProfileSerializer):
         user = request and request.user
         return user and user.is_authenticated() and user.is_listening(tag)
 
+    # Todo (mo): Find what clients use `is_owner` for
     def get_is_owner(self, user):
         return user.is_owner(self.root.context['request'].user)
 

@@ -8,7 +8,8 @@ from rest_framework import permissions, viewsets, mixins
 from rest_framework.decorators import detail_route
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
-from shoutit.models import ShoutIndex, DiscoverItem, Shout
+from shoutit.api.v2.views.shout_views import ShoutViewSet
+from shoutit.models import ShoutIndex, DiscoverItem
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import DiscoverItemFilter, ShoutIndexFilterBackend
 from ..pagination import ShoutitPageNumberPagination, PageNumberIndexPagination
@@ -95,11 +96,7 @@ class DiscoverViewSet(DetailSerializerMixin, mixins.RetrieveModelMixin, mixins.L
         index_queryset = ShoutIndex.search()
         index_queryset = filter_backend.filter_queryset(request=request, index_queryset=index_queryset, view=self,
                                                         extra_query_params=extra_query_params)
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
+        setattr(self, 'get_queryset', ShoutViewSet().get_queryset)
         paginator = PageNumberIndexPagination()
         page = paginator.paginate_queryset(index_queryset=index_queryset, request=request, view=self)
         serializer = ShoutSerializer(page, many=True, context={'request': request})

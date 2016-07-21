@@ -13,8 +13,9 @@ from rest_framework.reverse import reverse
 from rest_framework_extensions.mixins import DetailSerializerMixin
 
 from shoutit.api.permissions import IsOwnerModify, IsOwner
+from shoutit.api.v2.views.shout_views import ShoutViewSet
 from shoutit.controllers import listen_controller, message_controller, facebook_controller, gplus_controller
-from shoutit.models import User, Shout, ShoutIndex
+from shoutit.models import User, ShoutIndex
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..filters import HomeFilterBackend
 from ..pagination import (ShoutitPaginationMixin, PageNumberIndexPagination, ShoutitPageNumberPaginationNoCount)
@@ -330,11 +331,7 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: page_size
               paramType: query
         """
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
+        setattr(self, 'get_queryset', ShoutViewSet().get_queryset)
         shouts = HomeFilterBackend().filter_queryset(request=request, index_queryset=ShoutIndex.search(), view=self)
         paginator = PageNumberIndexPagination()
         page = paginator.paginate_queryset(index_queryset=shouts, request=request, view=self)
@@ -371,13 +368,8 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
         if shout_type not in ['offer', 'request', 'all']:
             raise ValidationError({'shout_type': "should be `offer`, `request` or `all`"})
 
-        # todo: refactor to use shout index filter
         self.pagination_class = PageNumberIndexPagination
-        setattr(self, 'model', Shout)
-        setattr(self, 'filters', {'is_disabled': False})
-        setattr(self, 'select_related', ('item', 'category__main_tag', 'item__currency', 'user__profile'))
-        setattr(self, 'prefetch_related', ('item__videos',))
-        setattr(self, 'defer', ())
+        setattr(self, 'get_queryset', ShoutViewSet().get_queryset)
         shouts = ShoutIndex.search().filter('term', uid=user.pk).sort('-published_at')
         if shout_type != 'all':
             shouts = shouts.query('match', type=shout_type)
@@ -423,7 +415,6 @@ class UserViewSet(DetailSerializerMixin, ShoutitPaginationMixin, mixins.ListMode
             - name: body
               paramType: body
         """
-        # Todo: move validation to the serializer
         user = self.get_object()
         logged_user = request.user
         if logged_user == user:

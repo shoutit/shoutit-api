@@ -431,7 +431,8 @@ CACHE_CONTROL_MAX_AGE = 60 * 5
 
 REST_FRAMEWORK_EXTENSIONS = {
     'DEFAULT_CACHE_RESPONSE_TIMEOUT': CACHE_CONTROL_MAX_AGE,
-    'DEFAULT_CACHE_ERRORS': False
+    'DEFAULT_CACHE_ERRORS': False,
+    'DEFAULT_CACHE_KEY_FUNC': 'shoutit.api.cache.shoutit_default_cache_key_func',
 }
 
 # OAuth2 settings

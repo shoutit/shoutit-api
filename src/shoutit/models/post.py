@@ -21,6 +21,8 @@ from shoutit.models.base import UUIDModel
 from shoutit.utils import error_logger, none_to_blank, correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
+SHOUT_SELECT_RELATED = ('item', 'category__main_tag', 'item__currency', 'user__profile', 'user__page')
+SHOUT_PREFETCH_RELATED = ('item__videos',)
 
 
 class ShoutManager(models.Manager):
@@ -38,6 +40,7 @@ class ShoutManager(models.Manager):
             qs = qs.filter(is_muted=False)
         if not get_expired:
             qs = self.filter_expired_out(qs)
+        qs = qs.select_related(*SHOUT_SELECT_RELATED).prefetch_related(*SHOUT_PREFETCH_RELATED)
         return qs
 
     def filter_expired_out(self, qs):

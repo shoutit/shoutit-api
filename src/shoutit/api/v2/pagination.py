@@ -317,10 +317,7 @@ class PageNumberIndexPagination(PageNumberPagination):
         # Fetch objects from database
         ids = objects_dict.keys()
         if ids:
-            qs = (view.model.objects.filter(id__in=ids, **view.filters)
-                  .select_related(*view.select_related)
-                  .prefetch_related(*view.prefetch_related)
-                  .defer(*view.defer))
+            qs = view.get_queryset().filter(id__in=ids)
         else:
             qs = []
 
