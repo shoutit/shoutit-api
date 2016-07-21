@@ -34,18 +34,11 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     serializer_detail_class = ShoutDetailSerializer
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
-    filters = {'is_disabled': False}
-    select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
-    prefetch_related = ('item__videos',)
-    defer = ()
     pagination_class = PageNumberIndexPagination
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        return (Shout.objects.get_valid_shouts(get_expired=True).all()
-                .select_related(*self.select_related)
-                .prefetch_related(*self.prefetch_related)
-                .defer(*self.defer))
+        return Shout.objects.get_valid_shouts(get_expired=True).all()
 
     def filter_queryset(self, queryset, *args, **kwargs):
         """
