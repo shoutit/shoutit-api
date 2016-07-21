@@ -198,8 +198,8 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Shout
         <pre><code>
         {
-            "apns": "e6f8269e0feb816c332c245134b49638b339e03e6b20b3b5c842eb3c495deb57",
-            "gcm": "c1jWs3rultQ:APA91bGMrBNbkAJXoSk1BUbsOdAfeKXBKhF8-bLQul5ed7KJefoWFb83XMTQWcv_MLXS5_yaGg7ufPmY-7gjUa1DG_wjHQbxsyXMakN6vxVX_a6F2Vm5XZbBf1ZmwKChMeu6EUuH_1We",
+            "apns": "APNS_KEY",
+            "gcm": "GCM_KEY",
             "payload": {
                 "event_name": "new_notification",
                 "title": "Deep Link",
@@ -218,7 +218,8 @@ class MiscViewSet(viewsets.ViewSet):
                 },
                 "data": {
                     "app_url": "shoutit://chats"
-                }
+                },
+                "pushed_for": ""
             }
         }
         </code></pre>
