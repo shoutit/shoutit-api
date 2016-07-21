@@ -4,7 +4,10 @@
 ## Update
 
 - Push Notifications `data` property has the `app_url` only except for incoming video calls which have caller profile properties. This was necessary as Apple only allows max payload of 2048 bytes. Check [Native Push](https://github.com/shoutit/shoutit-api/wiki/Native-Push)
-
+- `is_sold`, `available_count` and `expires_at` are added to **Shout**. They can be used for both Offers and Requests depending on the context. 
+  - `is_sold` would determine whether the Shout is sold if it is an offer or whether it is fulfilled if it is a request
+  - `available_count` would determine how many pieces available when the shout is an offer or how many pieces required when it is a request
+  - Shouts normally expire after 60 days from the day they published at. This allows shout owners to modify this period
 
 ## Facebook Pages (2016-07-12)
 
