@@ -30,8 +30,8 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
                                   **empty_char_input)
     text = serializers.CharField(min_length=10, max_length=1000, help_text="Max 1000 characters", **empty_char_input)
     price = serializers.IntegerField(source='item.price', allow_null=True, required=False, help_text="Value in cents")
-    available_count = serializers.IntegerField(default=1, help_text="Only used for Offers")
-    is_sold = serializers.BooleanField(default=False, help_text="Only used for Offers")
+    available_count = serializers.IntegerField(default=1)
+    is_sold = serializers.BooleanField(default=False)
     currency = serializers.CharField(source='item.currency_code', allow_null=True, required=False,
                                      help_text="3 characters currency code taken from the list of available currencies")
     date_published = serializers.IntegerField(source='published_at_unix', read_only=True)

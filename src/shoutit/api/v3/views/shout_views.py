@@ -44,16 +44,11 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
     filter_backends = (ShoutIndexFilterBackend,)
     model = Shout
     get_expired = False
-    select_related = ('item', 'category__main_tag', 'item__currency', 'user__profile')
-    prefetch_related = ('item__videos',)
     pagination_class = PageNumberIndexPagination
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerModify)
 
     def get_queryset(self):
-        qs = Shout.objects.get_valid_shouts(get_expired=self.get_expired).all()
-        qs = qs.select_related(*self.select_related)
-        qs = qs.prefetch_related(*self.prefetch_related)
-        return qs
+        return Shout.objects.get_valid_shouts(get_expired=self.get_expired).all()
 
     def filter_queryset(self, queryset, *args, **kwargs):
         """
@@ -69,6 +64,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         shout = super(ShoutViewSet, self).get_object()
         if shout.is_expired and self.request.user != shout.owner:
             raise Http404
+        self.get_expired = False
         return shout
 
     def get_index_search(self):

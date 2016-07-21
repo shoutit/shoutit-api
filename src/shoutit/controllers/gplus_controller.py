@@ -68,7 +68,7 @@ def link_gplus_account(user, gplus_code, client=None):
     credentials = credentials_from_code_and_client(gplus_code, client)
     gplus_id = credentials.id_token.get('sub')
 
-    # check if the gplus account is already linked
+    # Check whether the Google account is already linked
     try:
         la = LinkedGoogleAccount.objects.get(gplus_id=gplus_id)
         debug_logger.warning('User %s tried to link already linked gplus account id: %s.' % (user, gplus_id))
@@ -77,10 +77,10 @@ def link_gplus_account(user, gplus_code, client=None):
     except LinkedGoogleAccount.DoesNotExist:
         pass
 
-    # unlink previous gplus account
+    # Unlink previous Google account
     unlink_gplus_user(user, False)
 
-    # link
+    # Link Google account
     # todo: get info, pic, etc about user
     try:
         LinkedGoogleAccount.objects.create(user=user, credentials_json=credentials.to_json(), gplus_id=gplus_id)
@@ -88,12 +88,13 @@ def link_gplus_account(user, gplus_code, client=None):
         debug_logger.error("LinkedGoogleAccount creation error: %s" % str(e))
         raise ShoutitBadRequest(GPLUS_LINK_ERROR_TRY_AGAIN)
 
-    # activate the user
+    # Activate the user if not yet activated
     if not user.is_activated:
+        user.notify = False
         user.activate()
 
 
-def unlink_gplus_user(user, strict=True):
+def unlink_gplus_user(user, strict=True, notify=True):
     """
     Deleted the user's LinkedGoogleAccount
     """

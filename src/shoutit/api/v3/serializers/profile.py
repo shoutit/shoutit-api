@@ -55,6 +55,7 @@ class ProfileSerializer(MiniProfileSerializer):
         user = request and request.user
         return user and user.is_authenticated() and user.is_listening(tag)
 
+    # Todo (mo): Find what clients use `is_owner` for
     def get_is_owner(self, user):
         return user.is_owner(self.root.context['request'].user)
 
@@ -422,6 +423,8 @@ class ProfileLinkSerializer(serializers.Serializer):
         if action:
             success = _("Your %(account)s account has been %(action)s") % {'account': account_name, 'action': action}
             res = {'success': success}
+            # Send `profile_update` on Pusher
+            notifications_controller.notify_user_of_profile_update(user)
         else:
             res = {'success': _("No changes were made")}
         return res
@@ -463,6 +466,8 @@ class FacebookPageLinkSerializer(serializers.Serializer):
         if action:
             success = _("Your Facebook Page has been %(action)s") % {'action': action}
             res = {'success': success}
+            # Send `profile_update` on Pusher
+            notifications_controller.notify_user_of_profile_update(user)
         else:
             res = {'success': _("No changes were made")}
         return res

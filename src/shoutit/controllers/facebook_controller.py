@@ -154,7 +154,7 @@ def link_facebook_account(user, facebook_access_token):
         pass
 
     # Unlink previous Facebook account
-    unlink_facebook_user(user, strict=False, notify=False)
+    unlink_facebook_user(user, strict=False)
 
     # Link Facebook account
     try:
@@ -165,18 +165,15 @@ def link_facebook_account(user, facebook_access_token):
 
     # Link Facebook Pages if any existed in the previous LinkedFacebookAccount
     for facebook_page_id in linked_page_ids:
-        link_facebook_page(linked_facebook, facebook_page_id, notify=False)
+        link_facebook_page(linked_facebook, facebook_page_id)
 
     # Activate the user if not yet activated
     if not user.is_activated:
         user.notify = False
         user.activate()
 
-    # Send `profile_update` on Pusher
-    notifications_controller.notify_user_of_profile_update(user)
 
-
-def unlink_facebook_user(user, strict=True, notify=True):
+def unlink_facebook_user(user, strict=True):
     """
     Deleted the user's LinkedFacebookAccount
     """
@@ -186,10 +183,6 @@ def unlink_facebook_user(user, strict=True, notify=True):
     elif strict:
         debug_logger.warning("User: %s, tried to unlink non-existing facebook account" % user)
         raise ShoutitBadRequest(FB_LINK_ERROR_NO_LINK)
-
-    if notify:
-        # Send `profile_update` on Pusher
-        notifications_controller.notify_user_of_profile_update(user)
 
 
 def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
@@ -272,7 +265,7 @@ def update_profile_using_fb_user(profile, fb_user):
             media_controller.set_profile_media(profile, 'cover', url=cover_source)
 
 
-def link_facebook_page(linked_facebook, facebook_page_id, notify=True):
+def link_facebook_page(linked_facebook, facebook_page_id):
     """
     Add FacebookPage to LinkedFacebookAccount
     """
@@ -281,9 +274,6 @@ def link_facebook_page(linked_facebook, facebook_page_id, notify=True):
                 'name': facebook_page['name'], 'perms': facebook_page['perms']}
     LinkedFacebookPage.objects.update_or_create(linked_facebook=linked_facebook, facebook_id=facebook_page_id,
                                                 defaults=defaults)
-    # Send `profile_update` on Pusher
-    if notify:
-        notifications_controller.notify_user_of_profile_update(linked_facebook.user)
 
 
 def unlink_facebook_page(linked_facebook, facebook_page_id):
@@ -291,8 +281,6 @@ def unlink_facebook_page(linked_facebook, facebook_page_id):
     Remove FacebookPage from LinkedFacebookAccount
     """
     LinkedFacebookPage.objects.filter(linked_facebook=linked_facebook, facebook_id=facebook_page_id).delete()
-    # Send `profile_update` on Pusher
-    notifications_controller.notify_user_of_profile_update(linked_facebook.user)
 
 
 # todo: check!

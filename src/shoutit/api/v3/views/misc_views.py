@@ -57,6 +57,8 @@ class MiscViewSet(viewsets.ViewSet):
         serializer = CurrencySerializer(currencies, many=True, context={'request': request})
         return Response(serializer.data)
 
+    @cache_control(max_age=CACHE_CONTROL_MAX_AGE)
+    @cache_response()
     @list_route(methods=['get'], suffix='Suggestions')
     def suggestions(self, request):
         """
@@ -100,22 +102,25 @@ class MiscViewSet(viewsets.ViewSet):
         if 'users' in types:
             users_qs = User.objects.filter(type=USER_TYPE_PROFILE, is_activated=True).order_by('-date_joined')
             if request.user.is_authenticated():
-                # Todo (mo): handle case when the request.user is a page user
                 users_qs = users_qs.exclude(id=request.user.id)
             if country:
                 users_qs = users_qs.filter(profile__country=country)
+            users_qs = users_qs.select_related('profile')
             users = ProfileSerializer(users_qs[:page_size], many=True, context={'request': request}).data
             suggestions['users'] = users
         if 'pages' in types:
             pages_qs = User.objects.filter(type=USER_TYPE_PAGE).order_by('-date_joined')
+            if request.user.is_authenticated():
+                pages_qs = pages_qs.exclude(id=request.user.id)
             if country:
                 pages_qs = pages_qs.filter(page__country=country)
+            pages_qs = pages_qs.select_related('page')
             pages = ProfileSerializer(pages_qs[:page_size], many=True, context={'request': request}).data
             suggestions['pages'] = pages
         if 'tags' in types:
-            tag_names = list(Category.objects.all().values_list("main_tag__name", flat=True))
-            random.shuffle(tag_names)
-            tags_qs = Tag.objects.filter(name__in=tag_names[:page_size])
+            tag_slugs = list(Category.objects.values_list('slug', flat=True))
+            random.shuffle(tag_slugs)
+            tags_qs = Tag.objects.language().filter(slug__in=tag_slugs[:page_size])
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
@@ -193,8 +198,8 @@ class MiscViewSet(viewsets.ViewSet):
         ###Report Shout
         <pre><code>
         {
-            "apns": "e6f8269e0feb816c332c245134b49638b339e03e6b20b3b5c842eb3c495deb57",
-            "gcm": "c1jWs3rultQ:APA91bGMrBNbkAJXoSk1BUbsOdAfeKXBKhF8-bLQul5ed7KJefoWFb83XMTQWcv_MLXS5_yaGg7ufPmY-7gjUa1DG_wjHQbxsyXMakN6vxVX_a6F2Vm5XZbBf1ZmwKChMeu6EUuH_1We",
+            "apns": "APNS_KEY",
+            "gcm": "GCM_KEY",
             "payload": {
                 "event_name": "new_notification",
                 "title": "Deep Link",
@@ -213,7 +218,8 @@ class MiscViewSet(viewsets.ViewSet):
                 },
                 "data": {
                     "app_url": "shoutit://chats"
-                }
+                },
+                "pushed_for": ""
             }
         }
         </code></pre>
