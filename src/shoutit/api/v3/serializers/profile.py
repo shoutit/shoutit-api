@@ -423,6 +423,8 @@ class ProfileLinkSerializer(serializers.Serializer):
         if action:
             success = _("Your %(account)s account has been %(action)s") % {'account': account_name, 'action': action}
             res = {'success': success}
+            # Send `profile_update` on Pusher
+            notifications_controller.notify_user_of_profile_update(user)
         else:
             res = {'success': _("No changes were made")}
         return res
@@ -464,6 +466,8 @@ class FacebookPageLinkSerializer(serializers.Serializer):
         if action:
             success = _("Your Facebook Page has been %(action)s") % {'action': action}
             res = {'success': success}
+            # Send `profile_update` on Pusher
+            notifications_controller.notify_user_of_profile_update(user)
         else:
             res = {'success': _("No changes were made")}
         return res
