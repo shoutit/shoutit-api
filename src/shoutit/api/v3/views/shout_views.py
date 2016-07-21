@@ -64,6 +64,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         shout = super(ShoutViewSet, self).get_object()
         if shout.is_expired and self.request.user != shout.owner:
             raise Http404
+        self.get_expired = False
         return shout
 
     def get_index_search(self):
