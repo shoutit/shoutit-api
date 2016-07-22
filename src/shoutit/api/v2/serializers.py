@@ -580,7 +580,7 @@ class ShoutSerializer(serializers.ModelSerializer):
             ret = super(ShoutSerializer, self).to_representation(instance)
         if 'currency' in ret and not ret['currency']:
             ret['currency'] = DEFAULT_CURRENCY_CODE
-        return super(ShoutSerializer, self).to_representation(instance)
+        return ret
 
 
 class ShoutDetailSerializer(ShoutSerializer):
