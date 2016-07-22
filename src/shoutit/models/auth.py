@@ -187,11 +187,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def stats(self):
-        from ..controllers import notifications_controller
-        # Todo (mo): crate fields for each stats property which holds the latest value and gets updated
+        # Todo (mo): create fields for each stats property which holds the latest value and gets updated
         if not hasattr(self, '_stats'):
-            unread_conversations_count = notifications_controller.get_unread_conversations_count(self)
-            unread_notifications_count = notifications_controller.get_unread_actual_notifications_count(self)
+            unread_conversations_count = self.unread_conversations_count
+            unread_notifications_count = self.unread_notifications_count
             self._stats = OrderedDict([
                 ('unread_conversations_count', unread_conversations_count),
                 ('unread_notifications_count', unread_notifications_count),
@@ -199,6 +198,16 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 ('credit', self.credit),
             ])
         return self._stats
+
+    @property
+    def unread_conversations_count(self):
+        from ..controllers import notifications_controller
+        return notifications_controller.get_unread_conversations_count(self)
+
+    @property
+    def unread_notifications_count(self):
+        from ..controllers import notifications_controller
+        return notifications_controller.get_unread_actual_notifications_count(self)
 
     @property
     def credit(self):

@@ -76,6 +76,7 @@ def _add_to_mp_people(user_ids=None, buffered=False):
     for user in users:
         ap = user.ap
         properties = {
+            'shoutit_id': user.id,
             '$first_name': user.first_name,
             '$last_name': user.last_name,
 
@@ -96,6 +97,10 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             'platforms': map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names),
             'api_versions': user.devices.values_list('api_version', flat=True).distinct(),
             '$phone': getattr(ap, 'mobile', None),
+
+            'unread_conversations_count': user.unread_conversations_count,
+            'unread_notifications_count': user.unread_notifications_count,
+            'credit': user.credit,
         }
         if user.apns_device:
             properties['$ios_devices'] = [user.apns_device.registration_id]
