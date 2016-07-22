@@ -715,6 +715,7 @@ class ShoutitAuthViewSet(viewsets.ViewSet):
                 try:
                     access_token = self.get_access_token(user)
                     return self.access_token_response(access_token)
+                # Todo (mo): when this case happens?
                 except Exception:
                     return self.success_response(_("New password set"))
             except ConfirmToken.DoesNotExist:
