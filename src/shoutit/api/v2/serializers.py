@@ -22,7 +22,7 @@ from rest_framework.settings import api_settings
 from common.constants import (
     MESSAGE_ATTACHMENT_TYPE_SHOUT, MESSAGE_ATTACHMENT_TYPE_LOCATION, CONVERSATION_TYPE_ABOUT_SHOUT,
     REPORT_TYPE_PROFILE, REPORT_TYPE_SHOUT, TOKEN_TYPE_RESET_PASSWORD, POST_TYPE_REQUEST,
-    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType)
+    POST_TYPE_OFFER, MESSAGE_ATTACHMENT_TYPE_MEDIA, ConversationType, DEFAULT_CURRENCY_CODE)
 from common.utils import any_in
 from shoutit.controllers import (location_controller, shout_controller, user_controller, message_controller,
                                  media_controller)
@@ -575,7 +575,11 @@ class ShoutSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         if instance.is_muted or instance.is_disabled:
-            return InactiveShout().to_dict
+            ret = InactiveShout().to_dict
+        else:
+            ret = super(ShoutSerializer, self).to_representation(instance)
+        if 'currency' in ret and not ret['currency']:
+            ret['currency'] = DEFAULT_CURRENCY_CODE
         return super(ShoutSerializer, self).to_representation(instance)
 
 
