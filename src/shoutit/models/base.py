@@ -92,7 +92,10 @@ class TranslatedModelFallbackMixin(object):
         if not item.startswith('_local_'):
             return super(TranslatedModelFallbackMixin, self).__getattribute__(item)
 
-        translated_value = super(TranslatedModelFallbackMixin, self).__getattribute__(item)
+        try:
+            translated_value = super(TranslatedModelFallbackMixin, self).__getattribute__(item)
+        except self.__class__.DoesNotExist:  # NoTranslationError
+            translated_value = ''
         if item in self._translated_field_names and translated_value == '':
             shared_item = item.replace('_local_', '')
             return super(TranslatedModelFallbackMixin, self).__getattribute__(shared_item)

@@ -152,7 +152,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
         tag_names = filter(None, map(lambda x: x.get('name'), tag_dicts))
         tag_slugs = filter(None, map(lambda x: x.get('slug'), tag_dicts))
-        tags = Tag.objects.language().filter(Q(name__in=tag_names) | Q(slug__in=tag_slugs))
+        tags = Tag.objects.filter(Q(name__in=tag_names) | Q(slug__in=tag_slugs))
         api_client = getattr(request, 'api_client', None)
 
         names = ', '.join(map(lambda t: t._local_name, tags))
