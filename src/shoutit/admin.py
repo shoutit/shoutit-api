@@ -10,6 +10,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_mptt_admin.admin import DjangoMpttAdmin
 from hvad.admin import TranslatableAdmin
+from provider.oauth2.models import AccessToken, RefreshToken
 from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
@@ -31,8 +32,28 @@ def admin_url(self):
 def admin_link(self):
     return '<a href="%s">%s</a>' % (self.admin_url, unicode(self))
 
+
 models.Model.add_to_class('admin_url', admin_url)
 models.Model.add_to_class('admin_link', admin_link)
+
+admin.site.unregister(AccessToken)
+
+
+@admin.register(AccessToken)
+class AccessTokenAdmin(admin.ModelAdmin):
+    list_display = ('user', 'client', 'token', 'expires', 'scope', 'created')
+    raw_id_fields = ('user', 'client')
+    ordering = ('-created', )
+
+
+admin.site.unregister(RefreshToken)
+
+
+@admin.register(RefreshToken)
+class RefreshTokenAdmin(admin.ModelAdmin):
+    list_display = ('user', 'token', 'access_token', 'client', 'expired', 'created')
+    raw_id_fields = ('user', 'access_token', 'client')
+    ordering = ('-created',)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -194,6 +215,7 @@ class LinkedFacebookPageAdmin(admin.ModelAdmin):
 
     def _linked_facebook(self, la):
         return la.linked_facebook.admin_link
+
     _linked_facebook.allow_tags = True
     _linked_facebook.short_description = 'LinkedFacebookAccount'
 
@@ -259,6 +281,7 @@ class TagAdmin(LinksMixin, TranslatableAdmin):
 
     def _key(self, tag):
         return tag.key.admin_link if tag.key else '(None)'
+
     _key.allow_tags = True
     _key.short_description = 'Key'
 

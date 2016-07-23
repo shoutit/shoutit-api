@@ -120,7 +120,7 @@ class MiscViewSet(viewsets.ViewSet):
         if 'tags' in types:
             tag_slugs = list(Category.objects.values_list('slug', flat=True))
             random.shuffle(tag_slugs)
-            tags_qs = Tag.objects.language().filter(slug__in=tag_slugs[:page_size])
+            tags_qs = Tag.objects.filter(slug__in=tag_slugs[:page_size])
             tags = TagDetailSerializer(tags_qs, many=True, context={'request': request}).data
             suggestions['tags'] = tags
         if 'shouts' in types or 'shout' in types:
