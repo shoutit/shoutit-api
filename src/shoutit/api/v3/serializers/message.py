@@ -112,11 +112,12 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
                         videos = attachment.get('videos')
                         if not (images or videos):
                             attachment_error = {'': _("Should have at least one item in 'images' or 'videos'")}
+                        # Todo (mo): passing `partial=False` should take care of videos validations
                         if videos:
                             for v in videos:
                                 vs = VideoSerializer(data=v)
                                 if not vs.is_valid():
-                                    attachment_error = {'videos': str(vs.errors)}
+                                    attachment_error = {'videos': unicode(vs.errors)}
 
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1

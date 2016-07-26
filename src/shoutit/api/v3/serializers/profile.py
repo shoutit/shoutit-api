@@ -454,14 +454,14 @@ class FacebookPageLinkSerializer(serializers.Serializer):
             try:
                 facebook_controller.link_facebook_page(linked_facebook, facebook_page_id)
             except Exception as e:
-                raise ShoutitBadRequest(could_not_link, developer_message=str(e))
+                raise ShoutitBadRequest(could_not_link, developer_message=e)
 
         elif request.method == 'DELETE':
             action = _('unlinked')
             try:
                 facebook_controller.unlink_facebook_page(linked_facebook, facebook_page_id)
             except Exception as e:
-                raise ShoutitBadRequest(could_not_unlink, developer_message=str(e))
+                raise ShoutitBadRequest(could_not_unlink, developer_message=e)
 
         if action:
             success = _("Your Facebook Page has been %(action)s") % {'action': action}
