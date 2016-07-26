@@ -69,7 +69,7 @@ class TagDetailSerializer(TagSerializer):
 
     def get_shouts_url(self, tag):
         shouts_url = reverse('shout-list', request=self.context['request'])
-        return url_with_querystring(shouts_url, tags=tag.name)
+        return url_with_querystring(shouts_url, tags=tag.slug)
 
 
 class FeaturedTagSerializer(serializers.ModelSerializer):
