@@ -6,6 +6,7 @@ The filename should match `SHOUTIT_ENV` value e.g if it is `local` the file shou
 | Name                                          | Default       | Notes                                                          |
 |-----------------------------------------------|---------------|----------------------------------------------------------------|
 | `API_LINK`                                    |               |                                                                |
+| `APP_LINK_SCHEMA`                             | `shoutit`     |                                                                |
 | `DB_HOST`,`DB_PORT`, `DB_USER`, `DB_PASSWORD` |               |                                                                |
 | `EMAIL_ENV`                                   |               | Can be either `file` or `sendgrid`                             |
 | `ES_HOST`, `ES_PORT`, `ES_BASE_INDEX`         |               |                                                                |
