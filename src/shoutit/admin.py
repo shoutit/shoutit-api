@@ -43,6 +43,7 @@ admin.site.unregister(AccessToken)
 class AccessTokenAdmin(admin.ModelAdmin):
     list_display = ('user', 'client', 'token', 'expires', 'scope', 'created')
     raw_id_fields = ('user', 'client')
+    list_filter = ('client',)
     ordering = ('-created', )
 
 
@@ -53,6 +54,7 @@ admin.site.unregister(RefreshToken)
 class RefreshTokenAdmin(admin.ModelAdmin):
     list_display = ('user', 'token', 'access_token', 'client', 'expired', 'created')
     raw_id_fields = ('user', 'access_token', 'client')
+    list_filter = ('client',)
     ordering = ('-created',)
 
 

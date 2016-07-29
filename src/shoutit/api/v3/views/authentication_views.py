@@ -218,6 +218,28 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
 
         return self.access_token_response(at, data)
 
+    def get_access_token(self, request, user, scope, client, refreshable=True):
+        try:
+            # Attempt to fetch an existing access token.
+            access_tokens = AccessToken.objects.filter(user=user, client=client, scope=scope,
+                                                       expires__gt=now()).order_by('-expires')
+            # Single valid token. Return it
+            if access_tokens.count() == 1:
+                at = access_tokens[1]
+            # No valid tokens. Raise exception to create one
+            elif not access_tokens:
+                raise AccessToken.DoesNotExist()
+            # Multiple valid tokens. Take the first, which expires last, and delete the others
+            else:
+                at = access_tokens.first()
+                access_tokens.exclude(id=at.id).delete()
+        except AccessToken.DoesNotExist:
+            # None found... make a new one!
+            at = self.create_access_token(request, user, scope, client)
+            if refreshable:
+                self.create_refresh_token(request, user, scope, at, client)
+        return at
+
     def get_handler(self, grant_type):
         """
         Return a function or method that is capable handling the ``grant_type``
