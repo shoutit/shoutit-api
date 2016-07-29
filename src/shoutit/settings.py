@@ -3,8 +3,10 @@
 
 """
 from __future__ import unicode_literals
+
 from settings_env import *  # NOQA
 from common.utils import get_address_port, strtobool
+from datetime import timedelta
 from django.utils.translation import ugettext_lazy as _
 
 """
@@ -248,6 +250,9 @@ USE_TZ = True
 LANGUAGES = (
     ('en', _('English')),
     ('ar', _('Arabic')),
+    ('de', _('German')),
+    ('es', _('Spanish')),
+    ('zh', _('Chinese')),
 )
 DEFAULT_LANGUAGE_CODE = 'en'
 LOCALE_PATHS = (
@@ -440,6 +445,7 @@ OAUTH_SINGLE_ACCESS_TOKEN = True
 OAUTH_ENFORCE_SECURE = ENFORCE_SECURE
 OAUTH_ENFORCE_CLIENT_SECURE = True
 OAUTH_DELETE_EXPIRED = True
+OAUTH_EXPIRE_DELTA = timedelta(minutes=60)
 
 SWAGGER_SETTINGS = {
     'api_version': '3',
