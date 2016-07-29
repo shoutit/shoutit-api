@@ -65,6 +65,8 @@ def _track(distinct_id, event_name, properties=None, add=False):
 
 
 def add_to_mp_people(user_ids=None, buffered=False):
+    if not settings.USE_MIXPANEL:
+        return
     return _add_to_mp_people.delay(user_ids=user_ids, buffered=buffered)
 
 

@@ -170,7 +170,7 @@ class AddProfileSerializer(ConversationProfileActionSerializer):
         if not conversation.users.filter(id=profile.id).exists():
             conversation.add_profile(profile)
         else:
-            self.success_message = "%s is already in this conversation"
+            self.success_message = _("%(name)s is already in this conversation")
         return conversation
 
 

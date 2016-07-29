@@ -182,10 +182,10 @@ class TagDetailSerializer(TagSerializer):
         return user and user.is_authenticated() and user.is_listening(tag)
 
     def get_listeners_url(self, tag):
-        return reverse('tag-listeners', kwargs={'name': tag.name}, request=self.context['request'])
+        return reverse('tag-listeners', kwargs={'name': tag.slug}, request=self.context['request'])
 
     def get_shouts_url(self, tag):
-        return reverse('tag-shouts', kwargs={'name': tag.name}, request=self.context['request'])
+        return reverse('tag-shouts', kwargs={'name': tag.slug}, request=self.context['request'])
 
 
 class FeaturedTagSerializer(serializers.ModelSerializer):

@@ -21,6 +21,22 @@ class MiniTagSerializer(TranslatableModelSerializer):
         fields = ('id', 'name', 'slug')
         extra_kwargs = {'id': {'required': False, 'read_only': False}}
 
+    def compat_name(self, ret):
+        request = self.context['request']
+        from_web = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
+        ios_condition = request.agent == 'ios' and request.build_no >= 22312
+        android_condition = request.agent == 'android' and request.build_no >= 1450
+        if not any([from_web, ios_condition, android_condition]):
+            ret['name'] = ret['slug']
+        return ret
+
+    def to_representation(self, instance):
+        ret = super(MiniTagSerializer, self).to_representation(instance)
+        blank_to_none(ret, ['image'])
+        # Compatibility for older clients expecting `name` to be the unique identifier of Tag object
+        self.compat_name(ret)
+        return ret
+
 
 class TagSerializer(MiniTagSerializer):
     api_url = serializers.HyperlinkedIdentityField(view_name='tag-detail', lookup_field='slug')
@@ -33,22 +49,6 @@ class TagSerializer(MiniTagSerializer):
         if isinstance(data, basestring):
             data = {'slug': data}
         ret = super(TagSerializer, self).to_internal_value(data)
-        return ret
-
-    def to_representation(self, instance):
-        ret = super(TagSerializer, self).to_representation(instance)
-        blank_to_none(ret, ['image'])
-        # Compatibility for older clients expecting `name` to be the unique identifier of Tag object
-        self.compat_name(ret)
-        return ret
-
-    def compat_name(self, ret):
-        request = self.context['request']
-        from_web = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
-        ios_condition = request.agent == 'ios' and request.build_no >= 22312
-        android_condition = request.agent == 'android' and request.build_no >= 1450
-        if not any([from_web, ios_condition, android_condition]):
-            ret['name'] = ret['slug']
         return ret
 
 
@@ -69,7 +69,7 @@ class TagDetailSerializer(TagSerializer):
 
     def get_shouts_url(self, tag):
         shouts_url = reverse('shout-list', request=self.context['request'])
-        return url_with_querystring(shouts_url, tags=tag.name)
+        return url_with_querystring(shouts_url, tags=tag.slug)
 
 
 class FeaturedTagSerializer(serializers.ModelSerializer):

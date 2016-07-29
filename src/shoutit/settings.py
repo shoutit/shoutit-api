@@ -22,8 +22,8 @@ ADDRESS, PORT = get_address_port(GUNICORN)
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 API_LINK = os.environ.get('API_LINK')
-SITE_LINK = os.environ.get('SITE_LINK')
-APP_LINK_SCHEMA = 'shoutit'
+SITE_LINK = os.environ.get('SITE_LINK', 'shoutit')
+APP_LINK_SCHEMA = os.environ.get('APP_LINK_SCHEMA')
 
 # Security
 DEBUG = strtobool(os.environ.get('SHOUTIT_DEBUG'))
@@ -664,6 +664,7 @@ info("USE_SENTRY:", USE_SENTRY, RAVEN_CONFIG['dsn'][-5:])
 info("==================================================")
 info("API_LINK:", API_LINK)
 info("SITE_LINK:", SITE_LINK)
+info("APP_LINK_SCHEMA:", APP_LINK_SCHEMA)
 info("==================================================")
 info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
 info("REDIS_PORT:", REDIS_PORT)

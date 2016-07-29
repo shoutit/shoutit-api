@@ -567,7 +567,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             title = _("New Shoutit Credit transaction")
             action = _('View Transactions')
             text = self.attached_object.display()['text']
-            setattr(self, '_app_url', 'shoutit://credit_transactions')
+            setattr(self, '_app_url', settings.APP_LINK_SCHEMA + 'credit_transactions')
             setattr(self, '_web_url', None)
 
         elif self.type == NOTIFICATION_TYPE_SHOUT_LIKE:
