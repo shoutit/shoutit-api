@@ -225,7 +225,7 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
                                                        expires__gt=now()).order_by('-expires')
             # Single valid token. Return it
             if access_tokens.count() == 1:
-                at = access_tokens[1]
+                at = access_tokens[0]
             # No valid tokens. Raise exception to create one
             elif not access_tokens:
                 raise AccessToken.DoesNotExist()
