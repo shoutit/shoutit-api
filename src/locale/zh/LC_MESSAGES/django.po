@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-31 05:19+0200\n"
+"POT-Creation-Date: 2016-07-31 12:07+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -934,74 +934,70 @@ msgstr "Shoutit"
 msgid "New listen"
 msgstr "新的聆听"
 
-#: .\shoutit\models\message.py:537 .\shoutit\models\message.py:564
-#: .\shoutit\models\message.py:579
+#: .\shoutit\models\message.py:537 .\shoutit\models\message.py:562
+#: .\shoutit\models\message.py:577
 msgid "View Profile"
 msgstr "查看个人资料"
 
 #: .\shoutit\models\message.py:539
-msgid "you"
-msgstr "您"
-
-#: .\shoutit\models\message.py:540
 #, fuzzy, python-format
 #| msgid "%(name)s started listening to you"
 msgid "%(name)s started listening to your shouts"
 msgstr "%(name)s 开始聆听您"
 
-#: .\shoutit\models\message.py:544
+#: .\shoutit\models\message.py:542
 #, python-format
 msgid "Press the View Profile button to view %(name)s's profile"
 msgstr ""
 
-#: .\shoutit\models\message.py:548
+#: .\shoutit\models\message.py:546
 msgid "New message"
 msgstr "无新信息"
 
-#: .\shoutit\models\message.py:549
+#: .\shoutit\models\message.py:547
 msgid "Reply"
 msgstr "回复"
 
-#: .\shoutit\models\message.py:553
+#: .\shoutit\models\message.py:551
 msgid ""
 "Press the Reply button to respond or open 'My Chats' in your Shoutit App"
 msgstr ""
 
-#: .\shoutit\models\message.py:556
+#: .\shoutit\models\message.py:554
 msgid "Incoming video call"
 msgstr "传入视频通话"
 
-#: .\shoutit\models\message.py:557
+#: .\shoutit\models\message.py:555
 msgid "Answer"
 msgstr "答复"
 
-#: .\shoutit\models\message.py:559
+#: .\shoutit\models\message.py:557
 #, python-format
 msgid "%(name)s is calling you on Shoutit"
 msgstr "%(name)s 正在 Shoutit 呼叫您"
 
-#: .\shoutit\models\message.py:563
+#: .\shoutit\models\message.py:561
 msgid "Missed video call"
 msgstr "未接视频通话"
 
-#: .\shoutit\models\message.py:566
+#: .\shoutit\models\message.py:564
 #, python-format
 msgid "You missed a call from %(name)s"
 msgstr "您错过 %(name)s 的来电"
 
-#: .\shoutit\models\message.py:571
+#: .\shoutit\models\message.py:569
 msgid "New Shoutit Credit transaction"
 msgstr "新 Shoutit Credit 交易"
 
-#: .\shoutit\models\message.py:572
+#: .\shoutit\models\message.py:570
 msgid "View Transactions"
 msgstr "查看交易"
 
-#: .\shoutit\models\message.py:578
+#: .\shoutit\models\message.py:576
 msgid "New Shout Like"
 msgstr "新 Shout 喜欢"
 
-#: .\shoutit\models\message.py:582
+#: .\shoutit\models\message.py:580
 #, python-format
 msgid "%(name)s liked your shout %(title)s"
 msgstr "%(name)s 喜欢您的 Shout%(title)s"
@@ -1222,6 +1218,9 @@ msgstr "拥有身份 %(identity)s 的个人资料并不存在"
 #: .\shoutit_twilio\views.py:154 .\shoutit_twilio\views.py:200
 msgid "Invalid identity"
 msgstr "无效身份"
+
+#~ msgid "you"
+#~ msgstr "您"
 
 #~ msgid "Should be `all`, `top` or `featured`"
 #~ msgstr "Should be `all`, `top` or `featured`"

@@ -536,10 +536,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
             title = _("New listen")
             action = _("View Profile")
             name = self.attached_object.name
-            you = unicode(_('you'))
             text = _("%(name)s started listening to your shouts") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
-            ranges.append({'offset': text.index(you), 'length': len(you)})
             image = self.attached_object.ap.image
             note = _("Press the View Profile button to view %(name)s's profile") % {'name': name}
 
