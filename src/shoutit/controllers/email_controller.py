@@ -12,7 +12,7 @@ from django_rq import job
 from common.constants import USER_TYPE_PAGE
 from common.utils import date_unix
 from shoutit.models import User
-from shoutit.utils import debug_logger
+from shoutit.utils import debug_logger, error_logger
 
 # Todo (mo): add localized templates and fallback to english ones
 SG_WELCOME_TEMPLATE = 'f34f9b3a-92f3-4b11-932e-f0205003897a'
@@ -119,6 +119,12 @@ def _send_password_reset_email(user):
 
 
 def send_notification_email(user, notification):
+    if not user.email:
+        notification_type = notification.get_type_display()
+        error_logger.info("Tried to send %s:Notification Email to user who has no email" % notification_type, extra={
+            'user': user, 'notification': notification
+        })
+        return
     # Email the page admins if the notified user is a Page
     if user.type == USER_TYPE_PAGE:
         for admin in user.page.admins.all():
@@ -146,8 +152,9 @@ def _send_notification_email(user, notification, emailed_for=None):
         'text1':
             """
             %(intro)s
-            <blockquote><b>%(text)s</b></blockquote>
-            """ % {'intro': intro, 'text': display['text']},
+            <blockquote style="font-weight:bold;background-color:#EEEEEE;padding:10px;border-radius:5px;">%(text)s</blockquote>
+            <p style="font-style:italic;color:#888888;margin-top:50px;">%(note)s</p>
+            """ % {'intro': intro, 'text': display['text'] or '', 'note': display.get('note') or ''},
         'action': display['action'],
         'link': notification.web_url
     }

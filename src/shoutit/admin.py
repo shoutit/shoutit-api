@@ -148,8 +148,8 @@ class ProfileAdmin(admin.ModelAdmin, UserLinkMixin):
 
 # Page
 @admin.register(Page)
-class ShoutitPageAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', '_user', 'name', 'creator', 'category', 'country', 'city', 'created_at')
+class ShoutitPageAdmin(admin.ModelAdmin, UserLinkMixin, LinksMixin):
+    list_display = ('id', '_user', 'name', '_links', 'creator', 'category', 'country', 'city', 'created_at')
     raw_id_fields = ('user', 'creator')
     search_fields = ('name', 'user__email')
     readonly_fields = ('video', '_user')
