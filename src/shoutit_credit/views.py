@@ -156,7 +156,7 @@ class PromoteShoutMixin(object):
         omit_serializer: true
         """
         self.serializer_class = PromoteOptionSerializer
-        queryset = PromoteShouts.objects.all()
+        queryset = PromoteShouts.objects.filter(is_active=True)
         queryset = sorted(queryset, key=lambda pl: pl.rank)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
