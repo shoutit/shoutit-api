@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-29 13:13+0200\n"
+"POT-Creation-Date: 2016-07-31 05:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,45 +17,45 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: .\shoutit\admin.py:61
+#: .\shoutit\admin.py:63
 msgid "Username"
 msgstr ""
 
-#: .\shoutit\admin.py:62 .\shoutit\models\auth.py:77
+#: .\shoutit\admin.py:64 .\shoutit\models\auth.py:77
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
 msgstr ""
 
-#: .\shoutit\admin.py:63
+#: .\shoutit\admin.py:65
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr ""
 
-#: .\shoutit\admin.py:76
+#: .\shoutit\admin.py:78
 msgid "Personal info"
 msgstr ""
 
-#: .\shoutit\admin.py:77
+#: .\shoutit\admin.py:79
 msgid "Permissions"
 msgstr ""
 
-#: .\shoutit\admin.py:79
+#: .\shoutit\admin.py:81
 msgid "Important dates"
 msgstr ""
 
-#: .\shoutit\admin.py:80 .\shoutit\admin.py:355
+#: .\shoutit\admin.py:82 .\shoutit\admin.py:357
 msgid "Extra"
 msgstr ""
 
-#: .\shoutit\admin.py:189
+#: .\shoutit\admin.py:191
 msgid "Accept the selected verifications"
 msgstr ""
 
-#: .\shoutit\admin.py:195
+#: .\shoutit\admin.py:197
 msgid "Reject the selected verifications"
 msgstr ""
 
-#: .\shoutit\admin.py:354
+#: .\shoutit\admin.py:356
 msgid "Users"
 msgstr ""
 
@@ -537,38 +537,38 @@ msgstr ""
 msgid "You unbookmarked %(shout)s"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:470
+#: .\shoutit\api\v3\views\authentication_views.py:492
 #: .\shoutit\api\v3\views\exception_views.py:27
 #: .\shoutit\api\v3\views\exception_views.py:42
 msgid "Authentication failed"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:477
+#: .\shoutit\api\v3\views\authentication_views.py:499
 msgid "Unsupported grant_type"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:584
+#: .\shoutit\api\v3\views\authentication_views.py:606
 msgid "Password reset email will be sent soon"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:607
-#: .\shoutit\api\v3\views\authentication_views.py:720
+#: .\shoutit\api\v3\views\authentication_views.py:629
+#: .\shoutit\api\v3\views\authentication_views.py:742
 msgid "New password set"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:722
+#: .\shoutit\api\v3\views\authentication_views.py:744
 msgid "Token does not exist"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:724
+#: .\shoutit\api\v3\views\authentication_views.py:746
 msgid "Email address is already verified"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:728
+#: .\shoutit\api\v3\views\authentication_views.py:750
 msgid "Authentication credentials were not provided"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:732
+#: .\shoutit\api\v3\views\authentication_views.py:754
 #, python-format
 msgid "Your email '%(email)s' is already verified"
 msgstr ""
@@ -750,12 +750,12 @@ msgstr ""
 msgid "Reset my password"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:142
+#: .\shoutit\controllers\email_controller.py:148
 #, python-format
 msgid "Your page '%(page)s' has a new notification"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:144
+#: .\shoutit\controllers\email_controller.py:150
 msgid "You have a new notification"
 msgstr ""
 
@@ -930,67 +930,77 @@ msgstr ""
 msgid "Shoutit"
 msgstr ""
 
-#: .\shoutit\models\message.py:535
+#: .\shoutit\models\message.py:536
 msgid "New listen"
 msgstr ""
 
-#: .\shoutit\models\message.py:536 .\shoutit\models\message.py:560
-#: .\shoutit\models\message.py:575
+#: .\shoutit\models\message.py:537 .\shoutit\models\message.py:564
+#: .\shoutit\models\message.py:579
 msgid "View Profile"
 msgstr ""
 
-#: .\shoutit\models\message.py:538
+#: .\shoutit\models\message.py:539
 msgid "you"
 msgstr ""
 
-#: .\shoutit\models\message.py:539
+#: .\shoutit\models\message.py:540
 #, python-format
-msgid "%(name)s started listening to you"
+msgid "%(name)s started listening to your shouts"
 msgstr ""
 
-#: .\shoutit\models\message.py:545
+#: .\shoutit\models\message.py:544
+#, python-format
+msgid "Press the View Profile button to view %(name)s's profile"
+msgstr ""
+
+#: .\shoutit\models\message.py:548
 msgid "New message"
 msgstr ""
 
-#: .\shoutit\models\message.py:546
+#: .\shoutit\models\message.py:549
 msgid "Reply"
 msgstr ""
 
-#: .\shoutit\models\message.py:552
+#: .\shoutit\models\message.py:553
+msgid ""
+"Press the Reply button to respond or open 'My Chats' in your Shoutit App"
+msgstr ""
+
+#: .\shoutit\models\message.py:556
 msgid "Incoming video call"
 msgstr ""
 
-#: .\shoutit\models\message.py:553
+#: .\shoutit\models\message.py:557
 msgid "Answer"
 msgstr ""
 
-#: .\shoutit\models\message.py:555
+#: .\shoutit\models\message.py:559
 #, python-format
 msgid "%(name)s is calling you on Shoutit"
 msgstr ""
 
-#: .\shoutit\models\message.py:559
+#: .\shoutit\models\message.py:563
 msgid "Missed video call"
 msgstr ""
 
-#: .\shoutit\models\message.py:562
+#: .\shoutit\models\message.py:566
 #, python-format
 msgid "You missed a call from %(name)s"
 msgstr ""
 
-#: .\shoutit\models\message.py:567
+#: .\shoutit\models\message.py:571
 msgid "New Shoutit Credit transaction"
 msgstr ""
 
-#: .\shoutit\models\message.py:568
+#: .\shoutit\models\message.py:572
 msgid "View Transactions"
 msgstr ""
 
-#: .\shoutit\models\message.py:574
+#: .\shoutit\models\message.py:578
 msgid "New Shout Like"
 msgstr ""
 
-#: .\shoutit\models\message.py:578
+#: .\shoutit\models\message.py:582
 #, python-format
 msgid "%(name)s liked your shout %(title)s"
 msgstr ""
@@ -1117,12 +1127,24 @@ msgstr ""
 msgid "You're not allowed to send reports"
 msgstr ""
 
-#: .\shoutit\settings.py:249
+#: .\shoutit\settings.py:251
 msgid "English"
 msgstr ""
 
-#: .\shoutit\settings.py:250
+#: .\shoutit\settings.py:252
 msgid "Arabic"
+msgstr ""
+
+#: .\shoutit\settings.py:253
+msgid "German"
+msgstr ""
+
+#: .\shoutit\settings.py:254
+msgid "Spanish"
+msgstr ""
+
+#: .\shoutit\settings.py:255
+msgid "Chinese"
 msgstr ""
 
 #: .\shoutit\utils.py:63

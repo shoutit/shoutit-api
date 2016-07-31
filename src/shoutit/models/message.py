@@ -529,6 +529,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
         ranges = []
         image = None
         action = None
+        note = None
         target = self.attached_object
 
         if self.type == NOTIFICATION_TYPE_LISTEN:
@@ -536,17 +537,20 @@ class Notification(UUIDModel, AttachedObjectMixin):
             action = _("View Profile")
             name = self.attached_object.name
             you = unicode(_('you'))
-            text = _("%(name)s started listening to you") % {'name': name}
+            text = _("%(name)s started listening to your shouts") % {'name': name}
             ranges.append({'offset': text.index(name), 'length': len(name)})
             ranges.append({'offset': text.index(you), 'length': len(you)})
             image = self.attached_object.ap.image
+            note = _("Press the View Profile button to view %(name)s's profile") % {'name': name}
 
         elif self.type == NOTIFICATION_TYPE_MESSAGE:
+            # Todo (mo): Better title and text. Possibly instead of setting each var allow setting the display dict directly
             title = _("New message")
             action = _("Reply")
             text = self.attached_object.summary
             image = self.attached_object.user.ap.image
             target = self.attached_object.conversation
+            note = _("Press the Reply button to respond or open 'My Chats' in your Shoutit App")
 
         elif self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
             title = _("Incoming video call")
@@ -586,6 +590,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             ('ranges', ranges),
             ('image', image),
             ('action', action),
+            ('note', note),
         ])
 
         if self.type == NOTIFICATION_TYPE_INCOMING_VIDEO_CALL:
