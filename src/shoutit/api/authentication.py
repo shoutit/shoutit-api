@@ -138,6 +138,7 @@ class PostAccessTokenRequestMixin(object):
             # Track only
             mixpanel_controller.track(user.pk, event_name, track_properties, add=True)
             # Y U NO send us Mixpanel?
-            extra = {'request': request._request, 'agent': request.agent, 'build_no': request.build_no,
-                     'track_properties': track_properties, 'request_data': data}
-            error_logger.warning('AccessToken request without mixpanel_distinct_id', extra=extra)
+            if data.get('grant_type') != 'refresh_token':
+                extra = {'request': request._request, 'agent': request.agent, 'build_no': request.build_no,
+                         'track_properties': track_properties, 'request_data': data}
+                error_logger.warning('AccessToken request without mixpanel_distinct_id', extra=extra)
