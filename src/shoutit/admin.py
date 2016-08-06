@@ -555,10 +555,10 @@ class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
 
 # SMSInvitation
 @admin.register(SMSInvitation)
-class SMSInvitationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'status', 'country', 'mobile', 'user', 'created_at')
-    list_filter = ('status', 'country', ('created_at', ShoutitDateFieldListFilter))
-    search_fields = ('mobile', 'message')
+class SMSInvitationAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', 'status', 'country', 'mobile', 'category', '_user', 'created_at')
+    list_filter = ('status', 'country', 'category', ('created_at', ShoutitDateFieldListFilter))
+    search_fields = ('mobile',)
     raw_id_fields = ('user',)
     ordering = ('-created_at',)
 

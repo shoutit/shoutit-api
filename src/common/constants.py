@@ -299,6 +299,8 @@ SMS_INVITATION_ADDED = SMSInvitationStatus('added')
 SMS_INVITATION_QUEUED = SMSInvitationStatus('queued')
 SMS_INVITATION_SENT = SMSInvitationStatus('sent')
 SMS_INVITATION_DELIVERED = SMSInvitationStatus('delivered')
+SMS_INVITATION_PARKED = SMSInvitationStatus('parked')
+SMS_INVITATION_ERROR = SMSInvitationStatus('error')
 
 COUNTRY_ISO = {
     "AF": "Afghanistan",
