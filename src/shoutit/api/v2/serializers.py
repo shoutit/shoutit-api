@@ -1194,7 +1194,7 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SMSInvitation
-        fields = ('id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'created_at')
+        fields = ('id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'source', 'link', 'created_at')
 
     def validate_sent_text(self, value):
         ad_title = self.initial_data.get('user_text')
