@@ -4,50 +4,61 @@
 """
 from __future__ import unicode_literals
 
-from rest_framework import filters, status, mixins, viewsets
+from collections import OrderedDict
+from datetime import timedelta
+
+from common.constants import SMSInvitationStatus
+from django.db.models import Count
+from django.utils.timezone import now
+from rest_framework import status, mixins, viewsets
+from rest_framework import permissions
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from shoutit.models import SMSInvitation
 from . import DEFAULT_PARSER_CLASSES_v2
-from ..pagination import ShoutitPageNumberPagination
 from ..serializers import SMSInvitationSerializer
 from ..views.viewsets import UUIDViewSetMixin
 
 
-class SMSViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin,
-                 mixins.DestroyModelMixin, viewsets.GenericViewSet):
+class SMSViewSet(UUIDViewSetMixin, mixins.RetrieveModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
     """
     SMSInvitation API Resources.
     """
     parser_classes = DEFAULT_PARSER_CLASSES_v2
-    queryset = SMSInvitation.objects.all().order_by('-created_at')
+    queryset = SMSInvitation.objects.all()
     serializer_class = SMSInvitationSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('status', 'country', 'mobile')
-    pagination_class = ShoutitPageNumberPagination
-    permission_classes = ()
+    permission_classes = (permissions.IsAuthenticated,)
 
-    # Todo: add some kind of authentication to all methods
-
-    def retrieve(self, request, *args, **kwargs):
+    @list_route(methods=['get'], permission_classes=(permissions.IsAdminUser,), suffix='Summary')
+    def summary(self, request, *args, **kwargs):
         """
-        Get an SMSInvitation
-        ---
-        omit_serializer: true
-        """
-        return super(SMSViewSet, self).retrieve(request, *args, **kwargs)
-
-    def list(self, request, *args, **kwargs):
-        """
-        List SMSInvitations
+        SMSInvitation summary
         ---
         omit_serializer: true
         omit_parameters:
             - query
         """
-        return super(SMSViewSet, self).list(request, *args, **kwargs)
+        countries = request.query_params.get('countries', '').split(',')
+        if countries == ['']:
+            countries = SMSInvitation.objects.values_list('country', flat=True).distinct()
+        periods = [(1, 'day'), (7, 'week'), (30, 'month')]
+        statuses = SMSInvitationStatus.choices + ((None, 'total'),)
+        today = now()
+
+        def status_summary(sms_status, days):
+            created = today - timedelta(days=days)
+            invitations = SMSInvitation.objects.filter(country__in=countries, created_at__gte=created)
+            if sms_status is not None:
+                invitations = invitations.filter(status=sms_status)
+            invitations = invitations.values('country').annotate(count=Count('country'))
+            return OrderedDict([(invitation['country'], invitation['count']) for invitation in invitations])
+
+        results = OrderedDict(
+            [(p[1], OrderedDict([(s[1], status_summary(s[0], p[0])) for s in statuses])) for p in periods]
+        )
+        return Response(results)
 
     def create(self, request, *args, **kwargs):
         """
@@ -55,7 +66,7 @@ class SMSViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMi
         ---
         omit_serializer: true
         """
-        serializer = SMSInvitationSerializer(data=request.data, context={'request': request})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         headers = self.get_success_headers(serializer.data)
@@ -70,31 +81,10 @@ class SMSViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.RetrieveModelMi
         """
         items = request.data
         for item in items[:]:
-            serializer = SMSInvitationSerializer(data=item, context={'request': request})
+            serializer = self.get_serializer(data=item)
             try:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
             except ValidationError:
                 items.remove(item)
         return Response({'added': len(items)}, status=status.HTTP_201_CREATED)
-
-    def partial_update(self, request, *args, **kwargs):
-        """
-        Modify an SMSInvitation
-        ---
-        omit_serializer: true
-        """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Delete an SMSInvitation
-        ###NOT ALLOWED
-        ---
-        omit_serializer: true
-        """
-        return Response("Not allowed", status=status.HTTP_406_NOT_ACCEPTABLE)
