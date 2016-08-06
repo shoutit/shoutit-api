@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
+from django.utils.timezone import now as django_now
 from ipware.ip import get_real_ip
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
@@ -34,7 +35,7 @@ from shoutit.models import (
     Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
-from shoutit.utils import generate_username, debug_logger, url_with_querystring
+from shoutit.utils import generate_username, debug_logger, url_with_querystring, has_unicode
 
 
 class LocationSerializer(serializers.Serializer):
@@ -1188,23 +1189,38 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 
 
 class SMSInvitationSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    message = serializers.CharField(max_length=1000, required=False)
-    title = serializers.CharField(max_length=1000, required=False, write_only=True)
+    user_text = serializers.CharField(max_length=1000, required=False)
+    sent_text = serializers.CharField(max_length=1000, required=False, default='')
 
     class Meta:
         model = SMSInvitation
-        fields = ('id', 'user', 'message', 'old_message', 'title', 'mobile', 'status', 'country', 'created_at')
+        fields = ('id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'source', 'link', 'created_at')
+
+    def validate_sent_text(self, value):
+        ad_title = self.initial_data.get('user_text')
+        english_sms = [
+            "Hi there!\nlist your '%s...' for FREE on\nshoutit.com/app",
+            "Someone might be interested in your '%s...'\nlist FREE ads on\nshoutit.com/app"
+        ]
+        english_cut = 35
+        arabic_sms = [
+            "اعلن عن '%s...'\nبسهولة\nshoutit.com/app",
+            "اعرض '%s...'\nمجانا على\nshoutit.com/app"
+        ]
+        arabic_cut = 30
+        if has_unicode(ad_title):
+            return random.choice(arabic_sms) % (ad_title[:arabic_cut])
+        else:
+            return random.choice(english_sms) % (ad_title[:english_cut])
 
     def to_internal_value(self, data):
+        if 'title' in data:
+            data['user_text'] = data.pop('title')
         ret = super(SMSInvitationSerializer, self).to_internal_value(data)
-        title = ret.get('title', "")
-        message = ret.get('message', "")
-        if not message and title:
-            message = title
-        if message:
-            ret['message'] = message[:160]
-        ret.pop('title', None)
+        now = django_now()
+        if SMSInvitation.exists(mobile=ret['mobile'], created_at__year=now.year, created_at__month=now.month):
+            raise ValidationError({'mobile': 'Invitation to same mobile exists in this month'})
+        ret['user'] = self.context['request'].user
         return ret
 
 
