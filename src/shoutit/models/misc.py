@@ -201,7 +201,7 @@ class SMSInvitation(UUIDModel):
     country = LocationMixin._meta.get_field("country")
     category = models.ForeignKey('shoutit.Category', blank=True, null=True)
     source = models.CharField(max_length=20, db_index=True, default='', blank=True)
-    link = models.CharField(max_length=200, default='', blank=True)
+    link = models.CharField(max_length=1000, default='', blank=True)
 
     def __unicode__(self):
         return "%s: %s: %s" % (self.get_status_display(), self.country, self.mobile)
