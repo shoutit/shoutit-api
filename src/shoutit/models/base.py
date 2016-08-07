@@ -20,8 +20,8 @@ from common.utils import date_unix
 
 class UUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True)
-    modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True, null=True)
+    created_at = models.DateTimeField(verbose_name=_("Creation time"), auto_now_add=True, null=True, db_index=True)
+    modified_at = models.DateTimeField(verbose_name=_("Modification time"), auto_now=True, null=True, db_index=True)
 
     class Meta:
         abstract = True
