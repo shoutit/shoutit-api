@@ -41,11 +41,11 @@ class SMSViewSet(UUIDViewSetMixin, mixins.RetrieveModelMixin, mixins.CreateModel
             - query
         """
         countries = request.query_params.get('countries', '').split(',')
-        if countries == ['']:
-            countries = SMSInvitation.objects.values_list('country', flat=True).distinct()
-        periods = [(1, 'day'), (7, 'week'), (30, 'month')]
-        statuses = SMSInvitationStatus.choices + ((None, 'total'),)
         today = now()
+        periods = [(1, 'day'), (7, 'week'), (30, 'month')]
+        if countries == ['']:
+            countries = list(SMSInvitation.objects.filter(created_at__gte=today - timedelta(days=periods[-1][0])).values_list('country', flat=True).distinct())
+        statuses = SMSInvitationStatus.choices + ((None, 'total'),)
 
         def status_summary(sms_status, days):
             created = today - timedelta(days=days)
