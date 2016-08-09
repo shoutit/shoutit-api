@@ -23,7 +23,7 @@ class MiniTagSerializer(TranslatableModelSerializer):
 
     def compat_name(self, ret):
         request = self.context['request']
-        from_web = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
+        from_web = request.agent == 'web'
         ios_condition = request.agent == 'ios' and request.build_no >= 22312
         android_condition = request.agent == 'android' and request.build_no >= 1450
         if not any([from_web, ios_condition, android_condition]):

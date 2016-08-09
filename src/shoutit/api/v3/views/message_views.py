@@ -26,7 +26,7 @@ from ..views.viewsets import UUIDViewSetMixin
 def serializer_compat(view_set):
     # Use ConversationSerializer for web and newer mobile clients
     request = view_set.request
-    from_web = hasattr(request.auth, 'client') and request.auth.client.name == 'shoutit-web'
+    from_web = request.agent == 'web'
     ios_condition = request.agent == 'ios' and request.build_no >= 1378
     android_condition = request.agent == 'android' and request.build_no >= 1474
     if any([from_web, ios_condition, android_condition]):
