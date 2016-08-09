@@ -34,9 +34,9 @@ class AgentMiddleware(object):
             agent = 'android'
             build_no_re = re.search('com.shoutit.app.android.*\((\d+);', user_agent)
             build_no = build_no_re.groups()[0] if build_no_re else 0
-        elif 'shoutit-web (nodejs v4.4.5; production; stage; release-37-23-g505102e)' in user_agent:
+        elif 'shoutit-web' in user_agent:
             agent = 'web'
-            build_no_re = re.search('shoutit-web \(.+; .+; .+; release-(\d+)-.+\)', user_agent)
+            build_no_re = re.search('shoutit-web \(.+; .+; .+; release-(\d+).*\)', user_agent)
             build_no = build_no_re.groups()[0] if build_no_re else 0
         else:
             agent = None
