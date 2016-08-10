@@ -275,7 +275,7 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     INSTALLED_APPS += (
         'storages',
     )
-    STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_STORAGE_BUCKET_NAME = 'shoutit-api-static'
     AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
     STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN

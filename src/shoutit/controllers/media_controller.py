@@ -6,18 +6,20 @@ from __future__ import unicode_literals
 import uuid
 from cStringIO import StringIO
 
-import boto
+import boto3
 import requests
 from PIL import Image
 from django.conf import settings
 from django.utils import timezone
 from django_rq import job
-
 from shoutit.utils import error_logger, debug_logger
 
 
 class ImageData(str):
     def __repr__(self):
+        return str(self)
+
+    def __str__(self):
         return "ImageData: %d bytes" % len(self)
 
 
@@ -55,17 +57,15 @@ def upload_image_to_s3(bucket_name, public_url, url=None, data=None, filename=No
         # Check if an actual image
         Image.open(StringIO(data))
         # Connect to S3
-        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = s3.get_bucket(bucket_name)
-        key = bucket.new_key(filename)
-        key.set_metadata('Content-Type', 'image/jpg')
+        s3 = boto3.resource('s3')
         # Upload
-        key.set_contents_from_string(data)
+        s3.Object(bucket_name, filename).put(Body=data, ContentType='image/jpg')  # Todo (mo): set actual content type or convert to jpg
         # Construct public url
         s3_image_url = '%s/%s' % (public_url, filename)
+        debug_logger.debug("Uploaded image to S3: %s" % s3_image_url)
         return s3_image_url
-    except Exception:
+    except Exception as e:
         if raise_exception:
-            raise
+            raise e
         else:
             error_logger.warn("Uploading image to S3 failed", exc_info=True)
