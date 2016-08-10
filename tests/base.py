@@ -14,7 +14,7 @@ from django.utils import timezone
 from mock import MagicMock
 from push_notifications import apns, gcm
 import responses
-import boto
+import boto3
 
 from shoutit.controllers import mixpanel_controller
 from shoutit_pusher import utils as pusher_utils
@@ -41,8 +41,8 @@ gcm.gcm_send_bulk_message = mocked_gcm_send_bulk_message = MagicMock()
 mixpanel_controller.shoutit_mp = MagicMock()
 mixpanel_controller.shoutit_mp_buffered = MagicMock()
 
-# mock s3 boto
-boto.connect_s3 = MagicMock()
+# mock s3 boto3
+boto3.resource = MagicMock()
 
 # TODO: refactor application code, so shout signal will be applied
 #       automatically (currently shout_post_save signal is not called
