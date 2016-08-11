@@ -19,7 +19,7 @@ from pydash import arrays
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG, USER_TYPE_PAGE)
-from common.utils import AllowedUsernamesValidator, date_unix
+from common.utils import AllowedUsernameValidator, date_unix
 from shoutit.utils import debug_logger, none_to_blank
 from .base import UUIDModel, APIModelMixin, LocationMixin
 from .listen import Listen2
@@ -79,7 +79,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             validators.RegexValidator(
                 re.compile('^[0-9a-zA-Z.]+$'), _('Enter a valid username.'), 'invalid'),
             validators.MinLengthValidator(2),
-            AllowedUsernamesValidator()
+            AllowedUsernameValidator()
         ])
     first_name = models.CharField(
         _('first name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
