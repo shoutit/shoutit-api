@@ -4,12 +4,11 @@
 """
 from __future__ import unicode_literals
 
-import json
 import random
-import re
 from collections import OrderedDict
 from datetime import timedelta
 
+from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, USER_TYPE_PAGE, USER_TYPE_PROFILE
 from django.conf import settings
 from django.utils import timezone
 from ipware.ip import get_real_ip
@@ -17,13 +16,10 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
-from common.constants import POST_TYPE_OFFER, USER_TYPE_PAGE, USER_TYPE_PROFILE
-from common.constants import POST_TYPE_REQUEST
-from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
-from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
-                            Tag)
+from shoutit.controllers import shout_controller, user_controller, location_controller
+from shoutit.models import Currency, Category, PredefinedCity, CLUser, DBUser, User, DBZ2User, Shout, Tag
 from shoutit.utils import debug_logger, error_logger
+
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
                            UserSerializer, ShoutSerializer, TagDetailSerializer)

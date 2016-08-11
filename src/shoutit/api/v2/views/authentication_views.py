@@ -27,7 +27,7 @@ from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitSigninSerializer,
-    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer)
+    UserDetailSerializer, FacebookAuthSerializer, GplusAuthSerializer)
 
 
 class RequestParamsClientBackend(object):
@@ -60,7 +60,7 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
     authentication_classes = ()
     permission_classes = ()
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
-                   'shoutit_signup', 'shoutit_signin', 'sms_code']
+                   'shoutit_signup', 'shoutit_signin']
 
     def error_response(self, error, **kwargs):
         """
@@ -207,18 +207,6 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
 
         return self.access_token_response(at)
 
-    def get_sms_code_grant(self, request, data, client):
-        serializer = SMSCodeSerializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        return serializer.instance
-
-    def sms_code(self, request, data, client):
-        """
-        Handle ``grant_type=sms_code`` requests.
-        """
-        user = self.get_sms_code_grant(request, data, client)
-        return self.prepare_access_token_response(request, client, user)
-
     def prepare_access_token_response(self, request, client, user):
         self.request.user = user
         scope = provider_scope.to_int('read', 'write')
@@ -255,8 +243,6 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
             return self.shoutit_signup
         elif grant_type == 'shoutit_signin':
             return self.shoutit_signin
-        elif grant_type == 'sms_code':
-            return self.sms_code
         return None
 
     # override get, not to be documented or listed in urls.
@@ -343,17 +329,6 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
                 }
             },
             "mixpanel_distinct_id": "67da5c7b-8312-4dc5-b7c2-f09b30aa7fa1"
-        }
-        </code></pre>
-
-        ###Signin with SMS Code
-        ####Body
-        <pre><code>
-        {
-            "client_id": "shoutit-test",
-            "client_secret": "d89339adda874f02810efddd7427ebd6",
-            "grant_type": "sms_code",
-            "sms_code": "07c59e",
         }
         </code></pre>
 
