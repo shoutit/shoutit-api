@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 
 from common.constants import TOKEN_TYPE_EMAIL
 from shoutit.api.authentication import PostAccessTokenRequestMixin
+from shoutit.api.v3.exceptions import ShoutitBadRequest
 from shoutit.models import ConfirmToken
 from shoutit.utils import error_logger
 from . import DEFAULT_PARSER_CLASSES_v2
@@ -425,8 +426,10 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
             return self.error_response(e.args[0], client=client, grant_type=grant_type)
         except ValidationError as e:
             return self.error_response(e.detail, client=client, grant_type=grant_type)
+        except ShoutitBadRequest as e:
+            return self.error_response(e.message, client=client, grant_type=grant_type)
         except Exception as e:
-            return self.error_response(str(e), client=client, grant_type=grant_type)
+            return self.error_response(unicode(e), client=client, grant_type=grant_type)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):
