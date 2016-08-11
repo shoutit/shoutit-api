@@ -192,7 +192,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
             # Recently published and no specified expires_at
             recently_published = EQ('range', **{'published_at': {'gte': min_published}})
-            no_expiry_still_valid = EQ('bool', filter=[EQ('missing', field='expires_at'), recently_published])
+            no_expiry_still_valid = EQ('bool', filter=[~EQ('exists', field='expires_at'), recently_published])
 
             # Not expired
             not_expired = EQ('range', **{'expires_at': {'gte': now}})
