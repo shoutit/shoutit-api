@@ -86,6 +86,18 @@ class UserPermissionsMiddleware(object):
         UserPermissionsMiddleware.attach_permissions_to_request(request)
 
 
+class UserLanguageMiddleware(object):
+    """
+    Updates the user's language from information provided by the client.
+    """
+    @staticmethod
+    def process_request(request):
+        if request.user.is_authenticated() and request.LANGUAGE_CODE != request.user.language:
+            request.user.notify = False
+            request.user.update(language=request.LANGUAGE_CODE)
+            request.user.notify = True
+
+
 class FBMiddleware(object):
     @staticmethod
     def process_request(request):
