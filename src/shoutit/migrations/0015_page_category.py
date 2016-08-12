@@ -5,11 +5,12 @@ import mptt.fields
 from django.db import migrations, models
 
 from common.constants import USER_TYPE_PAGE
-from shoutit.models import User, PageCategory
+from shoutit.models import PageCategory
 
 
 def fill_data(apps, schema_editor):
     # Remove previous pages
+    User = apps.get_model('shoutit', 'User')
     User.objects.filter(type=USER_TYPE_PAGE).delete()
     # Remove previous page categories
     PageCategory.objects.all().delete()
