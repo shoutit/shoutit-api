@@ -106,7 +106,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         help_text=_('Designates whether this user is on the main mailing list.'))
     on_mp_people = models.BooleanField(
         _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
-    language = models.CharField(_('accepted language'), max_length=7, default=settings.LANGUAGE_CODE)
+    language = models.CharField(_('accepted language'), max_length=10, default=settings.LANGUAGE_CODE)
 
     objects = ShoutitUserManager()
 
