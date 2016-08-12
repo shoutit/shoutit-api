@@ -92,9 +92,10 @@ class UserLanguageMiddleware(object):
     """
     @staticmethod
     def process_request(request):
-        if request.LANGUAGE_CODE != request.user.language:
-            request.user.language = request.LANGUAGE_CODE
-            request.user.save()
+        if request.user.is_authenticated() and request.LANGUAGE_CODE != request.user.language:
+            request.user.notify = False
+            request.user.update(language=request.LANGUAGE_CODE)
+            request.user.notify = True
 
 
 class FBMiddleware(object):
