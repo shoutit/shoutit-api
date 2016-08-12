@@ -214,6 +214,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Shoutit Custom Middleware
     # 'shoutit.middleware.UserPermissionsMiddleware',
+    'shoutit.middleware.UserLanguageMiddleware',
     'shoutit.middleware.FBMiddleware',
     'shoutit.middleware.BadRequestsMiddleware',
     'shoutit.api.exceptions.APIExceptionMiddleware',
