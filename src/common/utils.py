@@ -106,7 +106,7 @@ def json_flatten(y, sep='.'):
 
 
 @deconstructible
-class AllowedUsernamesValidator(object):
+class AllowedUsernameValidator(object):
     message = "'%s' can not be used as username, please choose something else."
     code = 'invalid'
 
@@ -118,7 +118,7 @@ class AllowedUsernamesValidator(object):
         return True
 
 
-validate_allowed_usernames = AllowedUsernamesValidator()
+validate_allowed_username = AllowedUsernameValidator()
 
 
 @deconstructible

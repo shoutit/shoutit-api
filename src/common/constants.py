@@ -645,6 +645,7 @@ NOT_ALLOWED_USERNAMES = [
     'users',
     'valid_voucher',
     'xhr',
+    # Todo (mo): Add more
 ]
 
 PROFANITIES_LIST = (

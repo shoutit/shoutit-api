@@ -105,6 +105,11 @@ def auth_with_gplus(gplus_user, credentials, initial_user=None, is_test=False):
     profile_fields.update({'gender': gender})
 
     try:
+        # Todo: Check!
+        # in rare cases when clients send multiple requests and while the first one is still in progress
+        # (post save isn't yet completed i.e. no profile yet) the second one passes this check and breaks
+        # in the coming lines of updating profile location as there is no profile. The result of such call can be even
+        # worse as two users will be created
         user = User.objects.get(email=email)
         debug_logger.debug('Found user: {} with same email of gplus_user: {}'.format(user, gplus_id))
         if location:
