@@ -17,6 +17,9 @@ env.roledefs = {
 manage_py = os.path.join(SRC_DIR, 'manage.py')
 # Todo: This works only on Windows (specifically my machine)
 scripts_dir = os.path.join(os.path.dirname(os.path.dirname(SRC_DIR)), 'Scripts')
+# if the "Scripts" dir does not exist, assume an environment where the commands can be run from the project source dir
+if not os.path.exists(scripts_dir):
+    scripts_dir = SRC_DIR
 
 
 def local_flake8():
