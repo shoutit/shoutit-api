@@ -100,7 +100,7 @@ class Shout(Post):
     tags = models.ManyToManyField('shoutit.Tag', blank=True, related_name='shouts')
     is_indexed = models.BooleanField(default=False, db_index=True)
 
-    item = models.OneToOneField('shoutit.Item', db_index=True)
+    item = models.OneToOneField('shoutit.Item')
 
     expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
     expiry_notified = models.BooleanField(default=False)
