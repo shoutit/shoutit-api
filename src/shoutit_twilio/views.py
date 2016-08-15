@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
+from common.constants import NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
@@ -16,7 +17,7 @@ from rest_framework.response import Response
 
 from shoutit.api.v3.exceptions import ShoutitBadRequest, RequiredParameter, InvalidParameter, RequiredBody
 from shoutit.api.v3.serializers import ProfileSerializer
-from shoutit.controllers import notifications_controller
+from shoutit.controllers import notifications_controller, mixpanel_controller
 from shoutit.models import User
 from shoutit.utils import debug_logger
 from .controllers import create_video_client
@@ -163,6 +164,18 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
         else:
             # Notify the other user about the incoming video call
             notifications_controller.notify_user_of_incoming_video_call(user=other_user, caller=request.user)
+
+        # Track
+        event_name = NOTIFICATION_TYPE_MISSED_VIDEO_CALL if missed else NOTIFICATION_TYPE_INCOMING_VIDEO_CALL
+        caller = request.user
+        track_properties = {
+            'mp_country_code': caller.ap.country,
+            '$region': caller.ap.state,
+            '$city': caller.ap.city,
+            'api_client': getattr(request, 'api_client', None),
+            'called_profile': other_user.pk
+        }
+        mixpanel_controller.track(caller.pk, str(event_name), track_properties)
 
         return Response()
 

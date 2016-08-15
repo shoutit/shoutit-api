@@ -265,14 +265,17 @@ def publish_shout_to_facebook(shout):
     params = {
         'access_token': la.access_token,
         shout.get_type_display(): shout.web_url,
-        'fb:explicitly_shared': prod,
         'privacy': "{'value':'EVERYONE'}"
     }
+    if prod:
+        params['fb:explicitly_shared'] = True
     res = requests.post(actions_url, params=params).json()
     id_on_facebook = res.get('id')
     if id_on_facebook:
         shout.published_on['facebook'] = id_on_facebook
         shout.save(update_fields=['published_on'])
+        # Track
+        mixpanel_controller.track(shout.user.pk, 'share_shout_on_fb', shout.track_properties)
         debug_logger.debug('Published shout %s on Facebook' % shout)
     else:
         error_logger.warn('Error publishing shout on Facebook', extra={'res': res, 'shout': shout})
