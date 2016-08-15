@@ -21,6 +21,8 @@ SG_API_KEY = 'SG.aSYoCuZLRrOXkP5eUfYe8w.0LnF0Rl78MO76Jw9UCvZ5_c86s9vwd9k02Dpb6L6
 sg = sendgrid.SendGridClient(SG_API_KEY)
 sg_api = sendgrid.SendGridAPIClient(apikey=SG_API_KEY)
 
+# Todo: skip sending emails when `EMAIL_ENV` is `file`
+
 
 def prepare_message(user, subject, template, subs=None):
     message = sendgrid.Mail()
