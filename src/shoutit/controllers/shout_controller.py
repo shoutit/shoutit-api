@@ -14,6 +14,7 @@ from elasticsearch import NotFoundError
 
 from shoutit.controllers import (email_controller, item_controller, location_controller, mixpanel_controller,
                                  notifications_controller)
+from shoutit.controllers import facebook_controller
 from shoutit.models import Shout, Tag, ShoutIndex, ShoutLike, ShoutBookmark, delete_object_index
 from shoutit.utils import debug_logger, error_logger, now_plus_delta
 
@@ -181,6 +182,11 @@ def shout_post_save(sender, instance=None, created=False, **kwargs):
         # Track
         if not instance.is_sss:
             mixpanel_controller.track(instance.user.pk, 'new_shout', instance.track_properties)
+
+    # Pre cache on Facebook Graph
+    # https://developers.facebook.com/docs/sharing/best-practices/#precaching
+    if instance.item.thumbnail:
+        facebook_controller.pre_cache_graph(instance.web_url)
 
     # Publish to Facebook
     if getattr(instance, 'publish_to_facebook', False) and 'facebook' not in instance.published_on:
