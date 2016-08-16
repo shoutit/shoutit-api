@@ -58,6 +58,14 @@ class RefreshTokenAdmin(admin.ModelAdmin):
     ordering = ('-created',)
 
 
+@admin.register(AuthToken)
+class AuthTokenAdmin(admin.ModelAdmin, UserLinkMixin):
+    list_display = ('id', '_user', 'page_admin_user', 'used_count', 'expires_at', 'created_at')
+    raw_id_fields = ('user', 'page_admin_user')
+    readonly_fields = ('_user',)
+    ordering = ('-created_at',)
+
+
 class CustomUserChangeForm(UserChangeForm):
     username = forms.RegexField(
         label=_("Username"), max_length=30, min_length=2, regex=r"^[0-9a-zA-Z.]{2,30}$",
@@ -81,7 +89,7 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
-    list_filter = (UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
+    list_filter = ('type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
                    'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)

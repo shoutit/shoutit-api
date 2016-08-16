@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import random
 
+from common.utils import UUIDValidator
 from django.contrib.auth import login
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
@@ -12,9 +13,10 @@ from ipware.ip import get_real_ip
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
-from common.constants import TOKEN_TYPE_RESET_PASSWORD
+from common.constants import TOKEN_TYPE_RESET_PASSWORD, USER_TYPE_PAGE
 from shoutit.controllers import (facebook_controller, gplus_controller, user_controller, location_controller,
                                  page_controller)
+from shoutit.models import AuthToken
 from shoutit.models import User, DBCLConversation, ConfirmToken
 from .page import PageCategorySerializer
 from .profile import ProfileDetailSerializer, GuestSerializer
@@ -324,4 +326,32 @@ class SMSCodeSerializer(serializers.Serializer):
             self.instance = dbcl_conversation.to_user
         except DBCLConversation.DoesNotExist:
             raise serializers.ValidationError({'sms_code': _('Invalid sms_code')})
+        return ret
+
+
+class AuthTokenSerializer(serializers.Serializer):
+    auth_token = serializers.CharField(validators=[UUIDValidator(_("'%(value)s' is not a valid auth token"))])
+
+    def to_internal_value(self, data):
+        ret = super(AuthTokenSerializer, self).to_internal_value(data)
+        auth_token_id = ret['auth_token']
+        try:
+            auth_token = AuthToken.object.get(id=auth_token_id)
+        except AuthToken.DoesNotExist:
+            raise serializers.ValidationError({'auth_token': _('Auth token does not exist')})
+        else:
+            if auth_token.is_expired:
+                raise serializers.ValidationError({'auth_token': _('Auth token is expired')})
+            auth_token.update_used_count()
+
+        if auth_token.user.type == USER_TYPE_PAGE:
+            page = auth_token.user
+            user = auth_token.page_admin_user
+            request = self.context.get('request')
+            # Set the page admin user for serializing the admin property of this page
+            request.page_admin_user = user
+        else:
+            page = None
+            user = auth_token.user
+        self.instance = user, page
         return ret
