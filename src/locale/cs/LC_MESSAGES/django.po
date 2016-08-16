@@ -1,41 +1,60 @@
 msgid ""
 msgstr ""
+"Project-Id-Version: shoutit-api\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-08-16 03:42+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: POEditor.com\n"
-"Project-Id-Version: shoutit-api\n"
 "Language: cs\n"
 
-#: .\shoutit\admin.py:61
+#: .\common\utils.py:126
+#, python-format
+msgid "'%(value)s' is not a valid id."
+msgstr "'%(value)s' není platné id"
+
+#: .\shoutit\admin.py:71
 msgid "Username"
 msgstr "Username"
 
-#: .\shoutit\admin.py:62 .\shoutit\models\auth.py:77
-msgid "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)"
-msgstr "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)"
+#: .\shoutit\admin.py:72 .\shoutit\models\auth.py:81
+msgid ""
+"Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
+"(.)"
+msgstr ""
+"Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
+"(.)"
 
-#: .\shoutit\admin.py:63
+#: .\shoutit\admin.py:73
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 
-#: .\shoutit\admin.py:76
+#: .\shoutit\admin.py:86
 msgid "Personal info"
 msgstr "Personal info"
 
-#: .\shoutit\admin.py:77
+#: .\shoutit\admin.py:87
 msgid "Permissions"
 msgstr "Permissions"
 
-#: .\shoutit\admin.py:79
+#: .\shoutit\admin.py:89
 msgid "Important dates"
 msgstr "Important dates"
 
-#: .\shoutit\admin.py:80 .\shoutit\admin.py:355
+#: .\shoutit\admin.py:90 .\shoutit\admin.py:365
 msgid "Extra"
 msgstr "Extra"
 
-#: .\shoutit\admin.py:354
+#: .\shoutit\admin.py:199
+msgid "Accept the selected verifications"
+msgstr "Accept the selected verifications"
+
+#: .\shoutit\admin.py:205
+msgid "Reject the selected verifications"
+msgstr "Reject the selected verifications"
+
+#: .\shoutit\admin.py:364
 msgid "Users"
 msgstr "Users"
 
@@ -103,11 +122,16 @@ msgstr "Stránka neexistuje"
 msgid "Page inactive or deleted"
 msgstr "Stránka je neaktivní nebo smazána"
 
+#: .\shoutit\api\authentication.py:72
+msgid "You can't act as an admin of the provided page"
+msgstr "Nemůžete se chovat jako administrátor poskytnuté stránky"
+
 #: .\shoutit\api\permissions.py:24
 msgid "Secure connection is required"
 msgstr "Spolehlivé připojení je potřeba"
 
 #: .\shoutit\api\serializers.py:81
+#, python-format
 msgid "Invalid data. Expected a dictionary, but got %(type)s"
 msgstr "Invalid data. Expected a dictionary, but got %(type)s"
 
@@ -116,10 +140,12 @@ msgid "This field can not be empty"
 msgstr "Toto pole nesmí být prázdné"
 
 #: .\shoutit\api\serializers.py:90
+#, python-format
 msgid "'%(id)s' is not a valid id"
 msgstr "'%(id)s' není platné id"
 
 #: .\shoutit\api\serializers.py:93
+#, python-format
 msgid "%(model)s with id '%(id)s' does not exist"
 msgstr "%(model)s s id '%(id)s' neexistuje"
 
@@ -150,10 +176,12 @@ msgid "Invalid discover id"
 msgstr "Neplatné objevovací id"
 
 #: .\shoutit\api\v3\filters.py:42
+#, python-format
 msgid "Discover Item with id '%(discover)s' does not exist"
 msgstr "Objevit '%(discover)s' neexistuje"
 
-#: .\shoutit\api\v3\filters.py:58 .\shoutit_twilio\views.py:107
+#: .\shoutit\api\v3\filters.py:58 .\shoutit_twilio\views.py:108
+#, python-format
 msgid "Profile with username '%(username)s' does not exist"
 msgstr "Profil s uživatelským jménem '%(username)s' neexistuje"
 
@@ -182,6 +210,7 @@ msgid "Invalid number"
 msgstr "Neplatné číslo"
 
 #: .\shoutit\api\v3\filters.py:158 .\shoutit\api\v3\serializers\tag.py:129
+#, python-format
 msgid "Category with slug '%(slug)s' does not exist"
 msgstr "Kategorie '%(slug)s' neexistuje"
 
@@ -190,8 +219,10 @@ msgid "Invalid sort"
 msgstr "Neplatný druh"
 
 #: .\shoutit\api\v3\pagination.py:47
+#, python-format
 msgid "Using '%(before)s' and '%(after)s' query params together is not allowed"
-msgstr "Using '%(before)s' and '%(after)s' query params together is not allowed"
+msgstr ""
+"Using '%(before)s' and '%(after)s' query params together is not allowed"
 
 #: .\shoutit\api\v3\pagination.py:59 .\shoutit\api\v3\pagination.py:67
 msgid "Should be a valid timestamp"
@@ -201,49 +232,63 @@ msgstr "Měla by to být platná časová značka"
 msgid "We do not return more than 1000 results for any query"
 msgstr "Nevracíme více než 1000 výsledků pro jakýkoliv dotaz"
 
-#: .\shoutit\api\v3\serializers\auth.py:88
-#: .\shoutit\api\v3\serializers\auth.py:156
-#: .\shoutit\api\v3\serializers\auth.py:210
+#: .\shoutit\api\v3\serializers\auth.py:90
+#: .\shoutit\api\v3\serializers\auth.py:158
+#: .\shoutit\api\v3\serializers\auth.py:212
 #: .\shoutit\api\v3\serializers\profile.py:230
 #: .\shoutit\controllers\user_controller.py:21
 msgid "This email is used by another account"
 msgstr "Tento email používá jiný účet"
 
-#: .\shoutit\api\v3\serializers\auth.py:115
-#: .\shoutit\api\v3\serializers\auth.py:238
+#: .\shoutit\api\v3\serializers\auth.py:117
+#: .\shoutit\api\v3\serializers\auth.py:240
 msgid "The email or username you entered do not belong to any account"
-msgstr "Email nebo uživatelské jméno, které jste vložily nepatří k jakémukoliv účtu"
+msgstr ""
+"Email nebo uživatelské jméno, které jste vložily nepatří k jakémukoliv účtu"
 
-#: .\shoutit\api\v3\serializers\auth.py:118
-#: .\shoutit\api\v3\serializers\auth.py:311
+#: .\shoutit\api\v3\serializers\auth.py:120
+#: .\shoutit\api\v3\serializers\auth.py:313
 msgid "The password you entered is incorrect"
 msgstr "Heslo které jste vložily je nesprávné"
 
-#: .\shoutit\api\v3\serializers\auth.py:198
+#: .\shoutit\api\v3\serializers\auth.py:200
 msgid "Could not create guest account"
 msgstr "Nešlo vytvořit návštěvnický účet"
 
-#: .\shoutit\api\v3\serializers\auth.py:259
-#: .\shoutit\api\v3\serializers\auth.py:285
+#: .\shoutit\api\v3\serializers\auth.py:261
+#: .\shoutit\api\v3\serializers\auth.py:287
 msgid "New passwords did not match"
 msgstr "Nová hesla se od sebe liší"
 
-#: .\shoutit\api\v3\serializers\auth.py:272
+#: .\shoutit\api\v3\serializers\auth.py:274
 msgid "Old password is incorrect"
 msgstr "Staré heslo je nesprávné"
 
-#: .\shoutit\api\v3\serializers\auth.py:297
+#: .\shoutit\api\v3\serializers\auth.py:299
 #: .\shoutit\api\v3\views\authentication_views.py:31
 msgid "Account inactive or deleted"
 msgstr "Účet je neaktivní nebo smazán"
 
-#: .\shoutit\api\v3\serializers\auth.py:300
+#: .\shoutit\api\v3\serializers\auth.py:302
 msgid "Reset token is invalid"
 msgstr "Resetující žeton je neplatný"
 
-#: .\shoutit\api\v3\serializers\auth.py:326
+#: .\shoutit\api\v3\serializers\auth.py:328
 msgid "Invalid sms_code"
 msgstr "Neplatný sms_kód"
+
+#: .\shoutit\api\v3\serializers\auth.py:333
+#, python-format
+msgid "'%(value)s' is not a valid auth token"
+msgstr "'%(value)s' není platné id"
+
+#: .\shoutit\api\v3\serializers\auth.py:341
+msgid "Auth token does not exist"
+msgstr "Žeton neexistuje"
+
+#: .\shoutit\api\v3\serializers\auth.py:344
+msgid "Auth token is expired"
+msgstr ""
 
 #: .\shoutit\api\v3\serializers\base.py:56
 msgid "Could not find (`latitude` and `longitude`) or figure the IP Address"
@@ -258,6 +303,7 @@ msgid "Must be a non-empty dictionary"
 msgstr "Must be a non-empty dictionary"
 
 #: .\shoutit\api\v3\serializers\base.py:102
+#, python-format
 msgid "Can only contain %(keys)s"
 msgstr "Může pouze obsahovat %(keys)s"
 
@@ -274,56 +320,86 @@ msgid "You can't make chat actions against your own profile"
 msgstr "Nemůžete dělat chat akce proti vašemu vlastnímu profilu"
 
 #: .\shoutit\api\v3\serializers\conversation.py:161
-msgid "%(name)s is not one of your listeners and can't be added to this conversation"
-msgstr "%(name)s není jeden z vašich posluchačů a nemůže být přidán do této konverzace"
+#, python-format
+msgid ""
+"%(name)s is not one of your listeners and can't be added to this conversation"
+msgstr ""
+"%(name)s není jeden z vašich posluchačů a nemůže být přidán do této "
+"konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:162
+#, python-format
 msgid "Added %(name)s to this conversation"
 msgstr "%(name)s přidán do této konverzace"
 
+#: .\shoutit\api\v3\serializers\conversation.py:173
+#, python-format
+msgid "%(name)s is already in this conversation"
+msgstr "%(name)s už je v této konverzaci"
+
 #: .\shoutit\api\v3\serializers\conversation.py:178
-msgid "%(name)s is not a member of this conversation and can't be removed from it"
-msgstr "%(name)s není členem této konverzace a kvůli tomu nemůže být z ní odstraněn"
+#, python-format
+msgid ""
+"%(name)s is not a member of this conversation and can't be removed from it"
+msgstr ""
+"%(name)s není členem této konverzace a kvůli tomu nemůže být z ní odstraněn"
 
 #: .\shoutit\api\v3\serializers\conversation.py:179
+#, python-format
 msgid "Removed %(name)s from this conversation"
 msgstr "%(name)s odstraněn z této konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:192
-msgid "%(name)s is not a member of this conversation and can't be promoted to admin it"
-msgstr "%(name)s není členem této konverzace a nemůže být povýšen na administrátora"
+#, python-format
+msgid ""
+"%(name)s is not a member of this conversation and can't be promoted to admin "
+"it"
+msgstr ""
+"%(name)s není členem této konverzace a nemůže být povýšen na administrátora"
 
 #: .\shoutit\api\v3\serializers\conversation.py:193
+#, python-format
 msgid "Promoted %(name)s to admin in this conversation"
 msgstr "%(name)s povýšen na administrátora této konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:204
+#, python-format
 msgid "%(name)s is already admin in this conversation"
 msgstr "%(name)s již je administrátorem této konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:209
+#, python-format
 msgid "%(name)s is not a member of this conversation and can't be blocked"
 msgstr "%(name)s není členem této konverzace a nemůže být blokován"
 
 #: .\shoutit\api\v3\serializers\conversation.py:210
+#, python-format
 msgid "Blocked %(name)s from this conversation"
 msgstr "%(name)s blokován z této konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:221
+#, python-format
 msgid "%(name)s is already blocked from this conversation"
 msgstr "%(name)s již je blokován z této konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:226
+#, python-format
 msgid "%(name)s is not blocked from this conversation"
 msgstr "%(name)s není blokován z této konverzace"
 
 #: .\shoutit\api\v3\serializers\conversation.py:227
+#, python-format
 msgid "Unblocked %(name)s from this conversation"
 msgstr "%(name)s odblokován z této konverzace"
 
 #: .\shoutit\api\v3\serializers\message.py:90
 msgid "Provide 'text' or 'attachments'"
 msgstr "Poskytněte 'text' nebo 'přílohy'"
+
+#: .\shoutit\api\v3\serializers\message.py:101
+#, python-format
+msgid "Should have any of these properties: %(types)s"
+msgstr "By měly/a/o mít jakoukoliv z těchto vlastností %(types)s"
 
 #: .\shoutit\api\v3\serializers\message.py:108
 msgid "location object should have 'latitude' and 'longitude'"
@@ -346,24 +422,37 @@ msgid "Should have either 'profile', 'shout' or 'conversation'"
 msgstr "Mělo by to mít buďto 'profil' 'shout' nebo 'konverzace'"
 
 #: .\shoutit\api\v3\serializers\page.py:43
+#, python-format
 msgid "PageCategory with slug '%(slug)s' does not exist"
 msgstr "Stránková kategorie '%(slug)s' neexistuje"
 
 #: .\shoutit\api\v3\serializers\page.py:74
+#, python-format
 msgid "Added %(name)s to the admins of this page"
 msgstr "%(name)s přidán k administrátorům této stránky"
 
 #: .\shoutit\api\v3\serializers\page.py:84
+#, python-format
 msgid "%(name)s is already admin in this page"
 msgstr "%(name)s už je administrátor této stránky"
 
 #: .\shoutit\api\v3\serializers\page.py:89
+#, python-format
 msgid "%(name)s is not admin in this page"
 msgstr "%(name)s není administrátor této stránky"
 
 #: .\shoutit\api\v3\serializers\page.py:90
+#, python-format
 msgid "Removed %(name)s from the admins of this page"
 msgstr "%(name)s odstraněn z administrátorů této stránky"
+
+#: .\shoutit\api\v3\serializers\page.py:120
+msgid "Your business verification request has been submitted"
+msgstr "Vaše žádost o byznys ověření byla předložena"
+
+#: .\shoutit\api\v3\serializers\page.py:121
+msgid "Your business verification request has been updated"
+msgstr "Vaše žádost o byznys ověření byla aktualizována"
 
 #: .\shoutit\api\v3\serializers\profile.py:391
 msgid "Facebook"
@@ -374,8 +463,16 @@ msgid "Google"
 msgstr "Google"
 
 #: .\shoutit\api\v3\serializers\profile.py:392
+#, python-format
 msgid "Couldn't link your %(account)s account"
 msgstr "Nemohli jsme propojit váš %(account)s účet"
+
+#: .\shoutit\api\v3\serializers\profile.py:393
+#, python-format
+msgid ""
+"Couldn't unlink your %(account)s account. You must set your password first."
+msgstr ""
+"Nemohli jsme rozpojit váš %(account)s účet. První musíte nastavit vaše heslo."
 
 #: .\shoutit\api\v3\serializers\profile.py:396
 #: .\shoutit\api\v3\serializers\profile.py:453
@@ -387,33 +484,42 @@ msgstr "spojen"
 msgid "unlinked"
 msgstr "rozpojen"
 
-#: .\shoutit\api\v3\serializers\profile.py:407
-msgid "Your %(account)s has been %(action)s"
-msgstr "Váš %(account)s byl %(action)s"
+#: .\shoutit\api\v3\serializers\profile.py:424
+#, python-format
+msgid "Your %(account)s account has been %(action)s"
+msgstr "Váš %(account)s účet byl %(action)s"
 
 #: .\shoutit\api\v3\serializers\profile.py:429
 #: .\shoutit\api\v3\serializers\profile.py:472
 msgid "No changes were made"
 msgstr "Žádné změny nebyli udělány"
 
+#: .\shoutit\api\v3\serializers\profile.py:446
+msgid "You must link your Facebook account first"
+msgstr "Musíte první propojit váš Facebook účet"
+
+#: .\shoutit\api\v3\serializers\profile.py:449
+msgid "Couldn't link your Facebook Page"
+msgstr "Nemohli jsme propojit vaši Facebook Stránku"
+
+#: .\shoutit\api\v3\serializers\profile.py:450
+msgid "Couldn't unlink your Facebook Page"
+msgstr "Nemohli jsme rozpojit vaši Facebook Stránku"
+
+#: .\shoutit\api\v3\serializers\profile.py:467
+#, python-format
+msgid "Your Facebook Page has been %(action)s"
+msgstr "Vaše Facebook Stránka byla %(action)s"
+
 #: .\shoutit\api\v3\serializers\profile.py:592
 msgid "You can't make actions against your own profile"
 msgstr "Nemůžete udělat akce proti vašemu vlastnímu profilu"
-
-#: .\shoutit\api\v3\serializers\shout.py:80
-msgid "Malformed filters, missing key: %(key)s"
-msgstr "Zdeformované filtry, chybějící klíč %(key)s"
-
-#: .\shoutit\api\v3\serializers\shout.py:83
-msgid "Malformed filters"
-msgstr "Zdeformované filtry"
 
 #: .\shoutit\api\v3\serializers\shout.py:93
 msgid "The currency must be set when the price is set"
 msgstr "Měna musí být nastavena, když je nastavena cena"
 
 #: .\shoutit\api\v3\serializers\shout.py:203
-#, fuzzy
 msgid "Is not valid in your or in the shout's country"
 msgstr "Není platný/á/é ve vaši zemi nebo v zemi shoutu."
 
@@ -421,38 +527,68 @@ msgstr "Není platný/á/é ve vaši zemi nebo v zemi shoutu."
 msgid "You didn't provide enough information for creating a shout"
 msgstr "Neposkytli jste dostatek informaci k vytvoření shoutu"
 
-#: .\shoutit\api\v3\views\authentication_views.py:470
+#: .\shoutit\api\v3\serializers\shout.py:237
+#, python-format
+msgid "You liked %(shout)s"
+msgstr "Libí se vám %(shout)s"
+
+#: .\shoutit\api\v3\serializers\shout.py:238
+#, python-format
+msgid "You unliked %(shout)s"
+msgstr "Přestal/i se vám líbit %(shout)s"
+
+#: .\shoutit\api\v3\serializers\shout.py:243
+msgid "You can not like your own shouts"
+msgstr "Nemůžete si oblíbit vaše vlastní shouty"
+
+#: .\shoutit\api\v3\serializers\shout.py:260
+#: .\shoutit\api\v3\serializers\shout.py:285
+msgid "a shout"
+msgstr "shout"
+
+#: .\shoutit\api\v3\serializers\shout.py:269
+#, python-format
+msgid "You bookmarked %(shout)s"
+msgstr "Dali jste %(shout)s do záložek"
+
+#: .\shoutit\api\v3\serializers\shout.py:270
+#, python-format
+msgid "You unbookmarked %(shout)s"
+msgstr "Vyndali jste %(shout)s ze záložek"
+
+#: .\shoutit\api\v3\views\authentication_views.py:522
 #: .\shoutit\api\v3\views\exception_views.py:27
 #: .\shoutit\api\v3\views\exception_views.py:42
 msgid "Authentication failed"
 msgstr "Ověření selhalo"
 
-#: .\shoutit\api\v3\views\authentication_views.py:477
+#: .\shoutit\api\v3\views\authentication_views.py:529
 msgid "Unsupported grant_type"
 msgstr "Unsupported grant_type"
 
-#: .\shoutit\api\v3\views\authentication_views.py:584
+#: .\shoutit\api\v3\views\authentication_views.py:636
 msgid "Password reset email will be sent soon"
 msgstr "Brzo vám bude zaslán email s resetováním hesla"
 
-#: .\shoutit\api\v3\views\authentication_views.py:607
-#: .\shoutit\api\v3\views\authentication_views.py:720
+#: .\shoutit\api\v3\views\authentication_views.py:659
+#: .\shoutit\api\v3\views\authentication_views.py:772
 msgid "New password set"
 msgstr "Nové heslo nastaveno"
 
-#: .\shoutit\api\v3\views\authentication_views.py:722
+#: .\shoutit\api\v3\views\authentication_views.py:774
 msgid "Token does not exist"
 msgstr "Žeton neexistuje"
 
-#: .\shoutit\api\v3\views\authentication_views.py:724
+#: .\shoutit\api\v3\views\authentication_views.py:776
 msgid "Email address is already verified"
 msgstr "Email adresa už je ověřená"
 
-#: .\shoutit\api\v3\views\authentication_views.py:728
+#: .\shoutit\api\v3\views\authentication_views.py:780
 msgid "Authentication credentials were not provided"
 msgstr "Ověřovací listini nebyli poskytnuty"
 
-#: .\shoutit\api\v3\views\authentication_views.py:732
+#: .\shoutit\api\v3\views\authentication_views.py:784
+#, python-format
 msgid "Your email '%(email)s' is already verified"
 msgstr "Váš email '%(email)s už je ověřen"
 
@@ -512,10 +648,12 @@ msgid "You can't listen to your self"
 msgstr "Nemůžete poslouchat sami sebe"
 
 #: .\shoutit\api\v3\views\profile_views.py:238
+#, python-format
 msgid "You started listening to shouts from %(name)s"
 msgstr "Začali jste poslouchat shouty od %(name)s"
 
 #: .\shoutit\api\v3\views\profile_views.py:241
+#, python-format
 msgid "You stopped listening to shouts from %(name)s"
 msgstr "Přestali jste poslouchat shouty od %(name)s"
 
@@ -561,81 +699,114 @@ msgstr "Žádné mobilní číslo, které se"
 
 #: .\shoutit\api\v3\views\tag_views.py:161
 #: .\shoutit\api\v3\views\tag_views.py:206
+#, python-format
 msgid "You started listening to shouts about %(name)s"
 msgstr "Začali jste poslouchat shouty o %(name)s"
 
 #: .\shoutit\api\v3\views\tag_views.py:164
 #: .\shoutit\api\v3\views\tag_views.py:209
+#, python-format
 msgid "You stopped listening to shouts about %(name)s"
 msgstr "Přestali jste poslouchat shouty o %(name)s"
 
 #: .\shoutit\api\versioning.py:13
+#, python-format
 msgid "Invalid version in URL path. Please use version: %(version)s"
 msgstr "Neplatná verze URL cesty. Prosím použijte tuto verzi: %(version)s"
 
-#: .\shoutit\controllers\email_controller.py:47
+#: .\shoutit\controllers\email_controller.py:49
 msgid "Welcome!"
 msgstr "Vítejte!"
 
-#: .\shoutit\controllers\email_controller.py:54
-#: .\shoutit\controllers\email_controller.py:96
+#: .\shoutit\controllers\email_controller.py:56
+#: .\shoutit\controllers\email_controller.py:98
 msgid "Take me to my profile"
 msgstr "Vezměte mě k mému profilu"
 
-#: .\shoutit\controllers\email_controller.py:59
+#: .\shoutit\controllers\email_controller.py:61
 msgid "To get started using Shoutit, please activate your account below"
 msgstr "Aby jste začali používat Shoutit, prosím aktivujte váš účet níže"
 
-#: .\shoutit\controllers\email_controller.py:60
+#: .\shoutit\controllers\email_controller.py:62
 msgid "Activate your account"
 msgstr "Aktivujte váš účet"
 
-#: .\shoutit\controllers\email_controller.py:74
+#: .\shoutit\controllers\email_controller.py:76
 msgid "Verify your email"
 msgstr "Ověřte váš email"
 
-#: .\shoutit\controllers\email_controller.py:76
-msgid "Your have changed your email therefore your account is not verified. To use Shoutit with full potential we need to verify your email."
-msgstr "Změnili jste váš email, proto váš účet není ověřen. Aby jste mohli využít plný potenciál Shoutitu, potřebujete ověřit váš email."
-
 #: .\shoutit\controllers\email_controller.py:78
+msgid ""
+"Your have changed your email therefore your account is not verified. To use "
+"Shoutit with full potential we need to verify your email."
+msgstr ""
+"Změnili jste váš email, proto váš účet není ověřen. Aby jste mohli využít "
+"plný potenciál Shoutitu, potřebujete ověřit váš email."
+
+#: .\shoutit\controllers\email_controller.py:80
 msgid "Verify it now"
 msgstr "Ověřit teď"
 
-#: .\shoutit\controllers\email_controller.py:92
+#: .\shoutit\controllers\email_controller.py:94
 msgid "Your email has been verified!"
 msgstr "Váš email byl ověřen!"
 
-#: .\shoutit\controllers\email_controller.py:94
-msgid "Thank you for verifying your email. Your account has been verified and you can now use Shoutit full potential."
-msgstr "Děkujeme za ověření vašeho emailu. Váš účet byl ověřen a nyní můžete využít plný potenciál Shoutitu."
+#: .\shoutit\controllers\email_controller.py:96
+msgid ""
+"Thank you for verifying your email. Your account has been verified and you "
+"can now use Shoutit full potential."
+msgstr ""
+"Děkujeme za ověření vašeho emailu. Váš účet byl ověřen a nyní můžete využít "
+"plný potenciál Shoutitu."
 
-#: .\shoutit\controllers\email_controller.py:110
+#: .\shoutit\controllers\email_controller.py:112
 msgid "Reset your password"
 msgstr "Resetujte vaše heslo"
 
-#: .\shoutit\controllers\email_controller.py:112
-msgid "You have requested to reset your password. If it wasn't you please let us know as soon as possible."
-msgstr "Zažádali jste o resetování hesla. Pokud jste to nebyli vy, prosím nechte nás co nejrychleji vědět."
+#: .\shoutit\controllers\email_controller.py:114
+msgid ""
+"You have requested to reset your password. If it wasn't you please let us "
+"know as soon as possible."
+msgstr ""
+"Zažádali jste o resetování hesla. Pokud jste to nebyli vy, prosím nechte nás "
+"co nejrychleji vědět."
 
-#: .\shoutit\controllers\email_controller.py:113
+#: .\shoutit\controllers\email_controller.py:115
 msgid "Reset my password"
 msgstr "Resetovat mé heslo"
 
-#: .\shoutit\controllers\facebook_controller.py:26
+#: .\shoutit\controllers\email_controller.py:150
+#, python-format
+msgid "Your page '%(page)s' has a new notification"
+msgstr "Vaše stránka '%(page)s' má nové oznámení"
+
+#: .\shoutit\controllers\email_controller.py:153
+msgid "You have a new notification"
+msgstr "Máte nové oznámení"
+
+#: .\shoutit\controllers\facebook_controller.py:31
 msgid "Could not link Facebook account, try again later"
 msgstr "Nešlo propojit Facebook účet, zkuste to později"
 
-#: .\shoutit\controllers\facebook_controller.py:28
+#: .\shoutit\controllers\facebook_controller.py:32
+msgid "Facebook error, try again later"
+msgstr "Facebook chyba, zkuste to později"
+
+#: .\shoutit\controllers\facebook_controller.py:33
 #: .\shoutit\controllers\gplus_controller.py:23
 msgid "Could not access your email, make sure you allowed it"
-msgstr "Nemohli jsme získat přístup k vašemu emailu, ujistěte se, že je to povolené"
+msgstr ""
+"Nemohli jsme získat přístup k vašemu emailu, ujistěte se, že je to povolené"
 
-#: .\shoutit\controllers\facebook_controller.py:29
+#: .\shoutit\controllers\facebook_controller.py:34
 msgid "No Facebook account to unlink"
 msgstr "Žádný Facebook účet k rozpojení"
 
-#: .\shoutit\controllers\facebook_controller.py:151
+#: .\shoutit\controllers\facebook_controller.py:115
+msgid "Couldn't find the specified Facebook Page"
+msgstr "Nemohli jsme najít specifikovanou Facebook Stránku"
+
+#: .\shoutit\controllers\facebook_controller.py:156
 msgid "Facebook account is already linked to somebody else's profile"
 msgstr "Tento Facebook účet už je propojen s profilem někoho jiného"
 
@@ -644,7 +815,7 @@ msgid "No Google account to unlink"
 msgstr "Žádný Google účet k rozpojení"
 
 #: .\shoutit\controllers\gplus_controller.py:25
-#: .\shoutit\controllers\user_controller.py:127
+#: .\shoutit\controllers\user_controller.py:132
 msgid "Could not access your Google account, try again later"
 msgstr "Nemohli jsme získat přístup k vašemu Google účtu, zkuste to později"
 
@@ -652,99 +823,115 @@ msgstr "Nemohli jsme získat přístup k vašemu Google účtu, zkuste to pozdě
 msgid "This Google account is already linked to somebody else's profile"
 msgstr "Tento Google účet už je propojen s profilem někoho jiného"
 
-#: .\shoutit\models\auth.py:76
+#: .\shoutit\models\auth.py:80
 msgid "username"
 msgstr "uživatelské jméno"
 
-#: .\shoutit\models\auth.py:80
+#: .\shoutit\models\auth.py:84
 msgid "Enter a valid username."
 msgstr "Vložte platné uživatelské jméno"
 
-#: .\shoutit\models\auth.py:85 .\shoutit\models\auth.py:653
+#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:694
 msgid "first name"
 msgstr "křestní jméno"
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:654
+#: .\shoutit\models\auth.py:91 .\shoutit\models\auth.py:695
 msgid "last name"
 msgstr "příjmení"
 
-#: .\shoutit\models\auth.py:88 .\shoutit\models\auth.py:655
+#: .\shoutit\models\auth.py:92 .\shoutit\models\auth.py:696
 msgid "email address"
 msgstr "emailová adresa"
 
-#: .\shoutit\models\auth.py:90
+#: .\shoutit\models\auth.py:94
 msgid "staff status"
 msgstr "staff status"
 
-#: .\shoutit\models\auth.py:90
+#: .\shoutit\models\auth.py:94
 msgid "Designates whether the user can log into this admin site."
 msgstr "Designates whether the user can log into this admin site."
 
-#: .\shoutit\models\auth.py:92
+#: .\shoutit\models\auth.py:96
 msgid "active"
 msgstr "active"
 
-#: .\shoutit\models\auth.py:93
-msgid "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
-msgstr "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
+#: .\shoutit\models\auth.py:97
+msgid ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
+msgstr ""
+"Designates whether this user should be treated as active. Unselect this "
+"instead of deleting accounts."
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:99
 msgid "activated"
 msgstr "activated"
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:99
 msgid "Designates whether this user have a verified email."
 msgstr "Designates whether this user have a verified email."
 
-#: .\shoutit\models\auth.py:96
+#: .\shoutit\models\auth.py:100
 msgid "date joined"
 msgstr "date joined"
 
-#: .\shoutit\models\auth.py:101
+#: .\shoutit\models\auth.py:105
 msgid "testuser status"
 msgstr "testuser status"
 
-#: .\shoutit\models\auth.py:101
+#: .\shoutit\models\auth.py:105
 msgid "Designates whether this user is a test user."
 msgstr "Designates whether this user is a test user."
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:107
 msgid "guest user status"
 msgstr "guest user status"
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:107
 msgid "Designates whether this user is a guest user."
 msgstr "Designates whether this user is a guest user."
 
-#: .\shoutit\models\auth.py:105
+#: .\shoutit\models\auth.py:109
 msgid "mailing list status"
 msgstr "mailing list status"
 
-#: .\shoutit\models\auth.py:106
+#: .\shoutit\models\auth.py:110
 msgid "Designates whether this user is on the main mailing list."
 msgstr "Designates whether this user is on the main mailing list."
 
-#: .\shoutit\models\auth.py:108
+#: .\shoutit\models\auth.py:112
 msgid "mixpanel people status"
 msgstr "mixpanel people status"
 
-#: .\shoutit\models\auth.py:108
+#: .\shoutit\models\auth.py:112
 msgid "Designates whether this user is on MixPanel People."
 msgstr "Designates whether this user is on MixPanel People."
 
-#: .\shoutit\models\auth.py:115
+#: .\shoutit\models\auth.py:113
+msgid "accepted language"
+msgstr ""
+
+#: .\shoutit\models\auth.py:121
 msgid "user"
 msgstr "user"
 
-#: .\shoutit\models\auth.py:116
+#: .\shoutit\models\auth.py:122
 msgid "users"
 msgstr "users"
 
-#: .\shoutit\models\auth.py:540
+#: .\shoutit\models\auth.py:165 .\shoutit\models\auth.py:180
+msgid "Page"
+msgstr "Stránka"
+
+#: .\shoutit\models\auth.py:167
+msgid "Guest"
+msgstr "Návštěvník"
+
+#: .\shoutit\models\auth.py:553
 msgid "Shoutit User"
 msgstr "Shoutit uživatel"
 
-#: .\shoutit\models\auth.py:656
+#: .\shoutit\models\auth.py:697
 msgid "mobile"
 msgstr "mobilní číslo"
 
@@ -757,14 +944,17 @@ msgid "Modification time"
 msgstr "Modification time"
 
 #: .\shoutit\models\message.py:146
+#, python-format
 msgid "%(name)s has left the conversation"
 msgstr "%(name)s odešel z konverzace"
 
 #: .\shoutit\models\message.py:230
+#, python-format
 msgid "%(name)s created this public chat"
 msgstr "%(name)s vytvořil veřejný chat"
 
 #: .\shoutit\models\message.py:283
+#, python-format
 msgid "%(name)s: %(message)s"
 msgstr "%(name)s: %(message)s"
 
@@ -772,37 +962,76 @@ msgstr "%(name)s: %(message)s"
 msgid "Shoutit"
 msgstr "Shoutit"
 
+#: .\shoutit\models\message.py:536
+msgid "New listen"
+msgstr "Nový poslech"
+
+#: .\shoutit\models\message.py:537 .\shoutit\models\message.py:562
+#: .\shoutit\models\message.py:577
+msgid "View Profile"
+msgstr "Zobrazit profil"
+
 #: .\shoutit\models\message.py:539
-msgid "%(name)s started listening to you"
+#, python-format
+msgid "%(name)s started listening to your shouts"
 msgstr "%(name)s vás začal poslouchat"
 
-#: .\shoutit\models\message.py:545
+#: .\shoutit\models\message.py:542
+#, python-format
+msgid "Press the View Profile button to view %(name)s's profile"
+msgstr ""
+
+#: .\shoutit\models\message.py:546
 msgid "New message"
 msgstr "Nová zpráva"
 
-#: .\shoutit\models\message.py:552
+#: .\shoutit\models\message.py:547
+msgid "Reply"
+msgstr "Odpovědět"
+
+#: .\shoutit\models\message.py:551
+msgid ""
+"Press the Reply button to respond or open 'My Chats' in your Shoutit App"
+msgstr ""
+
+#: .\shoutit\models\message.py:554
 msgid "Incoming video call"
 msgstr "Příchozí video hovor"
 
 #: .\shoutit\models\message.py:555
+msgid "Answer"
+msgstr "Odpovědět"
+
+#: .\shoutit\models\message.py:557
+#, python-format
 msgid "%(name)s is calling you on Shoutit"
 msgstr "%(name)s vám volá na Shoutit"
 
-#: .\shoutit\models\message.py:559
+#: .\shoutit\models\message.py:561
 msgid "Missed video call"
 msgstr "Zmeškali jste video hovor"
 
-#: .\shoutit\models\message.py:562
+#: .\shoutit\models\message.py:564
+#, python-format
 msgid "You missed a call from %(name)s"
 msgstr "Zmeškali jste hovor od %(name)s"
 
-#: .\shoutit\models\message.py:561
-msgid "New Credit Transaction"
-msgstr "Nová Kredit Transakce"
+#: .\shoutit\models\message.py:569
+msgid "New Shoutit Credit transaction"
+msgstr "Nová Shoutit Kredit transakce"
 
-#: .\shoutit\models\message.py:553
-msgid "Answer"
-msgstr "Odpovědět"
+#: .\shoutit\models\message.py:570
+msgid "View Transactions"
+msgstr "Zobrazit Transakce"
+
+#: .\shoutit\models\message.py:576
+msgid "New Shout Like"
+msgstr "Nové oblíbení Shoutu"
+
+#: .\shoutit\models\message.py:580
+#, python-format
+msgid "%(name)s liked your shout %(title)s"
+msgstr "%(name)s se líbil váš shout %(title)s"
 
 #: .\shoutit\models\page.py:45
 msgid "name"
@@ -816,13 +1045,13 @@ msgstr "publikovaný"
 msgid "Designates whether the page is publicly visible."
 msgstr "Designates whether the page is publicly visible."
 
-#: .\shoutit\models\page.py:49
-msgid "claimed"
-msgstr "claimed"
-
 #: .\shoutit\models\page.py:50
-msgid "Designates whether the page is claimed."
-msgstr "Designates whether the page is claimed."
+msgid "verified"
+msgstr "ověřeno"
+
+#: .\shoutit\models\page.py:51
+msgid "Designates whether the page is verified."
+msgstr "Designates whether the page is verified."
 
 #: .\shoutit\models\page.py:53
 msgid "about"
@@ -856,6 +1085,30 @@ msgstr "mise"
 msgid "general info"
 msgstr "všeobecné info"
 
+#: .\shoutit\models\page.py:115
+msgid "Not submitted"
+msgstr "Nepředloženo"
+
+#: .\shoutit\models\page.py:116
+msgid "Waiting"
+msgstr "Čekám"
+
+#: .\shoutit\models\page.py:117
+msgid "In review"
+msgstr "Revizování"
+
+#: .\shoutit\models\page.py:118
+msgid "Rejected"
+msgstr "Zamítnuto"
+
+#: .\shoutit\models\page.py:119
+msgid "Accepted"
+msgstr "Přijmuto"
+
+#: .\shoutit\models\post.py:215
+msgid "Deleted Shout"
+msgstr "Smazaný Shout"
+
 #: .\shoutit\models\user.py:16
 msgid "Male"
 msgstr "Muž"
@@ -873,8 +1126,12 @@ msgid "You're not allowed to use Shoutit"
 msgstr "Nemáte povolení používat Shoutit"
 
 #: .\shoutit\permissions.py:29
-msgid "Activate your account to create more shouts (check your email for activation link)"
-msgstr "Aby jste mohli vytvořit více shoutů, aktivujte váš účet (zkontrolujte váš email pro aktivační odkaz)"
+msgid ""
+"Activate your account to create more shouts (check your email for activation "
+"link)"
+msgstr ""
+"Aby jste mohli vytvořit více shoutů, aktivujte váš účet (zkontrolujte váš "
+"email pro aktivační odkaz)"
 
 #: .\shoutit\permissions.py:31
 msgid "You're not allowed to create requests"
@@ -900,16 +1157,28 @@ msgstr "Nemáte povolení posílat zprávy"
 msgid "You're not allowed to send reports"
 msgstr "Nemáte povolení posílat hlášení"
 
-#: .\shoutit\settings.py:249
+#: .\shoutit\settings.py:252
 msgid "English"
 msgstr "Anglicky"
 
-#: .\shoutit\settings.py:250
+#: .\shoutit\settings.py:253
 msgid "Arabic"
 msgstr "Arabsky"
 
+#: .\shoutit\settings.py:254
+msgid "German"
+msgstr ""
+
+#: .\shoutit\settings.py:255
+msgid "Spanish"
+msgstr ""
+
+#: .\shoutit\settings.py:256
+msgid "Chinese"
+msgstr ""
+
 #: .\shoutit\utils.py:63
-#, fuzzy
+#, python-format
 msgid "Is not valid in %(country)s"
 msgstr "není platný/á/é v %(country)s"
 
@@ -918,24 +1187,36 @@ msgid "You earned 1 Shoutit Credit for completing your profile."
 msgstr "Vydělali jste si 1 Shoutit Kredit zkompletováním vašeho účtu."
 
 #: .\shoutit_credit\models\profile.py:90
+#, python-format
 msgid "You earned 1 Shoutit Credit for inviting %(name)s."
 msgstr "Vydělali jste si 1 Shoutit Kredit pozváním %(name)s."
 
 #: .\shoutit_credit\models\profile.py:144
+#, python-format
 msgid "You earned %(amount)d Shoutit Credit for listening to your friends."
-msgstr "Vydělali jste si %(amount)d Shoutit Kreditů posloucháním vašich přátel."
+msgstr ""
+"Vydělali jste si %(amount)d Shoutit Kreditů posloucháním vašich přátel."
 
 #: .\shoutit_credit\models\shout.py:81
+#, python-format
 msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
 msgstr "Vydělali jste si 1 Shoutit Kredit sdílením %(title)s na Facebooku."
 
 #: .\shoutit_credit\models\shout.py:148
-msgid "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %(days)d days."
-msgstr "Utratili jste %(amount)d Shoutit Kreditů propagací %(title)s jako %(label)s na %(days)d dní."
+#, python-format
+msgid ""
+"You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
+"(days)d days."
+msgstr ""
+"Utratili jste %(amount)d Shoutit Kreditů propagací %(title)s jako %(label)s "
+"na %(days)d dní."
 
 #: .\shoutit_credit\models\shout.py:149
-msgid "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
-msgstr "Utratili jste %(amount)d Shoutit Kreditů propagací %(title)s jako %(label)s."
+#, python-format
+msgid ""
+"You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
+msgstr ""
+"Utratili jste %(amount)d Shoutit Kreditů propagací %(title)s jako %(label)s."
 
 #: .\shoutit_credit\models\shout.py:217
 msgid "You don't have enough Shoutit Credit for this action"
@@ -949,193 +1230,20 @@ msgstr "Tento Shout už je propagován"
 msgid "The shout has been promoted"
 msgstr "Tento shout byl propagován"
 
-#: .\shoutit_twilio\views.py:58
+#: .\shoutit_twilio\views.py:59
 msgid "Couldn't authorize you to make video calls"
 msgstr "Nemohli jsme vás oprávnit k dělání video hovorů"
 
-#: .\shoutit_twilio\views.py:117
+#: .\shoutit_twilio\views.py:118
+#, python-format
 msgid "Error calling %(name)s"
 msgstr "Chyba při volání %(name)s"
 
-#: .\shoutit_twilio\views.py:151 .\shoutit_twilio\views.py:197
+#: .\shoutit_twilio\views.py:152 .\shoutit_twilio\views.py:210
+#, python-format
 msgid "Profile with identity %(identity)s does not exist"
 msgstr "Profil s identitou %(identity)s neexistuje"
 
-#: .\shoutit_twilio\views.py:154 .\shoutit_twilio\views.py:200
+#: .\shoutit_twilio\views.py:155 .\shoutit_twilio\views.py:213
 msgid "Invalid identity"
 msgstr "Neplatná identita"
-
-#: .\shoutit\api\v3\serializers\message.py:101
-#, fuzzy
-msgid "Should have any of these properties: %(types)s"
-msgstr "By měly/a/o mít jakoukoliv z těchto vlastností %(types)s"
-
-#: .\shoutit\models\post.py:215
-msgid "Deleted Shout"
-msgstr "Smazaný Shout"
-
-#: .\shoutit\api\authentication.py:72
-msgid "You can't act as an admin of the provided page"
-msgstr "Nemůžete se chovat jako administrátor poskytnuté stránky"
-
-#: .\shoutit\api\v3\serializers\shout.py:237
-#, fuzzy
-msgid "You liked %(shout)s"
-msgstr "Libí se vám %(shout)s"
-
-#: .\shoutit\api\v3\serializers\shout.py:238
-#, fuzzy
-msgid "You unliked %(shout)s"
-msgstr "Přestal/i se vám líbit %(shout)s"
-
-#: .\shoutit\api\v3\serializers\shout.py:243
-#, fuzzy
-msgid "You can not like your own shouts"
-msgstr "Nemůžete si oblíbit vaše vlastní shouty"
-
-#: .\shoutit\api\v3\serializers\shout.py:260
-#: .\shoutit\api\v3\serializers\shout.py:285
-msgid "a shout"
-msgstr "shout"
-
-#: .\shoutit\models\message.py:538
-msgid "you"
-msgstr "vy"
-
-#: .\shoutit\models\message.py:574
-#, fuzzy
-msgid "New Shout Like"
-msgstr "Nové oblíbení Shoutu"
-
-#: .\shoutit\models\message.py:578
-#, fuzzy
-msgid "%(name)s liked your shout %(title)s"
-msgstr "%(name)s se líbil váš shout %(title)s"
-
-#: .\shoutit\api\v3\serializers\shout.py:269
-#, fuzzy
-msgid "You bookmarked %(shout)s"
-msgstr "Dali jste %(shout)s do záložek"
-
-#: .\shoutit\api\v3\serializers\shout.py:270
-#, fuzzy
-msgid "You unbookmarked %(shout)s"
-msgstr "Vyndali jste %(shout)s ze záložek"
-
-#: .\shoutit\api\v3\serializers\page.py:120
-msgid "Your business verification request has been submitted"
-msgstr "Vaše žádost o byznys ověření byla předložena"
-
-#: .\shoutit\api\v3\serializers\page.py:121
-msgid "Your business verification request has been updated"
-msgstr "Vaše žádost o byznys ověření byla aktualizována"
-
-#: .\shoutit\models\message.py:535
-msgid "New listen"
-msgstr "Nový poslech"
-
-#: .\shoutit\models\page.py:50
-msgid "verified"
-msgstr "ověřeno"
-
-#: .\shoutit\models\page.py:51
-msgid "Designates whether the page is verified."
-msgstr "Designates whether the page is verified."
-
-#: .\shoutit\models\page.py:115
-msgid "Not submitted"
-msgstr "Nepředloženo"
-
-#: .\shoutit\models\page.py:116
-msgid "Waiting"
-msgstr "Čekám"
-
-#: .\shoutit\models\page.py:117
-msgid "In review"
-msgstr "Revizování"
-
-#: .\shoutit\models\page.py:118
-msgid "Rejected"
-msgstr "Zamítnuto"
-
-#: .\shoutit\models\page.py:119
-msgid "Accepted"
-msgstr "Přijmuto"
-
-#: .\shoutit\admin.py:189
-msgid "Accept the selected verifications"
-msgstr "Accept the selected verifications"
-
-#: .\shoutit\admin.py:195
-msgid "Reject the selected verifications"
-msgstr "Reject the selected verifications"
-
-#: .\shoutit\api\v3\serializers\conversation.py:173
-msgid "%(name)s is already in this conversation"
-msgstr "%(name)s už je v této konverzaci"
-
-#: .\shoutit\api\v3\serializers\profile.py:393
-msgid "Couldn't unlink your %(account)s account. You must set your password first."
-msgstr "Nemohli jsme rozpojit váš %(account)s účet. První musíte nastavit vaše heslo."
-
-#: .\shoutit\api\v3\serializers\profile.py:424
-msgid "Your %(account)s account has been %(action)s"
-msgstr "Váš %(account)s účet byl %(action)s"
-
-#: .\shoutit\api\v3\serializers\profile.py:446
-msgid "You must link your Facebook account first"
-msgstr "Musíte první propojit váš Facebook účet"
-
-#: .\shoutit\api\v3\serializers\profile.py:449
-msgid "Couldn't link your Facebook Page"
-msgstr "Nemohli jsme propojit vaši Facebook Stránku"
-
-#: .\shoutit\api\v3\serializers\profile.py:450
-msgid "Couldn't unlink your Facebook Page"
-msgstr "Nemohli jsme rozpojit vaši Facebook Stránku"
-
-#: .\shoutit\api\v3\serializers\profile.py:467
-msgid "Your Facebook Page has been %(action)s"
-msgstr "Vaše Facebook Stránka byla %(action)s"
-
-#: .\shoutit\controllers\email_controller.py:142
-msgid "Your page '%(page)s' has a new notification"
-msgstr "Vaše stránka '%(page)s' má nové oznámení"
-
-#: .\shoutit\controllers\email_controller.py:144
-msgid "You have a new notification"
-msgstr "Máte nové oznámení"
-
-#: .\shoutit\controllers\facebook_controller.py:27
-msgid "Facebook error, try again later"
-msgstr "Facebook chyba, zkuste to později"
-
-#: .\shoutit\controllers\facebook_controller.py:110
-msgid "Couldn't find the specified Facebook Page"
-msgstr "Nemohli jsme najít specifikovanou Facebook Stránku"
-
-#: .\shoutit\models\auth.py:159 .\shoutit\models\auth.py:174
-msgid "Page"
-msgstr "Stránka"
-
-#: .\shoutit\models\auth.py:161
-msgid "Guest"
-msgstr "Návštěvník"
-
-#: .\shoutit\models\message.py:536 .\shoutit\models\message.py:560
-#: .\shoutit\models\message.py:575
-msgid "View Profile"
-msgstr "Zobrazit profil"
-
-#: .\shoutit\models\message.py:546
-msgid "Reply"
-msgstr "Odpovědět"
-
-#: .\shoutit\models\message.py:567
-msgid "New Shoutit Credit transaction"
-msgstr "Nová Shoutit Kredit transakce"
-
-#: .\shoutit\models\message.py:568
-msgid "View Transactions"
-msgstr "Zobrazit Transakce"
-

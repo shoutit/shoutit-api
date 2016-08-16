@@ -12,7 +12,7 @@ from django_rq import job
 from common.constants import USER_TYPE_PAGE
 from common.utils import date_unix
 from shoutit.models import User
-from shoutit.utils import debug_logger, error_logger
+from shoutit.utils import debug_logger, error_logger, url_with_querystring
 
 # Todo (mo): add localized templates and fallback to english ones
 SG_WELCOME_TEMPLATE = 'f34f9b3a-92f3-4b11-932e-f0205003897a'
@@ -148,8 +148,11 @@ def _send_notification_email(user, notification, emailed_for=None):
     subject = display['title']
     if emailed_for:
         intro = _("Your page '%(page)s' has a new notification") % {'page': emailed_for.name}
+        auth_token = emailed_for.get_valid_auth_token(page_admin_user=user)
     else:
         intro = _("You have a new notification")
+        auth_token = user.get_valid_auth_token()
+    link = url_with_querystring(notification.web_url, auth_token=auth_token.pk)
     subs = {
         'text1':
             """
@@ -158,7 +161,7 @@ def _send_notification_email(user, notification, emailed_for=None):
             <p style="font-style:italic;color:#888888;margin-top:50px;">%(note)s</p>
             """ % {'intro': intro, 'text': display['text'] or '', 'note': display.get('note') or ''},
         'action': display['action'],
-        'link': notification.web_url
+        'link': link
     }
     message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
     result = sg.send(message)

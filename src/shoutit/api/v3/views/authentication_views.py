@@ -26,7 +26,7 @@ from ..serializers import (
     ShoutitSignupSerializer, ShoutitChangePasswordSerializer, ShoutitVerifyEmailSerializer, ShoutitPageSerializer,
     ShoutitSetPasswordSerializer, ShoutitResetPasswordSerializer, ShoutitLoginSerializer, ProfileDetailSerializer,
     FacebookAuthSerializer, GplusAuthSerializer, SMSCodeSerializer, ShoutitGuestSerializer, GuestSerializer,
-    PageDetailSerializer)
+    PageDetailSerializer, AuthTokenSerializer)
 
 INACTIVE_OR_DELETED = AuthenticationFailed(_('Account inactive or deleted'))
 
@@ -60,14 +60,14 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
     authentication_classes = ()
     permission_classes = ()
     grant_types = ['authorization_code', 'refresh_token', 'client_credentials', 'facebook_access_token', 'gplus_code',
-                   'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest', 'shoutit_page']
+                   'shoutit_signup', 'shoutit_login', 'sms_code', 'shoutit_guest', 'shoutit_page', 'auth_token']
 
     def access_token_response(self, access_token, data=None):
         """
         Returns a successful response after creating the access token
         as defined in :rfc:`5.1`.
         """
-        if self.action == 'shoutit_page':
+        if self.action in ['shoutit_page', 'auth_token'] and getattr(self, 'page', None):
             user = self.page
         else:
             user = access_token.user
@@ -94,7 +94,7 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
         }
 
         # Todo (mo): deprecate as it is used by old clients only
-        if self.action != 'shoutit_page':
+        if self.action not in ['shoutit_page', 'auth_token']:
             response_data['user'] = user_dict
 
         # Not all access_tokens are given a refresh_token
@@ -174,6 +174,21 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
         Handle ``grant_type=shoutit_page`` requests.
         """
         user, page = self.get_shoutit_page_grant(request, data, client)
+        self.page = page
+        scopes = ('read', 'write')
+        return self.prepare_access_token_response(request, client, user, scopes, data)
+
+    def get_auth_token_grant(self, request, auth_data, client):
+        serializer = AuthTokenSerializer(data=auth_data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user, page = serializer.instance
+        return user, page
+
+    def auth_token(self, request, data, client):
+        """
+        Handle ``grant_type=auth_token`` requests.
+        """
+        user, page = self.get_auth_token_grant(request, data, client)
         self.page = page
         scopes = ('read', 'write')
         return self.prepare_access_token_response(request, client, user, scopes, data)
@@ -268,6 +283,8 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
             return self.shoutit_guest
         elif grant_type == 'sms_code':
             return self.sms_code
+        elif grant_type == 'auth_token':
+            return self.auth_token
         return None
 
     # override get, not to be documented or listed in urls.
@@ -290,6 +307,9 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
         - returned `access_token` and `refresh_token` belong to the page creator (user)
         - returned `profile` is a DetailedPage and it contains `admin` which is a DetailedProfile for the page creator
         - clients should set http header `Authorization-Page-Id` using the returned `profile.id` for all later requests. This makes sure these calls are treated as if the Page is acting not its owner.
+
+        ## Auth Token
+        API sets an `auth_token={auth token}` query param for all links in notification emails. This can be used by web client to authenticate the user before viewing the target page. Auth tokens are temporary and can be used few times in short period.
 
         ##Requesting the access token
         There are various methods to do that. Each has different `grant_type` and attributes.
@@ -423,6 +443,16 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
             "client_secret": "d89339adda874f02810efddd7427ebd6",
             "grant_type": "sms_code",
             "sms_code": "07c59e",
+        }
+        </code></pre>
+
+        ###Using Auth Token
+        <pre><code>
+        {
+            "client_id": "shoutit-test",
+            "client_secret": "d89339adda874f02810efddd7427ebd6",
+            "grant_type": "auth_token",
+            "auth_token": "37804a4a-a13a-4aaf-9f5b-dd9d746e10ac"
         }
         </code></pre>
 

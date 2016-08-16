@@ -2,18 +2,23 @@ msgid ""
 msgstr ""
 "Project-Id-Version: shoutit-api\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-31 12:07+0200\n"
+"POT-Creation-Date: 2016-08-16 03:44+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: POEditor.com\n"
 "Language: zh-CN\n"
 
-#: .\shoutit\admin.py:63
+#: .\common\utils.py:126
+#, python-format
+msgid "'%(value)s' is not a valid id."
+msgstr "'%(value)s' 不是有效id"
+
+#: .\shoutit\admin.py:71
 msgid "Username"
 msgstr "Username"
 
-#: .\shoutit\admin.py:64 .\shoutit\models\auth.py:77
+#: .\shoutit\admin.py:72 .\shoutit\models\auth.py:81
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
@@ -21,35 +26,35 @@ msgstr ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
 
-#: .\shoutit\admin.py:65
+#: .\shoutit\admin.py:73
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 
-#: .\shoutit\admin.py:78
+#: .\shoutit\admin.py:86
 msgid "Personal info"
 msgstr "Personal info"
 
-#: .\shoutit\admin.py:79
+#: .\shoutit\admin.py:87
 msgid "Permissions"
 msgstr "Permissions"
 
-#: .\shoutit\admin.py:81
+#: .\shoutit\admin.py:89
 msgid "Important dates"
 msgstr "Important dates"
 
-#: .\shoutit\admin.py:82 .\shoutit\admin.py:357
+#: .\shoutit\admin.py:90 .\shoutit\admin.py:365
 msgid "Extra"
 msgstr "Extra"
 
-#: .\shoutit\admin.py:191
+#: .\shoutit\admin.py:199
 msgid "Accept the selected verifications"
 msgstr "Accept the selected verifications"
 
-#: .\shoutit\admin.py:197
+#: .\shoutit\admin.py:205
 msgid "Reject the selected verifications"
 msgstr "Reject the selected verifications"
 
-#: .\shoutit\admin.py:356
+#: .\shoutit\admin.py:364
 msgid "Users"
 msgstr "Users"
 
@@ -175,7 +180,7 @@ msgstr "无效 discover id"
 msgid "Discover Item with id '%(discover)s' does not exist"
 msgstr "具有id '%(discover)s' 的商品不存在"
 
-#: .\shoutit\api\v3\filters.py:58 .\shoutit_twilio\views.py:107
+#: .\shoutit\api\v3\filters.py:58 .\shoutit_twilio\views.py:108
 #, python-format
 msgid "Profile with username '%(username)s' does not exist"
 msgstr "用户名称 '%(username)s' 的个人资料不存在"
@@ -226,49 +231,62 @@ msgstr "请输入有效的时间模式"
 msgid "We do not return more than 1000 results for any query"
 msgstr "我们不会对任何查询返回超过1000个结果"
 
-#: .\shoutit\api\v3\serializers\auth.py:88
-#: .\shoutit\api\v3\serializers\auth.py:156
-#: .\shoutit\api\v3\serializers\auth.py:210
+#: .\shoutit\api\v3\serializers\auth.py:90
+#: .\shoutit\api\v3\serializers\auth.py:158
+#: .\shoutit\api\v3\serializers\auth.py:212
 #: .\shoutit\api\v3\serializers\profile.py:230
 #: .\shoutit\controllers\user_controller.py:21
 msgid "This email is used by another account"
 msgstr "此电邮已被其他账户使用"
 
-#: .\shoutit\api\v3\serializers\auth.py:115
-#: .\shoutit\api\v3\serializers\auth.py:238
+#: .\shoutit\api\v3\serializers\auth.py:117
+#: .\shoutit\api\v3\serializers\auth.py:240
 msgid "The email or username you entered do not belong to any account"
 msgstr "您输入的电邮或用户名称不属于任何帐户"
 
-#: .\shoutit\api\v3\serializers\auth.py:118
-#: .\shoutit\api\v3\serializers\auth.py:311
+#: .\shoutit\api\v3\serializers\auth.py:120
+#: .\shoutit\api\v3\serializers\auth.py:313
 msgid "The password you entered is incorrect"
 msgstr "您输入的密码不正确"
 
-#: .\shoutit\api\v3\serializers\auth.py:198
+#: .\shoutit\api\v3\serializers\auth.py:200
 msgid "Could not create guest account"
 msgstr "无法创建访客账户"
 
-#: .\shoutit\api\v3\serializers\auth.py:259
-#: .\shoutit\api\v3\serializers\auth.py:285
+#: .\shoutit\api\v3\serializers\auth.py:261
+#: .\shoutit\api\v3\serializers\auth.py:287
 msgid "New passwords did not match"
 msgstr "新密码不匹配"
 
-#: .\shoutit\api\v3\serializers\auth.py:272
+#: .\shoutit\api\v3\serializers\auth.py:274
 msgid "Old password is incorrect"
 msgstr "旧密码不正确"
 
-#: .\shoutit\api\v3\serializers\auth.py:297
+#: .\shoutit\api\v3\serializers\auth.py:299
 #: .\shoutit\api\v3\views\authentication_views.py:31
 msgid "Account inactive or deleted"
 msgstr "账户被停用或删除"
 
-#: .\shoutit\api\v3\serializers\auth.py:300
+#: .\shoutit\api\v3\serializers\auth.py:302
 msgid "Reset token is invalid"
 msgstr "重设编码无效"
 
-#: .\shoutit\api\v3\serializers\auth.py:326
+#: .\shoutit\api\v3\serializers\auth.py:328
 msgid "Invalid sms_code"
 msgstr "无效SMS_代码"
+
+#: .\shoutit\api\v3\serializers\auth.py:333
+#, python-format
+msgid "'%(value)s' is not a valid auth token"
+msgstr "'%(value)s' 不是有效id"
+
+#: .\shoutit\api\v3\serializers\auth.py:341
+msgid "Auth token does not exist"
+msgstr "编码不存在"
+
+#: .\shoutit\api\v3\serializers\auth.py:344
+msgid "Auth token is expired"
+msgstr ""
 
 #: .\shoutit\api\v3\serializers\base.py:56
 msgid "Could not find (`latitude` and `longitude`) or figure the IP Address"
@@ -531,38 +549,38 @@ msgstr "您已标签 %(shout)s"
 msgid "You unbookmarked %(shout)s"
 msgstr "您已取消标签 %(shout)s"
 
-#: .\shoutit\api\v3\views\authentication_views.py:492
+#: .\shoutit\api\v3\views\authentication_views.py:522
 #: .\shoutit\api\v3\views\exception_views.py:27
 #: .\shoutit\api\v3\views\exception_views.py:42
 msgid "Authentication failed"
 msgstr "验证失败"
 
-#: .\shoutit\api\v3\views\authentication_views.py:499
+#: .\shoutit\api\v3\views\authentication_views.py:529
 msgid "Unsupported grant_type"
 msgstr "grant_type 不被系统支持"
 
-#: .\shoutit\api\v3\views\authentication_views.py:606
+#: .\shoutit\api\v3\views\authentication_views.py:636
 msgid "Password reset email will be sent soon"
 msgstr "您将收到一则重设密码的电邮"
 
-#: .\shoutit\api\v3\views\authentication_views.py:629
-#: .\shoutit\api\v3\views\authentication_views.py:742
+#: .\shoutit\api\v3\views\authentication_views.py:659
+#: .\shoutit\api\v3\views\authentication_views.py:772
 msgid "New password set"
 msgstr "完成新密码设置"
 
-#: .\shoutit\api\v3\views\authentication_views.py:744
+#: .\shoutit\api\v3\views\authentication_views.py:774
 msgid "Token does not exist"
 msgstr "编码不存在"
 
-#: .\shoutit\api\v3\views\authentication_views.py:746
+#: .\shoutit\api\v3\views\authentication_views.py:776
 msgid "Email address is already verified"
 msgstr "电邮地址已得到认证"
 
-#: .\shoutit\api\v3\views\authentication_views.py:750
+#: .\shoutit\api\v3\views\authentication_views.py:780
 msgid "Authentication credentials were not provided"
 msgstr "未提供认证证件"
 
-#: .\shoutit\api\v3\views\authentication_views.py:754
+#: .\shoutit\api\v3\views\authentication_views.py:784
 #, python-format
 msgid "Your email '%(email)s' is already verified"
 msgstr "您的电邮 '%(email)s' 已经得到验证"
@@ -689,28 +707,28 @@ msgstr "您停止聆听关于 %(name)s 的Shout"
 msgid "Invalid version in URL path. Please use version: %(version)s"
 msgstr "URL路径中的版本无效，请使用此版本： %(version)s"
 
-#: .\shoutit\controllers\email_controller.py:47
+#: .\shoutit\controllers\email_controller.py:49
 msgid "Welcome!"
 msgstr "欢迎光临！"
 
-#: .\shoutit\controllers\email_controller.py:54
-#: .\shoutit\controllers\email_controller.py:96
+#: .\shoutit\controllers\email_controller.py:56
+#: .\shoutit\controllers\email_controller.py:98
 msgid "Take me to my profile"
 msgstr "前往我的个人资料"
 
-#: .\shoutit\controllers\email_controller.py:59
+#: .\shoutit\controllers\email_controller.py:61
 msgid "To get started using Shoutit, please activate your account below"
 msgstr "若想开始使用 Shoutit, 请于下方激活您的账户"
 
-#: .\shoutit\controllers\email_controller.py:60
+#: .\shoutit\controllers\email_controller.py:62
 msgid "Activate your account"
 msgstr "激活您的账户"
 
-#: .\shoutit\controllers\email_controller.py:74
+#: .\shoutit\controllers\email_controller.py:76
 msgid "Verify your email"
 msgstr "验证您的电邮"
 
-#: .\shoutit\controllers\email_controller.py:76
+#: .\shoutit\controllers\email_controller.py:78
 msgid ""
 "Your have changed your email therefore your account is not verified. To use "
 "Shoutit with full potential we need to verify your email."
@@ -718,15 +736,15 @@ msgstr ""
 "您的电邮已被更换，因此您的账户不被认证。为了使用户 Shoutit 的全部功能，我们必"
 "须重新验证您的电邮。"
 
-#: .\shoutit\controllers\email_controller.py:78
+#: .\shoutit\controllers\email_controller.py:80
 msgid "Verify it now"
 msgstr "立刻验证"
 
-#: .\shoutit\controllers\email_controller.py:92
+#: .\shoutit\controllers\email_controller.py:94
 msgid "Your email has been verified!"
 msgstr "您的电邮已得到验证！"
 
-#: .\shoutit\controllers\email_controller.py:94
+#: .\shoutit\controllers\email_controller.py:96
 msgid ""
 "Thank you for verifying your email. Your account has been verified and you "
 "can now use Shoutit full potential."
@@ -734,51 +752,51 @@ msgstr ""
 "非常感谢您验证您的电子邮件。您的帐户已得到验证，现在您可以使用 Shoutit 的全部"
 "功能。"
 
-#: .\shoutit\controllers\email_controller.py:110
+#: .\shoutit\controllers\email_controller.py:112
 msgid "Reset your password"
 msgstr "重设密码"
 
-#: .\shoutit\controllers\email_controller.py:112
+#: .\shoutit\controllers\email_controller.py:114
 msgid ""
 "You have requested to reset your password. If it wasn't you please let us "
 "know as soon as possible."
 msgstr "您的账户已发出重设密码的要求。若不是您本人，请尽快联系我们。"
 
-#: .\shoutit\controllers\email_controller.py:113
+#: .\shoutit\controllers\email_controller.py:115
 msgid "Reset my password"
 msgstr "重新设置我的密码"
 
-#: .\shoutit\controllers\email_controller.py:148
+#: .\shoutit\controllers\email_controller.py:150
 #, python-format
 msgid "Your page '%(page)s' has a new notification"
 msgstr "您的 '%(page)s' 有一个新的通知"
 
-#: .\shoutit\controllers\email_controller.py:150
+#: .\shoutit\controllers\email_controller.py:153
 msgid "You have a new notification"
 msgstr "您有一个新的通知"
 
-#: .\shoutit\controllers\facebook_controller.py:26
+#: .\shoutit\controllers\facebook_controller.py:31
 msgid "Could not link Facebook account, try again later"
 msgstr "无法与 Facebook 账户进行链接，请稍后再试"
 
-#: .\shoutit\controllers\facebook_controller.py:27
+#: .\shoutit\controllers\facebook_controller.py:32
 msgid "Facebook error, try again later"
 msgstr "Facebook 出现错误，请稍后再试"
 
-#: .\shoutit\controllers\facebook_controller.py:28
+#: .\shoutit\controllers\facebook_controller.py:33
 #: .\shoutit\controllers\gplus_controller.py:23
 msgid "Could not access your email, make sure you allowed it"
 msgstr "无法访问您的电邮，请确保您的电邮允许被访问"
 
-#: .\shoutit\controllers\facebook_controller.py:29
+#: .\shoutit\controllers\facebook_controller.py:34
 msgid "No Facebook account to unlink"
 msgstr "暂无 Facebook 账户消除链接"
 
-#: .\shoutit\controllers\facebook_controller.py:110
+#: .\shoutit\controllers\facebook_controller.py:115
 msgid "Couldn't find the specified Facebook Page"
 msgstr "无法在 Facebook 查或此页面"
 
-#: .\shoutit\controllers\facebook_controller.py:151
+#: .\shoutit\controllers\facebook_controller.py:156
 msgid "Facebook account is already linked to somebody else's profile"
 msgstr "此 Facebook 账户已与他人的账户进行链接"
 
@@ -787,7 +805,7 @@ msgid "No Google account to unlink"
 msgstr "暂无Google账户消除链接"
 
 #: .\shoutit\controllers\gplus_controller.py:25
-#: .\shoutit\controllers\user_controller.py:127
+#: .\shoutit\controllers\user_controller.py:132
 msgid "Could not access your Google account, try again later"
 msgstr "无法访问您的 Google 账户，请稍后再试"
 
@@ -795,39 +813,39 @@ msgstr "无法访问您的 Google 账户，请稍后再试"
 msgid "This Google account is already linked to somebody else's profile"
 msgstr "此 Google 账户已与他人的账户进行链接"
 
-#: .\shoutit\models\auth.py:76
+#: .\shoutit\models\auth.py:80
 msgid "username"
 msgstr "用户名称"
 
-#: .\shoutit\models\auth.py:80
+#: .\shoutit\models\auth.py:84
 msgid "Enter a valid username."
 msgstr "请输入有效的用户名称。"
 
-#: .\shoutit\models\auth.py:85 .\shoutit\models\auth.py:653
+#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:694
 msgid "first name"
 msgstr "名字"
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:654
+#: .\shoutit\models\auth.py:91 .\shoutit\models\auth.py:695
 msgid "last name"
 msgstr "姓氏"
 
-#: .\shoutit\models\auth.py:88 .\shoutit\models\auth.py:655
+#: .\shoutit\models\auth.py:92 .\shoutit\models\auth.py:696
 msgid "email address"
 msgstr "电邮地址"
 
-#: .\shoutit\models\auth.py:90
+#: .\shoutit\models\auth.py:94
 msgid "staff status"
 msgstr "员工状态"
 
-#: .\shoutit\models\auth.py:90
+#: .\shoutit\models\auth.py:94
 msgid "Designates whether the user can log into this admin site."
 msgstr "Designates whether the user can log into this admin site"
 
-#: .\shoutit\models\auth.py:92
+#: .\shoutit\models\auth.py:96
 msgid "active"
 msgstr "激活"
 
-#: .\shoutit\models\auth.py:93
+#: .\shoutit\models\auth.py:97
 msgid ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
@@ -835,71 +853,75 @@ msgstr ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:99
 msgid "activated"
 msgstr "已激活"
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:99
 msgid "Designates whether this user have a verified email."
 msgstr "Designates whether this user have a verified email."
 
-#: .\shoutit\models\auth.py:96
+#: .\shoutit\models\auth.py:100
 msgid "date joined"
 msgstr "加入日期"
 
-#: .\shoutit\models\auth.py:101
+#: .\shoutit\models\auth.py:105
 msgid "testuser status"
 msgstr "testuser status"
 
-#: .\shoutit\models\auth.py:101
+#: .\shoutit\models\auth.py:105
 msgid "Designates whether this user is a test user."
 msgstr "Designates whether this user is a test user."
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:107
 msgid "guest user status"
 msgstr "访客用户状态"
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:107
 msgid "Designates whether this user is a guest user."
 msgstr "Designates whether this user is a guest user."
 
-#: .\shoutit\models\auth.py:105
+#: .\shoutit\models\auth.py:109
 msgid "mailing list status"
 msgstr "电邮列表状态"
 
-#: .\shoutit\models\auth.py:106
+#: .\shoutit\models\auth.py:110
 msgid "Designates whether this user is on the main mailing list."
 msgstr "指定此用户是否被列入主要电邮列表中。"
 
-#: .\shoutit\models\auth.py:108
+#: .\shoutit\models\auth.py:112
 msgid "mixpanel people status"
 msgstr "mixpanel people status"
 
-#: .\shoutit\models\auth.py:108
+#: .\shoutit\models\auth.py:112
 msgid "Designates whether this user is on MixPanel People."
 msgstr "Designates whether this user is on MixPanel People."
 
-#: .\shoutit\models\auth.py:115
+#: .\shoutit\models\auth.py:113
+msgid "accepted language"
+msgstr ""
+
+#: .\shoutit\models\auth.py:121
 msgid "user"
 msgstr "用户"
 
-#: .\shoutit\models\auth.py:116
+#: .\shoutit\models\auth.py:122
 msgid "users"
 msgstr "用户们"
 
-#: .\shoutit\models\auth.py:159 .\shoutit\models\auth.py:174
+#: .\shoutit\models\auth.py:165 .\shoutit\models\auth.py:180
 msgid "Page"
 msgstr "页面"
 
-#: .\shoutit\models\auth.py:161
+#: .\shoutit\models\auth.py:167
 msgid "Guest"
 msgstr "访客"
 
-#: .\shoutit\models\auth.py:540
+#: .\shoutit\models\auth.py:553
 msgid "Shoutit User"
 msgstr "Shoutit 用户"
 
-#: .\shoutit\models\auth.py:656
+#: .\shoutit\models\auth.py:697
 msgid "mobile"
 msgstr "手机"
 
@@ -940,10 +962,9 @@ msgid "View Profile"
 msgstr "查看个人资料"
 
 #: .\shoutit\models\message.py:539
-#, fuzzy, python-format
-#| msgid "%(name)s started listening to you"
+#, python-format
 msgid "%(name)s started listening to your shouts"
-msgstr "%(name)s 开始聆听您"
+msgstr ""
 
 #: .\shoutit\models\message.py:542
 #, python-format
@@ -1124,23 +1145,23 @@ msgstr "您没有发送信息的权限"
 msgid "You're not allowed to send reports"
 msgstr "您没有发送报告的权限"
 
-#: .\shoutit\settings.py:251
+#: .\shoutit\settings.py:252
 msgid "English"
 msgstr "英语"
 
-#: .\shoutit\settings.py:252
+#: .\shoutit\settings.py:253
 msgid "Arabic"
 msgstr "阿拉伯语"
 
-#: .\shoutit\settings.py:253
+#: .\shoutit\settings.py:254
 msgid "German"
 msgstr ""
 
-#: .\shoutit\settings.py:254
+#: .\shoutit\settings.py:255
 msgid "Spanish"
 msgstr ""
 
-#: .\shoutit\settings.py:255
+#: .\shoutit\settings.py:256
 msgid "Chinese"
 msgstr ""
 
@@ -1169,25 +1190,20 @@ msgid "You earned 1 Shoutit Credit for sharing %(title)s on Facebook."
 msgstr "听过分享%(title)s至Facebook,您已成功赚取1枚 Shout Credit。"
 
 #: .\shoutit_credit\models\shout.py:148
-#, fuzzy, python-format
-#| msgid ""
-#| "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s "
-#| "for %(days)d days."
+#, python-format
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s for %"
 "(days)d days."
 msgstr ""
 "您已消费 %(amount)d 枚 Shoutit Credit 在于为时 %(days)d 天 %(title)s 作为"
-"(label)s 的推销。"
+"%(label)s 的推销。"
 
 #: .\shoutit_credit\models\shout.py:149
-#, fuzzy, python-format
-#| msgid ""
-#| "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
+#, python-format
 msgid ""
 "You spent %(amount)d Shoutit Credit in promoting %(title)s as %(label)s."
 msgstr ""
-"您已消费  %(amount)d 枚 Shoutit Credit 在于 %(title)s 作为 (label)s 的推销。"
+"您已消费  %(amount)d 枚 Shoutit Credit 在于 %(title)s 作为 %(label)s 的推销。"
 
 #: .\shoutit_credit\models\shout.py:217
 msgid "You don't have enough Shoutit Credit for this action"
@@ -1201,21 +1217,21 @@ msgstr "此 Shout 已被推销"
 msgid "The shout has been promoted"
 msgstr "此 Shout 已被推销"
 
-#: .\shoutit_twilio\views.py:58
+#: .\shoutit_twilio\views.py:59
 msgid "Couldn't authorize you to make video calls"
 msgstr "您没有使用视频通话的权限"
 
-#: .\shoutit_twilio\views.py:117
+#: .\shoutit_twilio\views.py:118
 #, python-format
 msgid "Error calling %(name)s"
 msgstr "呼叫 %(name)s 时出现错误"
 
-#: .\shoutit_twilio\views.py:151 .\shoutit_twilio\views.py:197
+#: .\shoutit_twilio\views.py:152 .\shoutit_twilio\views.py:210
 #, python-format
 msgid "Profile with identity %(identity)s does not exist"
 msgstr "拥有身份 %(identity)s 的个人资料并不存在"
 
-#: .\shoutit_twilio\views.py:154 .\shoutit_twilio\views.py:200
+#: .\shoutit_twilio\views.py:155 .\shoutit_twilio\views.py:213
 msgid "Invalid identity"
 msgstr "无效身份"
 
