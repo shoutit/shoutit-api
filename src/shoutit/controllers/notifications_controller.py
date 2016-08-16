@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.db.models import Count
+from django.utils.translation import activate, get_language
 from django_rq import job
 from rest_framework.settings import api_settings
 
@@ -63,6 +64,9 @@ def get_unread_conversations_count(user):
 
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None, versions=None, serializing_options=None):
+    current_language = get_language()
+    activate(user.language)
+
     if not versions:
         versions = api_settings.ALLOWED_VERSIONS
 
@@ -89,6 +93,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
     # Email
     if notification_type.include_in_email():
         email_controller.send_notification_email(user, notification)
+
+    activate(current_language)
 
 
 def notify_user_of_listen(user, listener):
