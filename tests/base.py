@@ -54,7 +54,10 @@ from shoutit.controllers import shout_controller
 
 class BaseTestCase(APITestCase):
     url_namespace = 'v3'
-    default_password = '123'
+    default_password = 'test123'
+    default_username = 'ivan'
+    default_first_name = 'Ivan'
+    default_email = 'ivan@example.com'
     IPS = {
         'CHINA': '14.131.255.15',
         'USA': '72.229.28.185',  # New York
@@ -161,7 +164,7 @@ class BaseTestCase(APITestCase):
                 self.assertEqual(attached_object_dict[k], v)
         return args
 
-    def login(self, user, password='123', **kwargs):
+    def login(self, user, password=default_password, **kwargs):
         self.client.login(username=user.username, password=password, **kwargs)
 
     def get_pusher_user_channel_name(self, user_pk):
@@ -237,7 +240,7 @@ class BaseTestCase(APITestCase):
                 status=status)
 
     @classmethod
-    def create_user(cls, username='ivan', first_name='Ivan',
+    def create_user(cls, username=default_username, first_name=default_first_name,
                     password=default_password, is_test=True, country=None,
                     **kwargs):
         user = N(

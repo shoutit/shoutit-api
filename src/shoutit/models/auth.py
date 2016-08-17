@@ -592,7 +592,7 @@ class AuthToken(UUIDModel):
         return self.created_at + timedelta(days=AUTH_TOKEN_EXPIRY_DAYS)
 
     def update_used_count(self):
-        AuthToken.object.filter(pk=self.pk).update(used_count=F('used_count')+1)
+        AuthToken.object.filter(pk=self.pk).update(used_count=F('used_count') + 1)
 
 
 class AbstractProfile(UUIDModel, LocationMixin):
