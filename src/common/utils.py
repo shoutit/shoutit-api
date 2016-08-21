@@ -11,11 +11,11 @@ from datetime import datetime
 from distutils.util import strtobool as stb
 
 import pytz
+from common.constants import NOT_ALLOWED_USERNAMES
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
+from django.utils.translation import ugettext_lazy as _
 from pydash import strings, arrays
-
-from common.constants import NOT_ALLOWED_USERNAMES
 
 
 def get_address_port(using_gunicorn=False):
@@ -106,7 +106,7 @@ def json_flatten(y, sep='.'):
 
 
 @deconstructible
-class AllowedUsernamesValidator(object):
+class AllowedUsernameValidator(object):
     message = "'%s' can not be used as username, please choose something else."
     code = 'invalid'
 
@@ -118,26 +118,29 @@ class AllowedUsernamesValidator(object):
         return True
 
 
-validate_allowed_usernames = AllowedUsernamesValidator()
+validate_allowed_username = AllowedUsernameValidator()
 
 
 @deconstructible
 class UUIDValidator(object):
-    message = "'%s' is not a valid id."
+    message = _("'%(value)s' is not a valid id.")
     code = 'invalid'
 
+    def __init__(self, message=None):
+        if message:
+            self.message = message
+
     def __call__(self, value):
-        UUIDValidator.validate(value)
+        self.validate(value)
 
     def __eq__(self, other):
         return True
 
-    @staticmethod
-    def validate(value):
+    def validate(self, value):
         try:
             uuid.UUID(value)
         except:
-            raise ValidationError(UUIDValidator.message % value, code=UUIDValidator.code)
+            raise ValidationError(self.message % {'value': value}, code=self.code)
 
 
 def tmp_file_from_env(env_var):

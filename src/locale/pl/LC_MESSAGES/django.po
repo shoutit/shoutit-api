@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-08-04 19:11+0200\n"
+"POT-Creation-Date: 2016-08-16 03:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,45 +17,50 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-#: .\shoutit\admin.py:63
+#: .\common\utils.py:126
+#, python-format
+msgid "'%(value)s' is not a valid id."
+msgstr ""
+
+#: .\shoutit\admin.py:71
 msgid "Username"
 msgstr ""
 
-#: .\shoutit\admin.py:64 .\shoutit\models\auth.py:77
+#: .\shoutit\admin.py:72 .\shoutit\models\auth.py:81
 msgid ""
 "Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods "
 "(.)"
 msgstr ""
 
-#: .\shoutit\admin.py:65
+#: .\shoutit\admin.py:73
 msgid "This value may only contain A-Z, a-z, 0-9, and periods (.)"
 msgstr ""
 
-#: .\shoutit\admin.py:78
+#: .\shoutit\admin.py:86
 msgid "Personal info"
 msgstr ""
 
-#: .\shoutit\admin.py:79
+#: .\shoutit\admin.py:87
 msgid "Permissions"
 msgstr ""
 
-#: .\shoutit\admin.py:81
+#: .\shoutit\admin.py:89
 msgid "Important dates"
 msgstr ""
 
-#: .\shoutit\admin.py:82 .\shoutit\admin.py:357
+#: .\shoutit\admin.py:90 .\shoutit\admin.py:365
 msgid "Extra"
 msgstr ""
 
-#: .\shoutit\admin.py:191
+#: .\shoutit\admin.py:199
 msgid "Accept the selected verifications"
 msgstr ""
 
-#: .\shoutit\admin.py:197
+#: .\shoutit\admin.py:205
 msgid "Reject the selected verifications"
 msgstr ""
 
-#: .\shoutit\admin.py:356
+#: .\shoutit\admin.py:364
 msgid "Users"
 msgstr ""
 
@@ -182,7 +186,7 @@ msgstr ""
 msgid "Discover Item with id '%(discover)s' does not exist"
 msgstr ""
 
-#: .\shoutit\api\v3\filters.py:58 .\shoutit_twilio\views.py:107
+#: .\shoutit\api\v3\filters.py:58 .\shoutit_twilio\views.py:108
 #, python-format
 msgid "Profile with username '%(username)s' does not exist"
 msgstr ""
@@ -233,48 +237,61 @@ msgstr ""
 msgid "We do not return more than 1000 results for any query"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:88
-#: .\shoutit\api\v3\serializers\auth.py:156
-#: .\shoutit\api\v3\serializers\auth.py:210
+#: .\shoutit\api\v3\serializers\auth.py:90
+#: .\shoutit\api\v3\serializers\auth.py:158
+#: .\shoutit\api\v3\serializers\auth.py:212
 #: .\shoutit\api\v3\serializers\profile.py:230
 #: .\shoutit\controllers\user_controller.py:21
 msgid "This email is used by another account"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:115
-#: .\shoutit\api\v3\serializers\auth.py:238
+#: .\shoutit\api\v3\serializers\auth.py:117
+#: .\shoutit\api\v3\serializers\auth.py:240
 msgid "The email or username you entered do not belong to any account"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:118
-#: .\shoutit\api\v3\serializers\auth.py:311
+#: .\shoutit\api\v3\serializers\auth.py:120
+#: .\shoutit\api\v3\serializers\auth.py:313
 msgid "The password you entered is incorrect"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:198
+#: .\shoutit\api\v3\serializers\auth.py:200
 msgid "Could not create guest account"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:259
-#: .\shoutit\api\v3\serializers\auth.py:285
+#: .\shoutit\api\v3\serializers\auth.py:261
+#: .\shoutit\api\v3\serializers\auth.py:287
 msgid "New passwords did not match"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:272
+#: .\shoutit\api\v3\serializers\auth.py:274
 msgid "Old password is incorrect"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:297
+#: .\shoutit\api\v3\serializers\auth.py:299
 #: .\shoutit\api\v3\views\authentication_views.py:31
 msgid "Account inactive or deleted"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:300
+#: .\shoutit\api\v3\serializers\auth.py:302
 msgid "Reset token is invalid"
 msgstr ""
 
-#: .\shoutit\api\v3\serializers\auth.py:326
+#: .\shoutit\api\v3\serializers\auth.py:328
 msgid "Invalid sms_code"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:333
+#, python-format
+msgid "'%(value)s' is not a valid auth token"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:341
+msgid "Auth token does not exist"
+msgstr ""
+
+#: .\shoutit\api\v3\serializers\auth.py:344
+msgid "Auth token is expired"
 msgstr ""
 
 #: .\shoutit\api\v3\serializers\base.py:56
@@ -538,38 +555,38 @@ msgstr ""
 msgid "You unbookmarked %(shout)s"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:492
+#: .\shoutit\api\v3\views\authentication_views.py:522
 #: .\shoutit\api\v3\views\exception_views.py:27
 #: .\shoutit\api\v3\views\exception_views.py:42
 msgid "Authentication failed"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:499
+#: .\shoutit\api\v3\views\authentication_views.py:529
 msgid "Unsupported grant_type"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:606
+#: .\shoutit\api\v3\views\authentication_views.py:636
 msgid "Password reset email will be sent soon"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:629
-#: .\shoutit\api\v3\views\authentication_views.py:742
+#: .\shoutit\api\v3\views\authentication_views.py:659
+#: .\shoutit\api\v3\views\authentication_views.py:772
 msgid "New password set"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:744
+#: .\shoutit\api\v3\views\authentication_views.py:774
 msgid "Token does not exist"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:746
+#: .\shoutit\api\v3\views\authentication_views.py:776
 msgid "Email address is already verified"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:750
+#: .\shoutit\api\v3\views\authentication_views.py:780
 msgid "Authentication credentials were not provided"
 msgstr ""
 
-#: .\shoutit\api\v3\views\authentication_views.py:754
+#: .\shoutit\api\v3\views\authentication_views.py:784
 #, python-format
 msgid "Your email '%(email)s' is already verified"
 msgstr ""
@@ -696,92 +713,92 @@ msgstr ""
 msgid "Invalid version in URL path. Please use version: %(version)s"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:47
+#: .\shoutit\controllers\email_controller.py:49
 msgid "Welcome!"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:54
-#: .\shoutit\controllers\email_controller.py:96
+#: .\shoutit\controllers\email_controller.py:56
+#: .\shoutit\controllers\email_controller.py:98
 msgid "Take me to my profile"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:59
+#: .\shoutit\controllers\email_controller.py:61
 msgid "To get started using Shoutit, please activate your account below"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:60
+#: .\shoutit\controllers\email_controller.py:62
 msgid "Activate your account"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:74
+#: .\shoutit\controllers\email_controller.py:76
 msgid "Verify your email"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:76
+#: .\shoutit\controllers\email_controller.py:78
 msgid ""
 "Your have changed your email therefore your account is not verified. To use "
 "Shoutit with full potential we need to verify your email."
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:78
+#: .\shoutit\controllers\email_controller.py:80
 msgid "Verify it now"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:92
+#: .\shoutit\controllers\email_controller.py:94
 msgid "Your email has been verified!"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:94
+#: .\shoutit\controllers\email_controller.py:96
 msgid ""
 "Thank you for verifying your email. Your account has been verified and you "
 "can now use Shoutit full potential."
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:110
+#: .\shoutit\controllers\email_controller.py:112
 msgid "Reset your password"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:112
+#: .\shoutit\controllers\email_controller.py:114
 msgid ""
 "You have requested to reset your password. If it wasn't you please let us "
 "know as soon as possible."
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:113
+#: .\shoutit\controllers\email_controller.py:115
 msgid "Reset my password"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:148
+#: .\shoutit\controllers\email_controller.py:150
 #, python-format
 msgid "Your page '%(page)s' has a new notification"
 msgstr ""
 
-#: .\shoutit\controllers\email_controller.py:150
+#: .\shoutit\controllers\email_controller.py:153
 msgid "You have a new notification"
 msgstr ""
 
-#: .\shoutit\controllers\facebook_controller.py:26
+#: .\shoutit\controllers\facebook_controller.py:31
 msgid "Could not link Facebook account, try again later"
 msgstr ""
 
-#: .\shoutit\controllers\facebook_controller.py:27
+#: .\shoutit\controllers\facebook_controller.py:32
 msgid "Facebook error, try again later"
 msgstr ""
 
-#: .\shoutit\controllers\facebook_controller.py:28
+#: .\shoutit\controllers\facebook_controller.py:33
 #: .\shoutit\controllers\gplus_controller.py:23
 msgid "Could not access your email, make sure you allowed it"
 msgstr ""
 
-#: .\shoutit\controllers\facebook_controller.py:29
+#: .\shoutit\controllers\facebook_controller.py:34
 msgid "No Facebook account to unlink"
 msgstr ""
 
-#: .\shoutit\controllers\facebook_controller.py:110
+#: .\shoutit\controllers\facebook_controller.py:115
 msgid "Couldn't find the specified Facebook Page"
 msgstr ""
 
-#: .\shoutit\controllers\facebook_controller.py:151
+#: .\shoutit\controllers\facebook_controller.py:156
 msgid "Facebook account is already linked to somebody else's profile"
 msgstr ""
 
@@ -790,7 +807,7 @@ msgid "No Google account to unlink"
 msgstr ""
 
 #: .\shoutit\controllers\gplus_controller.py:25
-#: .\shoutit\controllers\user_controller.py:127
+#: .\shoutit\controllers\user_controller.py:132
 msgid "Could not access your Google account, try again later"
 msgstr ""
 
@@ -798,109 +815,113 @@ msgstr ""
 msgid "This Google account is already linked to somebody else's profile"
 msgstr ""
 
-#: .\shoutit\models\auth.py:76
+#: .\shoutit\models\auth.py:80
 msgid "username"
 msgstr ""
 
-#: .\shoutit\models\auth.py:80
+#: .\shoutit\models\auth.py:84
 msgid "Enter a valid username."
 msgstr ""
 
-#: .\shoutit\models\auth.py:85 .\shoutit\models\auth.py:653
+#: .\shoutit\models\auth.py:89 .\shoutit\models\auth.py:694
 msgid "first name"
 msgstr ""
 
-#: .\shoutit\models\auth.py:87 .\shoutit\models\auth.py:654
+#: .\shoutit\models\auth.py:91 .\shoutit\models\auth.py:695
 msgid "last name"
 msgstr ""
 
-#: .\shoutit\models\auth.py:88 .\shoutit\models\auth.py:655
+#: .\shoutit\models\auth.py:92 .\shoutit\models\auth.py:696
 msgid "email address"
 msgstr ""
 
-#: .\shoutit\models\auth.py:90
+#: .\shoutit\models\auth.py:94
 msgid "staff status"
 msgstr ""
 
-#: .\shoutit\models\auth.py:90
+#: .\shoutit\models\auth.py:94
 msgid "Designates whether the user can log into this admin site."
 msgstr ""
 
-#: .\shoutit\models\auth.py:92
+#: .\shoutit\models\auth.py:96
 msgid "active"
 msgstr ""
 
-#: .\shoutit\models\auth.py:93
+#: .\shoutit\models\auth.py:97
 msgid ""
 "Designates whether this user should be treated as active. Unselect this "
 "instead of deleting accounts."
 msgstr ""
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:99
 msgid "activated"
 msgstr ""
 
-#: .\shoutit\models\auth.py:95
+#: .\shoutit\models\auth.py:99
 msgid "Designates whether this user have a verified email."
 msgstr ""
 
-#: .\shoutit\models\auth.py:96
+#: .\shoutit\models\auth.py:100
 msgid "date joined"
 msgstr ""
 
-#: .\shoutit\models\auth.py:101
+#: .\shoutit\models\auth.py:105
 msgid "testuser status"
 msgstr ""
 
-#: .\shoutit\models\auth.py:101
+#: .\shoutit\models\auth.py:105
 msgid "Designates whether this user is a test user."
 msgstr ""
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:107
 msgid "guest user status"
 msgstr ""
 
-#: .\shoutit\models\auth.py:103
+#: .\shoutit\models\auth.py:107
 msgid "Designates whether this user is a guest user."
 msgstr ""
 
-#: .\shoutit\models\auth.py:105
+#: .\shoutit\models\auth.py:109
 msgid "mailing list status"
 msgstr ""
 
-#: .\shoutit\models\auth.py:106
+#: .\shoutit\models\auth.py:110
 msgid "Designates whether this user is on the main mailing list."
 msgstr ""
 
-#: .\shoutit\models\auth.py:108
+#: .\shoutit\models\auth.py:112
 msgid "mixpanel people status"
 msgstr ""
 
-#: .\shoutit\models\auth.py:108
+#: .\shoutit\models\auth.py:112
 msgid "Designates whether this user is on MixPanel People."
 msgstr ""
 
-#: .\shoutit\models\auth.py:115
+#: .\shoutit\models\auth.py:113
+msgid "accepted language"
+msgstr ""
+
+#: .\shoutit\models\auth.py:121
 msgid "user"
 msgstr ""
 
-#: .\shoutit\models\auth.py:116
+#: .\shoutit\models\auth.py:122
 msgid "users"
 msgstr ""
 
-#: .\shoutit\models\auth.py:159 .\shoutit\models\auth.py:174
+#: .\shoutit\models\auth.py:165 .\shoutit\models\auth.py:180
 msgid "Page"
 msgstr ""
 
-#: .\shoutit\models\auth.py:161
+#: .\shoutit\models\auth.py:167
 msgid "Guest"
 msgstr ""
 
-#: .\shoutit\models\auth.py:540
+#: .\shoutit\models\auth.py:553
 msgid "Shoutit User"
 msgstr ""
 
-#: .\shoutit\models\auth.py:656
+#: .\shoutit\models\auth.py:697
 msgid "mobile"
 msgstr ""
 
@@ -1124,23 +1145,23 @@ msgstr ""
 msgid "You're not allowed to send reports"
 msgstr ""
 
-#: .\shoutit\settings.py:251
+#: .\shoutit\settings.py:252
 msgid "English"
 msgstr ""
 
-#: .\shoutit\settings.py:252
+#: .\shoutit\settings.py:253
 msgid "Arabic"
 msgstr ""
 
-#: .\shoutit\settings.py:253
+#: .\shoutit\settings.py:254
 msgid "German"
 msgstr ""
 
-#: .\shoutit\settings.py:254
+#: .\shoutit\settings.py:255
 msgid "Spanish"
 msgstr ""
 
-#: .\shoutit\settings.py:255
+#: .\shoutit\settings.py:256
 msgid "Chinese"
 msgstr ""
 
@@ -1193,20 +1214,20 @@ msgstr ""
 msgid "The shout has been promoted"
 msgstr ""
 
-#: .\shoutit_twilio\views.py:58
+#: .\shoutit_twilio\views.py:59
 msgid "Couldn't authorize you to make video calls"
 msgstr ""
 
-#: .\shoutit_twilio\views.py:117
+#: .\shoutit_twilio\views.py:118
 #, python-format
 msgid "Error calling %(name)s"
 msgstr ""
 
-#: .\shoutit_twilio\views.py:151 .\shoutit_twilio\views.py:197
+#: .\shoutit_twilio\views.py:152 .\shoutit_twilio\views.py:210
 #, python-format
 msgid "Profile with identity %(identity)s does not exist"
 msgstr ""
 
-#: .\shoutit_twilio\views.py:154 .\shoutit_twilio\views.py:200
+#: .\shoutit_twilio\views.py:155 .\shoutit_twilio\views.py:213
 msgid "Invalid identity"
 msgstr ""

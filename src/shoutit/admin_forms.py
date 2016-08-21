@@ -2,21 +2,20 @@
 
 """
 from __future__ import unicode_literals
+
 import json
 import uuid
 
-import boto
+from common.constants import DeviceOS, COUNTRY_CHOICES
+from common.utils import process_tag
 from django import forms
-from django.conf import settings
 from django.contrib.postgres.forms import SplitArrayField
 from django.core.exceptions import ValidationError
 from django.forms import URLField
-from hvad.forms import TranslatableModelForm
-
-from common.utils import process_tag
-from shoutit.models import PushBroadcast
-from common.constants import DeviceOS, COUNTRY_CHOICES
 from django.utils.translation import string_concat
+from hvad.forms import TranslatableModelForm
+from shoutit.controllers.media_controller import upload_image_to_s3
+from shoutit.models import PushBroadcast
 
 
 class PushBroadcastForm(forms.ModelForm):
@@ -106,12 +105,10 @@ class ImageFileChangeForm(TranslatableModelForm):
         image_file = self.cleaned_data.get('image_file')
         if not image_file:
             return
-        s3 = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-        bucket = s3.get_bucket('shoutit-tag-image-original')
+        bucket_name = 'shoutit-tag-image-original'
+        public_url = 'https://tag-image.static.shoutit.com'
         slug = self.cleaned_data.get('slug', 'tag')
-        filename = "%s-%s.jpg" % (uuid.uuid4(), process_tag(slug))
-        key = bucket.new_key(filename)
-        key.set_metadata('Content-Type', 'image/jpg')
-        key.set_contents_from_file(image_file)
-        s3_image_url = 'https://tag-image.static.shoutit.com/%s' % filename
-        self.cleaned_data['image'] = s3_image_url
+        file_name = "%s-%s.jpg" % (uuid.uuid4(), process_tag(slug))
+        s3_url = upload_image_to_s3(bucket_name, public_url, data=image_file.read(), filename=file_name)
+        if s3_url:
+            self.cleaned_data['image'] = s3_url

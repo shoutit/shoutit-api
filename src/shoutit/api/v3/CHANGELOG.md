@@ -1,7 +1,14 @@
 # shoutit-api v3 changelog
 
+## Update (2016-08-16)
 
-## Update
+### Auth Token
+API sets an `auth_token={auth token}` query param for all links in notification emails. This can be used by web client to authenticate the user before viewing the target page. It is useful so the user doesn't need to manually log in coming from his email if he isn't logged in already. Auth tokens are temporary and can be used few times in short period.
+
+### User Language
+API now saves the language sent in `Accept-Language` header of the last request. This language will be used when sending notifications and emails to the user.
+
+## Update (2016-08-01)
 
 - Push Notifications `data` property has the `app_url` only except for incoming video calls which have caller profile properties. This was necessary as Apple only allows max payload of 2048 bytes. Check [Native Push](https://github.com/shoutit/shoutit-api/wiki/Native-Push)
 - `is_sold`, `available_count` and `expires_at` are added to **Shout**. They can be used for both Offers and Requests depending on the context. 

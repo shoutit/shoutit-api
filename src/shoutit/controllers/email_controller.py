@@ -6,13 +6,13 @@ import json
 import sendgrid
 from django.conf import settings
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import activate, get_language, gettext_lazy as _
 from django_rq import job
 
 from common.constants import USER_TYPE_PAGE
 from common.utils import date_unix
 from shoutit.models import User
-from shoutit.utils import debug_logger, error_logger
+from shoutit.utils import debug_logger, error_logger, url_with_querystring
 
 # Todo (mo): add localized templates and fallback to english ones
 SG_WELCOME_TEMPLATE = 'f34f9b3a-92f3-4b11-932e-f0205003897a'
@@ -21,8 +21,12 @@ SG_API_KEY = 'SG.aSYoCuZLRrOXkP5eUfYe8w.0LnF0Rl78MO76Jw9UCvZ5_c86s9vwd9k02Dpb6L6
 sg = sendgrid.SendGridClient(SG_API_KEY)
 sg_api = sendgrid.SendGridAPIClient(apikey=SG_API_KEY)
 
+# Todo: skip sending emails when `EMAIL_ENV` is `file`
+
 
 def prepare_message(user, subject, template, subs=None):
+    lang = get_language()
+    activate(user.language)
     message = sendgrid.Mail()
     message.add_to(user.email)
     message.set_subject(force_text(subject))
@@ -35,6 +39,7 @@ def prepare_message(user, subject, template, subs=None):
     if subs:
         for key, val in subs.items():
             message.add_substitution('{{%s}}' % key, force_text(val))
+    activate(lang)
     return message
 
 
@@ -146,17 +151,20 @@ def _send_notification_email(user, notification, emailed_for=None):
     subject = display['title']
     if emailed_for:
         intro = _("Your page '%(page)s' has a new notification") % {'page': emailed_for.name}
+        auth_token = emailed_for.get_valid_auth_token(page_admin_user=user)
     else:
         intro = _("You have a new notification")
+        auth_token = user.get_valid_auth_token()
+    link = url_with_querystring(notification.web_url, auth_token=auth_token.pk)
     subs = {
         'text1':
             """
             %(intro)s
             <blockquote style="font-weight:bold;background-color:#EEEEEE;padding:10px;border-radius:5px;">%(text)s</blockquote>
             <p style="font-style:italic;color:#888888;margin-top:50px;">%(note)s</p>
-            """ % {'intro': intro, 'text': display['text'] or '', 'note': display.get('note') or ''},
+            """ % {'intro': force_text(intro), 'text': force_text(display['text']) or '', 'note': force_text(display.get('note')) or ''},
         'action': display['action'],
-        'link': notification.web_url
+        'link': link
     }
     message = prepare_message(user=user, subject=subject, template=SG_GENERAL_TEMPLATE, subs=subs)
     result = sg.send(message)

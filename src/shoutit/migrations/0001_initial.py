@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, serialize=False, editable=False, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation time', null=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, verbose_name='Modification time', null=True)),
-                ('username', models.CharField(help_text='Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)', unique=True, max_length=30, verbose_name='username', validators=[django.core.validators.RegexValidator(re.compile('^[0-9a-zA-Z.]+$'), 'Enter a valid username.', 'invalid'), django.core.validators.MinLengthValidator(2), common.utils.AllowedUsernamesValidator()])),
+                ('username', models.CharField(help_text='Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)', unique=True, max_length=30, verbose_name='username', validators=[django.core.validators.RegexValidator(re.compile('^[0-9a-zA-Z.]+$'), 'Enter a valid username.', 'invalid'), django.core.validators.MinLengthValidator(2), common.utils.AllowedUsernameValidator()])),
                 ('first_name', models.CharField(blank=True, max_length=30, verbose_name='first name', validators=[django.core.validators.MinLengthValidator(2)])),
                 ('last_name', models.CharField(blank=True, max_length=30, verbose_name='last name', validators=[django.core.validators.MinLengthValidator(1)])),
                 ('email', models.EmailField(max_length=254, verbose_name='email address', blank=True)),

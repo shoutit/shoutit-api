@@ -4,12 +4,11 @@
 """
 from __future__ import unicode_literals
 
-import json
 import random
-import re
 from collections import OrderedDict
 from datetime import timedelta
 
+from common.constants import POST_TYPE_OFFER, POST_TYPE_REQUEST, USER_TYPE_PAGE, USER_TYPE_PROFILE
 from django.conf import settings
 from django.utils import timezone
 from ipware.ip import get_real_ip
@@ -17,13 +16,10 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-
-from common.constants import POST_TYPE_OFFER, USER_TYPE_PAGE, USER_TYPE_PROFILE
-from common.constants import POST_TYPE_REQUEST
-from shoutit.controllers import shout_controller, user_controller, message_controller, location_controller
-from shoutit.models import (Currency, Category, PredefinedCity, CLUser, DBUser, DBCLConversation, User, DBZ2User, Shout,
-                            Tag)
+from shoutit.controllers import shout_controller, user_controller, location_controller
+from shoutit.models import Currency, Category, PredefinedCity, CLUser, DBUser, User, DBZ2User, Shout, Tag
 from shoutit.utils import debug_logger, error_logger
+
 from . import DEFAULT_PARSER_CLASSES_v2
 from ..serializers import (CategorySerializer, CurrencySerializer, ReportSerializer, PredefinedCitySerializer,
                            UserSerializer, ShoutSerializer, TagDetailSerializer)
@@ -316,28 +312,6 @@ class MiscViewSet(viewsets.ViewSet):
         # good bye!
         return Response({'success': True})
 
-    @list_route(methods=['get', 'post', 'head'], suffix='Inbound Email')
-    def inbound(self, request):
-        """
-        Accept inbounding emails
-        ###NOT TO BE USED BY API CLIENTS
-        """
-        data = request.POST or request.GET or {}
-        if request.method == 'POST':
-            if not data:
-                return Response({})
-            mandrill_events = json.loads(data.get('mandrill_events'))
-            msg = mandrill_events[0].get('msg') if mandrill_events else {}
-            in_email = msg.get('email')
-            if 'dbz-reply.com' in in_email:
-                return handle_dbz_reply(in_email, msg, request)
-            elif 'cl-reply.com' in in_email:
-                return handle_cl_reply(msg, request)
-            else:
-                return Response({'error': "Unknown in_email"})
-        else:
-            return Response(data)
-
     @list_route(methods=['post'], suffix='Base64 to Text')
     def b64_to_text(self, request):
         """
@@ -408,98 +382,3 @@ def base64_to_texts(b64, configs, invert=False):
         text = base64_to_text(b64, box, config, invert)
         texts.append(text)
     return texts
-
-
-def handle_dbz_reply(in_email, msg, request):
-    from_email = msg.get('from_email')
-    try:
-        dbcl_conversation = DBCLConversation.objects.get(in_email=in_email)
-    except DBCLConversation.DoesNotExist:
-        error = {'error': "Unknown in_email"}
-        error_logger.info(error['error'], exc_info=True)
-        return Response(error)
-
-    from_user = dbcl_conversation.to_user
-    to_user = dbcl_conversation.from_user
-    shout = dbcl_conversation.shout
-    if from_user.cl_user:
-        source = 'cl'
-    elif from_user.db_user:
-        source = 'dbz'
-    else:
-        source = 'dbz2'
-
-    # extract actual message from email without quoted text
-    text = msg.get('text')
-    try:
-        if source == 'cl':
-            if dbcl_conversation.from_user.name in text:
-                split = dbcl_conversation.from_user.name
-            else:
-                split = 'reply.craigslist.org'
-        elif source == 'dbz':
-            split = 'Dubizzle'
-        else:
-            split = 'dbz-reply'
-        text = text.split(split)[0]
-        lines = text.splitlines()
-        if len(lines) >= 3:
-            text = '\n'.join(lines[:-2])
-        else:
-            text = '\n'.join(lines)
-        if text.strip() == "":
-            text = '\n'.join(lines)
-    except AttributeError:
-        error = {'error': "Couldn't process the message text"}
-        error_logger.info(error['error'], exc_info=True)
-        return Response(error)
-
-    message = message_controller.send_message(conversation=None, user=from_user, to_users=[from_user, to_user],
-                                              about=shout, text=text, request=request)
-    # invitations
-    if source == 'cl':
-        messages_count = message.conversation.messages_count
-        if messages_count < 4:
-            debug_logger.debug('Messages count: %s' % messages_count)
-            debug_logger.debug('Sending invitation email to cl user: %s' % str(from_user))
-            from_user.cl_user.send_invitation_email()
-        else:
-            debug_logger.debug('Messages count: %s' % messages_count)
-            debug_logger.debug('Skipped sending invitation email to cl user: %s' % str(from_user))
-    if source in ['dbz', 'dbz2']:
-        email_exists = User.exists(email=from_email)
-        if not email_exists:
-            from_user.email = from_email
-            from_user.save()
-            if from_user.db_user:
-                from_user.db_user.send_invitation_email()
-            if from_user.dbz2_user:
-                from_user.dbz2_user.send_invitation_email()
-
-    return Response({'success': True, 'message_id': message.pk})
-
-
-def handle_cl_reply(msg, request):
-    text = msg.get('text')
-    try:
-        ref = re.search("\{ref:(.+)\}", text).groups()[0]
-    except AttributeError:
-        return Response({
-            'error': "ref wasn't passed in the reply, we can't process the message any further"})
-    try:
-        text = '\n'.join(text.split('\n> ')[0].splitlines()[:-2])
-    except AttributeError:
-        return Response({'error': "we couldn't process the message text"})
-    try:
-        dbcl_conversation = DBCLConversation.objects.get(ref=ref)
-    except DBCLConversation.DoesNotExist as e:
-        error_logger.warning(str(e))
-        return Response({'error': str(e)})
-
-    from_user = dbcl_conversation.to_user
-    to_user = dbcl_conversation.from_user
-    shout = dbcl_conversation.shout
-    message = message_controller.send_message(conversation=None, user=from_user, to_users=[from_user, to_user],
-                                              about=shout, text=text, request=request)
-
-    return Response({'success': True, 'message_id': message.pk})

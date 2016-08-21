@@ -14,7 +14,7 @@ from django.utils import timezone
 from mock import MagicMock
 from push_notifications import apns, gcm
 import responses
-import boto
+import boto3
 
 from shoutit.controllers import mixpanel_controller
 from shoutit_pusher import utils as pusher_utils
@@ -41,8 +41,8 @@ gcm.gcm_send_bulk_message = mocked_gcm_send_bulk_message = MagicMock()
 mixpanel_controller.shoutit_mp = MagicMock()
 mixpanel_controller.shoutit_mp_buffered = MagicMock()
 
-# mock s3 boto
-boto.connect_s3 = MagicMock()
+# mock s3 boto3
+boto3.resource = MagicMock()
 
 # TODO: refactor application code, so shout signal will be applied
 #       automatically (currently shout_post_save signal is not called
@@ -224,11 +224,10 @@ class BaseTestCase(APITestCase):
         ES.indices.refresh(index=index, **kwargs)
 
     @classmethod
-    def add_googleapis_geocode_response(cls, json_file_name, status=200,
-                                        add_path=True):
+    def add_googleapis_geocode_response(cls, json_file_name, status=200, add_path=True):
         if add_path:
-            json_file_name = os.path.join('tests/data/googleapis',
-                                          json_file_name)
+            current_dir = os.path.dirname(os.path.realpath(__file__))
+            json_file_name = os.path.join(current_dir, 'data', 'googleapis', json_file_name)
 
         with open(json_file_name) as f:
             responses.add(
@@ -272,5 +271,7 @@ class BaseTestCase(APITestCase):
 
     @classmethod
     def get_1pixel_jpg_image_data(self):
-        with open('tests/data/images/1x1_pixel.jpg', 'rb') as f:
+        current_dir = os.path.dirname(os.path.realpath(__file__))
+        image_file = os.path.join(current_dir, 'data', 'images', '1x1_pixel.jpg')
+        with open(image_file, 'rb') as f:
             return f.read()

@@ -31,7 +31,7 @@ from shoutit.controllers.facebook_controller import user_from_facebook_auth_resp
 from shoutit.controllers.gplus_controller import user_from_gplus_code
 from shoutit.models import (
     User, Video, Tag, Shout, Conversation, MessageAttachment, Message, SharedLocation, Notification, Category,
-    Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, DBCLConversation, SMSInvitation, DiscoverItem,
+    Currency, Report, PredefinedCity, ConfirmToken, FeaturedTag, SMSInvitation, DiscoverItem,
     Profile, Page)
 from shoutit.models.auth import InactiveUser
 from shoutit.models.post import InactiveShout
@@ -1165,20 +1165,6 @@ class UserDeactivationSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise ValidationError({'password': ['The password you entered is incorrect.']})
         user.update(is_active=False)
-        return ret
-
-
-class SMSCodeSerializer(serializers.Serializer):
-    sms_code = serializers.CharField(max_length=10, min_length=6)
-
-    def to_internal_value(self, data):
-        ret = super(SMSCodeSerializer, self).to_internal_value(data)
-        sms_code = ret.get('sms_code').upper()
-        try:
-            dbcl_conversation = DBCLConversation.objects.get(sms_code__iexact=sms_code)
-            self.instance = dbcl_conversation.to_user
-        except DBCLConversation.DoesNotExist:
-            raise ValidationError({'sms_code': ["Invalid sms_code"]})
         return ret
 
 

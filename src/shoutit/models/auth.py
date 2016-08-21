@@ -4,11 +4,13 @@ import re
 import sys
 from collections import OrderedDict
 
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager, AnonymousUser
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
 from django.db import models
+from django.db.models import F
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -19,10 +21,12 @@ from pydash import arrays
 
 from common.constants import (TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, USER_TYPE_PROFILE, UserType,
                               LISTEN_TYPE_PROFILE, LISTEN_TYPE_PAGE, LISTEN_TYPE_TAG, USER_TYPE_PAGE)
-from common.utils import AllowedUsernamesValidator, date_unix
+from common.utils import AllowedUsernameValidator, date_unix
 from shoutit.utils import debug_logger, none_to_blank
 from .base import UUIDModel, APIModelMixin, LocationMixin
 from .listen import Listen2
+
+AUTH_TOKEN_EXPIRY_DAYS = 30
 
 
 class ShoutitUserManager(UserManager):
@@ -79,7 +83,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             validators.RegexValidator(
                 re.compile('^[0-9a-zA-Z.]+$'), _('Enter a valid username.'), 'invalid'),
             validators.MinLengthValidator(2),
-            AllowedUsernamesValidator()
+            AllowedUsernameValidator()
         ])
     first_name = models.CharField(
         _('first name'), max_length=30, blank=True, validators=[validators.MinLengthValidator(2)])
@@ -106,6 +110,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         help_text=_('Designates whether this user is on the main mailing list.'))
     on_mp_people = models.BooleanField(
         _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
+    language = models.CharField(_('accepted language'), max_length=10, default=settings.LANGUAGE_CODE)
+
     objects = ShoutitUserManager()
 
     USERNAME_FIELD = 'username'
@@ -258,6 +264,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         return arrays.unique(self.accesstoken_set.values_list('client__name', flat=True))
 
     # Actions
+
+    def get_valid_auth_token(self, page_admin_user=None):
+        if page_admin_user:
+            auth_token, _ = AuthToken.object.get_valid_tokens().get_or_create(user=self, page_admin_user=page_admin_user)
+        else:
+            auth_token, _ = AuthToken.object.get_valid_tokens().get_or_create(user=self)
+        return auth_token
 
     def reset_password(self):
         from .misc import ConfirmToken
@@ -552,6 +565,34 @@ class InactiveUser(AnonymousUser):
 
 
 # Todo: Add DeletedUser class
+
+
+class AuthTokenManager(models.Manager):
+    def get_valid_tokens(self):
+        expires_at = timezone.now() - timedelta(days=AUTH_TOKEN_EXPIRY_DAYS)
+        return self.filter(created_at__gt=expires_at)
+
+
+class AuthToken(UUIDModel):
+    user = models.ForeignKey(User)
+    page_admin_user = models.ForeignKey(User, related_name='pages_%(class)ss', null=True, blank=True)
+    used_count = models.SmallIntegerField(default=0)
+
+    object = AuthTokenManager()
+
+    def __unicode__(self):
+        return 'For %s, expires at %s' % (self.user, self.expires_at)
+
+    @property
+    def is_expired(self):
+        return timezone.now() >= self.expires_at
+
+    @property
+    def expires_at(self):
+        return self.created_at + timedelta(days=AUTH_TOKEN_EXPIRY_DAYS)
+
+    def update_used_count(self):
+        AuthToken.object.filter(pk=self.pk).update(used_count=F('used_count')+1)
 
 
 class AbstractProfile(UUIDModel, LocationMixin):

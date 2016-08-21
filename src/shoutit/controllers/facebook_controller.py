@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django_rq import job
 from pydash import objects
 
 from common.utils import utcfromtimestamp
@@ -22,6 +23,10 @@ from shoutit.controllers import location_controller, user_controller, notificati
 from shoutit.models import LinkedFacebookAccount
 from shoutit.models.auth import LinkedFacebookPage
 from shoutit.utils import debug_logger, now_plus_delta, error_logger
+
+FB_APP_ACCESS_TOKEN = '%s|%s' % (settings.FACEBOOK_APP_ID, settings.FACEBOOK_APP_SECRET)
+FB_GRAPH_URL = 'https://graph.facebook.com/v2.6'
+FB_GRAPH_ACCESS_TOKEN_URL = 'https://graph.facebook.com/oauth/access_token'
 
 FB_LINK_ERROR_TRY_AGAIN = _("Could not link Facebook account, try again later")
 FB_ERROR_TRY_AGAIN = _("Facebook error, try again later")
@@ -64,7 +69,7 @@ def user_from_facebook_auth_response(auth_response, initial_user=None, is_test=F
 
 
 def facebook_graph_object(graph_path, params):
-    graph_url = 'https://graph.facebook.com/v2.6' + graph_path
+    graph_url = FB_GRAPH_URL + graph_path
     try:
         response = requests.get(graph_url, params=params, timeout=20)
         response_data = response.json()
@@ -82,7 +87,7 @@ def facebook_graph_object(graph_path, params):
 
 def debug_token(facebook_token):
     params = {
-        'access_token': "%s|%s" % (settings.FACEBOOK_APP_ID, settings.FACEBOOK_APP_SECRET),
+        'access_token': FB_APP_ACCESS_TOKEN,
         'input_token': facebook_token
     }
     token = facebook_graph_object('/debug_token', params)
@@ -111,7 +116,7 @@ def fb_page_from_facebook_page_id(facebook_page_id, facebook_access_token):
 
 
 def extend_token(short_lived_token):
-    exchange_url = 'https://graph.facebook.com/oauth/access_token'
+    exchange_url = FB_GRAPH_ACCESS_TOKEN_URL
     params = {
         'client_id': settings.FACEBOOK_APP_ID,
         'client_secret': settings.FACEBOOK_APP_SECRET,
@@ -283,6 +288,16 @@ def unlink_facebook_page(linked_facebook, facebook_page_id):
     LinkedFacebookPage.objects.filter(linked_facebook=linked_facebook, facebook_id=facebook_page_id).delete()
 
 
+@job(settings.RQ_QUEUE)
+def pre_cache_graph(url):
+    params = {
+        'id': url,
+        'scrape': True,
+        'access_token': FB_APP_ACCESS_TOKEN
+    }
+    return requests.post(FB_GRAPH_URL, params=params).json()
+
+
 # todo: check!
 def exchange_code(request, code):
     # Get Access Token using the Code then make an authResponse
@@ -290,7 +305,7 @@ def exchange_code(request, code):
         qs = request.META['QUERY_STRING'].split('&code')[0]
         # redirect_uri = urllib.quote('%s%s?%s' % (settings.SITE_LINK, request.path[1:], qs))
         redirect_uri = settings.SITE_LINK + request.path[1:] + qs
-        exchange_url = 'https://graph.facebook.com/oauth/access_token'
+        exchange_url = FB_GRAPH_ACCESS_TOKEN_URL
         params = {
             'client_id': settings.FACEBOOK_APP_ID,
             'client_secret': settings.FACEBOOK_APP_SECRET,
