@@ -14,7 +14,7 @@ from django.db import models, IntegrityError, transaction
 from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import activate, get_language, ugettext_lazy as _
 from django_pgjson.fields import JsonField
 from pydash import strings
 
@@ -521,6 +521,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
         return obj
 
     def display(self):
+        current_language = get_language()
+        activate(self.to_user.language)
         if hasattr(self, '_display'):
             return self._display
 
@@ -597,6 +599,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
         setattr(self, 'target', target)
         setattr(self, '_display', ret)
+        activate(current_language)
         return self._display
 
     @property

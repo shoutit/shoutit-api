@@ -6,7 +6,7 @@ import json
 import sendgrid
 from django.conf import settings
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import activate, get_language, gettext_lazy as _
 from django_rq import job
 
 from common.constants import USER_TYPE_PAGE
@@ -25,6 +25,8 @@ sg_api = sendgrid.SendGridAPIClient(apikey=SG_API_KEY)
 
 
 def prepare_message(user, subject, template, subs=None):
+    lang = get_language()
+    activate(user.language)
     message = sendgrid.Mail()
     message.add_to(user.email)
     message.set_subject(force_text(subject))
@@ -37,6 +39,7 @@ def prepare_message(user, subject, template, subs=None):
     if subs:
         for key, val in subs.items():
             message.add_substitution('{{%s}}' % key, force_text(val))
+    activate(lang)
     return message
 
 
@@ -159,7 +162,7 @@ def _send_notification_email(user, notification, emailed_for=None):
             %(intro)s
             <blockquote style="font-weight:bold;background-color:#EEEEEE;padding:10px;border-radius:5px;">%(text)s</blockquote>
             <p style="font-style:italic;color:#888888;margin-top:50px;">%(note)s</p>
-            """ % {'intro': intro, 'text': display['text'] or '', 'note': display.get('note') or ''},
+            """ % {'intro': force_text(intro), 'text': force_text(display['text']) or '', 'note': force_text(display.get('note')) or ''},
         'action': display['action'],
         'link': link
     }
