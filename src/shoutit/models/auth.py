@@ -295,6 +295,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         self.is_activated = False
         self.save(update_fields=['is_activated'])
 
+    def update_language(self, language):
+        old_notify_state = getattr(self, 'notify', None)
+        self.notify = False
+        self.update(language=language)
+        self.notify = old_notify_state
+
     def mute_shouts(self):
         # Todo: optimize
         from shoutit.models import Shout

@@ -92,10 +92,19 @@ class UserLanguageMiddleware(object):
     """
     @staticmethod
     def process_request(request):
-        if request.user.is_authenticated() and request.LANGUAGE_CODE != request.user.language:
-            request.user.notify = False
-            request.user.update(language=request.LANGUAGE_CODE)
-            request.user.notify = True
+        user = request.user
+        if user.is_authenticated() and request.LANGUAGE_CODE != user.language:
+            user.update_language(request.LANGUAGE_CODE)
+
+    @staticmethod
+    def process_response(request, response):
+        # The authentication with DRF happens in the views. Since there is no unified place to add middleware for DRF
+        # views, we can update the user language on response time instead. At this point the request will be
+        # authenticated already
+        user = request.user
+        if user.is_authenticated() and request.LANGUAGE_CODE != user.language:
+            user.update_language(request.LANGUAGE_CODE)
+        return response
 
 
 class FBMiddleware(object):
