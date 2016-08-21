@@ -162,7 +162,7 @@ def _send_notification_email(user, notification, emailed_for=None):
             %(intro)s
             <blockquote style="font-weight:bold;background-color:#EEEEEE;padding:10px;border-radius:5px;">%(text)s</blockquote>
             <p style="font-style:italic;color:#888888;margin-top:50px;">%(note)s</p>
-            """ % {'intro': intro, 'text': display['text'] or '', 'note': display.get('note') or ''},
+            """ % {'intro': force_text(intro), 'text': force_text(display['text']) or '', 'note': force_text(display.get('note')) or ''},
         'action': display['action'],
         'link': link
     }
