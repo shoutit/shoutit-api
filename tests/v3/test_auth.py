@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
+import time
+from datetime import datetime, timedelta
 from json import loads
 
-from django.contrib.auth import get_user_model
+from mock import patch
+import httplib2
 
+import responses
+from django.contrib.auth import get_user_model
+from django.utils.http import urlencode
 from django_dynamic_fixture import G
 from provider.oauth2.models import RefreshToken
 
 from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL
-from shoutit.models.auth import AuthToken, LinkedFacebookAccount, LinkedGoogleAccount
+from shoutit.models.auth import AuthToken, LinkedGoogleAccount
 from shoutit.models.dbcl import DBCLConversation
 from shoutit.models.misc import ConfirmToken
 from shoutit.models.page import Page, PageCategory
@@ -259,15 +265,67 @@ class AccessTokenTestCase(BaseTestCase):
         # resp = self.client.post(self.reverse(self.url_name), data)
         # self.assert200(resp)
 
+    @responses.activate
     def test_login_facebook_code(self):
-        return  # TODO I couldn't figure out right away how to setup the fixtures here
-        # fb_account = G(LinkedFacebookAccount, user=self.user)
-        # data = self.get_data({
-        #     "grant_type": "facebook_access_token",
-        #     "facebook_access_token": fb_account.access_token
-        # })
-        # resp = self.client.post(self.reverse(self.url_name), data)
-        # self.assert200(resp)
+        data = self.get_data({
+            "grant_type": "facebook_access_token",
+            "facebook_access_token": "123"
+        })
+
+        expires_at = datetime.now() + timedelta(days=7)
+        expires_at_ts = int(time.mktime(expires_at.timetuple()))
+
+        facebook_response = {
+            "id": "123456789097654",
+            "email": "hans.zimmer@example.com",
+            "name": "Hans Zimmer",
+            "first_name": "Hans",
+            "last_name": "Zimmer",
+            "gender": "male",
+            "picture": {
+                "data": {
+                    "height": 415,
+                    "is_silhouette": "false",
+                    "url": "https://scontent.xx.fbcdn.net/v/t1.0-1/10246800_1355580441027092_8676507526870221841_n.jpg?oh=555501ba29b829b89a5fbb4dfaad0091&oe=453300B1",
+                    "width": 415
+                }
+            },
+            "cover": {
+                "id": "1562904555561383",
+                "offset_y": 59,
+                "source": "https://scontent.xx.fbcdn.net/t31.0-8/q82/s720x720/10555590_1562904180661383_5329368429206082288_o.jpg"
+            }
+        }
+
+        facebook_debug = {
+            'data': {
+                "app_id": "1231231",
+                "application": "some_test_app",
+                "expires_at": expires_at_ts,
+                "is_valid": True,
+                "scopes": [
+                    "user_birthday",
+                    "email",
+                    "public_profile"
+                ],
+                "user_id": "123456"
+            }
+        }
+
+        facebook_access_token = urlencode({
+            "access_token": "EAAEM8234sdf",
+            "token_type": "bearer",
+            "expires": 5183341
+        })
+        responses.add(responses.GET, 'https://graph.facebook.com/v2.6/me',
+                      json=facebook_response, status=200)
+        responses.add(responses.GET, 'https://graph.facebook.com/v2.6/debug_token',
+                      json=facebook_debug, status=200)
+        responses.add(responses.GET,
+                      'https://graph.facebook.com/oauth/access_token',
+                      body=facebook_access_token, status=200)
+        resp = self.client.post(self.reverse(self.url_name), data)
+        self.assert200(resp)
 
     def test_login_shoutit_account_wrong_password(self):
         data = self.get_data({
@@ -367,11 +425,10 @@ class AccessTokenTestCase(BaseTestCase):
         page_count_pre = Page.objects.count()
         resp = self.client.post(self.reverse(self.url_name), data)
         self.assert200(resp)
-        return  # TODO somehow this creates 2 accounts on POST and I can't see why
         self.assertEqual(
-            User.objects.count(), user_count_pre + 1, msg=(
-                'After successful post for shoutit account creation, there should be one'
-                ' User instance in the database.'
+            User.objects.count(), user_count_pre + 2, msg=(
+                'After successful post for shoutit account creation, there should be two'
+                ' new User instances in the database.'
             )
         )
         self.assertEqual(
