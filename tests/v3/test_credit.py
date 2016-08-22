@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from django_dynamic_fixture import G, N
-from mock import patch
 
 from shoutit_credit.models import CreditTransaction
 from shoutit_credit.models.profile import CompleteProfile, InvitationCode
