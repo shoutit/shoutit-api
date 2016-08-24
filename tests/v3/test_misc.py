@@ -71,11 +71,68 @@ class MiscFBScopesChangedTestCase(BaseTestCase):
         self.assert200(resp)
 
 
+class MiscPushTestCase(BaseTestCase):
+    url_name = 'misc-push'
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = cls.create_user()
+
+    def test_push_noauth(self):
+        resp = self.client.post(self.reverse(self.url_name))
+        self.assert401(resp)
+
+    def test_push(self):
+        self.login(self.user)
+        data = {
+            'apns': 'APNS_KEY',
+            'gcm': 'GCM_KEY',
+            'payload': {
+                'event_name': 'new_notification',
+                'title': 'Deep Link',
+                'body': 'Check Chats!',
+                'icon': 'https://user-image.static.shoutit.com/477ed080-0a53-4a15-9d02-1795d2e8b875.jpg',
+                'aps': {
+                    'alert': {
+                        'title': 'Deep Link',
+                        'body': 'Check Chats!'
+                    },
+                    'badge': 0,
+                    'sound': 'default',
+                    'category': '',
+                    'expiration': 'null',
+                    'priority': 10
+                },
+                'data': {
+                    'app_url': 'shoutit://chats'
+                },
+                'pushed_for': ''
+            }
+        }
+        resp = self.client.post(self.reverse(self.url_name), data)
+        self.assert201(resp)
+
+
 class MiscGeocodeTestCase(BaseTestCase):
     url_name = 'misc-geocode'
 
     def test_misc_geocode_nodata(self):
         resp = self.client.get(self.reverse(self.url_name))
+        self.assert400(resp)
+
+    def test_misc_geocode(self):
+        data = {
+            'latlng': '40.722100,-74.046900',
+        }
+        resp = self.client.get(self.reverse(self.url_name), data)
+        self.assert200(resp)
+        self.assertEqual(self.decode_json(resp).get('city', ''), 'New York')
+
+    def test_misc_geocode_invalid_data(self):
+        data = {
+            'latlng': 'Invalid'
+        }
+        resp = self.client.get(self.reverse(self.url_name), data)
         self.assert400(resp)
 
 
@@ -169,6 +226,7 @@ class MiscSuggestionsTestCase(BaseTestCase):
             'category': cls.pagecategory,
             'is_published': True,
             'is_verified': True,
+            'country': 'DE'
         }
         cls.page_user1.save()
         cls.tag1 = G(Tag, slug=cls.category.slug, creator=cls.user2)
@@ -215,7 +273,15 @@ class MiscSuggestionsTestCase(BaseTestCase):
         #             msg='There should be an item of type shout in the result for query {0}.'.format(query)
         #         )
 
+    def test_misc_suggestions_invalid(self):
+        data = {
+            'page_size': 'Invalid'
+        }
+        resp = self.client.get(self.reverse(self.url_name), data)
+        self.assert400(resp)
+
     def test_misc_suggestions(self):
+        self.login(self.user1)
         resp = self.client.get(self.reverse(self.url_name))
         self.assert200(resp)
         self.assertKeysAndResultsCorrect({}, resp)
@@ -236,6 +302,14 @@ class MiscSuggestionsTestCase(BaseTestCase):
 
         data = {
             'type': 'users,shouts',
+            'country': 'DE',
+        }
+        resp = self.client.get(self.reverse(self.url_name), data)
+        self.assert200(resp)
+        self.assertKeysAndResultsCorrect(data, resp)
+
+        data = {
+            'type': 'pages',
             'country': 'DE',
         }
         resp = self.client.get(self.reverse(self.url_name), data)
