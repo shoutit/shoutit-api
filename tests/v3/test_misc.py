@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django_dynamic_fixture import G, N
 from django.utils.http import urlencode
@@ -7,6 +8,8 @@ from common.constants import USER_TYPE_PAGE
 from shoutit.models import (
     Category,
     Conversation,
+    LinkedFacebookAccount,
+    LinkedGoogleAccount,
     PageCategory,
     PredefinedCity,
     Report,
@@ -58,8 +61,39 @@ class MiscErrorTestCase(BaseTestCase):
 class MiscFBDeauthTestCase(BaseTestCase):
     url_name = 'misc-fb-deauth'
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = cls.create_user()
+        cls.fb_acc = G(LinkedFacebookAccount, user=cls.user)
+
     def test_misc_fb_deauth_nodata(self):
         resp = self.client.post(self.reverse(self.url_name))
+        self.assert200(resp)
+
+    def test_misc_fb_deauth(self):
+        return  # TODO this, same as the API docs return `'dict' object has no attribute 'encode'` (this happens for all misc-fb endpoints)
+        import json
+        import hmac
+        import hashlib
+        import base64
+
+        user_id = self.fb_acc.facebook_id
+        data = {
+            'user_id': user_id
+        }
+        inp = json.dumps(data)
+        inp = inp.replace('+', '-').replace('/', '_')
+        payload = base64.encodestring(inp)
+        sig = hmac.new(str(settings.FACEBOOK_APP_SECRET), msg=str(payload), digestmod=hashlib.sha256).digest()
+        encoded_sig = base64.encodestring(sig)
+
+        signed_request = '{0}.{1}'.format(encoded_sig, payload)
+
+        post_data = {
+            'signed_request': signed_request
+        }
+
+        resp = self.client.post(self.reverse(self.url_name), post_data)
         self.assert200(resp)
 
 
