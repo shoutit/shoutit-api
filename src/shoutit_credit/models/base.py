@@ -90,5 +90,8 @@ class CreditTransaction(UUIDModel):
 
 @receiver(post_save, sender=CreditTransaction)
 def transaction_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
+    user = sender.user
+    user.stats_store['credit'] = user.credit
+    user.save()
     if created and getattr(instance, 'notify', True):
         instance.notify_user()

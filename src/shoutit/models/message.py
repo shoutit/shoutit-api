@@ -627,7 +627,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
         self.save(update_fields=['is_read'])
 
         # Trigger `stats_update` on Pusher
-        from ..controllers import pusher_controller
+        from ..controllers import pusher_controller, notifications_controller
+        notifications_controller.update_notifications_store(self.to_user)
         pusher_controller.trigger_stats_update(self.to_user, 'v3')
 
 

@@ -16,6 +16,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone, six
 from django.utils.translation import ugettext_lazy as _
+from django_pgjson.fields import JsonField
 from push_notifications.models import APNSDevice, GCMDevice
 from pydash import arrays
 
@@ -111,6 +112,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     on_mp_people = models.BooleanField(
         _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
     language = models.CharField(_('accepted language'), max_length=10, default=settings.LANGUAGE_CODE)
+    stats_store = JsonField(default=dict, blank=True)
 
     objects = ShoutitUserManager()
 
@@ -193,16 +195,32 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def stats(self):
-        # Todo (mo): create fields for each stats property which holds the latest value and gets updated
+        def total_unread_count_fallback(obj):
+            value = obj.stats_store.get('total_unread_count')
+            if value is None:
+                value = obj._stats.get('total_unread_count')
+            if value is None:
+                value = (obj._stats['unread_notifications_count'] +
+                         obj._stats['unread_conversations_count'])
+            return value
+
+        stats = OrderedDict([
+            ('unread_conversations_count', lambda s: s.unread_conversations_count),
+            ('unread_notifications_count', lambda s: s.unread_notifications_count),
+            ('total_unread_count', total_unread_count_fallback),
+            ('credit', lambda s: s.credit),
+        ])
+
         if not hasattr(self, '_stats'):
-            unread_conversations_count = self.unread_conversations_count
-            unread_notifications_count = self.unread_notifications_count
-            self._stats = OrderedDict([
-                ('unread_conversations_count', unread_conversations_count),
-                ('unread_notifications_count', unread_notifications_count),
-                ('total_unread_count', unread_conversations_count + unread_notifications_count),
-                ('credit', self.credit),
-            ])
+            self._stats = OrderedDict()
+
+        for key, fallback in stats.items():
+            stat = self.stats_store.get(key)
+            if stat is None:
+                stat = self._stats.get(key)
+            if stat is None:
+                stat = fallback(self)
+            self._stats[key] = stat
         return self._stats
 
     @property
