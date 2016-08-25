@@ -53,6 +53,7 @@ from shoutit.controllers import shout_controller
 
 
 class BaseTestCase(APITestCase):
+    longMessage = True
     url_namespace = 'v3'
     default_password = '123'
     IPS = {
