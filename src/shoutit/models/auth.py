@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import re
 import sys
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 
 from datetime import timedelta
 from django.conf import settings
@@ -193,8 +193,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     # Misc properties
 
-    @property
-    def stats(self):
+    def retrieve_stats(self, mixpanel=False):
         def total_unread_count_fallback(obj):
             value = obj.stats_store.get('total_unread_count')
             if value is None:
@@ -204,24 +203,36 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                          obj._stats['unread_conversations_count'])
             return value
 
-        stats = OrderedDict([
-            ('unread_conversations_count', lambda s: s.unread_conversations_count),
-            ('unread_notifications_count', lambda s: s.unread_notifications_count),
-            ('total_unread_count', total_unread_count_fallback),
-            ('credit', lambda s: s.credit),
-        ])
+        Stat = namedtuple(
+            'Stat', ['field_name', 'fallback_func', 'include_in_mixpanel'])
+        fields = [
+            Stat('unread_conversations_count', lambda s: s.unread_conversations_count, True),
+            Stat('unread_notifications_count', lambda s: s.unread_notifications_count, True),
+            Stat('total_unread_count', total_unread_count_fallback, False),
+            Stat('credit', lambda s: s.credit, True),
+        ]
 
         if not hasattr(self, '_stats'):
             self._stats = OrderedDict()
 
-        for key, fallback in stats.items():
-            stat = self.stats_store.get(key)
+        for field in fields:
+            if mixpanel and not field.include_in_mixpanel:
+                continue
+            stat = self.stats_store.get(field.field_name)
             if stat is None:
-                stat = self._stats.get(key)
+                stat = self._stats.get(field.field_name)
             if stat is None:
-                stat = fallback(self)
-            self._stats[key] = stat
+                stat = field.fallback_func(self)
+            self._stats[field.field_name] = stat
         return self._stats
+
+    @property
+    def stats(self):
+        return self.retrieve_stats()
+
+    @property
+    def mixpanel_stats(self):
+        return self.retrieve_stats(mixpanel=True)
 
     @property
     def unread_conversations_count(self):
