@@ -5,7 +5,8 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models import F
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 from hvad.models import TranslatedFields, TranslatableModel
@@ -88,7 +89,23 @@ class CreditTransaction(UUIDModel):
         return CreditTransactionSerializer
 
 
-@receiver(post_save, sender=CreditTransaction)
+@receiver(post_save, sender=CreditTransaction, dispatch_uid='transaction post save')
 def transaction_post_save(sender, instance=None, created=False, update_fields=None, **kwargs):
-    if created and getattr(instance, 'notify', True):
-        instance.notify_user()
+    if created:
+        if getattr(instance, 'notify', True):
+            instance.notify_user()
+        # should be fine just update user credit amount
+        # may cause some side effects if credit used in some not really obvious way
+        # also it is not really clear when and how credit is consumed and even if it can be consumed
+        # basing on how it was calculated it seems it is just a sum of all transactions
+        # not sure about data consistence though, might require some additional checks or periodic updates
+        instance.user._meta.model.objects.filter(id=instance.user_id).update(credit=F('credit')+instance.amount)
+        from shoutit.controllers.mixpanel_controller import add_to_mp_people
+        add_to_mp_people(user_ids=[instance.user_id])
+
+
+@receiver(post_delete, sender=CreditTransaction, dispatch_uid='transaction post delete')
+def transaction_post_delete(sender, instance=None, **kwargs):
+    instance.user._meta.model.objects.filter(id=instance.user_id).update(credit=F('credit')-instance.amount)
+    from shoutit.controllers.mixpanel_controller import add_to_mp_people
+    add_to_mp_people(user_ids=[instance.user_id])

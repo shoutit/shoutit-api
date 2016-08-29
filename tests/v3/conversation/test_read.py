@@ -100,6 +100,21 @@ class MarkReadMixin(DetailMixin):
         self.assertEqual(set([m1.id, m2.id]),
                          set([args1[2]['id'], args2[2]['id']]))
 
+    def test_unread_conversations_count(self):
+        """
+        test that count is recalculated on read
+        """
+        m = G(Message, user=self.user2, conversation=self.c1, unread_conversations_count=1)
+
+        self.login(self.user1)
+        self._do_request()
+        self.assertEqual(
+            MessageRead.objects.filter(
+                user=self.user1, message=m, conversation=self.c1).count(), 1)
+
+        self.user1 = self.user1._meta.model.objects.get(id=self.user1.id)
+        self.assertEqual(self.user1.unread_conversations_count, 0)
+
     def _do_request(self):
         request_method = getattr(self.client, self.http_method)
         resp = request_method(self.get_url(self.c1.pk))

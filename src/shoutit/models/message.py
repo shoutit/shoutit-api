@@ -11,7 +11,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, IntegrityError, transaction
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.translation import activate, get_language, ugettext_lazy as _
@@ -169,11 +169,14 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         for message in unread_messages:
             pusher_controller.trigger_new_read_by(message=message, version='v3')
 
+        user.update_stats(notifications=True)
+
     def mark_as_unread(self, user):
         # Delete the last MessageRead only if it exits
         last_message_read = self.messages_read_set.filter(user=user).order_by('created_at').last()
         if last_message_read:
             last_message_read.delete()
+        user.update_stats(notifications=True)
 
     def add_profile(self, profile):
         from ..controllers import pusher_controller
@@ -338,6 +341,8 @@ class Message(Action):
             # Trigger `stats_update` on Pusher
             pusher_controller.trigger_stats_update(user, 'v3')
 
+            user.update_stats(notifications=True)
+
     def mark_as_unread(self, user):
         user.read_messages_set.filter(message=self).delete()
 
@@ -386,9 +391,17 @@ def post_save_message(sender, instance=None, created=False, **kwargs):
             pass
 
         # Notify the other participants
+        user_ids = []
         for to_user in conversation.contributors:
             if instance.user and instance.user != to_user:
+                user_ids.append(to_user.id)
                 notifications_controller.notify_user_of_message(to_user, instance)
+
+        # it is definitely better to use update here than calculate and save, should not break anything
+        # not sure about data consistence though, might require some additional checks or periodic updates
+        conversation.contributors.update(unread_conversations_count=F('unread_conversations_count')+1)
+        from ..controllers.mixpanel_controller import add_to_mp_people
+        add_to_mp_people(user_ids)
 
         # Update the conversation which sends a `conversation_update` pusher event
         conversation.last_message = instance
@@ -629,6 +642,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
         # Trigger `stats_update` on Pusher
         from ..controllers import pusher_controller
         pusher_controller.trigger_stats_update(self.to_user, 'v3')
+
+        self.to_user.update_stats(notifications=True)
 
 
 @property
