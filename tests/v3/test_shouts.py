@@ -354,7 +354,7 @@ class ShoutPromoteTestCase(BaseShoutTestCase):
         cls.setup_shout()
         cls.credit_rule = PromoteShouts.objects.all()[0]
         cls.credit_transaction = N(CreditTransaction, user=cls.user,
-                                    rule=cls.credit_rule, amount=9001)
+                                   rule=cls.credit_rule, amount=9001)
         cls.credit_transaction.notify = False
         cls.credit_transaction.save()
 
