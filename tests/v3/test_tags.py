@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from unittest import skip
+
 from django_dynamic_fixture import G
 
 from common.constants import LISTEN_TYPE_TAG
@@ -44,16 +46,8 @@ class TagListTestCase(BaseTagsTestCase):
             msg='Result should contain the right tag.'
         )
 
+    @skip('TODO Featured tags are deprecated in v3 and FeaturedTagSerializer breaks in this test')
     def test_featured_list(self):
-        return  # TODO FeaturedTagSerializer receives Tag instances but expects FeaturedTags. Therefore fails with AttributeError
-        """
-        TODO Full Exception:
-
-        AttributeError: Got AttributeError when attempting to get a value for field `title` on serializer `FeaturedTagSerializer`.
-        The serializer field might be named incorrectly and not match any attribute or key on the `Tag` instance.
-        Original exception text was: 'Tag' object has no attribute 'title'.
-
-        """
         resp = self.client.get(self.reverse(self.url_name), data={'type': 'featured'})
         self.assert200(resp)
         self.assertEqual(
