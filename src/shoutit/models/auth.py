@@ -114,6 +114,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     objects = ShoutitUserManager()
 
+    # stats fields
+    unread_conversations_count = models.IntegerField(
+        verbose_name=_('unread conversations count'),
+        default=0,
+    )
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
@@ -204,11 +210,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 ('credit', self.credit),
             ])
         return self._stats
-
-    @property
-    def unread_conversations_count(self):
-        from ..controllers import notifications_controller
-        return notifications_controller.get_unread_conversations_count(self)
 
     @property
     def unread_notifications_count(self):
