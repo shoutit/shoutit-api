@@ -347,6 +347,7 @@ class Message(Action):
 
     def mark_as_unread(self, user):
         user.read_messages_set.filter(message=self).delete()
+        user.update_unread_conversations_count()
 
     @property
     def track_properties(self):

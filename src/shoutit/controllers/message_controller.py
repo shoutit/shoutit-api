@@ -91,11 +91,7 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
 
     # update unread message stats for to_users
     for user in to_users:
-        user.update(
-            unread_conversations_count=
-            notifications_controller.get_unread_conversations_count(
-                user=user)
-        )
+        user.update_unread_conversations_count()
     return message
 
 

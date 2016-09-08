@@ -120,6 +120,11 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         default=0,
     )
 
+    unread_notifications_count = models.IntegerField(
+        verbose_name=_('unread notifications count'),
+        default=0,
+    )
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
@@ -201,20 +206,23 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     def stats(self):
         # Todo (mo): create fields for each stats property which holds the latest value and gets updated
         if not hasattr(self, '_stats'):
-            unread_conversations_count = self.unread_conversations_count
-            unread_notifications_count = self.unread_notifications_count
             self._stats = OrderedDict([
-                ('unread_conversations_count', unread_conversations_count),
-                ('unread_notifications_count', unread_notifications_count),
-                ('total_unread_count', unread_conversations_count + unread_notifications_count),
+                ('unread_conversations_count', self.unread_conversations_count),
+                ('unread_notifications_count', self.unread_notifications_count),
+                ('total_unread_count', self.unread_conversations_count + self.unread_notifications_count),
                 ('credit', self.credit),
             ])
         return self._stats
 
-    @property
-    def unread_notifications_count(self):
+    def update_unread_conversations_count(self):
         from ..controllers import notifications_controller
-        return notifications_controller.get_unread_actual_notifications_count(self)
+        self.unread_conversations_count = \
+            notifications_controller.get_unread_conversations_count(user=self)
+
+    def update_unread_notifications_count(self):
+        from ..controllers import notifications_controller
+        self.unread_notifications_count = \
+            notifications_controller.get_unread_actual_notifications_count(user=self)
 
     @property
     def credit(self):
