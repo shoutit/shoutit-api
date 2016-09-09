@@ -119,9 +119,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name=_('unread conversations count'),
         default=0,
     )
-
     unread_notifications_count = models.IntegerField(
         verbose_name=_('unread notifications count'),
+        default=0,
+    )
+    credit = models.IntegerField(
+        verbose_name=_('aggregated credits'),
         default=0,
     )
 
@@ -204,7 +207,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def stats(self):
-        # Todo (mo): create fields for each stats property which holds the latest value and gets updated
         if not hasattr(self, '_stats'):
             self._stats = OrderedDict([
                 ('unread_conversations_count', self.unread_conversations_count),
@@ -213,6 +215,10 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
                 ('credit', self.credit),
             ])
         return self._stats
+
+    def update_credit(self):
+        self.credit = self.credit_transactions.aggregate(
+            sum=Sum('amount'))['sum'] or 0
 
     def update_unread_conversations_count(self):
         from ..controllers import notifications_controller
@@ -223,10 +229,6 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         from ..controllers import notifications_controller
         self.unread_notifications_count = \
             notifications_controller.get_unread_actual_notifications_count(user=self)
-
-    @property
-    def credit(self):
-        return self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
 
     @property
     def linked_accounts(self):

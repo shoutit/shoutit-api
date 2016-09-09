@@ -59,6 +59,18 @@ class CreditTransaction(UUIDModel):
     def __unicode__(self):
         return "%s %d:%s by %s" % (self.id, self.amount, self.rule, self.user.username)
 
+    @classmethod
+    def create(cls, save=True, **kwargs):
+        obj = super(CreditTransaction, cls).create(save=save, **kwargs)
+        obj.user.update_credit()
+        obj.user.save()
+        return obj
+
+    def delete(self, using=None):
+        super(CreditTransaction, self).delete(using=using)
+        self.user.update_credit()
+        self.user.save()
+
     @property
     def type(self):
         return CREDIT_IN if self.amount > 0 else CREDIT_OUT

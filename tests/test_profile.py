@@ -2,6 +2,7 @@
 Tests for User model (profile) integration.
 """
 from django_dynamic_fixture import G
+from mock import patch
 
 from .base import BaseTestCase
 from shoutit.controllers.notifications_controller import (
@@ -10,7 +11,11 @@ from shoutit.controllers.notifications_controller import (
     mark_actual_notifications_as_read,
     notify_user_of_listen,
 )
+from shoutit.controllers import email_controller
 from shoutit.controllers.message_controller import send_message
+from shoutit.models import Category
+from shoutit_credit.models import ShareShouts
+from shoutit_credit.models.base import CREDIT_IN
 
 
 class ProfileStatsTestCase(BaseTestCase):
@@ -27,7 +32,41 @@ class ProfileStatsTestCase(BaseTestCase):
             username='from',
             first_name='From',
         )
+        cls.category = G(Category, slug='local-business')
+        cls.shout = cls.create_shout(user=cls.user, category=cls.category)
         cls.message_text = 'There is something I need to tell you'
+
+    @patch.object(email_controller, '_send_notification_email')
+    def test_update_credit(self, send_notification_email_mock):
+        G(
+            ShareShouts,
+            transaction_type=CREDIT_IN,
+            type='foo',
+            name='bar',
+            description='foobar',
+        )
+        rule = ShareShouts.objects.get()
+
+        self.assertEqual(
+            self.user.credit, 0,
+            msg='The user model should have a credit of 0',
+        )
+
+        transaction = rule.apply(self.shout)
+        self.user.refresh_from_db()
+
+        self.assertEqual(
+            self.user.credit, 1,
+            msg='The user model should have a credit of 1',
+        )
+
+        transaction.delete()
+        self.user.refresh_from_db()
+
+        self.assertEqual(
+            self.user.credit, 0,
+            msg='The user model should have a credit of 0',
+        )
 
     def test_update_notifications(self):
         unread_notifications_pre = self.user.unread_notifications_count
