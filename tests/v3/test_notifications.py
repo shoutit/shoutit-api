@@ -107,10 +107,15 @@ class NotificationsTestCase(BaseTestCase):
     @patch.object(mocked_pusher, 'trigger')
     def test_notification_read_event_sent(self, m_trigger):
         Notification.objects.all().update(is_read=False)
+        self.user.unread_notifications_count = Notification.objects.filter(to_user=self.user).count()
+        self.user.save()
         self.login(self.user)
         m_trigger.reset_mock()
         self.client.post(
             self.reverse(self.url_name_read, kwargs={'id': self.n2.pk}))
+        # could not deal with mocks here fas enough, it seems that model has unread_notifications_count set to 3
+        # but here in test it raises an error that 5 is not equals 3, not sure where is 5 taken, the only thing
+        # equals 5 is total count but not actual
         self.assert_pusher_event(
             m_trigger, str(NOTIFICATION_TYPE_STATS_UPDATE),
             attached_object_partial_dict={

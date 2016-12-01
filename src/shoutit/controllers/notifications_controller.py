@@ -19,6 +19,7 @@ def mark_all_as_read(user):
     # Legacy: Mark Notifications of all types as read
     """
     Notification.objects.filter(is_read=False, to_user=user).update(is_read=True)
+    user.update_stats(notifications=True)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -27,6 +28,8 @@ def mark_actual_notifications_as_read(user):
     Mark (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction` as read
     """
     user.actual_notifications.filter(is_read=False).update(is_read=True)
+
+    user.update_stats(notifications=True)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 

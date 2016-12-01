@@ -296,3 +296,19 @@ class ConversationReplyProfileTestCase(DetailMixin, BaseTestCase):
         attachment = message_attachments[0]
         self.assertEqual(attachment.type, int(attachment_type))
         return attachment
+
+    def test_unread_conversations_count(self):
+        """
+        Tests that unread count are increased
+        can't read here because of recursion exception
+        """
+        self.login(self.user1)
+        self.user2 = self.user2._meta.model.objects.get(id=self.user2.id)
+        self.assertEqual(self.user2.unread_conversations_count, 0)
+        resp = self.client.post(self.get_url(self.c1.pk), {
+            'text': 'Message text',
+        })
+        self.assert201(resp)
+        self.assertTrue(Message.objects.filter(text='Message text').exists())
+        self.user2 = self.user2._meta.model.objects.get(id=self.user2.id)
+        self.assertEqual(self.user2.unread_conversations_count, 1)

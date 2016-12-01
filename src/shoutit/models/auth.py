@@ -111,6 +111,12 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     on_mp_people = models.BooleanField(
         _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
     language = models.CharField(_('accepted language'), max_length=10, default=settings.LANGUAGE_CODE)
+    unread_conversations_count = models.PositiveIntegerField(
+        verbose_name=_('unread conversations count'), default=0)
+    unread_notifications_count = models.PositiveIntegerField(
+        verbose_name=_('unread notifications count'), default=0)
+    credit = models.PositiveIntegerField(
+        verbose_name=_('credit'), default=0)
 
     objects = ShoutitUserManager()
 
@@ -205,19 +211,26 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
             ])
         return self._stats
 
-    @property
-    def unread_conversations_count(self):
+    def update_stats(self, notifications=False, credit=False):
         from ..controllers import notifications_controller
-        return notifications_controller.get_unread_conversations_count(self)
-
-    @property
-    def unread_notifications_count(self):
-        from ..controllers import notifications_controller
-        return notifications_controller.get_unread_actual_notifications_count(self)
-
-    @property
-    def credit(self):
-        return self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
+        # It might be better to set parameters to 0 when mark all/actual as read
+        # It might be better not to recalculate count but increase/decrease with updated/created amount
+        # need to be more familiar to do that and also trigger to database required not to reach negative count
+        # during concurrent requests when we decrease one notification together wit mark all read
+        # at some point it might be better to use a cache for stats and update it time to time from database
+        # or it might be enough to use annotations for requests we needs stats
+        # anyway it takes more time time for project understanding and finding the best way of implementation
+        update_fields = []
+        if notifications:
+            self.unread_notifications_count = notifications_controller.get_unread_actual_notifications_count(self)
+            self.unread_conversations_count = notifications_controller.get_unread_conversations_count(self)
+            update_fields.extend(['unread_notifications_count', 'unread_conversations_count'])
+        if credit:
+            self.credit = self.credit_transactions.aggregate(sum=Sum('amount'))['sum'] or 0
+            update_fields.append('credit')
+        # stats should be updated at mixpanel automatically with post_save_profile handler
+        print('ww', self.unread_notifications_count)
+        self.save(update_fields=update_fields)
 
     @property
     def linked_accounts(self):
