@@ -99,11 +99,8 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             'platforms': map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names),
             'api_versions': user.devices.values_list('api_version', flat=True).distinct(),
             '$phone': getattr(ap, 'mobile', None),
-
-            'unread_conversations_count': user.unread_conversations_count,
-            'unread_notifications_count': user.unread_notifications_count,
-            'credit': user.credit,
         }
+        properties.update(**user.mixpanel_stats)
         if user.apns_device:
             properties['$ios_devices'] = [user.apns_device.registration_id]
         if user.gcm_device:

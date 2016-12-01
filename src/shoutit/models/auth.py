@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import re
 import sys
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 
 from datetime import timedelta
 from django.conf import settings
@@ -16,6 +16,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone, six
 from django.utils.translation import ugettext_lazy as _
+from django_pgjson.fields import JsonField
 from push_notifications.models import APNSDevice, GCMDevice
 from pydash import arrays
 
@@ -111,6 +112,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
     on_mp_people = models.BooleanField(
         _('mixpanel people status'), default=False, help_text=_('Designates whether this user is on MixPanel People.'))
     language = models.CharField(_('accepted language'), max_length=10, default=settings.LANGUAGE_CODE)
+    stats_store = JsonField(default=dict, blank=True)
 
     objects = ShoutitUserManager()
 
@@ -191,19 +193,46 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     # Misc properties
 
+    def retrieve_stats(self, mixpanel=False):
+        def total_unread_count_fallback(obj):
+            value = obj.stats_store.get('total_unread_count')
+            if value is None:
+                value = obj._stats.get('total_unread_count')
+            if value is None:
+                value = (obj._stats['unread_notifications_count'] +
+                         obj._stats['unread_conversations_count'])
+            return value
+
+        Stat = namedtuple(
+            'Stat', ['field_name', 'fallback_func', 'include_in_mixpanel'])
+        fields = [
+            Stat('unread_conversations_count', lambda s: s.unread_conversations_count, True),
+            Stat('unread_notifications_count', lambda s: s.unread_notifications_count, True),
+            Stat('total_unread_count', total_unread_count_fallback, False),
+            Stat('credit', lambda s: s.credit, True),
+        ]
+
+        if not hasattr(self, '_stats'):
+            self._stats = OrderedDict()
+
+        for field in fields:
+            if mixpanel and not field.include_in_mixpanel:
+                continue
+            stat = self.stats_store.get(field.field_name)
+            if stat is None:
+                stat = self._stats.get(field.field_name)
+            if stat is None:
+                stat = field.fallback_func(self)
+            self._stats[field.field_name] = stat
+        return self._stats
+
     @property
     def stats(self):
-        # Todo (mo): create fields for each stats property which holds the latest value and gets updated
-        if not hasattr(self, '_stats'):
-            unread_conversations_count = self.unread_conversations_count
-            unread_notifications_count = self.unread_notifications_count
-            self._stats = OrderedDict([
-                ('unread_conversations_count', unread_conversations_count),
-                ('unread_notifications_count', unread_notifications_count),
-                ('total_unread_count', unread_conversations_count + unread_notifications_count),
-                ('credit', self.credit),
-            ])
-        return self._stats
+        return self.retrieve_stats()
+
+    @property
+    def mixpanel_stats(self):
+        return self.retrieve_stats(mixpanel=True)
 
     @property
     def unread_conversations_count(self):

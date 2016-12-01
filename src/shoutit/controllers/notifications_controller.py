@@ -14,11 +14,30 @@ from ..controllers import push_controller, pusher_controller
 from ..models import Notification
 
 
+def update_notifications_store(user):
+    unread_conversations_count = user.unread_conversations_count
+    unread_notifications_count = user.unread_notifications_count
+    old_notify_state = getattr(user, 'notify', None)
+    user.notify = False
+    user.stats_store.update({
+        'unread_conversations_count': unread_conversations_count,
+        'unread_notifications_count': unread_notifications_count,
+        'total_unread_count': unread_conversations_count + unread_notifications_count,
+    })
+    user.update(stats_store=user.stats_store)
+    user.notify = old_notify_state
+
 def mark_all_as_read(user):
     """
     # Legacy: Mark Notifications of all types as read
     """
     Notification.objects.filter(is_read=False, to_user=user).update(is_read=True)
+    user.stats_store.update({
+        'unread_conversations_count': 0,
+        'unread_notifications_count': 0,
+        'total_unread_count': 0,
+    })
+    user.save()
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -27,6 +46,7 @@ def mark_actual_notifications_as_read(user):
     Mark (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction` as read
     """
     user.actual_notifications.filter(is_read=False).update(is_read=True)
+    update_notifications_store(user)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -36,6 +56,7 @@ def mark_credit_transactions_as_read(user):
     """
     Notification.objects.filter(is_read=False, to_user=user, type=NOTIFICATION_TYPE_CREDIT_TRANSACTION).update(
         is_read=True)
+    update_notifications_store(user)
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -76,6 +97,8 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
         notification.save()
         # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
+
+    update_notifications_store(user)
 
     # Pusher
     for v in versions:
