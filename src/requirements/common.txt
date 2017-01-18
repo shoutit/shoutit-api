@@ -22,12 +22,13 @@ drf-extensions
 # cache search queues
 redis==2.10.5
 django-redis==4.4.4
-elasticsearch==2.3.0
-elasticsearch-dsl==2.1.0
+elasticsearch==2.4.0
+elasticsearch-dsl==2.2.0
 click==6.3
 rq==0.6.0
 django-rq==0.9.2
 django-widget-tweaks
+requests_aws4auth==0.9
 
 # AWS imaging
 Pillow==3.3.0
