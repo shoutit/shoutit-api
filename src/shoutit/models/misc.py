@@ -9,13 +9,13 @@ from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django_rq import job
-from elasticsearch import RequestError, ConnectionTimeout, NotFoundError, ConflictError
+from elasticsearch import NotFoundError, ConflictError
 from elasticsearch_dsl import DocType, String, GeoPoint
 from pydash import arrays
 
 from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED, DeviceOS
 from shoutit.models.base import UUIDModel, LocationMixin
-from ..utils import error_logger, debug_logger
+from ..utils import debug_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -101,15 +101,6 @@ class LocationIndex(DocType):
             'city': self.city,
             'address': self.address,
         }
-
-
-# initiate the index if not initiated
-try:
-    LocationIndex.init()
-except RequestError:
-    pass
-except ConnectionTimeout:
-    error_logger.warn("ES Server is down", exc_info=True)
 
 
 @receiver(post_save, sender=GoogleLocation)

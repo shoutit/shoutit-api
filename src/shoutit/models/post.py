@@ -10,7 +10,6 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from elasticsearch import RequestError, ConnectionTimeout
 from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
 
 from common.constants import POST_TYPE_REQUEST, PostType
@@ -18,7 +17,7 @@ from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
 from shoutit.models.base import UUIDModel
-from shoutit.utils import error_logger, none_to_blank, correct_mobile
+from shoutit.utils import none_to_blank, correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 SHOUT_SELECT_RELATED = ('item', 'category__main_tag', 'item__currency', 'user__profile', 'user__page')
@@ -288,15 +287,6 @@ class ShoutIndex(DocType):
     @property
     def published_at_unix(self):
         return date_unix(self.published_at)
-
-
-# initiate the index if not initiated
-try:
-    ShoutIndex.init()
-except RequestError:
-    pass
-except ConnectionTimeout:
-    error_logger.warn("ES Server is down", exc_info=True)
 
 
 class Video(UUIDModel):
