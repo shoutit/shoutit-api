@@ -1,5 +1,5 @@
 # production requirements
 -r common.txt
-git+https://github.com/jschneier/django-storages
+django-storages==1.5.2
 setproctitle
 newrelic

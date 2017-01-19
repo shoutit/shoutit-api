@@ -15,7 +15,7 @@ from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_P
 from shoutit.models.base import UUIDModel, APIModelMixin, TranslationTreeManager, TranslatedModelFallbackMixin
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
-from shoutit.utils import correct_mobile
+from shoutit.utils import correct_mobile, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -68,7 +68,10 @@ class Page(AbstractProfile):
 
     def clean(self):
         super(Page, self).clean()
-        self.phone = correct_mobile(self.phone, self.country)
+        if self.phone:
+            self.phone = correct_mobile(self.phone, self.country)
+        none_to_blank(self, ['about', 'description', 'phone', 'founded', 'impressum', 'overview', 'mission',
+                             'general_info'])
 
     def is_admin(self, user):
         return user.id == self.id or self.admins.filter(id=user.id).exists()

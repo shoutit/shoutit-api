@@ -6,9 +6,8 @@ from __future__ import unicode_literals, print_function
 
 import os
 import sys
-
+import datetime
 import dotenv
-from django.utils import timezone
 from kitchen.text.converters import getwriter
 
 # very important when printing unicode strings
@@ -27,5 +26,5 @@ dotenv.read_dotenv(env_file)
 
 
 def info(*args):
-    _now = timezone.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    _now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     print("[%s] [INFO]:" % _now, *args, file=sys.stderr)
