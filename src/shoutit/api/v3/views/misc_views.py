@@ -317,7 +317,8 @@ class MiscViewSet(viewsets.ViewSet):
             return Response(hub_challenge)
 
         entries = request.data.get('entry', [])
-        facebook_ids = filter(None, arrays.unique(map(lambda e: e['id'], entries)))
+        entry_ids = arrays.unique([entry['id'] for entry in entries])
+        facebook_ids = [entry_id for entry_id in entry_ids if entry_id]
         for facebook_id in facebook_ids:
             facebook_controller.update_linked_facebook_account_scopes(facebook_id)
         return Response('OK')

@@ -10,7 +10,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response as DRFResponse
 from rest_framework.views import exception_handler as v2_exception_handler
 
-from v3.views.exception_views import drf_exception_handler as v3_exception_handler, django_exception_handler
+from .v3.views.exception_views import drf_exception_handler as v3_exception_handler, django_exception_handler
 
 
 def exception_handler(exc, context):

@@ -28,8 +28,8 @@ class Profile(AbstractProfile):
     def __init__(self, *args, **kwargs):
         super(Profile, self).__init__(*args, **kwargs)
 
-    def __unicode__(self):
-        return unicode(self.user)
+    def __str__(self):
+        return str(self.user)
 
     def clean(self):
         super(Profile, self).clean()

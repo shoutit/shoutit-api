@@ -8,15 +8,6 @@ import os
 import sys
 import datetime
 import dotenv
-from kitchen.text.converters import getwriter
-
-# Set default encoding for the entire app
-reload(sys)
-sys.setdefaultencoding('UTF8')
-
-# very important when printing unicode strings
-sys.stdout = getwriter('utf8')(sys.stdout)
-sys.stderr = getwriter('utf8')(sys.stderr)
 
 SRC_DIR = os.path.dirname(os.path.realpath(__file__))
 SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')

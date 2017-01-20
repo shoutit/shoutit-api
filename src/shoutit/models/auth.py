@@ -56,7 +56,7 @@ class ShoutitUserManager(UserManager):
 class Permission(UUIDModel):
     name = models.CharField(max_length=512, unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -65,8 +65,8 @@ class UserPermission(UUIDModel):
     permission = models.ForeignKey(Permission)
     date_given = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
-        return '%s: %s' % (unicode(self.user), unicode(self.permission))
+    def __str__(self):
+        return '%s: %s' % (str(self.user), str(self.permission))
 
 
 class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
@@ -121,7 +121,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s [%s:%s]" % (self.name, self.id, self.username)
 
     def clean(self):
@@ -521,8 +521,8 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         if not values:
             return User.objects.none()
         emails_list, mobiles_list = arrays.unzip(values)
-        emails = filter(None, arrays.flatten(emails_list))
-        mobiles = filter(None, arrays.flatten(mobiles_list))
+        emails = [e for e in arrays.flatten(emails_list) if e]
+        mobiles = [m for m in arrays.flatten(mobiles_list) if m]
         profile_ids = Profile.objects.filter(mobile__in=mobiles).values_list('id', flat=True)
         return User.objects.filter(Q(email__in=emails) | Q(id__in=profile_ids)).exclude(id=self.id)
 
@@ -586,7 +586,7 @@ class AuthToken(UUIDModel):
 
     object = AuthTokenManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return 'For %s, expires at %s' % (self.user, self.expires_at)
 
     @property
@@ -598,7 +598,7 @@ class AuthToken(UUIDModel):
         return self.created_at + timedelta(days=AUTH_TOKEN_EXPIRY_DAYS)
 
     def update_used_count(self):
-        AuthToken.object.filter(pk=self.pk).update(used_count=F('used_count')+1)
+        AuthToken.object.filter(pk=self.pk).update(used_count=F('used_count') + 1)
 
 
 class AbstractProfile(UUIDModel, LocationMixin):
@@ -655,8 +655,8 @@ class LinkedFacebookAccount(UUIDModel):
     scopes = ArrayField(models.CharField(max_length=50), default=['public_profile', 'email'], blank=True)
     friends = ArrayField(models.CharField(max_length=24), default=list, blank=True)
 
-    def __unicode__(self):
-        return unicode(self.user)
+    def __str__(self):
+        return str(self.user)
 
     @property
     def expires_at_unix(self):
@@ -671,7 +671,7 @@ class LinkedFacebookPage(UUIDModel):
     category = models.CharField(max_length=50)
     perms = ArrayField(models.CharField(max_length=25), default=list, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '%s:%s' % (self.name, self.facebook_id)
 
 
@@ -691,8 +691,8 @@ class LinkedGoogleAccount(UUIDModel):
     gplus_id = models.CharField(max_length=64, unique=True)
     credentials_json = models.CharField(max_length=4096)
 
-    def __unicode__(self):
-        return unicode(self.user)
+    def __str__(self):
+        return str(self.user)
 
 
 class ProfileContact(UUIDModel):
@@ -703,8 +703,8 @@ class ProfileContact(UUIDModel):
     mobiles = ArrayField(models.CharField(_('mobile'), max_length=20, blank=True), default=list, blank=True)
 
     def clean(self):
-        self.emails = filter(None, self.emails)
-        self.mobiles = filter(None, self.mobiles)
+        self.emails = [e for e in self.emails if e]
+        self.mobiles = [m for m in self.mobiles if m]
 
     def is_empty(self):
         return all([not self.first_name, not self.last_name, not self.emails, not self.mobiles])

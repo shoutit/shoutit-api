@@ -33,8 +33,8 @@ class Command(BaseCommand):
             total_succeed += succeed
             failed = len(errors)
             total_failed += failed
-            shout_ids = map(lambda x: x['_id'], shout_index_dicts)
-            failed_ids = map(lambda x: x['index']['_id'], errors)
+            shout_ids = [x['_id'] for x in shout_index_dicts]
+            failed_ids = [x['index']['_id'] for x in errors]
             succeed_ids = set(shout_ids) - set(failed_ids)
             Shout.objects.filter(id__in=succeed_ids).update(is_indexed=True)
             self.stdout.write('-- Chunk %0.3d: Successfully indexed %s shouts with %s errors' % (i + 1, succeed, failed))

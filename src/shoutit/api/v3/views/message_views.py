@@ -224,7 +224,7 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         page = self.paginate_queryset(messages_qs)
 
         # Only keep the messages that were not deleted by this user
-        messages_ids = map(lambda m: m.id, page.object_list)
+        messages_ids = [m.id for m in page.object_list]
         deleted_messages_ids = request.user.deleted_messages.filter(id__in=messages_ids).values_list('id', flat=True)
         for message in page.object_list:
             if message.id in deleted_messages_ids:
@@ -344,13 +344,13 @@ class ConversationViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListMo
         conversation = self.get_object()
         message_dicts = request.data.get('messages', [])
         # Todo: validate message ids
-        message_ids = map(lambda x: str(x.get('id')), message_dicts)
+        message_ids = [str(m.get('id')) for m in message_dicts]
         messages = Message.objects.filter(conversation_id=conversation.id, id__in=message_ids)
         message_controller.hide_messages_from_user(messages, request.user)
         ret = {
             'data': {
                 'success': _("The messages have been deleted"),
-                'deleted_messages': map(lambda m: {'id': m}, message_ids)
+                'deleted_messages': [{'id': m} for m in message_ids]
             },
             'status': status.HTTP_202_ACCEPTED
         }

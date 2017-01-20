@@ -236,7 +236,7 @@ class ProfileDetailTestCase(DetailMixin, BaseTestCase):
         self.assert200(resp)
         apns_devices = GCMDevice.objects.filter(user=self.user1)
         self.assertEqual(
-            map(str, apns_devices.values_list('registration_id', flat=True)),
+            [str(v) for v in apns_devices.values_list('registration_id', flat=True)],
             ['3'])
 
     @patch.object(mocked_pusher, 'trigger')
@@ -290,7 +290,7 @@ class ProfileDetailTestCase(DetailMixin, BaseTestCase):
         self.assert200(resp)
         apns_devices = APNSDevice.objects.filter(user=user)
         self.assertEqual(
-            map(str, apns_devices.values_list('registration_id', flat=True)),
+            [str(v) for v in apns_devices.values_list('registration_id', flat=True)],
             ['3'])
 
 

@@ -41,7 +41,7 @@ def get_address_port(using_gunicorn=False):
 
 
 def process_tag(name, fn=strings.kebab_case):
-    if not isinstance(name, basestring):
+    if not isinstance(name, str):
         return None
     name = fn(name)
     if len(name) < 2:

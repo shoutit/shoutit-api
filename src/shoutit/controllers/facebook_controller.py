@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import datetime
 import json
-import urlparse
+from urllib import parse
 
 import requests
 from django.conf import settings
@@ -127,7 +127,7 @@ def extend_token(short_lived_token):
         response = requests.get(exchange_url, params=params, timeout=20)
         if response.status_code != 200:
             raise ValueError("Invalid access token: %s" % response.content)
-        response_params = dict(urlparse.parse_qsl(response.content))
+        response_params = dict(parse.parse_qsl(response.content.decode()))
         access_token = response_params.get('access_token')
         if not access_token:
             raise ValueError('`access_token` not in response: %s' % response.content)
@@ -206,7 +206,7 @@ def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
     name = fb_user['name']
     scopes = token_data['scopes']
     friends_data = objects.get(fb_user, 'friends.data') or []
-    friends = map(lambda f: f['id'], friends_data)
+    friends = [f['id'] for f in friends_data]
     if linked_facebook:
         linked_facebook.update(user=user, facebook_id=facebook_id, name=name, access_token=access_token, scopes=scopes,
                                expires_at=expires_at, friends=friends)
@@ -313,9 +313,9 @@ def exchange_code(request, code):
             'code': code
         }
         response = requests.get(exchange_url, params=params, timeout=20)
-        params = dict(urlparse.parse_qsl(response.content))
+        params = dict(parse.parse_qsl(response.content))
     except Exception as e:
-        error_logger.warn(e.message)
+        error_logger.warn(e)
         return None
 
     auth_response = {

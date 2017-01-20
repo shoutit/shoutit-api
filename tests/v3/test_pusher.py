@@ -30,7 +30,7 @@ class PusherAuthTestCase(BaseTestCase):
             format='json')
         self.assert200(resp)
         self.assertEqual(mocked_pusher.authenticate.call_count, 1)
-        self.assertEqual(json.loads(resp.content),
+        self.assertEqual(json.loads(resp.content.decode()),
                          mocked_pusher.authenticate.return_value)
 
     @patch.object(mocked_pusher, 'authenticate')
@@ -52,7 +52,7 @@ class PusherAuthTestCase(BaseTestCase):
     def test_pusher_webhook_no_event(self):
         resp = self.post_webhook()
         self.assert200(resp)
-        self.assertEqual(json.loads(resp.content)['status'], 'OK')
+        self.assertEqual(json.loads(resp.content.decode())['status'], 'OK')
 
     @patch.object(mocked_pusher, 'validate_webhook')
     def test_pusher_webhook_channel_occupied(self, m_validate_webhook):

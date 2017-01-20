@@ -16,8 +16,8 @@ class VideoClient(UUIDModel):
     token = models.CharField(max_length=1000)
     ttl = models.IntegerField(default=SHOUTIT_TWILIO_SETTINGS['TOKEN_TTL'])
 
-    def __unicode__(self):
-        return "%s" % unicode(self.user)
+    def __str__(self):
+        return "%s" % str(self.user)
 
     @property
     def identity(self):

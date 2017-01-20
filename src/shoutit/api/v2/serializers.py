@@ -152,7 +152,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'api_url', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'name': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
@@ -212,7 +212,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('name', 'slug', 'icon', 'image', 'main_tag')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'name': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance

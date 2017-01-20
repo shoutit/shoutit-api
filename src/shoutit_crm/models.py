@@ -16,7 +16,7 @@ from shoutit_crm.constants import CRMSourceType, XMLLinkCRMSourceStatus
 class CRMProvider(UUIDModel):
     name = models.CharField(max_length=100)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -36,7 +36,7 @@ class XMLLinkCRMSource(CRMSource):
 
     crm_shouts = GenericRelation('shoutit_crm.XMLCRMShout', related_query_name='xml_link_crm_source')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s @ %s" % (self.pk, self.url, self.provider)
 
 

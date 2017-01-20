@@ -35,8 +35,8 @@ class PageCategory(APIModelMixin, TranslatedModelFallbackMixin, TranslatableMode
         _local_name=models.CharField(max_length=30, blank=True, default='')
     )
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return str(self.name)
 
 
 class Page(AbstractProfile):
@@ -63,8 +63,8 @@ class Page(AbstractProfile):
     def __init__(self, *args, **kwargs):
         super(Page, self).__init__(*args, **kwargs)
 
-    def __unicode__(self):
-        return unicode(self.user)
+    def __str__(self):
+        return str(self.user)
 
     def clean(self):
         super(Page, self).clean()

@@ -35,7 +35,7 @@ class PromoteLabel(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
         _local_description=models.CharField(max_length=250, blank=True, default='')
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s" % (self.name, self.color)
 
     def clean(self):

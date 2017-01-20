@@ -90,7 +90,7 @@ def drf_exception_handler(exc, context):
             return None
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         message = _('Server Error, try again later')
-        developer_message = unicode(exc)
+        developer_message = str(exc)
         errors = [{'message': message}]
 
     data = exception_response_date(status_code, message, developer_message, errors)
@@ -111,7 +111,7 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
         if isinstance(value, list):
             # List of strings
             # raise ValidationError({'username': ["Error message 1", "Error message 2"]
-            if all(isinstance(item, basestring) for item in value):
+            if all(isinstance(item, str) for item in value):
                 error_message = value
 
             # List of dicts (sub errors)
@@ -137,7 +137,7 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
 
         # String
         # raise ValidationError({'field': "Error message"})
-        elif isinstance(value, basestring):
+        elif isinstance(value, str):
             error_message = value
 
         # Tuple ([message], reason)
@@ -165,7 +165,7 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
 
 def django_exception_handler(response):
     exc = sys.exc_info()[1]
-    if any(map(lambda c: isinstance(exc, c), other_exceptions_map.keys())):
+    if any([isinstance(exc, c) for c in other_exceptions_map.keys()]):
         status_code, message, developer_message, reason = (None, None, None, None)
         for other_exception, value in other_exceptions_map.items():
             if isinstance(exc, other_exception):
@@ -180,7 +180,7 @@ def django_exception_handler(response):
             message = _("Bad request")
             reason = ERROR_REASON.BAD_REQUEST
         if exc:
-            msg = str(exc).decode('utf')
+            msg = str(exc)
             developer_message = "%s: %s" % (exc.__class__.__name__, msg)
         else:
             developer_message = getattr(response, 'reason_phrase', "Contact server admin with `request_id`")

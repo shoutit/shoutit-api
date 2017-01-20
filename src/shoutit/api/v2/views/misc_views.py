@@ -346,7 +346,7 @@ def base64_to_text(b64, box=None, config=None, invert=False):
     import pytesseract as pytesseract
     import base64
     from PIL import Image, ImageOps
-    from cStringIO import StringIO
+    from io import StringIO
 
     data = base64.b64decode(b64)
     image = Image.open(StringIO(data))

@@ -25,7 +25,7 @@ class AgentMiddleware(object):
         """
         Add information about the request using the its user-agent
         """
-        user_agent = request.META.get('HTTP_USER_AGENT', '').encode('utf8')
+        user_agent = str(request.META.get('HTTP_USER_AGENT', '').encode('utf8'))
         if 'com.shoutit-iphone' in user_agent or 'com.appunite.shoutit' in user_agent:
             agent = 'ios'
             build_no_re = re.search('.*(com.shoutit-iphone|com.appunite.shoutit).*\((\d+);', user_agent)

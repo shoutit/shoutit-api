@@ -1,1 +1,1 @@
-git+https://github.com/mochawich/django-oauth2-provider
+git+https://github.com/mochawich/django-oauth2-provider@master3

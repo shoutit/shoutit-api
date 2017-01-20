@@ -196,7 +196,7 @@ def _subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=Tru
             'last_login': date_unix(user.last_login) if user.last_login else 0,
             'country': ap.country,
             'image': ap.image,
-            'platform': " ".join(map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names)),
+            'platform': " ".join([c.replace('shoutit-', '') for c in user.api_client_names]),
             'gender': getattr(ap, 'gender', ''),
         }
         request_body.append(fields)
@@ -212,7 +212,7 @@ def _subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=Tru
             debug_logger.debug("Updated %d user(s) on SendGrid Contacts DB" % response_data['updated_count'])
 
         # Update added / updated users
-        added_emails = map(lambda pr: base64.b64decode(pr), response_data['persisted_recipients'])
+        added_emails = [base64.b64decode(pr) for pr in response_data['persisted_recipients']]
         User.objects.filter(email__in=added_emails).update(on_mailing_list=True)
 
         # Errors

@@ -26,8 +26,8 @@ class PredefinedCity(UUIDModel, LocationMixin):
     class Meta:
         unique_together = ('country', 'postal_code', 'state', 'city')
 
-    def __unicode__(self):
-        return unicode(self.country + ':' + self.city)
+    def __str__(self):
+        return str(self.country + ':' + self.city)
 
     def get_cities_within(self, dist_km, max_cities=30):
         distance = {
@@ -55,7 +55,7 @@ class ConfirmToken(UUIDModel):
     email = models.EmailField(blank=True, null=True)
     is_disabled = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s: %s" % (self.get_type_display(), self.user, self.token)
 
     def disable(self):
@@ -71,7 +71,7 @@ class GoogleLocation(LocationMixin, UUIDModel):
     geocode_response = models.TextField(max_length=5000)
     is_indexed = models.BooleanField(default=False, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s [%0.6f,%0.6f]: %s, %s" % (self.country, self.latitude, self.longitude, self.state, self.city)
 
     class Meta:
@@ -179,8 +179,8 @@ def delete_object_index(index_model, obj):
 #     File = models.CharField(max_length=1024)
 #     type = models.IntegerField()
 #
-#     def __unicode__(self):
-#         return "(" + unicode(self.pk) + ") " + unicode(self.File)
+#     def __str__(self):
+#         return "(" + str(self.pk) + ") " + str(self.File)
 
 
 class SMSInvitation(UUIDModel):
@@ -194,7 +194,7 @@ class SMSInvitation(UUIDModel):
     source = models.CharField(max_length=20, db_index=True, default='', blank=True)
     link = models.CharField(max_length=1000, default='', blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s: %s" % (self.get_status_display(), self.country, self.mobile)
 
 
@@ -207,5 +207,5 @@ class Device(UUIDModel):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_id = models.IntegerField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s" % (self.api_version, self.get_type_display())

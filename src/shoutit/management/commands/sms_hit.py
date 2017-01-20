@@ -30,7 +30,7 @@ class Command(BaseCommand):
             self.stdout.write("Would have tried to send %s sms invitations" % len(sms_invitations))
             return
 
-        all_ids = map(lambda s: s.id, sms_invitations)
+        all_ids = [s.id for s in sms_invitations]
         SMSInvitation.objects.filter(id__in=all_ids).update(status=SMS_INVITATION_QUEUED)
         sent = []
         for sms_invitation in sms_invitations:

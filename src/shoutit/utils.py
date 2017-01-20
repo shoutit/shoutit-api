@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 import random
-import urllib
-import urlparse
+from urllib import parse
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
@@ -128,13 +127,13 @@ class UserIds(list):
 
 
 def url_with_querystring(url, params=None, **kwargs):
-    url_parts = list(urlparse.urlparse(url))
-    query = dict(urlparse.parse_qsl(url_parts[4]))
+    url_parts = list(parse.urlparse(url))
+    query = dict(parse.parse_qsl(url_parts[4]))
     if isinstance(params, dict):
         query.update(params)
     query.update(kwargs)
-    url_parts[4] = urllib.urlencode(query)
-    return urlparse.urlunparse(url_parts)
+    url_parts[4] = parse.urlencode(query)
+    return parse.urlunparse(url_parts)
 
 # @receiver(post_save)
 # def model_post_save(sender, instance=None, created=False, **kwargs):

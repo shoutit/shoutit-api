@@ -21,7 +21,7 @@ class Action(UUIDModel, APIModelMixin, LocationMixin):
     class Meta(UUIDModel.Meta):
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s" % self.pk
 
     @property

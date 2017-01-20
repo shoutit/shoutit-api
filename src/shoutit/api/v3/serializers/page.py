@@ -31,7 +31,7 @@ class PageCategorySerializer(TranslatableModelSerializer):
         return ret
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         super(PageCategorySerializer, self).to_internal_value(data)
         return self.instance

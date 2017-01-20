@@ -17,7 +17,7 @@ class Item(UUIDModel):
     images = ArrayField(models.URLField(), default=list, blank=True)
     videos = models.ManyToManyField('shoutit.Video', blank=True, related_name='items')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s" % (self.name[:30] or '[Item]')
 
     def clean(self):
@@ -50,5 +50,5 @@ class Currency(UUIDModel):
     country = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=64, null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '[' + self.code + '] '

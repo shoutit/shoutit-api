@@ -23,14 +23,14 @@ class DiscoverTestCase(BaseTestCase):
     def test_discover_list(self):
         resp = self.client.get(self.reverse(self.url_list))
         self.assert200(resp)
-        self.assert_ids_equal(json.loads(resp.content)['results'],
+        self.assert_ids_equal(json.loads(resp.content.decode())['results'],
                               [self.d1, self.d4])
 
     def test_discover_detail_with_children(self):
         resp = self.client.get(
             self.reverse(self.url_detail, kwargs={'pk': self.d1.pk}))
         self.assert200(resp)
-        data = json.loads(resp.content)
+        data = json.loads(resp.content.decode())
         self.assert_ids_equal(data, self.d1)
         self.assert_ids_equal(data['parents'], [])
         self.assert_ids_equal(data['children'], [self.d2])
@@ -39,7 +39,7 @@ class DiscoverTestCase(BaseTestCase):
         resp = self.client.get(
             self.reverse(self.url_detail, kwargs={'pk': self.d3.pk}))
         self.assert200(resp)
-        data = json.loads(resp.content)
+        data = json.loads(resp.content.decode())
         self.assert_ids_equal(data, self.d3)
         self.assert_ids_equal(data['parents'], [self.d1, self.d2])
         self.assert_ids_equal(data['children'], [])
@@ -48,7 +48,7 @@ class DiscoverTestCase(BaseTestCase):
         resp = self.client.get(
             self.reverse(self.url_detail, kwargs={'pk': self.d2.pk}))
         self.assert200(resp)
-        data = json.loads(resp.content)
+        data = json.loads(resp.content.decode())
         self.assert_ids_equal(data, self.d2)
         self.assert_ids_equal(data['parents'], [self.d1])
         self.assert_ids_equal(data['children'], [self.d3])
@@ -57,7 +57,7 @@ class DiscoverTestCase(BaseTestCase):
         resp = self.client.get(
             self.reverse(self.url_detail, kwargs={'pk': self.d4.pk}))
         self.assert200(resp)
-        data = json.loads(resp.content)
+        data = json.loads(resp.content.decode())
         self.assert_ids_equal(data, self.d4)
         self.assert_ids_equal(data['parents'], [])
         self.assert_ids_equal(data['children'], [])

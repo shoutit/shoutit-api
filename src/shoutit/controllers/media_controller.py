@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 
 import uuid
-from cStringIO import StringIO
+from io import StringIO
 
 import boto3
 import requests

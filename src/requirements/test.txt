@@ -3,7 +3,7 @@
 coverage==4.0.3
 codeclimate-test-reporter
 pytest-django==2.9.1
-pytest-cov==2.2.1
+pytest-cov==2.4.0
 pytest-pythonpath==0.7
 django-dynamic-fixture==1.8.5
 mock==2.0.0

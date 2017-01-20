@@ -67,7 +67,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         if not value:
             return None
         try:
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except (Currency.DoesNotExist, ValueError):
@@ -75,7 +75,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
 
     def validate_filters(self, filters):
         # Ignore filter values that have no id. Old clients used to send the slug
-        filters = filter(lambda f: 'id' in f['value'], filters)
+        filters = [f for f in filters if 'id' in f['value']]
         return filters
 
     def to_internal_value(self, data):

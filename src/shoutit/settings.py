@@ -24,7 +24,7 @@ ADDRESS, PORT = get_address_port(GUNICORN)
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 API_LINK = os.environ.get('API_LINK')
-SITE_LINK = os.environ.get('SITE_LINK', 'shoutit')
+SITE_LINK = os.environ.get('SITE_LINK')
 APP_LINK_SCHEMA = os.environ.get('APP_LINK_SCHEMA')
 
 # Security
@@ -150,7 +150,7 @@ RQ_QUEUES = {
     },
 }
 if FORCE_SYNC_RQ:
-    for queue_config in RQ_QUEUES.itervalues():
+    for queue_config in RQ_QUEUES.values():
         queue_config['ASYNC'] = False
 
 """

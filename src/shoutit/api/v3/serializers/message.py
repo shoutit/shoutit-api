@@ -117,7 +117,7 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
                             for v in videos:
                                 vs = VideoSerializer(data=v)
                                 if not vs.is_valid():
-                                    attachment_error = {'videos': unicode(vs.errors)}
+                                    attachment_error = {'videos': str(vs.errors)}
 
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1

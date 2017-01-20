@@ -150,12 +150,12 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         # Todo (mo): Move to serializer
         tag_dicts = request.data.get('tags', [])
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
-        tag_names = filter(None, map(lambda x: x.get('name'), tag_dicts))
-        tag_slugs = filter(None, map(lambda x: x.get('slug'), tag_dicts))
+        tag_names = [tag.get('name') for tag in tag_dicts if tag.get('name')]
+        tag_slugs = [tag.get('slug') for tag in tag_dicts if tag.get('slug')]
         tags = Tag.objects.filter(Q(name__in=tag_names) | Q(slug__in=tag_slugs))
         api_client = getattr(request, 'api_client', None)
 
-        names = ', '.join(map(lambda t: t._local_name, tags))
+        names = ', '.join([t._local_name for t in tags])
         if request.method == 'POST':
             listen_controller.listen_to_objects(request.user, tags, api_client=api_client, api_version=request.version)
             msg = _("You started listening to shouts about %(name)s") % {'name': names}

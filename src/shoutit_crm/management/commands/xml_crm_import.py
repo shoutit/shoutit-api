@@ -14,7 +14,7 @@ from shoutit.utils import debug_logger
 from shoutit_crm.constants import XML_LINK_ENABLED
 from shoutit_crm.models import XMLLinkCRMSource, XMLCRMShout
 import xmltodict
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 
 class Command(BaseCommand):
@@ -57,12 +57,12 @@ class Command(BaseCommand):
         raw_shouts = (map_data(data, mapping) or [])[:count]
 
         # Collect crm ids
-        source_ids = map(lambda rs: rs.get('id_on_source'), raw_shouts)
+        source_ids = [rs.get('id_on_source') for rs in raw_shouts]
 
         # Disable current source Shouts with no matching crm ids
         current_crm_shouts = source.crm_shouts.filter(shout__is_disabled=False)
         discarded_crm_shouts = current_crm_shouts.filter(~Q(id_on_source__in=source_ids))
-        discarded_shouts_ids = map(lambda d_crm_s: str(d_crm_s.shout_id), discarded_crm_shouts)
+        discarded_shouts_ids = [str(d_crm_s.shout_id) for d_crm_s in discarded_crm_shouts]
         Shout.objects.filter(id__in=discarded_shouts_ids).update(is_disabled=True)
         # Remove them from the index too
         ShoutIndex()._get_connection().delete_by_query(index=ShoutIndex()._get_index(),
@@ -119,7 +119,7 @@ def map_data(data, mapping):
 
 def _map_float(data, mapping):
     mapped_float = 0
-    if isinstance(data, basestring):
+    if isinstance(data, str):
         mapped_float = data
     elif isinstance(data, dict):
         mapped_float = mapping.get('value', 0)
@@ -139,7 +139,7 @@ def _map_str(data, mapping):
     str_extra_lines = mapping.get('extra_lines', [])
     blank_concat = mapping.get('blank_concat', True)
 
-    if isinstance(data, basestring):
+    if isinstance(data, str):
         mapped_str = data
     elif isinstance(data, dict):
         mapped_str = mapping.get('value') or ''
@@ -200,7 +200,7 @@ def _map_list(data, mapping):
             mapped_list.append(mapped_item)
 
     if drop_empty:
-        mapped_list = filter(None, mapped_list)
+        mapped_list = [m for m in mapped_list if m]
     return mapped_list
 
 

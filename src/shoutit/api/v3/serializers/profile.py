@@ -502,7 +502,7 @@ class ProfileContactSerializer(serializers.Serializer):
         return ret
 
     def validate_emails(self, emails):
-        def email(e):
+        def _email(e):
             try:
                 e = e.lower().replace(' ', '')
                 validate_email(e)
@@ -510,8 +510,8 @@ class ProfileContactSerializer(serializers.Serializer):
             except:
                 return None
 
-        emails = map(email, emails)
-        emails = filter(None, emails)
+        emails = map(_email, emails)
+        emails = [email for email in emails if email]
         return emails
 
     def validate_mobiles(self, mobiles):
@@ -519,7 +519,7 @@ class ProfileContactSerializer(serializers.Serializer):
         user = request.user
         country = user.ap.country
 
-        def mobile(m):
+        def _mobile(m):
             try:
                 m = "".join(i for i in m if ord(i) < 128)
                 m = m.replace(' ', '')
@@ -529,8 +529,8 @@ class ProfileContactSerializer(serializers.Serializer):
             except:
                 return None
 
-        mobiles = map(mobile, mobiles)
-        mobiles = filter(None, mobiles)
+        mobiles = map(_mobile, mobiles)
+        mobiles = [mobile for mobile in mobiles if mobile]
         return mobiles
 
 
@@ -552,7 +552,7 @@ class ProfileContactsSerializer(serializers.Serializer):
 
         user.contacts.all().delete()
         profile_contacts = map(profile_contact, contacts)
-        profile_contacts = filter(lambda pc: pc.is_reached(), profile_contacts)
+        profile_contacts = [pc for pc in profile_contacts if pc.is_reached()]
         ProfileContact.objects.bulk_create(profile_contacts)
         return ret
 

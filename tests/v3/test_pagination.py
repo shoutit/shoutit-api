@@ -41,14 +41,13 @@ class ReverseModifiedDateTimeViewSet(BaseViewSet):
     pagination_class = pagination.ReverseModifiedDateTimePagination
 
 
-class TestRouter(routers.DefaultRouter):
+class Router(routers.DefaultRouter):
     include_format_suffixes = False
 
-router = TestRouter()
+router = Router()
 router.register('dt_created_asc', DateTimeViewSet, 'dt_created_asc')
 router.register('dt_created_desc', ReverseDateTimeViewSet, 'dt_created_desc')
-router.register('dt_modified_desc', ReverseModifiedDateTimeViewSet,
-                'dt_modified_desc')
+router.register('dt_modified_desc', ReverseModifiedDateTimeViewSet, 'dt_modified_desc')
 urlpatterns = router.urls
 
 

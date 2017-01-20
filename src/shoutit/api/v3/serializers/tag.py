@@ -46,7 +46,7 @@ class TagSerializer(MiniTagSerializer):
         fields = parent_fields + ('api_url', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
@@ -117,7 +117,7 @@ class CategorySerializer(TranslatableModelSerializer):
         fields = ('name', 'slug', 'icon', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance

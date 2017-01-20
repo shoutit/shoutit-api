@@ -137,7 +137,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         """
         tag_dicts = request.data.get('tags', [])
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
-        tag_names = map(lambda x: str(x['name']), tag_dicts)
+        tag_names = [str(t['name']) for t in tag_dicts]
         tags = Tag.objects.filter(name__in=tag_names)
         api_client = getattr(request, 'api_client', None)
 

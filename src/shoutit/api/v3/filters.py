@@ -66,12 +66,13 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         # Exclude shouts using their ids
         exclude = data.get('exclude')
-        if isinstance(exclude, basestring):
+        if isinstance(exclude, str):
             exclude = exclude.split(',')
         if exclude and not isinstance(exclude, list):
             exclude = [exclude]
         if exclude:
-            index_queryset = index_queryset.filter(~EQ('terms', _id=map(str, exclude)))
+            exclude = [str(e) for e in exclude]
+            index_queryset = index_queryset.filter(~EQ('terms', _id=exclude))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -109,7 +110,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     pass
                 else:
                     nearby_cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
-                    cities = map(lambda nc: nc.city, nearby_cities)
+                    cities = [nc.city for nc in nearby_cities]
                     cities.append(city)
                     cities = arrays.unique(cities)
                     index_queryset = index_queryset.filter('terms', city=cities)
@@ -236,7 +237,8 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         # Listened Profiles + user himself
         profiles = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if profiles:
-            listening_profiles = EQ('terms', uid=map(str, profiles))
+            profile = [str(p) for p in profiles]
+            listening_profiles = EQ('terms', uid=profile)
             listening.append(listening_profiles)
 
         index_queryset = index_queryset.query('bool', should=listening)

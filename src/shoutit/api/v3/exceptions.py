@@ -32,6 +32,8 @@ class ErrorReason(object):
     BACKEND_ERROR = 'backend_error'
     CONNECTION = 'connection_error'
     NOT_READY = 'not_ready'
+
+
 ERROR_REASON = ErrorReason()
 
 
@@ -39,6 +41,8 @@ class ErrorLocationType(object):
     HEADER = 'header'
     PARAMETER = 'parameter'
     BODY = 'body'
+
+
 ERROR_LOCATION_TYPE = ErrorLocationType()
 
 
@@ -49,19 +53,14 @@ def _force_text_recursive(data):
     This modified version keeps tuples as is
     """
     if isinstance(data, (list, tuple)):
-        ret = [
-            _force_text_recursive(item) for item in data
-        ]
+        ret = [_force_text_recursive(item) for item in data]
         if isinstance(data, ReturnList):
             return ReturnList(ret, serializer=data.serializer)
         if isinstance(data, tuple):
             return tuple(ret)
         return ret
     elif isinstance(data, dict):
-        ret = {
-            key: _force_text_recursive(value)
-            for key, value in data.items()
-        }
+        ret = {key: _force_text_recursive(value) for key, value in data.items()}
         if isinstance(data, ReturnDict):
             return ReturnDict(ret, serializer=data.serializer)
         return ret

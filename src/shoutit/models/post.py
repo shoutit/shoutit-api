@@ -115,7 +115,7 @@ class Shout(Post):
 
     objects = ShoutManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s, %s: %s" % (self.pk, self.item, self.country, self.city)
 
     def clean(self):
@@ -296,7 +296,7 @@ class Video(UUIDModel):
     id_on_provider = models.CharField(max_length=256)
     duration = models.PositiveIntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s @ %s" % (self.pk, self.id_on_provider, self.provider)
 
 

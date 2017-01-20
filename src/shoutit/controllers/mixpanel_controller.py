@@ -96,7 +96,7 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             '$city': ap.city,
 
             '$email': user.email,
-            'platforms': map(lambda c: str(c.replace('shoutit-', '')), user.api_client_names),
+            'platforms': [c.replace('shoutit-', '') for c in user.api_client_names],
             'api_versions': user.devices.values_list('api_version', flat=True).distinct(),
             '$phone': getattr(ap, 'mobile', None),
 
