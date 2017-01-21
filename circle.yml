@@ -1,6 +1,4 @@
 machine:
-  pre:
-    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
   timezone:
     Europe/Berlin
   services:
@@ -9,16 +7,16 @@ machine:
 
 dependencies:
   override:
+    - docker info
     - wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-2.4.0.tar.gz
     - tar -xvf elasticsearch-2.4.0.tar.gz
     - elasticsearch-2.4.0/bin/elasticsearch --network.host=0.0.0.0: {background: true}
-
-test:
-  pre:
     - sudo bash -c "echo \"listen_addresses = '*'\"       >> /etc/postgresql/9.4/main/postgresql.conf"
     - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >> /etc/postgresql/9.4/main/pg_hba.conf"
     - sudo /etc/init.d/postgresql restart
-    - docker build -t shoutit/shoutit-api:test .
+    - docker build --rm=false -t shoutit/shoutit-api:test .
+
+test:
   override:
     - >
       docker run -it
@@ -31,27 +29,26 @@ test:
       cp -r /host_repo/.git ./
       && py.test --reuse-db --cov=src --cov-report= --cov-config .coveragerc --junitxml=/circle_test_reports/django/junit.xml
       && CODECLIMATE_REPO_TOKEN=$CODECLIMATE_REPO_TOKEN codeclimate-test-reporter"
-  post:
 
 deployment:
   deploy-dev:
     branch: dev
     commands:
       - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
-      - docker build -t shoutit/shoutit-api:dev .
+      - docker build --rm=false -t shoutit/shoutit-api:dev .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
   deploy-prod:
     branch: prod
     commands:
       - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
-      - docker build -t shoutit/shoutit-api:prod .
+      - docker build --rm=false -t shoutit/shoutit-api:prod .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:prod
   deploy-tag:
     tag: /v[0-9]+(\.[0-9]+)*/
     commands:
       - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
-      - docker build -t shoutit/shoutit-api:$CIRCLE_TAG .
+      - docker build --rm=false -t shoutit/shoutit-api:$CIRCLE_TAG .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:$CIRCLE_TAG
