@@ -8,9 +8,7 @@ machine:
     - redis
 
 dependencies:
-  pre:
   override:
-  post:
     - wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-2.4.0.tar.gz
     - tar -xvf elasticsearch-2.4.0.tar.gz
     - elasticsearch-2.4.0/bin/elasticsearch --network.host=0.0.0.0: {background: true}
