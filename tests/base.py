@@ -49,7 +49,7 @@ boto3.resource = MagicMock()
 #       because it is not automatically imported)
 #       Following import is present only to apply signals
 #       The mocking has to be done first
-from shoutit.controllers import shout_controller
+from shoutit.controllers import shout_controller  # NOQA
 
 
 class BaseTestCase(APITestCase):

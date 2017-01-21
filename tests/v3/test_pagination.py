@@ -24,7 +24,7 @@ class DateTimeSerializer(serializers.ModelSerializer):
 
 
 class BaseViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = (permissions.AllowAny,)
     queryset = MyModel.objects.all()
     serializer_class = DateTimeSerializer
 
@@ -43,6 +43,7 @@ class ReverseModifiedDateTimeViewSet(BaseViewSet):
 
 class Router(routers.DefaultRouter):
     include_format_suffixes = False
+
 
 router = Router()
 router.register('dt_created_asc', DateTimeViewSet, 'dt_created_asc')

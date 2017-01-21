@@ -11,24 +11,20 @@ dependencies:
   pre:
   override:
   post:
-    - wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-2.0.0.tar.gz
-    - tar -xvf elasticsearch-2.0.0.tar.gz
-    - elasticsearch-2.0.0/bin/elasticsearch --network.host=0.0.0.0: {background: true}
+    - wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-2.4.0.tar.gz
+    - tar -xvf elasticsearch-2.4.0.tar.gz
+    - elasticsearch-2.4.0/bin/elasticsearch --network.host=0.0.0.0: {background: true}
 
 test:
   pre:
-    - sudo bash -c "echo \"listen_addresses = '*'\" >>
-      /etc/postgresql/9.4/main/postgresql.conf"
-    - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
-      /etc/postgresql/9.4/main/pg_hba.conf"
+    - sudo bash -c "echo \"listen_addresses = '*'\"       >> /etc/postgresql/9.4/main/postgresql.conf"
+    - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >> /etc/postgresql/9.4/main/pg_hba.conf"
     - sudo /etc/init.d/postgresql restart
-    - >
-      docker build
-      --build-arg SHOUTIT_ENV=test
-      -t shoutit/shoutit-api:test .
+    - docker build -t shoutit/shoutit-api:test .
   override:
     - >
       docker run -it
+      -e SHOUTIT_ENV=test
       -v ~/shoutit-api:/host_repo
       -v $CIRCLE_TEST_REPORTS:/circle_test_reports
       --add-host host_machine:$(ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
@@ -43,22 +39,21 @@ deployment:
   deploy-dev:
     branch: dev
     commands:
-      - rm -rf src/configs
       - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
-      - >
-        docker build
-        --build-arg SHOUTIT_ENV=dev
-        -t shoutit/shoutit-api:dev .
+      - docker build -t shoutit/shoutit-api:dev .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
   deploy-prod:
     branch: prod
     commands:
-      - rm -rf src/configs
       - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
-      - >
-        docker build
-        --build-arg SHOUTIT_ENV=prod
-        -t shoutit/shoutit-api:prod .
+      - docker build -t shoutit/shoutit-api:prod .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:prod
+  deploy-tag:
+    tag: /v[0-9]+(\.[0-9]+)*/
+    commands:
+      - git clone git@github.com:shoutit/shoutit-api-configs.git src/configs
+      - docker build -t shoutit/shoutit-api:$CIRCLE_TAG .
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push shoutit/shoutit-api:$CIRCLE_TAG

@@ -1,30 +1,35 @@
-FROM python:2.7
+FROM python:3.5
 
-ARG SHOUTIT_ENV=dev
+# Install pip requirements
+COPY ./requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
+
+# Install ubuntu dependencies
+RUN apt-get update -y && apt-get install tesseract-ocr -y
+
+# Install Gunicorn for serving Quant API endpoints
+RUN pip install gunicorn==19.6.0
+
+# Install supervisor
+#RUN pip install supervisor
+
+# Copy configrations
+#COPY ./deploy/supervisord.conf /etc/supervisord.conf
+
+# Add external files
+ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
 
 # Define working directory and copy files to it
 RUN mkdir /api
 WORKDIR /api
 ADD . /api/
 
-# Add external files
-ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
-
-# Install ubuntu dependencies
-RUN apt-get update -y && apt-get install tesseract-ocr -y
-
-# Install supervisor
-RUN pip install supervisor
-COPY ./deploy/supervisord.conf /etc/supervisord.conf
-
-# Install pip requirements
-RUN pip install -r src/requirements/${SHOUTIT_ENV}.txt
-RUN pip install -r src/requirements/common_noupdate.txt
-
 EXPOSE 8001
 
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONIOENCODING UTF-8
-ENV SHOUTIT_ENV $SHOUTIT_ENV
 
-CMD newrelic-admin run-program gunicorn src.wsgi -c /api/src/settings_gunicorn.py
+# Command to serve API
+CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/src/settings_gunicorn.py"]
+
+# Command to run RQ workers
+#CMD ["supervisord"]

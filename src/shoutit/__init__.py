@@ -1,4 +1,4 @@
-from settings_env import info
+from shoutit.settings import info
 
 """
 =================================

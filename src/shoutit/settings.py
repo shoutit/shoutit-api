@@ -2,12 +2,31 @@
 """
 
 """
-from __future__ import unicode_literals
-
-from settings_env import *  # NOQA
+import os
+import sys
+import dotenv
+import datetime
 from common.utils import get_address_port, strtobool
 from datetime import timedelta
 from django.utils.translation import ugettext_lazy as _
+
+"""
+=================================
+        Environment
+=================================
+"""
+SRC_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
+
+# Read env variables from .env file based on `SHOUTIT_ENV`
+env_file = os.path.join(SRC_DIR, 'configs', SHOUTIT_ENV + '.env')
+dotenv.read_dotenv(env_file)
+
+
+def info(*args):
+    _now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    print("[%s] [INFO]:" % _now, *args, file=sys.stderr)
+
 
 """
 =================================
