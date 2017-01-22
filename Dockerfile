@@ -11,7 +11,7 @@ RUN apt-get update -y && apt-get install tesseract-ocr -y
 RUN pip install gunicorn==19.6.0
 
 # Install circus
-RUN pip install circus
+RUN pip install circus==0.14.0
 
 # Add external files
 ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
