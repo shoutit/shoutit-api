@@ -22,7 +22,7 @@ class Command(BaseCommand):
         chunk = 500
         total_succeed = 0
         total_failed = 0
-        for i in range(limit / chunk + (1 if limit % chunk > 0 else 0)):
+        for i in range(limit // chunk + (1 if limit % chunk > 0 else 0)):
             location_index_dicts = []
             locations = GoogleLocation.objects.filter(is_indexed=False)[:chunk if limit > chunk else limit]
             if not locations:

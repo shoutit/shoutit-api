@@ -22,7 +22,7 @@ class Command(BaseCommand):
         chunk = 500
         total_succeed = 0
         total_failed = 0
-        for i in range(limit / chunk + (1 if limit % chunk > 0 else 0)):
+        for i in range(limit // chunk + (1 if limit % chunk > 0 else 0)):
             shout_index_dicts = []
             shouts = Shout.objects.filter(is_disabled=False, is_indexed=False)[:chunk if limit > chunk else limit]
             if not shouts:
