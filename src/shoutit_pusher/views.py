@@ -69,7 +69,7 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         try:
             webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
                                               signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
-                                              body=getattr(request, 'raw_body', ''))
+                                              body=getattr(request, 'raw_body', '').decode())
         except TypeError as e:
             error_logger.exception("Bad data for pusher webhook")
             raise ValidationError(str(e))

@@ -51,7 +51,7 @@ def upload_image_to_s3(bucket_name, public_url, url=None, data=None, filename=No
     try:
         if not data:
             response = requests.get(url, timeout=10)
-            data = response.content
+            data = response.content.decode()
         if not filename:
             filename = generate_image_name()
         # Check if an actual image

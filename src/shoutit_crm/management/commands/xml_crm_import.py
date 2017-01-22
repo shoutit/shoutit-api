@@ -99,7 +99,7 @@ class Command(BaseCommand):
         # path = "D:\\dev\crm_example.xml"
         # with open(path, "r") as xml_file:
         #     xml_data = xml_file.read().replace('\n', '')
-        xml_data = requests.get(source.url).content
+        xml_data = requests.get(source.url).content.decode()
         return xml_data
 
 

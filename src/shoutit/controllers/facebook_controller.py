@@ -313,7 +313,7 @@ def exchange_code(request, code):
             'code': code
         }
         response = requests.get(exchange_url, params=params, timeout=20)
-        params = dict(parse.parse_qsl(response.content))
+        params = dict(parse.parse_qsl(response.content.decode()))
     except Exception as e:
         error_logger.warn(e)
         return None
