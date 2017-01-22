@@ -99,10 +99,10 @@ class UserLanguageMiddleware(object):
     @staticmethod
     def process_response(request, response):
         # The authentication with DRF happens in the views. Since there is no unified place to add middleware for DRF
-        # views, we can update the user language on response time instead. At this point the request will be
-        # authenticated already
-        user = request.user
-        if user.is_authenticated() and request.LANGUAGE_CODE != user.language:
+        # views, we can update the user language on response time instead.
+        # At this point the request should be authenticated already, unless something wrong happened before DRF auth.
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated() and request.LANGUAGE_CODE != user.language:
             user.update_language(request.LANGUAGE_CODE)
         return response
 
