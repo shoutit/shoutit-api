@@ -10,11 +10,8 @@ RUN apt-get update -y && apt-get install tesseract-ocr -y
 # Install Gunicorn for serving Quant API endpoints
 RUN pip install gunicorn==19.6.0
 
-# Install supervisor
-#RUN pip install supervisor
-
-# Copy configrations
-#COPY ./deploy/supervisord.conf /etc/supervisord.conf
+# Install circus
+RUN pip install circus
 
 # Add external files
 ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
@@ -29,7 +26,7 @@ EXPOSE 8001
 ENV PYTHONUNBUFFERED 1
 
 # Command to serve API
-CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/src/settings_gunicorn.py"]
+CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/deploy/settings_gunicorn.py"]
 
 # Command to run RQ workers
-#CMD ["supervisord"]
+#CMD ["circusd", "/api/deploy/circus.ini"]

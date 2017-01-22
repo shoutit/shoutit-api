@@ -16,10 +16,3 @@ errorlog = accesslog = '-'
 loglevel = 'info'
 preload_app = True
 proc_name = 'shoutit-api-' + SHOUTIT_ENV
-
-# def when_ready(server):
-#     from django import setup
-#     from django.core.management import call_command
-#     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
-#     setup()
-#     call_command('validate')
