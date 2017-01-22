@@ -37,12 +37,10 @@ def generate_username():
 
 
 def has_unicode(s):
-    try:
-        s.decode('ascii')
-    except UnicodeError:
-        return True
-    else:
-        return False
+    for c in s:
+        if ord(c) >= 128:
+            return True
+    return False
 
 
 def correct_mobile(mobile, country, raise_exception=False):
