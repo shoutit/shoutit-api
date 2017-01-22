@@ -19,8 +19,9 @@ from pydash import strings, arrays
 
 
 def get_address_port(using_gunicorn=False):
+    return ''  # Todo (Nour) Fix
     if using_gunicorn:
-        from settings_gunicorn import bind
+        from gunicorn import bind
         return bind.split(':')
 
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":
