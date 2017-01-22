@@ -351,4 +351,4 @@ def base64_url_decode(inp):
     inp = inp.replace('-', '+').replace('_', '/')
     padding_factor = (4 - len(inp) % 4) % 4
     inp += "=" * padding_factor
-    return base64.decodestring(inp)
+    return base64.decodebytes(inp.encode())
