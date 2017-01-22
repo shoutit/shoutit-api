@@ -26,7 +26,7 @@ EXPOSE 8001
 ENV PYTHONUNBUFFERED 1
 
 # Command to serve API
-CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/deploy/settings_gunicorn.py"]
+CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/deploy/gunicorn.py"]
 
 # Command to run RQ workers
 #CMD ["circusd", "/api/deploy/circus.ini"]
