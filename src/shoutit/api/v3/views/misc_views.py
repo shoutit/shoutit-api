@@ -251,7 +251,7 @@ class MiscViewSet(viewsets.ViewSet):
         Create fake error
         """
         from ipware.ip import get_real_ip
-        raise Exception("Fake error request from ip: " + get_real_ip(request) or 'undefined')
+        raise Exception("Fake error request from ip: ".format(get_real_ip(request) or 'undefined'))
 
     @list_route(methods=['get'], suffix='Get IP')
     def ip(self, request):

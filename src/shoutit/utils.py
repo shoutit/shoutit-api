@@ -3,22 +3,26 @@ from __future__ import unicode_literals
 
 import logging
 import random
-from urllib import parse
 from datetime import timedelta
+from urllib import parse
 
-from django.core.exceptions import ValidationError
-# from django.db.models.signals import post_save, post_delete
-# from django.dispatch import receiver
-from django.http import HttpRequest
-from django.utils.timezone import now as django_now
 import nexmo as nexmo
 import phonenumbers
-from rest_framework.request import Request
+import rq
+from django.core.exceptions import ValidationError
+from django.http import HttpRequest
+from django.utils.timezone import now as django_now
 from django.utils.translation import ugettext_lazy as _
+from django_rq.queues import DjangoRQ
+from raven import Client
+from raven.transport import HTTPTransport
+from rest_framework.request import Request
+from rq.contrib.sentry import register_sentry
+
 from common.constants import COUNTRY_ISO
+from common.lib import location
 from shoutit import settings
 from shoutit.api.versioning import ShoutitNamespaceVersioning
-from common.lib import location
 
 # Shoutit loggers
 error_logger = logging.getLogger('shoutit.error')
@@ -30,6 +34,17 @@ ip2location = location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 
 # nexmo
 nexmo_client = nexmo.Client(key=settings.NEXMO_API_KEY, secret=settings.NEXMO_API_SECRET)
+
+
+class SentryAwareWorker(rq.Worker):
+    queue_class = DjangoRQ
+
+    def __init__(self, *args, **kwargs):
+        super(SentryAwareWorker, self).__init__(*args, **kwargs)
+        dsn = settings.RAVEN_CONFIG['dsn']
+        environment = settings.RAVEN_CONFIG['environment']
+        client = Client(dsn, transport=HTTPTransport, environment=environment)
+        register_sentry(client, self)
 
 
 def generate_username():

@@ -177,7 +177,7 @@ if FORCE_SYNC_RQ:
        Application definition
 =================================
 """
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'grappelli',
     'mptt',
     'django_mptt_admin',
@@ -199,14 +199,15 @@ INSTALLED_APPS = (
     'django_rq',
     'corsheaders',
     'heartbeat',
+    'raven.contrib.django.raven_compat',
 
     'shoutit',
     'shoutit_credit',
     'shoutit_crm',
     'shoutit_pusher',
     'shoutit_twilio',
-    'hvad'
-)
+    'hvad',
+]
 
 TWILIO_ENV = os.environ.get('TWILIO_ENV', SHOUTIT_ENV)
 PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
@@ -218,7 +219,7 @@ PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
 """
 REQUEST_ID_HEADER = None
 CORS_ORIGIN_ALLOW_ALL = True
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     'shoutit.middleware.AgentMiddleware',
     'shoutit.middleware.XForwardedForMiddleware',
     'request_id.middleware.RequestIdMiddleware',
@@ -239,7 +240,7 @@ MIDDLEWARE_CLASSES = (
     'shoutit.api.exceptions.APIExceptionMiddleware',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
-)
+]
 
 """
 =================================
@@ -503,6 +504,10 @@ RAVEN_CONFIG = {
 USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
 
+# Disable Sentry while on (local) development or when running py.test
+if DEBUG and not USE_SENTRY:
+    INSTALLED_APPS.remove('raven.contrib.django.raven_compat')
+
 LOG_SQL = False
 
 LOGGING = {
@@ -616,15 +621,15 @@ LOGGING = {
         },
     },
     'loggers': {
-        'django': {
-            'handlers': ['console_out', 'console_err', 'sentry'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'py.warnings': {
-            'handlers': ['console_err', 'sentry'],
-            'propagate': False,
-        },
+        # 'django': {
+        #     'handlers': ['console_out', 'console_err', 'sentry'],
+        #     'level': 'DEBUG',
+        #     'propagate': False,
+        # },
+        # 'py.warnings': {
+        #     'handlers': ['console_err', 'sentry'],
+        #     'propagate': False,
+        # },
         'raven': {
             'level': 'WARNING',
             'handlers': ['sentry_file'],
@@ -635,16 +640,11 @@ LOGGING = {
             'handlers': ['sentry_file'],
             'propagate': False,
         },
-        'gunicorn': {
-            'level': 'DEBUG',
-            'handlers': ['console_out', 'console_err', 'sentry'],
-            'propagate': False,
-        },
-        'rq.worker': {
-            'handlers': ['console_out', 'console_err', 'sentry'],
-            "level": "DEBUG",
-            'propagate': False,
-        },
+        # 'gunicorn': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console_out', 'console_err', 'sentry'],
+        #     'propagate': False,
+        # },
         # 'requests': {
         # 'level': 'DEBUG',
         # 'handlers': ['console_out', 'console_err', 'sentry'],
@@ -674,9 +674,9 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False
         },
-        '': {
-            'handlers': ['console_out', 'console_err', 'sentry'],
-        },
+        # '': {
+        #     'handlers': ['console_out', 'console_err', 'sentry'],
+        # },
     }
 }
 
