@@ -1,5 +1,5 @@
 # core
-django-dotenv
+django-dotenv==1.4.1
 requests==2.12.5
 Django==1.8.13
 psycopg2>=2.6

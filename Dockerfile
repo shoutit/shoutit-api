@@ -7,10 +7,10 @@ RUN pip install -r /tmp/requirements.txt
 # Install ubuntu dependencies
 RUN apt-get update -y && apt-get install tesseract-ocr -y
 
-# Install Gunicorn for serving Quant API endpoints
+# Install Gunicorn for serving API endpoints
 RUN pip install gunicorn==19.6.0
 
-# Install circus
+# Install circus for running RQ workers
 RUN pip install circus==0.14.0
 
 # Add external files
@@ -21,6 +21,7 @@ RUN mkdir /api
 WORKDIR /api
 ADD . /api/
 
+# Expose Gunicorn port
 EXPOSE 8001
 
 ENV PYTHONUNBUFFERED 1
@@ -28,5 +29,5 @@ ENV PYTHONUNBUFFERED 1
 # Command to serve API
 CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/deploy/gunicorn.py"]
 
-# Command to run RQ workers
+# Command to run RQ
 #CMD ["circusd", "/api/deploy/circus.ini"]
