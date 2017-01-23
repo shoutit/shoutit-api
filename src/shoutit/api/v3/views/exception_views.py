@@ -39,7 +39,7 @@ other_exceptions_map = {
     Http404: (status.HTTP_404_NOT_FOUND, _('Resource not found.'), "", ERROR_REASON.NOT_FOUND),
     django_exceptions.PermissionDenied: (status.HTTP_403_FORBIDDEN, _('Permission denied.'), "",
                                          ERROR_REASON.PERMISSION_DENIED),
-    provider_views.OAuthError: (status.HTTP_400_BAD_REQUEST, _("Authentication failed"), lambda e: e.message['error'],
+    provider_views.OAuthError: (status.HTTP_400_BAD_REQUEST, _("Authentication failed"), lambda e: e.args[0]['error'],
                                 ERROR_REASON.AUTH_FAILED)
 }
 
