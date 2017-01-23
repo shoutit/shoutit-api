@@ -329,16 +329,15 @@ def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECR
     import hashlib
     import hmac
 
-    l = signed_request.split('.', 2)
-    encoded_sig = l[0]
-    payload = l[1]
+    encoded_sig, encoded_data = signed_request.split('.', 2)
     sig = base64_url_decode(encoded_sig)
-    data = json.loads(base64_url_decode(payload))
+    data_str = base64_url_decode(encoded_data)
+    data = json.loads(data_str)
     if data['algorithm'].upper() != 'HMAC-SHA256':
         return {}
 
     # http://stackoverflow.com/questions/20849805/python-hmac-typeerror-character-mapping-must-return-integer-none-or-unicode
-    expected_sig = hmac.new(str(secret), msg=str(payload), digestmod=hashlib.sha256).digest()
+    expected_sig = hmac.new(str(secret), msg=str(encoded_data), digestmod=hashlib.sha256).digest()
     if sig != expected_sig:
         return {}
 
