@@ -572,7 +572,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             action = _('View Transactions')
             text = self.attached_object.display()['text']
             setattr(self, '_app_url', settings.APP_LINK_SCHEMA + 'credit_transactions')
-            setattr(self, '_web_url', None)
+            setattr(self, '_web_url', settings.SITE_LINK)
 
         elif self.type == NOTIFICATION_TYPE_SHOUT_LIKE:
             title = _('New Shout Like')
