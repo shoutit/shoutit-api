@@ -202,7 +202,7 @@ def _subscribe_users_to_mailing_list(users=None, user_ids=None, raise_errors=Tru
         request_body.append(fields)
     try:
         response = sg_api.client.contactdb.recipients.post(request_body=request_body)
-        response_data = json.loads(response.response_body)
+        response_data = json.loads(response.response_body.decode())
 
         # Check added
         if response_data['new_count'] > 0:
