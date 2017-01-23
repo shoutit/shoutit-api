@@ -4,7 +4,10 @@
 """
 from __future__ import unicode_literals
 
+import base64
 import datetime
+import hashlib
+import hmac
 import json
 from urllib import parse
 
@@ -325,29 +328,25 @@ def exchange_code(request, code):
     return auth_response
 
 
-def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECRET):
-    import hashlib
-    import hmac
+def parse_signed_request(signed_request='1.1', application_secret_key=settings.FACEBOOK_APP_SECRET):
+    """
+    Parse a signed request, returning a dictionary describing its payload.
+    """
 
-    encoded_sig, encoded_data = signed_request.split('.', 2)
-    sig = base64_url_decode(encoded_sig)
-    data_str = base64_url_decode(encoded_data)
-    data = json.loads(data_str)
-    if data['algorithm'].upper() != 'HMAC-SHA256':
+    def decode(encoded):
+        padding = '=' * (len(encoded) % 4)
+        return base64.urlsafe_b64decode(encoded + padding)
+
+    encoded_signature, encoded_payload = (str(string) for string in signed_request.split('.', 2))
+    signature = decode(encoded_signature)
+    signed_request_data = json.loads(decode(encoded_payload).decode('utf-8'))
+
+    if signed_request_data.get('algorithm', '').upper() != 'HMAC-SHA256':
         return {}
 
-    # http://stackoverflow.com/questions/20849805/python-hmac-typeerror-character-mapping-must-return-integer-none-or-unicode
-    expected_sig = hmac.new(str(secret), msg=str(encoded_data), digestmod=hashlib.sha256).digest()
-    if sig != expected_sig:
+    expected_signature = hmac.new(application_secret_key.encode('utf-8'), msg=encoded_payload.encode('utf-8'),
+                                  digestmod=hashlib.sha256).digest()
+    if signature != expected_signature:
         return {}
 
-    return data
-
-
-def base64_url_decode(inp):
-    import base64
-
-    inp = inp.replace('-', '+').replace('_', '/')
-    padding_factor = (4 - len(inp) % 4) % 4
-    inp += "=" * padding_factor
-    return str(base64.decodebytes(inp.encode()))
+    return signed_request_data
