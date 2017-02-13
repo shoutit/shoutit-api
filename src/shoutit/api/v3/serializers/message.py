@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from django.utils.translation import ugettext_lazy as _

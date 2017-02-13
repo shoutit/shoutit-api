@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from urllib import parse
 import uuid
 

@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import exceptions
 from rest_framework.versioning import NamespaceVersioning

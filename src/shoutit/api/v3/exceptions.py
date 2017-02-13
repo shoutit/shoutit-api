@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import request_id
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _

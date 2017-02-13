@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from common.constants import SMS_INVITATION_ADDED, SMS_INVITATION_QUEUED, SMS_INVITATION_SENT, SMS_INVITATION_ERROR
 from django.core.management.base import BaseCommand
 from shoutit.models import SMSInvitation

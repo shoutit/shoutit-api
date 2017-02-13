@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from common.constants import ITEM_STATE_AVAILABLE

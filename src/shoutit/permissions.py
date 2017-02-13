@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from common.constants import Constant
 from shoutit.models import Permission, UserPermission

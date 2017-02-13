@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse

@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from datetime import timedelta
 
 from django.conf import settings

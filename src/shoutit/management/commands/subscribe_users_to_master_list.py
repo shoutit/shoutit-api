@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.core.management.base import BaseCommand
 
 from shoutit.controllers.email_controller import subscribe_users_to_mailing_list

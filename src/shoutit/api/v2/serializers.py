@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import random
 import uuid
 from collections import OrderedDict

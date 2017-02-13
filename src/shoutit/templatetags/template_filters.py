@@ -2,7 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
 from django.utils.html import escape
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django import template

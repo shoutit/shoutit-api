@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from common.constants import NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_MISSED_VIDEO_CALL

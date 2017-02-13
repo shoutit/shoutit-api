@@ -2,7 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
 from logging import Filter, WARNING
 from django.conf import settings
 

@@ -1,8 +1,6 @@
 """
 Utils that are independent of Apps and their models
 """
-from __future__ import unicode_literals
-
 import collections
 import os
 import sys
@@ -19,7 +17,7 @@ from pydash import strings, arrays
 
 
 def get_address_port(using_gunicorn=False):
-    return '' , '' # Todo (Nour) Fix
+    return '', ''  # Todo (Nour) Fix
     if using_gunicorn:
         from gunicorn import bind
         return bind.split(':')

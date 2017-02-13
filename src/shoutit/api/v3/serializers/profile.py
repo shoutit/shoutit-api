@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser

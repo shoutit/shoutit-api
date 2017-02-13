@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from raven.contrib.django import DjangoClient
 from request_id import get_current_request_id
 from rest_framework.exceptions import APIException
