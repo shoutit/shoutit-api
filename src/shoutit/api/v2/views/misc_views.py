@@ -344,10 +344,10 @@ def base64_to_text(b64, box=None, config=None, invert=False):
     import pytesseract as pytesseract
     import base64
     from PIL import Image, ImageOps
-    from io import StringIO
+    from io import BytesIO
 
     data = base64.b64decode(b64)
-    image = Image.open(StringIO(data))
+    image = Image.open(BytesIO(data))
     if box:
         w, h = image.size
         cl, cu, cr, cd = box
@@ -369,7 +369,7 @@ def base64_to_text(b64, box=None, config=None, invert=False):
         except:
             pass
     text = pytesseract.image_to_string(image, config=config)
-    return text.decode("utf8")
+    return text
 
 
 def base64_to_texts(b64, configs, invert=False):
