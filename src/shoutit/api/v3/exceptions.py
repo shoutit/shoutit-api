@@ -76,7 +76,7 @@ class ShoutitAPIException(drf_exceptions.APIException):
     default_developer_message = 'Contact API admin and mention the `request_id`'
 
     def __init__(self, message=None, developer_message=None, errors=None):
-        self.original_message = message
+        self.original_message = _force_text_recursive(message or '')
         if message is not None:
             self.message = force_text(message)
         else:
