@@ -34,7 +34,7 @@ def conversation_exist(conversation_id=None, users=None, about=None, include_pub
         if not include_public:
             conversations = conversations.exclude(type=CONVERSATION_TYPE_PUBLIC_CHAT)
 
-        users = arrays.unique(users)
+        users = arrays.uniq(users)
         conversations = conversations.annotate(c=Count('users')).filter(c=len(users))
         for user in users:
             conversations = conversations.filter(users=user)
