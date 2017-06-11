@@ -760,7 +760,8 @@ class MessageSerializer(serializers.ModelSerializer):
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
                     if 'location' in attachment and (
-                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
+                                'location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -1175,27 +1176,49 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 class SMSInvitationSerializer(serializers.ModelSerializer):
     user_text = serializers.CharField(max_length=1000, required=False)
     sent_text = serializers.CharField(max_length=1000, required=False, default='')
+    category = serializers.CharField(max_length=50, default='other')
 
     class Meta:
         model = SMSInvitation
-        fields = ('id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'source', 'link', 'created_at')
+        fields = (
+            'id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'source', 'link', 'created_at')
+
+    def validate_category(self, value):
+        return Category.objects.get(slug=value)
 
     def validate_sent_text(self, value):
-        ad_title = self.initial_data.get('user_text')
+        category_text_map = {
+            'beauty-health': ('Beauty & Health items', 'منتجات الصحة والتجميل'),
+            'cars-motors': ('your Cars, Trucks, or Boats', 'السيارات والمحركات'),
+            'collectibles': ('Collectibles', 'مقتنياتك'),
+            'computers-technology': ('your Laptop or Computer', 'كمبيوترك أو لابتوبك'),
+            'electronics': ('Electronics', 'الكترونيات للبيع'),
+            'fashion-accessories': ('Fashion & Accessories', 'الألبسة والاكسسوارات'),
+            'home-furniture-garden': ('Furniture & Home Appliances', 'المفروشات وأجهزة المنزل'),
+            'jobs': ('your CV', 'سيرتك الذاتية للحصول على عمل'),
+            'movies-music-books': ('Movies, Music & Books', 'الكتب والأفلام وغيرها'),
+            'other': ('what you are Selling', 'ما تريد بيعه'),
+            'pets': ('Pets for sale or adoption', 'حيوانات أليفة للبيع أو التبني'),
+            'phones-accessories': ('your Phone or its Accessories', 'الموبايلات واكسسواراتها'),
+            'real-estate': ('Properties for Rent or Sale', 'عقارات وشقق للبيع أو الايجار'),
+            'services': ('your Services', 'خدماتك'),
+            'sport-leisure-games': ('Sport items & Games', 'أجهزة ومستلزمات الرياضةوالألعاب'),
+            'toys-children-baby': ('Baby items & Toys', 'مستلزمات وألعاب الأطفال'),
+        }
         english_sms = [
-            "Hi there!\nlist your '%s...' for FREE on\nshoutit.com/app",
-            "Someone might be interested in your '%s...'\nlist FREE ads on\nshoutit.com/app"
+            "Hi there!\nList {} for FREE on\nshoutit.com/app",
+            "Make easy $$\nList {} for FREE on\nshoutit.com/app"
         ]
-        english_cut = 35
         arabic_sms = [
-            "اعلن عن '%s...'\nبسهولة\nshoutit.com/app",
-            "اعرض '%s...'\nمجانا على\nshoutit.com/app"
+            "أعلن عن {}\nبسهولة على\nshoutit.com/app",
+            "اعرض {}\nمجانا على\nshoutit.com/app"
         ]
-        arabic_cut = 30
+        ad_category = self.initial_data.get('category')
+        ad_title = self.initial_data.get('user_text')
         if has_unicode(ad_title):
-            return random.choice(arabic_sms) % (ad_title[:arabic_cut])
+            return random.choice(arabic_sms).format(category_text_map[ad_category][1])
         else:
-            return random.choice(english_sms) % (ad_title[:english_cut])
+            return random.choice(english_sms).format(category_text_map[ad_category][0])
 
     def to_internal_value(self, data):
         if 'title' in data:
