@@ -249,7 +249,7 @@ class MiscViewSet(viewsets.ViewSet):
         Create fake error
         """
         from ipware.ip import get_real_ip
-        raise Exception("Fake error request from ip: ".format(get_real_ip(request) or 'undefined'))
+        raise Exception("Fake error request from ip: {}".format(get_real_ip(request) or 'undefined'))
 
     @list_route(methods=['get'], suffix='Get IP')
     def ip(self, request):
@@ -257,7 +257,7 @@ class MiscViewSet(viewsets.ViewSet):
         Retrieve ip from request
         """
         ip = get_real_ip(request) or 'undefined'
-        debug_logger.debug("IP request from : " + ip)
+        debug_logger.debug("IP request from : {}".format(ip))
         return Response({'ip': ip})
 
     @list_route(methods=['get'], suffix='Geocode')
