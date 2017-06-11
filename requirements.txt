@@ -27,7 +27,7 @@ elasticsearch-dsl==2.2.0
 click==6.3
 rq==0.7.1
 django-rq==0.9.4
-django-widget-tweaks
+django-widget-tweaks==1.4.1
 requests_aws4auth==0.9
 
 # AWS imaging
@@ -54,32 +54,33 @@ markdown==2.6.6
 # utils
 django-request-id==1.0.0
 raven==5.32.0
-pydash
+pydash==4.0.4
 phonenumbers==8.0.1
-django-ipware
+django-ipware==1.1.6
 twilio==6.2.dev0
-nexmo
-django-heartbeat
-xmltodict
+pysocks==1.6.7  # needed for Twilio as they don't have it in their requirements
+nexmo==1.5.0
+django-heartbeat==2.0.2
+xmltodict==0.11.0
 bpython==0.16
 
 # urllib
 # requires apt-get install libffi-dev
-pyopenssl
-ndg-httpsclient
-pyasn1
+pyopenssl==17.0.0
+ndg-httpsclient==0.4.2
+pyasn1==0.2.3
 
 # http://stackoverflow.com/questions/34646942/ssl3-get-server-certificate-certificate-verify-failed-on-python-when-requesting
 certifi==2015.04.28
 
 
 # To be removed
-pytesseract
+pytesseract==0.1.7
 
 # production requirements
 django-storages==1.5.2
-setproctitle
-newrelic
+setproctitle==1.1.10
+newrelic==2.86.3.70
 
 
 # test requirements
@@ -93,5 +94,5 @@ django-dynamic-fixture==1.9.1
 mock==2.0.0
 django-fake-model==0.1.4
 responses==0.5.1
-flake8  # flake8 .
-radon  # radon cc -s -n B .
+flake8==3.3.0  # flake8 .
+radon==2.0.1   # radon cc -s -n B .
