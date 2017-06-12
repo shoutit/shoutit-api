@@ -1,4 +1,4 @@
-FROM python:3.5
+FROM python:3.6
 
 # Install pip requirements
 COPY ./requirements.txt /tmp/
@@ -6,12 +6,6 @@ RUN pip install -r /tmp/requirements.txt
 
 # Install ubuntu dependencies
 RUN apt-get update -y && apt-get install tesseract-ocr -y
-
-# Install Gunicorn for serving API endpoints
-RUN pip install gunicorn==19.6.0
-
-# Install circus for running RQ workers
-RUN pip install circus==0.14.0
 
 # Add external files
 ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
