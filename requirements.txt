@@ -45,14 +45,6 @@ sendgrid==2.2.1
 twilio==6.2.dev0
 xmltodict==0.11.0
 
-# urllib - requires apt-get install libffi-dev
-ndg-httpsclient==0.4.2
-pyasn1==0.2.3
-pyopenssl==17.0.0
-
-# http://stackoverflow.com/questions/34646942/ssl3-get-server-certificate-certificate-verify-failed-on-python-when-requesting
-certifi==2015.04.28
-
 # Docs
 django-rest-swagger==0.3.6
 markdown==2.6.6
@@ -75,3 +67,10 @@ pytest-pythonpath==0.7.1
 pytest==3.0.6
 radon==2.0.1   # radon cc -s -n B .
 responses==0.5.1
+
+# urllib - requires apt-get install libffi-dev, hopefully all this is not needed with python 3
+# ndg-httpsclient==0.4.2
+# pyasn1==0.2.3
+# pyopenssl==17.0.0
+# http://stackoverflow.com/questions/34646942/ssl3-get-server-certificate-certificate-verify-failed-on-python-when-requesting
+# certifi==2015.04.28
