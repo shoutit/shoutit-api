@@ -110,7 +110,7 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     nearby_cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
                     cities = [nc.city for nc in nearby_cities]
                     cities.append(city)
-                    cities = arrays.unique(cities)
+                    cities = arrays.uniq(cities)
                     index_queryset = index_queryset.filter('terms', city=cities)
 
         down_left_lat = data.get('down_left_lat')

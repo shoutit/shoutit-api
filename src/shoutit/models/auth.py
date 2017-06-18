@@ -259,7 +259,7 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
 
     @property
     def api_client_names(self):
-        return arrays.unique(self.accesstoken_set.values_list('client__name', flat=True))
+        return arrays.uniq(self.accesstoken_set.values_list('client__name', flat=True))
 
     # Actions
 
