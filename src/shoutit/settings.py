@@ -520,7 +520,7 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '[%(asctime)s] [%(levelname)-8s] [%(name)-20s]: %(message)s'
+            'format': '[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s'
         },
         'simple_dashed': {
             'format': '-------------------------------------------\n'
