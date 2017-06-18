@@ -3,7 +3,7 @@ import os
 
 SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
 
-if SHOUTIT_ENV == 'local':
+if SHOUTIT_ENV.lower() in ['local', 'dev']:
     workers = 1
     timeout = 5 * 60
 else:
