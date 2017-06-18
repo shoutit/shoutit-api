@@ -93,6 +93,7 @@ class ShoutitAPIException(drf_exceptions.APIException):
             self.errors = _force_text_recursive(errors)
         else:
             self.errors = [{'message': self.message}]
+        super(ShoutitAPIException, self).__init__(detail=message)
 
     def __str__(self):
         dev_msg = self.developer_message if self.developer_message != self.default_developer_message else ''
