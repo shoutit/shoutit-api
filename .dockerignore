@@ -1,3 +1,10 @@
 .git
 .gitignore
 circle.yml
+
+# .gitignore
+.idea/
+*.pyc
+*.coverage
+.cache
+__pycache__

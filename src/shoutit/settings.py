@@ -2,13 +2,16 @@
 """
 
 """
+import datetime
 import os
 import sys
-import dotenv
-import datetime
-from common.utils import get_address_port, strtobool
 from datetime import timedelta
+
+import dotenv
 from django.utils.translation import ugettext_lazy as _
+
+from common.utils import get_address_port, strtobool
+from config import load_env
 
 """
 =================================
@@ -19,8 +22,7 @@ SRC_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
 
 # Read env variables from .env file based on `SHOUTIT_ENV`
-env_file = os.path.join(SRC_DIR, 'configs', SHOUTIT_ENV + '.env')
-dotenv.read_dotenv(env_file)
+load_env(env_name=SHOUTIT_ENV)
 
 
 def info(*args):
