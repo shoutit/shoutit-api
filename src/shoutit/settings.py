@@ -520,7 +520,7 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '[%(asctime)s] [%(levelname)s]: %(message)s'
+            'format': '[%(asctime)s] [%(levelname)-8s] [%(name)-20s]: %(message)s'
         },
         'simple_dashed': {
             'format': '-------------------------------------------\n'
@@ -674,6 +674,11 @@ LOGGING = {
         'shoutit.sss': {
             'handlers': ['sss_file'],
             'level': 'DEBUG',
+            'propagate': False
+        },
+        'elasticsearch': {
+            'handlers': ['console_out', 'console_err', 'sentry'],
+            'level': 'WARNING',
             'propagate': False
         },
         # '': {
