@@ -602,11 +602,11 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
     }
 
     # fb_exchange_token requests return `expires` unlike other Facebook access token requests which return `expires_in`
-    facebook_access_token = urlencode({
+    facebook_access_token = {
         "access_token": "EAAEM8234sdf",
         "token_type": "bearer",
         "expires": 5183341
-    })
+    }
 
     @classmethod
     def setUpTestData(cls):
@@ -627,7 +627,7 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
                       json=self.facebook_debug, status=200)
         responses.add(responses.GET,
                       'https://graph.facebook.com/oauth/access_token',
-                      body=self.facebook_access_token, status=200)
+                      json=self.facebook_access_token, status=200)
         responses.add(responses.GET,
                       self.facebook_response['picture']['data']['url'],
                       body=self.get_1pixel_jpg_image_data(), status=200)
