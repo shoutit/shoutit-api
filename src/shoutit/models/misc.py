@@ -22,7 +22,7 @@ class PredefinedCity(UUIDModel, LocationMixin):
     approved = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('country', 'postal_code', 'state', 'city')
+        unique_together = (('country', 'postal_code', 'state', 'city'), ('latitude', 'longitude'))
 
     def __str__(self):
         return str(self.country + ':' + self.city)
@@ -38,7 +38,7 @@ class PredefinedCity(UUIDModel, LocationMixin):
         cities = list(cities)
         cities.sort(key=lambda x: x['distance'])
         ids = [c['id'] for c in cities if float(c['distance']) < dist_km][:max_cities]
-        ids = arrays.unique(ids)
+        ids = arrays.uniq(ids)
         return PredefinedCity.objects.filter(id__in=ids)
 
 
