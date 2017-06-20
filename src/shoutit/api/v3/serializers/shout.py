@@ -22,8 +22,8 @@ from .tag import CategorySerializer, SingleValueTagKeySerializer
 
 class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
-    location = LocationSerializer(
-        help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
+    location = LocationSerializer(help_text="Defaults to user's saved location, Passing the `latitude` and `longitude`"
+                                            " is enough to calculate new location properties")
     title = serializers.CharField(source='item.name', min_length=4, max_length=50, help_text="Max 50 characters",
                                   **empty_char_input)
     text = serializers.CharField(min_length=10, max_length=1000, help_text="Max 1000 characters", **empty_char_input)
@@ -91,10 +91,10 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
             raise serializers.ValidationError({'currency': _("The currency must be set when the price is set")})
         # Optional category defaults to "Other" or current shout's category when being updated
         category = data.get('category')
-        data['category'] = category or self.instance.category.slug if self.instance else 'other'
+        data['category'] = category or (self.instance.category.slug if self.instance else 'other')
         # Optional location defaults to user's saved location or current shout's location when being updated
         location = data.get('location')
-        data['location'] = location or self.instance.location if self.instance else {}
+        data['location'] = location or (self.instance.location if self.instance else {})
         ret = super(ShoutSerializer, self).to_internal_value(data)
         return ret
 
