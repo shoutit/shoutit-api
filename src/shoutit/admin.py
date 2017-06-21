@@ -42,7 +42,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
     list_display = ('user', 'client', 'token', 'expires', 'scope', 'created')
     raw_id_fields = ('user', 'client')
     list_filter = ('client',)
-    ordering = ('-created', )
+    ordering = ('-created',)
 
 
 admin.site.unregister(RefreshToken)
@@ -87,8 +87,9 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
-    list_filter = ('type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
-                   'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
+    list_filter = (
+    'type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
+    'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
@@ -560,6 +561,15 @@ class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
 
 
 # SMSInvitation
+class SMSInvitationAdminForm(forms.ModelForm):
+    class Meta:
+        model = SMSInvitation
+        widgets = {
+            'sent_text': forms.Textarea(attrs={'cols': 80, 'rows': 10}),
+        }
+        fields = "__all__"
+
+
 @admin.register(SMSInvitation)
 class SMSInvitationAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', 'status', 'country', 'mobile', 'category', '_user', 'created_at')
@@ -567,6 +577,7 @@ class SMSInvitationAdmin(admin.ModelAdmin, UserLinkMixin):
     search_fields = ('mobile',)
     raw_id_fields = ('user',)
     ordering = ('-created_at',)
+    form = SMSInvitationAdminForm
 
 
 # ConfirmToken
