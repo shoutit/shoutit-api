@@ -1187,6 +1187,22 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
         return Category.objects.get(slug=value)
 
     def validate_sent_text(self, value):
+        ad_category = self.initial_data.get('category')
+        ad_title = self.initial_data.get('user_text')
+        return SMSInvitationSerializer.get_sent_text(ad_title, ad_category)
+
+    def to_internal_value(self, data):
+        if 'title' in data:
+            data['user_text'] = data.pop('title')
+        ret = super(SMSInvitationSerializer, self).to_internal_value(data)
+        now = django_now()
+        if SMSInvitation.exists(mobile=ret['mobile'], created_at__year=now.year, created_at__month=now.month):
+            raise ValidationError({'mobile': 'Invitation to same mobile exists in this month'})
+        ret['user'] = self.context['request'].user
+        return ret
+
+    @staticmethod
+    def get_sent_text(ad_title, ad_category):
         category_text_map = {
             'beauty-health': ('Beauty & Health items', 'منتجات الصحة والتجميل'),
             'cars-motors': ('your Cars, Trucks, or Boats', 'السيارات والمحركات'),
@@ -1213,22 +1229,10 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
             "أعلن عن {}\nبسهولة على\nshoutit.com/app",
             "اعرض {}\nمجانا على\nshoutit.com/app"
         ]
-        ad_category = self.initial_data.get('category')
-        ad_title = self.initial_data.get('user_text')
         if has_unicode(ad_title):
             return random.choice(arabic_sms).format(category_text_map[ad_category][1])
         else:
             return random.choice(english_sms).format(category_text_map[ad_category][0])
-
-    def to_internal_value(self, data):
-        if 'title' in data:
-            data['user_text'] = data.pop('title')
-        ret = super(SMSInvitationSerializer, self).to_internal_value(data)
-        now = django_now()
-        if SMSInvitation.exists(mobile=ret['mobile'], created_at__year=now.year, created_at__month=now.month):
-            raise ValidationError({'mobile': 'Invitation to same mobile exists in this month'})
-        ret['user'] = self.context['request'].user
-        return ret
 
 
 # Backward compatibility with v3
