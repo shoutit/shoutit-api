@@ -419,6 +419,9 @@ class MessageAdmin(admin.ModelAdmin):
         (None, {'fields': ('conversation', '_conversation', 'user', '_user', 'text')}),
     )
     ordering = ('-created_at',)
+    formfield_overrides = {
+        models.CharField: {'widget': forms.Textarea()},
+    }
 
     def _user(self, message):
         return user_link(message.user)
