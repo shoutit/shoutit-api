@@ -87,7 +87,7 @@ class ProfileDetailSerializer(ProfileSerializer):
                                      help_text='Formatted as YYYY-MM-DD')
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
-    website = serializers.CharField(source='ap.website', **empty_char_input)
+    website = serializers.CharField(max_length=200, source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
