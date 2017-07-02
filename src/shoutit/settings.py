@@ -349,6 +349,7 @@ MAX_BROADCAST_RECIPIENTS = 1000
 
 # Mixpanel
 MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', '')
+MIXPANEL_SECRET = os.environ.get('MIXPANEL_SECRET', '')
 USE_MIXPANEL = MIXPANEL_TOKEN is not ''
 
 # Nexmo
