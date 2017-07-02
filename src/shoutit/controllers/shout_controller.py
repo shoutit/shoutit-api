@@ -238,6 +238,7 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.latitude = shout.latitude
     shout_index.longitude = shout.longitude
     shout_index.price = shout.item.price if shout.item.price is not None else 0
+    shout_index.price_usd = shout.item.price_usd if shout.item.price_usd is not None else 0
     shout_index.available_count = shout.available_count
     shout_index.is_sold = shout.is_sold
     shout_index.is_muted = shout.is_muted

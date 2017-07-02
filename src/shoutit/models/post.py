@@ -165,6 +165,7 @@ class Shout(Post):
             'images': len(self.images),
             'videos': self.videos.count(),
             'price': self.item.price,
+            'price_usd': self.item.price_usd,
             'currency': self.item.currency.name if self.item.currency else None,
             'has_mobile': bool(self.mobile),
             'published_to_facebook': self.published_on.get('facebook'),
@@ -212,6 +213,7 @@ class InactiveShout(object):
             "title": _("Deleted Shout"),
             "text": "",
             "price": 0,
+            "price_usd": 0,
             "currency": "",
             "thumbnail": "",
             "video_url": "",
@@ -240,7 +242,8 @@ class ShoutIndex(DocType):
     city = String(index='not_analyzed')
     latitude = Double()
     longitude = Double()
-    price = Double()
+    price = Integer()
+    price_usd = Integer()
     available_count = Integer()
     is_sold = Boolean()
     is_muted = Boolean()
