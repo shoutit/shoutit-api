@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
+from elasticsearch_dsl import DocType, String, Date, Double, Integer, Long, Boolean, Object, MetaField
 
 from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
@@ -242,8 +242,8 @@ class ShoutIndex(DocType):
     city = String(index='not_analyzed')
     latitude = Double()
     longitude = Double()
-    price = Integer()
-    price_usd = Integer()
+    price = Long()
+    price_usd = Long()
     available_count = Integer()
     is_sold = Boolean()
     is_muted = Boolean()
