@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
+  <link rel="stylesheet" type="text/css"
+        href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
+  <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
+  <style>
+    .mixpanel-platform-label {
+      width: 100%;
+    }
+
+    .mixpanel-platform-select.event_selector_theme {
+      min-width: 82px;
+    }
+
+    .mixpanel-platform-select {
+      width: 130px;
+      margin-left: 5px;
+    }
+
+    .mixpanel-platform-select.event_selector_theme .select_button {
+      min-width: 82px;
+
+    }
+
+    .mixpanel-platform-select.event_selector_theme .select_menu {
+      min-width: 82px;
+      width: 128px;
+    }
+
+    .mixpanel-platform-select.event_selector_theme .select_menu .options_list .select_option {
+      min-width: 82px;
+    }
+
+    .left {
+      float: left;
+    }
+
+    .right {
+      float: right;
+    }
+
+    #byCountry {
+      background-color: #E5EEF4;
+      border-radius: 4px;
+      color: #4C6072;
+      float: right;
+      font-size: 12px;
+      font-weight: bold;
+      height: 31px;
+      line-height: 32px;
+      margin-bottom: 10px;
+      margin-right: 10px;
+      margin-left: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="mixpanel-platform-body">
+
+<div class="mixpanel-platform-section">
+  <div id="dateSelect" class="left"></div>
+  <div id="byCountry">
+    <label>
+      <span>By Country</span>
+      <input type="checkbox">
+    </label>
+  </div>
+  <div id="typeSelect" class="right"></div>
+  <div id="unitSelect" class="right"></div>
+  <div style="clear: both;"></div>
+</div>
+
+<div class="mixpanel-platform-section">
+  <span class="mixpanel-platform-label">Active Users</span>
+  <div style="clear: both;"></div>
+  <div id="graphAU"></div>
+</div>
+
+<div class="mixpanel-platform-section">
+  <span class="mixpanel-platform-label">Sign Ups</span>
+  <div style="clear: both;"></div>
+  <div id="graphSU"></div>
+</div>
+
+<div class="mixpanel-platform-section">
+  <span class="mixpanel-platform-label">Shouts</span>
+  <div style="clear: both;"></div>
+  <div id="graphSH"></div>
+</div>
+
+<div class="mixpanel-platform-section">
+  <span class="mixpanel-platform-label">Cost of Goods Sold in USD(not accurate)</span>
+  <div style="clear: both;"></div>
+  <div id="graphSH2"></div>
+</div>
+
+<div class="mixpanel-platform-section">
+  <span class="mixpanel-platform-label">Messages</span>
+  <div style="clear: both;"></div>
+  <div id="graphME"></div>
+</div>
+
+<script>
+    MP.api.setCredentials('{{ mixpanel_secret }}');
+
+    var dateSelect = $('#dateSelect').MPDatepicker();
+    var unitSelect = $('#unitSelect').MPDatepicker();
+    var typeSelect = $('#typeSelect').MPDatepicker();
+    var byCountry = $('#byCountry input');
+
+    var graphAU = $('#graphAU').MPChart({chartType: 'line'});
+    var graphSU = $('#graphSU').MPChart({chartType: 'line'});
+    var graphSH = $('#graphSH').MPChart({chartType: 'line'});
+    var graphSH2 = $('#graphSH2').MPChart({chartType: 'line'});
+    var graphME = $('#graphME').MPChart({chartType: 'line'});
+
+    function init() {
+        dateSelect.val(Object.assign(dateSelect.val(), {
+            from: new moment().subtract(60, 'days').toDate(),
+            to: new Date()
+        }));
+        unitSelect.MPSelect({items: [{label: 'Day', value: 'day'}, {label: 'Month', value: 'month'}]});
+        typeSelect.MPSelect({items: [{label: 'Total', value: 'general'}, {label: 'Unique', value: 'unique'}]});
+    }
+
+    function runQuery(eventName, graph, segment, extraParams) {
+        segment = typeof segment !== 'undefined' ? segment : (byCountry.prop('checked') ? 'mp_country_code' : null);
+
+        var dateRange = dateSelect.val();
+        var params = {
+            from: dateRange.from,
+            to: dateRange.to,
+            unit: unitSelect.val(),
+            type: typeSelect.val()
+        };
+        _.extend(params, extraParams);
+
+        MP.api.segment(eventName, segment, params).done(function (results) {
+            if (results.depth === 1) {
+                var data = {};
+                data[eventName] = results.values();
+                results = MP.Data.inst(data);
+            }
+            graph.MPChart('setData', results);
+        });
+    }
+
+    function runQueries() {
+        runQuery('app_open', graphAU);
+        runQuery('signup', graphSU);
+        runQuery('new_shout', graphSH);
+        runQuery('new_shout', graphSH2, 'round(properties["price_usd"] / 100)', {
+            method: 'sum'
+        });
+        runQuery('new_message', graphME);
+    }
+
+    function onChange(changed) {
+        return function (event, value) {
+            console.debug(changed + ' changed', value || '');
+            runQueries();
+        }
+    }
+
+    dateSelect.on('change', onChange('Date'));
+    unitSelect.on('change', onChange('Unit'));
+    typeSelect.on('change', onChange('Type'));
+    byCountry.on('change', onChange('Country'));
+
+    init();
+    runQueries();
+
+</script>
+</body>
+</html>

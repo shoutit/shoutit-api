@@ -327,6 +327,6 @@ class MiscViewSet(viewsets.ViewSet):
 
     @list_route(methods=['get'], authentication_classes=[BasicAuthentication], renderer_classes=[TemplateHTMLRenderer],
                 permission_classes=[permissions.IsAdminUser])
-    def dashboard(self, request):
+    def tracker(self, request):
         data = {'mixpanel_secret': settings.MIXPANEL_SECRET}
-        return Response(data, template_name='dashboard.html')
+        return Response(data, template_name='tracker.html')
