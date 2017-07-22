@@ -43,6 +43,8 @@ class DiscoverItemDetailSerializer(DiscoverItemSerializer):
         if not instance.show_shouts:
             ret.pop('shouts_url', None)
         blank_to_none(ret, ['image', 'cover', 'icon'])
+        # Sort children
+        ret['children'] = sorted(ret['children'], key=lambda x: x['position'])
         return ret
 
     def get_shouts_url(self, discover_item):
