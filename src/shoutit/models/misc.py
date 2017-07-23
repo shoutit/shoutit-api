@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django_pgjson.fields import JsonField
 from django_rq import job
 from elasticsearch import NotFoundError, ConflictError
 from elasticsearch_dsl import DocType, String, GeoPoint
@@ -207,3 +208,8 @@ class Device(UUIDModel):
 
     def __str__(self):
         return "%s:%s" % (self.api_version, self.get_type_display())
+
+
+class TrackerData(UUIDModel):
+    date = models.DateField()
+    data = JsonField(default=dict, blank=True)

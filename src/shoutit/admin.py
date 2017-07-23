@@ -13,6 +13,7 @@ from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import UserType
+from shoutit.models.misc import TrackerData
 from shoutit.utils import url_with_querystring
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
@@ -656,3 +657,9 @@ class DBCLConversationAdmin(admin.ModelAdmin):
         return user_link(obj.to_user)
 
     _to_user.allow_tags = True
+
+
+@admin.register(TrackerData)
+class TrackerDataAdmin(admin.ModelAdmin):
+    list_display = ('date', 'data')
+    ordering = ('-date',)

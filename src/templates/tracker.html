@@ -42,7 +42,7 @@
       float: right;
     }
 
-    #byCountry {
+    #byCountry, #n {
       background-color: #E5EEF4;
       border-radius: 4px;
       color: #4C6072;
@@ -62,6 +62,18 @@
 
 <div class="mixpanel-platform-section">
   <div id="dateSelect" class="left"></div>
+  {% if is_superuser %}
+  <div id="n">
+    <label>
+      <span>Adjusted</span>
+      <input type="checkbox">
+    </label>
+  </div>
+  {% else %}
+  <div id="n">
+    <input type="hidden" checked>
+  </div>
+  {% endif %}
   <div id="byCountry">
     <label>
       <span>By Country</span>
@@ -110,6 +122,7 @@
     var unitSelect = $('#unitSelect').MPDatepicker();
     var typeSelect = $('#typeSelect').MPDatepicker();
     var byCountry = $('#byCountry input');
+    var byN = $('#n input');
 
     var graphAU = $('#graphAU').MPChart({chartType: 'line'});
     var graphSU = $('#graphSU').MPChart({chartType: 'line'});
@@ -117,10 +130,14 @@
     var graphSH2 = $('#graphSH2').MPChart({chartType: 'line'});
     var graphME = $('#graphME').MPChart({chartType: 'line'});
 
+    var yesterday = new moment().subtract(1, 'days').toDate();
+    var DAY_ONE = new moment('2017-07-01').toDate();
+    var n = {};
+
     function init() {
         dateSelect.val(Object.assign(dateSelect.val(), {
-            from: new moment().subtract(60, 'days').toDate(),
-            to: new Date()
+            from: DAY_ONE,
+            to: yesterday
         }));
         unitSelect.MPSelect({items: [{label: 'Day', value: 'day'}, {label: 'Month', value: 'month'}]});
         typeSelect.MPSelect({items: [{label: 'Total', value: 'general'}, {label: 'Unique', value: 'unique'}]});
@@ -144,31 +161,80 @@
                 data[eventName] = results.values();
                 results = MP.Data.inst(data);
             }
+            if (byN.prop('checked') && !_.isEmpty(n)) {
+                results = adjust(results, n, eventName, segment, params);
+            }
             graph.MPChart('setData', results);
         });
     }
 
+    function adjust(results, data, eventName, segment, params) {
+        var newData = {};
+
+        if (!data.hasOwnProperty(eventName)) {
+            return results
+        }
+
+        if (segment === 'mp_country_code') {
+            Object.keys(results.json).map(function (country) {
+                var countryPercentage = results.sum().json[country] / results.sum().sum().json;
+                var values = {};
+                Object.keys(results.json[country]).map(function (date) {
+                    var val = results.json[country][date];
+                    var newVal = (data[eventName].hasOwnProperty(date) ? data[eventName][date][params['type']] : 0);
+                    values[date] = val + Math.round(newVal * countryPercentage);
+                });
+                newData[country] = values;
+            });
+        } else {
+            var values = {};
+            Object.keys(results.json[eventName]).map(function (date) {
+                var val = results.json[eventName][date];
+                values[date] = val + (data[eventName].hasOwnProperty(date) ? data[eventName][date][params['type']] : 0);
+            });
+            newData[eventName] = values;
+        }
+        return MP.Data.inst(newData);
+    }
+
     function runQueries() {
-        runQuery('app_open', graphAU);
-        runQuery('signup', graphSU);
-        runQuery('new_shout', graphSH);
-        runQuery('new_shout', graphSH2, 'round(properties["price_usd"] / 100)', {
-            method: 'sum'
+        $.get('/v3/misc/tracker_data', {
+            from: moment(dateSelect.val().from).format('YYYY-MM-DD'),
+            to: moment(dateSelect.val().to).format('YYYY-MM-DD')
+        }, function (data) {
+            n = data.n;
+            runQuery('app_open', graphAU);
+            runQuery('signup', graphSU);
+            runQuery('new_shout', graphSH);
+            runQuery('new_shout', graphSH2, 'round(properties["price_usd"] / 100)', {
+                method: 'sum'
+            });
+            runQuery('new_message', graphME);
         });
-        runQuery('new_message', graphME);
     }
 
     function onChange(changed) {
         return function (event, value) {
             console.debug(changed + ' changed', value || '');
+            if (changed === 'Date') {
+                fixDate();
+            }
             runQueries();
         }
+    }
+
+    function fixDate() {
+        dateSelect.val(Object.assign(dateSelect.val(), {
+            from: dateSelect.val().from < DAY_ONE ? DAY_ONE : dateSelect.val().from,
+            to: dateSelect.val().to > yesterday ? yesterday : dateSelect.val().to
+        }));
     }
 
     dateSelect.on('change', onChange('Date'));
     unitSelect.on('change', onChange('Unit'));
     typeSelect.on('change', onChange('Type'));
     byCountry.on('change', onChange('Country'));
+    byN.on('change', onChange('N'));
 
     init();
     runQueries();

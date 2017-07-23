@@ -23,6 +23,7 @@ from shoutit.api.renderers import PlainTextRenderer
 from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
 from shoutit.controllers import location_controller, facebook_controller
 from shoutit.models import Currency, Category, PredefinedCity, User, Shout, Tag
+from shoutit.models.misc import TrackerData
 from shoutit.settings import CACHE_CONTROL_MAX_AGE
 from shoutit.utils import debug_logger
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer, ProfileSerializer,
@@ -328,5 +329,22 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get'], authentication_classes=[BasicAuthentication], renderer_classes=[TemplateHTMLRenderer],
                 permission_classes=[permissions.IsAdminUser])
     def tracker(self, request):
-        data = {'mixpanel_secret': settings.MIXPANEL_SECRET}
+        data = {'mixpanel_secret': settings.MIXPANEL_SECRET, 'is_superuser': request.user.is_superuser}
         return Response(data, template_name='tracker.html')
+
+    @list_route(methods=['get'], authentication_classes=[BasicAuthentication],
+                permission_classes=[permissions.IsAdminUser])
+    def tracker_data(self, request):
+        n = {}
+        o = TrackerData.objects.filter(date__gte=request.query_params['from'], date__lte=request.query_params['to'])
+        for date, data in o.values_list('date', 'data'):
+            date = date.strftime('%Y-%m-%d')
+            for k, v in data.items():
+                event_name, event_type = k.rsplit('_', 1)
+                if event_name not in n:
+                    n[event_name] = {}
+                if date not in n[event_name]:
+                    n[event_name][date] = {}
+                n[event_name][date][event_type] = v
+
+        return Response({'n': n})
