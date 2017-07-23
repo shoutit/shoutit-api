@@ -211,5 +211,8 @@ class Device(UUIDModel):
 
 
 class TrackerData(UUIDModel):
-    date = models.DateField()
+    date = models.DateField(unique=True)
     data = JsonField(default=dict, blank=True)
+
+    def __str__(self):
+        return F'{self.date}: {self.data}'
