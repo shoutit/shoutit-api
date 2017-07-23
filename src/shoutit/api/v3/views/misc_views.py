@@ -65,7 +65,7 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get'], suffix='Suggestions')
     def suggestions(self, request):
         """
-        Get suggestions for Users, Pages, Tags and Shouts. `type` query param can be passed to limit the returned fields.
+        Get suggestions for Users, Pages, Tags and Shouts. `type` query param can be passed to limit the returned fields
 
         ###Request
         ```
@@ -233,7 +233,8 @@ class MiscViewSet(viewsets.ViewSet):
             - custom payload properties for iOS push
             - intent extras Bundle for Android that can be retrieved via intent.getExtras()
         - `payload.aps` is iOS specific. It will not be sent to Android and can only have the listed properties
-        - `payload.aps.alert` can be either a string or dict that may contain title, body, action-loc-key, loc-key or loc-args
+        - `payload.aps.alert` can be either a string or dict that may contain title, body, action-loc-key, loc-key or
+        loc-args
 
         ---
         serializer: PushTestSerializer
@@ -309,7 +310,8 @@ class MiscViewSet(viewsets.ViewSet):
                 suffix='Change the permission scopes of a LinkedFacebookAccount')
     def fb_scopes_changed(self, request):
         """
-        Get notified about a Facebook user changing Shoutit App scopes. This updates the LinkedFacebookAccount record with new scopes.
+        Get notified about a Facebook user changing Shoutit App scopes. This updates the LinkedFacebookAccount record
+        with new scopes.
         ###NOT TO BE USED BY API CLIENTS
         ###POST
         Expects a POST body with entry as list of objects each which has a uid and other attributes.
@@ -329,7 +331,13 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get'], authentication_classes=[BasicAuthentication], renderer_classes=[TemplateHTMLRenderer],
                 permission_classes=[permissions.IsAdminUser])
     def tracker(self, request):
-        data = {'mixpanel_secret': settings.MIXPANEL_SECRET, 'is_superuser': request.user.is_superuser}
+        data = {
+            'mixpanel_secret': settings.MIXPANEL_SECRET,
+            'is_superuser': request.user.is_superuser,
+            'username': request.user.username,
+            'user_id': request.user.pk,
+            'mixpanel_tracker_token': 'cd2514d9241dfc1451855685937c1ce9',
+        }
         return Response(data, template_name='tracker.html')
 
     @list_route(methods=['get'], authentication_classes=[BasicAuthentication],
