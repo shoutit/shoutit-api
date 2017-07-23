@@ -347,12 +347,11 @@ class MiscViewSet(viewsets.ViewSet):
         o = TrackerData.objects.filter(date__gte=request.query_params['from'], date__lte=request.query_params['to'])
         for date, data in o.values_list('date', 'data'):
             date = date.strftime('%Y-%m-%d')
-            for k, v in data.items():
-                event_name, event_type = k.rsplit('_', 1)
+            for event_name, v in data.items():
                 if event_name not in n:
                     n[event_name] = {}
                 if date not in n[event_name]:
                     n[event_name][date] = {}
-                n[event_name][date][event_type] = v
+                n[event_name][date] = v
 
         return Response({'n': n})

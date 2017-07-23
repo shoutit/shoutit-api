@@ -103,11 +103,11 @@
   <div id="graphSH"></div>
 </div>
 
-<div class="mixpanel-platform-section">
-  <span class="mixpanel-platform-label">Cost of Goods Sold in USD(not accurate)</span>
-  <div style="clear: both;"></div>
-  <div id="graphSH2"></div>
-</div>
+<!--<div class="mixpanel-platform-section">-->
+  <!--<span class="mixpanel-platform-label">Cost of Goods Sold in USD(not accurate)</span>-->
+  <!--<div style="clear: both;"></div>-->
+  <!--<div id="graphSH2"></div>-->
+<!--</div>-->
 
 <div class="mixpanel-platform-section">
   <span class="mixpanel-platform-label">Messages</span>
@@ -177,12 +177,11 @@
 
         if (segment === 'mp_country_code') {
             Object.keys(results.json).map(function (country) {
-                var countryPercentage = results.sum().json[country] / results.sum().sum().json;
                 var values = {};
                 Object.keys(results.json[country]).map(function (date) {
                     var val = results.json[country][date];
-                    var newVal = (data[eventName].hasOwnProperty(date) ? data[eventName][date][params['type']] : 0);
-                    values[date] = val + Math.round(newVal * countryPercentage);
+                    var x = (data[eventName].hasOwnProperty(date) ? data[eventName][date] : 1);
+                    values[date] = Math.round(val * x);
                 });
                 newData[country] = values;
             });
@@ -190,7 +189,8 @@
             var values = {};
             Object.keys(results.json[eventName]).map(function (date) {
                 var val = results.json[eventName][date];
-                values[date] = val + (data[eventName].hasOwnProperty(date) ? data[eventName][date][params['type']] : 0);
+                var x = (data[eventName].hasOwnProperty(date) ? data[eventName][date] : 1);
+                values[date] = Math.round(val * x);
             });
             newData[eventName] = values;
         }
