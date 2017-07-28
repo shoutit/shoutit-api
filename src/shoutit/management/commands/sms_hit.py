@@ -28,10 +28,6 @@ class Command(BaseCommand):
         countries = options['countries'].split(',')
         sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries)[:count]
 
-        if options['dry']:
-            self.stdout.write("Would have tried to send %s sms invitations" % len(sms_invitations))
-            return
-
         orig_app_link = 'shoutit.com/app'
         if code:
             if '%' in code:
@@ -41,6 +37,10 @@ class Command(BaseCommand):
         else:
             app_link = orig_app_link
         self.stdout.write(f'APP Link: {app_link}')
+
+        if options['dry']:
+            self.stdout.write("Would have tried to send %s sms invitations" % len(sms_invitations))
+            return
 
         all_ids = [s.id for s in sms_invitations]
         SMSInvitation.objects.filter(id__in=all_ids).update(status=SMS_INVITATION_QUEUED)
