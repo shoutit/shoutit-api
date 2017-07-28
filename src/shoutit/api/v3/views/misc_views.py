@@ -11,7 +11,6 @@ from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
 from pydash import arrays
 from rest_framework import viewsets, status, permissions
-from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import list_route
 from rest_framework.parsers import FormParser
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -19,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework_extensions.cache.decorators import cache_response
 
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
+from shoutit.api.permissions import IsTrackerUser
 from shoutit.api.renderers import PlainTextRenderer
 from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
 from shoutit.controllers import location_controller, facebook_controller
@@ -328,8 +328,8 @@ class MiscViewSet(viewsets.ViewSet):
             facebook_controller.update_linked_facebook_account_scopes(facebook_id)
         return Response('OK')
 
-    @list_route(methods=['get'], authentication_classes=[BasicAuthentication], renderer_classes=[TemplateHTMLRenderer],
-                permission_classes=[permissions.IsAdminUser])
+    @list_route(methods=['get'], renderer_classes=[TemplateHTMLRenderer],
+                permission_classes=[permissions.IsAuthenticated, IsTrackerUser])
     def tracker(self, request):
         data = {
             'mixpanel_secret': settings.MIXPANEL_SECRET,
@@ -340,8 +340,7 @@ class MiscViewSet(viewsets.ViewSet):
         }
         return Response(data, template_name='tracker.html')
 
-    @list_route(methods=['get'], authentication_classes=[BasicAuthentication],
-                permission_classes=[permissions.IsAdminUser])
+    @list_route(methods=['get'], permission_classes=[permissions.IsAuthenticated, IsTrackerUser])
     def tracker_data(self, request):
         n = {}
         o = TrackerData.objects.filter(date__gte=request.query_params['from'], date__lte=request.query_params['to'])

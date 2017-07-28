@@ -107,3 +107,11 @@ class IsOwnerModify(BasePermission):
         if request.method in MODIFY_METHODS:
             return obj.owner == request.user
         return True
+
+
+class IsTrackerUser(BasePermission):
+    """
+    Custom permission to check if the user is part of 'tracker_users' group.
+    """
+    def has_permission(self, request, view):
+        return request.user.groups.filter(name='tracker_users').exists()
