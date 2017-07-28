@@ -1205,29 +1205,28 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
     def get_sent_text(ad_title, ad_category):
         category_text_map = {
             'beauty-health': ('Beauty & Health items', 'منتجات الصحة والتجميل'),
-            'cars-motors': ('your Cars, Trucks, or Boats', 'السيارات والمحركات'),
+            'cars-motors': ('your Cars, Trucks, or Boats', 'سيارات للبيع'),
             'collectibles': ('Collectibles', 'مقتنياتك'),
-            'computers-technology': ('your Laptop or Computer', 'كمبيوترك أو لابتوبك'),
+            'computers-technology': ('your Laptop or Computer', 'كمبيوترك ولابتوبك'),
             'electronics': ('Electronics', 'الكترونيات للبيع'),
             'fashion-accessories': ('Fashion & Accessories', 'الألبسة والاكسسوارات'),
-            'home-furniture-garden': ('Furniture & Home Appliances', 'المفروشات وأجهزة المنزل'),
-            'jobs': ('your CV', 'سيرتك الذاتية للحصول على عمل'),
+            'home-furniture-garden': ('Furniture & Home Appliances', 'مفروشات وأجهزة المنزل'),
+            'jobs': ('your CV', 'سيرة ذاتيةوابحث عن عمل'),
             'movies-music-books': ('Movies, Music & Books', 'الكتب والأفلام وغيرها'),
             'other': ('what you are Selling', 'ما تريد بيعه'),
-            'pets': ('Pets for sale or adoption', 'حيوانات أليفة للبيع أو التبني'),
-            'phones-accessories': ('your Phone or its Accessories', 'الموبايلات واكسسواراتها'),
-            'real-estate': ('Properties for Rent or Sale', 'عقارات وشقق للبيع أو الايجار'),
+            'pets': ('Pets for sale or adoption', 'حيوانات للبيع أوالتبني'),
+            'phones-accessories': ('your Phone or its Accessories', 'موبايلات واكسسواراتها'),
+            'real-estate': ('Properties for Rent or Sale', 'عقارات للبيع و الايجار'),
             'services': ('your Services', 'خدماتك'),
-            'sport-leisure-games': ('Sport items & Games', 'أجهزة ومستلزمات الرياضةوالألعاب'),
-            'toys-children-baby': ('Baby items & Toys', 'مستلزمات وألعاب الأطفال'),
+            'sport-leisure-games': ('Sport items & Games', 'أجهزة الرياضة والألعاب'),
+            'toys-children-baby': ('Baby items & Toys', 'مستلزمات وألعاب اطفال'),
         }
         english_sms = [
-            "Hi there!\nList {} for FREE on\nshoutit.com/app",
-            "Make easy $$\nList {} for FREE on\nshoutit.com/app"
+            "Hi there!\n\nList {} for FREE on Shoutit\n\nshoutit.com/app",
+            "Make easy $$\n\nList {} for FREE on Shoutit\n\nshoutit.com/app"
         ]
         arabic_sms = [
-            "أعلن عن {}\nبسهولة على\nshoutit.com/app",
-            "اعرض {}\nمجانا على\nshoutit.com/app"
+            "اعرض {}\nمجانا على شاوت ات\n\nshoutit.com/app"
         ]
         if has_unicode(ad_title):
             return random.choice(arabic_sms).format(category_text_map[ad_category][1])
@@ -1238,3 +1237,14 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
 # Backward compatibility with v3
 ProfileDetailSerializer = UserDetailSerializer
 ProfileSerializer = UserSerializer
+
+
+# for _, (e, a) in category_text_map.items():
+#     e0 = english_sms[0].format(e).replace('shoutit.com/app', 'SHOUTIT.COM/app-abc1234')
+#     e1 = english_sms[1].format(e).replace('shoutit.com/app', 'SHOUTIT.COM/app-abc1234')
+#     print(f'----------- {len(e0)} - {len(e0) <= 160} -----------\n{e0}\n')
+#     print(f'----------- {len(e1)} - {len(e0) <= 160} -----------\n{e1}\n')
+#
+# for _, (e, a) in category_text_map.items():
+#     a0 = arabic_sms[0].format(a).replace('shoutit.com/app', 'SHOUTIT.COM/app-abc1234')
+#     print(f'----------- {len(a0)} - {len(a0) <= 70} -----------\n{a0}\n')
