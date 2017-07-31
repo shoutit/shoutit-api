@@ -221,11 +221,16 @@ class ProfileDetailSerializer(ProfileSerializer):
 
         return validated_data
 
+    # Todo (Nour): Create ShoutitEmailField that uses ShoutitEmailValidator
     def validate_email(self, email):
         user = self.context['request'].user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise serializers.ValidationError(_('This email is used by another account'))
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def validate_website(self, website):

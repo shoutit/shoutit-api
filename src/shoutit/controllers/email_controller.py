@@ -122,6 +122,9 @@ def _send_password_reset_email(user):
 
 
 def send_notification_email(user, notification):
+    # Todo (Nour): Create NotificationPreference model to allow users to change their notification settings
+    if user.is_staff:
+        return
     if not user.email:
         notification_type = notification.get_type_display()
         error_logger.info("Tried to send %s:Notification Email to user who has no email" % notification_type, extra={

@@ -9,6 +9,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
+from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.timezone import now as django_now
 from ipware.ip import get_real_ip
@@ -403,6 +404,10 @@ class UserDetailSerializer(UserSerializer):
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise ValidationError(["Email is already used by another user"])
+        if '@shoutit.com' in email:
+            raise ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def update(self, user, validated_data):
@@ -1008,6 +1013,10 @@ class ShoutitSignupSerializer(serializers.Serializer):
         email = email.lower()
         if User.exists(email=email):
             raise ValidationError(['Email is already used by another user.'])
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def create(self, validated_data):
@@ -1064,6 +1073,10 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise ValidationError(['Email is already used by another user.'])
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def to_internal_value(self, data):
