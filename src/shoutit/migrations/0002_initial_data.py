@@ -70,6 +70,7 @@ def fill_initial_data(apps, schema_editor):
         Currency(country='BH', code='BHD', name='Dinar'),
         Currency(country='OM', code='OMR', name='Rial'),
         Currency(country='JO', code='JOD', name='Dinar'),
+        Currency(country='SG', code='SGD', name='Dollar'),
     ])
 
 
