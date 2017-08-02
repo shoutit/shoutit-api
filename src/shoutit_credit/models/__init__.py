@@ -1,6 +1,6 @@
-from base import CreditTransaction, CreditRule, CREDIT_RULES, CREDIT_IN, CREDIT_OUT  # NOQA
-from profile import CompleteProfile, InviteFriends, ListenToFriends  # NOQA
-from shout import ShoutPromotion, PromoteLabel, ShareShouts, PromoteShouts  # NOQA
+from .base import CreditTransaction, CreditRule, CREDIT_RULES, CREDIT_IN, CREDIT_OUT  # NOQA
+from .profile import CompleteProfile, InviteFriends, ListenToFriends  # NOQA
+from .shout import ShoutPromotion, PromoteLabel, ShareShouts, PromoteShouts  # NOQA
 
 CREDIT_RULES['complete_profile'] = CompleteProfile
 CREDIT_RULES['invite_friends'] = InviteFriends

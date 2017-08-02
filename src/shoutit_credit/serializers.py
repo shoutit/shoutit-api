@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.utils.translation import ugettext_lazy as _
 from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers

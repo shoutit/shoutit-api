@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from rest_framework import permissions, viewsets, filters, status, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.exceptions import ValidationError
@@ -137,7 +135,7 @@ class TagViewSet(DetailSerializerMixin, mixins.ListModelMixin, viewsets.GenericV
         """
         tag_dicts = request.data.get('tags', [])
         TagSerializer(data=tag_dicts, many=True).is_valid(raise_exception=True)
-        tag_names = map(lambda x: str(x['name']), tag_dicts)
+        tag_names = [str(t['name']) for t in tag_dicts]
         tags = Tag.objects.filter(name__in=tag_names)
         api_client = getattr(request, 'api_client', None)
 

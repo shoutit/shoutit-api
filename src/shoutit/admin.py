@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -15,6 +13,7 @@ from push_notifications.admin import DeviceAdmin as PushDeviceAdmin
 from push_notifications.models import APNSDevice, GCMDevice
 
 from common.constants import UserType
+from shoutit.models.misc import TrackerData
 from shoutit.utils import url_with_querystring
 from .admin_filters import (ShoutitDateFieldListFilter, UserEmailFilter, UserDeviceFilter, APIClientFilter,
                             PublishedOnFilter)
@@ -30,7 +29,7 @@ def admin_url(self):
 
 @property
 def admin_link(self):
-    return '<a href="%s">%s</a>' % (self.admin_url, unicode(self))
+    return '<a href="%s">%s</a>' % (self.admin_url, str(self))
 
 
 models.Model.add_to_class('admin_url', admin_url)
@@ -44,7 +43,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
     list_display = ('user', 'client', 'token', 'expires', 'scope', 'created')
     raw_id_fields = ('user', 'client')
     list_filter = ('client',)
-    ordering = ('-created', )
+    ordering = ('-created',)
 
 
 admin.site.unregister(RefreshToken)
@@ -89,8 +88,9 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
-    list_filter = ('type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
-                   'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
+    list_filter = (
+    'type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
+    'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
@@ -121,7 +121,7 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     def _devices(self, user):
         devices = ''
         for device in user.devices.all():
-            devices += '<a href="%s">%s</a><br/>' % (device.admin_url, unicode(device))
+            devices += '<a href="%s">%s</a><br/>' % (device.admin_url, str(device))
         return devices
 
     _devices.allow_tags = True
@@ -130,7 +130,7 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
     def api_clients(self, user):
         clients = ''
         for at in user.accesstoken_set.all():
-            clients += '<a href="%s">%s</a><br/>' % (at.admin_url, unicode(at.client.name))
+            clients += '<a href="%s">%s</a><br/>' % (at.admin_url, str(at.client.name))
         return clients
 
     api_clients.allow_tags = True
@@ -389,7 +389,7 @@ class ConversationAdmin(admin.ModelAdmin):
     def _attached_object(self, instance):
         if not instance.attached_object:
             return ''
-        return '<a href="%s">%s</a>' % (instance.attached_object.admin_url, unicode(instance.attached_object))
+        return '<a href="%s">%s</a>' % (instance.attached_object.admin_url, str(instance.attached_object))
 
     _attached_object.allow_tags = True
     _attached_object.short_description = 'About'
@@ -397,7 +397,7 @@ class ConversationAdmin(admin.ModelAdmin):
     def _last_message(self, instance):
         if not instance.last_message:
             return ''
-        return '<a href="%s">%s</a>' % (instance.last_message.admin_url, unicode(instance.last_message))
+        return '<a href="%s">%s</a>' % (instance.last_message.admin_url, str(instance.last_message))
 
     _last_message.allow_tags = True
     _last_message.short_description = 'Last Message'
@@ -420,6 +420,9 @@ class MessageAdmin(admin.ModelAdmin):
         (None, {'fields': ('conversation', '_conversation', 'user', '_user', 'text')}),
     )
     ordering = ('-created_at',)
+    formfield_overrides = {
+        models.CharField: {'widget': forms.Textarea()},
+    }
 
     def _user(self, message):
         return user_link(message.user)
@@ -470,7 +473,7 @@ class PushBroadcastAdmin(admin.ModelAdmin, UserLinkMixin):
 
 # Django Push Notification
 class CustomPushDeviceAdmin(PushDeviceAdmin, UserLinkMixin):
-    list_display = ('__unicode__', '_device', 'device_id', '_user', 'active', 'date_created')
+    list_display = ('__str__', '_device', 'device_id', '_user', 'active', 'date_created')
     search_fields = ('device_id', 'user__id', 'user__username')
     list_filter = ('active', ('date_created', ShoutitDateFieldListFilter))
     raw_id_fields = ('user',)
@@ -504,7 +507,7 @@ class DeviceAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
 
     def _push_device(self, obj):
-        return '<a href="%s">%s</a>' % (obj.push_device.admin_url, unicode(obj.push_device))
+        return '<a href="%s">%s</a>' % (obj.push_device.admin_url, str(obj.push_device))
 
     _push_device.allow_tags = True
 
@@ -562,6 +565,15 @@ class ReportAdmin(admin.ModelAdmin, UserLinkMixin):
 
 
 # SMSInvitation
+class SMSInvitationAdminForm(forms.ModelForm):
+    class Meta:
+        model = SMSInvitation
+        widgets = {
+            'sent_text': forms.Textarea(attrs={'cols': 80, 'rows': 10}),
+        }
+        fields = "__all__"
+
+
 @admin.register(SMSInvitation)
 class SMSInvitationAdmin(admin.ModelAdmin, UserLinkMixin):
     list_display = ('id', 'status', 'country', 'mobile', 'category', '_user', 'created_at')
@@ -569,6 +581,7 @@ class SMSInvitationAdmin(admin.ModelAdmin, UserLinkMixin):
     search_fields = ('mobile',)
     raw_id_fields = ('user',)
     ordering = ('-created_at',)
+    form = SMSInvitationAdminForm
 
 
 # ConfirmToken
@@ -644,3 +657,9 @@ class DBCLConversationAdmin(admin.ModelAdmin):
         return user_link(obj.to_user)
 
     _to_user.allow_tags = True
+
+
+@admin.register(TrackerData)
+class TrackerDataAdmin(admin.ModelAdmin):
+    list_display = ('date', 'data')
+    ordering = ('-date',)

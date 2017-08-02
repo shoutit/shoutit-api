@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from common.constants import NOTIFICATION_TYPE_INCOMING_VIDEO_CALL, NOTIFICATION_TYPE_MISSED_VIDEO_CALL
@@ -57,7 +55,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
                 video_client = create_video_client(user)
             except (ValidationError, IntegrityError) as e:
                 msg = _("Couldn't authorize you to make video calls")
-                raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
+                raise ShoutitBadRequest(message=msg, developer_message=str(e))
 
         # Return token info
         res = OrderedDict([
@@ -116,7 +114,7 @@ class ShoutitTwilioViewSet(viewsets.ViewSet):
                 video_client = create_video_client(other_user)
             except (ValidationError, IntegrityError) as e:
                 msg = _("Error calling %(name)s") % {'name': other_username.name}
-                raise ShoutitBadRequest(message=msg, developer_message=unicode(e))
+                raise ShoutitBadRequest(message=msg, developer_message=str(e))
 
         # Notify the other user
         notifications_controller.notify_user_of_incoming_video_call(user=other_user, caller=request.user)

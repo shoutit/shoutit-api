@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.db import IntegrityError
 
 from shoutit.utils import debug_logger

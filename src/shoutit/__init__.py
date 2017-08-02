@@ -1,4 +1,4 @@
-from settings_env import info
+from shoutit.settings import info
 
 """
 =================================
@@ -6,7 +6,7 @@ from settings_env import info
 =================================
 """
 # some monkey patching for global imports
-import monkey_patches  # NOQA
+from . import monkey_patches  # NOQA
 
 info('Monkeys: Loaded')
 

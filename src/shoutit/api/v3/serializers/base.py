@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.utils.translation import ugettext_lazy as _
 from ipware.ip import get_real_ip
 from push_notifications.apns import apns_send_bulk_message

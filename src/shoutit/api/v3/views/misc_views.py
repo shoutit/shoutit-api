@@ -2,10 +2,10 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import random
 from collections import OrderedDict
+
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.cache import cache_control
 from ipware.ip import get_real_ip
@@ -13,14 +13,17 @@ from pydash import arrays
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import list_route
 from rest_framework.parsers import FormParser
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework_extensions.cache.decorators import cache_response
 
 from common.constants import USER_TYPE_PAGE, USER_TYPE_PROFILE
+from shoutit.api.permissions import IsTrackerUser
 from shoutit.api.renderers import PlainTextRenderer
 from shoutit.api.v3.exceptions import InvalidParameter, RequiredParameter
 from shoutit.controllers import location_controller, facebook_controller
 from shoutit.models import Currency, Category, PredefinedCity, User, Shout, Tag
+from shoutit.models.misc import TrackerData
 from shoutit.settings import CACHE_CONTROL_MAX_AGE
 from shoutit.utils import debug_logger
 from ..serializers import (CurrencySerializer, ReportSerializer, PredefinedCitySerializer, ProfileSerializer,
@@ -62,7 +65,7 @@ class MiscViewSet(viewsets.ViewSet):
     @list_route(methods=['get'], suffix='Suggestions')
     def suggestions(self, request):
         """
-        Get suggestions for Users, Pages, Tags and Shouts. `type` query param can be passed to limit the returned fields.
+        Get suggestions for Users, Pages, Tags and Shouts. `type` query param can be passed to limit the returned fields
 
         ###Request
         ```
@@ -230,7 +233,8 @@ class MiscViewSet(viewsets.ViewSet):
             - custom payload properties for iOS push
             - intent extras Bundle for Android that can be retrieved via intent.getExtras()
         - `payload.aps` is iOS specific. It will not be sent to Android and can only have the listed properties
-        - `payload.aps.alert` can be either a string or dict that may contain title, body, action-loc-key, loc-key or loc-args
+        - `payload.aps.alert` can be either a string or dict that may contain title, body, action-loc-key, loc-key or
+        loc-args
 
         ---
         serializer: PushTestSerializer
@@ -251,7 +255,7 @@ class MiscViewSet(viewsets.ViewSet):
         Create fake error
         """
         from ipware.ip import get_real_ip
-        raise Exception("Fake error request from ip: " + get_real_ip(request) or 'undefined')
+        raise Exception("Fake error request from ip: {}".format(get_real_ip(request) or 'undefined'))
 
     @list_route(methods=['get'], suffix='Get IP')
     def ip(self, request):
@@ -259,7 +263,7 @@ class MiscViewSet(viewsets.ViewSet):
         Retrieve ip from request
         """
         ip = get_real_ip(request) or 'undefined'
-        debug_logger.debug("IP request from : " + ip)
+        debug_logger.debug("IP request from : {}".format(ip))
         return Response({'ip': ip})
 
     @list_route(methods=['get'], suffix='Geocode')
@@ -306,7 +310,8 @@ class MiscViewSet(viewsets.ViewSet):
                 suffix='Change the permission scopes of a LinkedFacebookAccount')
     def fb_scopes_changed(self, request):
         """
-        Get notified about a Facebook user changing Shoutit App scopes. This updates the LinkedFacebookAccount record with new scopes.
+        Get notified about a Facebook user changing Shoutit App scopes. This updates the LinkedFacebookAccount record
+        with new scopes.
         ###NOT TO BE USED BY API CLIENTS
         ###POST
         Expects a POST body with entry as list of objects each which has a uid and other attributes.
@@ -317,7 +322,35 @@ class MiscViewSet(viewsets.ViewSet):
             return Response(hub_challenge)
 
         entries = request.data.get('entry', [])
-        facebook_ids = filter(None, arrays.unique(map(lambda e: e['id'], entries)))
+        entry_ids = arrays.uniq([entry['id'] for entry in entries])
+        facebook_ids = [entry_id for entry_id in entry_ids if entry_id]
         for facebook_id in facebook_ids:
             facebook_controller.update_linked_facebook_account_scopes(facebook_id)
         return Response('OK')
+
+    @list_route(methods=['get'], renderer_classes=[TemplateHTMLRenderer],
+                permission_classes=[permissions.IsAuthenticated, IsTrackerUser])
+    def tracker(self, request):
+        data = {
+            'mixpanel_secret': settings.MIXPANEL_SECRET,
+            'is_superuser': request.user.is_superuser,
+            'username': request.user.username,
+            'user_id': request.user.pk,
+            'mixpanel_tracker_token': 'cd2514d9241dfc1451855685937c1ce9',
+        }
+        return Response(data, template_name='tracker.html')
+
+    @list_route(methods=['get'], permission_classes=[permissions.IsAuthenticated, IsTrackerUser])
+    def tracker_data(self, request):
+        n = {}
+        o = TrackerData.objects.filter(date__gte=request.query_params['from'], date__lte=request.query_params['to'])
+        for date, data in o.values_list('date', 'data'):
+            date = date.strftime('%Y-%m-%d')
+            for event_name, v in data.items():
+                if event_name not in n:
+                    n[event_name] = {}
+                if date not in n[event_name]:
+                    n[event_name][date] = {}
+                n[event_name][date] = v
+
+        return Response({'n': n})

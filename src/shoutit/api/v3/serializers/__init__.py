@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from .auth import *  # NOQA
 from .base import *  # NOQA
 from .discover import *  # NOQA

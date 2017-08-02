@@ -2,7 +2,7 @@
 """
 
 """
-from __future__ import unicode_literals
+from django.utils.timezone import now
 
 from common.constants import SMS_INVITATION_ADDED, SMS_INVITATION_QUEUED, SMS_INVITATION_SENT, SMS_INVITATION_ERROR
 from django.core.management.base import BaseCommand
@@ -17,20 +17,32 @@ class Command(BaseCommand):
         parser.add_argument('--count', default=10, type=int)
         parser.add_argument('--status', default=SMS_INVITATION_ADDED, type=int)
         parser.add_argument('--countries', default='AE,SA,OM,QA,KW,BH,EG,LB,JO', type=str)
+        parser.add_argument('--code', default='', type=str)
         parser.add_argument('--dry', dest='dry', action='store_true')
         parser.set_defaults(dry=False)
 
     def handle(self, *args, **options):
         count = options['count']
         status = options['status']
+        code = options['code']
         countries = options['countries'].split(',')
         sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries)[:count]
+
+        orig_app_link = 'shoutit.com/app'
+        if code:
+            if '%' in code:
+                today = now()
+                code = today.strftime(code)
+            app_link = f'SHOUTIT.COM/app-{code}'
+        else:
+            app_link = orig_app_link
+        self.stdout.write(f'APP Link: {app_link}')
 
         if options['dry']:
             self.stdout.write("Would have tried to send %s sms invitations" % len(sms_invitations))
             return
 
-        all_ids = map(lambda s: s.id, sms_invitations)
+        all_ids = [s.id for s in sms_invitations]
         SMSInvitation.objects.filter(id__in=all_ids).update(status=SMS_INVITATION_QUEUED)
         sent = []
         for sms_invitation in sms_invitations:
@@ -44,7 +56,7 @@ class Command(BaseCommand):
                 message = {
                     'from': 'Shoutit Adv',
                     'to': sms_invitation.mobile,
-                    'text': text,
+                    'text': text.replace(orig_app_link, app_link),
                     'type': 'unicode' if _has_unicode else None
                 }
                 res = nexmo_client.send_message(message)

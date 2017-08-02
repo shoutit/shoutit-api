@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.utils.translation import ugettext_lazy as _
 from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers, exceptions as drf_exceptions
@@ -31,7 +29,7 @@ class PageCategorySerializer(TranslatableModelSerializer):
         return ret
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         super(PageCategorySerializer, self).to_internal_value(data)
         return self.instance

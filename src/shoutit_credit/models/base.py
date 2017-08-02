@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
@@ -43,7 +41,7 @@ class CreditRule(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
         if self.type:
             self.__class__ = CREDIT_RULES.get(self.type, CreditRule)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s:%s" % (self.get_transaction_type_display(), self.type, self.name)
 
     def display(self, transaction):
@@ -56,7 +54,7 @@ class CreditTransaction(UUIDModel):
     rule = models.ForeignKey(CreditRule, related_name='transactions')
     properties = JsonField(default=dict, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s %d:%s by %s" % (self.id, self.amount, self.rule, self.user.username)
 
     @property

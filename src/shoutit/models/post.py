@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 from datetime import timedelta
 
@@ -10,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
+from elasticsearch_dsl import DocType, String, Date, Double, Integer, Long, Boolean, Object, MetaField
 
 from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
@@ -115,7 +113,7 @@ class Shout(Post):
 
     objects = ShoutManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s, %s: %s" % (self.pk, self.item, self.country, self.city)
 
     def clean(self):
@@ -167,6 +165,7 @@ class Shout(Post):
             'images': len(self.images),
             'videos': self.videos.count(),
             'price': self.item.price,
+            'price_usd': self.item.price_usd,
             'currency': self.item.currency.name if self.item.currency else None,
             'has_mobile': bool(self.mobile),
             'published_to_facebook': self.published_on.get('facebook'),
@@ -214,6 +213,7 @@ class InactiveShout(object):
             "title": _("Deleted Shout"),
             "text": "",
             "price": 0,
+            "price_usd": 0,
             "currency": "",
             "thumbnail": "",
             "video_url": "",
@@ -242,7 +242,8 @@ class ShoutIndex(DocType):
     city = String(index='not_analyzed')
     latitude = Double()
     longitude = Double()
-    price = Double()
+    price = Long()
+    price_usd = Long()
     available_count = Integer()
     is_sold = Boolean()
     is_muted = Boolean()
@@ -296,7 +297,7 @@ class Video(UUIDModel):
     id_on_provider = models.CharField(max_length=256)
     duration = models.PositiveIntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s @ %s" % (self.pk, self.id_on_provider, self.provider)
 
 

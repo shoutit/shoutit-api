@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import migrations
 from provider.oauth2.models import Client
 
@@ -51,11 +49,11 @@ def fill_initial_data(apps, schema_editor):
     ]
 
     Category.objects.bulk_create(
-        map(lambda t: Category(name=t[0], slug=t[1]), categories)
+        [Category(name=c[0], slug=c[1]) for c in categories]
     )
 
     Tag.objects.bulk_create(
-        map(lambda t: Tag(name=t[1]), categories)
+        [Tag(name=c[1]) for c in categories]
     )
 
     # Currencies
@@ -72,6 +70,7 @@ def fill_initial_data(apps, schema_editor):
         Currency(country='BH', code='BHD', name='Dinar'),
         Currency(country='OM', code='OMR', name='Rial'),
         Currency(country='JO', code='JOD', name='Dinar'),
+        Currency(country='SG', code='SGD', name='Dollar'),
     ])
 
 
@@ -92,6 +91,7 @@ def remove_initial_data(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ('shoutit', '0001_initial'),
+        ('provider', '0001_initial'),
     ]
 
     operations = [

@@ -1,30 +1,36 @@
-FROM python:2.7
+FROM python:3.6
 
-ARG SHOUTIT_ENV=dev
+ENV PYTHONUNBUFFERED 1
+
+# Install Debian dependencies
+RUN apt-get update && apt-get install -y \
+    htop \
+    tesseract-ocr \
+    unzip \
+    vim \
+ && rm -rf /var/lib/apt/lists/*
+
+# Add IP2Location Lite Database
+RUN mkdir -p /opt/ip2location && \
+    cd /opt/ip2location && \
+    curl -sS -o /opt/ip2location/IP2LOCATION-LITE-DB9.BIN.ZIP \
+    https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN.ZIP?v=201708 && \
+    unzip IP2LOCATION-LITE-DB9.BIN.ZIP && rm IP2LOCATION-LITE-DB9.BIN.ZIP
+
+# Install pip requirements
+COPY ./requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
 
 # Define working directory and copy files to it
 RUN mkdir /api
 WORKDIR /api
 ADD . /api/
 
-# Add external files
-ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
-
-# Install ubuntu dependencies
-RUN apt-get update -y && apt-get install tesseract-ocr -y
-
-# Install supervisor
-RUN pip install supervisor
-COPY ./deploy/supervisord.conf /etc/supervisord.conf
-
-# Install pip requirements
-RUN pip install -r src/requirements/${SHOUTIT_ENV}.txt
-RUN pip install -r src/requirements/common_noupdate.txt
-
+# Expose Gunicorn port
 EXPOSE 8001
 
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONIOENCODING UTF-8
-ENV SHOUTIT_ENV $SHOUTIT_ENV
+# Command to serve API
+CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "/api/deploy/gunicorn.py"]
 
-CMD newrelic-admin run-program gunicorn src.wsgi -c /api/src/settings_gunicorn.py
+# Command to run RQ
+#CMD ["circusd", "/api/deploy/circus.ini"]

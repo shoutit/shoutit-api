@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import re
 
 from django.conf import settings
@@ -25,7 +23,7 @@ class AgentMiddleware(object):
         """
         Add information about the request using the its user-agent
         """
-        user_agent = request.META.get('HTTP_USER_AGENT', '').encode('utf8')
+        user_agent = str(request.META.get('HTTP_USER_AGENT', '').encode('utf8'))
         if 'com.shoutit-iphone' in user_agent or 'com.appunite.shoutit' in user_agent:
             agent = 'ios'
             build_no_re = re.search('.*(com.shoutit-iphone|com.appunite.shoutit).*\((\d+);', user_agent)
@@ -99,10 +97,10 @@ class UserLanguageMiddleware(object):
     @staticmethod
     def process_response(request, response):
         # The authentication with DRF happens in the views. Since there is no unified place to add middleware for DRF
-        # views, we can update the user language on response time instead. At this point the request will be
-        # authenticated already
-        user = request.user
-        if user.is_authenticated() and request.LANGUAGE_CODE != user.language:
+        # views, we can update the user language on response time instead.
+        # At this point the request should be authenticated already, unless something wrong happened before DRF auth.
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated() and request.LANGUAGE_CODE != user.language:
             user.update_language(request.LANGUAGE_CODE)
         return response
 

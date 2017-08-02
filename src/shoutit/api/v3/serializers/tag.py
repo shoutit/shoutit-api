@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.utils.translation import ugettext_lazy as _
 from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
@@ -46,7 +44,7 @@ class TagSerializer(MiniTagSerializer):
         fields = parent_fields + ('api_url', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
@@ -117,7 +115,7 @@ class CategorySerializer(TranslatableModelSerializer):
         fields = ('name', 'slug', 'icon', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance

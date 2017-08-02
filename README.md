@@ -1,6 +1,6 @@
 ### Env variables
 
-`SHOUTIT_ENV` should be set before starting the server. These (except `SHOUTIT_ENV`) should be set in an `.env` file located in `src/configs`.
+`SHOUTIT_ENV` should be set before starting the server. These (except `SHOUTIT_ENV`) should be set in an `.env` file located in `src/config`.
 The filename should match `SHOUTIT_ENV` value e.g if it is `local` the file should be `local.env`.
 
 | Name                                          | Default       | Notes                                                          |

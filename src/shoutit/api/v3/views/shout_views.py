@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import random
 
 from django.conf import settings
@@ -223,7 +221,7 @@ class ShoutViewSet(DetailSerializerMixin, UUIDViewSetMixin, mixins.ListModelMixi
         if len(search) >= 2:
             terms = list(Tag.objects.filter(name__istartswith=search).values_list('name', flat=True)[:10])
             random.shuffle(terms)
-            terms = map(lambda t: {'term': strings.human_case(t)}, terms)
+            terms = [{'term': strings.human_case(t)} for t in terms]
         else:
             raise InvalidParameter('search', _("At least two characters are required"))
         return Response(terms)

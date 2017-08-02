@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.contrib.postgres.fields import HStoreField
 from django.db import models
 from hvad.models import TranslatedFields, TranslatableModel
@@ -43,8 +41,8 @@ class DiscoverItem(APIModelMixin, TranslatedModelFallbackMixin, TranslatableMode
         _local_description=models.CharField(max_length=100, blank=True, default='')
     )
 
-    def __unicode__(self):
-        return "%s in %s" % (self.title, filter(None, self.countries))
+    def __str__(self):
+        return "%s in %s" % (self.title, [c for c in self.countries if c])
 
     @property
     def parents(self):

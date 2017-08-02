@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from django.contrib.auth.models import AnonymousUser
@@ -89,7 +87,7 @@ class ProfileDetailSerializer(ProfileSerializer):
                                      help_text='Formatted as YYYY-MM-DD')
     bio = serializers.CharField(source='profile.bio', max_length=160, **empty_char_input)
     video = VideoSerializer(source='ap.video', required=False, allow_null=True)
-    website = serializers.CharField(source='ap.website', **empty_char_input)
+    website = serializers.CharField(max_length=200, source='ap.website', **empty_char_input)
     push_tokens = PushTokensSerializer(help_text="Only shown for owner", required=False)
     linked_accounts = serializers.ReadOnlyField(help_text="only shown for owner")
     is_listener = serializers.SerializerMethodField(help_text="Whether this profile is listening you")
@@ -223,11 +221,16 @@ class ProfileDetailSerializer(ProfileSerializer):
 
         return validated_data
 
+    # Todo (Nour): Create ShoutitEmailField that uses ShoutitEmailValidator
     def validate_email(self, email):
         user = self.context['request'].user
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise serializers.ValidationError(_('This email is used by another account'))
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def validate_website(self, website):
@@ -502,7 +505,7 @@ class ProfileContactSerializer(serializers.Serializer):
         return ret
 
     def validate_emails(self, emails):
-        def email(e):
+        def _email(e):
             try:
                 e = e.lower().replace(' ', '')
                 validate_email(e)
@@ -510,8 +513,8 @@ class ProfileContactSerializer(serializers.Serializer):
             except:
                 return None
 
-        emails = map(email, emails)
-        emails = filter(None, emails)
+        emails = map(_email, emails)
+        emails = [email for email in emails if email]
         return emails
 
     def validate_mobiles(self, mobiles):
@@ -519,7 +522,7 @@ class ProfileContactSerializer(serializers.Serializer):
         user = request.user
         country = user.ap.country
 
-        def mobile(m):
+        def _mobile(m):
             try:
                 m = "".join(i for i in m if ord(i) < 128)
                 m = m.replace(' ', '')
@@ -529,8 +532,8 @@ class ProfileContactSerializer(serializers.Serializer):
             except:
                 return None
 
-        mobiles = map(mobile, mobiles)
-        mobiles = filter(None, mobiles)
+        mobiles = map(_mobile, mobiles)
+        mobiles = [mobile for mobile in mobiles if mobile]
         return mobiles
 
 
@@ -552,7 +555,7 @@ class ProfileContactsSerializer(serializers.Serializer):
 
         user.contacts.all().delete()
         profile_contacts = map(profile_contact, contacts)
-        profile_contacts = filter(lambda pc: pc.is_reached(), profile_contacts)
+        profile_contacts = [pc for pc in profile_contacts if pc.is_reached()]
         ProfileContact.objects.bulk_create(profile_contacts)
         return ret
 

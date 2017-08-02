@@ -1,8 +1,6 @@
 """
 Utils that are independent of Apps and their models
 """
-from __future__ import unicode_literals
-
 import collections
 import os
 import sys
@@ -19,8 +17,9 @@ from pydash import strings, arrays
 
 
 def get_address_port(using_gunicorn=False):
+    return '', ''  # Todo (Nour) Fix
     if using_gunicorn:
-        from settings_gunicorn import bind
+        from gunicorn import bind
         return bind.split(':')
 
     if len(sys.argv) > 1 and sys.argv[1] == "runserver":
@@ -41,7 +40,7 @@ def get_address_port(using_gunicorn=False):
 
 
 def process_tag(name, fn=strings.kebab_case):
-    if not isinstance(name, basestring):
+    if not isinstance(name, str):
         return None
     name = fn(name)
     if len(name) < 2:
@@ -56,7 +55,7 @@ def process_tags(names, snake_case=False):
         processed_tag = process_tag(name, fn)
         if processed_tag:
             processed_tags.append(processed_tag)
-    processed_tags = arrays.unique(processed_tags)
+    processed_tags = arrays.uniq(processed_tags)
     return processed_tags
 
 

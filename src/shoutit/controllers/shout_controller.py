@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from datetime import timedelta
 
 import requests
@@ -110,7 +108,7 @@ def create_shout(user, shout_type, title, text, price, currency, category, locat
     else:
         # Tags
         if filters:
-            tag_ids = map(lambda f: f['value']['id'], filters)
+            tag_ids = [f['value']['id'] for f in filters]
             tags = Tag.objects.filter(id__in=tag_ids)
             shout.tags.add(*tags)
 
@@ -132,7 +130,7 @@ def edit_shout(shout, title=None, text=None, price=None, currency=None, category
     shout.expires_at = expires_at
 
     if filters is not None:
-        tag_ids = map(lambda f: f['value']['id'], filters)
+        tag_ids = [f['value']['id'] for f in filters]
         tags = Tag.objects.filter(id__in=tag_ids)
         shout.tags.clear()
         shout.tags.add(*tags)
@@ -230,7 +228,7 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.text = shout.text
     tags = shout.tags.all().select_related('key')
     # Add category slug to be able to filter on it as one of the tags
-    shout_index.tags = map(lambda t: t.slug, tags) + [shout.category.slug]
+    shout_index.tags = [t.slug for t in tags] + [shout.category.slug]
     shout_index.filters = {tag.key.slug: tag.slug for tag in tags if tag.key}
     shout_index.category = shout.category.slug
     shout_index.country = shout.country
@@ -240,6 +238,7 @@ def shout_index_from_shout(shout, shout_index=None):
     shout_index.latitude = shout.latitude
     shout_index.longitude = shout.longitude
     shout_index.price = shout.item.price if shout.item.price is not None else 0
+    shout_index.price_usd = shout.item.price_usd if shout.item.price_usd is not None else 0
     shout_index.available_count = shout.available_count
     shout_index.is_sold = shout.is_sold
     shout_index.is_muted = shout.is_muted

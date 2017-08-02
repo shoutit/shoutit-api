@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.apps import apps
 from django.conf import settings
 from django.db import models
@@ -23,7 +21,7 @@ class Listen2(Action):
         super(Action, self).__init__(*args, **kwargs)
         self._meta.get_field('user').blank = False
 
-    def __unicode__(self):
+    def __str__(self):
         return "User: %s to %s: %s" % (self.user_id, self.get_type_display(), self.target)
 
     @classmethod

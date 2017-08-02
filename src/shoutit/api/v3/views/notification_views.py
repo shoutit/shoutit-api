@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from rest_framework import permissions, viewsets, status, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response

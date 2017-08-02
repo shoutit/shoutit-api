@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import uuid
 from json import JSONEncoder
 
@@ -73,7 +71,7 @@ def __getstate__(self):
     request = {
         'path': self.path,
         'method': self.method,
-        'META': {k: v for k, v in self.META.items() if isinstance(v, basestring)},  # keep string keys only
+        'META': {k: v for k, v in self.META.items() if isinstance(v, str)},  # keep string keys only
         'user': self.user,
     }
     return {'request': request, 'version': self.version, 'versioning_scheme': self.versioning_scheme}
