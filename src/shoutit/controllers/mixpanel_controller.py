@@ -92,6 +92,7 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             '$country_code': ap.country,
             '$region': ap.state,
             '$city': ap.city,
+            'language': user.language,
 
             '$email': user.email,
             'platforms': [c.replace('shoutit-', '') for c in user.api_client_names],
