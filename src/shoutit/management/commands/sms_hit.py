@@ -26,7 +26,8 @@ class Command(BaseCommand):
         status = options['status']
         code = options['code']
         countries = options['countries'].split(',')
-        sms_invitations = SMSInvitation.objects.filter(status=status, country__in=countries)[:count]
+        sms_invitations = SMSInvitation.objects.filter(status=status,
+                                                       country__in=countries).order_by('modified_at')[:count]
 
         orig_app_link = 'shoutit.com/app'
         if code:
@@ -43,7 +44,7 @@ class Command(BaseCommand):
             return
 
         all_ids = [s.id for s in sms_invitations]
-        SMSInvitation.objects.filter(id__in=all_ids).update(status=SMS_INVITATION_QUEUED)
+        SMSInvitation.objects.filter(id__in=all_ids).update(status=SMS_INVITATION_QUEUED, modified_at=now())
         sent = []
         for sms_invitation in sms_invitations:
             try:
@@ -72,11 +73,11 @@ class Command(BaseCommand):
                 self.stderr.write("Error sending: %s" % e)
 
         if sent:
-            SMSInvitation.objects.filter(id__in=sent).update(status=SMS_INVITATION_SENT)
+            SMSInvitation.objects.filter(id__in=sent).update(status=SMS_INVITATION_SENT, modified_at=now())
             self.stdout.write("Successfully sent %s sms invitations" % len(sent))
         errors = list(set(all_ids) - set(sent))
         if errors:
-            SMSInvitation.objects.filter(id__in=errors).update(status=SMS_INVITATION_ERROR)
+            SMSInvitation.objects.filter(id__in=errors).update(status=SMS_INVITATION_ERROR, modified_at=now())
             self.stderr.write("Error sending %s sms invitations" % len(errors))
 
         self.stdout.write("Done")

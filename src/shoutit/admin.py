@@ -89,8 +89,8 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
         (_('Extra'), {'fields': ('_devices', '_messaging')}),
     )
     list_filter = (
-    'type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
-    'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
+        'type', UserEmailFilter, APIClientFilter, ('created_at', ShoutitDateFieldListFilter), UserDeviceFilter,
+        'is_activated', 'is_active', 'is_test', 'is_guest', 'is_staff', 'is_superuser')
     readonly_fields = ('type', '_devices', '_messaging', '_profile')
     ordering = ('-created_at',)
     form = CustomUserChangeForm
@@ -576,8 +576,9 @@ class SMSInvitationAdminForm(forms.ModelForm):
 
 @admin.register(SMSInvitation)
 class SMSInvitationAdmin(admin.ModelAdmin, UserLinkMixin):
-    list_display = ('id', 'status', 'country', 'mobile', 'category', '_user', 'created_at')
-    list_filter = ('status', 'country', 'category', ('created_at', ShoutitDateFieldListFilter))
+    list_display = ('id', 'status', 'country', 'mobile', 'category', '_user', 'created_at', 'modified_at')
+    list_filter = ('status', 'country', 'category', ('created_at', ShoutitDateFieldListFilter),
+                   ('modified_at', ShoutitDateFieldListFilter))
     search_fields = ('mobile',)
     raw_id_fields = ('user',)
     ordering = ('-created_at',)

@@ -43,13 +43,13 @@ class SMSViewSet(UUIDViewSetMixin, mixins.RetrieveModelMixin, mixins.CreateModel
         periods = [(1, 'day'), (7, 'week'), (30, 'month')]
         if countries == ['']:
             month_ago = today_eod - timedelta(days=periods[-1][0])
-            countries = list(SMSInvitation.objects.filter(created_at__gt=month_ago)
+            countries = list(SMSInvitation.objects.filter(modified_at__gt=month_ago)
                              .values_list('country', flat=True).distinct())
         statuses = SMSInvitationStatus.choices + ((None, 'total'),)
 
         def _status_summary(sms_status, days):
-            created = today_eod - timedelta(days=days)
-            invitations_qs = SMSInvitation.objects.filter(country__in=countries, created_at__gt=created)
+            modified_at = today_eod - timedelta(days=days)
+            invitations_qs = SMSInvitation.objects.filter(country__in=countries, modified_at__gt=modified_at)
             if sms_status is not None:
                 invitations_qs = invitations_qs.filter(status=sms_status)
             invitations = invitations_qs.values('country').annotate(count=Count('country'))
