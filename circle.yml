@@ -34,21 +34,18 @@ deployment:
   deploy-dev:
     branch: dev
     commands:
-      - cd src/configs; git init; git remote add origin git@github.com:shoutit/shoutit-api-configs.git; git fetch; git checkout -t origin/master
       - docker build --rm=false -t shoutit/shoutit-api:dev .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:dev
   deploy-prod:
     branch: prod
     commands:
-      - cd src/configs; git init; git remote add origin git@github.com:shoutit/shoutit-api-configs.git; git fetch; git checkout -t origin/master
       - docker build --rm=false -t shoutit/shoutit-api:prod .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:prod
   deploy-tag:
     tag: /v[0-9]+(\.[0-9]+)*/
     commands:
-      - cd src/configs; git init; git remote add origin git@github.com:shoutit/shoutit-api-configs.git; git fetch; git checkout -t origin/master
       - docker build --rm=false -t shoutit/shoutit-api:$CIRCLE_TAG .
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push shoutit/shoutit-api:$CIRCLE_TAG
