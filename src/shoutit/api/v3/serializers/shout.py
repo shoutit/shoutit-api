@@ -216,9 +216,9 @@ class ShoutDetailSerializer(ShoutSerializer):
 
         if not shout:
             case_1 = shout_type is POST_TYPE_REQUEST and title
-            case_2 = shout_type is POST_TYPE_OFFER and (title or images or videos)
+            case_2 = shout_type is POST_TYPE_OFFER and (images or videos)
             if not (case_1 or case_2):
-                raise serializers.ValidationError(_("You didn't provide enough information for creating a shout"))
+                raise serializers.ValidationError({'': _("You didn't provide enough information for creating a shout")})
             shout = shout_controller.create_shout(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency, mobile=mobile,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,

@@ -217,7 +217,7 @@ class ProfileDetailSerializer(ProfileSerializer):
         if has_video and isinstance(video_data, OrderedDict):
             vs = VideoSerializer(data=video_data)
             if not vs.is_valid():
-                raise serializers.ValidationError({['video']: vs.errors})
+                raise serializers.ValidationError({'video': vs.errors})
 
         return validated_data
 

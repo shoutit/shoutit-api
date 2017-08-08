@@ -83,8 +83,6 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         errors = OrderedDict()
 
         if not text and not attachments:
-            # Todo: check why having string as the detail results in exception
-            # raise serializers.ValidationError("Provide 'text' or 'attachments'")
             raise serializers.ValidationError({'': _("Provide 'text' or 'attachments'")})
         if attachments is not None:
             if isinstance(attachments, list) and len(attachments):

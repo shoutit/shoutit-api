@@ -124,7 +124,7 @@ class CategorySerializer(TranslatableModelSerializer):
         try:
             self.instance = Category.objects.get(slug=slug)
         except (Category.DoesNotExist, AttributeError):
-            raise serializers.ValidationError(_("Category with slug '%(slug)s' does not exist") % {'value': slug})
+            raise serializers.ValidationError(_("Category with slug '%(slug)s' does not exist") % {'slug': slug})
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)

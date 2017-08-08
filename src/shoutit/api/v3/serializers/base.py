@@ -51,7 +51,8 @@ class LocationSerializer(serializers.Serializer):
             # Get location attributes using IP
             location = location_controller.from_ip(ip, use_location_index=True)
         else:
-            raise serializers.ValidationError(_("Could not find (`latitude` and `longitude`) or figure the IP Address"))
+            raise serializers.ValidationError(
+                {'': _("Could not find (`latitude` and `longitude`) or figure the IP Address")})
 
         if address:
             location.update({'address': address})
@@ -68,7 +69,7 @@ class PushTokensSerializer(serializers.Serializer):
         apns = ret.get('apns')
         gcm = ret.get('gcm')
         if apns and gcm:
-            raise serializers.ValidationError(_("Only one of `apns` or `gcm` is required not both"))
+            raise serializers.ValidationError({'': _("Only one of `apns` or `gcm` is required not both")})
         return ret
 
 

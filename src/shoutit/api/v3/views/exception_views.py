@@ -122,9 +122,9 @@ def process_validation_dict_errors(detail, parent_key='', sep='.'):
                 continue
 
             # List with single tuple ([message], reason)
-            # raising such exception *inside* a field or serializer
+            # raising such exception *inside* a field
             # raise ValidationError((["Only one of `apns` or `gcm` is required not both"], 'required'))
-            # or more complicated *outside* fields or serializers
+            # or more complicated *outside* fields
             # raise ValidationError({'field': [(["Error message"], 'invalid')]})
             elif len(value) == 1 and isinstance(value[0], tuple):
                 error_message, error_reason = value[0]
