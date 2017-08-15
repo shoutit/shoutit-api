@@ -21,8 +21,8 @@ django==1.8.17
 djangorestframework-oauth==1.1.0
 djangorestframework==3.4.3
 drf-extensions==0.3.1
-elasticsearch-dsl==2.2.0
-elasticsearch==2.4.0
+elasticsearch-dsl==5.3.0
+elasticsearch==5.4.0
 git+https://github.com/mochawich/django-oauth2-provider@master3
 google-api-python-client==1.6.2
 httplib2==0.9.2

@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from django_pgjson.fields import JsonField
 from django_rq import job
 from elasticsearch import NotFoundError, ConflictError
-from elasticsearch_dsl import DocType, String, GeoPoint
+from elasticsearch_dsl import DocType, Keyword, GeoPoint
 from pydash import arrays
 
 from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED, DeviceOS
@@ -78,13 +78,13 @@ class GoogleLocation(LocationMixin, UUIDModel):
 
 
 class LocationIndex(DocType):
-    source = String(index='not_analyzed')
+    source = Keyword()
     location = GeoPoint()
-    country = String(index='not_analyzed')
-    postal_code = String(index='not_analyzed')
-    state = String(index='not_analyzed')
-    city = String(index='not_analyzed')
-    address = String(index='not_analyzed')
+    country = Keyword()
+    postal_code = Keyword()
+    state = Keyword()
+    city = Keyword()
+    address = Keyword()
 
     class Meta:
         index = '%s_location' % settings.ES_BASE_INDEX

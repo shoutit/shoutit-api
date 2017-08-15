@@ -8,7 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from elasticsearch_dsl import DocType, String, Date, Double, Integer, Long, Boolean, Object, MetaField
+from elasticsearch_dsl import DocType, Text, Keyword, Date, Double, Integer, Long, Boolean, Object, MetaField
 
 from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
@@ -230,16 +230,16 @@ class InactiveShout(object):
 
 class ShoutIndex(DocType):
     # indexed
-    type = String(index='not_analyzed')
-    title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
-    text = String(analyzer='snowball')
-    tags = String(index='not_analyzed')
+    type = Keyword()
+    title = Text(analyzer='snowball', fields={'raw': Keyword()})
+    text = Text(analyzer='snowball')
+    tags = Keyword()
     filters = Object()
-    category = String(index='not_analyzed')
-    country = String(index='not_analyzed')
-    postal_code = String(index='not_analyzed')
-    state = String(index='not_analyzed')
-    city = String(index='not_analyzed')
+    category = Keyword()
+    country = Keyword()
+    postal_code = Keyword()
+    state = Keyword()
+    city = Keyword()
     latitude = Double()
     longitude = Double()
     price = Long()
@@ -247,16 +247,16 @@ class ShoutIndex(DocType):
     available_count = Integer()
     is_sold = Boolean()
     is_muted = Boolean()
-    uid = String(index='not_analyzed')
-    username = String(index='not_analyzed')
+    uid = Keyword()
+    username = Keyword()
     published_at = Date()
     expires_at = Date()
 
     # todo: should not be analysed or indexed
-    currency = String(index='not_analyzed')
-    address = String(index='not_analyzed')
-    thumbnail = String(index='not_analyzed')
-    video_url = String(index='not_analyzed')
+    currency = Keyword()
+    address = Keyword()
+    thumbnail = Keyword()
+    video_url = Keyword()
 
     is_sss = Boolean()
     priority = Integer()
@@ -278,8 +278,8 @@ class ShoutIndex(DocType):
                 "filters_string_keys": {
                     "path_match": "filters.*",
                     "mapping": {
-                        "type": "string",
-                        "index": "not_analyzed"
+                        "type": "keyword",
+                        "index": "true"
                     }
                 }
             }
