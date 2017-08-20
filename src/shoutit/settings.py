@@ -91,7 +91,7 @@ ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
             Caching
 =================================
 """
-REDIS_PORT = os.environ.get('REDIS_PORT').replace('tcp', 'redis')
+REDIS_PORT = os.environ.get('REDIS_PORT', 'tcp://localhost:6379').replace('tcp', 'redis')
 
 
 def default_redis_conf(db=0):

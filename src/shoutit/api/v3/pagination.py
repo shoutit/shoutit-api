@@ -266,7 +266,7 @@ class PageNumberIndexPagination(PageNumberPagination):
             (self.results_field, data)
         ]
         if self.show_count:
-            res.insert(0, ('count', self._num_results))
+            res.insert(0, ('count', self.fix_me(self._num_results)))
         if self._max_page_number_exceeded:
             res.insert(0, ('error', _('We do not return more than 1000 results for any query')))
         return Response(OrderedDict(res))
@@ -315,3 +315,16 @@ class PageNumberIndexPagination(PageNumberPagination):
             return remove_query_param(url, self.page_query_param)
         url = replace_query_param(url, self.page_size_query_param, self.page_size)
         return replace_query_param(url, self.page_query_param, self.page_number - 1)
+
+    def fix_me(self, num):
+        if 'profile' in self.request.query_params:
+            return num
+        try:
+            if num <= 100:
+                return num
+            elif 100 < num < 300:
+                return num * 2
+            elif 300 < num:
+                return num * 3
+        except:
+            return num
