@@ -10,7 +10,7 @@ from datetime import timedelta
 import dotenv
 from django.utils.translation import ugettext_lazy as _
 
-from common.utils import get_address_port, strtobool
+from src.common.utils import get_address_port, strtobool
 from config import load_env
 
 """
@@ -19,6 +19,7 @@ from config import load_env
 =================================
 """
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+API_DIR = os.path.dirname(SRC_DIR)
 SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
 
 # Read env variables from .env file based on `SHOUTIT_ENV`
@@ -304,7 +305,7 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join('/var', 'static')
+    STATIC_ROOT = os.path.join(API_DIR, 'static')
     if not os.path.exists(STATIC_ROOT):
         os.makedirs(STATIC_ROOT)
 
@@ -357,7 +358,7 @@ NEXMO_API_KEY = "7c650639"
 NEXMO_API_SECRET = "4ee98397"
 
 # IP2Location
-IP2LOCATION_DB_BIN = os.path.join('/opt', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
+IP2LOCATION_DB_BIN = os.path.join(API_DIR, 'meta', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
 
 # AntiCaptcha
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
@@ -379,7 +380,7 @@ GOOGLE_WEB_CLIENT = os.path.join(SRC_DIR, 'assets', 'google-web-client.json')
             Mail
 =================================
 """
-LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
+LOG_DIR = os.path.join(API_DIR, 'log', 'shoutit-api-' + SHOUTIT_ENV)
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 

@@ -8,3 +8,6 @@ circle.yml
 *.coverage
 .cache
 __pycache__
+log
+meta
+static
