@@ -20,7 +20,7 @@ from config import load_env
 """
 SRC_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 API_DIR = os.path.dirname(SRC_DIR)
-SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
+SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'development')
 
 # Read env variables from .env file based on `SHOUTIT_ENV`
 load_env(env_name=SHOUTIT_ENV)
@@ -508,7 +508,7 @@ RAVEN_CONFIG = {
 USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
 
-# Disable Sentry while on (local) development or when running py.test
+# Disable Sentry while on development or when running py.test
 if DEBUG and not USE_SENTRY:
     INSTALLED_APPS.remove('raven.contrib.django.raven_compat')
 
@@ -625,15 +625,15 @@ LOGGING = {
         },
     },
     'loggers': {
-        # 'django': {
-        #     'handlers': ['console_out', 'console_err', 'sentry'],
-        #     'level': 'DEBUG',
-        #     'propagate': False,
-        # },
-        # 'py.warnings': {
-        #     'handlers': ['console_err', 'sentry'],
-        #     'propagate': False,
-        # },
+        'django': {
+            'handlers': ['console_out', 'console_err', 'sentry'],
+            'level': 'DEBUG' if DEBUG else 'WARNING',
+            'propagate': False,
+        },
+        'py.warnings': {
+            'handlers': ['console_err', 'sentry'],
+            'propagate': False,
+        },
         'raven': {
             'level': 'WARNING',
             'handlers': ['sentry_file'],
@@ -644,11 +644,11 @@ LOGGING = {
             'handlers': ['sentry_file'],
             'propagate': False,
         },
-        # 'gunicorn': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['console_out', 'console_err', 'sentry'],
-        #     'propagate': False,
-        # },
+        'gunicorn': {
+            'level': 'DEBUG' if DEBUG else 'WARNING',
+            'handlers': ['console_out', 'console_err', 'sentry'],
+            'propagate': False,
+        },
         # 'requests': {
         # 'level': 'DEBUG',
         # 'handlers': ['console_out', 'console_err', 'sentry'],
@@ -683,9 +683,10 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False
         },
-        # '': {
-        #     'handlers': ['console_out', 'console_err', 'sentry'],
-        # },
+        '': {
+            'level': 'DEBUG' if DEBUG else 'WARNING',
+            'handlers': ['console_out', 'console_err', 'sentry'],
+        },
     }
 }
 

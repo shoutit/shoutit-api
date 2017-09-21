@@ -30,9 +30,9 @@ def load_env(env_name, ansible_vault_pass=None, raise_errors=False):
     environment variable or ``ansible_vault_pass`` param should be set to the phrase used to encrypt the .env file.
 
     Usage:
-    `load_env(env_name='LOCAL')`
+    `load_env(env_name='LIVE')`
 
-    This will look for `local.env` to load environment variables from.
+    This will look for `live.env` to load environment variables from.
 
     :param str env_name: environment name
     :param str ansible_vault_pass: Ansible Vault password to decrypt the env file in case it is encrypted

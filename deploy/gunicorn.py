@@ -1,9 +1,9 @@
 import multiprocessing
 import os
 
-SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
+SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'development')
 
-if SHOUTIT_ENV.lower() in ['local', 'dev']:
+if SHOUTIT_ENV.lower() in ['development', 'stage']:
     workers = 1
     timeout = 5 * 60
 else:
