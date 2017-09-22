@@ -92,13 +92,14 @@ ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
             Caching
 =================================
 """
-REDIS_PORT = os.environ.get('REDIS_PORT', 'tcp://localhost:6379').replace('tcp', 'redis')
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get('REDIS_PORT')
 
 
 def default_redis_conf(db=0):
     return {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "%s/%s" % (REDIS_PORT, str(db)),
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{db}",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
