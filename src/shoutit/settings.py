@@ -7,7 +7,6 @@ import os
 import sys
 from datetime import timedelta
 
-import dotenv
 from django.utils.translation import ugettext_lazy as _
 
 from src.common.utils import get_address_port, strtobool

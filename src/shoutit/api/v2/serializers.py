@@ -764,9 +764,8 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                                    'latitude' not in attachment['location'] or 'longitude' not in attachment[
-                                'location']):
+                    if 'location' in attachment \
+                            and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"

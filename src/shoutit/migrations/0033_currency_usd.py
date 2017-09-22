@@ -10,7 +10,7 @@ from shoutit.models import Currency, Item
 def set_usd_rates(apps, schema_editor):
     # Get and update currencies
     aed = Currency.objects.get(country='AE', code='AED').update(usd=0.27225)
-    usd = Currency.objects.get(country='US', code='USD').update(usd=1.00000)
+    Currency.objects.get(country='US', code='USD').update(usd=1.00000)
     eur = Currency.objects.get(country='DE', code='EUR').update(usd=1.14247)
     egp = Currency.objects.get(country='EG', code='EGP').update(usd=0.05444)
     gbp = Currency.objects.get(country='GB', code='GBP').update(usd=1.30278)

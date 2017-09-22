@@ -7,7 +7,6 @@ import responses
 from django_dynamic_fixture import G, F
 from django.contrib.auth import get_user_model
 from django.test import override_settings
-from django.utils.http import urlencode
 from push_notifications import apns
 
 from shoutit.models import (

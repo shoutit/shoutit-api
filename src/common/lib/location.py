@@ -6,7 +6,6 @@ if sys.version < '3':
     def u(x):
         return x.decode('utf-8')
 
-
     def b(x):
         return str(x)
 else:
@@ -14,7 +13,6 @@ else:
         if isinstance(x, bytes):
             return x.decode()
         return x
-
 
     def b(x):
         if isinstance(x, bytes):
@@ -36,7 +34,6 @@ if not hasattr(socket, 'inet_pton'):
         if n == 0:
             raise ValueError('Invalid address')
         return out_addr_p.raw
-
 
     socket.inet_pton = inet_pton
 
