@@ -1,10 +1,10 @@
-version: '2'
+version: '3'
 services:
   api:
     build: .
     ports:
       - 8001:8001
-    command: dockerize -wait tcp://es:9200 gunicorn src.wsgi -c deploy/gunicorn.py
+    command: dockerize -wait tcp://es:9200 -timeout 20s gunicorn src.wsgi -c deploy/gunicorn.py
     links:
       - es:es
       - redis:redis
