@@ -15,7 +15,7 @@ services:
     build:
       context: .
     image: "shoutit-api:test-${BUILD_TAG:-development}"
-    command: dockerize -wait tcp://es:9200 -timeout 20s py.test
+    command: dockerize -wait tcp://es:9200 -timeout 30s py.test
     environment:
       SHOUTIT_ENV: TESTING
     links:
