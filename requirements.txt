@@ -57,7 +57,7 @@ gunicorn==19.7.1
 newrelic==2.86.3.70
 setproctitle==1.1.10
 
-# Test
+# Testing
 codeclimate-test-reporter
 coverage==4.3.4
 django-dynamic-fixture==1.9.5
