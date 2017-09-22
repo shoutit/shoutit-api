@@ -85,7 +85,7 @@ workflows:
             tags:
               only: /.*/
       # Push docker image only on stage and release tags
-      - deploy_all:
+      - deploy:
           requires:
             - build
           filters:
