@@ -26,15 +26,9 @@ jobs:
           exclusive: true
 
       - run:
-          name: Build test docker image
-          command: |
-            echo $BUILD_TAG > BUILD_TAG
-            docker-compose --file docker-compose.test.yml build
-
-      - run:
           name: Run tests
           command: |
-            docker-compose --file docker-compose.test.yml up --abort-on-container-exit
+            docker-compose --file docker-compose.test.yml up --build --abort-on-container-exit
   deploy:
     <<: *defaults
     steps:
@@ -48,6 +42,12 @@ jobs:
       - setup_remote_docker:
           reusable: true
           exclusive: true
+
+      - run:
+          name: Build test docker image
+          command: |
+            echo $BUILD_TAG > BUILD_TAG
+            docker-compose --file docker-compose.test.yml build
 
       # Docker image tags are based on GitHub tag or branch
       #
