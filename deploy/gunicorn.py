@@ -1,13 +1,13 @@
 import multiprocessing
 import os
 
-SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'local')
+SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'development')
 
-if SHOUTIT_ENV.lower() in ['local', 'dev']:
+if SHOUTIT_ENV.lower() in ['development', 'stage']:
     workers = 1
     timeout = 5 * 60
 else:
-    workers = multiprocessing.cpu_count() * 2 + 1
+    workers = 4
     max_requests = 1000
     timeout = 60
 

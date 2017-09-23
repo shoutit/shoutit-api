@@ -15,7 +15,7 @@
       "http://localhost:3000",
       "https://stage.www.shoutit.com",
       "https://beta.www.shoutit.com",
-      "http://www.shoutit.local:3000"
+      "http://local.www.shoutit.com:3000"
     ]
   }
 }

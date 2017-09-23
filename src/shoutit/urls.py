@@ -30,7 +30,7 @@ urlpatterns = [
 ]
 
 # serving static files while developing locally using gunicorn
-if settings.GUNICORN and settings.SHOUTIT_ENV == 'local':
+if settings.GUNICORN and settings.SHOUTIT_ENV == 'development':
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
     urlpatterns += staticfiles_urlpatterns()
