@@ -83,7 +83,9 @@ FORCE_SSS_NOTIFY = False
 """
 ES_HOST = os.environ.get('ES_HOST')
 ES_PORT = os.environ.get('ES_PORT')
-ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
+if ES_PORT and 'tcp' in ES_PORT:
+    ES_PORT = ES_PORT.split(':')[-1]
+ES_URL = f"{ES_HOST}:{ES_PORT}"
 ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
 
 """
@@ -93,6 +95,8 @@ ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
 """
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
+if REDIS_PORT and 'tcp' in REDIS_PORT:
+    REDIS_PORT = REDIS_PORT.split(':')[-1]
 
 
 def default_redis_conf(db=0):
