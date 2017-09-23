@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 
 SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'development')
