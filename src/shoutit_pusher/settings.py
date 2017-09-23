@@ -13,11 +13,11 @@ SHOUTIT_PUSHER_SETTINGS = {
 }
 PUSHER_ENV = settings.PUSHER_ENV
 
-if PUSHER_ENV == 'prod':
+if PUSHER_ENV == 'live':
     SHOUTIT_PUSHER_SETTINGS["app_id"] = "121664"
     SHOUTIT_PUSHER_SETTINGS["key"] = "86d676926d4afda44089"
     SHOUTIT_PUSHER_SETTINGS["secret"] = "e7ef2a69a659f642fe0b"
-elif PUSHER_ENV == 'dev':
+elif PUSHER_ENV == 'stage':
     SHOUTIT_PUSHER_SETTINGS["app_id"] = "193632"
     SHOUTIT_PUSHER_SETTINGS["key"] = "7bee1e468fabb6287fc5"
     SHOUTIT_PUSHER_SETTINGS["secret"] = "727dcefd63d526113aa5"
