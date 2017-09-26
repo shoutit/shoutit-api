@@ -449,7 +449,7 @@ class ProfileHomeTestCase(DetailMixin, BaseTestCase):
             item=F(name='Reno'), country='US')
         cls.shout3.tags.add(cls.tag2)
         cls.shout3.save()
-        cls.refresh_elasticsearch_index(index='*')
+        cls.refresh_elasticsearch_index('*')
 
     def test_profile_home_unknown(self):
         resp = self.client.get(self.get_url('unknown'))

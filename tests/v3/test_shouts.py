@@ -1,30 +1,27 @@
 # -*- coding: utf-8 -*-
 from django.utils.timezone import now, timedelta
-
 from django_dynamic_fixture import G, N
-from elasticsearch.helpers import bulk
 from mock import patch
 
-from shoutit.controllers.shout_controller import shout_index_from_shout
+from common.constants import DEFAULT_LOCATION
 from shoutit.models import Category, Message, Shout, Tag
 from shoutit_credit.models import CreditTransaction, PromoteShouts
-from shoutit import ES
 from tests.base import BaseTestCase
 
 
 class BaseShoutTestCase(BaseTestCase):
     longMessage = True
 
+    # Todo (Nour): Use shout_controller.create_shout instead. Creating shouts is complicated and should not be mimicked.
     @classmethod
     def setup_shout(cls):
         if not hasattr(cls, 'user'):
             cls.user = cls.create_user()
         cls.category = Category.objects.get(slug='collectibles')
-        cls.shout = cls.create_shout(
-            user=cls.user, category=cls.category, title='Foobar')
+        cls.shout = cls.create_shout(user=cls.user, category=cls.category, title='Foobar')
         cls.tags = []
-        for i in range(0, 3):
-            tag = G(Tag, slug='tag-{0}'.format(i), name='Tag {0}'.format(i))
+        for slug in ['blue', 'old', 'metal']:
+            tag = G(Tag, slug=slug, name=slug.capitalize())
             cls.tags.append(tag)
             cls.shout.tags.add(tag)
 
@@ -53,7 +50,9 @@ class ShoutCreateTestCase(BaseShoutTestCase):
             "currency": "EUR",
             "available_count": 1,
             "is_sold": False,
-            "images": [],
+            "images": [
+                "https://shout-image.static.shoutit.com/1506323989994_bed63730-6107-420b-8996-36d0ce3c1c96.jpg"
+            ],
             "videos": [],
             "category": {
                 "slug": "collectibles"
@@ -94,30 +93,24 @@ class ShoutListTestCase(BaseShoutTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.delete_elasticsearch_index('*')
         cls.setup_shout()
         cls.refresh_elasticsearch_index('*')
-        shout_index_dicts = []
-        shout_index_dicts.append(shout_index_from_shout(cls.shout).to_dict(True))
-        bulk(ES, shout_index_dicts, chunk_size=1, raise_on_error=False, raise_on_exception=False)
 
     def test_shout_list(self):
         shout_count = Shout.objects.count()
         resp = self.client.get(self.reverse(self.url_name))
         self.assert200(resp)
         self.assertEqual(
-            len(self.decode_json(resp).get('results', [])),
             shout_count,
+            len(self.decode_json(resp).get('results', [])),
             msg='There should be {0} Shout in the results.'.format(shout_count)
         )
-        # TODO the count returns as 5 even though there's only 1 shout in the results and no other pages
-        # self.assertEqual(
-        #     int(self.decode_json(resp).get('count', 0)),
-        #     shout_count,
-        #     msg='The returned count returned in the response should be {0}. {1}'.format(shout_count, resp)
-        # )
-
-    def tearDown(self):
-        self.delete_elasticsearch_index('*', refresh=False)
+        self.assertEqual(
+            int(self.decode_json(resp).get('count', 0)),
+            shout_count,
+            msg='The returned count returned in the response should be {0}. {1}'.format(shout_count, resp)
+        )
 
 
 class ShoutAutocompleteTestCase(BaseShoutTestCase):
@@ -222,7 +215,7 @@ class ShoutDetailTestCase(BaseShoutTestCase):
         self.assert200(resp)
         self.assertEqual(
             self.decode_json(resp).get('id', ''),
-            unicode(self.shout.id),
+            str(self.shout.id),
             msg='The response should return the requested shout. {0}'.format(resp)
         )
 
@@ -384,43 +377,28 @@ class ShoutRelatedTestCase(BaseShoutTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.setup_shout()
-        cls.user2 = cls.create_user(
-            username='user2',
-            first_name='user',
-        )
-        cls.shout2 = cls.create_shout(
-            user=cls.user, category=cls.category, title='Foobar 2')
-        for tag in cls.tags:
-            cls.shout2.tags.add(tag)
+        cls.delete_elasticsearch_index('*')
+        user = cls.create_user()
+        category = Category.objects.get(slug='services')
+        cls.shout1 = cls.create_shout2(user=user, shout_type=0, title='Pets Service 1', text='', price=None,
+                                       currency=None, category=category, location=DEFAULT_LOCATION)
+        cls.shout2 = cls.create_shout2(user=user, shout_type=0, title='Pets Service 2', text='', price=None,
+                                       currency=None, category=category, location=DEFAULT_LOCATION)
         cls.refresh_elasticsearch_index('*')
-        shout_index_dicts = []
-        shout_index_dicts.append(shout_index_from_shout(cls.shout).to_dict(True))
-        shout_index_dicts.append(shout_index_from_shout(cls.shout2).to_dict(True))
-        bulk(ES, shout_index_dicts, chunk_size=2, raise_on_error=False, raise_on_exception=False)
-
-    def test_shout_related_unauth_unknown(self):
-        resp = self.client.get(self.reverse(self.url_name, kwargs={'id': 1}))
-        self.assert400(resp)
 
     def test_shout_related_auth(self):
-        self.login(self.user2)
-        resp = self.client.get(self.get_shout_url())
+        resp = self.client.get(self.reverse(self.url_name, kwargs={'id': self.shout1.id}))
         self.assert200(resp)
-        return  # TODO not sure, why it doesn't return anything. Shouts should be almost the same and method to index is same as on list page (where it works)
         self.assertEqual(
-            len(self.decode_json(resp).get('results', [])),
             1,
+            len(self.decode_json(resp)['results']),
             msg='There should be one shout in the results. {0}'.format(resp)
         )
         self.assertEqual(
-            len(self.decode_json(resp).get('results', {'id': ''}).get('id')),
-            self.shout2.id,
+            str(self.shout2.id),
+            self.decode_json(resp)['results'][0].get('id'),
             msg='The related shout should be in the results'
         )
-
-    def tearDown(self):
-        self.delete_elasticsearch_index('*', refresh=False)
 
 
 class ShoutReplyTestCase(BaseShoutTestCase):
