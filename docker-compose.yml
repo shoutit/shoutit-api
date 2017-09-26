@@ -36,3 +36,6 @@ volumes:
   esdata:
     driver: local
 
+# To run es and redis services only
+# docker-compose run -d --service-ports --name shoutit-api-es es
+# docker-compose run -d --service-ports --name shoutit-api-redis redis
