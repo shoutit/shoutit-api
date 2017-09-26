@@ -53,6 +53,7 @@ from shoutit.controllers import shout_controller  # NOQA
 
 
 class BaseTestCase(APITestCase):
+    longMessage = True
     url_namespace = 'v3'
     default_password = 'test123'
     default_username = 'ivan'
