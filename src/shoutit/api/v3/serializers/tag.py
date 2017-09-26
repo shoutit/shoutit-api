@@ -22,7 +22,10 @@ class MiniTagSerializer(TranslatableModelSerializer):
     def compat_name(self, ret):
         request = self.context['request']
         from_web = request.agent == 'web'
-        ios_condition = request.agent == 'ios' and request.build_no >= 22312
+        ios_condition = (
+            (request.agent == 'ios' and request.app_verison is None and request.build_no >= 22312) or
+            (request.agent == 'ios' and request.app_verison is not None)
+        )
         android_condition = request.agent == 'android' and request.build_no >= 1450
         if not any([from_web, ios_condition, android_condition]):
             ret['name'] = ret['slug']

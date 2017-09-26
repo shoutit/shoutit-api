@@ -25,7 +25,10 @@ def serializer_compat(view_set):
     # Use ConversationSerializer for web and newer mobile clients
     request = view_set.request
     from_web = request.agent == 'web'
-    ios_condition = request.agent == 'ios' and request.build_no >= 1378
+    ios_condition = (
+        (request.agent == 'ios' and request.app_version is None and request.build_no >= 1378) or
+        (request.agent == 'ios' and request.app_version is not None)
+    )
     android_condition = request.agent == 'android' and request.build_no >= 1474
     if any([from_web, ios_condition, android_condition]):
         view_set.serializer_class = ConversationSerializer

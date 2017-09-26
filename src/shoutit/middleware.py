@@ -23,25 +23,42 @@ class AgentMiddleware(object):
         """
         Add information about the request using the its user-agent
         """
+        # Todo: Simplify
         user_agent = str(request.META.get('HTTP_USER_AGENT', '').encode('utf8'))
         if 'com.shoutit-iphone' in user_agent or 'com.appunite.shoutit' in user_agent:
             agent = 'ios'
-            build_no_re = re.search('.*(com.shoutit-iphone|com.appunite.shoutit).*\((\d+);', user_agent)
-            build_no = build_no_re.groups()[1] if build_no_re else 0
+            if 'Alamofire' in user_agent:
+                info_re = re.search('.*/([\d.]+) \(.*; build:(\d+); iOS ([\d.]+)\) Alamofire/([\d.]+)', user_agent)
+                app_version = info_re.groups()[0] if info_re else None
+                build_no = info_re.groups()[1] if info_re else 0
+                os_version = info_re.groups()[2] if info_re else None
+            else:
+                info_re = re.search('.*(com.shoutit-iphone|com.appunite.shoutit).*\((\d+);', user_agent)
+                app_version = None
+                build_no = info_re.groups()[1] if info_re else 0
+                os_version = None
         elif 'com.shoutit.app.android' in user_agent:
             agent = 'android'
-            build_no_re = re.search('com.shoutit.app.android.*\((\d+);', user_agent)
-            build_no = build_no_re.groups()[0] if build_no_re else 0
+            info_re = re.search('com.shoutit.app.android.*\((\d+);', user_agent)
+            app_version = None
+            build_no = info_re.groups()[0] if info_re else 0
+            os_version = None
         elif 'shoutit-web' in user_agent:
             agent = 'web'
-            build_no_re = re.search('shoutit-web \(.+; .+; .+; release-(\d+).*\)', user_agent)
-            build_no = build_no_re.groups()[0] if build_no_re else 0
+            info_re = re.search('shoutit-web \(.+; .+; .+; release-(\d+).*\)', user_agent)
+            app_version = None
+            build_no = info_re.groups()[0] if info_re else 0
+            os_version = None
         else:
             agent = None
+            app_version = None
             build_no = 0
+            os_version = None
 
         request.agent = agent
+        request.app_version = app_version
         request.build_no = int(build_no)
+        request.os_version = os_version
 
 
 class BadRequestsMiddleware(object):

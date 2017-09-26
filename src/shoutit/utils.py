@@ -128,7 +128,9 @@ def create_fake_request(version):
     request.version = version
     request.versioning_scheme = ShoutitNamespaceVersioning()
     request.agent = None
+    request.app_version = ''
     request.build_no = 0
+    request.os_version = ''
     return request
 
 

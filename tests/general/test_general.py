@@ -1,3 +1,8 @@
+from collections import namedtuple
+
+from mock import Mock
+
+from shoutit.middleware import AgentMiddleware
 from tests.base import BaseTestCase
 
 
@@ -50,3 +55,22 @@ class GeneralTestCase(BaseTestCase):
                                 'TkSuQmCC')
         image = Image.open(BytesIO(data))
         assert pytesseract.image_to_string(image) == '+971523244067'
+
+
+class MiddlewaresTestCase(BaseTestCase):
+    def test_agent_middleware(self):
+        # Todo: Add more cases
+        AgentCase = namedtuple('AgentCase', ['user_agent', 'app_version', 'build_no', 'os_version'])
+        test_cases = [
+            AgentCase('Shoutit Staging/3.0.3 (com.appunite.shoutit; build:44000; iOS 9.3.0) Alamofire/4.5.0',
+                      app_version='3.0.3', build_no=44000, os_version='9.3.0'),
+            AgentCase('Shoutit Staging/com.appunite.shoutit (22000; OS Version 9.3.2 (Build 13F69))',
+                      app_version='', build_no=22000, os_version=''),
+        ]
+        for case in test_cases:
+            request = Mock()
+            request.META = {'HTTP_USER_AGENT': case.user_agent}
+            AgentMiddleware.process_request(request)
+            assert request.app_version == case.app_version
+            assert request.build_no == case.build_no
+            assert request.os_version == case.os_version
