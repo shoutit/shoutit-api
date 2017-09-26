@@ -2,7 +2,6 @@ from collections import namedtuple
 
 from mock import Mock
 
-from shoutit.middleware import AgentMiddleware
 from tests.base import BaseTestCase
 
 
@@ -59,13 +58,16 @@ class GeneralTestCase(BaseTestCase):
 
 class MiddlewaresTestCase(BaseTestCase):
     def test_agent_middleware(self):
+        # Todo: Can not import AgentMiddleware globally as it leads to issue with post_save signals
+        from shoutit.middleware import AgentMiddleware
+
         # Todo: Add more cases
         AgentCase = namedtuple('AgentCase', ['user_agent', 'app_version', 'build_no', 'os_version'])
         test_cases = [
             AgentCase('Shoutit Staging/3.0.3 (com.appunite.shoutit; build:44000; iOS 9.3.0) Alamofire/4.5.0',
                       app_version='3.0.3', build_no=44000, os_version='9.3.0'),
             AgentCase('Shoutit Staging/com.appunite.shoutit (22000; OS Version 9.3.2 (Build 13F69))',
-                      app_version='', build_no=22000, os_version=''),
+                      app_version=None, build_no=22000, os_version=None),
         ]
         for case in test_cases:
             request = Mock()
