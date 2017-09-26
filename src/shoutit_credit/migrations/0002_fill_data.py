@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import migrations
 
 from shoutit_credit.models import CreditRule, CREDIT_OUT, CREDIT_IN, PromoteLabel

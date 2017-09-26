@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
-import urlparse
+from urllib import parse
 import uuid
-from urllib import urlencode
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -150,14 +147,14 @@ class APIModelMixin(object):
             'discoveritem': ('discover', 'id'),
         }
         netloc, attr_name = lookups.get(name, (name, 'id'))
-        if isinstance(attr_name, basestring):
+        if isinstance(attr_name, str):
             attr_name = (attr_name, attr_name)
         attr_value = getattr(self, attr_name[0], '')
         if name == 'user':
-            params = urlencode({attr_name[1]: attr_value, 'type': self.v3_type_name})
+            params = parse.urlencode({attr_name[1]: attr_value, 'type': self.v3_type_name})
         else:
-            params = urlencode({attr_name[1]: attr_value})
-        url = urlparse.urlunparse((settings.APP_LINK_SCHEMA, netloc, '', '', params, ''))
+            params = parse.urlencode({attr_name[1]: attr_value})
+        url = parse.urlunparse((settings.APP_LINK_SCHEMA, netloc, '', '', params, ''))
         return url
 
 

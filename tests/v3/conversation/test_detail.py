@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from unittest import skip
 
 from mock import patch
 from django_dynamic_fixture import G, F

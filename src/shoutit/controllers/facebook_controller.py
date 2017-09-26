@@ -2,11 +2,12 @@
 """
 
 """
-from __future__ import unicode_literals
-
+import base64
 import datetime
+import hashlib
+import hmac
 import json
-import urlparse
+from urllib import parse
 
 import requests
 from django.conf import settings
@@ -116,7 +117,6 @@ def fb_page_from_facebook_page_id(facebook_page_id, facebook_access_token):
 
 
 def extend_token(short_lived_token):
-    exchange_url = FB_GRAPH_ACCESS_TOKEN_URL
     params = {
         'client_id': settings.FACEBOOK_APP_ID,
         'client_secret': settings.FACEBOOK_APP_SECRET,
@@ -124,20 +124,18 @@ def extend_token(short_lived_token):
         'fb_exchange_token': short_lived_token
     }
     try:
-        response = requests.get(exchange_url, params=params, timeout=20)
+        response = requests.get(FB_GRAPH_ACCESS_TOKEN_URL, params=params, timeout=20)
         if response.status_code != 200:
             raise ValueError("Invalid access token: %s" % response.content)
-        response_params = dict(urlparse.parse_qsl(response.content))
-        access_token = response_params.get('access_token')
-        if not access_token:
+        response_data = response.json()
+        if 'access_token' not in response_data:
             raise ValueError('`access_token` not in response: %s' % response.content)
-        expires = response_params.get('expires')
         # Sometimes Facebook doesn't return expiry, assume 60 days
-        response_params['expires'] = expires or SIXTY_DAYS
+        response_data['expires'] = response_data.get('expires') or SIXTY_DAYS
     except (requests.RequestException, ValueError) as e:
         debug_logger.error("Facebook token extend error: %s" % str(e))
         raise ShoutitBadRequest(message=FB_ERROR_TRY_AGAIN, developer_message=str(e))
-    return response_params
+    return response_data
 
 
 def link_facebook_account(user, facebook_access_token):
@@ -206,7 +204,7 @@ def save_linked_facebook(user, access_token, fb_user, linked_facebook=None):
     name = fb_user['name']
     scopes = token_data['scopes']
     friends_data = objects.get(fb_user, 'friends.data') or []
-    friends = map(lambda f: f['id'], friends_data)
+    friends = [f['id'] for f in friends_data]
     if linked_facebook:
         linked_facebook.update(user=user, facebook_id=facebook_id, name=name, access_token=access_token, scopes=scopes,
                                expires_at=expires_at, friends=friends)
@@ -305,17 +303,16 @@ def exchange_code(request, code):
         qs = request.META['QUERY_STRING'].split('&code')[0]
         # redirect_uri = urllib.quote('%s%s?%s' % (settings.SITE_LINK, request.path[1:], qs))
         redirect_uri = settings.SITE_LINK + request.path[1:] + qs
-        exchange_url = FB_GRAPH_ACCESS_TOKEN_URL
         params = {
             'client_id': settings.FACEBOOK_APP_ID,
             'client_secret': settings.FACEBOOK_APP_SECRET,
             'redirect_uri': redirect_uri,
             'code': code
         }
-        response = requests.get(exchange_url, params=params, timeout=20)
-        params = dict(urlparse.parse_qsl(response.content))
+        response = requests.get(FB_GRAPH_ACCESS_TOKEN_URL, params=params, timeout=20)
+        params = dict(parse.parse_qsl(response.content.decode()))
     except Exception as e:
-        error_logger.warn(e.message)
+        error_logger.warn(e)
         return None
 
     auth_response = {
@@ -325,30 +322,25 @@ def exchange_code(request, code):
     return auth_response
 
 
-def parse_signed_request(signed_request='a.a', secret=settings.FACEBOOK_APP_SECRET):
-    import hashlib
-    import hmac
+def parse_signed_request(signed_request='1.1', application_secret_key=settings.FACEBOOK_APP_SECRET):
+    """
+    Parse a signed request, returning a dictionary describing its payload.
+    """
 
-    l = signed_request.split('.', 2)
-    encoded_sig = l[0]
-    payload = l[1]
-    sig = base64_url_decode(encoded_sig)
-    data = json.loads(base64_url_decode(payload))
-    if data['algorithm'].upper() != 'HMAC-SHA256':
+    def decode(encoded):
+        padding = '=' * (len(encoded) % 4)
+        return base64.urlsafe_b64decode(encoded + padding)
+
+    encoded_signature, encoded_payload = (str(string) for string in signed_request.split('.', 2))
+    signature = decode(encoded_signature)
+    signed_request_data = json.loads(decode(encoded_payload).decode('utf-8'))
+
+    if signed_request_data.get('algorithm', '').upper() != 'HMAC-SHA256':
         return {}
 
-    # http://stackoverflow.com/questions/20849805/python-hmac-typeerror-character-mapping-must-return-integer-none-or-unicode
-    expected_sig = hmac.new(str(secret), msg=str(payload), digestmod=hashlib.sha256).digest()
-    if sig != expected_sig:
+    expected_signature = hmac.new(application_secret_key.encode('utf-8'), msg=encoded_payload.encode('utf-8'),
+                                  digestmod=hashlib.sha256).digest()
+    if signature != expected_signature:
         return {}
 
-    return data
-
-
-def base64_url_decode(inp):
-    import base64
-
-    inp = inp.replace('-', '+').replace('_', '/')
-    padding_factor = (4 - len(inp) % 4) % 4
-    inp += "=" * padding_factor
-    return base64.decodestring(inp)
+    return signed_request_data

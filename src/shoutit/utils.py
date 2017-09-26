@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 import random
-import urllib
-import urlparse
 from datetime import timedelta
+from urllib import parse
 
-from django.core.exceptions import ValidationError
-# from django.db.models.signals import post_save, post_delete
-# from django.dispatch import receiver
-from django.http import HttpRequest
-from django.utils.timezone import now as django_now
 import nexmo as nexmo
 import phonenumbers
-from rest_framework.request import Request
+import rq
+from django.core.exceptions import ValidationError
+from django.http import HttpRequest
+from django.utils.timezone import now as django_now
 from django.utils.translation import ugettext_lazy as _
+from django_rq.queues import DjangoRQ
+from raven import Client
+from raven.transport import HTTPTransport
+from rest_framework.request import Request
+from rq.contrib.sentry import register_sentry
+
 from common.constants import COUNTRY_ISO
+from common.lib import location
 from shoutit import settings
 from shoutit.api.versioning import ShoutitNamespaceVersioning
-from common.lib import location
 
 # Shoutit loggers
 error_logger = logging.getLogger('shoutit.error')
@@ -33,17 +34,26 @@ ip2location = location.IP2Location(filename=settings.IP2LOCATION_DB_BIN)
 nexmo_client = nexmo.Client(key=settings.NEXMO_API_KEY, secret=settings.NEXMO_API_SECRET)
 
 
+class SentryAwareWorker(rq.Worker):
+    queue_class = DjangoRQ
+
+    def __init__(self, *args, **kwargs):
+        super(SentryAwareWorker, self).__init__(*args, **kwargs)
+        dsn = settings.RAVEN_CONFIG['dsn']
+        environment = settings.RAVEN_CONFIG['environment']
+        client = Client(dsn, transport=HTTPTransport, environment=environment)
+        register_sentry(client, self)
+
+
 def generate_username():
     return str(random.randint(10000000000, 19999999999))[1:]
 
 
 def has_unicode(s):
-    try:
-        s.decode('ascii')
-    except UnicodeError:
-        return True
-    else:
-        return False
+    for c in s:
+        if ord(c) >= 128:
+            return True
+    return False
 
 
 def correct_mobile(mobile, country, raise_exception=False):
@@ -118,7 +128,9 @@ def create_fake_request(version):
     request.version = version
     request.versioning_scheme = ShoutitNamespaceVersioning()
     request.agent = None
+    request.app_version = ''
     request.build_no = 0
+    request.os_version = ''
     return request
 
 
@@ -128,13 +140,13 @@ class UserIds(list):
 
 
 def url_with_querystring(url, params=None, **kwargs):
-    url_parts = list(urlparse.urlparse(url))
-    query = dict(urlparse.parse_qsl(url_parts[4]))
+    url_parts = list(parse.urlparse(url))
+    query = dict(parse.parse_qsl(url_parts[4]))
     if isinstance(params, dict):
         query.update(params)
     query.update(kwargs)
-    url_parts[4] = urllib.urlencode(query)
-    return urlparse.urlunparse(url_parts)
+    url_parts[4] = parse.urlencode(query)
+    return parse.urlunparse(url_parts)
 
 # @receiver(post_save)
 # def model_post_save(sender, instance=None, created=False, **kwargs):

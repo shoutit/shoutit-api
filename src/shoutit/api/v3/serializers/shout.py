@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
@@ -24,8 +22,8 @@ from .tag import CategorySerializer, SingleValueTagKeySerializer
 
 class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
     type = serializers.ChoiceField(source='get_type_display', choices=['offer', 'request'], help_text="*")
-    location = LocationSerializer(
-        help_text="Defaults to user's saved location, Passing the `latitude` and `longitude` is enough to calculate new location properties")
+    location = LocationSerializer(help_text="Defaults to user's saved location, Passing the `latitude` and `longitude`"
+                                            " is enough to calculate new location properties")
     title = serializers.CharField(source='item.name', min_length=4, max_length=50, help_text="Max 50 characters",
                                   **empty_char_input)
     text = serializers.CharField(min_length=10, max_length=1000, help_text="Max 1000 characters", **empty_char_input)
@@ -67,7 +65,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         if not value:
             return None
         try:
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 raise ValueError()
             return Currency.objects.get(code__iexact=value)
         except (Currency.DoesNotExist, ValueError):
@@ -75,7 +73,7 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
 
     def validate_filters(self, filters):
         # Ignore filter values that have no id. Old clients used to send the slug
-        filters = filter(lambda f: 'id' in f['value'], filters)
+        filters = [f for f in filters if 'id' in f['value']]
         return filters
 
     def to_internal_value(self, data):
@@ -91,12 +89,12 @@ class ShoutSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         currency_is_none = data.get('currency') is None
         if price_is_set and price != 0 and currency_is_none:
             raise serializers.ValidationError({'currency': _("The currency must be set when the price is set")})
-        # Optional category defaults to "Other"
-        if data.get('category') is None:
-            data['category'] = 'other'
-        # Optional location defaults to user's saved location
-        if data.get('location') is None:
-            data['location'] = {}
+        # Optional category defaults to "Other" or current shout's category when being updated
+        category = data.get('category')
+        data['category'] = category or (self.instance.category.slug if self.instance else 'other')
+        # Optional location defaults to user's saved location or current shout's location when being updated
+        location = data.get('location')
+        data['location'] = location or (self.instance.location if self.instance else {})
         ret = super(ShoutSerializer, self).to_internal_value(data)
         return ret
 
@@ -180,19 +178,33 @@ class ShoutDetailSerializer(ShoutSerializer):
             None: None
         }
         shout_type = shout_types[shout_type_name]
-        text = validated_data.get('text')
+
+        def validated_or_original(data, key, obj, attr=None):
+            return data[key] if key in data else getattr(obj, attr or key, None)
+
         item = validated_data.get('item', {})
-        title = item.get('name')
-        price = item.get('price')
-        currency = item.get('currency_code')
+        shout_item = shout.item if shout else {}
+
+        # Item attributes that can't be passed as None to controllers
+        title = validated_or_original(item, 'name', shout_item)
+        text = validated_or_original(validated_data, 'text', shout_item, 'description')
+        price = validated_or_original(item, 'price', shout_item)
+        currency = validated_or_original(item, 'currency_code', shout_item, 'currency')
+        # Item attributes that can be passed as None to controllers
+        images = item.get('images')
+        videos = item.get('videos', {'all': None})['all']
         available_count = validated_data.get('available_count')
         is_sold = validated_data.get('is_sold')
-        expires_at = validated_data.get('expires_at')
+
+        # Shout attributes that can't be passed as None to controllers
+        expires_at = validated_or_original(validated_data, 'expires_at', shout)
+        mobile = validated_or_original(validated_data, 'mobile', shout)
+        # Shout attributes that can be passed as None to controllers
         category = validated_data.get('category')
         filters = validated_data.get('filters')
         location = validated_data.get('location')
         publish_to_facebook = validated_data.get('publish_to_facebook')
-        mobile = validated_data.get('mobile')
+
         if mobile:
             try:
                 mobile = correct_mobile(mobile, user.ap.country, raise_exception=True)
@@ -202,14 +214,11 @@ class ShoutDetailSerializer(ShoutSerializer):
                 except ValidationError:
                     raise serializers.ValidationError({'mobile': _("Is not valid in your or in the shout's country")})
 
-        images = item.get('images', None)
-        videos = item.get('videos', {'all': None})['all']
-
         if not shout:
             case_1 = shout_type is POST_TYPE_REQUEST and title
-            case_2 = shout_type is POST_TYPE_OFFER and (title or images or videos)
+            case_2 = shout_type is POST_TYPE_OFFER and (images or videos)
             if not (case_1 or case_2):
-                raise serializers.ValidationError(_("You didn't provide enough information for creating a shout"))
+                raise serializers.ValidationError({'': _("You didn't provide enough information for creating a shout")})
             shout = shout_controller.create_shout(
                 user=user, shout_type=shout_type, title=title, text=text, price=price, currency=currency, mobile=mobile,
                 available_count=available_count, is_sold=is_sold, category=category, filters=filters, location=location,

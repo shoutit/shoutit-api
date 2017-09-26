@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.db.models import Q
 from django_rq import job
@@ -68,12 +66,13 @@ def trigger_new_read_by(message, version):
     _trigger_new_read_by.delay(message, version)
 
 
+# Todo (Nour): Find a way to send all the read_by_objects. Pusher only allows 10KB body size
 @job(settings.RQ_QUEUE_PUSHER)
 def _trigger_new_read_by(message, version):
     event_name = str(NOTIFICATION_TYPE_READ_BY)
     message_summary = {
         'id': message.id,
-        'read_by': message.read_by_objects
+        'read_by': message.read_by_objects[:100]
     }
     trigger_conversation_event(message.conversation_id, event_name, message_summary, version)
 

@@ -1,0 +1,79 @@
+# Core
+boto3==1.4.4
+bpython==0.16
+click==6.3
+django-cors-headers==2.1.0
+django-dotenv==1.4.1
+django-filter==0.13.0
+django-grappelli==2.9.1
+django-heartbeat==2.0.2
+django-hvad==1.6.0
+django-ipware==1.1.6
+django-mptt-admin==0.4.3
+django-mptt==0.8.7
+django-pgjson==0.3.1
+django-push-notifications==1.4.1
+django-redis==4.8.0
+django-request-id==1.0.0
+django-rq==0.9.5
+django-widget-tweaks==1.4.1
+django==1.8.17
+djangorestframework-oauth==1.1.0
+djangorestframework==3.4.3
+drf-extensions==0.3.1
+elasticsearch-dsl==5.3.0
+elasticsearch==5.4.0
+git+https://github.com/mochawich/django-oauth2-provider@master3
+google-api-python-client==1.6.2
+httplib2==0.9.2
+kitchen==1.2.4
+mixpanel==4.3.2
+nexmo==1.5.0
+phonenumbers==8.5.1
+pillow==4.1.1
+psycopg2>=2.6
+pusher==1.7.1
+pydash==4.1.0
+pysocks==1.6.7  # needed for Twilio as they don't have it in their requirements
+pytesseract==0.1.7
+raven==6.1.0
+redis==2.10.5
+requests==2.17.3
+requests_aws4auth==0.9
+rq==0.8.0
+sendgrid==2.2.1
+twilio==6.2.dev0
+xmltodict==0.11.0
+
+# Docs
+django-rest-swagger==0.3.6
+markdown==2.6.6
+
+# Production
+ansible==2.3.1.0
+circus==0.14.0
+django-storages==1.5.2
+gunicorn==19.7.1
+newrelic==2.86.3.70
+setproctitle==1.1.10
+
+# Testing
+codeclimate-test-reporter
+coverage==4.3.4
+django-dynamic-fixture==1.9.5
+django-fake-model==0.1.4
+flake8==3.3.0  # flake8 .
+mock==2.0.0
+pytest-cov==2.5.1
+pytest-django==3.1.2
+pytest-pythonpath==0.7.1
+pytest==3.1.2
+radon==2.0.2   # radon cc -s -n B .
+responses==0.5.1
+
+# urllib - requires apt-get install libffi-dev, hopefully all this is not needed with python 3
+# ndg-httpsclient==0.4.2
+# pyasn1==0.2.3
+# pyopenssl==17.0.0
+# http://stackoverflow.com/questions/34646942/ssl3-get-server-certificate-certificate-verify-failed-on-python-when-requesting
+# certifi==2015.04.28

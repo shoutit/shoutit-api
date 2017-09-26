@@ -95,12 +95,24 @@ class IP2Location(object):
 
     def __init__(self, filename=None):
         ''' Creates a database object and opens a file if filename is given
+
         '''
         if filename:
             self.open(filename)
 
+    def __enter__(self):
+        if not hasattr(self, '_f') or self._f.closed:
+            raise ValueError("Cannot enter context with closed file")
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def open(self, filename):
         ''' Opens a database file '''
+        # Ensure old file is closed before opening a new one
+        self.close()
+
         self._f = open(filename, 'rb')
         self._dbtype = struct.unpack('B', self._f.read(1))[0]
         self._dbcolumn = struct.unpack('B', self._f.read(1))[0]
@@ -111,6 +123,14 @@ class IP2Location(object):
         self._ipv4dbaddr = struct.unpack('<I', self._f.read(4))[0]
         self._ipv6dbcount = struct.unpack('<I', self._f.read(4))[0]
         self._ipv6dbaddr = struct.unpack('<I', self._f.read(4))[0]
+        self._ipv4indexbaseaddr = struct.unpack('<I', self._f.read(4))[0]
+        self._ipv6indexbaseaddr = struct.unpack('<I', self._f.read(4))[0]
+
+    def close(self):
+        if hasattr(self, '_f'):
+            # If there is file close it.
+            self._f.close()
+            del self._f
 
     def get_country_short(self, ip):
         ''' Get country_short '''
@@ -237,7 +257,8 @@ class IP2Location(object):
     def _reads(self, offset):
         self._f.seek(offset - 1)
         n = struct.unpack('B', self._f.read(1))[0]
-        return u(self._f.read(n))
+        # return u(self._f.read(n))
+        return self._f.read(n).decode('iso-8859-1').encode('utf-8')
 
     def _readi(self, offset):
         self._f.seek(offset - 1)
@@ -287,9 +308,9 @@ class IP2Location(object):
             rec.isp = self._reads(self._readi(calc_off(_ISP_POSITION, mid)) + 1)
 
         if _LATITUDE_POSITION[self._dbtype] != 0:
-            rec.latitude = self._readf(calc_off(_LATITUDE_POSITION, mid))
+            rec.latitude = round(self._readf(calc_off(_LATITUDE_POSITION, mid)), 6)
         if _LONGITUDE_POSITION[self._dbtype] != 0:
-            rec.longitude = self._readf(calc_off(_LONGITUDE_POSITION, mid))
+            rec.longitude = round(self._readf(calc_off(_LONGITUDE_POSITION, mid)), 6)
 
         if _DOMAIN_POSITION[self._dbtype] != 0:
             rec.domain = self._reads(self._readi(calc_off(_DOMAIN_POSITION, mid)) + 1)
@@ -364,20 +385,29 @@ class IP2Location(object):
 
     def _get_record(self, ip):
 
+        low = 0
         ipv = self._parse_addr(ip)
         if ipv == 4:
             ipno = struct.unpack('!L', socket.inet_pton(socket.AF_INET, ip))[0]
             off = 0
             baseaddr = self._ipv4dbaddr
             high = self._ipv4dbcount
+            if self._ipv4indexbaseaddr > 0:
+                indexpos = ((ipno >> 16) << 3) + self._ipv4indexbaseaddr
+                low = self._readi(indexpos)
+                high = self._readi(indexpos + 4)
+
         elif ipv == 6:
             a, b = struct.unpack('!QQ', socket.inet_pton(socket.AF_INET6, ip))
             ipno = (a << 64) | b
             off = 12
             baseaddr = self._ipv6dbaddr
             high = self._ipv6dbcount
+            if self._ipv6indexbaseaddr > 0:
+                indexpos = ((ipno >> 112) << 3) + self._ipv6indexbaseaddr
+                low = self._readi(indexpos)
+                high = self._readi(indexpos + 4)
 
-        low = 0
         while low <= high:
             mid = int((low + high) / 2)
             ipfrom = self._readip(baseaddr + (mid) * (self._dbcolumn * 4 + off), ipv)

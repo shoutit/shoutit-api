@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 class Constant(object):
     """
     should be redefined inside the classes who inherited Constant

@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import uuid
 
 from rest_framework import viewsets
@@ -67,9 +65,12 @@ class ShoutitPusherViewSet(viewsets.ViewSet):
         ###Not used directly by API clients.
         """
         try:
+            body = getattr(request, 'raw_body', '')
+            if isinstance(body, bytes):
+                body = body.decode()
             webhook = pusher.validate_webhook(key=request.META.get('HTTP_X_PUSHER_KEY'),
                                               signature=request.META.get('HTTP_X_PUSHER_SIGNATURE'),
-                                              body=getattr(request, 'raw_body', ''))
+                                              body=body)
         except TypeError as e:
             error_logger.exception("Bad data for pusher webhook")
             raise ValidationError(str(e))

@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.db.models import Count
-from django.utils.translation import activate, get_language
 from django_rq import job
 from rest_framework.settings import api_settings
 

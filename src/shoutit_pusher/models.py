@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.core import validators
 from django.db import models
@@ -17,8 +15,8 @@ class PusherDevice(UUIDModel):
         validators.RegexValidator(socket_id_re)
     ])
 
-    def __unicode__(self):
-        return "%s: %s" % (unicode(self.user), self.socket_id)
+    def __str__(self):
+        return "%s: %s" % (str(self.user), self.socket_id)
 
 
 pusher_channel_types = ((0, 'public'), (1, 'private'), (2, 'presence'))
@@ -33,7 +31,7 @@ class PusherChannel(UUIDModel):
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='joined_pusher_channels',
                                    through='shoutit_pusher.PusherChannelJoin')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s users" % (self.name, self.users.count())
 
     @property

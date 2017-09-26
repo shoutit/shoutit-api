@@ -1,6 +1,5 @@
 [run]
 omit = *migrations*,*management*,*settings*,*/v2/*,
-       fabfile.py,
        src/wsgi.py,
        src/manage.py,
        src/common/middleware/ProfilerMiddleware.py,

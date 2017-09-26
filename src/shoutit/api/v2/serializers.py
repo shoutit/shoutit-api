@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import random
 import uuid
 from collections import OrderedDict
@@ -11,6 +9,7 @@ from collections import OrderedDict
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AnonymousUser
+from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.timezone import now as django_now
 from ipware.ip import get_real_ip
@@ -152,7 +151,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'api_url', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'name': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
@@ -212,7 +211,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('name', 'slug', 'icon', 'image', 'main_tag')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'name': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance
@@ -405,6 +404,10 @@ class UserDetailSerializer(UserSerializer):
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise ValidationError(["Email is already used by another user"])
+        if '@shoutit.com' in email:
+            raise ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def update(self, user, validated_data):
@@ -761,8 +764,8 @@ class MessageSerializer(serializers.ModelSerializer):
                             errors['attachments'] = {
                                 'shout': "shout with id '%s' does not exist" % attachment['shout']['id']}
 
-                    if 'location' in attachment and (
-                            'latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
+                    if 'location' in attachment \
+                            and ('latitude' not in attachment['location'] or 'longitude' not in attachment['location']):
                         errors['attachments'] = {'location': "location object should have 'latitude' and 'longitude'"}
             else:
                 errors['attachments'] = "'attachments' should be a non empty list"
@@ -1009,6 +1012,10 @@ class ShoutitSignupSerializer(serializers.Serializer):
         email = email.lower()
         if User.exists(email=email):
             raise ValidationError(['Email is already used by another user.'])
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def create(self, validated_data):
@@ -1065,6 +1072,10 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise ValidationError(['Email is already used by another user.'])
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def to_internal_value(self, data):
@@ -1177,27 +1188,20 @@ class PredefinedCitySerializer(serializers.ModelSerializer):
 class SMSInvitationSerializer(serializers.ModelSerializer):
     user_text = serializers.CharField(max_length=1000, required=False)
     sent_text = serializers.CharField(max_length=1000, required=False, default='')
+    category = serializers.CharField(max_length=50, default='other')
 
     class Meta:
         model = SMSInvitation
-        fields = ('id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'source', 'link', 'created_at')
+        fields = (
+            'id', 'mobile', 'user_text', 'sent_text', 'status', 'country', 'category', 'source', 'link', 'created_at')
+
+    def validate_category(self, value):
+        return Category.objects.get(slug=value)
 
     def validate_sent_text(self, value):
+        ad_category = self.initial_data.get('category')
         ad_title = self.initial_data.get('user_text')
-        english_sms = [
-            "Hi there!\nlist your '%s...' for FREE on\nshoutit.com/app",
-            "Someone might be interested in your '%s...'\nlist FREE ads on\nshoutit.com/app"
-        ]
-        english_cut = 35
-        arabic_sms = [
-            "اعلن عن '%s...'\nبسهولة\nshoutit.com/app",
-            "اعرض '%s...'\nمجانا على\nshoutit.com/app"
-        ]
-        arabic_cut = 30
-        if has_unicode(ad_title):
-            return random.choice(arabic_sms) % (ad_title[:arabic_cut])
-        else:
-            return random.choice(english_sms) % (ad_title[:english_cut])
+        return SMSInvitationSerializer.get_sent_text(ad_title, ad_category)
 
     def to_internal_value(self, data):
         if 'title' in data:
@@ -1209,7 +1213,50 @@ class SMSInvitationSerializer(serializers.ModelSerializer):
         ret['user'] = self.context['request'].user
         return ret
 
+    @staticmethod
+    def get_sent_text(ad_title, ad_category):
+        category_text_map = {
+            'beauty-health': ('Beauty & Health items', 'منتجات الصحة والتجميل'),
+            'cars-motors': ('your Cars, Trucks, or Boats', 'سيارات للبيع'),
+            'collectibles': ('Collectibles', 'مقتنياتك'),
+            'computers-technology': ('your Laptop or Computer', 'كمبيوترك ولابتوبك'),
+            'electronics': ('Electronics', 'الكترونيات للبيع'),
+            'fashion-accessories': ('Fashion & Accessories', 'الألبسة والاكسسوارات'),
+            'home-furniture-garden': ('Furniture & Home Appliances', 'مفروشات وأجهزة المنزل'),
+            'jobs': ('your CV', 'سيرة ذاتيةوابحث عن عمل'),
+            'movies-music-books': ('Movies, Music & Books', 'الكتب والأفلام وغيرها'),
+            'other': ('what you are Selling', 'ما تريد بيعه'),
+            'pets': ('Pets for sale or adoption', 'حيوانات للبيع أوالتبني'),
+            'phones-accessories': ('your Phone or its Accessories', 'موبايلات واكسسواراتها'),
+            'real-estate': ('Properties for Rent or Sale', 'عقارات للبيع و الايجار'),
+            'services': ('your Services', 'خدماتك'),
+            'sport-leisure-games': ('Sport items & Games', 'أجهزة الرياضة والألعاب'),
+            'toys-children-baby': ('Baby items & Toys', 'مستلزمات وألعاب اطفال'),
+        }
+        english_sms = [
+            "Hi there!\n\nList {} for FREE on Shoutit\n\nshoutit.com/app",
+            "Make easy $$\n\nList {} for FREE on Shoutit\n\nshoutit.com/app"
+        ]
+        arabic_sms = [
+            "اعرض {}\nمجانا على شاوت ات\n\nshoutit.com/app"
+        ]
+        if has_unicode(ad_title):
+            return random.choice(arabic_sms).format(category_text_map[ad_category][1])
+        else:
+            return random.choice(english_sms).format(category_text_map[ad_category][0])
+
 
 # Backward compatibility with v3
 ProfileDetailSerializer = UserDetailSerializer
 ProfileSerializer = UserSerializer
+
+
+# for _, (e, a) in category_text_map.items():
+#     e0 = english_sms[0].format(e).replace('shoutit.com/app', 'SHOUTIT.COM/app-abc1234')
+#     e1 = english_sms[1].format(e).replace('shoutit.com/app', 'SHOUTIT.COM/app-abc1234')
+#     print(f'----------- {len(e0)} - {len(e0) <= 160} -----------\n{e0}\n')
+#     print(f'----------- {len(e1)} - {len(e0) <= 160} -----------\n{e1}\n')
+#
+# for _, (e, a) in category_text_map.items():
+#     a0 = arabic_sms[0].format(a).replace('shoutit.com/app', 'SHOUTIT.COM/app-abc1234')
+#     print(f'----------- {len(a0)} - {len(a0) <= 70} -----------\n{a0}\n')

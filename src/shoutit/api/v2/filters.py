@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 import django_filters
@@ -52,12 +50,13 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
 
         # Exclude ids
         exclude_ids = data.get('exclude_ids')
-        if isinstance(exclude_ids, basestring):
+        if isinstance(exclude_ids, str):
             exclude_ids = exclude_ids.split(',')
         if exclude_ids and not isinstance(exclude_ids, list):
             exclude_ids = [exclude_ids]
         if exclude_ids:
-            index_queryset = index_queryset.filter(~Q('terms', _id=map(str, exclude_ids)))
+            exclude_ids = [str(i) for i in exclude_ids]
+            index_queryset = index_queryset.filter(~Q('terms', _id=exclude_ids))
 
         # Shout type
         shout_type = data.get('shout_type')
@@ -94,9 +93,9 @@ class ShoutIndexFilterBackend(filters.BaseFilterBackend):
                     pass
                 else:
                     nearby_cities = pd_city.get_cities_within(settings.NEARBY_CITIES_RADIUS_KM)
-                    cities = map(lambda nc: nc.city, nearby_cities)
+                    cities = [nc.city for nc in nearby_cities]
                     cities.append(city)
-                    cities = arrays.unique(cities)
+                    cities = arrays.uniq(cities)
                     index_queryset = index_queryset.filter('terms', city=cities)
 
         latlng_errors = OrderedDict()
@@ -201,7 +200,8 @@ class HomeFilterBackend(filters.BaseFilterBackend):
         # Listened Profiles + user himself
         users = [user.pk] + user.listening2_pages_ids + user.listening2_users_ids
         if users:
-            listening_users = Q('terms', uid=map(str, users))
+            users = [str(u) for u in users]
+            listening_users = Q('terms', uid=users)
             listening.append(listening_users)
 
         index_queryset = index_queryset.query('bool', should=listening)

@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 from datetime import timedelta
 
@@ -41,22 +39,26 @@ class SMSViewSet(UUIDViewSetMixin, mixins.RetrieveModelMixin, mixins.CreateModel
             - query
         """
         countries = request.query_params.get('countries', '').split(',')
-        today = now()
+        today_eod = now().replace(hour=23, minute=59, second=59, microsecond=999999)
         periods = [(1, 'day'), (7, 'week'), (30, 'month')]
         if countries == ['']:
-            countries = list(SMSInvitation.objects.filter(created_at__gte=today - timedelta(days=periods[-1][0])).values_list('country', flat=True).distinct())
+            month_ago = today_eod - timedelta(days=periods[-1][0])
+            countries = list(SMSInvitation.objects.filter(modified_at__gt=month_ago)
+                             .values_list('country', flat=True).distinct())
         statuses = SMSInvitationStatus.choices + ((None, 'total'),)
 
-        def status_summary(sms_status, days):
-            created = today - timedelta(days=days)
-            invitations = SMSInvitation.objects.filter(country__in=countries, created_at__gte=created)
+        def _status_summary(sms_status, days):
+            modified_at = today_eod - timedelta(days=days)
+            invitations_qs = SMSInvitation.objects.filter(country__in=countries, modified_at__gt=modified_at)
             if sms_status is not None:
-                invitations = invitations.filter(status=sms_status)
-            invitations = invitations.values('country').annotate(count=Count('country'))
-            return OrderedDict([(invitation['country'], invitation['count']) for invitation in invitations])
+                invitations_qs = invitations_qs.filter(status=sms_status)
+            invitations = invitations_qs.values('country').annotate(count=Count('country'))
+            result = OrderedDict([(invitation['country'], invitation['count']) for invitation in invitations])
+            result['total'] = invitations_qs.count()
+            return result
 
         results = OrderedDict(
-            [(p[1], OrderedDict([(s[1], status_summary(s[0], p[0])) for s in statuses])) for p in periods]
+            [(p[1], OrderedDict([(s[1], _status_summary(s[0], p[0])) for s in statuses])) for p in periods]
         )
         return Response(results)
 

@@ -193,8 +193,7 @@ class ConversationReplyProfileTestCase(DetailMixin, BaseTestCase):
         attachments = Message.objects.get(text='m1').attachments.all()
         self.assertEqual(len(attachments), 2)
         self.assertEqual(set(attachments.values_list('type', flat=True)),
-                         set(map(int, [MESSAGE_ATTACHMENT_TYPE_PROFILE,
-                                       MESSAGE_ATTACHMENT_TYPE_LOCATION])))
+                         set(map(int, [MESSAGE_ATTACHMENT_TYPE_PROFILE, MESSAGE_ATTACHMENT_TYPE_LOCATION])))
 
     @patch.object(mocked_pusher, 'trigger')
     def test_message_reply_new_message_pusher_event(self, m_trigger):

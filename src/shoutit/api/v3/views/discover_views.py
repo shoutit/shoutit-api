@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from rest_framework import permissions, viewsets, mixins
 from rest_framework_extensions.mixins import DetailSerializerMixin
 

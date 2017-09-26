@@ -1,0 +1,99 @@
+version: 2
+
+defaults: &defaults
+  docker:
+    - image: circleci/python:3.6
+  working_directory: ~/repo
+
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - run:
+          name: Set BUILD_TAG and BUILD_BRANCH
+          command: |
+            ./.circleci/set-build-tag.sh
+
+      - run:
+          name: Run linting tests [Flake8]
+          command: |
+            ./.circleci/run-flake8-tests.sh
+
+      - setup_remote_docker:
+          reusable: true
+          exclusive: true
+
+      - run:
+          name: Run tests
+          command: |
+            docker-compose --file docker-compose.test.yml up --build --abort-on-container-exit
+  deploy:
+    <<: *defaults
+    steps:
+      - checkout
+
+      - run:
+          name: Set BUILD_TAG and BUILD_BRANCH
+          command: |
+            ./.circleci/set-build-tag.sh
+
+      - setup_remote_docker:
+          reusable: true
+          exclusive: true
+
+      - run:
+          name: Build test docker image
+          command: |
+            echo $BUILD_TAG > BUILD_TAG
+            docker-compose --file docker-compose.test.yml build
+
+      # Docker image tags are based on GitHub tag or branch
+      #
+      # GitHub          Docker Cloud Tags
+      #
+      # develop         build-$BUILD_TAG, develop
+      # master          build-$BUILD_TAG, master
+      # release-*       build-$BUILD_TAG, live
+      # stage-xyz       build-$BUILD_TAG, stage-xyz
+      #
+      # stage-x can be used to create docker images from any branch. An example is when Docker Cloud is set to
+      # auto redeploy a service that is bound to shoutit-web:stage-xyz image.
+      # Create a Git tag and push it. Force flag is required for later pushes so tags on GitHub and Docker Cloud
+      # are forcibly updated. This should be used for testing only.
+      #
+      # git tag -f stage-xyz
+      # git push -f origin stage-xyz
+      #
+      - deploy:
+          name: Push docker images
+          command: |
+            docker tag shoutit-api:test-${BUILD_TAG} shoutit/shoutit-api:build-$BUILD_TAG
+            docker tag shoutit-api:test-${BUILD_TAG} shoutit/shoutit-api:$BUILD_BRANCH
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push shoutit/shoutit-api:build-$BUILD_TAG
+            docker push shoutit/shoutit-api:$BUILD_BRANCH
+
+workflows:
+  version: 2
+  build-n-deploy:
+    jobs:
+      # Build and test on all branches and tags
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      # Push docker image only on stage and release tags
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+                - master
+            tags:
+              only:
+                - /^release-.*/
+                - /^stage-.*/
