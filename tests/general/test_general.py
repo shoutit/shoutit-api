@@ -1,11 +1,14 @@
 from collections import namedtuple
 
+import os
 from mock import Mock
 
 from tests.base import BaseTestCase
 
 
 class GeneralTestCase(BaseTestCase):
+    def test_environment(self):
+        assert os.getenv('SHOUTIT_ENV', '').lower() == 'testing', "SHOUTIT_ENV should be set to 'testing'"
 
     def test_tesseract(self):
         import base64
