@@ -18,7 +18,7 @@ import boto3
 
 from shoutit.controllers import mixpanel_controller
 from shoutit_pusher import utils as pusher_utils
-from shoutit import ES
+from shoutit import ES, settings
 from shoutit.models.misc import LocationIndex
 from shoutit.models.post import ShoutIndex, Post, Shout
 from shoutit.models import Profile
@@ -192,6 +192,10 @@ class BaseTestCase(APITestCase):
         return G(Shout, **kwargs)
 
     @classmethod
+    def create_shout2(cls, **kwargs):
+        return shout_controller.create_shout(**kwargs)
+
+    @classmethod
     def get_video_data(cls, **data):
         data.setdefault('url', 'http://yout.com/v1')
         data.setdefault('thumbnail_url', 'http://s3.com/v1.png')
@@ -210,18 +214,17 @@ class BaseTestCase(APITestCase):
         return reverse(cls.url_namespace + ':' + url_name, *args, **kwargs)
 
     @classmethod
-    def delete_elasticsearch_index(cls, index, reinit=True, refresh=True,
-                                   **kwargs):
-        ES.indices.delete(index=index, **kwargs)
+    def delete_elasticsearch_index(cls, index, reinit=True, refresh=True):
+        ES.indices.delete(index=f'{settings.ES_BASE_INDEX}_{index}')
         if reinit:
             LocationIndex.init()
             ShoutIndex.init()
         if refresh:
-            cls.refresh_elasticsearch_index(index=index, **kwargs)
+            cls.refresh_elasticsearch_index(index=index)
 
     @classmethod
-    def refresh_elasticsearch_index(cls, index, **kwargs):
-        ES.indices.refresh(index=index, **kwargs)
+    def refresh_elasticsearch_index(cls, index):
+        ES.indices.refresh(index=f'{settings.ES_BASE_INDEX}_{index}')
 
     @classmethod
     def add_googleapis_geocode_response(cls, json_file_name, status=200, add_path=True):

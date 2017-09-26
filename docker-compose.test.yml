@@ -2,6 +2,10 @@ version: '3'
 services:
   db:
     image: postgres:9.5
+    environment:
+      POSTGRES_DB: shoutit
+      POSTGRES_USER: shoutit
+      POSTGRES_PASSWORD: shoutit
 
   redis:
     image: redis:4-alpine
