@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.core.management.base import BaseCommand
 from elasticsearch.helpers import bulk
 from shoutit.models import GoogleLocation
@@ -22,7 +20,7 @@ class Command(BaseCommand):
         chunk = 500
         total_succeed = 0
         total_failed = 0
-        for i in range(limit / chunk + (1 if limit % chunk > 0 else 0)):
+        for i in range(limit // chunk + (1 if limit % chunk > 0 else 0)):
             location_index_dicts = []
             locations = GoogleLocation.objects.filter(is_indexed=False)[:chunk if limit > chunk else limit]
             if not locations:
@@ -33,8 +31,8 @@ class Command(BaseCommand):
             total_succeed += succeed
             failed = len(errors)
             total_failed += failed
-            shout_ids = map(lambda x: x['_id'], location_index_dicts)
-            failed_ids = map(lambda x: x['index']['_id'], errors)
+            shout_ids = [x['_id'] for x in location_index_dicts]
+            failed_ids = [x['index']['_id'] for x in errors]
             succeed_ids = set(shout_ids) - set(failed_ids)
             GoogleLocation.objects.filter(id__in=succeed_ids).update(is_indexed=True)
             self.stdout.write('-- Chunk %0.3d: Successfully indexed %s locations with %s errors' % (i + 1, succeed, failed))

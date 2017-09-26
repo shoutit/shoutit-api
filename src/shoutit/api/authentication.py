@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import uuid
 
 from django.utils.translation import ugettext_lazy as _
@@ -139,6 +137,13 @@ class PostAccessTokenRequestMixin(object):
             mixpanel_controller.track(user.pk, event_name, track_properties, add=True)
             # Y U NO send us Mixpanel?
             if data.get('grant_type') != 'refresh_token':
-                extra = {'request': request._request, 'agent': request.agent, 'build_no': request.build_no,
-                         'track_properties': track_properties, 'request_data': data}
+                extra = {
+                    'agent': request.agent,
+                    'app_version': request.app_version,
+                    'build_no': request.build_no,
+                    'os_version': request.os_version,
+                    'request': request._request,
+                    'request_data': data,
+                    'track_properties': track_properties,
+                }
                 error_logger.warning('AccessToken request without mixpanel_distinct_id', extra=extra)

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from common.constants import Constant
 from shoutit.models import Permission, UserPermission
@@ -25,6 +24,7 @@ class ConstantPermission(Constant):
     def __eq__(self, other):
         return self.value.int == other.value.int
 
+
 PERMISSION_USE_SHOUTIT = ConstantPermission("USE_SHOUTIT", _("You're not allowed to use Shoutit"))
 PERMISSION_SHOUT_MORE = ConstantPermission("SHOUT_MORE", _("Activate your account to create more shouts (check your "
                                                            "email for activation link)"))
@@ -50,7 +50,6 @@ ACTIVATED_USER_PERMISSIONS = [
 ]
 
 FULL_USER_PERMISSIONS = INITIAL_USER_PERMISSIONS + ACTIVATED_USER_PERMISSIONS
-
 
 ANONYMOUS_USER_PERMISSIONS = [
     PERMISSION_USE_SHOUTIT,

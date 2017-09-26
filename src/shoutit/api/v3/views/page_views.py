@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.views.decorators.cache import cache_control
 from rest_framework import filters, mixins, viewsets
 from rest_framework.decorators import list_route, detail_route

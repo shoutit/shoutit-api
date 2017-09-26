@@ -1,10 +1,8 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import uuid
-from cStringIO import StringIO
+from io import StringIO
 
 import boto3
 import requests
@@ -51,7 +49,7 @@ def upload_image_to_s3(bucket_name, public_url, url=None, data=None, filename=No
     try:
         if not data:
             response = requests.get(url, timeout=10)
-            data = response.content
+            data = response.content.decode()
         if not filename:
             filename = generate_image_name()
         # Check if an actual image

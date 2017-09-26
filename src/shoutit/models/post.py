@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 from datetime import timedelta
 
@@ -10,15 +8,14 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from elasticsearch import RequestError, ConnectionTimeout
-from elasticsearch_dsl import DocType, String, Date, Double, Integer, Boolean, Object, MetaField
+from elasticsearch_dsl import DocType, Text, Keyword, Date, Double, Integer, Long, Boolean, Object, MetaField
 
 from common.constants import POST_TYPE_REQUEST, PostType
 from common.utils import date_unix
 from shoutit.models.action import Action
 from shoutit.models.auth import InactiveUser
 from shoutit.models.base import UUIDModel
-from shoutit.utils import error_logger, none_to_blank, correct_mobile
+from shoutit.utils import none_to_blank, correct_mobile
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 SHOUT_SELECT_RELATED = ('item', 'category__main_tag', 'item__currency', 'user__profile', 'user__page')
@@ -116,7 +113,7 @@ class Shout(Post):
 
     objects = ShoutManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s, %s: %s" % (self.pk, self.item, self.country, self.city)
 
     def clean(self):
@@ -168,6 +165,7 @@ class Shout(Post):
             'images': len(self.images),
             'videos': self.videos.count(),
             'price': self.item.price,
+            'price_usd': self.item.price_usd,
             'currency': self.item.currency.name if self.item.currency else None,
             'has_mobile': bool(self.mobile),
             'published_to_facebook': self.published_on.get('facebook'),
@@ -215,6 +213,7 @@ class InactiveShout(object):
             "title": _("Deleted Shout"),
             "text": "",
             "price": 0,
+            "price_usd": 0,
             "currency": "",
             "thumbnail": "",
             "video_url": "",
@@ -231,32 +230,33 @@ class InactiveShout(object):
 
 class ShoutIndex(DocType):
     # indexed
-    type = String(index='not_analyzed')
-    title = String(analyzer='snowball', fields={'raw': String(index='not_analyzed')})
-    text = String(analyzer='snowball')
-    tags = String(index='not_analyzed')
+    type = Keyword()
+    title = Text(analyzer='snowball', fields={'raw': Keyword()})
+    text = Text(analyzer='snowball')
+    tags = Keyword()
     filters = Object()
-    category = String(index='not_analyzed')
-    country = String(index='not_analyzed')
-    postal_code = String(index='not_analyzed')
-    state = String(index='not_analyzed')
-    city = String(index='not_analyzed')
+    category = Keyword()
+    country = Keyword()
+    postal_code = Keyword()
+    state = Keyword()
+    city = Keyword()
     latitude = Double()
     longitude = Double()
-    price = Double()
+    price = Long()
+    price_usd = Long()
     available_count = Integer()
     is_sold = Boolean()
     is_muted = Boolean()
-    uid = String(index='not_analyzed')
-    username = String(index='not_analyzed')
+    uid = Keyword()
+    username = Keyword()
     published_at = Date()
     expires_at = Date()
 
     # todo: should not be analysed or indexed
-    currency = String(index='not_analyzed')
-    address = String(index='not_analyzed')
-    thumbnail = String(index='not_analyzed')
-    video_url = String(index='not_analyzed')
+    currency = Keyword()
+    address = Keyword()
+    thumbnail = Keyword()
+    video_url = Keyword()
 
     is_sss = Boolean()
     priority = Integer()
@@ -278,8 +278,8 @@ class ShoutIndex(DocType):
                 "filters_string_keys": {
                     "path_match": "filters.*",
                     "mapping": {
-                        "type": "string",
-                        "index": "not_analyzed"
+                        "type": "keyword",
+                        "index": "true"
                     }
                 }
             }
@@ -290,15 +290,6 @@ class ShoutIndex(DocType):
         return date_unix(self.published_at)
 
 
-# initiate the index if not initiated
-try:
-    ShoutIndex.init()
-except RequestError:
-    pass
-except ConnectionTimeout:
-    error_logger.warn("ES Server is down", exc_info=True)
-
-
 class Video(UUIDModel):
     url = models.URLField(max_length=1024)
     thumbnail_url = models.URLField(max_length=1024)
@@ -306,7 +297,7 @@ class Video(UUIDModel):
     id_on_provider = models.CharField(max_length=256)
     duration = models.PositiveIntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s @ %s" % (self.pk, self.id_on_provider, self.provider)
 
 

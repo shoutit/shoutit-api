@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db.models.query_utils import Q

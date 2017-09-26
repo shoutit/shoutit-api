@@ -1,9 +1,9 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import random
+
+from django.core.validators import validate_email
 
 from common.utils import UUIDValidator
 from django.contrib.auth import login
@@ -88,6 +88,10 @@ class ShoutitSignupSerializer(serializers.Serializer):
         email = email.lower()
         if User.exists(email=email):
             raise serializers.ValidationError(_('This email is used by another account'))
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def create(self, validated_data):
@@ -156,6 +160,10 @@ class ShoutitPageSerializer(serializers.Serializer):
         email = email.lower()
         if User.exists(email=email):
             raise serializers.ValidationError(_('This email is used by another account'))
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def create(self, validated_data):
@@ -210,6 +218,10 @@ class ShoutitVerifyEmailSerializer(serializers.Serializer):
         email = email.lower()
         if User.objects.filter(email=email).exclude(id=user.id).exists():
             raise serializers.ValidationError(_('This email is used by another account'))
+        if '@shoutit.com' in email:
+            raise serializers.ValidationError(validate_email.message)
+        if email.endswith('@s.it'):
+            email = email.replace('@s.it', '@shoutit.com')
         return email
 
     def to_internal_value(self, data):

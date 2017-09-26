@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.utils.translation import ugettext_lazy as _
 from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
@@ -24,7 +22,10 @@ class MiniTagSerializer(TranslatableModelSerializer):
     def compat_name(self, ret):
         request = self.context['request']
         from_web = request.agent == 'web'
-        ios_condition = request.agent == 'ios' and request.build_no >= 22312
+        ios_condition = (
+            (request.agent == 'ios' and request.app_verison is None and request.build_no >= 22312) or
+            (request.agent == 'ios' and request.app_verison is not None)
+        )
         android_condition = request.agent == 'android' and request.build_no >= 1450
         if not any([from_web, ios_condition, android_condition]):
             ret['name'] = ret['slug']
@@ -46,7 +47,7 @@ class TagSerializer(MiniTagSerializer):
         fields = parent_fields + ('api_url', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         ret = super(TagSerializer, self).to_internal_value(data)
         return ret
@@ -117,7 +118,7 @@ class CategorySerializer(TranslatableModelSerializer):
         fields = ('name', 'slug', 'icon', 'image')
 
     def to_internal_value(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             data = {'slug': data}
         super(CategorySerializer, self).to_internal_value(data)
         return self.instance
@@ -126,7 +127,7 @@ class CategorySerializer(TranslatableModelSerializer):
         try:
             self.instance = Category.objects.get(slug=slug)
         except (Category.DoesNotExist, AttributeError):
-            raise serializers.ValidationError(_("Category with slug '%(slug)s' does not exist") % {'value': slug})
+            raise serializers.ValidationError(_("Category with slug '%(slug)s' does not exist") % {'slug': slug})
 
     def to_representation(self, instance):
         ret = super(CategorySerializer, self).to_representation(instance)

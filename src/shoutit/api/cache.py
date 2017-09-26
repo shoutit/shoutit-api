@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from rest_framework_extensions.key_constructor import bits
 from rest_framework_extensions.key_constructor.constructors import KeyConstructor
 

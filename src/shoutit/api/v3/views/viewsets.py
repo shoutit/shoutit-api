@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import uuid
 
 from django.utils.translation import ugettext_lazy as _
@@ -18,7 +16,7 @@ class UUIDViewSetMixin(object):
         value = self.kwargs.get(self.lookup_field)
         try:
             uuid.UUID(value)
-        except:
+        except ValueError:
             raise ShoutitBadRequest(message=_("Resource not found"), developer_message="'%s' is not a valid id" % value,
                                     reason=ERROR_REASON.INVALID_IDENTIFIER)
 

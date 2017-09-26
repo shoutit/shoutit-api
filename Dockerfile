@@ -1,30 +1,43 @@
-FROM python:2.7
-
-ARG SHOUTIT_ENV=dev
-
-# Define working directory and copy files to it
-RUN mkdir /api
-WORKDIR /api
-ADD . /api/
-
-# Add external files
-ADD https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN /opt/ip2location/
-
-# Install ubuntu dependencies
-RUN apt-get update -y && apt-get install tesseract-ocr -y
-
-# Install supervisor
-RUN pip install supervisor
-COPY ./deploy/supervisord.conf /etc/supervisord.conf
-
-# Install pip requirements
-RUN pip install -r src/requirements/${SHOUTIT_ENV}.txt
-RUN pip install -r src/requirements/common_noupdate.txt
-
-EXPOSE 8001
+FROM python:3.6
 
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONIOENCODING UTF-8
-ENV SHOUTIT_ENV $SHOUTIT_ENV
 
-CMD newrelic-admin run-program gunicorn src.wsgi -c /api/src/settings_gunicorn.py
+# Install Debian dependencies
+RUN apt-get update && apt-get install -y \
+    htop \
+    tesseract-ocr \
+    unzip \
+    vim \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install dockerize
+ENV DOCKERIZE_VERSION v0.5.0
+RUN wget -nv https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+# Define working directory
+RUN mkdir /api
+WORKDIR /api
+
+# Add IP2Location Lite Database
+RUN mkdir -p meta/ip2location \
+ && cd meta/ip2location \
+ && curl -sS -o IP2LOCATION-LITE-DB9.BIN.ZIP https://s3-eu-west-1.amazonaws.com/shoutit-api-static/ip2location/IP2LOCATION-LITE-DB9.BIN.ZIP?v=201708 \
+ && unzip IP2LOCATION-LITE-DB9.BIN.ZIP && rm IP2LOCATION-LITE-DB9.BIN.ZIP
+
+# Install Python requirements
+COPY ./requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt
+
+# Copy project files to working directory
+COPY . .
+
+# Expose Gunicorn port
+EXPOSE 8001
+
+# Command to serve API
+CMD ["newrelic-admin", "run-program", "gunicorn", "src.wsgi", "-c", "deploy/gunicorn.py"]
+
+# Command to run RQ
+#CMD ["circusd", "deploy/circus.ini"]

@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from django.conf import settings
@@ -14,7 +12,7 @@ from django.db import models, IntegrityError, transaction
 from django.db.models import Q, Count
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import activate, get_language, ugettext_lazy as _
 from django_pgjson.fields import JsonField
 from pydash import strings
 
@@ -50,7 +48,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     last_message = models.OneToOneField('shoutit.Message', related_name='+', null=True, blank=True,
                                         on_delete=models.SET_NULL)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s at:%s" % (self.pk, self.modified_at_unix)
 
     def clean(self):
@@ -74,7 +72,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
         title = self.subject
         is_contributor = self.contributors.only('id').filter(id=user.id).exists()
         contributors_summary = self.contributors.exclude(id=user.id).select_related('profile', 'page')[:5]
-        contributors_summary_names = map(lambda u: u.name, contributors_summary)
+        contributors_summary_names = [u.name for u in contributors_summary]
         contributors_summary_len = len(contributors_summary)
         if contributors_summary_len == 0:
             sub_title = "You only" if is_contributor else ''
@@ -162,7 +160,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
 
         # Read all the conversation's messages by other users that weren't read by the user before
         MessageRead.objects.bulk_create(
-            map(lambda m: MessageRead(user=user, message=m, conversation=self), unread_messages)
+            [MessageRead(user=user, message=m, conversation=self) for m in unread_messages]
         )
 
         # Todo: Optimize! bulk pusher events
@@ -207,7 +205,7 @@ class Conversation(UUIDModel, AttachedObjectMixin, APIModelMixin, NamedLocationM
     def shout_attachments(self):
         from .post import Shout
         return (Shout.objects.filter(message_attachments__conversation=self)
-                             .distinct())
+                .distinct())
 
 
 @receiver(pre_save, sender=Conversation)
@@ -268,7 +266,7 @@ class Message(Action):
 
     notifications = GenericRelation('shoutit.Notification', related_query_name='message')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s  at:%s" % (self.summary, self.created_at_unix)
 
     def clean(self):
@@ -435,7 +433,7 @@ class MessageAttachment(UUIDModel, AttachedObjectMixin):
     images = ArrayField(models.URLField(), default=list, blank=True)
     videos = models.ManyToManyField('shoutit.Video', blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_type_display()
 
     @property
@@ -481,7 +479,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
     from_user = models.ForeignKey(AUTH_USER_MODEL, null=True, blank=True, related_name='+')
     expires_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s" % (self.pk, self.get_type_display())
 
     @property
@@ -521,6 +519,8 @@ class Notification(UUIDModel, AttachedObjectMixin):
         return obj
 
     def display(self):
+        current_language = get_language()
+        activate(self.to_user.language)
         if hasattr(self, '_display'):
             return self._display
 
@@ -570,7 +570,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
             action = _('View Transactions')
             text = self.attached_object.display()['text']
             setattr(self, '_app_url', settings.APP_LINK_SCHEMA + 'credit_transactions')
-            setattr(self, '_web_url', None)
+            setattr(self, '_web_url', settings.SITE_LINK)
 
         elif self.type == NOTIFICATION_TYPE_SHOUT_LIKE:
             title = _('New Shout Like')
@@ -597,6 +597,7 @@ class Notification(UUIDModel, AttachedObjectMixin):
 
         setattr(self, 'target', target)
         setattr(self, '_display', ret)
+        activate(current_language)
         return self._display
 
     @property
@@ -635,6 +636,8 @@ def actual_notifications(self):
     """
     excluded_types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
     return self.notifications.exclude(type__in=excluded_types).order_by('-created_at')
+
+
 User.add_to_class('actual_notifications', actual_notifications)
 
 
@@ -645,7 +648,7 @@ class Report(UUIDModel, AttachedObjectMixin):
     is_solved = models.BooleanField(default=False)
     is_disabled = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return "From user:%s about: %s:%s" % (self.user.pk, self.get_type_display(), self.attached_object.pk)
 
     def clean(self):
@@ -658,5 +661,5 @@ class PushBroadcast(UUIDModel, AttachedObjectMixin):
     conditions = JsonField(default=dict, blank=True)
     data = JsonField(default=dict, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s" % self.pk

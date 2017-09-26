@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core import validators
@@ -15,7 +13,7 @@ from common.constants import (PageAdminType, PAGE_ADMIN_TYPE_EDITOR, USER_TYPE_P
 from shoutit.models.base import UUIDModel, APIModelMixin, TranslationTreeManager, TranslatedModelFallbackMixin
 from shoutit.models.auth import AbstractProfile
 from shoutit.models.tag import ShoutitSlugField
-from shoutit.utils import correct_mobile
+from shoutit.utils import correct_mobile, none_to_blank
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -35,8 +33,8 @@ class PageCategory(APIModelMixin, TranslatedModelFallbackMixin, TranslatableMode
         _local_name=models.CharField(max_length=30, blank=True, default='')
     )
 
-    def __unicode__(self):
-        return unicode(self.name)
+    def __str__(self):
+        return str(self.name)
 
 
 class Page(AbstractProfile):
@@ -63,12 +61,15 @@ class Page(AbstractProfile):
     def __init__(self, *args, **kwargs):
         super(Page, self).__init__(*args, **kwargs)
 
-    def __unicode__(self):
-        return unicode(self.user)
+    def __str__(self):
+        return str(self.user)
 
     def clean(self):
         super(Page, self).clean()
-        self.phone = correct_mobile(self.phone, self.country)
+        if self.phone:
+            self.phone = correct_mobile(self.phone, self.country)
+        none_to_blank(self, ['about', 'description', 'phone', 'founded', 'impressum', 'overview', 'mission',
+                             'general_info'])
 
     def is_admin(self, user):
         return user.id == self.id or self.admins.filter(id=user.id).exists()

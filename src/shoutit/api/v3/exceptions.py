@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import request_id
 from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
@@ -32,6 +30,8 @@ class ErrorReason(object):
     BACKEND_ERROR = 'backend_error'
     CONNECTION = 'connection_error'
     NOT_READY = 'not_ready'
+
+
 ERROR_REASON = ErrorReason()
 
 
@@ -39,6 +39,8 @@ class ErrorLocationType(object):
     HEADER = 'header'
     PARAMETER = 'parameter'
     BODY = 'body'
+
+
 ERROR_LOCATION_TYPE = ErrorLocationType()
 
 
@@ -49,19 +51,14 @@ def _force_text_recursive(data):
     This modified version keeps tuples as is
     """
     if isinstance(data, (list, tuple)):
-        ret = [
-            _force_text_recursive(item) for item in data
-        ]
+        ret = [_force_text_recursive(item) for item in data]
         if isinstance(data, ReturnList):
             return ReturnList(ret, serializer=data.serializer)
         if isinstance(data, tuple):
             return tuple(ret)
         return ret
     elif isinstance(data, dict):
-        ret = {
-            key: _force_text_recursive(value)
-            for key, value in data.items()
-        }
+        ret = {key: _force_text_recursive(value) for key, value in data.items()}
         if isinstance(data, ReturnDict):
             return ReturnDict(ret, serializer=data.serializer)
         return ret
@@ -79,7 +76,7 @@ class ShoutitAPIException(drf_exceptions.APIException):
     default_developer_message = 'Contact API admin and mention the `request_id`'
 
     def __init__(self, message=None, developer_message=None, errors=None):
-        self.original_message = message
+        self.original_message = _force_text_recursive(message or '')
         if message is not None:
             self.message = force_text(message)
         else:
@@ -96,6 +93,7 @@ class ShoutitAPIException(drf_exceptions.APIException):
             self.errors = _force_text_recursive(errors)
         else:
             self.errors = [{'message': self.message}]
+        super(ShoutitAPIException, self).__init__(detail=message)
 
     def __str__(self):
         dev_msg = self.developer_message if self.developer_message != self.default_developer_message else ''

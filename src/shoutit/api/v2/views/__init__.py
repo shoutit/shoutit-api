@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from rest_framework.parsers import FormParser, MultiPartParser
 
 from ...parsers import ShoutitJSONParser

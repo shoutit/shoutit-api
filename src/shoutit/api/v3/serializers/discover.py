@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from hvad.contrib.restframework import TranslatableModelSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -45,6 +43,8 @@ class DiscoverItemDetailSerializer(DiscoverItemSerializer):
         if not instance.show_shouts:
             ret.pop('shouts_url', None)
         blank_to_none(ret, ['image', 'cover', 'icon'])
+        # Sort children
+        ret['children'] = sorted(ret['children'], key=lambda x: x['position'])
         return ret
 
     def get_shouts_url(self, discover_item):

@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 import uuid
 from importlib import import_module
 

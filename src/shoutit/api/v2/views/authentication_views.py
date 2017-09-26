@@ -2,8 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from django.core.exceptions import ObjectDoesNotExist
 from provider import constants as provider_constants, scope as provider_scope
 from provider.oauth2.forms import ClientAuthForm
@@ -404,7 +402,7 @@ class AccessTokenView(PostAccessTokenRequestMixin, OAuthAccessTokenView, APIView
         except ShoutitBadRequest as e:
             return self.error_response(e.message, client=client, grant_type=grant_type)
         except Exception as e:
-            return self.error_response(unicode(e), client=client, grant_type=grant_type)
+            return self.error_response(str(e), client=client, grant_type=grant_type)
 
 
 class ShoutitAuthViewSet(viewsets.ViewSet):

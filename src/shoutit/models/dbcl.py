@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.db import models
 from shoutit.models import Shout
@@ -13,7 +11,7 @@ class DBCLUser(UUIDModel):
     class Meta(UUIDModel.Meta):
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s" % (self.pk, self.user)
 
     @property
@@ -42,7 +40,7 @@ class DBCLConversation(UUIDModel):
     sms_code = models.CharField(max_length=10, default='', blank=True)
 
     def clean(self):
-        if isinstance(self.sms_code, basestring):
+        if isinstance(self.sms_code, str):
             if self._state.adding:
                 self.sms_code = 'Z' + self.sms_code
             self.sms_code = self.sms_code.upper()

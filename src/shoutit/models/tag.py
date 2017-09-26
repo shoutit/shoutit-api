@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import re
 
 from django.core import validators
@@ -64,7 +62,7 @@ class Tag(APIModelMixin, TranslatedModelFallbackMixin, TranslatableModel, UUIDMo
     class Meta:
         unique_together = ('slug', 'key')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s" % (self.key, self.slug)
 
     @property
@@ -83,7 +81,7 @@ class TagKey(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
     values_type = models.PositiveSmallIntegerField(choices=TagValueType.choices, default=TAG_TYPE_STR.value)
     definition = models.CharField(max_length=100, blank=True, default='')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s" % self.slug
 
     translations = TranslatedFields(
@@ -102,7 +100,7 @@ class Category(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
         _local_name=models.CharField(max_length=30, blank=True, default='', db_index=True)
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @property
@@ -118,5 +116,5 @@ class FeaturedTag(UUIDModel, NamedLocationMixin):
     class Meta:
         unique_together = ('country', 'state', 'city', 'rank')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s in %s, %s, %s" % (self.tag.name, self.city, self.state, self.country)

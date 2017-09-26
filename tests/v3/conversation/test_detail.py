@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from unittest import skip
 
 from mock import patch
 from django_dynamic_fixture import G, F
@@ -109,6 +108,15 @@ class ConversationDetailTestCase(DetailMixin, BaseTestCase):
         resp = self.client.patch(self.get_url(conv.pk), {'subject': '-'})
         self.assert200(resp)
         self.assertEqual(Conversation.objects.get(pk=conv.pk).subject, '-')
+
+    def test_update_icon(self):
+        conv = G(Conversation, type=CONVERSATION_TYPE_CHAT, creator=self.user1)
+        self.login(self.user1)
+        icon_url = 'http://example.com/img.jpg'
+        resp = self.client.patch(self.get_url(conv.pk), {'icon': icon_url})
+        self.assert200(resp)
+        conv.refresh_from_db()
+        self.assertEqual(conv.icon, icon_url)
 
     @patch.object(mocked_pusher, 'trigger')
     def test_update_subject_pusher_event(self, m_trigger):

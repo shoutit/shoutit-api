@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from django.utils.translation import ugettext_lazy as _
@@ -85,8 +83,6 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
         errors = OrderedDict()
 
         if not text and not attachments:
-            # Todo: check why having string as the detail results in exception
-            # raise serializers.ValidationError("Provide 'text' or 'attachments'")
             raise serializers.ValidationError({'': _("Provide 'text' or 'attachments'")})
         if attachments is not None:
             if isinstance(attachments, list) and len(attachments):
@@ -117,7 +113,7 @@ class MessageSerializer(AttachedUUIDObjectMixin, serializers.ModelSerializer):
                             for v in videos:
                                 vs = VideoSerializer(data=v)
                                 if not vs.is_valid():
-                                    attachment_error = {'videos': unicode(vs.errors)}
+                                    attachment_error = {'videos': str(vs.errors)}
 
                     errors['attachments'].insert(i, attachment_error or None)
                     i += 1

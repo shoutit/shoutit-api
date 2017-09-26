@@ -2,12 +2,33 @@
 """
 
 """
-from __future__ import unicode_literals
-
-from settings_env import *  # NOQA
-from common.utils import get_address_port, strtobool
+import datetime
+import os
+import sys
 from datetime import timedelta
+
 from django.utils.translation import ugettext_lazy as _
+
+from src.common.utils import get_address_port, strtobool
+from config import load_env
+
+"""
+=================================
+        Environment
+=================================
+"""
+SRC_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+API_DIR = os.path.dirname(SRC_DIR)
+SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'development')
+
+# Read env variables from .env file based on `SHOUTIT_ENV`
+load_env(env_name=SHOUTIT_ENV)
+
+
+def info(*args):
+    _now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    print("[%s] [INFO]:" % _now, *args, file=sys.stderr)
+
 
 """
 =================================
@@ -24,7 +45,7 @@ ADDRESS, PORT = get_address_port(GUNICORN)
 ROOT_URLCONF = 'shoutit.urls'
 APPEND_SLASH = False
 API_LINK = os.environ.get('API_LINK')
-SITE_LINK = os.environ.get('SITE_LINK', 'shoutit')
+SITE_LINK = os.environ.get('SITE_LINK')
 APP_LINK_SCHEMA = os.environ.get('APP_LINK_SCHEMA')
 
 # Security
@@ -62,7 +83,9 @@ FORCE_SSS_NOTIFY = False
 """
 ES_HOST = os.environ.get('ES_HOST')
 ES_PORT = os.environ.get('ES_PORT')
-ES_URL = "%s:%s" % (ES_HOST, ES_PORT)
+if ES_PORT and 'tcp' in ES_PORT:
+    ES_PORT = ES_PORT.split(':')[-1]
+ES_URL = f"{ES_HOST}:{ES_PORT}"
 ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
 
 """
@@ -70,13 +93,16 @@ ES_BASE_INDEX = os.environ.get('ES_BASE_INDEX')
             Caching
 =================================
 """
-REDIS_PORT = os.environ.get('REDIS_PORT').replace('tcp', 'redis')
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get('REDIS_PORT')
+if REDIS_PORT and 'tcp' in REDIS_PORT:
+    REDIS_PORT = REDIS_PORT.split(':')[-1]
 
 
 def default_redis_conf(db=0):
     return {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "%s/%s" % (REDIS_PORT, str(db)),
+        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/{db}",
         'TIMEOUT': None,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -150,7 +176,7 @@ RQ_QUEUES = {
     },
 }
 if FORCE_SYNC_RQ:
-    for queue_config in RQ_QUEUES.itervalues():
+    for queue_config in RQ_QUEUES.values():
         queue_config['ASYNC'] = False
 
 """
@@ -158,7 +184,7 @@ if FORCE_SYNC_RQ:
        Application definition
 =================================
 """
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'grappelli',
     'mptt',
     'django_mptt_admin',
@@ -180,14 +206,15 @@ INSTALLED_APPS = (
     'django_rq',
     'corsheaders',
     'heartbeat',
+    'raven.contrib.django.raven_compat',
 
     'shoutit',
     'shoutit_credit',
     'shoutit_crm',
     'shoutit_pusher',
     'shoutit_twilio',
-    'hvad'
-)
+    'hvad',
+]
 
 TWILIO_ENV = os.environ.get('TWILIO_ENV', SHOUTIT_ENV)
 PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
@@ -199,7 +226,7 @@ PUSHER_ENV = os.environ.get('PUSHER_ENV', SHOUTIT_ENV)
 """
 REQUEST_ID_HEADER = None
 CORS_ORIGIN_ALLOW_ALL = True
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE_CLASSES = [
     'shoutit.middleware.AgentMiddleware',
     'shoutit.middleware.XForwardedForMiddleware',
     'request_id.middleware.RequestIdMiddleware',
@@ -220,7 +247,7 @@ MIDDLEWARE_CLASSES = (
     'shoutit.api.exceptions.APIExceptionMiddleware',
     # 'common.middleware.ProfilerMiddleware.ProfileMiddleware',
     # 'common.middleware.SqlLogMiddleware.SQLLogToConsoleMiddleware',
-)
+]
 
 """
 =================================
@@ -282,7 +309,7 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 else:
     STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join('/var', 'static')
+    STATIC_ROOT = os.path.join(API_DIR, 'static')
     if not os.path.exists(STATIC_ROOT):
         os.makedirs(STATIC_ROOT)
 
@@ -327,6 +354,7 @@ MAX_BROADCAST_RECIPIENTS = 1000
 
 # Mixpanel
 MIXPANEL_TOKEN = os.environ.get('MIXPANEL_TOKEN', '')
+MIXPANEL_SECRET = os.environ.get('MIXPANEL_SECRET', '')
 USE_MIXPANEL = MIXPANEL_TOKEN is not ''
 
 # Nexmo
@@ -334,7 +362,7 @@ NEXMO_API_KEY = "7c650639"
 NEXMO_API_SECRET = "4ee98397"
 
 # IP2Location
-IP2LOCATION_DB_BIN = os.path.join('/opt', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
+IP2LOCATION_DB_BIN = os.path.join(API_DIR, 'meta', 'ip2location', 'IP2LOCATION-LITE-DB9.BIN')
 
 # AntiCaptcha
 ANTI_KEY = 'eb8e82bf16467103e8e0f49f6ea2924a'
@@ -356,7 +384,7 @@ GOOGLE_WEB_CLIENT = os.path.join(SRC_DIR, 'assets', 'google-web-client.json')
             Mail
 =================================
 """
-LOG_DIR = os.path.join('/var', 'log', 'shoutit-api-' + SHOUTIT_ENV)
+LOG_DIR = os.path.join(API_DIR, 'log', 'shoutit-api-' + SHOUTIT_ENV)
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
@@ -478,10 +506,15 @@ SWAGGER_SETTINGS = {
 RAVEN_CONFIG = {
     'dsn': os.environ.get('RAVEN_DSN', ''),
     'string_max_length': 1000,
-    'transport': 'raven.transport.requests.RequestsHTTPTransport'
+    'transport': 'raven.transport.threaded_requests.ThreadedRequestsHTTPTransport',
+    'environment': SHOUTIT_ENV,
 }
 USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
+
+# Disable Sentry while on development or when running py.test
+if DEBUG and not USE_SENTRY:
+    INSTALLED_APPS.remove('raven.contrib.django.raven_compat')
 
 LOG_SQL = False
 
@@ -493,7 +526,7 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '[%(asctime)s] [%(levelname)s]: %(message)s'
+            'format': '[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s'
         },
         'simple_dashed': {
             'format': '-------------------------------------------\n'
@@ -598,7 +631,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console_out', 'console_err', 'sentry'],
-            'level': 'DEBUG',
+            'level': 'DEBUG' if DEBUG else 'WARNING',
             'propagate': False,
         },
         'py.warnings': {
@@ -616,13 +649,8 @@ LOGGING = {
             'propagate': False,
         },
         'gunicorn': {
-            'level': 'DEBUG',
+            'level': 'DEBUG' if DEBUG else 'WARNING',
             'handlers': ['console_out', 'console_err', 'sentry'],
-            'propagate': False,
-        },
-        'rq.worker': {
-            'handlers': ['console_out', 'console_err', 'sentry'],
-            "level": "DEBUG",
             'propagate': False,
         },
         # 'requests': {
@@ -654,7 +682,13 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False
         },
+        'elasticsearch': {
+            'handlers': ['console_out', 'console_err', 'sentry'],
+            'level': 'WARNING',
+            'propagate': False
+        },
         '': {
+            'level': 'DEBUG' if DEBUG else 'WARNING',
             'handlers': ['console_out', 'console_err', 'sentry'],
         },
     }

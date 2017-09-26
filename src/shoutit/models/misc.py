@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import uuid
 
 from django.conf import settings
@@ -8,14 +6,15 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django_pgjson.fields import JsonField
 from django_rq import job
-from elasticsearch import RequestError, ConnectionTimeout, NotFoundError, ConflictError
-from elasticsearch_dsl import DocType, String, GeoPoint
+from elasticsearch import NotFoundError, ConflictError
+from elasticsearch_dsl import DocType, Keyword, GeoPoint
 from pydash import arrays
 
 from common.constants import TOKEN_TYPE_EMAIL, TokenType, SMSInvitationStatus, SMS_INVITATION_ADDED, DeviceOS
 from shoutit.models.base import UUIDModel, LocationMixin
-from ..utils import error_logger, debug_logger
+from ..utils import debug_logger
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
@@ -24,10 +23,10 @@ class PredefinedCity(UUIDModel, LocationMixin):
     approved = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ('country', 'postal_code', 'state', 'city')
+        unique_together = (('country', 'postal_code', 'state', 'city'), ('latitude', 'longitude'))
 
-    def __unicode__(self):
-        return unicode(self.country + ':' + self.city)
+    def __str__(self):
+        return str(self.country + ':' + self.city)
 
     def get_cities_within(self, dist_km, max_cities=30):
         distance = {
@@ -40,7 +39,7 @@ class PredefinedCity(UUIDModel, LocationMixin):
         cities = list(cities)
         cities.sort(key=lambda x: x['distance'])
         ids = [c['id'] for c in cities if float(c['distance']) < dist_km][:max_cities]
-        ids = arrays.unique(ids)
+        ids = arrays.uniq(ids)
         return PredefinedCity.objects.filter(id__in=ids)
 
 
@@ -55,7 +54,7 @@ class ConfirmToken(UUIDModel):
     email = models.EmailField(blank=True, null=True)
     is_disabled = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s: %s" % (self.get_type_display(), self.user, self.token)
 
     def disable(self):
@@ -71,7 +70,7 @@ class GoogleLocation(LocationMixin, UUIDModel):
     geocode_response = models.TextField(max_length=5000)
     is_indexed = models.BooleanField(default=False, db_index=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s [%0.6f,%0.6f]: %s, %s" % (self.country, self.latitude, self.longitude, self.state, self.city)
 
     class Meta:
@@ -79,13 +78,13 @@ class GoogleLocation(LocationMixin, UUIDModel):
 
 
 class LocationIndex(DocType):
-    source = String(index='not_analyzed')
+    source = Keyword()
     location = GeoPoint()
-    country = String(index='not_analyzed')
-    postal_code = String(index='not_analyzed')
-    state = String(index='not_analyzed')
-    city = String(index='not_analyzed')
-    address = String(index='not_analyzed')
+    country = Keyword()
+    postal_code = Keyword()
+    state = Keyword()
+    city = Keyword()
+    address = Keyword()
 
     class Meta:
         index = '%s_location' % settings.ES_BASE_INDEX
@@ -101,15 +100,6 @@ class LocationIndex(DocType):
             'city': self.city,
             'address': self.address,
         }
-
-
-# initiate the index if not initiated
-try:
-    LocationIndex.init()
-except RequestError:
-    pass
-except ConnectionTimeout:
-    error_logger.warn("ES Server is down", exc_info=True)
 
 
 @receiver(post_save, sender=GoogleLocation)
@@ -188,8 +178,8 @@ def delete_object_index(index_model, obj):
 #     File = models.CharField(max_length=1024)
 #     type = models.IntegerField()
 #
-#     def __unicode__(self):
-#         return "(" + unicode(self.pk) + ") " + unicode(self.File)
+#     def __str__(self):
+#         return "(" + str(self.pk) + ") " + str(self.File)
 
 
 class SMSInvitation(UUIDModel):
@@ -203,7 +193,7 @@ class SMSInvitation(UUIDModel):
     source = models.CharField(max_length=20, db_index=True, default='', blank=True)
     link = models.CharField(max_length=1000, default='', blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s: %s" % (self.get_status_display(), self.country, self.mobile)
 
 
@@ -216,5 +206,13 @@ class Device(UUIDModel):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_id = models.IntegerField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s" % (self.api_version, self.get_type_display())
+
+
+class TrackerData(UUIDModel):
+    date = models.DateField(unique=True)
+    data = JsonField(default=dict, blank=True)
+
+    def __str__(self):
+        return F'{self.date}: {self.data}'

@@ -2,7 +2,6 @@
 """
 
 """
-from __future__ import unicode_literals
 import datetime
 from django.contrib import admin
 from django.contrib.admin import DateFieldListFilter

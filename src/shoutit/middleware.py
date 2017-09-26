@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import re
 
 from django.conf import settings
@@ -25,25 +23,42 @@ class AgentMiddleware(object):
         """
         Add information about the request using the its user-agent
         """
-        user_agent = request.META.get('HTTP_USER_AGENT', '').encode('utf8')
+        # Todo: Simplify
+        user_agent = str(request.META.get('HTTP_USER_AGENT', '').encode('utf8'))
         if 'com.shoutit-iphone' in user_agent or 'com.appunite.shoutit' in user_agent:
             agent = 'ios'
-            build_no_re = re.search('.*(com.shoutit-iphone|com.appunite.shoutit).*\((\d+);', user_agent)
-            build_no = build_no_re.groups()[1] if build_no_re else 0
+            if 'Alamofire' in user_agent:
+                info_re = re.search('.*/([\d.]+) \(.*; build:(\d+); iOS ([\d.]+)\) Alamofire/([\d.]+)', user_agent)
+                app_version = info_re.groups()[0] if info_re else None
+                build_no = info_re.groups()[1] if info_re else 0
+                os_version = info_re.groups()[2] if info_re else None
+            else:
+                info_re = re.search('.*(com.shoutit-iphone|com.appunite.shoutit).*\((\d+);', user_agent)
+                app_version = None
+                build_no = info_re.groups()[1] if info_re else 0
+                os_version = None
         elif 'com.shoutit.app.android' in user_agent:
             agent = 'android'
-            build_no_re = re.search('com.shoutit.app.android.*\((\d+);', user_agent)
-            build_no = build_no_re.groups()[0] if build_no_re else 0
+            info_re = re.search('com.shoutit.app.android.*\((\d+);', user_agent)
+            app_version = None
+            build_no = info_re.groups()[0] if info_re else 0
+            os_version = None
         elif 'shoutit-web' in user_agent:
             agent = 'web'
-            build_no_re = re.search('shoutit-web \(.+; .+; .+; release-(\d+).*\)', user_agent)
-            build_no = build_no_re.groups()[0] if build_no_re else 0
+            info_re = re.search('shoutit-web \(.+; .+; .+; release-(\d+).*\)', user_agent)
+            app_version = None
+            build_no = info_re.groups()[0] if info_re else 0
+            os_version = None
         else:
             agent = None
+            app_version = None
             build_no = 0
+            os_version = None
 
         request.agent = agent
+        request.app_version = app_version
         request.build_no = int(build_no)
+        request.os_version = os_version
 
 
 class BadRequestsMiddleware(object):
@@ -92,10 +107,19 @@ class UserLanguageMiddleware(object):
     """
     @staticmethod
     def process_request(request):
-        if request.user.is_authenticated() and request.LANGUAGE_CODE != request.user.language:
-            request.user.notify = False
-            request.user.update(language=request.LANGUAGE_CODE)
-            request.user.notify = True
+        user = request.user
+        if user.is_authenticated() and request.LANGUAGE_CODE != user.language:
+            user.update_language(request.LANGUAGE_CODE)
+
+    @staticmethod
+    def process_response(request, response):
+        # The authentication with DRF happens in the views. Since there is no unified place to add middleware for DRF
+        # views, we can update the user language on response time instead.
+        # At this point the request should be authenticated already, unless something wrong happened before DRF auth.
+        user = getattr(request, 'user', None)
+        if user and user.is_authenticated() and request.LANGUAGE_CODE != user.language:
+            user.update_language(request.LANGUAGE_CODE)
+        return response
 
 
 class FBMiddleware(object):

@@ -1,8 +1,6 @@
 """
 
 """
-from __future__ import unicode_literals
-
 from datetime import timedelta
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
@@ -35,7 +33,7 @@ class PromoteLabel(TranslatedModelFallbackMixin, TranslatableModel, UUIDModel):
         _local_description=models.CharField(max_length=250, blank=True, default='')
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s:%s" % (self.name, self.color)
 
     def clean(self):

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
@@ -32,7 +30,7 @@ urlpatterns = [
 ]
 
 # serving static files while developing locally using gunicorn
-if settings.GUNICORN and settings.LOCAL:
+if settings.GUNICORN and settings.SHOUTIT_ENV == 'development':
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
     urlpatterns += staticfiles_urlpatterns()

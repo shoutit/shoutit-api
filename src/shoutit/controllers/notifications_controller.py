@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.db.models import Count
 from django_rq import job
@@ -63,6 +61,7 @@ def get_unread_conversations_count(user):
 
 @job(settings.RQ_QUEUE)
 def notify_user(user, notification_type, from_user=None, attached_object=None, versions=None, serializing_options=None):
+
     if not versions:
         versions = api_settings.ALLOWED_VERSIONS
 
