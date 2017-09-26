@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.test import override_settings
 from push_notifications import apns
 
+from shoutit.controllers.facebook_controller import FB_GRAPH_ACCESS_TOKEN_URL
 from shoutit.models import (
     Conversation, Video, Listen2, Tag, Message, LinkedFacebookAccount,
     ProfileContact, Page)
@@ -625,7 +626,7 @@ class ProfileLinkTestCase(DetailMixin, BaseTestCase):
         responses.add(responses.GET, 'https://graph.facebook.com/v2.6/debug_token',
                       json=self.facebook_debug, status=200)
         responses.add(responses.GET,
-                      'https://graph.facebook.com/oauth/access_token',
+                      FB_GRAPH_ACCESS_TOKEN_URL,
                       json=self.facebook_access_token, status=200)
         responses.add(responses.GET,
                       self.facebook_response['picture']['data']['url'],

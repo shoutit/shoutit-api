@@ -3,24 +3,15 @@ import time
 from datetime import datetime, timedelta
 from json import loads
 
-from mock import patch
-import httplib2
-
 import responses
 from django.contrib.auth import get_user_model
-from django.utils.http import urlencode
 from django_dynamic_fixture import G
-from provider.oauth2.models import RefreshToken
+from provider.oauth2.models import RefreshToken, Client
 
-from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL
-from shoutit.models.auth import AuthToken, LinkedGoogleAccount
-from shoutit.models.dbcl import DBCLConversation
-from shoutit.models.misc import ConfirmToken
-from shoutit.models.page import Page, PageCategory
-from shoutit.models.user import Profile
-
+from common.constants import TOKEN_TYPE_RESET_PASSWORD, TOKEN_TYPE_EMAIL, DEFAULT_LOCATION
+from shoutit.controllers.facebook_controller import FB_GRAPH_ACCESS_TOKEN_URL
+from shoutit.models import AuthToken, Category, DBCLConversation, ConfirmToken, Page, PageCategory, Profile
 from tests.base import BaseTestCase
-
 
 User = get_user_model()
 
@@ -118,7 +109,6 @@ class SetPasswordTestCase(BaseTestCase):
         self.assert400(resp)
 
     def test_missing_password(self):
-
         data = {
             'reset_token': self.token.token,
             'new_password': 'sup3rs4f3!!!',
@@ -137,7 +127,6 @@ class SetPasswordTestCase(BaseTestCase):
         self.assert400(resp)
 
     def test_valid_password_update(self):
-
         data = {
             'reset_token': self.token.token,
             'new_password': 'sup3rs4f3!!!',
@@ -243,7 +232,9 @@ class AccessTokenTestCase(BaseTestCase):
             last_name='Zimmer',
             email='hans@example.com',
         )
-        cls.shout = cls.create_shout(category__slug='shout-slug', user=cls.user)
+        category = Category.objects.get(slug='services')
+        cls.shout = cls.create_shout2(user=cls.user, shout_type=0, title='Pets Service 1', text='', price=None,
+                                      currency=None, category=category, location=DEFAULT_LOCATION)
 
     def get_data(self, new_data=None):
         data = self.default_data.copy()
@@ -312,18 +303,18 @@ class AccessTokenTestCase(BaseTestCase):
             }
         }
 
-        facebook_access_token = urlencode({
+        facebook_access_token = {
             "access_token": "EAAEM8234sdf",
             "token_type": "bearer",
             "expires": 5183341
-        })
+        }
         responses.add(responses.GET, 'https://graph.facebook.com/v2.6/me',
                       json=facebook_response, status=200)
         responses.add(responses.GET, 'https://graph.facebook.com/v2.6/debug_token',
                       json=facebook_debug, status=200)
         responses.add(responses.GET,
-                      'https://graph.facebook.com/oauth/access_token',
-                      body=facebook_access_token, status=200)
+                      FB_GRAPH_ACCESS_TOKEN_URL,
+                      json=facebook_access_token, status=200)
         resp = self.client.post(self.reverse(self.url_name), data)
         self.assert200(resp)
 
@@ -492,9 +483,7 @@ class AccessTokenTestCase(BaseTestCase):
         self.assert200(resp)
 
     def test_refresh_token(self):
-        return  # TODO the error message I get back suggests, that the grant 'refresh_token' does not exist
-        # Error returned: OAuthError: errorinvalid_grant
-        token = G(RefreshToken, user=self.user)
+        token = G(RefreshToken, user=self.user, client=Client.objects.get(client_id='shoutit-test'))
         data = self.get_data({
             'grant_type': 'refresh_token',
             'refresh_token': token.token
