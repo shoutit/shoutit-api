@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from django.utils.translation import ugettext_lazy as _
 
-from src.common.utils import get_address_port, strtobool
+from common.utils import get_address_port, strtobool
 from config import load_env
 
 """
