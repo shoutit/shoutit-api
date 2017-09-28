@@ -266,7 +266,7 @@ def publish_shout_to_facebook(shout):
         return
     live = settings.SHOUTIT_ENV == 'live'
     stage = settings.SHOUTIT_ENV == 'stage'
-    namespace = 'shoutitcom' if live else 'shoutitcom-dev' if stage else 'shoutitcom-local'
+    namespace = 'shoutitcom' if live else 'shoutitcom-stage' if stage else 'shoutitcom-dev'
     actions_url = 'https://graph.facebook.com/v2.6/me/%s:shout' % namespace
     params = {
         'access_token': la.access_token,
