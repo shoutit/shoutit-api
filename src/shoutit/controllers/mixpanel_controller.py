@@ -84,6 +84,7 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             'username': user.username,
 
             '$created': user.date_joined,
+            '$last_seen': user.last_login,
             'last_login': user.last_login,
 
             '$country_code': ap.country,
