@@ -130,11 +130,9 @@ class PostAccessTokenRequestMixin(object):
             event_name = 'login'
 
         if mixpanel_distinct_id:
-            # Alias the Mixpanel id and track
-            mixpanel_controller.alias(user.pk, mixpanel_distinct_id, event_name, track_properties, add=True)
+            # Alias the Mixpanel id
+            mixpanel_controller.alias(user.pk, mixpanel_distinct_id)
         else:
-            # Track only
-            mixpanel_controller.track(user.pk, event_name, track_properties, add=True)
             # Y U NO send us Mixpanel?
             if data.get('grant_type') != 'refresh_token':
                 extra = {
@@ -147,3 +145,7 @@ class PostAccessTokenRequestMixin(object):
                     'track_properties': track_properties,
                 }
                 error_logger.warning('AccessToken request without mixpanel_distinct_id', extra=extra)
+
+        # Track event and add/update user to Mixpanel people
+        mixpanel_controller.track(user.pk, event_name, track_properties)
+        mixpanel_controller.add_to_mp_people([user.pk])

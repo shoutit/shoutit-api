@@ -19,18 +19,16 @@ shoutit_mp = Mixpanel(settings.MIXPANEL_TOKEN, serializer=ShoutitJSONEncoder)
 shoutit_mp_buffered = Mixpanel(settings.MIXPANEL_TOKEN, consumer=buffered_consumer, serializer=ShoutitJSONEncoder)
 
 
-def alias(alias_id, original, event_name=None, track_properties=None, add=False):
+def alias(alias_id, original):
     if not settings.USE_MIXPANEL:
         return
-    return _alias.delay(alias_id, original, event_name=event_name, track_properties=track_properties, add=add)
+    return _alias.delay(alias_id, original)
 
 
 @job(settings.RQ_QUEUE)
-def _alias(alias_id, original, event_name=None, track_properties=None, add=None):
+def _alias(alias_id, original):
     shoutit_mp.alias(alias_id, original)
     debug_logger.debug("MP aliased, alias_id: %s original: %s" % (alias_id, original))
-    if event_name and track_properties:
-        _track(alias_id, event_name, track_properties, add)
 
 
 def track_new_message(message):
@@ -43,23 +41,21 @@ def _track_new_message(message):
     track(distinct_id, 'new_message', message.track_properties, delay=False)
 
 
-def track(distinct_id, event_name, properties=None, delay=True, add=False):
+def track(distinct_id, event_name, properties=None, delay=True):
     # Todo: properties could be a callable that gets called when the tracking happens
     if not settings.USE_MIXPANEL:
         return
     if delay:
-        return _track.delay(distinct_id, event_name, properties, add=add)
+        return _track.delay(distinct_id, event_name, properties)
     else:
-        return _track(distinct_id, event_name, properties, add=add)
+        return _track(distinct_id, event_name, properties)
 
 
 @job(settings.RQ_QUEUE)
-def _track(distinct_id, event_name, properties=None, add=False):
+def _track(distinct_id, event_name, properties=None):
     properties = properties or {}
     shoutit_mp.track(distinct_id, event_name, properties)
     debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
-    if add:
-        _add_to_mp_people([distinct_id])
 
 
 def add_to_mp_people(user_ids=None, buffered=False):
