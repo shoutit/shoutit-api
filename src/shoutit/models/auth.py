@@ -294,10 +294,13 @@ class User(AbstractBaseUser, PermissionsMixin, UUIDModel, APIModelMixin):
         self.save(update_fields=['is_activated'])
 
     def update_language(self, language):
+        from ..controllers import mixpanel_controller
+
         old_notify_state = getattr(self, 'notify', None)
         self.notify = False
         self.update(language=language)
         self.notify = old_notify_state
+        mixpanel_controller.add_to_mp_people([self.id])
 
     def mute_shouts(self):
         # Todo: optimize

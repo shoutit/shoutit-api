@@ -58,6 +58,7 @@ def _track(distinct_id, event_name, properties=None):
     debug_logger.debug("Tracked %s for %s" % (event_name, distinct_id))
 
 
+# Todo: Refactor calling this function. It should be called every time user instance or its profile/page are updated
 def add_to_mp_people(user_ids=None, buffered=False):
     if not settings.USE_MIXPANEL:
         return

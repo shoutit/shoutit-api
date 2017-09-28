@@ -75,7 +75,7 @@ MAX_IMAGES_PER_ITEM = 10
 MAX_VIDEOS_PER_ITEM = 2
 SHOUT_EXPIRY_NOTIFY = 2
 FORCE_SSS_NOTIFY = False
-
+USER_LAST_LOGIN_EXPIRY_SECONDS = 60 * 60
 """
 =================================
             Elasticsearch
@@ -241,7 +241,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Shoutit Custom Middleware
     # 'shoutit.middleware.UserPermissionsMiddleware',
-    'shoutit.middleware.UserLanguageMiddleware',
+    'shoutit.middleware.UserAttributesMiddleware',
     'shoutit.middleware.FBMiddleware',
     'shoutit.middleware.BadRequestsMiddleware',
     'shoutit.api.exceptions.APIExceptionMiddleware',

@@ -1,6 +1,9 @@
 import re
 
 from django.conf import settings
+from django.contrib.auth import user_logged_in
+from django.core.cache import cache
+from django.utils import timezone
 from ipware.ip import get_real_ip
 
 from common.constants import DEFAULT_LOCATION
@@ -101,15 +104,10 @@ class UserPermissionsMiddleware(object):
         UserPermissionsMiddleware.attach_permissions_to_request(request)
 
 
-class UserLanguageMiddleware(object):
+class UserAttributesMiddleware(object):
     """
-    Updates the user's language from information provided by the client.
+    Updates the user's language and last_login attributes.
     """
-    @staticmethod
-    def process_request(request):
-        user = request.user
-        if user.is_authenticated() and request.LANGUAGE_CODE != user.language:
-            user.update_language(request.LANGUAGE_CODE)
 
     @staticmethod
     def process_response(request, response):
@@ -117,8 +115,17 @@ class UserLanguageMiddleware(object):
         # views, we can update the user language on response time instead.
         # At this point the request should be authenticated already, unless something wrong happened before DRF auth.
         user = getattr(request, 'user', None)
-        if user and user.is_authenticated() and request.LANGUAGE_CODE != user.language:
-            user.update_language(request.LANGUAGE_CODE)
+
+        # Todo: Make less calls to Datebase, Mixpanel, and Pusher
+        if user and user.is_authenticated():
+            if request.LANGUAGE_CODE != user.language:
+                user.update_language(request.LANGUAGE_CODE)
+
+            last_login_cache_key = f'user-last-login-{user.id}'
+            if cache.get(last_login_cache_key) is None:
+                cache.set(last_login_cache_key, timezone.now(), settings.USER_LAST_LOGIN_EXPIRY_SECONDS)
+                user_logged_in.send(sender=user.__class__, request=request, user=user)
+
         return response
 
 
