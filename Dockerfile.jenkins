@@ -1,0 +1,12 @@
+FROM jenkins:2.60.3
+
+COPY shoutit.pem /var/lib/jenkins/cert
+COPY shoutit.key /var/lib/jenkins/pk
+
+ENV JENKINS_OPTS --httpPort=-1 --httpsPort=8083 --httpsCertificate=/var/lib/jenkins/cert --httpsPrivateKey=/var/lib/jenkins/pk
+
+EXPOSE 8083
+
+# The private key had to be converted to RSA private key
+# https://issues.jenkins-ci.org/browse/JENKINS-22448
+# https://stackoverflow.com/questions/17733536/how-to-convert-a-private-key-to-an-rsa-private-key
