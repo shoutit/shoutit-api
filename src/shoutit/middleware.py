@@ -114,10 +114,11 @@ class UserAttributesMiddleware(object):
         # The authentication with DRF happens in the views. Since there is no unified place to add middleware for DRF
         # views, we can update the user language on response time instead.
         # At this point the request should be authenticated already, unless something wrong happened before DRF auth.
+        # We need to check for user.id to make sure the user exists and was not deleted (test users can be deleted).
         user = getattr(request, 'user', None)
 
         # Todo: Make less calls to Datebase, Mixpanel, and Pusher
-        if user and user.is_authenticated():
+        if user and user.id and user.is_authenticated():
             if request.LANGUAGE_CODE != user.language:
                 user.update_language(request.LANGUAGE_CODE)
 

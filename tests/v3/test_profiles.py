@@ -142,6 +142,15 @@ class ProfileDetailTestCase(DetailMixin, BaseTestCase):
         self.assertEqual(User.objects.get(id=self.user1.id).email,
                          'vasya@email.com')
 
+    def test_profile_update_language(self):
+        """
+        Logged-in user can update his language by passing Accept-Language header in any api call
+        """
+        self.login(self.user1)
+        self.assertEqual('en-us', self.user1.language)
+        self.client.get(self.get_url('me'), HTTP_ACCEPT_LANGUAGE='ar')
+        self.assertEqual('ar', User.objects.get(id=self.user1.id).language)
+
     def test_profile_update_email_already_exists(self):
         """
         User can update his own profile
