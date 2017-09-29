@@ -36,6 +36,7 @@ with open(os.path.join(API_DIR, 'VERSION')) as f:
 WSGI_APPLICATION = 'wsgi.application'
 ALLOWED_HOSTS = ['127.0.0.1', '.shoutit.com']
 INTERNAL_IPS = ['127.0.0.1']
+GUNICORN = 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '')
 
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
@@ -698,6 +699,7 @@ info("==================================================")
 info("VERSION:", VERSION)
 info("BUILD_NUM:", BUILD_NUM)
 info("SHOUTIT_ENV:", SHOUTIT_ENV)
+info("GUNICORN:", GUNICORN)
 info("DEBUG:", DEBUG)
 info("USE_SENTRY:", USE_SENTRY, RAVEN_CONFIG['dsn'][-5:])
 info("==================================================")
