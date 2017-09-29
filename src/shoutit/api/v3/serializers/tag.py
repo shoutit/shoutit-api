@@ -23,8 +23,8 @@ class MiniTagSerializer(TranslatableModelSerializer):
         request = self.context['request']
         from_web = request.agent == 'web'
         ios_condition = (
-            (request.agent == 'ios' and request.app_verison is None and request.build_no >= 22312) or
-            (request.agent == 'ios' and request.app_verison is not None)
+            (request.agent == 'ios' and request.app_version is None and request.build_no >= 22312) or
+            (request.agent == 'ios' and request.app_version is not None)
         )
         android_condition = request.agent == 'android' and request.build_no >= 1450
         if not any([from_web, ios_condition, android_condition]):

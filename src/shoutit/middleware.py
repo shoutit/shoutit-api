@@ -117,7 +117,7 @@ class UserAttributesMiddleware(object):
         # We need to check for user.id to make sure the user exists and was not deleted (test users can be deleted).
         user = getattr(request, 'user', None)
 
-        # Todo: Make less calls to Datebase, Mixpanel, and Pusher
+        # Todo: Make less calls to Database, Mixpanel, and Pusher
         if user and user.id and user.is_authenticated():
             if request.LANGUAGE_CODE != user.language:
                 user.update_language(request.LANGUAGE_CODE)
