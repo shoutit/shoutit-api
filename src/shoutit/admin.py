@@ -71,6 +71,13 @@ class CustomUserChangeForm(UserChangeForm):
         help_text=_('Required. 2 to 30 characters and can only contain A-Z, a-z, 0-9, and periods (.)'),
         error_messages={'invalid': _("This value may only contain A-Z, a-z, 0-9, and periods (.)")})
 
+    def save(self, *args, **kwargs):
+        if isinstance(self.changed_data, list) and 'email' in self.changed_data:
+            self.changed_data.append('is_activated')
+            self.cleaned_data['is_activated'] = False
+            self.instance.is_activated = False
+        return super(CustomUserChangeForm, self).save(*args, **kwargs)
+
 
 # User
 @admin.register(User)
@@ -135,12 +142,6 @@ class CustomUserAdmin(UserAdmin, LocationMixin, LinksMixin):
 
     api_clients.allow_tags = True
     api_clients.short_description = 'Devices'
-
-    def save_model(self, request, obj, form, change):
-        update_fields = form.changed_data
-        if isinstance(update_fields, list) and 'email' in update_fields:
-            update_fields.append('is_activated')
-        obj.save(update_fields=update_fields)
 
 
 # Profile
