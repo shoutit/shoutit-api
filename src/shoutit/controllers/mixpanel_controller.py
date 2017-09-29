@@ -84,7 +84,6 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             'username': user.username,
 
             '$created': user.date_joined,
-            '$last_seen': user.last_login,
             'last_login': user.last_login,
 
             '$country_code': ap.country,
@@ -112,9 +111,6 @@ def _add_to_mp_people(user_ids=None, buffered=False):
             if value not in (None, ''):
                 properties[attr] = value
 
-        meta = {
-            '$ignore_time': True  # Don't count this update as a user activity. 'Last Seen' will not be updated
-        }
         if buffered:
             shoutit_mp_buffered.people_set(user.pk, properties, meta)
         else:
