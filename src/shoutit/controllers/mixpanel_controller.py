@@ -112,9 +112,9 @@ def _add_to_mp_people(user_ids=None, buffered=False):
                 properties[attr] = value
 
         if buffered:
-            shoutit_mp_buffered.people_set(user.pk, properties, meta)
+            shoutit_mp_buffered.people_set(user.pk, properties)
         else:
-            shoutit_mp.people_set(user.pk, properties, meta)
+            shoutit_mp.people_set(user.pk, properties)
 
     # Force sending the requests if necessary
     if buffered:
