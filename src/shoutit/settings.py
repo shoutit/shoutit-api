@@ -2,14 +2,13 @@
 """
 
 """
-import datetime
 import os
 import sys
 from datetime import timedelta
 
 from django.utils.translation import ugettext_lazy as _
 
-from common.utils import get_address_port, strtobool
+from common.utils import strtobool, info
 from config import load_env
 
 """
@@ -24,11 +23,10 @@ SHOUTIT_ENV = os.environ.get('SHOUTIT_ENV', 'development')
 # Read env variables from .env file based on `SHOUTIT_ENV`
 load_env(env_name=SHOUTIT_ENV)
 
-
-def info(*args):
-    _now = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-    print("[%s] [INFO]:" % _now, *args, file=sys.stderr)
-
+with open(os.path.join(API_DIR, 'BUILD_NUM')) as f:
+    BUILD_NUM = f.read()
+with open(os.path.join(API_DIR, 'VERSION')) as f:
+    VERSION = f.read()
 
 """
 =================================
@@ -38,8 +36,6 @@ def info(*args):
 WSGI_APPLICATION = 'wsgi.application'
 ALLOWED_HOSTS = ['127.0.0.1', '.shoutit.com']
 INTERNAL_IPS = ['127.0.0.1']
-GUNICORN = 'gunicorn' in os.environ.get('SERVER_SOFTWARE', '')
-ADDRESS, PORT = get_address_port(GUNICORN)
 
 # URLs
 ROOT_URLCONF = 'shoutit.urls'
@@ -504,10 +500,12 @@ SWAGGER_SETTINGS = {
 =================================
 """
 RAVEN_CONFIG = {
+    'build': BUILD_NUM,
     'dsn': os.environ.get('RAVEN_DSN', ''),
+    'environment': SHOUTIT_ENV,
+    'release': VERSION,
     'string_max_length': 1000,
     'transport': 'raven.transport.threaded_requests.ThreadedRequestsHTTPTransport',
-    'environment': SHOUTIT_ENV,
 }
 USE_SENTRY = RAVEN_CONFIG['dsn'] is not ''
 SENTRY_CLIENT = 'shoutit.api.exceptions.ShoutitRavenClient'
@@ -695,11 +693,11 @@ LOGGING = {
 }
 
 info("==================================================")
-info("================= Shoutit Server =================")
+info("================== Shoutit API ===================")
 info("==================================================")
+info("VERSION:", VERSION)
+info("BUILD_NUM:", BUILD_NUM)
 info("SHOUTIT_ENV:", SHOUTIT_ENV)
-info("GUNICORN:", GUNICORN)
-info("BIND: {}:{}".format(ADDRESS, PORT))
 info("DEBUG:", DEBUG)
 info("USE_SENTRY:", USE_SENTRY, RAVEN_CONFIG['dsn'][-5:])
 info("==================================================")
@@ -707,9 +705,9 @@ info("API_LINK:", API_LINK)
 info("SITE_LINK:", SITE_LINK)
 info("APP_LINK_SCHEMA:", APP_LINK_SCHEMA)
 info("==================================================")
-info("DB_HOST, DB_PORT:", DATABASES['default']['HOST'], DATABASES['default']['PORT'])
-info("REDIS_PORT:", REDIS_PORT)
-info("ES_HOST, ES_PORT:", ES_HOST, ES_PORT)
+info("DB_HOST:DB_PORT:", f"{DATABASES['default']['HOST']}:{DATABASES['default']['PORT']}")
+info("REDIS_HOST:REDIS_PORT:", f'{REDIS_HOST}:{REDIS_PORT}')
+info("ES_HOST:ES_PORT:", f'{ES_HOST}:{ES_PORT}')
 info("FORCE_SYNC_RQ:", FORCE_SYNC_RQ)
 info("==================================================")
 info('STATIC_URL:', STATIC_URL)

@@ -12,9 +12,9 @@ jobs:
       - checkout
 
       - run:
-          name: Set BUILD_TAG and BUILD_BRANCH
+          name: Set BUILD_NUM and BUILD_BRANCH
           command: |
-            ./.circleci/set-build-tag.sh
+            ./.circleci/set-build-attributes.sh
 
       - run:
           name: Run linting tests [Flake8]
@@ -35,9 +35,9 @@ jobs:
       - checkout
 
       - run:
-          name: Set BUILD_TAG and BUILD_BRANCH
+          name: Set BUILD_NUM and BUILD_BRANCH
           command: |
-            ./.circleci/set-build-tag.sh
+            ./.circleci/set-build-attributes.sh
 
       - setup_remote_docker:
           reusable: true
@@ -46,17 +46,17 @@ jobs:
       - run:
           name: Build test docker image
           command: |
-            echo $BUILD_TAG > BUILD_TAG
+            echo $BUILD_NUM > BUILD_NUM
             docker-compose --file docker-compose.test.yml build
 
       # Docker image tags are based on GitHub tag or branch
       #
       # GitHub          Docker Cloud Tags
       #
-      # develop         build-$BUILD_TAG, develop
-      # master          build-$BUILD_TAG, master
-      # release-*       build-$BUILD_TAG, live
-      # stage-xyz       build-$BUILD_TAG, stage-xyz
+      # develop         build-$BUILD_NUM, develop
+      # master          build-$BUILD_NUM, master
+      # release-*       build-$BUILD_NUM, live
+      # stage-xyz       build-$BUILD_NUM, stage-xyz
       #
       # stage-x can be used to create docker images from any branch. An example is when Docker Cloud is set to
       # auto redeploy a service that is bound to shoutit-web:stage-xyz image.
@@ -69,10 +69,10 @@ jobs:
       - deploy:
           name: Push docker images
           command: |
-            docker tag shoutit-api:test-${BUILD_TAG} shoutit/shoutit-api:build-$BUILD_TAG
-            docker tag shoutit-api:test-${BUILD_TAG} shoutit/shoutit-api:$BUILD_BRANCH
+            docker tag shoutit-api:test-${BUILD_NUM} shoutit/shoutit-api:build-$BUILD_NUM
+            docker tag shoutit-api:test-${BUILD_NUM} shoutit/shoutit-api:$BUILD_BRANCH
             docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push shoutit/shoutit-api:build-$BUILD_TAG
+            docker push shoutit/shoutit-api:build-$BUILD_NUM
             docker push shoutit/shoutit-api:$BUILD_BRANCH
 
 workflows:

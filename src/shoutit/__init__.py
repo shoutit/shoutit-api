@@ -1,4 +1,4 @@
-from shoutit.settings import info
+from common.utils import info
 
 """
 =================================

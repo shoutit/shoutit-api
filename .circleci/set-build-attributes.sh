@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Set BUILD_TAG to $CIRCLE_BUILD_NUM
-echo "BUILD_TAG=${CIRCLE_BUILD_NUM}"
-echo "export BUILD_TAG=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
+# Set BUILD_NUM to $CIRCLE_BUILD_NUM
+echo "BUILD_NUM=${CIRCLE_BUILD_NUM}"
+echo "export BUILD_NUM=${CIRCLE_BUILD_NUM}" >> $BASH_ENV
 
 # Set BUILD_BRANCH
 case "${CIRCLE_TAG:-$CIRCLE_BRANCH}" in

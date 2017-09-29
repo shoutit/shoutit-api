@@ -16,27 +16,9 @@ from django.utils.translation import ugettext_lazy as _
 from pydash import strings, arrays
 
 
-def get_address_port(using_gunicorn=False):
-    return '', ''  # Todo (Nour) Fix
-    if using_gunicorn:
-        from gunicorn import bind
-        return bind.split(':')
-
-    if len(sys.argv) > 1 and sys.argv[1] == "runserver":
-        address_port = sys.argv[-1] if len(sys.argv) > 2 else "127.0.0.1:8000"
-        if address_port.startswith("-"):
-            return
-        else:
-            try:
-                address, port = address_port.split(':')
-            except ValueError:
-                address, port = '', address_port
-        if not address:
-            address = '127.0.0.1'
-        return address, port
-
-    else:
-        return '127.0.0.1', '8000'
+def info(*args):
+    _now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    print("[%s] [INFO]:" % _now, *args, file=sys.stderr)
 
 
 def process_tag(name, fn=strings.kebab_case):
