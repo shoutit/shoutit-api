@@ -14,7 +14,7 @@ class UUIDViewSetMixin(object):
         value = self.kwargs.get(self.lookup_field)
         try:
             uuid.UUID(value)
-        except:
+        except (TypeError, ValueError):
             raise ValidationError({'detail': "'%s' is not a valid id" % value})
 
         return super(UUIDViewSetMixin, self).get_object()

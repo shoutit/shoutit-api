@@ -116,7 +116,7 @@ class MiscViewSet(viewsets.ViewSet):
         country = data.get('country', '').upper()
         try:
             types = type_qp.split(',')
-        except:
+        except AttributeError:
             raise ValidationError({'error': "Invalid `type` parameter"})
 
         suggestions = OrderedDict()
@@ -359,14 +359,16 @@ def base64_to_text(b64, box=None, config=None, invert=False):
             image_no_trans.paste(image, image)
             inverted_image = ImageOps.invert(image_no_trans)
             image = inverted_image
-        except:
+        except Exception as e:
+            debug_logger.warn(str(e))
             pass
     else:
         try:
             image_no_trans = Image.new("RGB", image.size, (255, 255, 255))
             image_no_trans.paste(image, image)
             image = image_no_trans
-        except:
+        except Exception as e:
+            debug_logger.warn(str(e))
             pass
     text = pytesseract.image_to_string(image, config=config)
     return text

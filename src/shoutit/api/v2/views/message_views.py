@@ -212,7 +212,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
             new_user = User.objects.get(id=new_user_id)
         except User.DoesNotExist:
             raise ValidationError({'user_id': "user with id '%s' does not exist" % new_user_id})
-        except:
+        except ValueError:
             raise ValidationError({'user_id': "Invalid user_id"})
         if not new_user.is_listening(adder):
             raise ValidationError({'user_id': "The user you are trying to add is not one of your listeners"})
@@ -251,7 +251,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
             existing_user = User.objects.get(id=existing_user_id)
         except User.DoesNotExist:
             raise ValidationError({'user_id': "user with id '%s' does not exist" % existing_user_id})
-        except:
+        except ValueError:
             raise ValidationError({'user_id': "Invalid user_id"})
         if not conversation.users.filter(id=existing_user.id).exists():
             raise ValidationError({'user_id': "The user you are trying to remove is not a member of this conversation"})
@@ -291,7 +291,7 @@ class ConversationViewSet(UUIDViewSetMixin, mixins.ListModelMixin, mixins.Create
             existing_user = User.objects.get(id=existing_user_id)
         except User.DoesNotExist:
             raise ValidationError({'user_id': "user with id '%s' does not exist" % existing_user_id})
-        except:
+        except ValueError:
             raise ValidationError({'user_id': "Invalid user_id"})
         if not conversation.users.filter(id=existing_user.id).exists():
             raise ValidationError(

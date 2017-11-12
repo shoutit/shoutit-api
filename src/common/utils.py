@@ -120,7 +120,7 @@ class UUIDValidator(object):
     def validate(self, value):
         try:
             uuid.UUID(value)
-        except:
+        except (TypeError, ValueError):
             raise ValidationError(self.message % {'value': value}, code=self.code)
 
 

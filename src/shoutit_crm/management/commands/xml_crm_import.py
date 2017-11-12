@@ -234,5 +234,6 @@ def text_from_html(text):
         parser.feed(text)
         parser.close()
         return parser.text()
-    except:
+    except Exception as e:
+        debug_logger.debug(str(e))
         return text

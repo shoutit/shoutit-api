@@ -19,7 +19,7 @@ from shoutit.controllers import (message_controller, location_controller, notifi
                                  gplus_controller, mixpanel_controller)
 from shoutit.models import User, InactiveUser, Profile, Page, Video, ProfileContact
 from shoutit.models.user import gender_choices
-from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none
+from shoutit.utils import url_with_querystring, correct_mobile, blank_to_none, debug_logger
 from .base import VideoSerializer, LocationSerializer, PushTokensSerializer, empty_char_input
 
 
@@ -510,7 +510,8 @@ class ProfileContactSerializer(serializers.Serializer):
                 e = e.lower().replace(' ', '')
                 validate_email(e)
                 return e
-            except:
+            except Exception as exc:
+                debug_logger.debug(str(exc))
                 return None
 
         emails = map(_email, emails)
@@ -529,7 +530,8 @@ class ProfileContactSerializer(serializers.Serializer):
                 if m.startswith('+'):
                     return m
                 return correct_mobile(mobile=m, country=country)
-            except:
+            except Exception as exc:
+                debug_logger.debug(str(exc))
                 return None
 
         mobiles = map(_mobile, mobiles)

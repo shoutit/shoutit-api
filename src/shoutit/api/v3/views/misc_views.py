@@ -97,7 +97,7 @@ class MiscViewSet(viewsets.ViewSet):
         country = data.get('country', '').upper()
         try:
             types = type_qp.split(',')
-        except:
+        except AttributeError:
             raise InvalidParameter('type', _("Invalid `type`"))
 
         suggestions = OrderedDict()

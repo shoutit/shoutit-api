@@ -537,7 +537,7 @@ class VideoAdmin(admin.ModelAdmin):
                 reverse('admin:shoutit_shout_change', args=(_shout.pk,)), _shout)
             _shout_web_url = links(_shout)
             return '%s | %s' % (_shout_admin_url, _shout_web_url)
-        except:
+        except Exception:
             return 'None'
 
     shout.allow_tags = True

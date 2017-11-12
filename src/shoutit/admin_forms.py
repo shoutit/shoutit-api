@@ -31,7 +31,7 @@ class PushBroadcastForm(forms.ModelForm):
         conditions = self.cleaned_data['conditions']
         try:
             conditions = json.loads(conditions)
-        except:
+        except (TypeError, json.JSONDecodeError):
             raise forms.ValidationError("Invalid Json for conditions!")
 
         countries = self.cleaned_data.get('countries')
@@ -48,7 +48,7 @@ class PushBroadcastForm(forms.ModelForm):
         data = self.cleaned_data['data']
         try:
             json.loads(data)
-        except:
+        except (TypeError, json.JSONDecodeError):
             raise forms.ValidationError("Invalid Json for data!")
         return data
 

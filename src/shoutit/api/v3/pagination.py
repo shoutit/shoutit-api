@@ -18,7 +18,7 @@ from rest_framework.utils.urls import remove_query_param
 
 from common.utils import utcfromtimestamp
 from shoutit.api.v3.exceptions import InvalidParameter
-from shoutit.utils import error_logger
+from shoutit.utils import error_logger, debug_logger
 from ..api_utils import get_current_uri
 
 
@@ -326,5 +326,6 @@ class PageNumberIndexPagination(PageNumberPagination):
                 return num * 2
             elif 300 < num:
                 return num * 3
-        except:
+        except Exception as e:
+            debug_logger.warn(str(e))
             return num
