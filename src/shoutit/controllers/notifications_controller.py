@@ -24,6 +24,7 @@ def mark_actual_notifications_as_read(user):
     Mark (actual) Notifications that are *not* of type `new_message` or `new_credit_transaction` as read
     """
     user.actual_notifications.filter(is_read=False).update(is_read=True)
+    user.update_unread_notifications_count()
     pusher_controller.trigger_stats_update(user, 'v3')
 
 
@@ -68,9 +69,13 @@ def notify_user(user, notification_type, from_user=None, attached_object=None, v
     # Create notification object
     notification = Notification(to_user=user, type=notification_type, from_user=from_user,
                                 attached_object=attached_object)
+
     if notification_type.requires_notification_object():
         # Save the notification
         notification.save()
+        # update actual notification count on user model
+        if notification_type.is_actual_notification():
+            user.update_unread_notifications_count()
         # Trigger `stats_update` on Pusher (introduced in v3)
         pusher_controller.trigger_stats_update(user, 'v3')
 

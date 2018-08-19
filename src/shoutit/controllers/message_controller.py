@@ -1,13 +1,13 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError, transaction
-from django.db.models import Count
+from django.db.models import Count, F, query
 from pydash import arrays
 
 from common.constants import MESSAGE_ATTACHMENT_TYPE_LOCATION, MESSAGE_ATTACHMENT_TYPE_PROFILE
 from common.constants import (MESSAGE_ATTACHMENT_TYPE_SHOUT, CONVERSATION_TYPE_CHAT, CONVERSATION_TYPE_ABOUT_SHOUT,
                               MESSAGE_ATTACHMENT_TYPE_MEDIA, CONVERSATION_TYPE_PUBLIC_CHAT)
 from common.utils import any_in
-from shoutit.controllers import location_controller
+from shoutit.controllers import location_controller, notifications_controller
 from shoutit.models import (Conversation, Message, MessageAttachment, MessageDelete, Shout, User, SharedLocation,
                             Video)
 from shoutit.utils import error_logger
@@ -86,6 +86,10 @@ def send_message(conversation, user, to_users=None, about=None, text=None, attac
     message.api_client = getattr(request, 'api_client', None)
     message.api_version = getattr(request, 'version', None)
     message.save()
+
+    # update unread message stats for to_users
+    for user in to_users:
+        user.update_unread_conversations_count()
     return message
 
 

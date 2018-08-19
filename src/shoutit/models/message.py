@@ -324,7 +324,10 @@ class Message(Action):
         except IntegrityError:
             pass
         else:
-            from ..controllers import pusher_controller
+            from ..controllers import (
+                pusher_controller,
+                notifications_controller,
+            )
 
             # Trigger `new_read_by` event in the conversation channel
             pusher_controller.trigger_new_read_by(message=self, version='v3')
@@ -336,8 +339,13 @@ class Message(Action):
             # Trigger `stats_update` on Pusher
             pusher_controller.trigger_stats_update(user, 'v3')
 
+            user.update(
+                unread_conversations_count=
+                notifications_controller.get_unread_conversations_count(user))
+
     def mark_as_unread(self, user):
         user.read_messages_set.filter(message=self).delete()
+        user.update_unread_conversations_count()
 
     @property
     def track_properties(self):

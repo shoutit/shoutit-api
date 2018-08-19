@@ -174,6 +174,10 @@ class NotificationType(Constant):
     def new_notification(cls):
         return cls('new_notification', 1000)
 
+    def is_actual_notification(self):
+        excluded_types = [NOTIFICATION_TYPE_MESSAGE, NOTIFICATION_TYPE_CREDIT_TRANSACTION]
+        return self not in excluded_types
+
     def requires_notification_object(self):
         types = [
             NOTIFICATION_TYPE_MESSAGE,
